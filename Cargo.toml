@@ -1,0 +1,43 @@
+[package]
+name = "bevy_baby"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bevy = { version = "0.15", features = [
+    "file_watcher",
+    "bevy_picking",
+    "serialize",
+] }
+bevy_flurx = { version = "0.9", features = ["effect", "state"] }
+serde = { version = "1", features = ["derive"] }
+device_query = "3"
+dirs = "6"
+thiserror = "2"
+serde_json = "1"
+winit = "0.30"
+rand = "0.9"
+crossbeam = "0.8.4"
+itertools = "0.14"
+anyhow = "1.0.96"
+bevy-inspector-egui = { version = "0.29", optional = true }
+
+[dependencies.bevy_webview_wry]
+path = "../bevy_webview_projects/crates/bevy_webview_wry"
+features = ["api"]
+
+[target.'cfg(target_os="macos")'.dependencies]
+core-graphics = { version = "0.24.0" }
+core-foundation = { version = "0.10.0" }
+objc2 = { version = "0.5", features = ["std"] }
+objc2-foundation = { version = "0.2" }
+objc2-app-kit = { version = "0.2", features = [
+    "NSWindow",
+    "NSView",
+    "NSApplication",
+] }
+apple-sys = { version = "0.2", features = ["IOKit"] }
+
+[features]
+default = []
+develop = ["dep:bevy-inspector-egui"]
