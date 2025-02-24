@@ -22,6 +22,7 @@ fn update_hit_test(
 ) {
     for (window_entity, mut window, layers) in windows.iter_mut() {
         let Some((camera, tf, _)) = cameras.find_camera(window_entity) else {
+            window.cursor_options.hit_test = false;
             continue;
         };
         let Some(local_cursor_pos) = mouse_position.local(layers) else {
@@ -29,6 +30,7 @@ fn update_hit_test(
             continue;
         };
         let Ok(ray) = camera.viewport_to_world(tf, local_cursor_pos) else {
+            window.cursor_options.hit_test = false;
             continue;
         };
         let hitting_anyone = !mesh_ray_cast
