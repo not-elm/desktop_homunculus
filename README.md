@@ -42,8 +42,8 @@ Currently, **Windows is supported**, and macOS support is planned.
 
 | Platform  | Status            |
 |-----------|-------------------|
-| ✅ Windows | Supported         |
-| ❌ macOS   | Not yet supported |
+| ✅ MacOS   | Supported         |
+| ❌ Windows | Not yet supported |
 
 ---
 
@@ -98,6 +98,7 @@ Actions can transition between each other using different transition modes:
 - [ ] **Complete Documentation**
 - [ ] **Local HTTP Server for External Control**
 - [ ] **Enhanced Action System** (scale changes, additional movements)
+- [ ] **Support Look At retargeting**
 
 ### **📡 Local HTTP Server**
 

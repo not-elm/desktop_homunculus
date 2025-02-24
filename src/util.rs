@@ -1,7 +1,10 @@
 use std::path::{Path, PathBuf};
 
 pub fn models_dir() -> PathBuf {
-    std::env::current_dir()
+    std::env::current_exe()
+        .ok()
+        .and_then(|exe_path| Some(exe_path.parent()?.to_path_buf()))
+        .or_else(|| std::env::current_dir().ok())
         .unwrap_or_default()
         .join("assets")
         .join("models")
