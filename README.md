@@ -1,5 +1,7 @@
 # bevy_baby
 
+[itch.io](https://notelm.itch.io/bevy-baby)
+
 > [!CAUTION]
 > This crate is in an early stage of development and may undergo breaking changes.
 
