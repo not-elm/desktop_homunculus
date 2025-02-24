@@ -1,7 +1,13 @@
 #[cfg(target_os = "macos")]
 mod macos;
+#[cfg(target_os="windows")]
+mod windows;
 
+#[cfg(target_os="macos")]
 pub use crate::global_window::macos::*;
+#[cfg(target_os="windows")]
+pub use crate::global_window::windows::*;
+
 use bevy::math::{Rect, Vec2};
 use bevy::prelude::Resource;
 
@@ -26,11 +32,14 @@ impl GlobalWindow {
     /// Returns `true` if the application_windows position has been updated.
     #[inline]
     pub fn update(&self) -> Option<GlobalWindow> {
-        if let Some(updated) = find_window_from_number(self.window_number) {
-            if updated.frame != self.frame {
-                return Some(updated);
-            }
+       #[cfg(target_os="macos")]
+       {
+            if let Some(updated) = find_window_from_number(self.window_number) {
+                if updated.frame != self.frame {
+                    return Some(updated);
+                }
         }
+       }
         None
     }
 }
@@ -66,6 +75,7 @@ fn hitting_sitting_area(
     let min = window_frame.min;
     let max = window_frame.max;
     let sitting_area = Rect::from_corners(Vec2::new(min.x, min.y - threshold_height), Vec2::new(max.x, min.y));
+    println!("Dropp {sitting_area:?} pos: {drop_viewport_point:?}");
     sitting_area.contains(drop_viewport_point)
 }
 

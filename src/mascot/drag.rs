@@ -11,10 +11,12 @@ use crate::system_param::mascot_root_searcher::MascotRootSearcher;
 use crate::system_param::monitors::Monitors;
 use crate::system_param::mouse_position::MousePosition;
 use bevy::app::{App, Plugin, Update};
+use bevy::ecs::system::NonSend;
 use bevy::input::common_conditions::{input_just_released, input_pressed};
 use bevy::log::debug;
 use bevy::prelude::{Commands, DragStart, Entity, IntoSystemConfigs, ParallelCommands, Pointer, PointerButton, Query, Res, Trigger};
 use bevy::render::view::RenderLayers;
+use bevy::winit::WinitWindows;
 
 pub struct MascotDragPlugin;
 
@@ -95,14 +97,17 @@ fn on_drag_drop(
     global_cursor: Res<GlobalMouseCursor>,
     monitors: Monitors,
     move_targets: Query<(Entity, &RenderLayers, &MascotAction)>,
+    // To run on main thread
+    _: NonSend<WinitWindows>,
 ) {
     let global_cursor_pos = global_cursor.global_cursor_pos();
-    move_targets.par_iter().for_each(|(entity, layers, state)| {
+    for (entity, layers, state) in move_targets.iter(){
         if !state.group.is_drag() {
             return;
         }
         let mascot = MascotEntity(entity);
         let global_windows: GlobalWindows = obtain_global_windows().unwrap_or_default();
+        println!("{global_windows:#?}");
         match global_windows.find_sitting_window(global_cursor_pos) {
             Some(global_window) => {
                 let global_sitting_pos = global_window.sitting_pos(global_cursor_pos);
@@ -133,6 +138,6 @@ fn on_drag_drop(
                 });
             }
         }
-    });
+    }
 }
 
