@@ -2,7 +2,7 @@
     clippy::type_complexity,
     clippy::too_many_arguments,
 )]
-
+#![cfg_attr(all(target_os="windows", not(debug_assertions)), windows_subsystem="windows")]
 mod application_windows;
 mod mascot;
 mod global_window;
