@@ -29,6 +29,8 @@ use bevy::app::{App, PluginGroup};
 use bevy::color::Color;
 use bevy::log::LogPlugin;
 use bevy::prelude::{default, AmbientLight, ClearColor, MeshPickingPlugin};
+use bevy::render::settings::{RenderCreation, WgpuSettings};
+use bevy::render::RenderPlugin;
 use bevy::window::WindowPlugin;
 use bevy::DefaultPlugins;
 use bevy_webview_wry::api::{AllLogPlugins, AppExitApiPlugin};
@@ -42,10 +44,24 @@ fn main() {
                 .set(LogPlugin {
                     #[cfg(debug_assertions)]
                     level: bevy::log::Level::DEBUG,
+                    #[cfg(target_os="windows")]
+                    filter: "wgpu_hal=off".to_string(),
                     ..default()
                 })
                 .set(WindowPlugin {
+                    // Windows won't start without PrimaryWindow for some reason.
+                    #[cfg(not(target_os="windows"))]
                     primary_window: None,
+                    ..default()
+                })
+                .set(RenderPlugin{
+                    render_creation: RenderCreation::Automatic(WgpuSettings{
+                        // On Windows, neither on `VULKAN` and `DX12` don't work transparency.
+                        // Ensure not certainty that this will work correctly on all devices.
+                        #[cfg(target_os="windows")]
+                        backends: Some(bevy::render::settings::Backends::GL),
+                        ..default()
+                    }),
                     ..default()
                 }),
             WebviewWryPlugin {

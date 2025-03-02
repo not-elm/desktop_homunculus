@@ -3,13 +3,15 @@ use crate::global_mouse::cursor::GlobalMouseCursor;
 use crate::system_param::monitors::monitor_rect;
 use bevy::app::{App, Startup};
 use bevy::core::Name;
+use bevy::ecs::query::With;
+use bevy::ecs::schedule::IntoSystemConfigs;
 use bevy::log::debug;
 use bevy::math::Vec2;
 use bevy::prelude::{default, Camera, Camera3d, OrthographicProjection, Projection, Res, Transform, Window};
 use bevy::prelude::{Commands, Entity, Plugin, Query};
 use bevy::render::camera::{RenderTarget, ScalingMode};
 use bevy::render::view::RenderLayers;
-use bevy::window::{CompositeAlphaMode, CursorOptions, Monitor, PrimaryMonitor, PrimaryWindow, WindowLevel, WindowMode, WindowRef, WindowResolution};
+use bevy::window::{CursorOptions, Monitor, PrimaryMonitor, PrimaryWindow, WindowLevel, WindowMode, WindowRef, WindowResolution};
 
 pub struct ApplicationWindowsSetupPlugin;
 
@@ -17,7 +19,19 @@ impl Plugin for ApplicationWindowsSetupPlugin {
     fn build(&self, app: &mut App) {
         app
             .register_type::<TargetMonitor>()
-            .add_systems(Startup, setup_windows);
+            .add_systems(Startup, (
+                despawn_default_window,
+                setup_windows,
+            ).chain());
+    }
+}
+
+fn despawn_default_window(
+    mut commands: Commands,
+    default_window: Query<Entity, With<PrimaryWindow>>,
+){
+    if let Ok(entity) = default_window.get_single(){
+        commands.entity(entity).despawn();
     }
 }
 
@@ -41,8 +55,6 @@ fn setup_windows(
 
         debug!("Monitor({:?}) {:?}", monitor.physical_position, monitor.physical_size());
         window.position.set((monitor.physical_position.as_vec2() * scale_factor).as_ivec2());
-        let size = monitor.physical_size();
-        window.resolution.set_physical_resolution(size.x, size.y);
         window.resolution.set_scale_factor(monitor.scale_factor as f32);
 
         let window_entity = commands.spawn((
@@ -88,10 +100,14 @@ fn create_window(size: Vec2) -> Window {
         transparent: true,
         has_shadow: false,
         #[cfg(target_os = "macos")]
-        composite_alpha_mode: CompositeAlphaMode::PostMultiplied,
+        composite_alpha_mode: bevy::window::CompositeAlphaMode::PostMultiplied,
         resizable: false,
         decorations: false,
         window_level: WindowLevel::AlwaysOnTop,
+        // Weired, on Windows, it doesn't become transparent if make it the same size as the screen.
+        #[cfg(target_os="windows")]
+        resolution: WindowResolution::new(size.x - 1., size.y - 1.),
+        #[cfg(not(target_os="windows"))]
         resolution: WindowResolution::new(size.x, size.y),
         titlebar_shown: false,
         mode: WindowMode::Windowed,
