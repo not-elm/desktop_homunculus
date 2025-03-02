@@ -95,9 +95,12 @@ fn on_drag_drop(
     global_cursor: Res<GlobalMouseCursor>,
     monitors: Monitors,
     move_targets: Query<(Entity, &RenderLayers, &MascotAction)>,
+    #[cfg(target_os = "windows")]
+    // To run on main thread
+    _: bevy::prelude::NonSend<bevy::winit::WinitWindows>,
 ) {
     let global_cursor_pos = global_cursor.global_cursor_pos();
-    move_targets.par_iter().for_each(|(entity, layers, state)| {
+    for (entity, layers, state) in move_targets.iter() {
         if !state.group.is_drag() {
             return;
         }
@@ -133,6 +136,6 @@ fn on_drag_drop(
                 });
             }
         }
-    });
+    }
 }
 
