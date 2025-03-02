@@ -11,12 +11,10 @@ use crate::system_param::mascot_root_searcher::MascotRootSearcher;
 use crate::system_param::monitors::Monitors;
 use crate::system_param::mouse_position::MousePosition;
 use bevy::app::{App, Plugin, Update};
-use bevy::ecs::system::NonSend;
 use bevy::input::common_conditions::{input_just_released, input_pressed};
 use bevy::log::debug;
 use bevy::prelude::{Commands, DragStart, Entity, IntoSystemConfigs, ParallelCommands, Pointer, PointerButton, Query, Res, Trigger};
 use bevy::render::view::RenderLayers;
-use bevy::winit::WinitWindows;
 
 pub struct MascotDragPlugin;
 
@@ -97,12 +95,12 @@ fn on_drag_drop(
     global_cursor: Res<GlobalMouseCursor>,
     monitors: Monitors,
     move_targets: Query<(Entity, &RenderLayers, &MascotAction)>,
-    #[cfg(target_os="windows")]
+    #[cfg(target_os = "windows")]
     // To run on main thread
-    _: NonSend<WinitWindows>,
+    _: bevy::prelude::NonSend<bevy::winit::WinitWindows>,
 ) {
     let global_cursor_pos = global_cursor.global_cursor_pos();
-    for (entity, layers, state) in move_targets.iter(){
+    for (entity, layers, state) in move_targets.iter() {
         if !state.group.is_drag() {
             return;
         }
