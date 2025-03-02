@@ -50,8 +50,8 @@ Currently, **Windows is supported**, and macOS support is planned.
 > [!WARNING]
 > On Windows, due to bug in `winit` or `wgpu`,
 > it is currently not possible to create a transparent window with backends both `vulcan` and `dx12`.
-
-This application uses `open-gl` to avoid this bug, but on some devices, the application may crash during rendering.
+>
+>This application uses `open-gl` to avoid this bug, but on some devices, the application may crash during rendering.
 
 ---
 
