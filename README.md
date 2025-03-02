@@ -42,10 +42,17 @@ experts are highly appreciated!
 
 Currently, **Windows is supported**, and macOS support is planned.
 
-| Platform  | Status            |
-|-----------|-------------------|
-| ✅ MacOS   | Supported         |
-| ❌ Windows | Not yet supported |
+| Platform   | Status              |
+|------------|---------------------|
+| ✅ MacOS    | Supported           |
+| ⚠️ Windows | Partially Supported |
+
+### 🚨 **Windows Support Note**
+
+On Windows, due to bug in `winit` or `wgpu`,
+it is currently not possible to create a transparent window with backends both `vulcan` and `dx12`.
+
+This application uses `open-gl` to avoid this bug, but on some devices, the application may crash during rendering.
 
 ---
 
