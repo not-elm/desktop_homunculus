@@ -56,6 +56,8 @@ fn main() {
                 })
                 .set(RenderPlugin{
                     render_creation: RenderCreation::Automatic(WgpuSettings{
+                        // On Windows, neither on `VULKAN` and `DX12` don't work transparency.
+                        // Ensure not certainty that this will work correctly on all devices.
                         #[cfg(target_os="windows")]
                         backends: Some(bevy::render::settings::Backends::GL),
                         ..default()

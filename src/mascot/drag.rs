@@ -97,6 +97,7 @@ fn on_drag_drop(
     global_cursor: Res<GlobalMouseCursor>,
     monitors: Monitors,
     move_targets: Query<(Entity, &RenderLayers, &MascotAction)>,
+    #[cfg(target_os="windows")]
     // To run on main thread
     _: NonSend<WinitWindows>,
 ) {
@@ -107,7 +108,6 @@ fn on_drag_drop(
         }
         let mascot = MascotEntity(entity);
         let global_windows: GlobalWindows = obtain_global_windows().unwrap_or_default();
-        println!("{global_windows:#?}");
         match global_windows.find_sitting_window(global_cursor_pos) {
             Some(global_window) => {
                 let global_sitting_pos = global_window.sitting_pos(global_cursor_pos);

@@ -1,12 +1,13 @@
 #[cfg(target_os = "macos")]
 mod macos;
 #[cfg(target_os="windows")]
-mod windows;
+#[path ="global_window/windows.rs"]
+mod _windows;
 
 #[cfg(target_os="macos")]
 pub use crate::global_window::macos::*;
 #[cfg(target_os="windows")]
-pub use crate::global_window::windows::*;
+pub use crate::global_window::_windows::*;
 
 use bevy::math::{Rect, Vec2};
 use bevy::prelude::Resource;
@@ -19,6 +20,8 @@ pub struct GlobalWindow {
     pub window_layer: i64,
     #[cfg(target_os = "macos")]
     pub window_number: objc2_foundation::NSInteger,
+    #[cfg(target_os="windows")]
+    pub hwnd: i64,
 }
 
 impl GlobalWindow {
@@ -38,7 +41,18 @@ impl GlobalWindow {
                 if updated.frame != self.frame {
                     return Some(updated);
                 }
-        }
+            }
+       }
+       #[cfg(target_os="windows")]
+       {
+            if let Some(updated) = update_window(self.hwnd) {
+                if updated != self.frame {
+                    return Some(GlobalWindow { 
+                        frame: updated, 
+                        ..self.clone()
+                    });
+                }
+            }
        }
         None
     }
