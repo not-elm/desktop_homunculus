@@ -1,16 +1,17 @@
 #[cfg(target_os = "macos")]
 mod macos;
-#[cfg(target_os="windows")]
-#[path ="global_window/windows.rs"]
+#[cfg(target_os = "windows")]
+#[path = "global_window/windows.rs"]
 mod _windows;
 
-#[cfg(target_os="macos")]
-pub use crate::global_window::macos::*;
-#[cfg(target_os="windows")]
+#[cfg(target_os = "windows")]
 pub use crate::global_window::_windows::*;
+#[cfg(target_os = "macos")]
+pub use crate::global_window::macos::*;
 
 use bevy::math::{Rect, Vec2};
 use bevy::prelude::Resource;
+
 
 #[derive(Debug, Clone, PartialEq, Default, Resource)]
 pub struct GlobalWindow {
@@ -20,7 +21,7 @@ pub struct GlobalWindow {
     pub window_layer: i64,
     #[cfg(target_os = "macos")]
     pub window_number: objc2_foundation::NSInteger,
-    #[cfg(target_os="windows")]
+    #[cfg(target_os = "windows")]
     pub hwnd: i64,
 }
 
@@ -35,25 +36,25 @@ impl GlobalWindow {
     /// Returns `true` if the application_windows position has been updated.
     #[inline]
     pub fn update(&self) -> Option<GlobalWindow> {
-       #[cfg(target_os="macos")]
-       {
+        #[cfg(target_os = "macos")]
+        {
             if let Some(updated) = find_window_from_number(self.window_number) {
                 if updated.frame != self.frame {
                     return Some(updated);
                 }
             }
-       }
-       #[cfg(target_os="windows")]
-       {
+        }
+        #[cfg(target_os = "windows")]
+        {
             if let Some(updated) = update_window(self.hwnd) {
                 if updated != self.frame {
-                    return Some(GlobalWindow { 
-                        frame: updated, 
+                    return Some(GlobalWindow {
+                        frame: updated,
                         ..self.clone()
                     });
                 }
             }
-       }
+        }
         None
     }
 }

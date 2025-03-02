@@ -1,0 +1,46 @@
+name: CI
+run-name: Test CI
+on:
+  push:
+  workflow_dispatch:
+
+env:
+  RUSTFLAGS: '-D warnings'
+  RUSTDOCFLAGS: '--cfg docsrs -D warnings'
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ macos-latest, windows-latest ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 'nightly'
+          components: 'clippy,rust-docs'
+      - name: Install alsa and udev
+        run: |
+          sudo apt-get update && sudo apt-get install --no-install-recommends libasound2-dev \
+            libudev-dev \
+            libasound2-dev \
+            libwebkit2gtk-4.1-dev \
+            pkg-config \
+            libudev-dev \
+            libssl-dev \
+            build-essential \
+            libxdo-dev
+        if: runner.os == 'linux'
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Clippy all features
+        run: cargo clippy --all-features --tests -- -D warnings
+
+      - name: Test all features
+        run: cargo test --all-features
