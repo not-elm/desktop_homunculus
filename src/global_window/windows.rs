@@ -11,7 +11,7 @@ extern "system" fn enum_windows_proc(hwnd: HWND, _: LPARAM) -> BOOL {
             return BOOL(1);
         };
         if IsWindowVisible(hwnd).into() {
-            let Ok(mut foud_windows) = FOUND_WINDOWS.lock() else {
+            let Ok(mut found_windows) = FOUND_WINDOWS.lock() else {
                 return BOOL(1);
             };
             let current = GetForegroundWindow();
@@ -21,7 +21,7 @@ extern "system" fn enum_windows_proc(hwnd: HWND, _: LPARAM) -> BOOL {
                 let title = (0 < len).then(|| {
                     decode_title(&buf, len)
                 });
-                foud_windows.push(GlobalWindow {
+                found_windows.push(GlobalWindow {
                     title,
                     frame,
                     hwnd: hwnd.0 as i64,

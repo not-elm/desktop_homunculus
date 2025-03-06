@@ -2,7 +2,7 @@ use crate::global_mouse::button::GlobalMouseButton;
 use crate::global_window::GlobalWindow;
 use crate::mascot::MascotEntity;
 use crate::settings::state::{ActionName, MascotAction};
-use crate::system_param::mascot_controller::MascotTracker;
+use crate::system_param::mascot_tracker::MascotTracker;
 use crate::system_param::monitors::Monitors;
 use crate::system_param::mouse_position::MousePosition;
 use bevy::app::{App, PostUpdate, Update};

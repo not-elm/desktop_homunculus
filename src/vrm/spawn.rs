@@ -105,9 +105,9 @@ fn spawn_vrm(
     mut ew: EventWriter<RequestLoadVrma>,
     node_assets: Res<Assets<GltfNode>>,
     vrm_assets: Res<Assets<Vrm>>,
-    handles: Query<(Entity, &VrmHandle, &Transform, &VrmPath)>,
+    handles: Query<(Entity, &VrmHandle, &Transform, &VrmPath, &RenderLayers)>,
 ) {
-    for (vrm_handle_entity, handle, tf, vrm_path) in handles.iter() {
+    for (vrm_handle_entity, handle, tf, vrm_path, layers) in handles.iter() {
         let Some(vrm) = vrm_assets.get(handle.0.id()) else {
             continue;
         };
@@ -130,10 +130,10 @@ fn spawn_vrm(
         info!("Spawned mascot({:?}): {:?}", extensions.name(), vrm_path.0);
         commands.spawn((
             Mascot,
-            RenderLayers::default(),
             SceneRoot(scene.clone()),
             vrm_path.clone(),
             *tf,
+            layers.clone(),
             VrmExpressions::new(&extensions, &node_assets, &vrm.gltf.nodes),
             HumanoidBoneNodes::new(
                 &extensions.vrmc_vrm.humanoid.human_bones,
