@@ -1,6 +1,6 @@
 [package]
 name = "bevy_baby"
-version = "0.1.0"
+version = "0.1.0-alpha.1"
 edition = "2021"
 license = "MIT"
 description = "Desktop mascot built with bevy"
@@ -8,6 +8,7 @@ authors = ["notelm <elmprograminfo@gmail.com>"]
 repository = "https://github.com/not-elm/bevy_baby"
 keywords = ["bevy", "desktop", "game"]
 categories = ["games"]
+publish = false
 
 [dependencies]
 bevy = { version = "0.15", features = [
@@ -45,7 +46,7 @@ apple-sys = { version = "0.2", features = ["IOKit"] }
 windows = { version = "0.60", features = [
     "Win32_Foundation",
     "Win32_UI_WindowsAndMessaging",
-]}
+] }
 
 [features]
 default = []
