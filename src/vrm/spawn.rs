@@ -127,7 +127,7 @@ fn spawn_vrm(
         #[cfg(feature = "develop")]
         create_vrm_json_for_debug(&vrm.gltf, &extensions);
 
-        info!("Spawned mascot({:?}): {:?}", extensions.name(), vrm_path.0);
+        info!("Spawned mascot({:?}): {:?}\nposition: {:?}", extensions.name(), vrm_path.0, tf.translation);
         commands.spawn((
             Mascot,
             SceneRoot(scene.clone()),

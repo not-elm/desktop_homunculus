@@ -12,14 +12,20 @@ use bevy::render::view::{NoFrustumCulling, RenderLayers};
 #[reflect(Component)]
 pub struct TargetMonitor(pub Entity);
 
+#[derive(Debug, Component, Eq, PartialEq, Copy, Clone, Reflect)]
+#[reflect(Component)]
+pub struct PrimaryCamera;
+
 pub struct ApplicationWindowsPlugin;
 
 impl Plugin for ApplicationWindowsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((
-            ApplicationWindowsSetupPlugin,
-            ApplicationWindowsHitTestPlugin,
-        ));
+        app
+            .register_type::<PrimaryCamera>()
+            .add_plugins((
+                ApplicationWindowsSetupPlugin,
+                ApplicationWindowsHitTestPlugin,
+            ));
 
         app
             .world_mut()

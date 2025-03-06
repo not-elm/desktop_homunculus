@@ -10,6 +10,11 @@ pub struct MascotAabb<'w, 's> {
 }
 
 impl MascotAabb<'_, '_> {
+    // pub fn calculate_as_rect(&self, entity: Entity) -> Rect {
+    //     let (min, max) = self.calculate(entity);
+    //     Rect::from_corners(min.truncate(), max.truncate())
+    // }
+
     pub fn calculate(
         &self,
         mesh_root: Entity,

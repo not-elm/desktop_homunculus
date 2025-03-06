@@ -90,7 +90,6 @@ fn hitting_sitting_area(
     let min = window_frame.min;
     let max = window_frame.max;
     let sitting_area = Rect::from_corners(Vec2::new(min.x, min.y - threshold_height), Vec2::new(max.x, min.y));
-    println!("Dropp {sitting_area:?} pos: {drop_viewport_point:?}");
     sitting_area.contains(drop_viewport_point)
 }
 

@@ -1,13 +1,12 @@
 use crate::mascot::Mascot;
 use bevy::ecs::system::SystemParam;
 use bevy::math::{Rect, Vec2};
-use bevy::prelude::{Entity, Query, With, Without};
+use bevy::prelude::{Entity, Query, Without};
 use bevy::render::view::RenderLayers;
-use bevy::window::{Monitor, PrimaryMonitor};
+use bevy::window::Monitor;
 
 #[derive(SystemParam)]
 pub struct Monitors<'w, 's> {
-    pub primary: Query<'w, 's, Entity, With<PrimaryMonitor>>,
     pub monitors: Query<'w, 's, (Entity, &'static Monitor, &'static RenderLayers), Without<Mascot>>,
 }
 
@@ -33,12 +32,6 @@ impl Monitors<'_, '_> {
             })
     }
 
-    pub fn default_mascot_viewport_pos_and_layers(&self) -> (Vec2, &RenderLayers) {
-        let primary_monitor = self.primary.single();
-        let monitor = self.monitors.get(primary_monitor).unwrap();
-        (monitor.1.physical_position.as_vec2(), monitor.2)
-    }
-
     pub fn find_monitor_from_screen_pos(&self, viewport_pos: Vec2) -> Option<(Entity, &Monitor, &RenderLayers)> {
         self.monitors.iter().find(|(_, monitor, _)| {
             monitor_rect(monitor).contains(viewport_pos)
@@ -60,7 +53,7 @@ impl Monitors<'_, '_> {
     }
 
     #[inline]
-    fn find_monitor(&self, render_layers: &RenderLayers) -> Option<(Entity, &Monitor)> {
+    pub fn find_monitor(&self, render_layers: &RenderLayers) -> Option<(Entity, &Monitor)> {
         self
             .monitors
             .iter()
