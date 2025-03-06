@@ -1,6 +1,6 @@
 use crate::mascot::Mascot;
 use bevy::ecs::system::SystemParam;
-use bevy::math::{Vec2, Vec3};
+use bevy::math::{Rect, Vec2, Vec3};
 use bevy::prelude::{Camera, Entity, GlobalTransform, Query, With, Without};
 use bevy::render::camera::RenderTarget;
 use bevy::render::view::RenderLayers;
@@ -37,6 +37,18 @@ impl Cameras<'_, '_> {
         } else {
             None
         }
+    }
+
+    pub fn find_camera_from_world_pos(&self, world_pos: Vec3) -> Option<CameraQuery> {
+        self
+            .cameras
+            .iter()
+            .find_map(|(camera, gtf, layers)| {
+                let viewport = camera.viewport.as_ref().unwrap();
+                let min = camera.viewport_to_world_2d(gtf, Vec2::ZERO).ok()?;
+                let max = camera.viewport_to_world_2d(gtf, viewport.physical_size.as_vec2()).ok()?;
+                Rect::from_corners(min, max).contains(world_pos.truncate()).then_some((camera, gtf, layers))
+            })
     }
 
     #[inline]

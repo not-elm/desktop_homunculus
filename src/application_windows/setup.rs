@@ -1,15 +1,15 @@
-use crate::application_windows::TargetMonitor;
+use crate::application_windows::{PrimaryCamera, TargetMonitor};
 use crate::global_mouse::cursor::GlobalMouseCursor;
 use crate::system_param::monitors::monitor_rect;
-use bevy::app::{App, Startup};
+use bevy::app::{App, Startup, Update};
 use bevy::core::Name;
 use bevy::ecs::query::With;
 use bevy::ecs::schedule::IntoSystemConfigs;
 use bevy::log::debug;
 use bevy::math::Vec2;
-use bevy::prelude::{default, Camera, Camera3d, OrthographicProjection, Projection, Res, Transform, Window};
+use bevy::prelude::{default, Added, Camera, Camera3d, GlobalTransform, OrthographicProjection, ParallelCommands, Projection, Res, Transform, Window};
 use bevy::prelude::{Commands, Entity, Plugin, Query};
-use bevy::render::camera::{RenderTarget, ScalingMode};
+use bevy::render::camera::{RenderTarget, ScalingMode, Viewport};
 use bevy::render::view::RenderLayers;
 use bevy::window::{CursorOptions, Monitor, PrimaryMonitor, PrimaryWindow, WindowLevel, WindowMode, WindowRef, WindowResolution};
 
@@ -22,7 +22,8 @@ impl Plugin for ApplicationWindowsSetupPlugin {
             .add_systems(Startup, (
                 despawn_default_window,
                 setup_windows,
-            ).chain());
+            ).chain())
+            .add_systems(Update, initialize_camera_position);
     }
 }
 
@@ -64,7 +65,7 @@ fn setup_windows(
             window,
         )).id();
         commands.entity(monitor_entity).insert(RenderLayers::layer(layer));
-        spawn_camera(&mut commands, window_entity, layer);
+        spawn_camera(&mut commands, window_entity, monitor, layer, primary.is_some());
 
         if primary.is_some() {
             commands.entity(window_entity).insert(PrimaryWindow);
@@ -75,14 +76,20 @@ fn setup_windows(
 fn spawn_camera(
     commands: &mut Commands,
     window_entity: Entity,
+    monitor: &Monitor,
     camera_layer: usize,
+    is_primary: bool,
 ) {
-    commands.spawn((
+    let mut cmd = commands.spawn((
         Name::new(format!("Camera({camera_layer})")),
         RenderLayers::layer(camera_layer),
         Camera3d::default(),
         Camera {
             target: RenderTarget::Window(WindowRef::Entity(window_entity)),
+            viewport: Some(Viewport {
+                physical_size: monitor.physical_size(),
+                ..default()
+            }),
             ..default()
         },
         Projection::from(OrthographicProjection {
@@ -91,8 +98,27 @@ fn spawn_camera(
             },
             ..OrthographicProjection::default_3d()
         }),
-        Transform::from_xyz(0., 0.0, 4.5),
+        Transform::from_xyz(0., 0., 4.5),
     ));
+    if is_primary {
+        cmd.insert(PrimaryCamera);
+    }
+}
+
+fn initialize_camera_position(
+    par_commands: ParallelCommands,
+    cameras: Query<(Entity, &Camera, &GlobalTransform), Added<Camera>>,
+) {
+    cameras.par_iter().for_each(|(entity, camera, gtf)| {
+        let center = camera.viewport.as_ref().unwrap().physical_size.as_vec2() / 2.;
+        let camera_pos = camera
+            .viewport_to_world_2d(gtf, center)
+            .unwrap_or_default()
+            .extend(4.5);
+        par_commands.command_scope(|mut commands| {
+            commands.entity(entity).insert(Transform::from_translation(camera_pos));
+        });
+    });
 }
 
 fn create_window(size: Vec2) -> Window {

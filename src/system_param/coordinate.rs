@@ -1,13 +1,16 @@
+use crate::application_windows::PrimaryCamera;
 use crate::system_param::cameras::Cameras;
 use crate::system_param::monitors::Monitors;
 use bevy::ecs::system::SystemParam;
 use bevy::math::Vec3;
+use bevy::prelude::{Entity, Query, With};
 use bevy::render::view::RenderLayers;
 
 #[derive(SystemParam)]
 pub struct Coordinate<'w, 's> {
     pub cameras: Cameras<'w, 's>,
     pub monitors: Monitors<'w, 's>,
+    primary_camera: Query<'w, 's, Entity, With<PrimaryCamera>>,
 }
 
 impl Coordinate<'_, '_> {
@@ -24,12 +27,18 @@ impl Coordinate<'_, '_> {
 
     /// If the passed position is outside the screen, return the default position and layers of the mascot.
     pub fn initial_mascot_pos_and_layers(&self, load_pos: Vec3) -> (Vec3, RenderLayers) {
-        let viewport_pos = self.cameras.to_viewport_pos(&RenderLayers::default(), load_pos).unwrap();
-        if let Some((_, _, layers)) = self.monitors.find_monitor_from_screen_pos(viewport_pos) {
-            return (load_pos, layers.clone());
+        match self.cameras.find_camera_from_world_pos(load_pos) {
+            Some((_, _, layers)) => (load_pos, layers.clone()),
+            None => {
+                let entity = self.primary_camera.single();
+                let (pos, layers) = self.cameras.cameras.get(entity)
+                    .ok()
+                    .and_then(|(camera, gtf, layers)| {
+                        let pos = camera.viewport_to_world_2d(gtf, camera.viewport.as_ref().unwrap().physical_size.as_vec2() / 2.).ok()?;
+                        Some((pos, layers.clone()))
+                    }).unwrap_or_default();
+                (pos.extend(0.), layers)
+            }
         }
-        let (viewport_pos, layers) = self.monitors.default_mascot_viewport_pos_and_layers();
-        println!("viewport_pos: {:?} {layers:?}", viewport_pos);
-        (self.cameras.to_world_pos(layers, viewport_pos).unwrap_or_default(), layers.clone())
     }
 }

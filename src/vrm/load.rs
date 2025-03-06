@@ -98,7 +98,6 @@ fn load_models(
     {
         let mut tf = mascot_preferences.transform(asset_path.path());
         let (pos, layers) = coordinate.initial_mascot_pos_and_layers(tf.translation);
-        println!("pos: {:?} {layers:?}", pos);
         tf.translation = pos;
         commands.spawn((
             tf,
