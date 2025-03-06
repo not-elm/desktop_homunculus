@@ -29,8 +29,8 @@ impl Plugin for ApplicationWindowsSetupPlugin {
 fn despawn_default_window(
     mut commands: Commands,
     default_window: Query<Entity, With<PrimaryWindow>>,
-){
-    if let Ok(entity) = default_window.get_single(){
+) {
+    if let Ok(entity) = default_window.get_single() {
         commands.entity(entity).despawn();
     }
 }
@@ -105,14 +105,11 @@ fn create_window(size: Vec2) -> Window {
         decorations: false,
         window_level: WindowLevel::AlwaysOnTop,
         // Weired, on Windows, it doesn't become transparent if make it the same size as the screen.
-        #[cfg(target_os="windows")]
         resolution: WindowResolution::new(size.x - 1., size.y - 1.),
-        #[cfg(not(target_os="windows"))]
-        resolution: WindowResolution::new(size.x, size.y),
         titlebar_shown: false,
         mode: WindowMode::Windowed,
         cursor_options: CursorOptions {
-            hit_test: false,
+            hit_test: true,
             ..default()
         },
         ..default()

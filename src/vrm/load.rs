@@ -1,5 +1,6 @@
 use crate::power_state::Loading;
 use crate::settings::preferences::MascotPreferencesResource;
+use crate::system_param::coordinate::Coordinate;
 use crate::util::{create_dir_all_if_need, models_dir, remove_mystery_file_if_exists};
 use crate::vrm::loader::VrmHandle;
 use crate::vrm::VrmPath;
@@ -75,6 +76,7 @@ fn prepare_initial_loading(
 
 fn load_models(
     mut commands: Commands,
+    coordinate: Coordinate,
     mascot_preferences: Res<MascotPreferencesResource>,
     folders: Res<Assets<LoadedFolder>>,
     handle: Query<&ModelsFolderHandle>,
@@ -94,8 +96,13 @@ fn load_models(
         .flat_map(|handle| handle.path())
         .filter(|path| !exists_mascots.contains(&path.path()))
     {
+        let mut tf = mascot_preferences.transform(asset_path.path());
+        let (pos, layers) = coordinate.initial_mascot_pos_and_layers(tf.translation);
+        println!("pos: {:?} {layers:?}", pos);
+        tf.translation = pos;
         commands.spawn((
-            mascot_preferences.transform(asset_path.path()),
+            tf,
+            layers,
             VrmPath(asset_path.path().to_path_buf()),
             VrmHandle(asset_server.load(asset_path)),
         ));
