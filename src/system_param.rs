@@ -1,8 +1,7 @@
 pub mod monitors;
 pub mod mesh_aabb;
 pub mod cameras;
-pub mod mascot_controller;
-pub mod mascot_root_searcher;
+pub mod mascot_tracker;
 pub mod mouse_position;
 pub mod child_searcher;
 pub mod vrm_animation_players;

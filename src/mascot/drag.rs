@@ -6,11 +6,11 @@ use crate::global_window::{obtain_global_windows, GlobalWindows};
 use crate::mascot::sitting::SittingWindow;
 use crate::mascot::{Mascot, MascotEntity};
 use crate::settings::state::{ActionGroup, ActionName, MascotAction};
-use crate::system_param::mascot_controller::MascotTracker;
-use crate::system_param::mascot_root_searcher::MascotRootSearcher;
+use crate::system_param::mascot_tracker::MascotTracker;
 use crate::system_param::monitors::Monitors;
 use crate::system_param::mouse_position::MousePosition;
 use bevy::app::{App, Plugin, Update};
+use bevy::hierarchy::{HierarchyQueryExt, Parent};
 use bevy::input::common_conditions::{input_just_released, input_pressed};
 use bevy::log::debug;
 use bevy::prelude::{Commands, DragStart, Entity, IntoSystemConfigs, ParallelCommands, Pointer, PointerButton, Query, Res, Trigger};
@@ -41,17 +41,16 @@ impl Plugin for MascotDragPlugin {
 fn on_drag_start(
     trigger: Trigger<Pointer<DragStart>>,
     mut commands: Commands,
-    roots: MascotRootSearcher,
     states: Query<&MascotAction>,
+    parents: Query<&Parent>,
 ) {
     if !matches!(trigger.event.button, PointerButton::Primary) {
         return;
     }
-    if let Some(mascot_entity) = roots.find_root(trigger.target) {
-        if not_playing_sit_down(&states, mascot_entity) {
-            debug!("on_drag_start {:?}", trigger.pointer_location.position);
-            commands.entity(mascot_entity).insert(MascotAction::from_main(ActionGroup::drag()));
-        }
+    let mascot_entity = parents.root_ancestor(trigger.target);
+    if not_playing_sit_down(&states, mascot_entity) {
+        debug!("on_drag_start {:?}", trigger.pointer_location.position);
+        commands.entity(mascot_entity).insert(MascotAction::from_main(ActionGroup::drag()));
     }
 }
 
