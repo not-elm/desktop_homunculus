@@ -14,19 +14,6 @@ pub struct Coordinate<'w, 's> {
 }
 
 impl Coordinate<'_, '_> {
-    //TODO: new_render_layers_if_overall_monitor
-    #[inline]
-    #[allow(unused)]
-    pub fn new_render_layers_if_overall_monitor(
-        &self,
-        current_render_layers: &RenderLayers,
-        world_pos: Vec3,
-    ) -> Option<(Vec3, &RenderLayers)> {
-        let viewport_pos = self.cameras.to_viewport_pos(current_render_layers, world_pos)?;
-        let (new_viewport, new_layers) = self.monitors.new_render_layers_if_overall_monitor(current_render_layers, viewport_pos)?;
-        Some((self.cameras.to_world_pos_from_viewport(new_layers, new_viewport)?, new_layers))
-    }
-
     pub fn default_mascot_pos_and_layers(&self) -> (Vec3, RenderLayers) {
         let entity = self.primary_camera.single();
         let (pos, layers) = self.cameras

@@ -49,7 +49,8 @@ fn save_mascot_locations(
     debug!("save mascot locations: {:?}", mascots);
     create_parent_dir_all_if_need(&mascot_locations_json_path());
 
-    std::fs::write(mascot_locations_json_path(), serde_json::to_string(&locations).unwrap()).output_log_if_error("Save");
+    //TODO: save mascot locations
+    // std::fs::write(mascot_locations_json_path(), serde_json::to_string(&locations).unwrap()).output_log_if_error("Save");
 }
 
 fn save_actions(

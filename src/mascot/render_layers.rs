@@ -1,11 +1,7 @@
 use crate::mascot::Mascot;
-use crate::system_param::cameras::Cameras;
-use crate::system_param::mesh_aabb::MascotAabb;
-use bevy::app::{App, PostUpdate, Update};
-use bevy::core::Name;
+use bevy::app::{App, Update};
 use bevy::hierarchy::Children;
-use bevy::log::debug;
-use bevy::prelude::{apply_deferred, Added, Changed, Commands, Entity, IntoSystem, IntoSystemConfigs, Or, ParallelCommands, Plugin, Query, Transform, With, Without};
+use bevy::prelude::{Added, Changed, Commands, Entity, IntoSystemConfigs, Or, Plugin, Query, With, Without};
 use bevy::render::view::RenderLayers;
 
 pub struct MascotRenderLayersPlugin;
@@ -13,37 +9,10 @@ pub struct MascotRenderLayersPlugin;
 impl Plugin for MascotRenderLayersPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_systems(PostUpdate, (
-                change_render_layers.pipe(apply_deferred),
+            .add_systems(Update, (
                 update_children_layers,
             ).chain());
     }
-}
-
-fn change_render_layers(
-    par_commands: ParallelCommands,
-    mascots: Query<(Entity, &Name, &RenderLayers), (Changed<Transform>, With<Mascot>)>,
-    cameras: Cameras,
-    mascot_aabb: MascotAabb,
-) {
-    mascots.par_iter().for_each(|(entity, name, current_layers)| {
-        let (min, max) = mascot_aabb.calculate(entity);
-        let Some((_, _, min_layer)) = cameras.find_camera_from_world_pos(min) else {
-            return;
-        };
-        let Some((_, _, max_layer)) = cameras.find_camera_from_world_pos(max) else {
-            return;
-        };
-        if current_layers == min_layer || (min_layer != max_layer) {
-            return;
-        }
-        debug!("{name:?}'s render layer changed from {current_layers:?} to {min_layer:?}");
-        par_commands.command_scope(|mut commands| {
-            commands.entity(entity).insert((
-                min_layer.clone(),
-            ));
-        });
-    });
 }
 
 fn update_children_layers(

@@ -3,13 +3,13 @@ use crate::global_window::GlobalWindow;
 use crate::mascot::MascotEntity;
 use crate::settings::state::{ActionName, MascotAction};
 use crate::system_param::mascot_tracker::MascotTracker;
-use crate::system_param::monitors::Monitors;
 use crate::system_param::mouse_position::MousePosition;
+use crate::system_param::window_layers::{window_local_pos, WindowLayers};
+use crate::system_param::GlobalScreenPos;
 use bevy::app::{App, PostUpdate, Update};
 use bevy::input::common_conditions::{input_just_pressed, input_just_released};
 use bevy::math::Vec2;
 use bevy::prelude::{debug, on_event, Changed, Commands, Component, Entity, Event, EventReader, EventWriter, IntoSystemConfigs, Local, ParallelCommands, Plugin, Query, Transform, With};
-use bevy::render::view::RenderLayers;
 use bevy::utils::HashMap;
 use bevy::window::RequestRedraw;
 use itertools::Itertools;
@@ -51,10 +51,10 @@ pub struct SittingWindow {
 impl SittingWindow {
     pub fn new(
         global_window: GlobalWindow,
-        sitting_pos: Vec2,
+        sitting_pos: GlobalScreenPos,
     ) -> Self {
         Self {
-            mascot_viewport_offset: sitting_pos - global_window.frame.min,
+            mascot_viewport_offset: *sitting_pos - global_window.frame.min,
             window: global_window,
             dragging: false,
         }
@@ -70,8 +70,8 @@ impl SittingWindow {
     }
 
     #[inline]
-    pub fn global_sitting_pos(&self) -> Vec2 {
-        self.window.frame.min + self.mascot_viewport_offset
+    pub fn sitting_pos(&self) -> GlobalScreenPos {
+        GlobalScreenPos(self.window.frame.min + self.mascot_viewport_offset)
     }
 }
 
@@ -106,20 +106,16 @@ fn move_sitting_pos(
     mut redraw: EventWriter<RequestRedraw>,
     mut er: EventReader<MoveSittingPos>,
     tracker: MascotTracker,
-    mascots: Query<(&SittingWindow, &RenderLayers)>,
-    monitors: Monitors,
+    mascots: Query<&SittingWindow>,
 ) {
     for mascot in er
         .read()
         .map(|e| e.mascot)
         .unique()
     {
-        if let Ok((sitting_window, layers)) = mascots.get(mascot.0) {
-            let Some(monitor_pos) = monitors.monitor_pos(layers) else {
-                return;
-            };
-            let sitting_pos = sitting_window.global_sitting_pos() - monitor_pos;
-            if let Some(transform) = tracker.tracking_on_sitting(mascot, sitting_pos) {
+        if let Ok(sitting_window) = mascots.get(mascot.0) {
+            let global = sitting_window.sitting_pos();
+            if let Some(transform) = tracker.tracking_on_sitting(mascot, global) {
                 commands.entity(mascot.0).insert(transform);
             }
         }
@@ -136,7 +132,7 @@ fn start_tracking(
         .iter_mut()
         .filter(|s| !s.dragging)
     {
-        if sitting_window.window.frame.contains(mouse_position.global()) {
+        if sitting_window.window.frame.contains(*mouse_position.global()) {
             debug!("Start tracking sitting application_windows: {:?}", sitting_window.window.title);
             sitting_window.dragging = true;
             redraw.send(RequestRedraw);
@@ -147,21 +143,17 @@ fn start_tracking(
 fn track_to_sitting_window(
     mut redraw: EventWriter<RequestRedraw>,
     par_commands: ParallelCommands,
-    sitting_windows: Query<(Entity, &SittingWindow, &RenderLayers)>,
+    sitting_windows: Query<(Entity, &SittingWindow)>,
     tracker: MascotTracker,
-    monitors: Monitors,
 ) {
-    sitting_windows.par_iter().for_each(|(mascot_entity, sitting_window, layers)| {
+    sitting_windows.par_iter().for_each(|(mascot_entity, sitting_window)| {
         if !sitting_window.dragging {
             return;
         }
-        let Some(monitor_pos) = monitors.monitor_pos(layers) else {
-            return;
-        };
         let Some(new_sitting_window) = sitting_window.update() else {
             return;
         };
-        let sitting_pos = new_sitting_window.global_sitting_pos() - monitor_pos;
+        let sitting_pos = new_sitting_window.sitting_pos();
         let Some(transform) = tracker.tracking_on_sitting(MascotEntity(mascot_entity), sitting_pos) else {
             return;
         };

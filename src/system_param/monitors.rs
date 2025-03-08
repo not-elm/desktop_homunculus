@@ -1,4 +1,5 @@
 use crate::mascot::Mascot;
+use crate::system_param::GlobalScreenPos;
 use bevy::ecs::system::SystemParam;
 use bevy::math::{Rect, Vec2};
 use bevy::prelude::{Entity, Query, Without};
@@ -11,36 +12,15 @@ pub struct Monitors<'w, 's> {
 }
 
 impl Monitors<'_, '_> {
-    #[inline]
-    pub fn new_render_layers_if_overall_monitor(
-        &self,
-        current_render_layers: &RenderLayers,
-        viewport_pos: Vec2,
-    ) -> Option<(Vec2, &RenderLayers)> {
-        let (current_monitor_entity, monitor) = self.find_monitor(current_render_layers)?;
-        let monitor_pos = monitor.physical_position.as_vec2();
-        self
-            .monitors
-            .iter()
-            .filter(|(entity, _, _)| entity != &current_monitor_entity)
-            .find_map(|(_, monitor, layers)| {
-                if monitor_rect(monitor).contains(viewport_pos + monitor_pos) {
-                    Some((viewport_pos + monitor_pos, layers))
-                } else {
-                    None
-                }
-            })
-    }
-
     pub fn find_monitor_from_name(&self, monitor_name: &str) -> Option<(Entity, &Monitor, &RenderLayers)> {
         self.monitors.iter().find(|(_, monitor, _)| {
             monitor.name.as_ref().is_some_and(|name| name == monitor_name)
         })
     }
 
-    pub fn find_monitor_from_screen_pos(&self, viewport_pos: Vec2) -> Option<(Entity, &Monitor, &RenderLayers)> {
+    pub fn find_monitor_from_global_screen_pos(&self, global: GlobalScreenPos) -> Option<(Entity, &Monitor, &RenderLayers)> {
         self.monitors.iter().find(|(_, monitor, _)| {
-            monitor_rect(monitor).contains(viewport_pos)
+            monitor_rect(monitor).contains(*global)
         })
     }
 

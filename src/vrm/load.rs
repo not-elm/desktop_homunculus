@@ -99,7 +99,6 @@ fn load_models(
         let (tf, layers) = locations.load(asset_path.path(), &coordinate);
         commands.spawn((
             tf,
-            layers,
             VrmPath(asset_path.path().to_path_buf()),
             VrmHandle(asset_server.load(asset_path)),
         ));

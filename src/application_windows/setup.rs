@@ -47,11 +47,11 @@ fn setup_windows(
     global_cursor: Res<GlobalMouseCursor>,
     monitors: Query<(Entity, &Monitor, Option<&PrimaryMonitor>)>,
 ) {
-    let cursor_pos = global_cursor.global_cursor_pos();
+    let cursor_pos = global_cursor.global();
     let Some(scale_factor) = monitors
         .iter()
         .find_map(|(_, monitor, _)| {
-            monitor_rect(monitor).contains(cursor_pos).then_some(monitor.scale_factor as f32)
+            monitor_rect(monitor).contains(*cursor_pos).then_some(monitor.scale_factor as f32)
         })
     else {
         return;
