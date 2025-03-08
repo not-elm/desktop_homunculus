@@ -60,7 +60,7 @@ impl Cameras<'_, '_> {
     #[inline]
     pub fn to_world_pos(&self, layers: &RenderLayers, viewport_pos: Vec2) -> Option<Vec3> {
         let (camera, camera_tf, _) = self.find_camera_from_layers(layers)?;
-        let ray = camera.viewport_to_world(camera_tf, viewport_pos).unwrap();
-        Some(ray.get_point(camera_tf.translation().distance(Vec3::ZERO)))
+        let pos = camera.viewport_to_world_2d(camera_tf, viewport_pos).unwrap();
+        Some(pos.extend(0.))
     }
 }
