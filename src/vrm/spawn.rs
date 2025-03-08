@@ -1,4 +1,5 @@
 use crate::mascot::Mascot;
+use crate::system_param::cameras::Cameras;
 use crate::system_param::child_searcher::ChildSearcher;
 use crate::vrm::extensions::{MorphTargetBind, VrmExtensions, VrmNode};
 use crate::vrm::loader::{Vrm, VrmHandle};
@@ -11,7 +12,6 @@ use bevy::gltf::GltfNode;
 use bevy::log::{error, info};
 use bevy::math::Quat;
 use bevy::prelude::{Added, Children, Commands, Component, Deref, DespawnRecursiveExt, Entity, EventWriter, Plugin, Query, Reflect, Res, Transform};
-use bevy::render::view::RenderLayers;
 use bevy::scene::SceneRoot;
 use bevy::utils::HashMap;
 
@@ -103,11 +103,12 @@ impl HumanoidBoneNodes {
 fn spawn_vrm(
     mut commands: Commands,
     mut ew: EventWriter<RequestLoadVrma>,
+    cameras: Cameras,
     node_assets: Res<Assets<GltfNode>>,
     vrm_assets: Res<Assets<Vrm>>,
-    handles: Query<(Entity, &VrmHandle, &Transform, &VrmPath, &RenderLayers)>,
+    handles: Query<(Entity, &VrmHandle, &Transform, &VrmPath)>,
 ) {
-    for (vrm_handle_entity, handle, tf, vrm_path, layers) in handles.iter() {
+    for (vrm_handle_entity, handle, tf, vrm_path) in handles.iter() {
         let Some(vrm) = vrm_assets.get(handle.0.id()) else {
             continue;
         };
@@ -133,7 +134,7 @@ fn spawn_vrm(
             SceneRoot(scene.clone()),
             vrm_path.clone(),
             *tf,
-            layers.clone(),
+            cameras.all_layers(),
             VrmExpressions::new(&extensions, &node_assets, &vrm.gltf.nodes),
             HumanoidBoneNodes::new(
                 &extensions.vrmc_vrm.humanoid.human_bones,

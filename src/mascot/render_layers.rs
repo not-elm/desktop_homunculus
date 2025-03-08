@@ -1,7 +1,7 @@
 use crate::mascot::Mascot;
-use bevy::app::{App, PreUpdate, Update};
+use bevy::app::{App, Update};
 use bevy::hierarchy::Children;
-use bevy::prelude::{Added, Changed, Commands, Entity, Or, ParallelCommands, Plugin, Query, With, Without};
+use bevy::prelude::{Added, Changed, Commands, Entity, IntoSystemConfigs, Or, Plugin, Query, With, Without};
 use bevy::render::view::RenderLayers;
 
 pub struct MascotRenderLayersPlugin;
@@ -9,44 +9,10 @@ pub struct MascotRenderLayersPlugin;
 impl Plugin for MascotRenderLayersPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_systems(PreUpdate, change_render_layers)
-            .add_systems(Update, update_children_layers);
+            .add_systems(Update, (
+                update_children_layers,
+            ).chain());
     }
-}
-
-fn change_render_layers(
-    _par_commands: ParallelCommands,
-    // mascots: Query<(Entity, &Name, &Transform, &RenderLayers), (Changed<Transform>, With<Mascot>)>,
-    // cameras: Cameras,
-    // mascot_aabb: MascotAabb,
-) {
-    // mascots.par_iter().for_each(|(entity, name, tf, current_layers)| {
-    //     let Some((_, current_gtf, _)) = cameras.find_camera_from_layers(current_layers) else {
-    //         return;
-    //     };
-    //     // let (min, max) = mascot_aabb.calculate(entity);
-    //     // let Some((min_camera, min_gtf, min_layers)) = cameras.find_camera_from_world_pos(min) else {
-    //     //     return;
-    //     // };
-    //     // let Some((_, max_gtf, max_layers)) = cameras.find_camera_from_world_pos(max) else {
-    //     //     return;
-    //     // };
-    //     // if current_layers == min_layers {
-    //     //     return;
-    //     // }
-    //     // let mut new_tf = *tf;
-    //     // new_tf.translation = min_camera.viewport_to_world_2d(min_gtf, Vec2::ZERO).unwrap().extend(0.);
-    //     // new_tf.translation += (min_gtf.translation().xy() - current_gtf.translation().xy())
-    //     //     .normalize()
-    //     //     .extend(0.);
-    //     // debug!("{name:?}'s render layer changed to {min_layers:?}");
-    //     // par_commands.command_scope(|commands| {
-    //     //     commands.entity(entity).insert((
-    //     //         min_layers.clone(),
-    //     //         new_tf,
-    //     //     ));
-    //     // });
-    // });
 }
 
 fn update_children_layers(

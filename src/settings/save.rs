@@ -24,19 +24,20 @@ impl Plugin for AppSettingsSavePlugin {
 }
 
 fn deserialize_mascot_locations(
-    mascots: Query<(&Transform, &VrmPath, &RenderLayers), With<Mascot>>,
+    mascots: Query<(&Transform, &VrmPath), With<Mascot>>,
     monitors: Monitors,
     cameras: Cameras,
 ) -> HashMap<PathBuf, MascotLocation> {
     mascots
         .iter()
-        .flat_map(|(tf, path, layers)| {
+        .flat_map(|(tf, path)| {
+            let (camera, gtf, layers) = cameras.find_camera_from_world_pos(tf.translation)?;
             let (_, monitor) = monitors.find_monitor(layers)?;
             Some((path.0.clone(), MascotLocation {
                 monitor_name: monitor.name.clone(),
                 scale: tf.scale,
                 rotation: tf.rotation,
-                ndc: cameras.to_ndc(layers, tf.translation)?,
+                viewport_pos: camera.world_to_viewport(gtf, tf.translation).ok()?.extend(tf.translation.z),
             }))
         })
         .collect()

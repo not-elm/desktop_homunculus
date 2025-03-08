@@ -21,7 +21,7 @@ fn update_hit_test(
     cameras: Cameras,
 ) {
     for (window_entity, mut window, layers) in windows.iter_mut() {
-        let Some((camera, tf, _)) = cameras.find_camera(window_entity) else {
+        let Some((camera, tf, _)) = cameras.find_camera_from_window(window_entity) else {
             window.cursor_options.hit_test = false;
             continue;
         };
