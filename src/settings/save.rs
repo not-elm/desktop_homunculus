@@ -1,42 +1,60 @@
+use crate::error::OutputLog;
 use crate::mascot::Mascot;
 use crate::settings::preferences::action::ActionPreferences;
-use crate::settings::preferences::AppPreferences;
-use crate::settings::{save_file_path, MascotPreferences};
+use crate::settings::{actions_json_path, mascot_locations_json_path, MascotLocation};
+use crate::system_param::cameras::Cameras;
+use crate::system_param::monitors::Monitors;
 use crate::util::create_parent_dir_all_if_need;
 use crate::vrm::VrmPath;
 use bevy::app::{AppExit, PostUpdate};
-use bevy::log::error;
-use bevy::prelude::{debug, on_event, IntoSystemConfigs, Plugin, Query, Res, Transform, With};
+use bevy::prelude::{debug, on_event, In, IntoSystem, IntoSystemConfigs, Plugin, Query, Res, Transform, With};
+use bevy::render::view::RenderLayers;
+use bevy::utils::HashMap;
+use std::path::PathBuf;
 
 pub struct AppSettingsSavePlugin;
 
 impl Plugin for AppSettingsSavePlugin {
     fn build(&self, app: &mut bevy::app::App) {
-        app.add_systems(PostUpdate, save.run_if(on_event::<AppExit>));
+        app.add_systems(PostUpdate, (
+            deserialize_mascot_locations.pipe(save_mascot_locations),
+            save_actions,
+        ).run_if(on_event::<AppExit>));
     }
 }
 
-fn save(
-    actions: Res<ActionPreferences>,
-    mascots: Query<(&Transform, &VrmPath), With<Mascot>>,
-) {
-    let mascots = mascots
+fn deserialize_mascot_locations(
+    mascots: Query<(&Transform, &VrmPath, &RenderLayers), With<Mascot>>,
+    monitors: Monitors,
+    cameras: Cameras,
+) -> HashMap<PathBuf, MascotLocation> {
+    mascots
         .iter()
-        .map(|(tf, vrm_path)| {
-            MascotPreferences {
-                transform: *tf,
-                path: vrm_path.0.clone(),
-            }
+        .flat_map(|(tf, path, layers)| {
+            let (_, monitor) = monitors.find_monitor(layers)?;
+            Some((path.0.clone(), MascotLocation {
+                monitor_name: monitor.name.clone(),
+                scale: tf.scale,
+                rotation: tf.rotation,
+                ndc: cameras.to_ndc(layers, tf.translation)?,
+            }))
         })
-        .collect::<Vec<_>>();
-    debug!("save preference: {:?}", mascots);
+        .collect()
+}
 
-    create_parent_dir_all_if_need(&save_file_path());
+fn save_mascot_locations(
+    In(locations): In<HashMap<PathBuf, MascotLocation>>,
+    mascots: Query<(&Transform, &VrmPath, &RenderLayers), With<Mascot>>,
+) {
+    debug!("save mascot locations: {:?}", mascots);
+    create_parent_dir_all_if_need(&mascot_locations_json_path());
 
-    if let Err(e) = std::fs::write(save_file_path(), serde_json::to_string(&AppPreferences {
-        mascots,
-        actions: actions.clone(),
-    }).unwrap()) {
-        error!("Failed to save settings: {:?}", e);
-    }
+    std::fs::write(mascot_locations_json_path(), serde_json::to_string(&locations).unwrap()).output_log_if_error("Save");
+}
+
+fn save_actions(
+    actions: Res<ActionPreferences>,
+) {
+    let actions_json = serde_json::to_string(&*actions).unwrap();
+    std::fs::write(actions_json_path(), actions_json).output_log_if_error("Save");
 }

@@ -1,5 +1,5 @@
 use crate::power_state::Loading;
-use crate::settings::preferences::MascotPreferencesResource;
+use crate::settings::preferences::MascotLocationPreferences;
 use crate::system_param::coordinate::Coordinate;
 use crate::util::{create_dir_all_if_need, models_dir, remove_mystery_file_if_exists};
 use crate::vrm::loader::VrmHandle;
@@ -77,7 +77,7 @@ fn prepare_initial_loading(
 fn load_models(
     mut commands: Commands,
     coordinate: Coordinate,
-    mascot_preferences: Res<MascotPreferencesResource>,
+    locations: Res<MascotLocationPreferences>,
     folders: Res<Assets<LoadedFolder>>,
     handle: Query<&ModelsFolderHandle>,
     asset_server: Res<AssetServer>,
@@ -96,9 +96,7 @@ fn load_models(
         .flat_map(|handle| handle.path())
         .filter(|path| !exists_mascots.contains(&path.path()))
     {
-        let mut tf = mascot_preferences.transform(asset_path.path());
-        let (pos, layers) = coordinate.initial_mascot_pos_and_layers(tf.translation);
-        tf.translation = pos;
+        let (tf, layers) = locations.load(asset_path.path(), &coordinate);
         commands.spawn((
             tf,
             layers,
@@ -134,7 +132,8 @@ fn start_watching(
 
 fn receive_events(
     mut commands: Commands,
-    mascot_preferences: Res<MascotPreferencesResource>,
+    coordinate: Coordinate,
+    mascot_preferences: Res<MascotLocationPreferences>,
     asset_server: Res<AssetServer>,
     watchers: Query<&ModelFilesWatcher>,
 ) {
@@ -142,7 +141,7 @@ fn receive_events(
         if let AssetSourceEvent::AddedAsset(path) = event {
             let relative_path = PathBuf::from("models").join(&path);
             commands.spawn((
-                mascot_preferences.transform(&relative_path),
+                mascot_preferences.load(&relative_path, &coordinate),
                 VrmHandle(asset_server.load(models_dir().join(path))),
                 VrmPath(relative_path),
             ));
