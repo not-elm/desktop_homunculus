@@ -10,8 +10,11 @@ use crate::system_param::monitors::Monitors;
 use bevy::app::{App, Plugin};
 use bevy::hierarchy::{HierarchyQueryExt, Parent};
 use bevy::log::debug;
-use bevy::prelude::{Commands, Drag, DragEnd, DragStart, Entity, Pointer, PointerButton, Query, Res, Trigger};
+use bevy::math::Vec2;
+use bevy::prelude::{Commands, Drag, DragEnd, DragStart, Entity, Pointer, PointerButton, Query, Res, Trigger, With, Without};
+use bevy::render::camera::NormalizedRenderTarget;
 use bevy::render::view::RenderLayers;
+use bevy::window::{Window, WindowPosition};
 
 pub struct MascotDragPlugin;
 
@@ -63,12 +66,47 @@ fn on_drag_move(
     trigger: Trigger<Pointer<Drag>>,
     mut commands: Commands,
     tracker: MascotTracker,
+    layers: Query<&RenderLayers, With<Mascot>>,
+    windows: Query<(&Window, &RenderLayers), Without<Mascot>>,
 ) {
     let mascot = MascotEntity(trigger.entity());
-    let Some(transform) = tracker.tracking_on_drag(mascot, trigger.pointer_location.position) else {
+    let NormalizedRenderTarget::Window(window_ref) = trigger.pointer_location.target else {
+        return;
+    };
+    let Some(mascot_window_pos) = mascot_window_pos(mascot.0, layers, &windows) else {
+        return;
+    };
+    let Some(target_window_pos) = window_pos(window_ref.entity(), &windows) else {
+        return;
+    };
+    let d = mascot_window_pos - target_window_pos;
+    let Some(transform) = tracker.tracking_on_drag(mascot, trigger.pointer_location.position - d) else {
         return;
     };
     commands.entity(mascot.0).insert(transform);
+}
+
+fn mascot_window_pos(
+    mascot: Entity,
+    layers: Query<&RenderLayers, With<Mascot>>,
+    windows: &Query<(&Window, &RenderLayers), Without<Mascot>>,
+) -> Option<Vec2> {
+    let layers = layers.get(mascot).ok()?;
+    let (target_window, _) = windows.iter().find(|(_, l)| *l == layers)?;
+    if let WindowPosition::At(position) = target_window.position {
+        Some(position.as_vec2())
+    } else {
+        None
+    }
+}
+
+fn window_pos(entity: Entity, windows: &Query<(&Window, &RenderLayers), Without<Mascot>>) -> Option<Vec2> {
+    let (target_window, _) = windows.get(entity).ok()?;
+    if let WindowPosition::At(position) = target_window.position {
+        Some(position.as_vec2())
+    } else {
+        None
+    }
 }
 
 fn on_drag_drop(

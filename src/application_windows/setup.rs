@@ -59,12 +59,9 @@ fn setup_windows(
 
     for (layer, (monitor_entity, monitor, primary)) in monitors.iter().enumerate() {
         let mut window = create_window(monitor.physical_size().as_vec2());
-
         debug!("Monitor({:?}) {:?}", monitor.physical_position, monitor.physical_size());
         window.position.set((monitor.physical_position.as_vec2() * scale_factor).as_ivec2());
         window.resolution.set_scale_factor(monitor.scale_factor as f32);
-        let size = window.resolution.physical_size();
-        println!("Window({:?}) {:?}", monitor.physical_position, size);
         let window_entity = commands.spawn((
             Name::new(format!("Window({:?})", monitor.physical_position)),
             TargetMonitor(monitor_entity),
@@ -127,13 +124,11 @@ fn initialize_camera_position(
         };
         let pos = window.outer_position().unwrap().cast();
         let pos = Vec2::new(pos.x, pos.y);
-        let center = camera.viewport.as_ref().unwrap().physical_size.as_vec2() / 2.;
-
+        let center = camera.logical_viewport_size().unwrap() / 2.;
         let camera_pos = camera
             .viewport_to_world_2d(gtf, center + pos)
             .unwrap_or_default()
             .extend(4.5);
-        println!("Camera({:?}) {:?} {:?}", entity, camera_pos, window.outer_size());
         commands
             .entity(entity)
             .insert(Transform::from_translation(camera_pos))

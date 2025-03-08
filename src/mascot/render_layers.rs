@@ -1,7 +1,11 @@
 use crate::mascot::Mascot;
-use bevy::app::{App, PreUpdate, Update};
+use crate::system_param::cameras::Cameras;
+use crate::system_param::mesh_aabb::MascotAabb;
+use bevy::app::{App, PostUpdate, Update};
+use bevy::core::Name;
 use bevy::hierarchy::Children;
-use bevy::prelude::{Added, Changed, Commands, Entity, Or, ParallelCommands, Plugin, Query, With, Without};
+use bevy::log::debug;
+use bevy::prelude::{apply_deferred, Added, Changed, Commands, Entity, IntoSystem, IntoSystemConfigs, Or, ParallelCommands, Plugin, Query, Transform, With, Without};
 use bevy::render::view::RenderLayers;
 
 pub struct MascotRenderLayersPlugin;
@@ -9,44 +13,37 @@ pub struct MascotRenderLayersPlugin;
 impl Plugin for MascotRenderLayersPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_systems(PreUpdate, change_render_layers)
-            .add_systems(Update, update_children_layers);
+            .add_systems(PostUpdate, (
+                change_render_layers.pipe(apply_deferred),
+                update_children_layers,
+            ).chain());
     }
 }
 
 fn change_render_layers(
-    _par_commands: ParallelCommands,
-    // mascots: Query<(Entity, &Name, &Transform, &RenderLayers), (Changed<Transform>, With<Mascot>)>,
-    // cameras: Cameras,
-    // mascot_aabb: MascotAabb,
+    par_commands: ParallelCommands,
+    mascots: Query<(Entity, &Name, &RenderLayers), (Changed<Transform>, With<Mascot>)>,
+    cameras: Cameras,
+    mascot_aabb: MascotAabb,
 ) {
-    // mascots.par_iter().for_each(|(entity, name, tf, current_layers)| {
-    //     let Some((_, current_gtf, _)) = cameras.find_camera_from_layers(current_layers) else {
-    //         return;
-    //     };
-    //     // let (min, max) = mascot_aabb.calculate(entity);
-    //     // let Some((min_camera, min_gtf, min_layers)) = cameras.find_camera_from_world_pos(min) else {
-    //     //     return;
-    //     // };
-    //     // let Some((_, max_gtf, max_layers)) = cameras.find_camera_from_world_pos(max) else {
-    //     //     return;
-    //     // };
-    //     // if current_layers == min_layers {
-    //     //     return;
-    //     // }
-    //     // let mut new_tf = *tf;
-    //     // new_tf.translation = min_camera.viewport_to_world_2d(min_gtf, Vec2::ZERO).unwrap().extend(0.);
-    //     // new_tf.translation += (min_gtf.translation().xy() - current_gtf.translation().xy())
-    //     //     .normalize()
-    //     //     .extend(0.);
-    //     // debug!("{name:?}'s render layer changed to {min_layers:?}");
-    //     // par_commands.command_scope(|commands| {
-    //     //     commands.entity(entity).insert((
-    //     //         min_layers.clone(),
-    //     //         new_tf,
-    //     //     ));
-    //     // });
-    // });
+    mascots.par_iter().for_each(|(entity, name, current_layers)| {
+        let (min, max) = mascot_aabb.calculate(entity);
+        let Some((_, _, min_layer)) = cameras.find_camera_from_world_pos(min) else {
+            return;
+        };
+        let Some((_, _, max_layer)) = cameras.find_camera_from_world_pos(max) else {
+            return;
+        };
+        if current_layers == min_layer || (min_layer != max_layer) {
+            return;
+        }
+        debug!("{name:?}'s render layer changed from {current_layers:?} to {min_layer:?}");
+        par_commands.command_scope(|mut commands| {
+            commands.entity(entity).insert((
+                min_layer.clone(),
+            ));
+        });
+    });
 }
 
 fn update_children_layers(
