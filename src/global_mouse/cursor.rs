@@ -1,4 +1,5 @@
 use crate::global_mouse::GlobalMouseHandle;
+use crate::system_param::GlobalScreenPos;
 use bevy::app::{App, First, PreStartup};
 use bevy::math::Vec2;
 use bevy::prelude::{Plugin, Res, ResMut, Resource};
@@ -11,8 +12,8 @@ pub struct GlobalMouseCursor {
 
 impl GlobalMouseCursor {
     #[inline(always)]
-    pub const fn global_cursor_pos(&self) -> Vec2 {
-        self.current
+    pub const fn global(&self) -> GlobalScreenPos {
+        GlobalScreenPos(self.current)
     }
 }
 

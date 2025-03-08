@@ -9,9 +9,9 @@ pub use crate::global_window::_windows::*;
 #[cfg(target_os = "macos")]
 pub use crate::global_window::macos::*;
 
+use crate::system_param::GlobalScreenPos;
 use bevy::math::{Rect, Vec2};
 use bevy::prelude::Resource;
-
 
 #[derive(Debug, Clone, PartialEq, Default, Resource)]
 pub struct GlobalWindow {
@@ -27,8 +27,8 @@ pub struct GlobalWindow {
 
 impl GlobalWindow {
     #[inline]
-    pub fn sitting_pos(&self, drop_pos: Vec2) -> Vec2 {
-        Vec2::new(drop_pos.x, self.frame.min.y)
+    pub fn sitting_pos(&self, drop_pos: GlobalScreenPos) -> GlobalScreenPos {
+        GlobalScreenPos(Vec2::new(drop_pos.x, self.frame.min.y))
     }
 
     /// Update the application_windows metadata.
@@ -67,12 +67,12 @@ impl GlobalWindows {
         Self(frames)
     }
 
-    pub fn find_sitting_window(&self, drop_pos: Vec2) -> Option<GlobalWindow> {
+    pub fn find_sitting_window(&self, drop_pos: GlobalScreenPos) -> Option<GlobalWindow> {
         const SITTING_THRESHOLD_HEIGHT: f32 = 80.;
         let mut areas = Vec::new();
         for sitting_area in self.0.iter() {
-            if hitting_sitting_area(&sitting_area.frame, drop_pos, SITTING_THRESHOLD_HEIGHT)
-                && !areas.iter().any(|area: &&GlobalWindow| area.frame.contains(drop_pos))
+            if hitting_sitting_area(&sitting_area.frame, *drop_pos, SITTING_THRESHOLD_HEIGHT)
+                && !areas.iter().any(|area: &&GlobalWindow| area.frame.contains(*drop_pos))
             {
                 return Some(sitting_area.clone());
             }
@@ -96,6 +96,7 @@ fn hitting_sitting_area(
 #[cfg(test)]
 mod tests {
     use crate::global_window::{hitting_sitting_area, GlobalWindow, GlobalWindows};
+    use crate::system_param::GlobalScreenPos;
     use bevy::math::{Rect, Vec2};
 
     #[test]
@@ -119,7 +120,7 @@ mod tests {
                 ..Default::default()
             },
         ]);
-        assert_eq!(areas.find_sitting_window(Vec2::new(50., 50.)), None);
+        assert_eq!(areas.find_sitting_window(GlobalScreenPos(Vec2::new(50., 50.))), None);
     }
 
     #[test]
@@ -135,7 +136,7 @@ mod tests {
             },
             bottom.clone(),
         ]);
-        assert_eq!(areas.find_sitting_window(Vec2::new(110., 50.)), Some(bottom));
+        assert_eq!(areas.find_sitting_window(GlobalScreenPos(Vec2::new(110., 50.))), Some(bottom));
     }
 }
 

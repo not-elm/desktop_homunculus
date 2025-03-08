@@ -1,9 +1,15 @@
 pub type AppResult<T = ()> = Result<T, anyhow::Error>;
 
-#[derive(Debug, thiserror::Error)]
-pub enum AppError {
-    #[error("Failed to parse vrm extensions:\n{0}")]
-    FailedParseExtensions(#[from] serde_json::error::Error),
+pub trait OutputLog {
+    fn output_log_if_error(&self, tag: &str);
+}
+
+impl<T, E: std::error::Error> OutputLog for Result<T, E> {
+    fn output_log_if_error(&self, tag: &str) {
+        if let Err(e) = self {
+            bevy::log::error!("[{tag}]: {e}");
+        }
+    }
 }
 
 #[macro_export]

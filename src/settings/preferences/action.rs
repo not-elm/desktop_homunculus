@@ -1,5 +1,5 @@
 use crate::settings::state::{ActionGroup, ActionName, MascotAction};
-use bevy::prelude::{Component, Reflect, Resource};
+use bevy::prelude::{Component, Deref, Reflect, Resource};
 use bevy::utils::hashbrown::HashMap;
 use serde::{Deserialize, Serialize};
 
@@ -63,7 +63,7 @@ macro_rules! actions {
 }
 
 
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone, Resource)]
+#[derive(PartialEq, Debug, Serialize, Deserialize, Clone, Resource, Deref)]
 pub struct ActionPreferences(HashMap<ActionGroup, HashMap<ActionName, ActionProperties>>);
 
 impl ActionPreferences {

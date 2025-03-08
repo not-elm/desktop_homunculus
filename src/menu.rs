@@ -81,11 +81,11 @@ fn open_menu(
     if !(matches!(trigger.event.button, PointerButton::Secondary) && menus.is_empty()) {
         return;
     }
-    let global_cursor_pos = mouse.global_cursor_pos();
-    let Some((_, monitor, _)) = monitors.find_monitor_from_screen_pos(global_cursor_pos) else {
+    let global_cursor_pos = mouse.global();
+    let Some((_, monitor, _)) = monitors.find_monitor_from_global_screen_pos(global_cursor_pos) else {
         return;
     };
-    let (position, resolution) = fit_position(global_cursor_pos, &monitor_rect(monitor));
+    let (position, resolution) = fit_position(*global_cursor_pos, &monitor_rect(monitor));
     let mascot_entity = parents.root_ancestor(trigger.target);
     commands.spawn((
         Menu,
@@ -146,7 +146,7 @@ fn mark_initialized_menu(
             let monitor_pos = monitors.monitor_pos(layers).unwrap_or_default();
             let scale_factor = monitors.scale_factor(layers).unwrap_or(1.0);
             let (_, max) = mascot_aabb.calculate(*mascot_entity);
-            let max = cameras.to_viewport_pos(layers, max).unwrap_or(mouse.global_cursor_pos());
+            let max = cameras.to_viewport_pos(layers, max).unwrap_or(*mouse.global());
             let max = monitor_pos + max;
             let pos = max * scale_factor;
             winit_window.set_outer_position(PhysicalPosition::new(pos.x, pos.y));
