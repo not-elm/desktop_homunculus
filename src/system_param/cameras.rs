@@ -1,6 +1,6 @@
 use crate::mascot::Mascot;
 use bevy::ecs::system::SystemParam;
-use bevy::math::{Rect, Vec2, Vec3};
+use bevy::math::{Vec2, Vec3};
 use bevy::prelude::{Camera, Entity, GlobalTransform, Query, With, Without};
 use bevy::render::camera::RenderTarget;
 use bevy::render::view::RenderLayers;
@@ -14,8 +14,14 @@ pub struct Cameras<'w, 's> {
 }
 
 impl Cameras<'_, '_> {
+    pub fn all_layers(&self) -> RenderLayers {
+        self.cameras.iter().fold(RenderLayers::none(), |l1, (_, _, l2)| {
+            l1 | l2.clone()
+        })
+    }
+
     #[inline]
-    pub fn find_camera(&self, window_entity: Entity) -> Option<CameraQuery> {
+    pub fn find_camera_from_window(&self, window_entity: Entity) -> Option<CameraQuery> {
         self
             .cameras
             .iter()
@@ -25,29 +31,29 @@ impl Cameras<'_, '_> {
     }
 
     #[inline]
-    pub fn find_camera_from_layers(&self, layers: &RenderLayers) -> Option<CameraQuery> {
-        let (camera, _, _) = self
-            .cameras
-            .iter()
-            .find(|(_, _, layer)| {
-                layer == &layers
-            })?;
-        if let RenderTarget::Window(WindowRef::Entity(window_entity)) = camera.target {
-            self.find_camera(window_entity)
-        } else {
-            None
-        }
-    }
-
     pub fn find_camera_from_world_pos(&self, world_pos: Vec3) -> Option<CameraQuery> {
         self
             .cameras
             .iter()
-            .find_map(|(camera, gtf, layers)| {
-                let viewport = camera.viewport.as_ref().unwrap();
-                let min = camera.viewport_to_world_2d(gtf, Vec2::ZERO).ok()?;
-                let max = camera.viewport_to_world_2d(gtf, viewport.physical_size.as_vec2()).ok()?;
-                Rect::from_corners(min, max).contains(world_pos.truncate()).then_some((camera, gtf, layers))
+            .find(|(camera, gtf, _)| {
+                camera
+                    .logical_viewport_rect()
+                    .is_some_and(|viewport| {
+                        let Ok(pos) = camera.world_to_viewport(gtf, world_pos) else {
+                            return false;
+                        };
+                        viewport.contains(pos)
+                    })
+            })
+    }
+
+    #[inline]
+    pub fn find_camera_from_layers(&self, layers: &RenderLayers) -> Option<CameraQuery> {
+        self
+            .cameras
+            .iter()
+            .find(|(_, _, layer)| {
+                layers.intersects(layer)
             })
     }
 
@@ -58,9 +64,42 @@ impl Cameras<'_, '_> {
     }
 
     #[inline]
-    pub fn to_world_pos(&self, layers: &RenderLayers, viewport_pos: Vec2) -> Option<Vec3> {
-        let (camera, camera_tf, _) = self.find_camera_from_layers(layers)?;
-        let ray = camera.viewport_to_world(camera_tf, viewport_pos).unwrap();
-        Some(ray.get_point(camera_tf.translation().distance(Vec3::ZERO)))
+    pub fn to_world_pos_from_viewport(&self, window_entity: Entity, viewport_pos: Vec2) -> Option<Vec3> {
+        let (camera, camera_tf, _) = self.find_camera_from_window(window_entity)?;
+        let pos = camera.viewport_to_world_2d(camera_tf, viewport_pos).unwrap();
+        Some(pos.extend(0.))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::system_param::cameras::Cameras;
+    use crate::tests::{test_app, TestResult};
+    use bevy::ecs::system::RunSystemOnce;
+    use bevy::prelude::{Camera, Commands, GlobalTransform};
+    use bevy::render::view::RenderLayers;
+
+    #[test]
+    fn test_all_layers() -> TestResult {
+        let mut app = test_app();
+        app.world_mut().run_system_once(|mut commands: Commands| {
+            commands.spawn((
+                Camera::default(),
+                GlobalTransform::default(),
+                RenderLayers::layer(1)
+            ));
+            commands.spawn((
+                Camera::default(),
+                GlobalTransform::default(),
+                RenderLayers::layer(2)
+            ));
+        })?;
+        app.update();
+
+        let layers = app.world_mut().run_system_once(|cameras: Cameras| {
+            cameras.all_layers()
+        })?;
+        assert_eq!(layers, RenderLayers::from_layers(&[1, 2]));
+        Ok(())
     }
 }

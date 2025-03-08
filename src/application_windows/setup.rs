@@ -7,17 +7,19 @@ use bevy::ecs::query::With;
 use bevy::ecs::schedule::IntoSystemConfigs;
 use bevy::log::debug;
 use bevy::math::Vec2;
-use bevy::prelude::{default, Added, Camera, Camera3d, GlobalTransform, OrthographicProjection, ParallelCommands, Projection, Res, Transform, Window};
+use bevy::prelude::{default, Camera, Camera3d, Component, GlobalTransform, NonSend, OrthographicProjection, Projection, Reflect, ReflectComponent, Res, Transform, Window};
 use bevy::prelude::{Commands, Entity, Plugin, Query};
 use bevy::render::camera::{RenderTarget, ScalingMode, Viewport};
 use bevy::render::view::RenderLayers;
 use bevy::window::{CursorOptions, Monitor, PrimaryMonitor, PrimaryWindow, WindowLevel, WindowMode, WindowRef, WindowResolution};
+use bevy::winit::WinitWindows;
 
 pub struct ApplicationWindowsSetupPlugin;
 
 impl Plugin for ApplicationWindowsSetupPlugin {
     fn build(&self, app: &mut App) {
         app
+            .register_type::<UninitializedCamera>()
             .register_type::<TargetMonitor>()
             .add_systems(Startup, (
                 despawn_default_window,
@@ -26,6 +28,10 @@ impl Plugin for ApplicationWindowsSetupPlugin {
             .add_systems(Update, initialize_camera_position);
     }
 }
+
+#[derive(Component, Debug, Reflect)]
+#[reflect(Component)]
+struct UninitializedCamera;
 
 fn despawn_default_window(
     mut commands: Commands,
@@ -41,11 +47,11 @@ fn setup_windows(
     global_cursor: Res<GlobalMouseCursor>,
     monitors: Query<(Entity, &Monitor, Option<&PrimaryMonitor>)>,
 ) {
-    let cursor_pos = global_cursor.global_cursor_pos();
+    let cursor_pos = global_cursor.global();
     let Some(scale_factor) = monitors
         .iter()
         .find_map(|(_, monitor, _)| {
-            monitor_rect(monitor).contains(cursor_pos).then_some(monitor.scale_factor as f32)
+            monitor_rect(monitor).contains(*cursor_pos).then_some(monitor.scale_factor as f32)
         })
     else {
         return;
@@ -53,11 +59,9 @@ fn setup_windows(
 
     for (layer, (monitor_entity, monitor, primary)) in monitors.iter().enumerate() {
         let mut window = create_window(monitor.physical_size().as_vec2());
-
         debug!("Monitor({:?}) {:?}", monitor.physical_position, monitor.physical_size());
         window.position.set((monitor.physical_position.as_vec2() * scale_factor).as_ivec2());
         window.resolution.set_scale_factor(monitor.scale_factor as f32);
-
         let window_entity = commands.spawn((
             Name::new(format!("Window({:?})", monitor.physical_position)),
             TargetMonitor(monitor_entity),
@@ -81,6 +85,7 @@ fn spawn_camera(
     is_primary: bool,
 ) {
     let mut cmd = commands.spawn((
+        UninitializedCamera,
         Name::new(format!("Camera({camera_layer})")),
         RenderLayers::layer(camera_layer),
         Camera3d::default(),
@@ -106,18 +111,28 @@ fn spawn_camera(
 }
 
 fn initialize_camera_position(
-    par_commands: ParallelCommands,
-    cameras: Query<(Entity, &Camera, &GlobalTransform), Added<Camera>>,
+    mut commands: Commands,
+    cameras: Query<(Entity, &Camera, &GlobalTransform), With<UninitializedCamera>>,
+    winit_window: NonSend<WinitWindows>,
 ) {
-    cameras.par_iter().for_each(|(entity, camera, gtf)| {
-        let center = camera.viewport.as_ref().unwrap().physical_size.as_vec2() / 2.;
+    cameras.iter().for_each(|(entity, camera, gtf)| {
+        let RenderTarget::Window(WindowRef::Entity(window_entity)) = camera.target else {
+            return;
+        };
+        let Some(window) = winit_window.get_window(window_entity) else {
+            return;
+        };
+        let pos = window.outer_position().unwrap().cast();
+        let pos = Vec2::new(pos.x, pos.y);
+        let center = camera.logical_viewport_size().unwrap() / 2.;
         let camera_pos = camera
-            .viewport_to_world_2d(gtf, center)
+            .viewport_to_world_2d(gtf, center + pos)
             .unwrap_or_default()
             .extend(4.5);
-        par_commands.command_scope(|mut commands| {
-            commands.entity(entity).insert(Transform::from_translation(camera_pos));
-        });
+        commands
+            .entity(entity)
+            .insert(Transform::from_translation(camera_pos))
+            .remove::<UninitializedCamera>();
     });
 }
 

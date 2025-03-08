@@ -43,7 +43,7 @@ fn main() {
             DefaultPlugins
                 .set(LogPlugin {
                     #[cfg(debug_assertions)]
-                    level: bevy::log::Level::INFO,
+                    level: bevy::log::Level::DEBUG,
                     #[cfg(target_os = "windows")]
                     filter: "wgpu_hal=off".to_string(),
                     ..default()
@@ -96,6 +96,10 @@ fn main() {
 
 #[cfg(test)]
 pub(crate) mod tests {
+    use bevy::asset::AssetPlugin;
+    use bevy::prelude::ImagePlugin;
+    use bevy::render::camera::CameraPlugin;
+    use bevy::window::WindowPlugin;
     use bevy::MinimalPlugins;
 
     pub type TestResult<T = ()> = Result<T, Box<dyn std::error::Error>>;
@@ -109,7 +113,13 @@ pub(crate) mod tests {
 
     pub fn test_app() -> bevy::app::App {
         let mut app = bevy::app::App::new();
-        app.add_plugins(MinimalPlugins);
+        app.add_plugins((
+            MinimalPlugins,
+            AssetPlugin::default(),
+            ImagePlugin::default(),
+            WindowPlugin::default(),
+            CameraPlugin,
+        ));
         app
     }
 }
