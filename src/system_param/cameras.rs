@@ -26,17 +26,12 @@ impl Cameras<'_, '_> {
 
     #[inline]
     pub fn find_camera_from_layers(&self, layers: &RenderLayers) -> Option<CameraQuery> {
-        let (camera, _, _) = self
+        self
             .cameras
             .iter()
             .find(|(_, _, layer)| {
                 layer == &layers
-            })?;
-        if let RenderTarget::Window(WindowRef::Entity(window_entity)) = camera.target {
-            self.find_camera(window_entity)
-        } else {
-            None
-        }
+            })
     }
 
     pub fn find_camera_from_world_pos(&self, world_pos: Vec3) -> Option<CameraQuery> {
@@ -51,6 +46,11 @@ impl Cameras<'_, '_> {
             })
     }
 
+    pub fn to_ndc(&self, layers: &RenderLayers, world_pos: Vec3) -> Option<Vec3> {
+        let (camera, camera_tf, _) = self.find_camera_from_layers(layers)?;
+        camera.world_to_ndc(camera_tf, world_pos)
+    }
+
     #[inline]
     pub fn to_viewport_pos(&self, layers: &RenderLayers, world_pos: Vec3) -> Option<Vec2> {
         let (camera, camera_tf, _) = self.find_camera_from_layers(layers)?;
@@ -58,7 +58,13 @@ impl Cameras<'_, '_> {
     }
 
     #[inline]
-    pub fn to_world_pos(&self, layers: &RenderLayers, viewport_pos: Vec2) -> Option<Vec3> {
+    pub fn to_world_pos(&self, layers: &RenderLayers, ndc: Vec3) -> Option<Vec3> {
+        let (camera, camera_tf, _) = self.find_camera_from_layers(layers)?;
+        camera.ndc_to_world(camera_tf, ndc)
+    }
+
+    #[inline]
+    pub fn to_world_pos_from_viewport(&self, layers: &RenderLayers, viewport_pos: Vec2) -> Option<Vec3> {
         let (camera, camera_tf, _) = self.find_camera_from_layers(layers)?;
         let pos = camera.viewport_to_world_2d(camera_tf, viewport_pos).unwrap();
         Some(pos.extend(0.))

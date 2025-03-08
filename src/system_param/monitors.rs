@@ -32,6 +32,12 @@ impl Monitors<'_, '_> {
             })
     }
 
+    pub fn find_monitor_from_name(&self, monitor_name: &str) -> Option<(Entity, &Monitor, &RenderLayers)> {
+        self.monitors.iter().find(|(_, monitor, _)| {
+            monitor.name.as_ref().is_some_and(|name| name == monitor_name)
+        })
+    }
+
     pub fn find_monitor_from_screen_pos(&self, viewport_pos: Vec2) -> Option<(Entity, &Monitor, &RenderLayers)> {
         self.monitors.iter().find(|(_, monitor, _)| {
             monitor_rect(monitor).contains(viewport_pos)

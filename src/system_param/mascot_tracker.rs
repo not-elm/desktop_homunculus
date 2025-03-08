@@ -44,7 +44,7 @@ impl MascotTracker<'_, '_> {
     ) -> Option<Transform> {
         let (tf, render_layers) = self.mascots.get(mascot.0).ok()?;
         let hips_offset = self.offsets.hips_offset(mascot)?;
-        let mut cursor_pos = self.camera.to_world_pos(render_layers, view_port_pos)?;
+        let mut cursor_pos = self.camera.to_world_pos_from_viewport(render_layers, view_port_pos)?;
 
         let mut new_tf = *tf;
         cursor_pos.y -= hips_offset.y * adjust;
