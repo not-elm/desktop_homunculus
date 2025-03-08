@@ -6,15 +6,12 @@ use crate::mascot::sitting::SittingWindow;
 use crate::mascot::{Mascot, MascotEntity};
 use crate::settings::state::{ActionGroup, ActionName, MascotAction};
 use crate::system_param::mascot_tracker::MascotTracker;
-use crate::system_param::window_layers::{window_local_pos, WindowLayers};
+use crate::system_param::window_layers::WindowLayers;
 use bevy::app::{App, Plugin};
 use bevy::hierarchy::{HierarchyQueryExt, Parent};
 use bevy::log::debug;
-use bevy::math::Vec2;
-use bevy::prelude::{Commands, Drag, DragEnd, DragStart, Entity, Pointer, PointerButton, Query, Res, Trigger, With, Without};
+use bevy::prelude::{Commands, Drag, DragEnd, DragStart, Entity, Pointer, PointerButton, Query, Res, Trigger};
 use bevy::render::camera::NormalizedRenderTarget;
-use bevy::render::view::RenderLayers;
-use bevy::window::{Window, WindowPosition};
 
 pub struct MascotDragPlugin;
 
@@ -92,9 +89,6 @@ fn on_drag_drop(
 ) {
     let global_cursor_pos = global_cursor.global();
     let mascot = MascotEntity(trigger.entity());
-    let NormalizedRenderTarget::Window(window_ref) = trigger.pointer_location.target else {
-        return;
-    };
     let global_windows: GlobalWindows = obtain_global_windows().unwrap_or_default();
     match global_windows.find_sitting_window(global_cursor_pos) {
         Some(global_window) => {

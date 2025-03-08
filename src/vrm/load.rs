@@ -96,9 +96,8 @@ fn load_models(
         .flat_map(|handle| handle.path())
         .filter(|path| !exists_mascots.contains(&path.path()))
     {
-        let (tf, layers) = locations.load(asset_path.path(), &coordinate);
         commands.spawn((
-            tf,
+            locations.load_transform(asset_path.path(), &coordinate),
             VrmPath(asset_path.path().to_path_buf()),
             VrmHandle(asset_server.load(asset_path)),
         ));
@@ -140,7 +139,7 @@ fn receive_events(
         if let AssetSourceEvent::AddedAsset(path) = event {
             let relative_path = PathBuf::from("models").join(&path);
             commands.spawn((
-                mascot_preferences.load(&relative_path, &coordinate),
+                mascot_preferences.load_transform(&relative_path, &coordinate),
                 VrmHandle(asset_server.load(models_dir().join(path))),
                 VrmPath(relative_path),
             ));

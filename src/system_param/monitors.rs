@@ -43,8 +43,8 @@ impl Monitors<'_, '_> {
         self
             .monitors
             .iter()
-            .find_map(|(entity, monitor, monitor_layers)| {
-                (monitor_layers == render_layers).then_some((entity, monitor))
+            .find_map(|(entity, monitor, layer)| {
+                render_layers.intersects(layer).then_some((entity, monitor))
             })
     }
 }

@@ -31,18 +31,30 @@ impl Cameras<'_, '_> {
     }
 
     #[inline]
+    pub fn find_camera_from_world_pos(&self, world_pos: Vec3) -> Option<CameraQuery> {
+        self
+            .cameras
+            .iter()
+            .find(|(camera, gtf, _)| {
+                camera
+                    .logical_viewport_rect()
+                    .is_some_and(|viewport| {
+                        let Ok(pos) = camera.world_to_viewport(gtf, world_pos) else {
+                            return false;
+                        };
+                        viewport.contains(pos)
+                    })
+            })
+    }
+
+    #[inline]
     pub fn find_camera_from_layers(&self, layers: &RenderLayers) -> Option<CameraQuery> {
         self
             .cameras
             .iter()
             .find(|(_, _, layer)| {
-                layer == &layers
+                layers.intersects(layer)
             })
-    }
-
-    pub fn to_ndc(&self, layers: &RenderLayers, world_pos: Vec3) -> Option<Vec3> {
-        let (camera, camera_tf, _) = self.find_camera_from_layers(layers)?;
-        camera.world_to_ndc(camera_tf, world_pos)
     }
 
     #[inline]

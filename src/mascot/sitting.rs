@@ -4,7 +4,6 @@ use crate::mascot::MascotEntity;
 use crate::settings::state::{ActionName, MascotAction};
 use crate::system_param::mascot_tracker::MascotTracker;
 use crate::system_param::mouse_position::MousePosition;
-use crate::system_param::window_layers::{window_local_pos, WindowLayers};
 use crate::system_param::GlobalScreenPos;
 use bevy::app::{App, PostUpdate, Update};
 use bevy::input::common_conditions::{input_just_pressed, input_just_released};
