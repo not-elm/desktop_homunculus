@@ -1,9 +1,8 @@
 pub mod action;
 
 use crate::system_param::coordinate::Coordinate;
-use bevy::math::{Quat, Vec2, Vec3};
+use bevy::math::{Quat, Vec3};
 use bevy::prelude::{Reflect, Resource, Transform};
-use bevy::render::view::RenderLayers;
 use bevy::utils::{default, HashMap};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};

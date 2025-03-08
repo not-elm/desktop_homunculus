@@ -64,12 +64,6 @@ impl Cameras<'_, '_> {
     }
 
     #[inline]
-    pub fn to_world_pos(&self, layers: &RenderLayers, ndc: Vec3) -> Option<Vec3> {
-        let (camera, camera_tf, _) = self.find_camera_from_layers(layers)?;
-        camera.ndc_to_world(camera_tf, ndc)
-    }
-
-    #[inline]
     pub fn to_world_pos_from_viewport(&self, window_entity: Entity, viewport_pos: Vec2) -> Option<Vec3> {
         let (camera, camera_tf, _) = self.find_camera_from_window(window_entity)?;
         let pos = camera.viewport_to_world_2d(camera_tf, viewport_pos).unwrap();
