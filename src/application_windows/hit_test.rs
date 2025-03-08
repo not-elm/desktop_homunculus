@@ -1,8 +1,8 @@
-use crate::global_mouse::cursor::GlobalMouseCursor;
 use crate::system_param::cameras::Cameras;
 use crate::system_param::mouse_position::MousePosition;
 use bevy::app::{App, Plugin, PreUpdate};
-use bevy::prelude::{resource_exists_and_changed, Entity, IntoSystemConfigs, MeshRayCast, Query, RayCastSettings};
+use bevy::input::mouse::MouseMotion;
+use bevy::prelude::{on_event, Entity, IntoSystemConfigs, MeshRayCast, Query, RayCastSettings};
 use bevy::render::view::RenderLayers;
 use bevy::window::Window;
 
@@ -10,7 +10,7 @@ pub struct ApplicationWindowsHitTestPlugin;
 
 impl Plugin for ApplicationWindowsHitTestPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(PreUpdate, update_hit_test.run_if(resource_exists_and_changed::<GlobalMouseCursor>));
+        app.add_systems(PreUpdate, update_hit_test.run_if(on_event::<MouseMotion>));
     }
 }
 

@@ -4,7 +4,7 @@ use bevy::app::{App, PreUpdate};
 use bevy::core::Name;
 use bevy::hierarchy::Children;
 use bevy::log::debug;
-use bevy::prelude::{Changed, Commands, Entity, ParallelCommands, Plugin, Query, Transform, With, Without};
+use bevy::prelude::{Added, Changed, Commands, Entity, Or, ParallelCommands, Plugin, Query, Transform, With, Without};
 use bevy::render::view::RenderLayers;
 
 pub struct MascotRenderLayersPlugin;
@@ -18,7 +18,7 @@ impl Plugin for MascotRenderLayersPlugin {
 
 fn change_render_layers(
     par_commands: ParallelCommands,
-    mascots: Query<(Entity, &Name, &Transform, &RenderLayers, Option<&Children>), (Changed<Transform>, With<Mascot>)>,
+    mascots: Query<(Entity, &Name, &Transform, &RenderLayers, &Children), (With<Mascot>, Or<(Changed<Transform>, Added<Children>)>)>,
     coordinate: Coordinate,
     meshes: Query<(Option<&RenderLayers>, Option<&Children>), Without<Mascot>>,
 ) {
@@ -33,10 +33,8 @@ fn change_render_layers(
         new_tf.translation = new_pos;
         debug!("{name:?}'s render layer changed to {new_layers:?}");
         par_commands.command_scope(|mut commands| {
-            if let Some(children) = children {
-                for child in children.iter() {
-                    update_layers(*child, new_layers.clone(), &mut commands, &meshes);
-                }
+            for child in children.iter() {
+                update_layers(*child, new_layers.clone(), &mut commands, &meshes);
             }
             commands.entity(entity).insert((
                 new_layers.clone(),
