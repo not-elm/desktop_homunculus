@@ -7,7 +7,7 @@ use bevy::ecs::query::With;
 use bevy::ecs::schedule::IntoSystemConfigs;
 use bevy::log::debug;
 use bevy::math::Vec2;
-use bevy::prelude::{default, Added, Camera, Camera3d, Component, GlobalTransform, NonSend, OrthographicProjection, ParallelCommands, Projection, Reflect, ReflectComponent, Res, Transform, Window};
+use bevy::prelude::{default, Camera, Camera3d, Component, GlobalTransform, NonSend, OrthographicProjection, Projection, Reflect, ReflectComponent, Res, Transform, Window};
 use bevy::prelude::{Commands, Entity, Plugin, Query};
 use bevy::render::camera::{RenderTarget, ScalingMode, Viewport};
 use bevy::render::view::RenderLayers;

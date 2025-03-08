@@ -14,7 +14,9 @@ pub struct Coordinate<'w, 's> {
 }
 
 impl Coordinate<'_, '_> {
+    //TODO: new_render_layers_if_overall_monitor
     #[inline]
+    #[allow(unused)]
     pub fn new_render_layers_if_overall_monitor(
         &self,
         current_render_layers: &RenderLayers,

@@ -5,7 +5,7 @@ pub mod state;
 
 use crate::settings::load::AppSettingsLoadPlugin;
 use crate::settings::preferences::action::{ActionPreferences, ActionProperties};
-use crate::settings::preferences::{MascotPreferences, MascotPreferencesResource};
+use crate::settings::preferences::{MascotLocation, MascotLocationPreferences};
 use crate::settings::save::AppSettingsSavePlugin;
 use crate::settings::state::MascotAction;
 use crate::vrma::Vrma;
@@ -20,7 +20,7 @@ impl Plugin for AppSettingsPlugin {
         app
             .register_type::<MascotAction>()
             .register_type::<ActionProperties>()
-            .register_type::<MascotPreferencesResource>()
+            .register_type::<MascotLocationPreferences>()
             .add_plugins((
                 AppSettingsLoadPlugin,
                 AppSettingsSavePlugin,
@@ -50,9 +50,16 @@ fn remove_action(
     actions.cleanup(&exists_actions);
 }
 
-fn save_file_path() -> PathBuf {
+fn app_data_dir() -> PathBuf {
     dirs::data_dir()
         .unwrap_or_default()
-        .join("bevy_baby")
-        .join("mascots.json")
+        .join(env!("CARGO_PKG_NAME"))
+}
+
+fn mascot_locations_json_path() -> PathBuf {
+    app_data_dir().join("mascot_locations.json")
+}
+
+fn actions_json_path() -> PathBuf {
+    app_data_dir().join("actions.json")
 }
