@@ -26,9 +26,9 @@ impl MascotAction {
         })
     }
 
-    pub fn from_main(main: ActionGroup) -> Self {
+    pub fn from_group(group: ActionGroup) -> Self {
         MascotAction {
-            group: main,
+            group,
             name: ActionName::default(),
         }
     }

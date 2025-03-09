@@ -2,11 +2,13 @@ pub mod loader;
 pub mod spawn;
 pub mod extensions;
 mod load;
+mod spring_bone;
 
 use crate::new_type;
 use crate::vrm::load::VrmLoadPlugin;
 use crate::vrm::loader::{Vrm, VrmLoaderPlugin};
 use crate::vrm::spawn::VrmSpawnPlugin;
+use crate::vrm::spring_bone::VrmSpringBonePlugin;
 use bevy::app::{App, Plugin};
 use bevy::asset::AssetApp;
 use bevy::math::Quat;
@@ -42,6 +44,7 @@ impl Plugin for VrmPlugin {
                 VrmLoadPlugin,
                 VrmLoaderPlugin,
                 VrmSpawnPlugin,
+                VrmSpringBonePlugin,
             ));
     }
 }
