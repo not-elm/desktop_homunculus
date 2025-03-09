@@ -7,6 +7,7 @@ use crate::system_param::mouse_position::MousePosition;
 use crate::system_param::GlobalScreenPos;
 use bevy::app::{App, PostUpdate, Update};
 use bevy::input::common_conditions::{input_just_pressed, input_just_released};
+use bevy::input::mouse::MouseMotion;
 use bevy::math::Vec2;
 use bevy::prelude::{debug, on_event, Changed, Commands, Component, Entity, Event, EventReader, EventWriter, IntoSystemConfigs, Local, ParallelCommands, Plugin, Query, Transform, With};
 use bevy::utils::HashMap;
@@ -26,7 +27,7 @@ impl Plugin for MascotSittingPlugin {
             .add_event::<MoveSittingPos>()
             .add_systems(Update, (
                 start_tracking.run_if(input_just_pressed(GlobalMouseButton::Left)),
-                track_to_sitting_window,
+                track_to_sitting_window.run_if(on_event::<MouseMotion>),
                 end_tracking.run_if(input_just_released(GlobalMouseButton::Left)),
                 remove_sitting_window,
                 adjust_sitting_pos_on_scaling,

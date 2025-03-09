@@ -1,5 +1,5 @@
 use crate::system_param::child_searcher::ChildSearcher;
-use crate::vrm::spawn::HumanoidBoneNodes;
+use crate::vrm::spawn::bone::HumanoidBoneNodes;
 use crate::vrm::{BonePgRestQuaternion, BoneRestTransform};
 use crate::vrma::retarget::CurrentRetargeting;
 use crate::vrma::{RetargetSource, RetargetTo};

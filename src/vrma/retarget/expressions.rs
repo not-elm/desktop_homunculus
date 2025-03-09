@@ -1,6 +1,6 @@
 use crate::system_param::child_searcher::ChildSearcher;
 
-use crate::vrm::spawn::VrmExpressions;
+use crate::vrm::spawn::expressions::VrmExpressions;
 use crate::vrma::load::VrmaExpressionNames;
 use crate::vrma::retarget::CurrentRetargeting;
 use crate::vrma::{RetargetSource, RetargetTo};

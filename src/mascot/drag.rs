@@ -43,7 +43,7 @@ fn on_drag_start(
     let mascot_entity = parents.root_ancestor(trigger.target);
     if not_playing_sit_down(&states, mascot_entity) {
         debug!("on_drag_start {:?}", trigger.pointer_location.position);
-        commands.entity(mascot_entity).insert(MascotAction::from_main(ActionGroup::drag()));
+        commands.entity(mascot_entity).insert(MascotAction::from_group(ActionGroup::drag()));
     }
 }
 
@@ -101,7 +101,7 @@ fn on_drag_drop(
             commands.entity(mascot.0).insert((
                 sitting_window,
                 transform,
-                MascotAction::from_main(ActionGroup::sit_down()),
+                MascotAction::from_group(ActionGroup::sit_down()),
             ));
         }
         None => {
