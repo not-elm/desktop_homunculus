@@ -63,7 +63,7 @@ fn spawn_vrm(
         create_vrm_json_for_debug(&vrm.gltf, &extensions);
 
         info!("Spawned mascot({:?}): {:?}\nposition: {:?}", extensions.name(), vrm_path.0, tf.translation);
-        commands.spawn((
+        let mut cmd = commands.spawn((
             Mascot,
             SceneRoot(scene.clone()),
             vrm_path.clone(),
@@ -75,23 +75,28 @@ fn spawn_vrm(
                 &node_assets,
                 &vrm.gltf.nodes,
             ),
-            SpringJointRegistry::new(
-                &extensions.spring_joints(),
-                &node_assets,
-                &vrm.gltf.nodes,
-            ),
-            SpringColliderRegistry::new(
-                extensions.spring_colliders(),
-                &node_assets,
-                &vrm.gltf.nodes,
-            ),
-            SpringNodeRegistry::new(
-                &extensions.vrmc_spring_bone.springs,
-                &node_assets,
-                &vrm.gltf.nodes,
-            ),
             Name::new(extensions.name().unwrap_or_else(|| "VRM".to_string())),
         ));
+
+        if let Some(spring_bone) = extensions.vrmc_spring_bone.as_ref() {
+            cmd.insert((
+                SpringJointRegistry::new(
+                    &spring_bone.all_joints(),
+                    &node_assets,
+                    &vrm.gltf.nodes,
+                ),
+                SpringColliderRegistry::new(
+                    &spring_bone.colliders,
+                    &node_assets,
+                    &vrm.gltf.nodes,
+                ),
+                SpringNodeRegistry::new(
+                    &spring_bone,
+                    &node_assets,
+                    &vrm.gltf.nodes,
+                ),
+            ));
+        }
         ew.send(RequestLoadVrma);
     }
 }

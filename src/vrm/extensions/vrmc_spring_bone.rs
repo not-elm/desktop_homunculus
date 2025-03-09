@@ -1,3 +1,4 @@
+use bevy::math::NormedVectorSpace;
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -16,6 +17,24 @@ pub struct VRMCSpringBone {
 
     /// [Spring]
     pub springs: Vec<Spring>,
+}
+
+impl VRMCSpringBone {
+    pub fn all_joints(&self) -> Vec<SpringJoint> {
+        self
+            .springs
+            .iter()
+            .flat_map(|spring| spring.joints.clone())
+            .collect()
+    }
+
+    pub fn spring_colliders(&self, collider_group_indices: &[usize]) -> Vec<Collider> {
+        collider_group_indices
+            .iter()
+            .flat_map(|index| self.collider_groups[*index].colliders.clone())
+            .flat_map(|index| self.colliders.get(index as usize).cloned())
+            .collect()
+    }
 }
 
 #[derive(Serialize, Deserialize)]
@@ -74,6 +93,38 @@ pub struct SpringJoint {
 pub enum ColliderShape {
     Sphere(Sphere),
     Capsule(Capsule),
+}
+
+impl ColliderShape {
+    /// Returns the collision vector from the collider to the target position.
+    pub fn calc_collision(
+        &self,
+        next_tail: Vec3,
+        collider: &GlobalTransform,
+        joint_radius: f32,
+    ) -> (Vec3, f32) {
+        match self {
+            Self::Sphere(sphere) => {
+                let offset = collider.compute_matrix().transform_point3(Vec3::from(sphere.offset));
+                let delta = next_tail - offset;
+                let distance = delta.norm() - sphere.radius - joint_radius;
+                (delta.normalize(), distance)
+            }
+            Self::Capsule(capsule) => {
+                //TODO: In UniVRM, only SphereCollider is implemented, so it seems to be postponed
+                (Vec3::ZERO, 1.)
+            }
+        }
+    }
+
+
+    #[inline]
+    pub const fn radius(&self) -> f32 {
+        match self {
+            Self::Sphere(sphere) => sphere.radius,
+            Self::Capsule(capsule) => capsule.radius,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, Component, Reflect)]

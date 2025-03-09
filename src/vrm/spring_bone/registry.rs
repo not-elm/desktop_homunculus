@@ -1,4 +1,4 @@
-use crate::vrm::extensions::vrmc_spring_bone::{Collider, ColliderShape, Spring, SpringJoint};
+use crate::vrm::extensions::vrmc_spring_bone::{Collider, ColliderShape, Spring, SpringJoint, VRMCSpringBone};
 use crate::vrm::spring_bone::SpringJointProps;
 use bevy::app::App;
 use bevy::asset::{Assets, Handle};
@@ -69,10 +69,11 @@ impl SpringJointRegistry {
     }
 }
 
-#[derive(Component, Reflect, Debug)]
+#[derive(Component, Reflect, Debug, Default)]
 pub struct SpringNode {
     pub center: Option<Name>,
     pub joints: Vec<Name>,
+    pub colliders: Vec<Name>,
 }
 
 #[derive(Component, Deref, Reflect)]
@@ -80,11 +81,12 @@ pub struct SpringNodeRegistry(pub Vec<SpringNode>);
 
 impl SpringNodeRegistry {
     pub fn new(
-        springs: &[Spring],
+        spring_bone: &VRMCSpringBone,
         node_assets: &Assets<GltfNode>,
         nodes: &[Handle<GltfNode>],
     ) -> Self {
-        Self(springs
+        Self(spring_bone
+            .springs
             .iter()
             .map(|spring| SpringNode {
                 joints: spring
@@ -92,6 +94,7 @@ impl SpringNodeRegistry {
                     .iter()
                     .filter_map(|joint| get_node_name(joint.node, node_assets, nodes))
                     .collect(),
+                colliders: collider_names(spring_bone, spring, node_assets, nodes),
                 center: spring
                     .center
                     .and_then(|index| get_node_name(index, node_assets, nodes)),
@@ -99,6 +102,22 @@ impl SpringNodeRegistry {
             .collect()
         )
     }
+}
+
+fn collider_names(
+    spring_bone: &VRMCSpringBone,
+    spring: &Spring,
+    node_assets: &Assets<GltfNode>,
+    nodes: &[Handle<GltfNode>],
+) -> Vec<Name> {
+    let Some(collider_groups) = spring.collider_groups.as_ref() else {
+        return vec![];
+    };
+    spring_bone
+        .spring_colliders(collider_groups)
+        .iter()
+        .flat_map(|collider| get_node_name(collider.node, node_assets, nodes))
+        .collect()
 }
 
 fn get_node_name(

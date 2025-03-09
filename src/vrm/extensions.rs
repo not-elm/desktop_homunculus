@@ -2,7 +2,7 @@ pub mod vrmc_spring_bone;
 pub mod vrmc_vrm;
 
 use crate::error::AppResult;
-use crate::vrm::extensions::vrmc_spring_bone::{Collider, SpringJoint, VRMCSpringBone};
+use crate::vrm::extensions::vrmc_spring_bone::VRMCSpringBone;
 use crate::vrm::extensions::vrmc_vrm::VrmcVrm;
 use anyhow::Context;
 use bevy::gltf::Gltf;
@@ -14,7 +14,7 @@ pub struct VrmExtensions {
     pub vrmc_vrm: VrmcVrm,
 
     #[serde(rename = "VRMC_springBone")]
-    pub vrmc_spring_bone: VRMCSpringBone,
+    pub vrmc_spring_bone: Option<VRMCSpringBone>,
 }
 
 impl VrmExtensions {
@@ -23,7 +23,9 @@ impl VrmExtensions {
     ) -> AppResult<Self> {
         Ok(Self {
             vrmc_vrm: serde_json::from_value(obtain_vrmc_vrm(json)?)?,
-            vrmc_spring_bone: serde_json::from_value(obtain_vrmc_springs(json)?)?,
+            vrmc_spring_bone: obtain_vrmc_springs(json)
+                .ok()
+                .and_then(|v| serde_json::from_value(v).ok()),
         })
     }
 
@@ -38,17 +40,6 @@ impl VrmExtensions {
             .as_ref()?
             .name
             .clone()
-    }
-
-    pub fn spring_joints(&self) -> Vec<SpringJoint> {
-        self.vrmc_spring_bone.springs
-            .iter()
-            .flat_map(|spring| spring.joints.clone())
-            .collect()
-    }
-
-    pub fn spring_colliders(&self) -> &[Collider] {
-        &self.vrmc_spring_bone.colliders
     }
 }
 
