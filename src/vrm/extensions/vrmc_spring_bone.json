@@ -1,0 +1,1093 @@
+{
+  "colliderGroups": [
+    {
+      "colliders": [
+        0
+      ],
+      "name": "J_Bip_C_Spine"
+    },
+    {
+      "colliders": [
+        1,
+        2,
+        3
+      ],
+      "name": "J_Bip_C_UpperChest"
+    },
+    {
+      "colliders": [
+        4
+      ],
+      "name": "J_Bip_C_Neck"
+    },
+    {
+      "colliders": [
+        5
+      ],
+      "name": "J_Bip_C_Head"
+    },
+    {
+      "colliders": [
+        6,
+        7,
+        8
+      ],
+      "name": "J_Bip_L_UpperArm"
+    },
+    {
+      "colliders": [
+        9,
+        10,
+        11,
+        12
+      ],
+      "name": "J_Bip_L_LowerArm"
+    },
+    {
+      "colliders": [
+        13
+      ],
+      "name": "J_Bip_L_Hand"
+    },
+    {
+      "colliders": [
+        14,
+        15,
+        16
+      ],
+      "name": "J_Bip_R_UpperArm"
+    },
+    {
+      "colliders": [
+        17,
+        18,
+        19,
+        20
+      ],
+      "name": "J_Bip_R_LowerArm"
+    },
+    {
+      "colliders": [
+        21
+      ],
+      "name": "J_Bip_R_Hand"
+    }
+  ],
+  "colliders": [
+    {
+      "node": 2,
+      "shape": {
+        "sphere": {
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "radius": 0.103557207
+        }
+      }
+    },
+    {
+      "node": 4,
+      "shape": {
+        "sphere": {
+          "offset": [
+            0,
+            0.00286316872,
+            0.00814094953
+          ],
+          "radius": 0.08629768
+        }
+      }
+    },
+    {
+      "node": 4,
+      "shape": {
+        "sphere": {
+          "offset": [
+            0.04314884,
+            0.050053,
+            -0.0267516635
+          ],
+          "radius": 0.0604083762
+        }
+      }
+    },
+    {
+      "node": 4,
+      "shape": {
+        "sphere": {
+          "offset": [
+            -0.04314884,
+            0.050053,
+            -0.0267516635
+          ],
+          "radius": 0.0604083762
+        }
+      }
+    },
+    {
+      "node": 18,
+      "shape": {
+        "capsule": {
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "radius": 1,
+          "tail": [
+            0,
+            0,
+            1
+          ]
+        }
+      }
+    },
+    {
+      "node": 22,
+      "shape": {
+        "sphere": {
+          "offset": [
+            0,
+            0.0243667364,
+            0.0142260259
+          ],
+          "radius": 0.04314884
+        }
+      }
+    },
+    {
+      "node": 23,
+      "shape": {
+        "sphere": {
+          "offset": [
+            -1.19215393e-8,
+            0.107435942,
+            -0.0142858028
+          ],
+          "radius": 0.107275121
+        }
+      }
+    },
+    {
+      "node": 58,
+      "shape": {
+        "sphere": {
+          "offset": [
+            0,
+            -0.008629799,
+            -3.7252903e-9
+          ],
+          "radius": 0.0431488454
+        }
+      }
+    },
+    {
+      "node": 58,
+      "shape": {
+        "sphere": {
+          "offset": [
+            0.06472327,
+            -0.008629799,
+            -3.7252903e-9
+          ],
+          "radius": 0.0431488454
+        }
+      }
+    },
+    {
+      "node": 58,
+      "shape": {
+        "sphere": {
+          "offset": [
+            0.129446536,
+            -0.008629799,
+            -1.86264515e-9
+          ],
+          "radius": 0.0431488454
+        }
+      }
+    },
+    {
+      "node": 59,
+      "shape": {
+        "sphere": {
+          "offset": [
+            -2.98023224e-8,
+            0,
+            -3.7252903e-9
+          ],
+          "radius": 0.0258893073
+        }
+      }
+    },
+    {
+      "node": 59,
+      "shape": {
+        "sphere": {
+          "offset": [
+            0.043148756,
+            0,
+            0.00007530488
+          ],
+          "radius": 0.0302041918
+        }
+      }
+    },
+    {
+      "node": 59,
+      "shape": {
+        "sphere": {
+          "offset": [
+            0.08629751,
+            0,
+            0.000150615349
+          ],
+          "radius": 0.0258893073
+        }
+      }
+    },
+    {
+      "node": 59,
+      "shape": {
+        "sphere": {
+          "offset": [
+            0.129446328,
+            0,
+            0.000225923955
+          ],
+          "radius": 0.0258893073
+        }
+      }
+    },
+    {
+      "node": 60,
+      "shape": {
+        "sphere": {
+          "offset": [
+            0.0159171224,
+            0,
+            7.450581e-9
+          ],
+          "radius": 0.0238757227
+        }
+      }
+    },
+    {
+      "node": 77,
+      "shape": {
+        "sphere": {
+          "offset": [
+            0,
+            -0.008629799,
+            -3.7252903e-9
+          ],
+          "radius": 0.0431488454
+        }
+      }
+    },
+    {
+      "node": 77,
+      "shape": {
+        "sphere": {
+          "offset": [
+            -0.06472327,
+            -0.008629799,
+            -3.7252903e-9
+          ],
+          "radius": 0.0431488454
+        }
+      }
+    },
+    {
+      "node": 77,
+      "shape": {
+        "sphere": {
+          "offset": [
+            -0.129446536,
+            -0.008629799,
+            -1.86264515e-9
+          ],
+          "radius": 0.0431488454
+        }
+      }
+    },
+    {
+      "node": 78,
+      "shape": {
+        "sphere": {
+          "offset": [
+            2.98023224e-8,
+            0,
+            -3.7252903e-9
+          ],
+          "radius": 0.0258893073
+        }
+      }
+    },
+    {
+      "node": 78,
+      "shape": {
+        "sphere": {
+          "offset": [
+            -0.043148756,
+            0,
+            0.00007530488
+          ],
+          "radius": 0.0302041918
+        }
+      }
+    },
+    {
+      "node": 78,
+      "shape": {
+        "sphere": {
+          "offset": [
+            -0.08629751,
+            0,
+            0.000150615349
+          ],
+          "radius": 0.0258893073
+        }
+      }
+    },
+    {
+      "node": 78,
+      "shape": {
+        "sphere": {
+          "offset": [
+            -0.129446328,
+            0,
+            0.000225923955
+          ],
+          "radius": 0.0258893073
+        }
+      }
+    },
+    {
+      "node": 79,
+      "shape": {
+        "sphere": {
+          "offset": [
+            -0.0159171224,
+            0,
+            7.450581e-9
+          ],
+          "radius": 0.0238757227
+        }
+      }
+    }
+  ],
+  "specVersion": "1.0",
+  "springs": [
+    {
+      "center": 0,
+      "joints": [
+        {
+          "dragForce": 0.05,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0,
+          "hitRadius": 0.00772699434,
+          "node": 5,
+          "stiffness": 0.75
+        },
+        {
+          "dragForce": 0.05,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0,
+          "hitRadius": 0.00772699434,
+          "node": 6,
+          "stiffness": 0.75
+        },
+        {
+          "dragForce": 0.5,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0,
+          "hitRadius": 0,
+          "node": 7,
+          "stiffness": 1
+        }
+      ],
+      "name": "Bust"
+    },
+    {
+      "center": 0,
+      "joints": [
+        {
+          "dragForce": 0.05,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0,
+          "hitRadius": 0.00772699434,
+          "node": 8,
+          "stiffness": 0.75
+        },
+        {
+          "dragForce": 0.05,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0,
+          "hitRadius": 0.00772699434,
+          "node": 9,
+          "stiffness": 0.75
+        },
+        {
+          "dragForce": 0.5,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0,
+          "hitRadius": 0,
+          "node": 10,
+          "stiffness": 1
+        }
+      ],
+      "name": "Bust"
+    },
+    {
+      "center": 0,
+      "joints": [
+        {
+          "dragForce": 0.05,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0,
+          "hitRadius": 0.00773664657,
+          "node": 11,
+          "stiffness": 0.75
+        },
+        {
+          "dragForce": 0.05,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0,
+          "hitRadius": 0.00773664657,
+          "node": 12,
+          "stiffness": 0.75
+        },
+        {
+          "dragForce": 0.5,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0,
+          "hitRadius": 0,
+          "node": 13,
+          "stiffness": 1
+        }
+      ],
+      "name": "Hood"
+    },
+    {
+      "center": 0,
+      "joints": [
+        {
+          "dragForce": 0,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0.25,
+          "hitRadius": 0.007736551,
+          "node": 15,
+          "stiffness": 0.26
+        },
+        {
+          "dragForce": 0,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0.25,
+          "hitRadius": 0.007736551,
+          "node": 16,
+          "stiffness": 0.26
+        },
+        {
+          "dragForce": 0.5,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0,
+          "hitRadius": 0,
+          "node": 17,
+          "stiffness": 1
+        }
+      ],
+      "name": "HoodString"
+    },
+    {
+      "center": 0,
+      "joints": [
+        {
+          "dragForce": 0,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0.25,
+          "hitRadius": 0.007736551,
+          "node": 19,
+          "stiffness": 0.26
+        },
+        {
+          "dragForce": 0,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0.25,
+          "hitRadius": 0.007736551,
+          "node": 20,
+          "stiffness": 0.26
+        },
+        {
+          "dragForce": 0.5,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0,
+          "hitRadius": 0,
+          "node": 21,
+          "stiffness": 1
+        }
+      ],
+      "name": "HoodString"
+    },
+    {
+      "center": 0,
+      "colliderGroups": [
+        3,
+        4,
+        7,
+        5,
+        8,
+        6,
+        9,
+        1,
+        0,
+        2
+      ],
+      "joints": [
+        {
+          "dragForce": 0.4,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0,
+          "hitRadius": 0.0107275,
+          "node": 26,
+          "stiffness": 0.8475211
+        },
+        {
+          "dragForce": 0.4,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0,
+          "hitRadius": 0.0107275,
+          "node": 27,
+          "stiffness": 0.8475211
+        },
+        {
+          "dragForce": 0.5,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0,
+          "hitRadius": 0,
+          "node": 28,
+          "stiffness": 1
+        }
+      ],
+      "name": "Hair"
+    },
+    {
+      "center": 0,
+      "colliderGroups": [
+        3,
+        4,
+        7,
+        5,
+        8,
+        6,
+        9,
+        1,
+        0,
+        2
+      ],
+      "joints": [
+        {
+          "dragForce": 0.4,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0,
+          "hitRadius": 0.0107275,
+          "node": 29,
+          "stiffness": 0.848229468
+        },
+        {
+          "dragForce": 0.4,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0,
+          "hitRadius": 0.0107275,
+          "node": 30,
+          "stiffness": 0.848229468
+        },
+        {
+          "dragForce": 0.4,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0,
+          "hitRadius": 0.0107275,
+          "node": 31,
+          "stiffness": 0.848229468
+        },
+        {
+          "dragForce": 0.5,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0,
+          "hitRadius": 0,
+          "node": 32,
+          "stiffness": 1
+        }
+      ],
+      "name": "Hair"
+    },
+    {
+      "center": 0,
+      "colliderGroups": [
+        3,
+        4,
+        7,
+        5,
+        8,
+        6,
+        9,
+        1,
+        0,
+        2
+      ],
+      "joints": [
+        {
+          "dragForce": 0.4,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0,
+          "hitRadius": 0.0107275015,
+          "node": 33,
+          "stiffness": 0.8020291
+        },
+        {
+          "dragForce": 0.4,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0,
+          "hitRadius": 0.0107275015,
+          "node": 34,
+          "stiffness": 0.8020291
+        },
+        {
+          "dragForce": 0.4,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0,
+          "hitRadius": 0.0107275015,
+          "node": 35,
+          "stiffness": 0.8020291
+        },
+        {
+          "dragForce": 0.4,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0,
+          "hitRadius": 0.0107275015,
+          "node": 36,
+          "stiffness": 0.8020291
+        },
+        {
+          "dragForce": 0.5,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0,
+          "hitRadius": 0,
+          "node": 37,
+          "stiffness": 1
+        }
+      ],
+      "name": "Hair"
+    },
+    {
+      "center": 0,
+      "colliderGroups": [
+        3,
+        4,
+        7,
+        5,
+        8,
+        6,
+        9,
+        1,
+        0,
+        2
+      ],
+      "joints": [
+        {
+          "dragForce": 0.4,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0,
+          "hitRadius": 0.0107275154,
+          "node": 38,
+          "stiffness": 0.8012918
+        },
+        {
+          "dragForce": 0.4,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0,
+          "hitRadius": 0.0107275154,
+          "node": 39,
+          "stiffness": 0.8012918
+        },
+        {
+          "dragForce": 0.4,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0,
+          "hitRadius": 0.0107275154,
+          "node": 40,
+          "stiffness": 0.8012918
+        },
+        {
+          "dragForce": 0.4,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0,
+          "hitRadius": 0.0107275154,
+          "node": 41,
+          "stiffness": 0.8012918
+        },
+        {
+          "dragForce": 0.5,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0,
+          "hitRadius": 0,
+          "node": 42,
+          "stiffness": 1
+        }
+      ],
+      "name": "Hair"
+    },
+    {
+      "center": 0,
+      "colliderGroups": [
+        3,
+        4,
+        7,
+        5,
+        8,
+        6,
+        9,
+        1,
+        0,
+        2
+      ],
+      "joints": [
+        {
+          "dragForce": 0.4,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0,
+          "hitRadius": 0.0107275052,
+          "node": 43,
+          "stiffness": 0.7997162
+        },
+        {
+          "dragForce": 0.4,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0,
+          "hitRadius": 0.0107275052,
+          "node": 44,
+          "stiffness": 0.7997162
+        },
+        {
+          "dragForce": 0.4,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0,
+          "hitRadius": 0.0107275052,
+          "node": 45,
+          "stiffness": 0.7997162
+        },
+        {
+          "dragForce": 0.4,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0,
+          "hitRadius": 0.0107275052,
+          "node": 46,
+          "stiffness": 0.7997162
+        },
+        {
+          "dragForce": 0.5,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0,
+          "hitRadius": 0,
+          "node": 47,
+          "stiffness": 1
+        }
+      ],
+      "name": "Hair"
+    },
+    {
+      "center": 0,
+      "colliderGroups": [
+        3,
+        4,
+        7,
+        5,
+        8,
+        6,
+        9,
+        1,
+        0,
+        2
+      ],
+      "joints": [
+        {
+          "dragForce": 0.4,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0,
+          "hitRadius": 0.0107275071,
+          "node": 48,
+          "stiffness": 0.854821265
+        },
+        {
+          "dragForce": 0.4,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0,
+          "hitRadius": 0.0107275071,
+          "node": 49,
+          "stiffness": 0.854821265
+        },
+        {
+          "dragForce": 0.4,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0,
+          "hitRadius": 0.0107275071,
+          "node": 50,
+          "stiffness": 0.854821265
+        },
+        {
+          "dragForce": 0.5,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0,
+          "hitRadius": 0,
+          "node": 51,
+          "stiffness": 1
+        }
+      ],
+      "name": "Hair"
+    },
+    {
+      "center": 0,
+      "colliderGroups": [
+        3,
+        4,
+        7,
+        5,
+        8,
+        6,
+        9,
+        1,
+        0,
+        2
+      ],
+      "joints": [
+        {
+          "dragForce": 0.4,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0,
+          "hitRadius": 0.0107275164,
+          "node": 52,
+          "stiffness": 0.798603058
+        },
+        {
+          "dragForce": 0.4,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0,
+          "hitRadius": 0.0107275164,
+          "node": 53,
+          "stiffness": 0.798603058
+        },
+        {
+          "dragForce": 0.4,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0,
+          "hitRadius": 0.0107275164,
+          "node": 54,
+          "stiffness": 0.798603058
+        },
+        {
+          "dragForce": 0.4,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0,
+          "hitRadius": 0.0107275164,
+          "node": 55,
+          "stiffness": 0.798603058
+        },
+        {
+          "dragForce": 0.5,
+          "gravityDir": [
+            0,
+            -1,
+            0
+          ],
+          "gravityPower": 0,
+          "hitRadius": 0,
+          "node": 56,
+          "stiffness": 1
+        }
+      ],
+      "name": "Hair"
+    }
+  ]
+}

@@ -1,7 +1,8 @@
 use crate::mascot::Mascot;
 use crate::system_param::cameras::Cameras;
 use crate::system_param::child_searcher::ChildSearcher;
-use crate::vrm::extensions::{MorphTargetBind, VrmExtensions, VrmNode};
+use crate::vrm::extensions::vrmc_vrm::MorphTargetBind;
+use crate::vrm::extensions::{VrmExtensions, VrmNode};
 use crate::vrm::loader::{Vrm, VrmHandle};
 use crate::vrm::{BonePgRestQuaternion, BoneRestTransform, VrmBone, VrmExpression, VrmHipsBoneTo, VrmPath};
 use crate::vrma::load::RequestLoadVrma;
@@ -91,7 +92,7 @@ impl HumanoidBoneNodes {
         Self(bones
             .iter()
             .filter_map(|(name, target_node)| {
-                let node_handle = nodes.get(target_node.node as usize)?;
+                let node_handle = nodes.get(target_node.node)?;
                 let node = node_assets.get(node_handle)?;
                 Some((VrmBone(name.clone()), Name::new(node.name.clone())))
             })
