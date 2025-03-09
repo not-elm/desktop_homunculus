@@ -1,3 +1,4 @@
+use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
@@ -17,7 +18,6 @@ pub struct VRMCSpringBone {
     pub springs: Vec<Spring>,
 }
 
-
 #[derive(Serialize, Deserialize)]
 pub struct ColliderGroup {
     /// Group name
@@ -28,48 +28,56 @@ pub struct ColliderGroup {
     pub colliders: Vec<u64>,
 }
 
-
 /// Represents the collision detection for SpringBone.
 /// It consists of the target node index and the collider shape.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
 pub struct Collider {
     pub node: usize,
-    pub shape: Shape,
+    pub shape: ColliderShape,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct Spring {
-    pub center: i64,
-    pub joints: Vec<SpringJoint>,
+    /// Spring name
     pub name: String,
+
+    /// The list of joints that make up the springBone.
+    pub joints: Vec<SpringJoint>,
+
+    /// Each value is an index of `VRMCSpringBone::colliderGroups`.
     #[serde(rename = "colliderGroups")]
-    pub collider_groups: Option<Vec<i64>>,
+    pub collider_groups: Option<Vec<usize>>,
+
+    pub center: Option<usize>,
 }
 
 /// The node of a single glTF with SpringBone settings.
-#[derive(Serialize, Deserialize)]
+/// The node of a single glTF with SpringBone settings.
+#[derive(Serialize, Deserialize, Copy, Clone, Debug)]
 pub struct SpringJoint {
     pub node: usize,
     #[serde(rename = "dragForce")]
-    pub drag_force: f32,
+    pub drag_force: Option<f32>,
     #[serde(rename = "gravityDir")]
-    pub gravity_dir: [f32; 3],
+    pub gravity_dir: Option<[f32; 3]>,
     #[serde(rename = "gravityPower")]
-    pub gravity_power: f32,
+    pub gravity_power: Option<f32>,
     #[serde(rename = "hitRadius")]
-    pub hit_radius: f32,
-    pub stiffness: f32,
+    pub hit_radius: Option<f32>,
+    pub stiffness: Option<f32>,
 }
 
 /// The shape of the collision detection for [Collider]
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, Component, Reflect)]
+#[reflect(Component, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub enum Shape {
+pub enum ColliderShape {
     Sphere(Sphere),
     Capsule(Capsule),
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, Component, Reflect)]
+#[reflect(Component, Serialize, Deserialize)]
 pub struct Sphere {
     /// Local coordinate of the sphere center
     pub offset: [f32; 3],
@@ -77,7 +85,8 @@ pub struct Sphere {
     pub radius: f32,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, Component, Reflect)]
+#[reflect(Component, Serialize, Deserialize)]
 pub struct Capsule {
     /// Local coordinate of the center of the half sphere at the start point of the capsule
     pub offset: [f32; 3],

@@ -2,7 +2,7 @@ use crate::mascot::Mascot;
 use crate::power_state::Loading;
 use crate::settings::preferences::action::ActionPreferences;
 use crate::settings::state::MascotAction;
-use crate::vrm::spawn::HumanoidBoneNodes;
+use crate::vrm::spawn::bone::HumanoidBoneNodes;
 use crate::vrm::VrmExpression;
 use crate::vrma::animation::{AnimationPlayerEntities, VrmAnimationGraph};
 use crate::vrma::extensions::VrmaExtensions;

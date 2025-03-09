@@ -2,7 +2,7 @@ pub mod vrmc_spring_bone;
 pub mod vrmc_vrm;
 
 use crate::error::AppResult;
-use crate::vrm::extensions::vrmc_spring_bone::VRMCSpringBone;
+use crate::vrm::extensions::vrmc_spring_bone::{Collider, SpringJoint, VRMCSpringBone};
 use crate::vrm::extensions::vrmc_vrm::VrmcVrm;
 use anyhow::Context;
 use bevy::gltf::Gltf;
@@ -38,6 +38,17 @@ impl VrmExtensions {
             .as_ref()?
             .name
             .clone()
+    }
+
+    pub fn spring_joints(&self) -> Vec<SpringJoint> {
+        self.vrmc_spring_bone.springs
+            .iter()
+            .flat_map(|spring| spring.joints.clone())
+            .collect()
+    }
+
+    pub fn spring_colliders(&self) -> &[Collider] {
+        &self.vrmc_spring_bone.colliders
     }
 }
 
