@@ -2,20 +2,35 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct VRMCSpringBone {
-    #[serde(rename = "colliderGroups")]
-    pub collider_groups: Vec<ColliderGroup>,
-    pub colliders: Vec<Collider>,
+    /// Represents the specification version of the VRMC_springBone extension.
     #[serde(rename = "specVersion")]
     pub spec_version: String,
+
+    /// [Collider]
+    pub colliders: Vec<Collider>,
+
+    /// [ColliderGroup]
+    #[serde(rename = "colliderGroups")]
+    pub collider_groups: Vec<ColliderGroup>,
+
+    /// [Spring]
     pub springs: Vec<Spring>,
 }
 
+
 #[derive(Serialize, Deserialize)]
 pub struct ColliderGroup {
-    pub colliders: Vec<u64>,
+    /// Group name
     pub name: String,
+
+    /// The list of colliders belonging to this group.
+    /// Each value is an index of `VRMCSpringBone::colliders`.
+    pub colliders: Vec<u64>,
 }
 
+
+/// Represents the collision detection for SpringBone.
+/// It consists of the target node index and the collider shape.
 #[derive(Serialize, Deserialize)]
 pub struct Collider {
     pub node: usize,
