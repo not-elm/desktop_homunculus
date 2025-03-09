@@ -91,7 +91,7 @@ fn spawn_vrm(
                     &vrm.gltf.nodes,
                 ),
                 SpringNodeRegistry::new(
-                    &spring_bone,
+                    spring_bone,
                     &node_assets,
                     &vrm.gltf.nodes,
                 ),

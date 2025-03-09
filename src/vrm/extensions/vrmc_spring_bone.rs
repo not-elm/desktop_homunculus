@@ -110,7 +110,7 @@ impl ColliderShape {
                 let distance = delta.norm() - sphere.radius - joint_radius;
                 (delta.normalize(), distance)
             }
-            Self::Capsule(capsule) => {
+            Self::Capsule(_) => {
                 //TODO: In UniVRM, only SphereCollider is implemented, so it seems to be postponed
                 (Vec3::ZERO, 1.)
             }
