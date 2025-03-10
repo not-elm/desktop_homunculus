@@ -1,9 +1,9 @@
 use crate::mascot::Mascot;
 use crate::system_param::cameras::Cameras;
+use crate::vrm::expressions::VrmExpressionRegistry;
 use crate::vrm::extensions::VrmExtensions;
+use crate::vrm::humanoid_bone::HumanoidBoneRegistry;
 use crate::vrm::loader::{Vrm, VrmHandle};
-use crate::vrm::spawn::bone::VrmAttachBonesPlugin;
-use crate::vrm::spawn::expressions::VrmExpressions;
 use crate::vrm::spring_bone::registry::*;
 use crate::vrm::VrmPath;
 use crate::vrma::load::RequestLoadVrma;
@@ -14,23 +14,12 @@ use bevy::gltf::GltfNode;
 use bevy::log::{error, info};
 use bevy::prelude::{Commands, DespawnRecursiveExt, Entity, EventWriter, Plugin, Query, Res, Transform};
 use bevy::scene::SceneRoot;
-use bone::HumanoidBoneNodes;
-
-pub mod bone;
-pub mod expressions;
 
 pub struct VrmSpawnPlugin;
 
 impl Plugin for VrmSpawnPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .register_type::<VrmExpressions>()
-            .add_plugins((
-                VrmAttachBonesPlugin,
-            ))
-            .add_systems(Update, (
-                spawn_vrm,
-            ));
+        app.add_systems(Update, spawn_vrm);
     }
 }
 
@@ -69,8 +58,8 @@ fn spawn_vrm(
             vrm_path.clone(),
             *tf,
             cameras.all_layers(),
-            VrmExpressions::new(&extensions, &node_assets, &vrm.gltf.nodes),
-            HumanoidBoneNodes::new(
+            VrmExpressionRegistry::new(&extensions, &node_assets, &vrm.gltf.nodes),
+            HumanoidBoneRegistry::new(
                 &extensions.vrmc_vrm.humanoid.human_bones,
                 &node_assets,
                 &vrm.gltf.nodes,

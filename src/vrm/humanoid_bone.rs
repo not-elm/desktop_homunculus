@@ -1,28 +1,20 @@
 use crate::system_param::child_searcher::ChildSearcher;
 use crate::vrm::extensions::VrmNode;
 use crate::vrm::{BonePgRestQuaternion, BoneRestTransform, VrmBone, VrmHipsBoneTo};
+use bevy::app::{App, Plugin, Update};
 use bevy::asset::{Assets, Handle};
 use bevy::core::Name;
 use bevy::gltf::GltfNode;
 use bevy::hierarchy::Children;
 use bevy::math::Quat;
-use bevy::prelude::{Added, App, Commands, Component, Deref, Entity, Plugin, Query, Reflect, Transform, Update};
+use bevy::prelude::{Added, Commands, Component, Deref, Entity, Query, Reflect, Transform};
 use bevy::utils::HashMap;
 
-pub struct VrmAttachBonesPlugin;
-
-impl Plugin for VrmAttachBonesPlugin {
-    fn build(&self, app: &mut App) {
-        app
-            .register_type::<HumanoidBoneNodes>()
-            .add_systems(Update, attach_bones);
-    }
-}
 
 #[derive(Component, Deref, Reflect)]
-pub struct HumanoidBoneNodes(HashMap<VrmBone, Name>);
+pub struct HumanoidBoneRegistry(HashMap<VrmBone, Name>);
 
-impl HumanoidBoneNodes {
+impl HumanoidBoneRegistry {
     pub fn new(
         bones: &HashMap<String, VrmNode>,
         node_assets: &Assets<GltfNode>,
@@ -40,10 +32,20 @@ impl HumanoidBoneNodes {
     }
 }
 
+pub struct VrmHumanoidBonePlugin;
+
+impl Plugin for VrmHumanoidBonePlugin {
+    fn build(&self, app: &mut App) {
+        app
+            .register_type::<HumanoidBoneRegistry>()
+            .add_systems(Update, attach_bones);
+    }
+}
+
 fn attach_bones(
     mut commands: Commands,
     searcher: ChildSearcher,
-    mascots: Query<(Entity, &HumanoidBoneNodes), Added<Children>>,
+    mascots: Query<(Entity, &HumanoidBoneRegistry), Added<Children>>,
     transforms: Query<(&Transform, Option<&Children>)>,
 ) {
     for (mascot_entity, humanoid_bones) in mascots.iter() {
