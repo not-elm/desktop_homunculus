@@ -2,7 +2,7 @@ use crate::mascot::Mascot;
 use crate::power_state::Loading;
 use crate::settings::preferences::action::ActionPreferences;
 use crate::settings::state::MascotAction;
-use crate::vrm::spawn::bone::HumanoidBoneNodes;
+use crate::vrm::humanoid_bone::HumanoidBoneRegistry;
 use crate::vrm::VrmExpression;
 use crate::vrma::animation::{AnimationPlayerEntities, VrmAnimationGraph};
 use crate::vrma::extensions::VrmaExtensions;
@@ -211,7 +211,7 @@ fn spawn_vrma(
             obtain_vrma_duration(&clip_assets, &vrma.gltf.animations),
             VrmAnimationGraph::new(vrma.gltf.animations.to_vec(), &mut animation_graphs),
             VrmaExpressionNames::new(&extensions),
-            HumanoidBoneNodes::new(
+            HumanoidBoneRegistry::new(
                 &extensions.vrmc_vrm_animation.humanoid.human_bones,
                 &node_assets,
                 &vrma.gltf.nodes,
