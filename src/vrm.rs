@@ -1,10 +1,14 @@
 pub mod loader;
-pub mod spawn;
+mod spawn;
 pub mod extensions;
 mod load;
 mod spring_bone;
+pub mod humanoid_bone;
+pub mod expressions;
 
 use crate::new_type;
+use crate::vrm::expressions::VrmExpressionPlugin;
+use crate::vrm::humanoid_bone::VrmHumanoidBonePlugin;
 use crate::vrm::load::VrmLoadPlugin;
 use crate::vrm::loader::{Vrm, VrmLoaderPlugin};
 use crate::vrm::spawn::VrmSpawnPlugin;
@@ -45,6 +49,8 @@ impl Plugin for VrmPlugin {
                 VrmLoaderPlugin,
                 VrmSpawnPlugin,
                 VrmSpringBonePlugin,
+                VrmHumanoidBonePlugin,
+                VrmExpressionPlugin,
             ));
     }
 }

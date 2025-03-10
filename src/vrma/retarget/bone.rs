@@ -1,5 +1,5 @@
 use crate::system_param::child_searcher::ChildSearcher;
-use crate::vrm::spawn::bone::HumanoidBoneNodes;
+use crate::vrm::humanoid_bone::HumanoidBoneRegistry;
 use crate::vrm::{BonePgRestQuaternion, BoneRestTransform};
 use crate::vrma::retarget::CurrentRetargeting;
 use crate::vrma::{RetargetSource, RetargetTo};
@@ -32,7 +32,7 @@ struct PreviousPosition(Vec3);
 
 fn retarget_bones_to_mascot(
     par_commands: ParallelCommands,
-    bones: Query<(Entity, &RetargetTo, &HumanoidBoneNodes), Added<Children>>,
+    bones: Query<(Entity, &RetargetTo, &HumanoidBoneRegistry), Added<Children>>,
     transforms: Query<&Transform>,
     names: Query<&Name>,
     searcher: ChildSearcher,

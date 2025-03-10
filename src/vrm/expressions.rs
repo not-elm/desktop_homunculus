@@ -1,6 +1,7 @@
 use crate::vrm::extensions::vrmc_vrm::MorphTargetBind;
 use crate::vrm::extensions::VrmExtensions;
 use crate::vrm::VrmExpression;
+use bevy::app::Plugin;
 use bevy::asset::{Assets, Handle};
 use bevy::core::Name;
 use bevy::gltf::GltfNode;
@@ -14,9 +15,9 @@ pub struct ExpressionNode {
 }
 
 #[derive(Component, Deref, Reflect)]
-pub struct VrmExpressions(HashMap<VrmExpression, Vec<ExpressionNode>>);
+pub struct VrmExpressionRegistry(HashMap<VrmExpression, Vec<ExpressionNode>>);
 
-impl VrmExpressions {
+impl VrmExpressionRegistry {
     pub fn new(
         extensions: &VrmExtensions,
         node_assets: &Assets<GltfNode>,
@@ -41,6 +42,14 @@ impl VrmExpressions {
             })
             .collect()
         )
+    }
+}
+
+pub struct VrmExpressionPlugin;
+
+impl Plugin for VrmExpressionPlugin {
+    fn build(&self, app: &mut bevy::app::App) {
+        app.register_type::<VrmExpressionRegistry>();
     }
 }
 

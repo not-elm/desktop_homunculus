@@ -1,6 +1,6 @@
 use crate::system_param::child_searcher::ChildSearcher;
 
-use crate::vrm::spawn::expressions::VrmExpressions;
+use crate::vrm::expressions::VrmExpressionRegistry;
 use crate::vrma::load::VrmaExpressionNames;
 use crate::vrma::retarget::CurrentRetargeting;
 use crate::vrma::{RetargetSource, RetargetTo};
@@ -35,7 +35,7 @@ struct RetargetExpressionTo(Vec<BindExpressionNode>);
 fn retarget_expressions_to_mascot(
     mut commands: Commands,
     vrma: Query<(Entity, &RetargetTo, &VrmaExpressionNames), Added<Children>>,
-    mascots: Query<&VrmExpressions>,
+    mascots: Query<&VrmExpressionRegistry>,
     searcher: ChildSearcher,
 ) {
     for (vrma_entity, retarget, expressions) in vrma.iter() {
