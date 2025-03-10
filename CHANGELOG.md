@@ -1,5 +1,9 @@
 ## Unreleased
 
+### Features
+
+- Supported Spring Bone.
+
 ### Improvements
 
 - Split settings file into two files: `actions.json` and `mascot_locations.json`.
