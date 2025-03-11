@@ -15,8 +15,7 @@ use crate::vrm::spawn::VrmSpawnPlugin;
 use crate::vrm::spring_bone::VrmSpringBonePlugin;
 use bevy::app::{App, Plugin};
 use bevy::asset::AssetApp;
-use bevy::math::Quat;
-use bevy::prelude::{Component, Entity, Reflect, Transform};
+use bevy::prelude::{Component, Entity, GlobalTransform, Reflect, Transform};
 use std::path::PathBuf;
 
 new_type!(VrmBone, String);
@@ -29,7 +28,7 @@ pub struct VrmPath(pub PathBuf);
 pub struct BoneRestTransform(pub Transform);
 
 #[derive(Debug, Reflect, Copy, Clone, Component)]
-pub struct BonePgRestQuaternion(pub Quat);
+pub struct BoneRestGlobalTransform(pub GlobalTransform);
 
 #[derive(Debug, Reflect, Copy, Clone, Component)]
 pub struct VrmHipsBoneTo(pub Entity);
@@ -42,6 +41,7 @@ impl Plugin for VrmPlugin {
             .init_asset::<Vrm>()
             .register_type::<VrmPath>()
             .register_type::<BoneRestTransform>()
+            .register_type::<BoneRestGlobalTransform>()
             .register_type::<VrmHipsBoneTo>()
             .register_type::<VrmBone>()
             .add_plugins((
