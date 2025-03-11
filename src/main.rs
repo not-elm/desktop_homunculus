@@ -43,7 +43,7 @@ fn main() {
             DefaultPlugins
                 .set(LogPlugin {
                     #[cfg(debug_assertions)]
-                    level: bevy::log::Level::DEBUG,
+                    level: bevy::log::Level::INFO,
                     #[cfg(target_os = "windows")]
                     filter: "wgpu_hal=off".to_string(),
                     ..default()

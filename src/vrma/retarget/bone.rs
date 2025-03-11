@@ -1,14 +1,14 @@
 use crate::system_param::child_searcher::ChildSearcher;
-use crate::vrm::humanoid_bone::HumanoidBoneRegistry;
-use crate::vrm::{BonePgRestQuaternion, BoneRestTransform};
+use crate::vrm::humanoid_bone::{Hips, HumanoidBoneRegistry};
+use crate::vrm::{BoneRestGlobalTransform, BoneRestTransform};
 use crate::vrma::retarget::CurrentRetargeting;
 use crate::vrma::{RetargetSource, RetargetTo};
 use bevy::app::{App, Update};
 use bevy::core::Name;
 use bevy::hierarchy::Children;
 use bevy::log::error;
-use bevy::math::{Quat, Vec3};
-use bevy::prelude::{Added, Changed, Component, Entity, ParallelCommands, Plugin, Query, Reflect, Transform, With, Without};
+use bevy::math::Vec3;
+use bevy::prelude::{Added, Changed, Component, Entity, GlobalTransform, ParallelCommands, Plugin, Query, Reflect, Transform, With, Without};
 
 pub struct VrmaRetargetingBonePlugin;
 
@@ -16,10 +16,9 @@ impl Plugin for VrmaRetargetingBonePlugin {
     fn build(&self, app: &mut App) {
         app
             .register_type::<RetargetBoneTo>()
-            .register_type::<PreviousPosition>()
             .add_systems(Update, (
                 retarget_bones_to_mascot,
-                bind_bones,
+                bind_bone_rotations,
             ));
     }
 }
@@ -27,13 +26,10 @@ impl Plugin for VrmaRetargetingBonePlugin {
 #[derive(Debug, Component, Reflect)]
 struct RetargetBoneTo(pub Entity);
 
-#[derive(Debug, Component, Reflect)]
-struct PreviousPosition(Vec3);
-
 fn retarget_bones_to_mascot(
     par_commands: ParallelCommands,
     bones: Query<(Entity, &RetargetTo, &HumanoidBoneRegistry), Added<Children>>,
-    transforms: Query<&Transform>,
+    transforms: Query<(&Transform, &GlobalTransform)>,
     names: Query<&Name>,
     searcher: ChildSearcher,
 ) {
@@ -47,16 +43,15 @@ fn retarget_bones_to_mascot(
                 error!("[Bone] {dist_name}'s {bone} not found");
                 continue;
             };
-            let Ok(src_transform) = transforms.get(src_bone_entity) else {
+            let Ok((src_tf, src_gtf)) = transforms.get(src_bone_entity) else {
                 continue;
             };
 
-            let initial_pos = fix_position(src_transform.translation);
             par_commands.command_scope(|mut commands| {
                 commands.entity(src_bone_entity).insert((
-                    PreviousPosition(initial_pos),
                     RetargetSource,
-                    BoneRestTransform(*src_transform),
+                    BoneRestTransform(*src_tf),
+                    BoneRestGlobalTransform(*src_gtf),
                     RetargetBoneTo(dist_bone_entity),
                 ));
             });
@@ -64,48 +59,82 @@ fn retarget_bones_to_mascot(
     });
 }
 
-fn bind_bones(
+fn bind_bone_rotations(
     par_commands: ParallelCommands,
     sources: Query<(
-        Entity,
         &RetargetBoneTo,
         &Transform,
-        &BoneRestTransform,
-        &BonePgRestQuaternion,
+        &BoneRestGlobalTransform,
+        Option<&Hips>,
     ), (Changed<Transform>, With<CurrentRetargeting>)>,
     dist_bones: Query<(
-        &BoneRestTransform,
-        &BonePgRestQuaternion,
+        &Transform,
+        &BoneRestGlobalTransform,
     ), Without<CurrentRetargeting>>,
 ) {
-    sources.par_iter().for_each(|(entity, retarget_bone_to, src_pose, src_rest, src_pg_rest)| {
-        let Ok((dist_rest, dist_pg_rest)) = dist_bones.get(retarget_bone_to.0) else {
+    sources.par_iter().for_each(|(retarget_bone_to, src_pose_tf, src_rest_gtf, maybe_hips)| {
+        let Ok((dist_pose_tf, dist_rest_gtf)) = dist_bones.get(retarget_bone_to.0) else {
             return;
         };
-        let src_pos = fix_position(src_pose.translation);
-        let anim_q = fix_rotation(src_pg_rest.0 *
-            src_pose.rotation *
-            src_rest.0.rotation.inverse() *
-            src_pg_rest.0.inverse());
         let transform = Transform {
-            translation: fix_position(src_pose.translation),
-            rotation: dist_pg_rest.0.inverse() * anim_q * dist_pg_rest.0 * dist_rest.0.rotation,
-            scale: src_pose.scale,
+            rotation: src_pose_tf.rotation,
+            translation: if maybe_hips.is_some() {
+                calc_hips_position(
+                    src_rest_gtf.0.translation(),
+                    src_pose_tf.translation,
+                    dist_rest_gtf.0.translation(),
+                )
+            } else {
+                dist_pose_tf.translation
+            },
+            scale: dist_pose_tf.scale,
         };
         par_commands.command_scope(|mut commands| {
-            commands.entity(entity).insert(PreviousPosition(src_pos));
             commands.entity(retarget_bone_to.0).insert(transform);
         });
     });
 }
 
 #[inline]
-fn fix_rotation(quat: Quat) -> Quat {
-    let r = Quat::from_rotation_x(std::f32::consts::FRAC_PI_2);
-    r * quat * r.inverse()
+fn calc_scaling(
+    dist_rest_global_pos: Vec3,
+    source_rest_global_pos: Vec3,
+) -> f32 {
+    dist_rest_global_pos.y / source_rest_global_pos.y
 }
 
 #[inline]
-fn fix_position(pos: Vec3) -> Vec3 {
-    Vec3::new(pos.x, -pos.z, pos.y)
+fn calc_delta(
+    source_pose_pos: Vec3,
+    source_rest_global_pos: Vec3,
+) -> Vec3 {
+    source_pose_pos - source_rest_global_pos
+}
+
+fn calc_hips_position(
+    source_rest_global_pos: Vec3,
+    source_pose_pos: Vec3,
+    dist_rest_global_pos: Vec3,
+) -> Vec3 {
+    let delta = calc_delta(source_pose_pos, source_rest_global_pos);
+    let scaling = calc_scaling(dist_rest_global_pos, source_rest_global_pos);
+    dist_rest_global_pos + delta * scaling
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::vrma::retarget::bone::{calc_delta, calc_scaling};
+    use bevy::math::Vec3;
+
+    #[test]
+    fn test_scaling() {
+        let scalling = calc_scaling(Vec3::splat(1.), Vec3::splat(2.));
+        assert!((scalling - 0.5) < 0.001);
+    }
+
+    #[test]
+    fn test_delta() {
+        let delta = calc_delta(Vec3::splat(1.), Vec3::splat(2.));
+        assert_eq!(delta, Vec3::splat(-1.));
+    }
 }
