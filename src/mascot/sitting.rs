@@ -27,7 +27,7 @@ impl Plugin for MascotSittingPlugin {
             .add_event::<MoveSittingPos>()
             .add_systems(Update, (
                 start_tracking.run_if(input_just_pressed(GlobalMouseButton::Left)),
-                track_to_sitting_window.run_if(on_event::<MouseMotion>),
+                track_to_sitting_window.run_if(any_drag_sitting_window),
                 end_tracking.run_if(input_just_released(GlobalMouseButton::Left)),
                 remove_sitting_window,
                 adjust_sitting_pos_on_scaling,
@@ -35,6 +35,12 @@ impl Plugin for MascotSittingPlugin {
             ).run_if(any_mascots_sitting))
             .add_systems(PostUpdate, move_sitting_pos.run_if(on_event::<MoveSittingPos>));
     }
+}
+
+fn any_drag_sitting_window(
+    sitting_windows: Query<&SittingWindow>,
+) -> bool {
+    sitting_windows.iter().any(|s| s.dragging)
 }
 
 fn any_mascots_sitting(mascots: Query<&MascotAction>) -> bool {
