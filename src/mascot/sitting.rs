@@ -7,7 +7,6 @@ use crate::system_param::mouse_position::MousePosition;
 use crate::system_param::GlobalScreenPos;
 use bevy::app::{App, PostUpdate, Update};
 use bevy::input::common_conditions::{input_just_pressed, input_just_released};
-use bevy::input::mouse::MouseMotion;
 use bevy::math::Vec2;
 use bevy::prelude::{debug, on_event, Changed, Commands, Component, Entity, Event, EventReader, EventWriter, IntoSystemConfigs, Local, ParallelCommands, Plugin, Query, Transform, With};
 use bevy::utils::HashMap;
