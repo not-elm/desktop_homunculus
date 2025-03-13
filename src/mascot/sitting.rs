@@ -1,14 +1,11 @@
-use crate::global_mouse::button::GlobalMouseButton;
 use crate::global_window::GlobalWindow;
 use crate::mascot::MascotEntity;
 use crate::settings::state::{ActionName, MascotAction};
 use crate::system_param::mascot_tracker::MascotTracker;
-use crate::system_param::mouse_position::MousePosition;
 use crate::system_param::GlobalScreenPos;
 use bevy::app::{App, PostUpdate, Update};
-use bevy::input::common_conditions::{input_just_pressed, input_just_released};
 use bevy::math::Vec2;
-use bevy::prelude::{debug, on_event, Changed, Commands, Component, Entity, Event, EventReader, EventWriter, IntoSystemConfigs, Local, ParallelCommands, Plugin, Query, Transform, With};
+use bevy::prelude::{on_event, Changed, Commands, Component, Entity, Event, EventReader, EventWriter, IntoSystemConfigs, Local, ParallelCommands, Plugin, Query, Transform, With};
 use bevy::utils::HashMap;
 use bevy::window::RequestRedraw;
 use itertools::Itertools;
@@ -25,21 +22,13 @@ impl Plugin for MascotSittingPlugin {
         app
             .add_event::<MoveSittingPos>()
             .add_systems(Update, (
-                start_tracking.run_if(input_just_pressed(GlobalMouseButton::Left)),
-                track_to_sitting_window.run_if(any_drag_sitting_window),
-                end_tracking.run_if(input_just_released(GlobalMouseButton::Left)),
+                track_to_sitting_window,
                 remove_sitting_window,
                 adjust_sitting_pos_on_scaling,
                 adjust_sitting_pos_on_sit_down,
             ).run_if(any_mascots_sitting))
             .add_systems(PostUpdate, move_sitting_pos.run_if(on_event::<MoveSittingPos>));
     }
-}
-
-fn any_drag_sitting_window(
-    sitting_windows: Query<&SittingWindow>,
-) -> bool {
-    sitting_windows.iter().any(|s| s.dragging)
 }
 
 fn any_mascots_sitting(mascots: Query<&MascotAction>) -> bool {
@@ -50,7 +39,6 @@ fn any_mascots_sitting(mascots: Query<&MascotAction>) -> bool {
 pub struct SittingWindow {
     pub window: GlobalWindow,
     pub mascot_viewport_offset: Vec2,
-    pub dragging: bool,
 }
 
 impl SittingWindow {
@@ -61,7 +49,6 @@ impl SittingWindow {
         Self {
             mascot_viewport_offset: *sitting_pos - global_window.frame.min,
             window: global_window,
-            dragging: false,
         }
     }
 
@@ -128,33 +115,12 @@ fn move_sitting_pos(
     redraw.send(RequestRedraw);
 }
 
-fn start_tracking(
-    mut redraw: EventWriter<RequestRedraw>,
-    mut sitting_windows: Query<&mut SittingWindow>,
-    mouse_position: MousePosition,
-) {
-    for mut sitting_window in sitting_windows
-        .iter_mut()
-        .filter(|s| !s.dragging)
-    {
-        if sitting_window.window.frame.contains(*mouse_position.global()) {
-            debug!("Start tracking sitting application_windows: {:?}", sitting_window.window.title);
-            sitting_window.dragging = true;
-            redraw.send(RequestRedraw);
-        }
-    }
-}
-
 fn track_to_sitting_window(
-    mut redraw: EventWriter<RequestRedraw>,
     par_commands: ParallelCommands,
     sitting_windows: Query<(Entity, &SittingWindow)>,
     tracker: MascotTracker,
 ) {
     sitting_windows.par_iter().for_each(|(mascot_entity, sitting_window)| {
-        if !sitting_window.dragging {
-            return;
-        }
         let Some(new_sitting_window) = sitting_window.update() else {
             return;
         };
@@ -167,22 +133,6 @@ fn track_to_sitting_window(
                 new_sitting_window,
                 transform,
             ));
-        });
-    });
-    redraw.send(RequestRedraw);
-}
-
-fn end_tracking(
-    par_commands: ParallelCommands,
-    sitting_windows: Query<(Entity, &SittingWindow)>,
-) {
-    sitting_windows.par_iter().for_each(|(entity, sitting_window)| {
-        par_commands.command_scope(|mut commands| {
-            commands.entity(entity).insert(SittingWindow {
-                dragging: false,
-                mascot_viewport_offset: sitting_window.mascot_viewport_offset,
-                window: sitting_window.window.clone(),
-            });
         });
     });
 }

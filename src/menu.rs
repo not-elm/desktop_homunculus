@@ -3,7 +3,6 @@ mod load_mascot;
 mod actions;
 mod reset_position;
 
-use crate::global_mouse::cursor::GlobalMouseCursor;
 use crate::mascot::Mascot;
 use crate::menu::actions::{request_send_actions, MenuActionsPlugin};
 use crate::menu::load_mascot::load_mascot;
@@ -12,12 +11,14 @@ use crate::menu::scale::MenuScalePlugin;
 use crate::system_param::cameras::Cameras;
 use crate::system_param::mesh_aabb::MascotAabb;
 use crate::system_param::monitors::{monitor_rect, Monitors};
+use crate::system_param::window_layers::WindowLayers;
 use bevy::app::{App, Plugin, PostUpdate, Update};
 use bevy::core::Name;
 use bevy::hierarchy::Parent;
 use bevy::math::{Rect, Vec2};
 use bevy::picking::events::Click;
-use bevy::prelude::{any_with_component, Added, Commands, Component, Entity, HierarchyQueryExt, In, IntoSystemConfigs, NonSend, Observer, Pointer, PointerButton, Query, Res, Transform, Trigger, With, Without};
+use bevy::prelude::{any_with_component, Added, Commands, Component, Entity, HierarchyQueryExt, In, IntoSystemConfigs, NonSend, Observer, Pointer, PointerButton, Query, Transform, Trigger, With, Without};
+use bevy::render::camera::NormalizedRenderTarget;
 use bevy::render::view::RenderLayers;
 use bevy::utils::default;
 use bevy::window::{Window, WindowPosition, WindowResolution};
@@ -73,7 +74,7 @@ fn open_menu(
     trigger: Trigger<Pointer<Click>>,
     mut commands: Commands,
     monitors: Monitors,
-    mouse: Res<GlobalMouseCursor>,
+    windows: WindowLayers,
     parents: Query<&Parent>,
     menus: Query<&Menu>,
     mascots: Query<&Name>,
@@ -81,7 +82,12 @@ fn open_menu(
     if !(matches!(trigger.event.button, PointerButton::Secondary) && menus.is_empty()) {
         return;
     }
-    let global_cursor_pos = mouse.global();
+    let NormalizedRenderTarget::Window(window_ref) = trigger.pointer_location.target else {
+        return;
+    };
+    let Some(global_cursor_pos) = windows.to_global_pos(window_ref.entity(), trigger.pointer_location.position) else {
+        return;
+    };
     let Some((_, monitor, _)) = monitors.find_monitor_from_global_screen_pos(global_cursor_pos) else {
         return;
     };
@@ -134,7 +140,6 @@ fn fit_position(
 
 fn mark_initialized_menu(
     mut commands: Commands,
-    mouse: Res<GlobalMouseCursor>,
     cameras: Cameras,
     monitors: Monitors,
     winit_windows: NonSend<WinitWindows>,
@@ -146,7 +151,7 @@ fn mark_initialized_menu(
             let monitor_pos = monitors.monitor_pos(layers).unwrap_or_default();
             let scale_factor = monitors.scale_factor(layers).unwrap_or(1.0);
             let (_, max) = mascot_aabb.calculate(*mascot_entity);
-            let max = cameras.to_viewport_pos(layers, max).unwrap_or(*mouse.global());
+            let max = cameras.to_viewport_pos(layers, max).unwrap_or_default();
             let max = monitor_pos + max;
             let pos = max * scale_factor;
             winit_window.set_outer_position(PhysicalPosition::new(pos.x, pos.y));

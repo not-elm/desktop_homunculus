@@ -1,3 +1,4 @@
+use crate::application_windows::hit_test::UpdatedHitTest;
 use crate::mascot::Mascot;
 use crate::system_param::cameras::Cameras;
 use crate::vrm::expressions::VrmExpressionRegistry;
@@ -12,7 +13,8 @@ use bevy::asset::Assets;
 use bevy::core::Name;
 use bevy::gltf::GltfNode;
 use bevy::log::{error, info};
-use bevy::prelude::{Commands, DespawnRecursiveExt, Entity, EventWriter, Plugin, Query, Res, Transform};
+use bevy::prelude::{Commands, DespawnRecursiveExt, Entity, EventWriter, Out, Over, Plugin, Pointer, Query, Res, Transform, Trigger};
+use bevy::render::camera::NormalizedRenderTarget;
 use bevy::scene::SceneRoot;
 
 pub struct VrmSpawnPlugin;
@@ -86,7 +88,34 @@ fn spawn_vrm(
                 ),
             ));
         }
+        cmd
+            .observe(enable_hit_test)
+            .observe(disable_hit_test);
         ew.send(RequestLoadVrma);
+    }
+}
+
+fn enable_hit_test(
+    trigger: Trigger<Pointer<Over>>,
+    mut commands: Commands,
+) {
+    if let NormalizedRenderTarget::Window(window) = trigger.pointer_location.target {
+        commands.trigger(UpdatedHitTest {
+            window: window.entity(),
+            hit_test: true,
+        });
+    }
+}
+
+fn disable_hit_test(
+    trigger: Trigger<Pointer<Out>>,
+    mut commands: Commands,
+) {
+    if let NormalizedRenderTarget::Window(window) = trigger.pointer_location.target {
+        commands.trigger(UpdatedHitTest {
+            window: window.entity(),
+            hit_test: false,
+        });
     }
 }
 
