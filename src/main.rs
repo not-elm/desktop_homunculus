@@ -31,7 +31,7 @@ use bevy::log::LogPlugin;
 use bevy::prelude::{default, AmbientLight, ClearColor, MeshPickingPlugin};
 use bevy::render::settings::{RenderCreation, WgpuSettings};
 use bevy::render::RenderPlugin;
-use bevy::window::WindowPlugin;
+use bevy::window::{ExitCondition, WindowPlugin};
 use bevy::DefaultPlugins;
 use bevy_webview_wry::api::{AllLogPlugins, AppExitApiPlugin};
 use bevy_webview_wry::prelude::AllDialogPlugins;
@@ -52,6 +52,7 @@ fn main() {
                     // Windows won't start without PrimaryWindow for some reason.
                     #[cfg(not(target_os = "windows"))]
                     primary_window: None,
+                    exit_condition: ExitCondition::DontExit,
                     ..default()
                 })
                 .set(RenderPlugin {
