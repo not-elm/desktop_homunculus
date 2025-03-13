@@ -8,6 +8,7 @@ use crate::settings::preferences::action::{ActionPreferences, ActionProperties};
 use crate::settings::preferences::{MascotLocation, MascotLocationPreferences};
 use crate::settings::save::AppSettingsSavePlugin;
 use crate::settings::state::MascotAction;
+use crate::util::app_data_dir;
 use crate::vrma::Vrma;
 use bevy::app::{App, Update};
 use bevy::prelude::{any_component_removed, Added, IntoSystemConfigs, Plugin, Query, ResMut, With};
@@ -48,12 +49,6 @@ fn remove_action(
 ) {
     let exists_actions = vrma.iter().cloned().collect::<Vec<_>>();
     actions.cleanup(&exists_actions);
-}
-
-fn app_data_dir() -> PathBuf {
-    dirs::data_dir()
-        .unwrap_or_default()
-        .join(env!("CARGO_PKG_NAME"))
 }
 
 fn mascot_locations_json_path() -> PathBuf {

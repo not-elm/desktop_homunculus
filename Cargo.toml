@@ -21,7 +21,6 @@ bevy_webview_wry = { version = "0.3", features = ["api"] }
 serde = { version = "1", features = ["derive"] }
 device_query = "3"
 dirs = "6"
-thiserror = "2"
 serde_json = "1"
 winit = "0.30"
 rand = "0.9"
@@ -29,6 +28,7 @@ crossbeam = "0.8.4"
 itertools = "0.14"
 anyhow = "1.0.96"
 bevy-inspector-egui = { version = "0.29", optional = true }
+tracing-appender = "0.2.3"
 
 [target.'cfg(target_os="macos")'.dependencies]
 core-graphics = { version = "0.24.0" }
@@ -51,3 +51,25 @@ windows = { version = "0.60", features = [
 [features]
 default = []
 develop = ["dep:bevy-inspector-egui"]
+
+[profile.dev.package."*"]
+opt-level = 3
+
+[profile.dev]
+opt-level = 1
+
+# This is used by trunk as it doesn't support custom profiles: https://github.com/trunk-rs/trunk/issues/605
+# xbuild also uses this profile for building android AABs because I couldn't find a configuration for it
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+strip = true
+
+# Profile for distribution
+[profile.dist]
+inherits = "release"
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true

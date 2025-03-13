@@ -23,11 +23,13 @@ use crate::mascot::DesktopMascotPlugin;
 use crate::menu::MenuPlugin;
 use crate::power_state::PowerStatePlugin;
 use crate::settings::AppSettingsPlugin;
+use crate::util::app_data_dir;
 use crate::vrm::VrmPlugin;
 use crate::vrma::VrmaPlugin;
 use bevy::app::{App, PluginGroup};
 use bevy::color::Color;
-use bevy::log::LogPlugin;
+use bevy::log::tracing_subscriber::Layer;
+use bevy::log::{BoxedLayer, LogPlugin};
 use bevy::prelude::{default, AmbientLight, ClearColor, MeshPickingPlugin};
 use bevy::render::settings::{RenderCreation, WgpuSettings};
 use bevy::render::RenderPlugin;
@@ -36,17 +38,25 @@ use bevy::DefaultPlugins;
 use bevy_webview_wry::api::{AllLogPlugins, AppExitApiPlugin};
 use bevy_webview_wry::prelude::AllDialogPlugins;
 use bevy_webview_wry::WebviewWryPlugin;
+use std::sync::OnceLock;
+use tracing_appender::non_blocking::WorkerGuard;
+use tracing_appender::rolling;
 
 fn main() {
-    App::new()
+    let mut app = App::new();
+    app
         .add_plugins((
             DefaultPlugins
                 .set(LogPlugin {
                     #[cfg(debug_assertions)]
                     level: bevy::log::Level::INFO,
+                    #[cfg(not(debug_assertions))]
+                    level: bevy::log::Level::ERROR,
+                    custom_layer,
                     #[cfg(target_os = "windows")]
                     filter: "wgpu_hal=off".to_string(),
-                    ..default()
+                    #[cfg(not(target_os = "windows"))]
+                    filter: LogPlugin::default().filter,
                 })
                 .set(WindowPlugin {
                     // Windows won't start without PrimaryWindow for some reason.
@@ -93,6 +103,18 @@ fn main() {
         })
         .insert_resource(ClearColor(Color::NONE))
         .run();
+}
+
+fn custom_layer(_app: &mut App) -> Option<BoxedLayer> {
+    let file_appender = rolling::daily(app_data_dir().join("Logs"), "log.txt");
+    let (non_blocking, guard) = tracing_appender::non_blocking(file_appender);
+    static LOG_GUARD: OnceLock<WorkerGuard> = OnceLock::new();
+    let _ = LOG_GUARD.set(guard);
+    Some(bevy::log::tracing_subscriber::fmt::layer()
+        .with_writer(non_blocking)
+        .with_file(true)
+        .with_line_number(true)
+        .boxed())
 }
 
 #[cfg(test)]

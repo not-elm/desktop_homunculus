@@ -7,6 +7,7 @@
 ### Improvements
 
 - Split settings file into two files: `actions.json` and `mascot_locations.json`.
+- Log file is now saved in the Logs directory.
 
 ### Bug Fixes
 
