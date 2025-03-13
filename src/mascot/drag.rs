@@ -4,13 +4,14 @@ use crate::global_window::{obtain_global_windows, GlobalWindows};
 use crate::mascot::sitting::SittingWindow;
 use crate::mascot::{Mascot, MascotEntity};
 use crate::settings::state::{ActionGroup, ActionName, MascotAction};
+use crate::system_param::cameras::Cameras;
 use crate::system_param::mascot_tracker::MascotTracker;
 use crate::system_param::window_layers::WindowLayers;
 use crate::system_param::GlobalScreenPos;
 use bevy::app::{App, Plugin};
 use bevy::hierarchy::{HierarchyQueryExt, Parent};
 use bevy::log::debug;
-use bevy::prelude::{Commands, Drag, DragEnd, DragStart, Entity, Pointer, PointerButton, Query, Reflect, Trigger};
+use bevy::prelude::{Commands, Drag, DragEnd, DragStart, Entity, Pointer, PointerButton, Query, Reflect, Transform, Trigger};
 use bevy::render::camera::NormalizedRenderTarget;
 use std::fmt::Debug;
 
@@ -35,16 +36,26 @@ impl Plugin for MascotDragPlugin {
 fn on_drag_start(
     trigger: Trigger<Pointer<DragStart>>,
     mut commands: Commands,
+    tracker: MascotTracker,
+    windows: WindowLayers,
     states: Query<&MascotAction>,
-    parents: Query<&Parent>,
 ) {
     if !matches!(trigger.event.button, PointerButton::Primary) {
         return;
     }
-    let mascot_entity = parents.root_ancestor(trigger.target);
-    if not_playing_sit_down(&states, mascot_entity) {
+    let mascot = MascotEntity(trigger.entity());
+    if not_playing_sit_down(&states, mascot.0) {
         debug!("on_drag_start {:?}", trigger.pointer_location.position);
-        commands.entity(mascot_entity).insert(MascotAction::from_group(ActionGroup::drag()));
+        let Some(global) = global_cursor_pos(&trigger, &windows) else {
+            return;
+        };
+        let Some(transform) = tracker.tracking_on_drag(mascot, global) else {
+            return;
+        };
+        commands.entity(mascot.0).insert((
+            MascotAction::from_group(ActionGroup::drag()),
+            transform,
+        ));
     }
 }
 
@@ -63,20 +74,31 @@ fn not_playing_sit_down(
 fn on_drag_move(
     trigger: Trigger<Pointer<Drag>>,
     mut commands: Commands,
-    tracker: MascotTracker,
-    windows: WindowLayers,
+    cameras: Cameras,
+    transforms: Query<&Transform>,
 ) {
     if !matches!(trigger.event.button, PointerButton::Primary) {
         return;
     }
     let mascot = MascotEntity(trigger.entity());
-    let Some(global) = global_cursor_pos(&trigger, &windows) else {
+    let NormalizedRenderTarget::Window(window_ref) = trigger.pointer_location.target else {
         return;
     };
-    let Some(transform) = tracker.tracking_on_drag(mascot, global) else {
+    let drag_pos = trigger.pointer_location.position;
+    let Some(origin) = cameras.to_world_pos_from_viewport(window_ref.entity(), drag_pos - trigger.delta) else {
         return;
     };
-    commands.entity(mascot.0).insert(transform);
+    let Some(current) = cameras.to_world_pos_from_viewport(window_ref.entity(), drag_pos) else {
+        return;
+    };
+    let Ok(transform) = transforms.get(mascot.0) else {
+        return;
+    };
+    let delta = current - origin;
+    commands.entity(mascot.0).insert(Transform {
+        translation: transform.translation + delta,
+        ..*transform
+    });
 }
 
 fn on_drag_drop(
