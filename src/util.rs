@@ -1,13 +1,22 @@
 use std::path::{Path, PathBuf};
 
 pub fn models_dir() -> PathBuf {
+    assets_dir().join("models")
+}
+
+pub fn assets_dir() -> PathBuf {
     std::env::current_exe()
         .ok()
         .and_then(|exe_path| Some(exe_path.parent()?.to_path_buf()))
         .or_else(|| std::env::current_dir().ok())
         .unwrap_or_default()
         .join("assets")
-        .join("models")
+}
+
+pub fn app_data_dir() -> PathBuf {
+    dirs::data_dir()
+        .unwrap_or_default()
+        .join(env!("CARGO_PKG_NAME"))
 }
 
 pub fn remove_mystery_file_if_exists(dir: &Path) {
