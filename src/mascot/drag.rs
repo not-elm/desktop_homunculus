@@ -1,17 +1,18 @@
 // mod index;
 
-use crate::global_mouse::cursor::GlobalMouseCursor;
 use crate::global_window::{obtain_global_windows, GlobalWindows};
 use crate::mascot::sitting::SittingWindow;
 use crate::mascot::{Mascot, MascotEntity};
 use crate::settings::state::{ActionGroup, ActionName, MascotAction};
 use crate::system_param::mascot_tracker::MascotTracker;
 use crate::system_param::window_layers::WindowLayers;
+use crate::system_param::GlobalScreenPos;
 use bevy::app::{App, Plugin};
 use bevy::hierarchy::{HierarchyQueryExt, Parent};
 use bevy::log::debug;
-use bevy::prelude::{Commands, Drag, DragEnd, DragStart, Entity, Pointer, PointerButton, Query, Res, Trigger};
+use bevy::prelude::{Commands, Drag, DragEnd, DragStart, Entity, Pointer, PointerButton, Query, Reflect, Trigger};
 use bevy::render::camera::NormalizedRenderTarget;
+use std::fmt::Debug;
 
 pub struct MascotDragPlugin;
 
@@ -65,11 +66,11 @@ fn on_drag_move(
     tracker: MascotTracker,
     windows: WindowLayers,
 ) {
-    let mascot = MascotEntity(trigger.entity());
-    let NormalizedRenderTarget::Window(window_ref) = trigger.pointer_location.target else {
+    if !matches!(trigger.event.button, PointerButton::Primary) {
         return;
-    };
-    let Some(global) = windows.to_global_pos(window_ref.entity(), trigger.pointer_location.position) else {
+    }
+    let mascot = MascotEntity(trigger.entity());
+    let Some(global) = global_cursor_pos(&trigger, &windows) else {
         return;
     };
     let Some(transform) = tracker.tracking_on_drag(mascot, global) else {
@@ -82,12 +83,17 @@ fn on_drag_drop(
     trigger: Trigger<Pointer<DragEnd>>,
     mut commands: Commands,
     tracker: MascotTracker,
-    global_cursor: Res<GlobalMouseCursor>,
+    windows: WindowLayers,
     #[cfg(target_os = "windows")]
     // To run on main thread
     _: bevy::prelude::NonSend<bevy::winit::WinitWindows>,
 ) {
-    let global_cursor_pos = global_cursor.global();
+    if !matches!(trigger.event.button, PointerButton::Primary) {
+        return;
+    }
+    let Some(global_cursor_pos) = global_cursor_pos(&trigger, &windows) else {
+        return;
+    };
     let mascot = MascotEntity(trigger.entity());
     let global_windows: GlobalWindows = obtain_global_windows().unwrap_or_default();
     match global_windows.find_sitting_window(global_cursor_pos) {
@@ -113,3 +119,12 @@ fn on_drag_drop(
     }
 }
 
+fn global_cursor_pos<E: Debug + Clone + Reflect>(
+    trigger: &Trigger<Pointer<E>>,
+    windows: &WindowLayers,
+) -> Option<GlobalScreenPos> {
+    let NormalizedRenderTarget::Window(window_ref) = trigger.pointer_location.target else {
+        return None;
+    };
+    windows.to_global_pos(window_ref.entity(), trigger.pointer_location.position)
+}

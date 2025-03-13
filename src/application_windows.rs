@@ -1,5 +1,5 @@
 mod setup;
-mod hit_test;
+pub mod hit_test;
 
 use crate::application_windows::hit_test::ApplicationWindowsHitTestPlugin;
 use crate::application_windows::setup::ApplicationWindowsSetupPlugin;

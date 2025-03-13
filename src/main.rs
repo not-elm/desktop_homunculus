@@ -8,7 +8,6 @@ mod mascot;
 mod global_window;
 mod system_param;
 mod power_state;
-mod global_mouse;
 mod menu;
 mod settings;
 mod error;
@@ -18,7 +17,6 @@ mod vrma;
 mod util;
 
 use crate::application_windows::ApplicationWindowsPlugin;
-use crate::global_mouse::GlobalMousePlugin;
 use crate::mascot::DesktopMascotPlugin;
 use crate::menu::MenuPlugin;
 use crate::power_state::PowerStatePlugin;
@@ -97,7 +95,6 @@ fn main() {
             VrmPlugin,
             VrmaPlugin,
             ApplicationWindowsPlugin,
-            GlobalMousePlugin,
             AppSettingsPlugin,
         ))
         .insert_resource(AmbientLight {

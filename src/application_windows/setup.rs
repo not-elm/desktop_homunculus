@@ -159,7 +159,7 @@ fn create_window(size: Vec2) -> Window {
         titlebar_shown: false,
         mode: WindowMode::Windowed,
         cursor_options: CursorOptions {
-            hit_test: true,
+            hit_test: false,
             ..default()
         },
         ..default()
