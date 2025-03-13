@@ -30,10 +30,10 @@ use bevy::app::{App, PluginGroup};
 use bevy::color::Color;
 use bevy::log::tracing_subscriber::Layer;
 use bevy::log::{BoxedLayer, LogPlugin};
-use bevy::prelude::{default, AmbientLight, ClearColor, MeshPickingPlugin};
+use bevy::prelude::{default, AmbientLight, ClearColor, MeshPickingPlugin, Window};
 use bevy::render::settings::{RenderCreation, WgpuSettings};
 use bevy::render::RenderPlugin;
-use bevy::window::{ExitCondition, WindowPlugin};
+use bevy::window::{ExitCondition, WindowPlugin, WindowResolution};
 use bevy::DefaultPlugins;
 use bevy_webview_wry::api::{AllLogPlugins, AppExitApiPlugin};
 use bevy_webview_wry::prelude::AllDialogPlugins;
@@ -59,9 +59,12 @@ fn main() {
                     filter: LogPlugin::default().filter,
                 })
                 .set(WindowPlugin {
-                    // Windows won't start without PrimaryWindow for some reason.
-                    #[cfg(not(target_os = "windows"))]
-                    primary_window: None,
+                    primary_window: Some(Window {
+                        resolution: WindowResolution::new(0., 0.),
+                        decorations: false,
+                        transparent: true,
+                        ..default()
+                    }),
                     exit_condition: ExitCondition::DontExit,
                     ..default()
                 })
