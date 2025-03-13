@@ -1,18 +1,16 @@
 use crate::application_windows::{PrimaryCamera, TargetMonitor};
-use crate::global_mouse::cursor::GlobalMouseCursor;
-use crate::system_param::monitors::monitor_rect;
-use bevy::app::{App, Startup, Update};
+use bevy::app::{App, Update};
 use bevy::core::Name;
 use bevy::ecs::query::With;
 use bevy::ecs::schedule::IntoSystemConfigs;
 use bevy::log::debug;
 use bevy::math::Vec2;
-use bevy::prelude::{default, Camera, Camera3d, Component, GlobalTransform, NonSend, OrthographicProjection, Projection, Reflect, ReflectComponent, Res, Transform, Window};
-use bevy::prelude::{Commands, Entity, Plugin, Query};
+use bevy::prelude::*;
 use bevy::render::camera::{RenderTarget, ScalingMode, Viewport};
 use bevy::render::view::RenderLayers;
 use bevy::window::{CursorOptions, Monitor, PrimaryMonitor, PrimaryWindow, WindowLevel, WindowMode, WindowRef, WindowResolution};
 use bevy::winit::WinitWindows;
+use serde::{Deserialize, Serialize};
 
 pub struct ApplicationWindowsSetupPlugin;
 
@@ -20,47 +18,58 @@ impl Plugin for ApplicationWindowsSetupPlugin {
     fn build(&self, app: &mut App) {
         app
             .register_type::<UninitializedCamera>()
+            .register_type::<DefaultPrimaryWindow>()
             .register_type::<TargetMonitor>()
-            .add_systems(Startup, (
-                despawn_default_window,
+            .add_systems(PreStartup, (
+                mark_default_window,
                 setup_windows,
+                despawn_default_window,
             ).chain())
             .add_systems(Update, initialize_camera_position);
     }
 }
 
-#[derive(Component, Debug, Reflect)]
-#[reflect(Component)]
+#[derive(Component, Debug, Reflect, Serialize, Deserialize)]
+#[reflect(Component, Serialize, Deserialize)]
 struct UninitializedCamera;
 
-fn despawn_default_window(
+/// The default primary window is only used to adjust the position of the window, and
+/// it is despawn after all windows are created.
+#[derive(Component, Debug, Reflect, Serialize, Deserialize)]
+#[reflect(Component, Serialize, Deserialize)]
+struct DefaultPrimaryWindow;
+
+fn mark_default_window(
     mut commands: Commands,
     default_window: Query<Entity, With<PrimaryWindow>>,
 ) {
-    if let Ok(entity) = default_window.get_single() {
-        commands.entity(entity).despawn();
-    }
+    commands.entity(default_window.single()).insert(DefaultPrimaryWindow);
+}
+
+fn despawn_default_window(
+    mut commands: Commands,
+    default_window: Query<Entity, With<DefaultPrimaryWindow>>,
+) {
+    commands.entity(default_window.single()).despawn();
 }
 
 fn setup_windows(
     mut commands: Commands,
-    global_cursor: Res<GlobalMouseCursor>,
     monitors: Query<(Entity, &Monitor, Option<&PrimaryMonitor>)>,
+    primary_window: Query<Entity, With<PrimaryWindow>>,
+    winit_windows: NonSend<WinitWindows>,
 ) {
-    let cursor_pos = global_cursor.global();
-    let Some(scale_factor) = monitors
-        .iter()
-        .find_map(|(_, monitor, _)| {
-            monitor_rect(monitor).contains(*cursor_pos).then_some(monitor.scale_factor as f32)
-        })
-    else {
-        return;
-    };
-
+    let current_monitor_scale_factor = winit_windows
+        .get_window(primary_window.single())
+        .unwrap()
+        .current_monitor()
+        .map(|monitor| monitor.scale_factor() as f32)
+        .unwrap_or(1.);
     for (layer, (monitor_entity, monitor, primary)) in monitors.iter().enumerate() {
         let mut window = create_window(monitor.physical_size().as_vec2());
         debug!("Monitor({:?}) {:?}", monitor.physical_position, monitor.physical_size());
-        window.position.set((monitor.physical_position.as_vec2() * scale_factor).as_ivec2());
+
+        window.position.set((monitor.physical_position.as_vec2() * current_monitor_scale_factor).as_ivec2());
         window.resolution.set_scale_factor(monitor.scale_factor as f32);
         let window_entity = commands.spawn((
             Name::new(format!("Window({:?})", monitor.physical_position)),
