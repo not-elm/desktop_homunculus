@@ -1,4 +1,4 @@
-use crate::util::create_dir_all_if_need;
+use crate::util::{animations_dir, create_dir_all_if_need};
 use crate::vrma::load::RequestLoadVrma;
 use bevy::app::{App, Startup, Update};
 use bevy::asset::io::file::FileWatcher;
@@ -28,10 +28,7 @@ fn start_watching(
     mut commands: Commands,
 ) {
     let (sender, receiver) = crossbeam::channel::unbounded();
-    let vrma_folder = std::env::current_dir()
-        .unwrap_or_default()
-        .join("assets")
-        .join("animations");
+    let vrma_folder = animations_dir();
 
     create_dir_all_if_need(&vrma_folder);
 
