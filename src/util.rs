@@ -19,6 +19,10 @@ pub fn app_data_dir() -> PathBuf {
         .join(env!("CARGO_PKG_NAME"))
 }
 
+pub fn animations_dir() -> PathBuf {
+    assets_dir().join("animations")
+}
+
 pub fn remove_mystery_file_if_exists(dir: &Path) {
     let path = dir.join(".DS_Store");
     if path.exists() {
