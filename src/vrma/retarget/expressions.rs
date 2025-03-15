@@ -2,12 +2,12 @@ use crate::system_param::child_searcher::ChildSearcher;
 
 use crate::vrm::expressions::VrmExpressionRegistry;
 use crate::vrma::load::VrmaExpressionNames;
-use crate::vrma::retarget::CurrentRetargeting;
+use crate::vrma::retarget::{CurrentRetargeting, RetargetBindingSystemSet};
 use crate::vrma::{RetargetSource, RetargetTo};
 use bevy::app::{App, Update};
 use bevy::hierarchy::Children;
 use bevy::log::debug;
-use bevy::prelude::{Added, Changed, Commands, Component, Entity, MorphWeights, Plugin, Query, Reflect, Transform, With};
+use bevy::prelude::{Added, Changed, Commands, Component, Entity, IntoSystemConfigs, MorphWeights, Plugin, Query, Reflect, Transform, With};
 
 pub struct VrmaRetargetExpressionsPlugin;
 
@@ -18,7 +18,7 @@ impl Plugin for VrmaRetargetExpressionsPlugin {
             .register_type::<BindExpressionNode>()
             .add_systems(Update, (
                 retarget_expressions_to_mascot,
-                bind_expressions,
+                bind_expressions.in_set(RetargetBindingSystemSet),
             ));
     }
 }

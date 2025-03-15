@@ -11,7 +11,7 @@ use crate::menu::scale::MenuScalePlugin;
 use crate::system_param::cameras::Cameras;
 use crate::system_param::mesh_aabb::MascotAabb;
 use crate::system_param::monitors::{monitor_rect, Monitors};
-use crate::system_param::window_layers::WindowLayers;
+use crate::system_param::windows::Windows;
 use bevy::app::{App, Plugin, PostUpdate, Update};
 use bevy::core::Name;
 use bevy::hierarchy::Parent;
@@ -74,7 +74,7 @@ fn open_menu(
     trigger: Trigger<Pointer<Click>>,
     mut commands: Commands,
     monitors: Monitors,
-    windows: WindowLayers,
+    windows: Windows,
     parents: Query<&Parent>,
     menus: Query<&Menu>,
     mascots: Query<&Name>,
