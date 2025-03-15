@@ -1,7 +1,7 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
     <!-- ToDo use your own keys for Name and Manufacturer, as well as a new UUID for UpgradeCode -->
     <Package
-        Name="BevyGame"
+        Name="bevy_baby"
         Manufacturer="My Name"
         UpgradeCode="12345678-de4f-4893-a535-93dfd0597731"
         Version="0.1.0"
