@@ -9,7 +9,7 @@ pub mod child_searcher;
 pub mod vrm_animation_players;
 pub mod bone_offsets;
 pub mod coordinate;
-pub mod window_layers;
+pub mod windows;
 
 /// Represents the global screen coordinates.
 /// If there are multiple screens, the coordinates of the leftmost screen are used as the origin.

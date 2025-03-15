@@ -61,6 +61,11 @@ impl ActionGroup {
     pub fn is_sit_down(&self) -> bool {
         self.0 == Self::SIT_DOWN
     }
+
+    #[inline]
+    pub fn is_drag(&self) -> bool {
+        self.0 == Self::DRAG
+    }
 }
 
 impl Default for ActionGroup {
@@ -89,6 +94,11 @@ impl ActionName {
 
     pub fn drop() -> Self {
         Self::from(Self::DROP)
+    }
+
+    #[inline]
+    pub fn is_index(&self) -> bool {
+        self.0 == Self::INDEX
     }
 }
 
