@@ -24,12 +24,6 @@ impl Windows<'_, '_> {
             })
     }
 
-    pub fn find_window_from_layers(&self, layers: &RenderLayers) -> Option<(Entity, &Window, &RenderLayers)> {
-        self.windows.iter().find(|(_, _, layer)| {
-            layers.intersects(layer)
-        })
-    }
-
     pub fn find_window_from_global_screen_pos(&self, pos: GlobalScreenPos) -> Option<(Entity, &Window, &RenderLayers)> {
         self.windows.iter().find(|(_, window, _)| {
             window_to_rect(window).contains(*pos)
