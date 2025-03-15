@@ -1,14 +1,14 @@
 use crate::system_param::child_searcher::ChildSearcher;
 use crate::vrm::humanoid_bone::{Hips, HumanoidBoneRegistry};
 use crate::vrm::{BoneRestGlobalTransform, BoneRestTransform};
-use crate::vrma::retarget::CurrentRetargeting;
+use crate::vrma::retarget::{CurrentRetargeting, RetargetBindingSystemSet};
 use crate::vrma::{RetargetSource, RetargetTo};
 use bevy::app::{App, Update};
 use bevy::core::Name;
 use bevy::hierarchy::Children;
 use bevy::log::error;
 use bevy::math::Vec3;
-use bevy::prelude::{Added, Changed, Component, Entity, GlobalTransform, ParallelCommands, Plugin, Query, Reflect, Transform, With, Without};
+use bevy::prelude::{Added, Changed, Component, Entity, GlobalTransform, IntoSystemConfigs, ParallelCommands, Plugin, Query, Reflect, Transform, With, Without};
 
 pub struct VrmaRetargetingBonePlugin;
 
@@ -18,7 +18,7 @@ impl Plugin for VrmaRetargetingBonePlugin {
             .register_type::<RetargetBoneTo>()
             .add_systems(Update, (
                 retarget_bones_to_mascot,
-                bind_bone_rotations,
+                bind_bone_rotations.in_set(RetargetBindingSystemSet),
             ));
     }
 }
@@ -128,8 +128,8 @@ mod tests {
 
     #[test]
     fn test_scaling() {
-        let scalling = calc_scaling(Vec3::splat(1.), Vec3::splat(2.));
-        assert!((scalling - 0.5) < 0.001);
+        let scaling = calc_scaling(Vec3::splat(1.), Vec3::splat(2.));
+        assert!((scaling - 0.5) < 0.001);
     }
 
     #[test]

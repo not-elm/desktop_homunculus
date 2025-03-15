@@ -1,6 +1,6 @@
 mod loader;
 pub mod load;
-mod retarget;
+pub mod retarget;
 pub mod animation;
 mod extensions;
 mod watch_assets;

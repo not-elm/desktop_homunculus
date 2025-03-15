@@ -1,17 +1,17 @@
 use crate::mascot::{Mascot, MascotEntity};
 use crate::system_param::bone_offsets::BoneOffsets;
 use crate::system_param::cameras::Cameras;
-use crate::system_param::window_layers::{window_local_pos, WindowLayers};
+use crate::system_param::windows::{window_local_pos, Windows};
 use crate::system_param::GlobalScreenPos;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{Camera, Query, Transform, With, Without};
 
 #[derive(SystemParam)]
 pub struct MascotTracker<'w, 's> {
-    mascots: Query<'w, 's, &'static mut Transform, (With<Mascot>, Without<Camera>)>,
+    mascots: Query<'w, 's, &'static Transform, (With<Mascot>, Without<Camera>)>,
     camera: Cameras<'w, 's>,
     offsets: BoneOffsets<'w, 's>,
-    windows: WindowLayers<'w, 's>,
+    windows: Windows<'w, 's>,
 }
 
 impl MascotTracker<'_, '_> {
@@ -34,7 +34,7 @@ impl MascotTracker<'_, '_> {
         self.tracking(mascot, pos, 1.0)
     }
 
-    fn tracking(
+    pub fn tracking(
         &self,
         mascot: MascotEntity,
         pos: GlobalScreenPos,

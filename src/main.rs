@@ -47,7 +47,7 @@ fn main() {
             DefaultPlugins
                 .set(LogPlugin {
                     #[cfg(debug_assertions)]
-                    level: bevy::log::Level::INFO,
+                    level: bevy::log::Level::DEBUG,
                     #[cfg(not(debug_assertions))]
                     level: bevy::log::Level::ERROR,
                     custom_layer,
