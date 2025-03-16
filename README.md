@@ -1,6 +1,6 @@
 # desktop_homunculus
 
-[itch.io](https://notelm.itch.io/bevy-baby)
+[itch.io](https://notelm.itch.io/desktop-homunculus)
 
 > [!CAUTION]
 > This crate is in an early stage of development and may undergo breaking changes.
@@ -28,10 +28,6 @@ Currently, **Windows is supported**, and macOS support is planned.
 > it is currently not possible to create a transparent window with backends both `vulkan` and `dx12`.
 >
 >This application uses `open-gl` to avoid this bug, but on some devices, the application may crash during rendering.
-
----
-
----
 
 ## Animation Actions & Transitions
 
@@ -84,19 +80,6 @@ Actions can transition between each other using different transition modes:
 
 - Implement a **local HTTP server** to allow external applications to control mascot actions.
 - Example: **Twitch API integration** to trigger animations based on chat events.
-
-## Using Custom VRM Models
-
-By default, **VRM models and animations (VRMA) are exported from Blender**.  
-However, **VRM models exported from Unity may have different coordinate systems or bone structures**, causing unexpected
-deformations.
-
-### How to Export from Blender
-
-To ensure compatibility, **export VRM models using Blender** with the following add-ons:
-
-- [VRM Add-on for Blender (EN)](https://vrm-addon-for-blender.info/en/)
-- [VRM Add-on for Blender (JP)](https://vrm-addon-for-blender.info/ja/)
 
 ## Credits
 
