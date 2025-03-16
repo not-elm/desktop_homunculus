@@ -13,8 +13,8 @@ on:
 
 env:
   # This variable is used to name release output files.
-  GAME_EXECUTABLE_NAME: bevy_baby
-  GAME_OSX_APP_NAME: bevy_baby
+  GAME_EXECUTABLE_NAME: desktop_homunculus
+  GAME_OSX_APP_NAME: DesktopHomunculus
 
 permissions:
   contents: write
