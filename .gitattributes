@@ -1,0 +1,2 @@
+*.rs linguist-detectable
+*.html linguist-vendored
