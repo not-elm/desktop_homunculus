@@ -1,42 +1,18 @@
-# bevy_baby
+# desktop_homunculus
 
-[itch.io](https://notelm.itch.io/bevy-baby)
+[itch.io](https://notelm.itch.io/desktop-homunculus)
 
 > [!CAUTION]
 > This crate is in an early stage of development and may undergo breaking changes.
 
 ## Overview
 
-**bevy_baby** is a desktop mascot application built using [Bevy](https://github.com/bevyengine/bevy), a fast and
-lightweight game engine written in Rust that utilizes the **ECS (Entity Component System) architecture**.
+**desktop_homunculus** is a desktop mascot application built using [Bevy](https://github.com/bevyengine/bevy), a fast
+and
+lightweight game engine written in Rust that utilizes the ECS (Entity Component System) architecture.
 
-- Supports **VRM** ([VRM 1.0](https://vrm.dev/en/vrm1/)) and **VRMA animations** ([VRMA](https://vrm.dev/en/vrma/)).
-- Enables **animation retargeting** across multiple models, leveraging Bevy's ECS efficiency.
-- Designed for **Bevy users** and those interested in VRM-based animation workflows.
-
-🚀 **This project also showcases my Bevy libraries!**
-
-If you're using Bevy or planning to start, check them out:
-
-| Library              | Description                | Link                                                       |
-|----------------------|----------------------------|------------------------------------------------------------|
-| **bevy_flurx**       | Provides coroutine support | [GitHub](https://github.com/not-elm/bevy_flurx)            | 
-| **bevy_webview_wry** | Enables WebView in Bevy    | [GitHub](https://github.com/not-elm/bevy_webview_projects) |
-
----
-
-## Purpose & Goals
-
-This project was started as a **learning initiative** for:
-
-- Bevy and ECS architecture
-- Blender-based VRM model handling
-- VRM animation techniques (VRMA)
-
-Since I'm learning VRM from scratch, **some implementations might not be optimal**. Contributions and feedback from
-experts are highly appreciated!
-
----
+- Supports [VRM 1.0](https://vrm.dev/en/vrm1/) and [VRMA](https://vrm.dev/en/vrma/).
+- Enables animation retargeting across multiple models, leveraging Bevy's ECS efficiency.
 
 ## Supported Platforms
 
@@ -49,22 +25,14 @@ Currently, **Windows is supported**, and macOS support is planned.
 
 > [!WARNING]
 > On Windows, due to bug in `winit` or `wgpu`,
-> it is currently not possible to create a transparent window with backends both `vulcan` and `dx12`.
+> it is currently not possible to create a transparent window with backends both `vulkan` and `dx12`.
 >
 >This application uses `open-gl` to avoid this bug, but on some devices, the application may crash during rendering.
 
----
-
-## Installation & Usage
-
-🚧 **Coming soon...**
-
----
-
 ## Animation Actions & Transitions
 
-This application uses **animation actions** to define different mascot behaviors.  
-Each action belongs to a **group**, and animations are stored in `assets/animations`.
+This application uses actions to define different mascot behaviors.  
+Each action belongs to a group, and animations are stored in `assets/animations`.
 
 📂 Example:
 
@@ -103,32 +71,15 @@ Actions can transition between each other using different transition modes:
 
 ### Planned Features
 
-- [ ] **Complete Documentation**
-- [ ] **Local HTTP Server for External Control**
-- [ ] **Enhanced Action System** (scale changes, additional movements)
-- [ ] **Support Look At retargeting**
+- [ ] Complete Documentation
+- [ ] Local HTTP Server for External Control
+- [ ] Enhanced Action System (scale changes, additional movements)
+- [ ] Support Look At retargeting
 
 ### Local HTTP Server
 
 - Implement a **local HTTP server** to allow external applications to control mascot actions.
 - Example: **Twitch API integration** to trigger animations based on chat events.
-
----
-
-## Using Custom VRM Models
-
-By default, **VRM models and animations (VRMA) are exported from Blender**.  
-However, **VRM models exported from Unity may have different coordinate systems or bone structures**, causing unexpected
-deformations.
-
-### How to Export from Blender
-
-To ensure compatibility, **export VRM models using Blender** with the following add-ons:
-
-- [VRM Add-on for Blender (EN)](https://vrm-addon-for-blender.info/en/)
-- [VRM Add-on for Blender (JP)](https://vrm-addon-for-blender.info/jp/)
-
----
 
 ## Credits
 
@@ -141,8 +92,6 @@ To ensure compatibility, **export VRM models using Blender** with the following 
 ## License
 
 This project is released under the **MIT License**.
-
----
 
 ## Contact
 
