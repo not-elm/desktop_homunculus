@@ -4,6 +4,8 @@
 src/mascot/assets/
 /test
 
+./crates/
+
 /develop/
 
 # Logs

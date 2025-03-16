@@ -1,33 +1,37 @@
+use crate::application_windows::hit_test::UpdatedHitTest;
+use crate::mascot::Mascot;
 use crate::power_state::Loading;
 use crate::settings::preferences::MascotLocationPreferences;
 use crate::system_param::coordinate::Coordinate;
 use crate::util::{create_dir_all_if_need, models_dir, remove_mystery_file_if_exists};
-use crate::vrm::loader::VrmHandle;
-use crate::vrm::VrmPath;
 use bevy::app::{App, PreStartup, Update};
 use bevy::asset::io::file::FileWatcher;
 use bevy::asset::io::AssetSourceEvent;
 use bevy::asset::{Assets, Handle, LoadedFolder};
 use bevy::log::error;
-use bevy::prelude::{on_event, AssetServer, Commands, Component, Entity, Event, EventWriter, IntoSystemConfigs, Local, Plugin, Query, Reflect, Res};
+use bevy::prelude::{on_event, AssetServer, Commands, Component, Entity, Event, EventWriter, IntoSystemConfigs, Local, Out, Over, Plugin, Pointer, Query, Reflect, Res, Trigger};
+use bevy::render::camera::NormalizedRenderTarget;
+use bevy_vrma::system_param::cameras::Cameras;
+use bevy_vrma::vrm::loader::VrmHandle;
+use bevy_vrma::vrm::VrmPath;
 use crossbeam::channel::Receiver;
 use std::path::PathBuf;
 use std::time::Duration;
 
-pub struct VrmLoadPlugin;
+pub struct VrmFileWatcherPlugin;
 
-impl Plugin for VrmLoadPlugin {
+impl Plugin for VrmFileWatcherPlugin {
     fn build(&self, app: &mut App) {
         app
-            .register_type::<ModelsFolderHandle>()
-            .add_event::<RequestLoadModels>()
+            .register_type::<VrmFolderHandle>()
+            .add_event::<RequestLoadVrm>()
             .add_systems(PreStartup, (
                 start_load_models_folder,
                 start_watching,
             ).chain())
             .add_systems(Update, (
                 prepare_initial_loading,
-                load_models.run_if(on_event::<RequestLoadModels>),
+                load_models.run_if(on_event::<RequestLoadVrm>),
                 receive_events,
             ));
     }
@@ -40,10 +44,10 @@ struct ModelFilesWatcher {
 }
 
 #[derive(Component, Reflect)]
-struct ModelsFolderHandle(Handle<LoadedFolder>);
+struct VrmFolderHandle(Handle<LoadedFolder>);
 
 #[derive(Event)]
-struct RequestLoadModels;
+struct RequestLoadVrm;
 
 fn start_load_models_folder(
     mut commands: Commands,
@@ -52,16 +56,16 @@ fn start_load_models_folder(
     remove_mystery_file_if_exists(&models_dir());
     commands.spawn((
         Loading,
-        ModelsFolderHandle(asset_server.load_folder("models")),
+        VrmFolderHandle(asset_server.load_folder("models")),
     ));
 }
 
 fn prepare_initial_loading(
     mut commands: Commands,
-    mut ew: EventWriter<RequestLoadModels>,
+    mut ew: EventWriter<RequestLoadVrm>,
     mut loaded: Local<bool>,
     folders: Res<Assets<LoadedFolder>>,
-    handle: Query<(Entity, &ModelsFolderHandle)>,
+    handle: Query<(Entity, &VrmFolderHandle)>,
 ) {
     if *loaded {
         return;
@@ -70,7 +74,7 @@ fn prepare_initial_loading(
     if folders.contains(handle.0.id()) {
         *loaded = true;
         commands.entity(entity).remove::<Loading>();
-        ew.send(RequestLoadModels);
+        ew.send(RequestLoadVrm);
     }
 }
 
@@ -79,9 +83,10 @@ fn load_models(
     coordinate: Coordinate,
     locations: Res<MascotLocationPreferences>,
     folders: Res<Assets<LoadedFolder>>,
-    handle: Query<&ModelsFolderHandle>,
+    handle: Query<&VrmFolderHandle>,
     asset_server: Res<AssetServer>,
     mascots: Query<&VrmPath>,
+    cameras: Cameras,
 ) {
     let Some(folder) = folders.get(handle.single().0.id()) else {
         return;
@@ -97,12 +102,40 @@ fn load_models(
         .filter(|path| !exists_mascots.contains(&path.path()))
     {
         commands.spawn((
+            Mascot,
             locations.load_transform(asset_path.path(), &coordinate),
-            VrmPath(asset_path.path().to_path_buf()),
             VrmHandle(asset_server.load(asset_path)),
-        ));
+            cameras.all_layers(),
+        ))
+            .observe(enable_hit_test)
+            .observe(disable_hit_test);
     }
 }
+
+fn enable_hit_test(
+    trigger: Trigger<Pointer<Over>>,
+    mut commands: Commands,
+) {
+    if let NormalizedRenderTarget::Window(window) = trigger.pointer_location.target {
+        commands.trigger(UpdatedHitTest {
+            window: window.entity(),
+            hit_test: true,
+        });
+    }
+}
+
+fn disable_hit_test(
+    trigger: Trigger<Pointer<Out>>,
+    mut commands: Commands,
+) {
+    if let NormalizedRenderTarget::Window(window) = trigger.pointer_location.target {
+        commands.trigger(UpdatedHitTest {
+            window: window.entity(),
+            hit_test: false,
+        });
+    }
+}
+
 
 fn start_watching(
     mut commands: Commands,
@@ -141,7 +174,6 @@ fn receive_events(
             commands.spawn((
                 mascot_preferences.load_transform(&relative_path, &coordinate),
                 VrmHandle(asset_server.load(models_dir().join(path))),
-                VrmPath(relative_path),
             ));
         }
     }

@@ -1,18 +1,16 @@
-// mod index;
-
 use crate::global_window::{obtain_global_windows, GlobalWindows};
 use crate::mascot::sitting::SittingWindow;
 use crate::mascot::{Mascot, MascotEntity};
-use crate::settings::state::{ActionGroup, ActionName, MascotAction};
-use crate::system_param::cameras::Cameras;
+use crate::settings::preferences::action::ActionName;
 use crate::system_param::mascot_tracker::MascotTracker;
 use crate::system_param::windows::Windows;
 use crate::system_param::GlobalScreenPos;
-use crate::vrma::retarget::RetargetBindingSystemSet;
 use bevy::app::{App, Plugin, Update};
 use bevy::log::debug;
 use bevy::prelude::{Commands, Drag, DragEnd, DragStart, Entity, IntoSystemConfigs, ParallelCommands, Pointer, PointerButton, Query, Reflect, Transform, Trigger};
 use bevy::render::camera::NormalizedRenderTarget;
+use bevy_vrma::system_param::cameras::Cameras;
+use bevy_vrma::vrma::retarget::RetargetBindingSystemSet;
 use std::fmt::Debug;
 
 pub struct MascotDragPlugin;
@@ -40,13 +38,13 @@ fn on_drag_start(
     mut commands: Commands,
     tracker: MascotTracker,
     windows: Windows,
-    states: Query<&MascotAction>,
+    actions: Query<&ActionName>,
 ) {
     if !matches!(trigger.event.button, PointerButton::Primary) {
         return;
     }
     let mascot = MascotEntity(trigger.entity());
-    if not_playing_sit_down(&states, mascot.0) {
+    if not_playing_sit_down(&actions, mascot.0) {
         let Some(global) = global_cursor_pos(&trigger, &windows) else {
             return;
         };
@@ -54,21 +52,18 @@ fn on_drag_start(
             return;
         };
         commands.entity(mascot.0).insert((
-            MascotAction::from_group(ActionGroup::drag()),
+            ActionName::drag_start(),
             transform,
         ));
     }
 }
 
 fn not_playing_sit_down(
-    states: &Query<&MascotAction>,
+    actions: &Query<&ActionName>,
     mascot_entity: Entity,
 ) -> bool {
-    states.get(mascot_entity).is_ok_and(|state| {
-        state != &MascotAction {
-            group: ActionGroup::sit_down(),
-            name: ActionName::index(),
-        }
+    actions.get(mascot_entity).is_ok_and(|action| {
+        !action.is_sit_down()
     })
 }
 
@@ -78,10 +73,10 @@ fn on_drag_index(
     par_commands: ParallelCommands,
     windows: Windows,
     tracker: MascotTracker,
-    mascots: Query<(Entity, &MascotAction)>,
+    mascots: Query<(Entity, &ActionName)>,
 ) {
     mascots.par_iter().for_each(|(entity, mascot_action)| {
-        if !(mascot_action.group.is_drag() && mascot_action.name.is_index()) {
+        if !mascot_action.is_drag_start() {
             return;
         }
         let Some(global_cursor_pos) = windows.global_cursor_pos() else {
@@ -154,14 +149,11 @@ fn on_drag_drop(
             commands.entity(mascot.0).insert((
                 sitting_window,
                 transform,
-                MascotAction::from_group(ActionGroup::sit_down()),
+                ActionName::sit_down(),
             ));
         }
         None => {
-            commands.entity(mascot.0).insert(MascotAction {
-                group: ActionGroup::drag(),
-                name: ActionName::drop(),
-            });
+            commands.entity(mascot.0).insert(ActionName::drop());
         }
     }
 }

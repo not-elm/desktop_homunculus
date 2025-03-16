@@ -1,6 +1,6 @@
 use crate::global_window::GlobalWindow;
 use crate::mascot::MascotEntity;
-use crate::settings::state::{ActionName, MascotAction};
+use crate::settings::preferences::action::{ActionName, ActionTags};
 use crate::system_param::mascot_tracker::MascotTracker;
 use crate::system_param::GlobalScreenPos;
 use bevy::app::{App, PostUpdate, Update};
@@ -31,8 +31,8 @@ impl Plugin for MascotSittingPlugin {
     }
 }
 
-fn any_mascots_sitting(mascots: Query<&MascotAction>) -> bool {
-    mascots.iter().any(|status| status.group.is_sit_down())
+fn any_mascots_sitting(mascots: Query<&ActionName>) -> bool {
+    mascots.iter().any(|action| action.is_sitting())
 }
 
 #[derive(Debug, Default, Clone, Component)]
@@ -69,10 +69,10 @@ impl SittingWindow {
 
 fn adjust_sitting_pos_on_sit_down(
     mut ew: EventWriter<MoveSittingPos>,
-    mascots: Query<(Entity, &MascotAction)>,
+    mascots: Query<(Entity, &ActionName)>,
 ) {
-    for (mascot_entity, state) in mascots.iter() {
-        if state.name == ActionName::index() {
+    for (mascot_entity, action) in mascots.iter() {
+        if action.is_sit_down() {
             ew.send(MoveSittingPos { mascot: MascotEntity(mascot_entity) });
         }
     }
@@ -139,10 +139,10 @@ fn track_to_sitting_window(
 
 fn remove_sitting_window(
     par_commands: ParallelCommands,
-    mascots: Query<(Entity, &MascotAction), (Changed<MascotAction>, With<SittingWindow>)>,
+    mascots: Query<(Entity, &ActionTags), (Changed<ActionTags>, With<SittingWindow>)>,
 ) {
-    mascots.par_iter().for_each(|(entity, status)| {
-        if !status.group.is_sit_down() {
+    mascots.par_iter().for_each(|(entity, tags)| {
+        if !tags.contains("sitting") {
             par_commands.command_scope(|mut commands| {
                 commands.entity(entity).remove::<SittingWindow>();
             });

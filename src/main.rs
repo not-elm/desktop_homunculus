@@ -12,18 +12,16 @@ mod menu;
 mod settings;
 mod error;
 mod macros;
-mod vrm;
-mod vrma;
 mod util;
+mod file_watcher;
 
 use crate::application_windows::ApplicationWindowsPlugin;
+use crate::file_watcher::FileWatcherPlugin;
 use crate::mascot::DesktopMascotPlugin;
 use crate::menu::MenuPlugin;
 use crate::power_state::PowerStatePlugin;
 use crate::settings::AppSettingsPlugin;
 use crate::util::app_data_dir;
-use crate::vrm::VrmPlugin;
-use crate::vrma::VrmaPlugin;
 use bevy::app::{App, PluginGroup};
 use bevy::color::Color;
 use bevy::log::tracing_subscriber::Layer;
@@ -33,6 +31,8 @@ use bevy::render::settings::{RenderCreation, WgpuSettings};
 use bevy::render::RenderPlugin;
 use bevy::window::{ExitCondition, WindowPlugin, WindowResolution};
 use bevy::DefaultPlugins;
+use bevy_vrma::vrm::VrmPlugin;
+use bevy_vrma::vrma::VrmaPlugin;
 use bevy_webview_wry::api::{AllLogPlugins, AppExitApiPlugin};
 use bevy_webview_wry::prelude::AllDialogPlugins;
 use bevy_webview_wry::WebviewWryPlugin;
@@ -96,6 +96,7 @@ fn main() {
             VrmaPlugin,
             ApplicationWindowsPlugin,
             AppSettingsPlugin,
+            FileWatcherPlugin,
         ))
         .insert_resource(AmbientLight {
             brightness: 3000.0,

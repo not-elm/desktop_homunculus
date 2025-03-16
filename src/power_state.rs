@@ -1,10 +1,10 @@
-use crate::vrm::loader::VrmHandle;
-use crate::vrma::VrmaHandle;
 use bevy::app::{App, Plugin, Update};
 use bevy::ecs::world::DeferredWorld;
 use bevy::log::debug;
 use bevy::prelude::{Commands, Component, Entity, Local, Query, Reflect};
 use bevy::winit::{UpdateMode, WinitSettings};
+use bevy_vrma::vrm::loader::VrmHandle;
+use bevy_vrma::vrma::VrmaHandle;
 use serde::{Deserialize, Serialize};
 
 /// If this component exists, the application is in active state.

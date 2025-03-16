@@ -1575,6 +1575,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_vrma"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bevy",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "bevy_webview_core"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2451,6 +2461,7 @@ dependencies = [
  "bevy",
  "bevy-inspector-egui",
  "bevy_flurx",
+ "bevy_vrma",
  "bevy_webview_wry",
  "core-foundation 0.10.0",
  "core-graphics 0.24.0",

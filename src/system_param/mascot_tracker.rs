@@ -1,10 +1,10 @@
 use crate::mascot::{Mascot, MascotEntity};
 use crate::system_param::bone_offsets::BoneOffsets;
-use crate::system_param::cameras::Cameras;
 use crate::system_param::windows::{window_local_pos, Windows};
 use crate::system_param::GlobalScreenPos;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{Camera, Query, Transform, With, Without};
+use bevy_vrma::system_param::cameras::Cameras;
 
 #[derive(SystemParam)]
 pub struct MascotTracker<'w, 's> {

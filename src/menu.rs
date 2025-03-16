@@ -8,7 +8,6 @@ use crate::menu::actions::{request_send_actions, MenuActionsPlugin};
 use crate::menu::load_mascot::load_mascot;
 use crate::menu::reset_position::MenuResetPositionPlugin;
 use crate::menu::scale::MenuScalePlugin;
-use crate::system_param::cameras::Cameras;
 use crate::system_param::mesh_aabb::MascotAabb;
 use crate::system_param::monitors::{monitor_rect, Monitors};
 use crate::system_param::windows::Windows;
@@ -25,6 +24,7 @@ use bevy::window::{Window, WindowPosition, WindowResolution};
 use bevy::winit::WinitWindows;
 use bevy_flurx::action::once;
 use bevy_flurx::prelude::ReactorTask;
+use bevy_vrma::system_param::cameras::Cameras;
 use bevy_webview_wry::ipc::IpcHandlers;
 use bevy_webview_wry::prelude::*;
 use winit::dpi::PhysicalPosition;
@@ -63,7 +63,6 @@ fn register_observer(
     for mascot in mascots.iter() {
         let mut observer = Observer::new(open_menu);
         observer.watch_entity(mascot);
-
         commands.spawn(observer);
     }
 }

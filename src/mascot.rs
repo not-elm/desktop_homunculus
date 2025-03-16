@@ -1,7 +1,7 @@
+use crate::mascot::action::MascotActionPlugin;
 use crate::mascot::drag::MascotDragPlugin;
 use crate::mascot::render_layers::MascotRenderLayersPlugin;
 use crate::mascot::sitting::MascotSittingPlugin;
-use crate::mascot::state::MascotStatePlugin;
 use bevy::app::{App, Plugin};
 use bevy::asset::Handle;
 use bevy::prelude::{Component, Entity, Gltf, Reflect, ReflectComponent, ReflectDeserialize, ReflectSerialize};
@@ -12,7 +12,7 @@ pub mod visibility;
 mod render_layers;
 
 pub mod sitting;
-pub mod state;
+pub mod action;
 
 #[derive(Component, Reflect, Serialize, Deserialize, Debug)]
 #[reflect(Component, Serialize, Deserialize)]
@@ -38,7 +38,7 @@ impl Plugin for DesktopMascotPlugin {
                 MascotDragPlugin,
                 MascotRenderLayersPlugin,
                 MascotSittingPlugin,
-                MascotStatePlugin,
+                MascotActionPlugin,
             ));
     }
 }

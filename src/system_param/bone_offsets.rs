@@ -1,8 +1,8 @@
 use crate::mascot::{Mascot, MascotEntity};
-use crate::vrm::VrmHipsBoneTo;
 use bevy::ecs::system::SystemParam;
 use bevy::math::Vec3;
 use bevy::prelude::{Camera, GlobalTransform, Query, With, Without};
+use bevy_vrma::vrm::VrmHipsBoneTo;
 
 #[derive(SystemParam)]
 pub struct BoneOffsets<'w, 's> {

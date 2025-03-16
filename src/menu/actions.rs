@@ -1,6 +1,5 @@
 use crate::menu::Menu;
-use crate::settings::preferences::action::{ActionPreferences, ActionProperties};
-use crate::settings::state::MascotAction;
+use crate::settings::preferences::action::{ActionName, ActionPreferences, ActionProperties};
 use bevy::app::{App, Plugin, Update};
 use bevy::prelude::{resource_exists_and_changed, EventReader, IntoSystemConfigs, Query, Res, ResMut, With};
 use bevy_flurx::prelude::once;
@@ -23,7 +22,7 @@ impl Plugin for MenuActionsPlugin {
 
 #[derive(Deserialize, Clone, Debug)]
 struct UpdateAction {
-    action: MascotAction,
+    action: ActionName,
     properties: ActionProperties,
 }
 
