@@ -3,7 +3,7 @@ name: release-flow
 on:
   push:
     tags:
-      - "[0-9]+.[0-9]+.[0-9]+*"
+      - "v[0-9]+.[0-9]+.[0-9]+*"
   workflow_dispatch:
     inputs:
       version:
@@ -80,57 +80,57 @@ jobs:
           tag: ${{ env.VERSION }}
           overwrite: true
 
-  build-windows:
-    runs-on: windows-latest
-    needs: get-version
-    env:
-      VERSION: ${{needs.get-version.outputs.version}}
-      BUILD_INSTALLER: ${{ false }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Install rust toolchain
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: stable
-      - name: Install dotnet
-        if: ${{ env.BUILD_INSTALLER }}
-        uses: actions/setup-dotnet@v4
-        with:
-          global-json-file: build/windows/installer/global.json
-      - name: Build release
-        run: |
-          cargo build --profile dist
-      - name: Prepare release
-        run: |
-          mkdir target/dist/assets && cp -r assets target/dist/assets
-          mkdir target/dist/credits && cp -r credits target/dist/credits
-      - name: Zip release
-        uses: vimtor/action-zip@v1.1
-        with:
-          files: target/dist/assets/ target/dist/credits/ target/dist/${{ env.GAME_EXECUTABLE_NAME }}.exe
-          dest: ${{ env.GAME_EXECUTABLE_NAME }}_windows.zip
-      - name: Create Installer
-        if: ${{ env.BUILD_INSTALLER }}
-        run: dotnet build -p:Version=${{ env.VERSION }} -c Release build/windows/installer/Installer.wixproj --output installer
-      - name: Upload release
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ${{ env.GAME_EXECUTABLE_NAME }}_windows.zip
-          asset_name: ${{ env.GAME_EXECUTABLE_NAME }}_${{ env.VERSION }}_windows.zip
-          tag: ${{ env.VERSION }}
-          overwrite: true
-      - name: Upload installer
-        if: ${{ env.BUILD_INSTALLER }}
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: installer/en-US/installer.msi
-          asset_name: ${{ env.GAME_EXECUTABLE_NAME }}_${{ env.VERSION }}_windows.msi
-          release_name: ${{ env.VERSION }}
-          tag: ${{ env.VERSION }}
-          overwrite: true
+#  build-windows:
+#    runs-on: windows-latest
+#    needs: get-version
+#    env:
+#      VERSION: ${{needs.get-version.outputs.version}}
+#      BUILD_INSTALLER: ${{ false }}
+#    steps:
+#      - name: Checkout repository
+#        uses: actions/checkout@v4
+#      - name: Install rust toolchain
+#        uses: dtolnay/rust-toolchain@master
+#        with:
+#          toolchain: stable
+#      - name: Install dotnet
+#        if: ${{ env.BUILD_INSTALLER }}
+#        uses: actions/setup-dotnet@v4
+#        with:
+#          global-json-file: build/windows/installer/global.json
+#      - name: Build release
+#        run: |
+#          cargo build --profile dist
+#      - name: Prepare release
+#        run: |
+#          mkdir target/dist/assets && cp -r assets target/dist/assets
+#          mkdir target/dist/credits && cp -r credits target/dist/credits
+#      - name: Zip release
+#        uses: vimtor/action-zip@v1.1
+#        with:
+#          files: target/dist/assets/ target/dist/credits/ target/dist/${{ env.GAME_EXECUTABLE_NAME }}.exe
+#          dest: ${{ env.GAME_EXECUTABLE_NAME }}_windows.zip
+#      - name: Create Installer
+#        if: ${{ env.BUILD_INSTALLER }}
+#        run: dotnet build -p:Version=${{ env.VERSION }} -c Release build/windows/installer/Installer.wixproj --output installer
+#      - name: Upload release
+#        uses: svenstaro/upload-release-action@v2
+#        with:
+#          repo_token: ${{ secrets.GITHUB_TOKEN }}
+#          file: ${{ env.GAME_EXECUTABLE_NAME }}_windows.zip
+#          asset_name: ${{ env.GAME_EXECUTABLE_NAME }}_${{ env.VERSION }}_windows.zip
+#          tag: ${{ env.VERSION }}
+#          overwrite: true
+#      - name: Upload installer
+#        if: ${{ env.BUILD_INSTALLER }}
+#        uses: svenstaro/upload-release-action@v2
+#        with:
+#          repo_token: ${{ secrets.GITHUB_TOKEN }}
+#          file: installer/en-US/installer.msi
+#          asset_name: ${{ env.GAME_EXECUTABLE_NAME }}_${{ env.VERSION }}_windows.msi
+#          release_name: ${{ env.VERSION }}
+#          tag: ${{ env.VERSION }}
+#          overwrite: true
 
 # Want to support for web
 #  build-web:
