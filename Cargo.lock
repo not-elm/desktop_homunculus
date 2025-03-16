@@ -716,33 +716,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bevy_baby"
-version = "0.1.0-alpha.1"
-dependencies = [
- "anyhow",
- "apple-sys",
- "bevy",
- "bevy-inspector-egui",
- "bevy_flurx",
- "bevy_webview_wry",
- "core-foundation 0.10.0",
- "core-graphics 0.24.0",
- "crossbeam",
- "dirs",
- "embed-resource",
- "itertools 0.14.0",
- "objc2",
- "objc2-app-kit",
- "objc2-foundation",
- "rand 0.9.0",
- "serde",
- "serde_json",
- "tracing-appender",
- "windows 0.60.0",
- "winit",
-]
-
-[[package]]
 name = "bevy_child_window"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2467,6 +2440,33 @@ dependencies = [
  "quote",
  "syn 2.0.98",
  "unicode-xid",
+]
+
+[[package]]
+name = "desktop_homunculus"
+version = "0.1.0-alpha.2"
+dependencies = [
+ "anyhow",
+ "apple-sys",
+ "bevy",
+ "bevy-inspector-egui",
+ "bevy_flurx",
+ "bevy_webview_wry",
+ "core-foundation 0.10.0",
+ "core-graphics 0.24.0",
+ "crossbeam",
+ "dirs",
+ "embed-resource",
+ "itertools 0.14.0",
+ "objc2",
+ "objc2-app-kit",
+ "objc2-foundation",
+ "rand 0.9.0",
+ "serde",
+ "serde_json",
+ "tracing-appender",
+ "windows 0.60.0",
+ "winit",
 ]
 
 [[package]]
