@@ -5,17 +5,15 @@
         <key>CFBundleDevelopmentRegion</key>
         <string>en</string>
         <key>CFBundleDisplayName</key>
-        <string>bevy_baby</string> <!-- ToDo: this should be the same as your OSX app name in the release flow -->
+        <string>Desktop Homunculus</string>
         <key>CFBundleExecutable</key>
-        <string>bevy_baby</string> <!-- ToDo: this should be the same as your executable name in the release flow -->
+        <string>desktop_homunculus</string>
+        <key>CFBundleIdentifier</key>
+        <string>not.elm.homunculus.desktop</string>
         <key>CFBundleIconFile</key>
         <string>AppIcon.icns</string>
-        <key>CFBundleIdentifier</key>
-        <string>not.elm.bevy.baby</string> <!-- ToDo -->
         <key>CFBundleInfoDictionaryVersion</key>
         <string>6.0</string>
-        <key>CFBundleName</key>
-        <string>bevy_baby</string> <!-- ToDo -->
         <key>CFBundlePackageType</key>
         <string>APPL</string>
         <key>CFBundleShortVersionString</key>

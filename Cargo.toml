@@ -1,6 +1,6 @@
 [package]
-name = "bevy_baby"
-version = "0.1.0-alpha.1"
+name = "desktop_homunculus"
+version = "0.1.0-alpha.2"
 edition = "2021"
 license = "MIT"
 description = "Desktop mascot built with bevy"
