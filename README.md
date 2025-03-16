@@ -7,12 +7,13 @@
 
 ## Overview
 
-**desktop_homunculus** is a desktop mascot application built using [Bevy](https://github.com/bevyengine/bevy), a fast
-and
-lightweight game engine written in Rust that utilizes the ECS (Entity Component System) architecture.
+Desktop Homunculus is an application that summons [VRM](https://vrm.dev/en/vrm/vrm_about/) models on your desktop.
 
-- Supports [VRM 1.0](https://vrm.dev/en/vrm1/) and [VRMA](https://vrm.dev/en/vrma/).
-- Enables animation retargeting across multiple models, leveraging Bevy's ECS efficiency.
+## Features
+
+- By using [VRMA](https://vrm.dev/en/vrma/) files, you can freely animate mascots.
+- Multiple VRM models can be placed simultaneously.
+- Supports multi-monitor
 
 ## Supported Platforms
 
@@ -65,29 +66,11 @@ Actions can transition between each other using different transition modes:
 - You can change action transitions **from the settings menu**.
 - Open the menu by **right-clicking on the mascot**.
 
----
-
-## Future Plans (TODO)
-
-### Planned Features
-
-- [ ] Complete Documentation
-- [ ] Local HTTP Server for External Control
-- [ ] Enhanced Action System (scale changes, additional movements)
-- [ ] Support Look At retargeting
-
-### Local HTTP Server
-
-- Implement a **local HTTP server** to allow external applications to control mascot actions.
-- Example: **Twitch API integration** to trigger animations based on chat events.
-
 ## Credits
 
 - [VRM Sample Model](https://vroid.pixiv.help/hc/ja/articles/4402394424089-AvatarSample-A-Z)
 - Character animation credits to **pixiv Inc.'s VRoid Project**
 - Uses [bevy_game_template](https://github.com/NiklasEi/bevy_game_template) to ci and build packages.
-
----
 
 ## License
 
