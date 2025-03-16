@@ -78,6 +78,4 @@ This project is released under the **MIT License**.
 
 ## Contact
 
-📢 **For questions & contributions:**
-
 - **Discord:** `@not_not_elm`
