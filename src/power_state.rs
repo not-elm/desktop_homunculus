@@ -15,8 +15,7 @@ pub struct PowerStatePlugin;
 
 impl Plugin for PowerStatePlugin {
     fn build(&self, app: &mut App) {
-        app
-            .register_type::<Loading>()
+        app.register_type::<Loading>()
             .add_systems(Update, update_active_status);
 
         register_loading_target::<VrmHandle>(app);
@@ -25,18 +24,16 @@ impl Plugin for PowerStatePlugin {
 }
 
 fn register_loading_target<C: Component>(app: &mut App) {
-    app
-        .world_mut()
-        .register_component_hooks::<C>()
-        .on_add(|mut world: DeferredWorld, entity: Entity, _| {
+    app.world_mut().register_component_hooks::<C>().on_add(
+        |mut world: DeferredWorld, entity: Entity, _| {
             world.commands().entity(entity).insert(Loading);
-        });
+        },
+    );
 }
 
 fn update_active_status(
     mut commands: Commands,
-    #[cfg(not(feature = "develop"))]
-    mut windows: Query<&mut bevy::window::Window>,
+    #[cfg(not(feature = "develop"))] mut windows: Query<&mut bevy::window::Window>,
     mut is_sleep: Local<bool>,
     loading_contents: Query<&Loading>,
 ) {

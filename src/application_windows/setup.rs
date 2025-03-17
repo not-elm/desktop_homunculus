@@ -8,7 +8,10 @@ use bevy::math::Vec2;
 use bevy::prelude::*;
 use bevy::render::camera::{RenderTarget, ScalingMode, Viewport};
 use bevy::render::view::RenderLayers;
-use bevy::window::{CursorOptions, Monitor, PrimaryMonitor, PrimaryWindow, WindowLevel, WindowMode, WindowRef, WindowResolution};
+use bevy::window::{
+    CursorOptions, Monitor, PrimaryMonitor, PrimaryWindow, WindowLevel, WindowMode, WindowRef,
+    WindowResolution,
+};
 use bevy::winit::WinitWindows;
 use serde::{Deserialize, Serialize};
 
@@ -16,15 +19,13 @@ pub struct ApplicationWindowsSetupPlugin;
 
 impl Plugin for ApplicationWindowsSetupPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .register_type::<UninitializedCamera>()
+        app.register_type::<UninitializedCamera>()
             .register_type::<DefaultPrimaryWindow>()
             .register_type::<TargetMonitor>()
-            .add_systems(PreStartup, (
-                mark_default_window,
-                setup_windows,
-                despawn_default_window,
-            ).chain())
+            .add_systems(
+                PreStartup,
+                (mark_default_window, setup_windows, despawn_default_window).chain(),
+            )
             .add_systems(Update, initialize_camera_position);
     }
 }
@@ -39,11 +40,10 @@ struct UninitializedCamera;
 #[reflect(Component, Serialize, Deserialize)]
 struct DefaultPrimaryWindow;
 
-fn mark_default_window(
-    mut commands: Commands,
-    default_window: Query<Entity, With<PrimaryWindow>>,
-) {
-    commands.entity(default_window.single()).insert(DefaultPrimaryWindow);
+fn mark_default_window(mut commands: Commands, default_window: Query<Entity, With<PrimaryWindow>>) {
+    commands
+        .entity(default_window.single())
+        .insert(DefaultPrimaryWindow);
 }
 
 fn despawn_default_window(
@@ -67,18 +67,36 @@ fn setup_windows(
         .unwrap_or(1.);
     for (layer, (monitor_entity, monitor, primary)) in monitors.iter().enumerate() {
         let mut window = create_window(monitor.physical_size().as_vec2());
-        debug!("Monitor({:?}) {:?}", monitor.physical_position, monitor.physical_size());
+        debug!(
+            "Monitor({:?}) {:?}",
+            monitor.physical_position,
+            monitor.physical_size()
+        );
 
-        window.position.set((monitor.physical_position.as_vec2() * current_monitor_scale_factor).as_ivec2());
-        window.resolution.set_scale_factor(monitor.scale_factor as f32);
-        let window_entity = commands.spawn((
-            Name::new(format!("Window({:?})", monitor.physical_position)),
-            TargetMonitor(monitor_entity),
-            RenderLayers::layer(layer),
-            window,
-        )).id();
-        commands.entity(monitor_entity).insert(RenderLayers::layer(layer));
-        spawn_camera(&mut commands, window_entity, monitor, layer, primary.is_some());
+        window
+            .position
+            .set((monitor.physical_position.as_vec2() * current_monitor_scale_factor).as_ivec2());
+        window
+            .resolution
+            .set_scale_factor(monitor.scale_factor as f32);
+        let window_entity = commands
+            .spawn((
+                Name::new(format!("Window({:?})", monitor.physical_position)),
+                TargetMonitor(monitor_entity),
+                RenderLayers::layer(layer),
+                window,
+            ))
+            .id();
+        commands
+            .entity(monitor_entity)
+            .insert(RenderLayers::layer(layer));
+        spawn_camera(
+            &mut commands,
+            window_entity,
+            monitor,
+            layer,
+            primary.is_some(),
+        );
 
         if primary.is_some() {
             commands.entity(window_entity).insert(PrimaryWindow);

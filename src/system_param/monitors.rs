@@ -12,16 +12,25 @@ pub struct Monitors<'w, 's> {
 }
 
 impl Monitors<'_, '_> {
-    pub fn find_monitor_from_name(&self, monitor_name: &str) -> Option<(Entity, &Monitor, &RenderLayers)> {
+    pub fn find_monitor_from_name(
+        &self,
+        monitor_name: &str,
+    ) -> Option<(Entity, &Monitor, &RenderLayers)> {
         self.monitors.iter().find(|(_, monitor, _)| {
-            monitor.name.as_ref().is_some_and(|name| name == monitor_name)
+            monitor
+                .name
+                .as_ref()
+                .is_some_and(|name| name == monitor_name)
         })
     }
 
-    pub fn find_monitor_from_global_screen_pos(&self, global: GlobalScreenPos) -> Option<(Entity, &Monitor, &RenderLayers)> {
-        self.monitors.iter().find(|(_, monitor, _)| {
-            monitor_rect(monitor).contains(*global)
-        })
+    pub fn find_monitor_from_global_screen_pos(
+        &self,
+        global: GlobalScreenPos,
+    ) -> Option<(Entity, &Monitor, &RenderLayers)> {
+        self.monitors
+            .iter()
+            .find(|(_, monitor, _)| monitor_rect(monitor).contains(*global))
     }
 
     pub fn scale_factor(&self, render_layers: &RenderLayers) -> Option<f32> {
@@ -40,12 +49,9 @@ impl Monitors<'_, '_> {
 
     #[inline]
     pub fn find_monitor(&self, render_layers: &RenderLayers) -> Option<(Entity, &Monitor)> {
-        self
-            .monitors
-            .iter()
-            .find_map(|(entity, monitor, layer)| {
-                render_layers.intersects(layer).then_some((entity, monitor))
-            })
+        self.monitors.iter().find_map(|(entity, monitor, layer)| {
+            render_layers.intersects(layer).then_some((entity, monitor))
+        })
     }
 }
 

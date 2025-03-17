@@ -6,10 +6,12 @@ use bevy_vrma::vrm::VrmHipsBoneTo;
 
 #[derive(SystemParam)]
 pub struct BoneOffsets<'w, 's> {
-    mascots: Query<'w, 's, (
-        &'static GlobalTransform,
-        &'static VrmHipsBoneTo,
-    ), (With<Mascot>, Without<Camera>)>,
+    mascots: Query<
+        'w,
+        's,
+        (&'static GlobalTransform, &'static VrmHipsBoneTo),
+        (With<Mascot>, Without<Camera>),
+    >,
     bones: Query<'w, 's, &'static GlobalTransform, (Without<Mascot>, Without<Camera>)>,
 }
 

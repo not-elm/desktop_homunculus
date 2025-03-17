@@ -13,7 +13,8 @@ pub struct ScaleAction {
 
 impl ExecuteMascotAction for ScaleAction {
     async fn execute(&self, mascot: MascotEntity, task: &ReactorTask) {
-        task.will(Update, once::run(change_scale).with((mascot, self.scale))).await;
+        task.will(Update, once::run(change_scale).with((mascot, self.scale)))
+            .await;
     }
 }
 

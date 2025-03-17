@@ -26,7 +26,8 @@ impl MascotLocationPreferences {
 
     fn try_load_transform(&self, path: &Path, coordinate: &Coordinate) -> Option<Transform> {
         let location = self.0.get(path)?;
-        let world_pos = coordinate.mascot_position(location.viewport_pos, &location.monitor_name)?;
+        let world_pos =
+            coordinate.mascot_position(location.viewport_pos, &location.monitor_name)?;
         Some(Transform {
             translation: world_pos,
             scale: location.scale,
@@ -42,4 +43,3 @@ pub struct MascotLocation {
     pub scale: Vec3,
     pub rotation: Quat,
 }
-

@@ -7,7 +7,10 @@ use crate::system_param::windows::Windows;
 use crate::system_param::GlobalScreenPos;
 use bevy::app::{App, Plugin, Update};
 use bevy::log::debug;
-use bevy::prelude::{Commands, Drag, DragEnd, DragStart, Entity, IntoSystemConfigs, ParallelCommands, Pointer, PointerButton, Query, Reflect, Transform, Trigger};
+use bevy::prelude::{
+    Commands, Drag, DragEnd, DragStart, Entity, IntoSystemConfigs, ParallelCommands, Pointer,
+    PointerButton, Query, Reflect, Transform, Trigger,
+};
 use bevy::render::camera::NormalizedRenderTarget;
 use bevy_vrma::system_param::cameras::Cameras;
 use bevy_vrma::vrma::retarget::RetargetBindingSystemSet;
@@ -19,8 +22,7 @@ impl Plugin for MascotDragPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Update, on_drag_index.after(RetargetBindingSystemSet));
 
-        app
-            .world_mut()
+        app.world_mut()
             .register_component_hooks::<Mascot>()
             .on_add(|mut world, entity, _| {
                 world
@@ -51,20 +53,16 @@ fn on_drag_start(
         let Some(transform) = tracker.tracking(mascot, global, 1.) else {
             return;
         };
-        commands.entity(mascot.0).insert((
-            ActionName::drag_start(),
-            transform,
-        ));
+        commands
+            .entity(mascot.0)
+            .insert((ActionName::drag_start(), transform));
     }
 }
 
-fn not_playing_sit_down(
-    actions: &Query<&ActionName>,
-    mascot_entity: Entity,
-) -> bool {
-    actions.get(mascot_entity).is_ok_and(|action| {
-        !action.is_sit_down()
-    })
+fn not_playing_sit_down(actions: &Query<&ActionName>, mascot_entity: Entity) -> bool {
+    actions
+        .get(mascot_entity)
+        .is_ok_and(|action| !action.is_sit_down())
 }
 
 /// This system is executed while the character is floating up after starting the drag.
@@ -105,7 +103,9 @@ fn on_drag_move(
         return;
     };
     let drag_pos = trigger.pointer_location.position;
-    let Some(origin) = cameras.to_world_pos_from_viewport(window_ref.entity(), drag_pos - trigger.delta) else {
+    let Some(origin) =
+        cameras.to_world_pos_from_viewport(window_ref.entity(), drag_pos - trigger.delta)
+    else {
         return;
     };
     let Some(current) = cameras.to_world_pos_from_viewport(window_ref.entity(), drag_pos) else {
@@ -142,15 +142,17 @@ fn on_drag_drop(
         Some(global_window) => {
             let sitting_pos = global_window.sitting_pos(global_cursor_pos);
             let sitting_window = SittingWindow::new(global_window, sitting_pos);
-            let Some(transform) = tracker.tracking_on_sitting(mascot, sitting_window.sitting_pos()) else {
+            let Some(transform) = tracker.tracking_on_sitting(mascot, sitting_window.sitting_pos())
+            else {
                 return;
             };
-            debug!("Sitting application_windows: {:?}", sitting_window.window.title);
-            commands.entity(mascot.0).insert((
-                sitting_window,
-                transform,
-                ActionName::sit_down(),
-            ));
+            debug!(
+                "Sitting application_windows: {:?}",
+                sitting_window.window.title
+            );
+            commands
+                .entity(mascot.0)
+                .insert((sitting_window, transform, ActionName::sit_down()));
         }
         None => {
             commands.entity(mascot.0).insert(ActionName::drop());

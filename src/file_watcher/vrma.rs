@@ -6,8 +6,11 @@ use bevy::asset::io::file::FileWatcher;
 use bevy::asset::io::AssetSourceEvent;
 use bevy::asset::{Handle, LoadedFolder};
 use bevy::log::error;
-use bevy::prelude::{AssetServer, Assets, BuildChildren, Children, Commands, Component, Entity, Event, EventWriter, Local, Or, ParallelCommands, Plugin, PreStartup, Query, Reflect, Res, Trigger, With};
-use bevy_vrma::vrma::{Vrma, VrmaHandle};
+use bevy::prelude::{
+    AssetServer, Assets, BuildChildren, Children, Commands, Component, Entity, Event, EventWriter,
+    Local, ParallelCommands, Plugin, PreStartup, Query, Reflect, Res, Trigger, With,
+};
+use bevy_vrma::vrma::VrmaHandle;
 use crossbeam::channel::Receiver;
 use std::path::PathBuf;
 use std::time::Duration;
@@ -16,15 +19,11 @@ pub struct VrmaFileWatcherPlugin;
 
 impl Plugin for VrmaFileWatcherPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .add_event::<LoadVrma>()
+        app.add_event::<LoadVrma>()
             .register_type::<AnimationFolderHandle>()
             .add_systems(PreStartup, start_load_folder)
             .add_systems(Startup, start_watching)
-            .add_systems(Update, (
-                receive_events,
-                wait_load,
-            ))
+            .add_systems(Update, (receive_events, wait_load))
             .add_observer(observer_load_vrma);
     }
 }
@@ -41,10 +40,7 @@ struct VrmaFilesWatcher {
 #[derive(Component, Reflect)]
 struct AnimationFolderHandle(Handle<LoadedFolder>);
 
-fn start_load_folder(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-) {
+fn start_load_folder(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn((
         Loading,
         AnimationFolderHandle(asset_server.load_folder("animations")),
@@ -69,19 +65,13 @@ fn wait_load(
     }
 }
 
-fn start_watching(
-    mut commands: Commands,
-) {
+fn start_watching(mut commands: Commands) {
     let (sender, receiver) = crossbeam::channel::unbounded();
     let vrma_folder = animations_dir();
 
     create_dir_all_if_need(&vrma_folder);
 
-    match FileWatcher::new(
-        vrma_folder,
-        sender,
-        Duration::from_secs(2),
-    ) {
+    match FileWatcher::new(vrma_folder, sender, Duration::from_secs(2)) {
         Ok(watcher) => {
             commands.spawn(VrmaFilesWatcher {
                 _watcher: watcher,
@@ -94,15 +84,11 @@ fn start_watching(
     }
 }
 
-fn receive_events(
-    mut request_load: EventWriter<LoadVrma>,
-    watchers: Query<&VrmaFilesWatcher>,
-) {
+fn receive_events(mut request_load: EventWriter<LoadVrma>, watchers: Query<&VrmaFilesWatcher>) {
     while watchers.single().receiver.try_recv().is_ok() {
         request_load.send(LoadVrma);
     }
 }
-
 
 fn observer_load_vrma(
     _: Trigger<LoadVrma>,
@@ -119,7 +105,9 @@ fn observer_load_vrma(
             //     return;
             // }
             commands.command_scope(|mut commands| {
-                commands.entity(mascot_entity).with_child(VrmaHandle(asset_server.load(vrma_path.clone())));
+                commands
+                    .entity(mascot_entity)
+                    .with_child(VrmaHandle(asset_server.load(vrma_path.clone())));
             });
         });
     }

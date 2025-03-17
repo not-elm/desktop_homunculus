@@ -1,5 +1,5 @@
-mod setup;
 pub mod hit_test;
+mod setup;
 
 use crate::application_windows::hit_test::ApplicationWindowsHitTestPlugin;
 use crate::application_windows::setup::ApplicationWindowsSetupPlugin;
@@ -20,23 +20,20 @@ pub struct ApplicationWindowsPlugin;
 
 impl Plugin for ApplicationWindowsPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .register_type::<PrimaryCamera>()
-            .add_plugins((
-                ApplicationWindowsSetupPlugin,
-                ApplicationWindowsHitTestPlugin,
-            ));
+        app.register_type::<PrimaryCamera>().add_plugins((
+            ApplicationWindowsSetupPlugin,
+            ApplicationWindowsHitTestPlugin,
+        ));
 
-        app
-            .world_mut()
-            .register_component_hooks::<Mesh3d>()
-            .on_add(|mut world: DeferredWorld, entity: Entity, _| {
+        app.world_mut().register_component_hooks::<Mesh3d>().on_add(
+            |mut world: DeferredWorld, entity: Entity, _| {
                 world.commands().entity(entity).insert((
-                    //FIXME: When mascot moves to the top of the screen while sitting, the face is not drawn, 
+                    //FIXME: When mascot moves to the top of the screen while sitting, the face is not drawn,
                     // so it is inserted as a temporary measure
                     NoFrustumCulling,
                     RenderLayers::default(),
                 ));
-            });
+            },
+        );
     }
 }

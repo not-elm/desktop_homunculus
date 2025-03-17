@@ -1,7 +1,7 @@
-mod scale;
-mod load_mascot;
 mod actions;
+mod load_mascot;
 mod reset_position;
+mod scale;
 
 use crate::mascot::Mascot;
 use crate::menu::actions::{request_send_actions, MenuActionsPlugin};
@@ -16,7 +16,11 @@ use bevy::core::Name;
 use bevy::hierarchy::Parent;
 use bevy::math::{Rect, Vec2};
 use bevy::picking::events::Click;
-use bevy::prelude::{any_with_component, Added, Commands, Component, Entity, HierarchyQueryExt, In, IntoSystemConfigs, NonSend, Observer, Pointer, PointerButton, Query, Transform, Trigger, With, Without};
+use bevy::prelude::{
+    any_with_component, Added, Commands, Component, Entity, HierarchyQueryExt, In,
+    IntoSystemConfigs, NonSend, Observer, Pointer, PointerButton, Query, Transform, Trigger, With,
+    Without,
+};
 use bevy::render::camera::NormalizedRenderTarget;
 use bevy::render::view::RenderLayers;
 use bevy::utils::default;
@@ -42,24 +46,19 @@ pub struct MenuPlugin;
 
 impl Plugin for MenuPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .add_plugins((
-                MenuScalePlugin,
-                MenuActionsPlugin,
-                MenuResetPositionPlugin,
-            ))
-            .add_systems(Update, (
-                mark_initialized_menu.run_if(any_with_component::<MenuUnInitialized>),
-                request_close_event.run_if(any_with_component::<Menu>),
-            ))
+        app.add_plugins((MenuScalePlugin, MenuActionsPlugin, MenuResetPositionPlugin))
+            .add_systems(
+                Update,
+                (
+                    mark_initialized_menu.run_if(any_with_component::<MenuUnInitialized>),
+                    request_close_event.run_if(any_with_component::<Menu>),
+                ),
+            )
             .add_systems(PostUpdate, register_observer);
     }
 }
 
-fn register_observer(
-    mut commands: Commands,
-    mascots: Query<Entity, Added<Mascot>>,
-) {
+fn register_observer(mut commands: Commands, mascots: Query<Entity, Added<Mascot>>) {
     for mascot in mascots.iter() {
         let mut observer = Observer::new(open_menu);
         observer.watch_entity(mascot);
@@ -84,10 +83,13 @@ fn open_menu(
     let NormalizedRenderTarget::Window(window_ref) = trigger.pointer_location.target else {
         return;
     };
-    let Some(global_cursor_pos) = windows.to_global_pos(window_ref.entity(), trigger.pointer_location.position) else {
+    let Some(global_cursor_pos) =
+        windows.to_global_pos(window_ref.entity(), trigger.pointer_location.position)
+    else {
         return;
     };
-    let Some((_, monitor, _)) = monitors.find_monitor_from_global_screen_pos(global_cursor_pos) else {
+    let Some((_, monitor, _)) = monitors.find_monitor_from_global_screen_pos(global_cursor_pos)
+    else {
         return;
     };
     let (position, resolution) = fit_position(*global_cursor_pos, &monitor_rect(monitor));
@@ -98,7 +100,11 @@ fn open_menu(
         Name::new("Menu"),
         TargetMascot(mascot_entity),
         Window {
-            title: mascots.get(mascot_entity).cloned().unwrap_or_default().to_string(),
+            title: mascots
+                .get(mascot_entity)
+                .cloned()
+                .unwrap_or_default()
+                .to_string(),
             resizable: false,
             resolution,
             position: WindowPosition::At(position.as_ivec2()),
@@ -119,10 +125,7 @@ fn open_menu(
     ));
 }
 
-fn fit_position(
-    cursor_pos: Vec2,
-    monitor_frame: &Rect,
-) -> (Vec2, WindowResolution) {
+fn fit_position(cursor_pos: Vec2, monitor_frame: &Rect) -> (Vec2, WindowResolution) {
     let menu_window_frame = Rect::new(
         cursor_pos.x,
         cursor_pos.y,
@@ -176,10 +179,7 @@ fn request_close_event(
 }
 
 #[command]
-async fn get_mascot_name(
-    entity: WebviewEntity,
-    task: ReactorTask,
-) -> Option<String> {
+async fn get_mascot_name(entity: WebviewEntity, task: ReactorTask) -> Option<String> {
     task.will(Update, once::run(mascot_name).with(entity)).await
 }
 
@@ -188,16 +188,16 @@ fn mascot_name(
     target: Query<&TargetMascot>,
     mascot: Query<&Name>,
 ) -> Option<String> {
-    target.get(entity.0).ok().and_then(|TargetMascot(mascot_entity)| {
-        mascot.get(*mascot_entity).map(|name| name.to_string()).ok()
-    })
+    target
+        .get(entity.0)
+        .ok()
+        .and_then(|TargetMascot(mascot_entity)| {
+            mascot.get(*mascot_entity).map(|name| name.to_string()).ok()
+        })
 }
 
 #[command]
-async fn get_scale(
-    entity: WebviewEntity,
-    task: ReactorTask,
-) -> Option<f32> {
+async fn get_scale(entity: WebviewEntity, task: ReactorTask) -> Option<f32> {
     task.will(Update, once::run(scale).with(entity)).await
 }
 
@@ -206,8 +206,10 @@ fn scale(
     target: Query<&TargetMascot>,
     mascot: Query<&Transform>,
 ) -> Option<f32> {
-    target.get(entity.0).ok().and_then(|TargetMascot(mascot_entity)| {
-        mascot.get(*mascot_entity).map(|tf| tf.scale.x).ok()
-    })
+    target
+        .get(entity.0)
+        .ok()
+        .and_then(|TargetMascot(mascot_entity)| {
+            mascot.get(*mascot_entity).map(|tf| tf.scale.x).ok()
+        })
 }
-

@@ -13,17 +13,21 @@ pub struct MascotVisibilityPlugin;
 
 impl Plugin for MascotVisibilityPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .init_state::<MascotVisibilityState>()
+        app.init_state::<MascotVisibilityState>()
             .add_systems(OnEnter(MascotVisibilityState::Visible), set_visible::<true>)
-            .add_systems(OnEnter(MascotVisibilityState::Invisible), set_visible::<false>);
+            .add_systems(
+                OnEnter(MascotVisibilityState::Invisible),
+                set_visible::<false>,
+            );
     }
 }
 
-fn set_visible<const VISIBLE: bool>(
-    mut mascots: Query<&mut Visibility, With<Mascot>>,
-) {
+fn set_visible<const VISIBLE: bool>(mut mascots: Query<&mut Visibility, With<Mascot>>) {
     for mut mascot in mascots.iter_mut() {
-        *mascot = if VISIBLE { Visibility::Visible } else { Visibility::Hidden };
+        *mascot = if VISIBLE {
+            Visibility::Visible
+        } else {
+            Visibility::Hidden
+        };
     }
 }

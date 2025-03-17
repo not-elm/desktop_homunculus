@@ -5,11 +5,8 @@ use bevy::prelude::{Component, Deref, Reflect, Resource};
 use bevy::utils::hashbrown::HashMap;
 use bevy_flurx::task::ReactorTask;
 use serde::{Deserialize, Serialize};
-use std::fmt::{Display, Formatter};
-use std::path::Path;
 
 pub mod scale;
-
 
 macro_rules! actions {
     ( $( $key:literal: $value:expr ),* $(,)? ) => {{
@@ -25,7 +22,9 @@ pub struct ActionProperties {
     pub action: MascotAction,
 }
 
-#[derive(Debug, Default, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Reflect, Component)]
+#[derive(
+    Debug, Default, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Reflect, Component,
+)]
 pub struct ActionTags(pub Vec<String>);
 
 impl ActionTags {
@@ -39,7 +38,6 @@ impl From<Vec<&str>> for ActionTags {
         Self(value.iter().map(|v| v.to_string()).collect())
     }
 }
-
 
 new_type!(ActionName, String);
 
@@ -102,7 +100,6 @@ impl Default for ActionName {
     }
 }
 
-
 pub trait ExecuteMascotAction: Send + Sync {
     async fn execute(&self, mascot: MascotEntity, task: &ReactorTask);
 }
@@ -128,25 +125,18 @@ impl ActionPreferences {
         self.0 = self
             .0
             .iter()
-            .filter_map(|(k, v)| {
-                exists_actions.contains(k).then_some((k.clone(), v.clone()))
-            })
+            .filter_map(|(k, v)| exists_actions.contains(k).then_some((k.clone(), v.clone())))
             .collect::<HashMap<_, _>>();
     }
 
     pub fn register_if_not_exists(&mut self, name: ActionName, action: ActionProperties) {
-        self.0
-            .entry(name)
-            .or_insert(action);
+        self.0.entry(name).or_insert(action);
     }
 
     pub fn update(&mut self, name: ActionName, properties: ActionProperties) {
-        self.0
-            .entry(name)
-            .insert(properties);
+        self.0.entry(name).insert(properties);
     }
 }
-
 
 impl Default for ActionPreferences {
     fn default() -> Self {
@@ -170,12 +160,13 @@ mod tests {
     #[test]
     fn test_cleanup() {
         let mut preferences = ActionPreferences(HashMap::default());
-        preferences.0.insert("rotate".into(), ActionProperties {
-            tags: vec![
-                "idle",
-            ].into(),
-            action: MascotAction::Scale(ScaleAction::default()),
-        });
+        preferences.0.insert(
+            "rotate".into(),
+            ActionProperties {
+                tags: vec!["idle"].into(),
+                action: MascotAction::Scale(ScaleAction::default()),
+            },
+        );
         preferences.cleanup(&["rotate".into()]);
         assert_eq!(preferences.0.len(), 1);
     }
@@ -183,12 +174,13 @@ mod tests {
     #[test]
     fn test_remove_all() {
         let mut preferences = ActionPreferences(HashMap::default());
-        preferences.0.insert("rotate".into(), ActionProperties {
-            tags: vec![
-                "idle",
-            ].into(),
-            action: MascotAction::Scale(ScaleAction::default()),
-        });
+        preferences.0.insert(
+            "rotate".into(),
+            ActionProperties {
+                tags: vec!["idle"].into(),
+                action: MascotAction::Scale(ScaleAction::default()),
+            },
+        );
         preferences.cleanup(&[]);
         assert!(preferences.0.is_empty());
     }

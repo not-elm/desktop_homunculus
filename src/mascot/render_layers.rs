@@ -1,23 +1,25 @@
 use crate::mascot::Mascot;
 use bevy::app::{App, Update};
 use bevy::hierarchy::Children;
-use bevy::prelude::{Added, Changed, Commands, Entity, IntoSystemConfigs, Or, Plugin, Query, With, Without};
+use bevy::prelude::{
+    Added, Changed, Commands, Entity, IntoSystemConfigs, Or, Plugin, Query, With, Without,
+};
 use bevy::render::view::RenderLayers;
 
 pub struct MascotRenderLayersPlugin;
 
 impl Plugin for MascotRenderLayersPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .add_systems(Update, (
-                update_children_layers,
-            ).chain());
+        app.add_systems(Update, (update_children_layers,).chain());
     }
 }
 
 fn update_children_layers(
     mut commands: Commands,
-    mascots: Query<(&RenderLayers, &Children), (With<Mascot>, Or<(Changed<RenderLayers>, Added<Children>)>)>,
+    mascots: Query<
+        (&RenderLayers, &Children),
+        (With<Mascot>, Or<(Changed<RenderLayers>, Added<Children>)>),
+    >,
     meshes: Query<(Option<&RenderLayers>, Option<&Children>), Without<Mascot>>,
 ) {
     for (layers, children) in mascots.iter() {

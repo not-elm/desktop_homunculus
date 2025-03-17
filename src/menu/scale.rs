@@ -9,8 +9,7 @@ pub struct MenuScalePlugin;
 
 impl Plugin for MenuScalePlugin {
     fn build(&self, app: &mut App) {
-        app
-            .add_ipc_event::<ChangeScale>("scale")
+        app.add_ipc_event::<ChangeScale>("scale")
             .add_systems(Update, change_scale);
     }
 }

@@ -9,22 +9,15 @@ pub struct AppSettingsLoadPlugin;
 
 impl Plugin for AppSettingsLoadPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, (
-            load_mascot_locations,
-            load_actions,
-        ));
+        app.add_systems(Startup, (load_mascot_locations, load_actions));
     }
 }
 
-fn load_mascot_locations(
-    mut commands: Commands,
-) {
+fn load_mascot_locations(mut commands: Commands) {
     commands.insert_resource(read_mascot_locations().unwrap_or_default());
 }
 
-fn load_actions(
-    mut commands: Commands,
-) {
+fn load_actions(mut commands: Commands) {
     commands.insert_resource(read_actions().unwrap_or_default());
 }
 

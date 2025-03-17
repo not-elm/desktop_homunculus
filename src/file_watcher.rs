@@ -9,9 +9,6 @@ pub struct FileWatcherPlugin;
 
 impl Plugin for FileWatcherPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((
-            VrmFileWatcherPlugin,
-            VrmaFileWatcherPlugin,
-        ));
+        app.add_plugins((VrmFileWatcherPlugin, VrmaFileWatcherPlugin));
     }
 }

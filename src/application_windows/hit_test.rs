@@ -6,8 +6,7 @@ pub struct ApplicationWindowsHitTestPlugin;
 
 impl Plugin for ApplicationWindowsHitTestPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .register_type::<UpdatedHitTest>()
+        app.register_type::<UpdatedHitTest>()
             .add_event::<UpdatedHitTest>()
             .add_observer(update_hit_test);
     }
@@ -19,13 +18,8 @@ pub struct UpdatedHitTest {
     pub hit_test: bool,
 }
 
-fn update_hit_test(
-    trigger: Trigger<UpdatedHitTest>,
-    mut windows: Query<&mut Window>,
-) {
+fn update_hit_test(trigger: Trigger<UpdatedHitTest>, mut windows: Query<&mut Window>) {
     if let Ok(mut window) = windows.get_mut(trigger.window) {
         window.cursor_options.hit_test = trigger.hit_test;
     }
 }
-
-

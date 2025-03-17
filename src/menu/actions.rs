@@ -1,7 +1,9 @@
 use crate::menu::Menu;
 use crate::settings::preferences::action::{ActionName, ActionPreferences, ActionProperties};
 use bevy::app::{App, Plugin, Update};
-use bevy::prelude::{resource_exists_and_changed, EventReader, IntoSystemConfigs, Query, Res, ResMut, With};
+use bevy::prelude::{
+    resource_exists_and_changed, EventReader, IntoSystemConfigs, Query, Res, ResMut, With,
+};
 use bevy_flurx::prelude::once;
 use bevy_flurx::task::ReactorTask;
 use bevy_webview_wry::prelude::*;
@@ -11,12 +13,15 @@ pub struct MenuActionsPlugin;
 
 impl Plugin for MenuActionsPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .add_ipc_event::<UpdateAction>("update_action")
-            .add_systems(Update, (
-                send_action_preferences.run_if(resource_exists_and_changed::<ActionPreferences>),
-                update_action,
-            ));
+        app.add_ipc_event::<UpdateAction>("update_action")
+            .add_systems(
+                Update,
+                (
+                    send_action_preferences
+                        .run_if(resource_exists_and_changed::<ActionPreferences>),
+                    update_action,
+                ),
+            );
     }
 }
 
@@ -27,9 +32,7 @@ struct UpdateAction {
 }
 
 #[command]
-pub async fn request_send_actions(
-    task: ReactorTask,
-) {
+pub async fn request_send_actions(task: ReactorTask) {
     task.will(Update, once::run(send_action_preferences)).await;
 }
 

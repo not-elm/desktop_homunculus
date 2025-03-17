@@ -4,7 +4,6 @@ use bevy::app::{App, Update};
 use bevy::prelude::{Changed, Entity, ParallelCommands, Plugin, Query, Res, With};
 use bevy_flurx::prelude::Reactor;
 
-
 pub struct MascotActionPlugin;
 
 impl Plugin for MascotActionPlugin {
@@ -33,7 +32,6 @@ fn transition_actions(
     });
 }
 
-
 // fn transition_actions(
 //     mut request_play: EventWriter<RequestPlayVrma>,
 //     mut request_stop: EventWriter<RequestStopVrma>,
@@ -58,13 +56,14 @@ fn transition_actions(
 //     }
 // }
 
-
 #[cfg(test)]
 mod tests {
     use crate::mascot::action::transition_actions;
     use crate::mascot::Mascot;
     use crate::settings::preferences::action::scale::ScaleAction;
-    use crate::settings::preferences::action::{ActionName, ActionPreferences, ActionProperties, ActionTags, MascotAction};
+    use crate::settings::preferences::action::{
+        ActionName, ActionPreferences, ActionProperties, ActionTags, MascotAction,
+    };
     use crate::tests::{test_app, TestResult};
     use bevy::app::Update;
     use bevy::prelude::{Commands, IntoSystemConfigs};
@@ -73,19 +72,23 @@ mod tests {
     fn test_transition_actions() -> TestResult {
         let mut app = test_app();
         let mut preference = ActionPreferences::default();
-        preference.register_if_not_exists(ActionName::drop(), ActionProperties {
-            tags: vec!["drag"].into(),
-            action: MascotAction::Scale(ScaleAction::default()),
-        });
-        app.add_systems(Update, (
-            |mut commands: Commands| {
-                commands.spawn((
-                    Mascot,
-                    ActionName::drop(),
-                ));
+        preference.register_if_not_exists(
+            ActionName::drop(),
+            ActionProperties {
+                tags: vec!["drag"].into(),
+                action: MascotAction::Scale(ScaleAction::default()),
             },
-            transition_actions,
-        ).chain());
+        );
+        app.add_systems(
+            Update,
+            (
+                |mut commands: Commands| {
+                    commands.spawn((Mascot, ActionName::drop()));
+                },
+                transition_actions,
+            )
+                .chain(),
+        );
         app.insert_resource(preference);
         app.update();
 

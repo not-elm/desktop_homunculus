@@ -1,19 +1,19 @@
-#![allow(
-    clippy::type_complexity,
-    clippy::too_many_arguments,
+#![allow(clippy::type_complexity, clippy::too_many_arguments)]
+#![cfg_attr(
+    all(target_os = "windows", not(debug_assertions)),
+    windows_subsystem = "windows"
 )]
-#![cfg_attr(all(target_os = "windows", not(debug_assertions)), windows_subsystem = "windows")]
 mod application_windows;
-mod mascot;
-mod global_window;
-mod system_param;
-mod power_state;
-mod menu;
-mod settings;
 mod error;
-mod macros;
-mod util;
 mod file_watcher;
+mod global_window;
+mod macros;
+mod mascot;
+mod menu;
+mod power_state;
+mod settings;
+mod system_param;
+mod util;
 
 use crate::application_windows::ApplicationWindowsPlugin;
 use crate::file_watcher::FileWatcherPlugin;
@@ -42,68 +42,63 @@ use tracing_appender::rolling;
 
 fn main() {
     let mut app = App::new();
-    app
-        .add_plugins((
-            DefaultPlugins
-                .set(LogPlugin {
-                    #[cfg(debug_assertions)]
-                    level: bevy::log::Level::DEBUG,
-                    #[cfg(not(debug_assertions))]
-                    level: bevy::log::Level::ERROR,
-                    custom_layer,
-                    #[cfg(target_os = "windows")]
-                    filter: "wgpu_hal=off".to_string(),
-                    #[cfg(not(target_os = "windows"))]
-                    filter: LogPlugin::default().filter,
-                })
-                .set(WindowPlugin {
-                    primary_window: Some(Window {
-                        resolution: WindowResolution::new(0., 0.),
-                        decorations: false,
-                        transparent: true,
-                        ..default()
-                    }),
-                    exit_condition: ExitCondition::DontExit,
-                    ..default()
-                })
-                .set(RenderPlugin {
-                    render_creation: RenderCreation::Automatic(WgpuSettings {
-                        // On Windows, neither on `VULKAN` and `DX12` don't work transparency.
-                        // Ensure not certainty that this will work correctly on all devices.
-                        #[cfg(target_os = "windows")]
-                        backends: Some(bevy::render::settings::Backends::GL),
-                        ..default()
-                    }),
+    app.add_plugins((
+        DefaultPlugins
+            .set(LogPlugin {
+                #[cfg(debug_assertions)]
+                level: bevy::log::Level::DEBUG,
+                #[cfg(not(debug_assertions))]
+                level: bevy::log::Level::ERROR,
+                custom_layer,
+                #[cfg(target_os = "windows")]
+                filter: "wgpu_hal=off".to_string(),
+                #[cfg(not(target_os = "windows"))]
+                filter: LogPlugin::default().filter,
+            })
+            .set(WindowPlugin {
+                primary_window: Some(Window {
+                    resolution: WindowResolution::new(0., 0.),
+                    decorations: false,
+                    transparent: true,
                     ..default()
                 }),
-            WebviewWryPlugin {
-                local_root: std::path::PathBuf::from("ui")
-            },
-            MeshPickingPlugin,
-            #[cfg(feature = "develop")]
-            bevy_inspector_egui::quick::WorldInspectorPlugin::default(),
-        ))
-        .add_plugins((
-            AllDialogPlugins,
-            AllLogPlugins,
-            AppExitApiPlugin,
-        ))
-        .add_plugins((
-            MenuPlugin,
-            DesktopMascotPlugin,
-            PowerStatePlugin,
-            VrmPlugin,
-            VrmaPlugin,
-            ApplicationWindowsPlugin,
-            AppSettingsPlugin,
-            FileWatcherPlugin,
-        ))
-        .insert_resource(AmbientLight {
-            brightness: 3000.0,
-            ..default()
-        })
-        .insert_resource(ClearColor(Color::NONE))
-        .run();
+                exit_condition: ExitCondition::DontExit,
+                ..default()
+            })
+            .set(RenderPlugin {
+                render_creation: RenderCreation::Automatic(WgpuSettings {
+                    // On Windows, neither on `VULKAN` and `DX12` don't work transparency.
+                    // Ensure not certainty that this will work correctly on all devices.
+                    #[cfg(target_os = "windows")]
+                    backends: Some(bevy::render::settings::Backends::GL),
+                    ..default()
+                }),
+                ..default()
+            }),
+        WebviewWryPlugin {
+            local_root: std::path::PathBuf::from("ui"),
+        },
+        MeshPickingPlugin,
+        #[cfg(feature = "develop")]
+        bevy_inspector_egui::quick::WorldInspectorPlugin::default(),
+    ))
+    .add_plugins((AllDialogPlugins, AllLogPlugins, AppExitApiPlugin))
+    .add_plugins((
+        MenuPlugin,
+        DesktopMascotPlugin,
+        PowerStatePlugin,
+        VrmPlugin,
+        VrmaPlugin,
+        ApplicationWindowsPlugin,
+        AppSettingsPlugin,
+        FileWatcherPlugin,
+    ))
+    .insert_resource(AmbientLight {
+        brightness: 3000.0,
+        ..default()
+    })
+    .insert_resource(ClearColor(Color::NONE))
+    .run();
 }
 
 fn custom_layer(_app: &mut App) -> Option<BoxedLayer> {
@@ -111,11 +106,13 @@ fn custom_layer(_app: &mut App) -> Option<BoxedLayer> {
     let (non_blocking, guard) = tracing_appender::non_blocking(file_appender);
     static LOG_GUARD: OnceLock<WorkerGuard> = OnceLock::new();
     let _ = LOG_GUARD.set(guard);
-    Some(bevy::log::tracing_subscriber::fmt::layer()
-        .with_writer(non_blocking)
-        .with_file(true)
-        .with_line_number(true)
-        .boxed())
+    Some(
+        bevy::log::tracing_subscriber::fmt::layer()
+            .with_writer(non_blocking)
+            .with_file(true)
+            .with_line_number(true)
+            .boxed(),
+    )
 }
 
 #[cfg(test)]
