@@ -16,7 +16,7 @@ bevy = { version = "0.15", features = [
     "bevy_picking",
     "serialize",
 ] }
-bevy_vrma = { path = "../bevy_vrma" }
+bevy_vrma = { git = "https://github.com/not-elm/bevy_vrma" }
 bevy_flurx = { version = "0.9", features = ["effect", "state"] }
 bevy_webview_wry = { version = "0.3", features = ["api"] }
 serde = { version = "1", features = ["derive"] }

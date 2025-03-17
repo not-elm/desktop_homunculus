@@ -1,5 +1,6 @@
 use crate::mascot::MascotEntity;
 use crate::new_type;
+use bevy::math::Vec3;
 use bevy::prelude::{Component, Deref, Reflect, Resource};
 use bevy::utils::hashbrown::HashMap;
 use bevy_flurx::task::ReactorTask;
@@ -18,9 +19,9 @@ macro_rules! actions {
     }};
 }
 
-#[derive(Component, Serialize, Deserialize, Clone, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct ActionProperties {
-    pub tags: Vec<String>,
+    pub tags: ActionTags,
     pub action: MascotAction,
 }
 
@@ -33,27 +34,25 @@ impl ActionTags {
     }
 }
 
-
-new_type!(ActionName, String);
-
-impl ActionProperties {
-    pub async fn execute(&self, mascot: MascotEntity, task: &ReactorTask) {
-        match &self.action {
-            MascotAction::Scale(action) => action.execute(mascot, task).await,
-        }
+impl From<Vec<&str>> for ActionTags {
+    fn from(value: Vec<&str>) -> Self {
+        Self(value.iter().map(|v| v.to_string()).collect())
     }
 }
 
+
+new_type!(ActionName, String);
+
 impl ActionName {
-    pub const INDEX: &'static str = "index";
+    pub const IDLE: &'static str = "idle";
     pub const SIT_DOWN: &'static str = "sit_down";
     pub const SITTING: &'static str = "sitting";
     pub const DRAG: &'static str = "drag";
     pub const DRAG_START: &'static str = "drag_start";
     pub const DROP: &'static str = "drag_drop";
 
-    pub fn index() -> Self {
-        Self::from(Self::INDEX)
+    pub fn idle() -> Self {
+        Self::from(Self::IDLE)
     }
 
     pub fn sit_down() -> Self {
@@ -78,7 +77,7 @@ impl ActionName {
 
     #[inline]
     pub fn is_index(&self) -> bool {
-        self.0 == Self::INDEX
+        self.0 == Self::IDLE
     }
 
     #[inline]
@@ -99,7 +98,7 @@ impl ActionName {
 
 impl Default for ActionName {
     fn default() -> Self {
-        Self::index()
+        Self::idle()
     }
 }
 
@@ -108,9 +107,17 @@ pub trait ExecuteMascotAction: Send + Sync {
     async fn execute(&self, mascot: MascotEntity, task: &ReactorTask);
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, Reflect, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub enum MascotAction {
     Scale(scale::ScaleAction),
+}
+
+impl ExecuteMascotAction for MascotAction {
+    async fn execute(&self, mascot: MascotEntity, task: &ReactorTask) {
+        match self {
+            MascotAction::Scale(action) => action.execute(mascot, task).await,
+        }
+    }
 }
 
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone, Resource, Deref)]
@@ -143,7 +150,14 @@ impl ActionPreferences {
 
 impl Default for ActionPreferences {
     fn default() -> Self {
-        Self(HashMap::default())
+        Self(actions! {
+            "idle": ActionProperties {
+                tags: vec!["idle"].into(),
+                action: MascotAction::Scale(scale::ScaleAction{
+                    scale: Vec3::splat(3.0),
+                }),
+            },
+        })
     }
 }
 
@@ -158,13 +172,11 @@ mod tests {
         let mut preferences = ActionPreferences(HashMap::default());
         preferences.0.insert("rotate".into(), ActionProperties {
             tags: vec![
-                "idle".into(),
-            ],
+                "idle",
+            ].into(),
             action: MascotAction::Scale(ScaleAction::default()),
         });
-        preferences.cleanup(&vec![
-            "rotate".into(),
-        ]);
+        preferences.cleanup(&["rotate".into()]);
         assert_eq!(preferences.0.len(), 1);
     }
 
@@ -173,11 +185,11 @@ mod tests {
         let mut preferences = ActionPreferences(HashMap::default());
         preferences.0.insert("rotate".into(), ActionProperties {
             tags: vec![
-                "idle".into(),
-            ],
+                "idle",
+            ].into(),
             action: MascotAction::Scale(ScaleAction::default()),
         });
-        preferences.cleanup(&vec![]);
+        preferences.cleanup(&[]);
         assert!(preferences.0.is_empty());
     }
 }

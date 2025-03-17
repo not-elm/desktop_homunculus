@@ -1,6 +1,7 @@
 use crate::application_windows::hit_test::UpdatedHitTest;
 use crate::mascot::Mascot;
 use crate::power_state::Loading;
+use crate::settings::preferences::action::ActionName;
 use crate::settings::preferences::MascotLocationPreferences;
 use crate::system_param::coordinate::Coordinate;
 use crate::util::{create_dir_all_if_need, models_dir, remove_mystery_file_if_exists};
@@ -103,6 +104,7 @@ fn load_models(
     {
         commands.spawn((
             Mascot,
+            ActionName::idle(),
             locations.load_transform(asset_path.path(), &coordinate),
             VrmHandle(asset_server.load(asset_path)),
             cameras.all_layers(),
@@ -135,7 +137,6 @@ fn disable_hit_test(
         });
     }
 }
-
 
 fn start_watching(
     mut commands: Commands,
