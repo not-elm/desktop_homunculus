@@ -1,4 +1,4 @@
-use crate::mascot::action::MascotActionExt;
+use crate::mascot::action::{MascotAction, MascotActionExt};
 use crate::mascot::MascotEntity;
 use bevy::prelude::*;
 use bevy_flurx::action::once;
@@ -6,21 +6,22 @@ use bevy_flurx::prelude::{ActionSeed, Omit};
 use bevy_vrma::vrma::animation::play::PlayVrma;
 use bevy_vrma::vrma::{VrmaEntity, VrmaPath};
 use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Reflect)]
 #[reflect(Serialize, Deserialize)]
-pub struct MascotVrmaActionParams {
+pub struct AnimationActionParams {
     pub vrma_path: VrmaPath,
     pub repeat: bool,
 }
 
-pub struct MascotVrmaActionPlugin;
+pub struct AnimationActionPlugin;
 
-impl MascotVrmaActionPlugin {
-    pub const ID: &'static str = "vrma";
+impl AnimationActionPlugin {
+    pub const ID: &'static str = "animation";
 }
 
-impl Plugin for MascotVrmaActionPlugin {
+impl Plugin for AnimationActionPlugin {
     fn build(
         &self,
         app: &mut App,
@@ -31,13 +32,13 @@ impl Plugin for MascotVrmaActionPlugin {
 
 fn vrma_animation_action(
     mascot: MascotEntity,
-    params: MascotVrmaActionParams,
+    params: AnimationActionParams,
 ) -> ActionSeed {
     once::run(vrma_animation).with((mascot, params)).omit()
 }
 
 fn vrma_animation(
-    In((mascot, params)): In<(MascotEntity, MascotVrmaActionParams)>,
+    In((mascot, params)): In<(MascotEntity, AnimationActionParams)>,
     mut commands: Commands,
     vrma: Query<(Entity, &VrmaPath)>,
 ) {
@@ -60,7 +61,7 @@ fn find_vrma_from_path_buff(
 
 #[cfg(test)]
 mod tests {
-    use crate::mascot::action::vrma::find_vrma_from_path_buff;
+    use crate::mascot::action::animation::find_vrma_from_path_buff;
     use crate::tests::{test_app, TestResult};
     use bevy::ecs::system::RunSystemOnce;
     use bevy::prelude::{Commands, Entity, Query};

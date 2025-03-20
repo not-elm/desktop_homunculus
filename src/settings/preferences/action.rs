@@ -3,11 +3,9 @@ mod action_tags;
 
 use bevy::prelude::{Component, Deref, Reflect, Resource};
 use bevy::utils::hashbrown::HashMap;
-use bevy_vrma::vrma::VrmaPath;
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
 
-use crate::mascot::action::vrma::MascotVrmaActionParams;
+use crate::mascot::action::MascotAction;
 pub use action_name::ActionName;
 pub use action_tags::ActionTags;
 
@@ -55,16 +53,35 @@ impl ActionPreferences {
 impl Default for ActionPreferences {
     fn default() -> Self {
         let mut actions = HashMap::new();
+
         actions.insert(
             ActionName::drag_start(),
             ActionProperties {
                 tags: vec!["drag"].into(),
-                action_id: "vrma".to_string(),
-                params: serde_json::to_string(&MascotVrmaActionParams {
-                    vrma_path: VrmaPath(PathBuf::from("vrma").join("drag_start.vrma")),
-                    repeat: false,
-                })
-                .unwrap(),
+                actions: vec![
+                    MascotAction::animation("drag_start.vrma", false),
+                    MascotAction::wait_animation(),
+                    MascotAction::transition(ActionName::drag()),
+                ],
+            },
+        );
+        actions.insert(
+            ActionName::drag(),
+            ActionProperties {
+                tags: vec!["drag"].into(),
+                actions: vec![MascotAction::animation("drag.vrma", true)],
+            },
+        );
+
+        actions.insert(
+            ActionName::drop(),
+            ActionProperties {
+                tags: vec!["drag"].into(),
+                actions: vec![
+                    MascotAction::animation("drop.vrma", false),
+                    MascotAction::wait_animation(),
+                    MascotAction::transition(ActionName::idle()),
+                ],
             },
         );
         Self(actions)
@@ -74,8 +91,7 @@ impl Default for ActionPreferences {
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug, Default)]
 pub struct ActionProperties {
     pub tags: ActionTags,
-    pub action_id: String,
-    pub params: String,
+    pub actions: Vec<MascotAction>,
 }
 
 #[cfg(test)]
