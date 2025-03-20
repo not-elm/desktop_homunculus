@@ -2,7 +2,7 @@ use crate::mascot::action::MascotActionExt;
 use bevy::log::info;
 use bevy::prelude::Plugin;
 use bevy_flurx::action::delay;
-use bevy_flurx::prelude::{ActionSeed, Omit};
+use bevy_flurx::prelude::Omit;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 

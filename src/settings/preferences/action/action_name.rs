@@ -40,11 +40,6 @@ impl ActionName {
     }
 
     #[inline]
-    pub fn is_sitting(&self) -> bool {
-        self.0 == Self::SITTING
-    }
-
-    #[inline]
     pub fn is_drag_start(&self) -> bool {
         self.0 == Self::DRAG_START
     }

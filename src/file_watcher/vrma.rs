@@ -8,10 +8,10 @@ use bevy::asset::{Handle, LoadedFolder};
 use bevy::core::Name;
 use bevy::log::error;
 use bevy::prelude::{
-    AssetServer, Assets, BuildChildren, Children, Commands, Component, Entity, Event,
-    Local, Plugin, PreStartup, Query, Reflect, Res, Trigger, With,
+    debug, AssetServer, Assets, BuildChildren, Children, Commands, Component, DespawnRecursiveExt,
+    Entity, Event, Local, Plugin, PreStartup, Query, Reflect, Res, Trigger, With,
 };
-use bevy_vrma::vrma::VrmaHandle;
+use bevy_vrma::vrma::{VrmaHandle, VrmaPath};
 use crossbeam::channel::Receiver;
 use std::path::PathBuf;
 use std::time::Duration;
@@ -28,7 +28,8 @@ impl Plugin for VrmaFileWatcherPlugin {
             .add_systems(PreStartup, start_load_folder)
             .add_systems(Startup, start_watching)
             .add_systems(Update, (receive_events, wait_load))
-            .add_observer(observer_load_vrma);
+            .add_observer(observe_added_vrma)
+            .add_observer(observe_removed_vrma);
     }
 }
 
@@ -96,20 +97,20 @@ fn receive_events(
     }
 }
 
-fn observer_load_vrma(
+fn observe_added_vrma(
     _: Trigger<LoadVrma>,
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     folder_assets: Res<Assets<LoadedFolder>>,
     folder_handle: Query<&VrmaFolderHandle>,
     mascots: Query<(Entity, Option<&Children>), With<Mascot>>,
-    // vrma: Query<&ActionProperties, Or<(With<Vrma>, With<VrmaHandle>)>>,
+    vrma: Query<&VrmaPath>,
 ) {
     for vrma_path in all_loaded_vrma_path(&folder_assets, &folder_handle) {
         mascots.iter().for_each(|(mascot_entity, children)| {
-            // if already_attached(children, &vrma, &state) {
-            //     return;
-            // }
+            if already_attached(children, &vrma, &vrma_path) {
+                return;
+            }
             commands.entity(mascot_entity).with_child((
                 Name::from(format!("{}", vrma_path.display())),
                 VrmaHandle(asset_server.load(vrma_path.clone())),
@@ -118,21 +119,19 @@ fn observer_load_vrma(
     }
 }
 
-// fn remove_all_removed_vrma(
-//     mut commands: Commands,
-//     folder_assets: Res<Assets<LoadedFolder>>,
-//     folder_handle: Query<&AnimationFolderHandle>,
-//     vrma: Query<(Entity, &ActionProperties), Or<(With<Vrma>, With<VrmaHandle>)>>,
-// ) {
-//     let current_exists = all_loaded_vrma_path(&folder_assets, &folder_handle)
-//         .into_iter()
-//         .map(|(state, _)| state)
-//         .collect::<Vec<_>>();
-//     for (remove_vrma_entity, state) in search_all_removed_vrma_path(&current_exists, vrma.iter()) {
-//         debug!("Remove {state:?} from {remove_vrma_entity}");
-//         commands.entity(remove_vrma_entity).despawn_recursive();
-//     }
-// }
+fn observe_removed_vrma(
+    _: Trigger<LoadVrma>,
+    mut commands: Commands,
+    folder_assets: Res<Assets<LoadedFolder>>,
+    folder_handle: Query<&VrmaFolderHandle>,
+    vrma: Query<(Entity, &VrmaPath)>,
+) {
+    let all_loaded_path = all_loaded_vrma_path(&folder_assets, &folder_handle);
+    for (remove_vrma_entity, path) in obtain_all_remove_vrma_path(&all_loaded_path, &vrma) {
+        debug!("Remove {path:?} from {remove_vrma_entity}");
+        commands.entity(remove_vrma_entity).despawn_recursive();
+    }
+}
 
 fn all_loaded_vrma_path(
     folder_assets: &Res<Assets<LoadedFolder>>,
@@ -155,17 +154,117 @@ fn all_loaded_vrma_path(
         .collect()
 }
 
-// fn already_attached(
-//     children: Option<&Children>,
-//     vrma: &Query<&ActionProperties, >,
-//     state: &ActionProperties,
-// ) -> bool {
-//     let Some(children) = children else {
-//         return false;
-//     };
-//     children
-//         .iter()
-//         .any(|entity| {
-//             vrma.get(*entity).is_ok_and(|vrma_state| vrma_state == state)
-//         })
-// }
+fn already_attached(
+    children: Option<&Children>,
+    vrma: &Query<&VrmaPath>,
+    path: &PathBuf,
+) -> bool {
+    let Some(children) = children else {
+        return false;
+    };
+    children.iter().any(|entity| {
+        vrma.get(*entity)
+            .is_ok_and(|vrma_path| &vrma_path.0 == path)
+    })
+}
+
+fn obtain_all_remove_vrma_path(
+    all_loaded_path: &[PathBuf],
+    vrma: &Query<(Entity, &VrmaPath)>,
+) -> Vec<(Entity, PathBuf)> {
+    vrma.iter()
+        .filter_map(|(entity, vrma_path)| {
+            if all_loaded_path.contains(&vrma_path.0) {
+                None
+            } else {
+                Some((entity, vrma_path.0.clone()))
+            }
+        })
+        .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::file_watcher::vrma::{already_attached, obtain_all_remove_vrma_path};
+    use crate::tests::{test_app, TestResult};
+    use bevy::ecs::system::RunSystemOnce;
+    use bevy::hierarchy::BuildChildren;
+    use bevy::prelude::{Children, Commands, Entity, Query, With};
+    use bevy_vrma::vrm::Vrm;
+    use bevy_vrma::vrma::VrmaPath;
+    use std::path::PathBuf;
+
+    #[test]
+    fn return_false_if_has_not_children() -> TestResult {
+        let mut app = test_app();
+        let attached = app.world_mut().run_system_once(|vrma: Query<&VrmaPath>| {
+            already_attached(None, &vrma, &PathBuf::from("/root"))
+        })?;
+        assert!(!attached);
+        Ok(())
+    }
+
+    #[test]
+    fn return_true_if_has_been_attached() -> TestResult {
+        let mut app = test_app();
+        app.world_mut().run_system_once(|mut commands: Commands| {
+            commands
+                .spawn(Vrm)
+                .with_child(VrmaPath(PathBuf::from("/root")));
+        })?;
+        let attached = app.world_mut().run_system_once(
+            |vrm: Query<&Children, With<Vrm>>, vrma: Query<&VrmaPath>| {
+                already_attached(Some(vrm.single()), &vrma, &PathBuf::from("/root"))
+            },
+        )?;
+        assert!(attached);
+        Ok(())
+    }
+
+    #[test]
+    fn return_false_if_has_not_been_attached() -> TestResult {
+        let mut app = test_app();
+        app.world_mut().run_system_once(|mut commands: Commands| {
+            commands
+                .spawn(Vrm)
+                .with_child(VrmaPath(PathBuf::from("/user")));
+        })?;
+        let attached = app.world_mut().run_system_once(
+            |vrm: Query<&Children, With<Vrm>>, vrma: Query<&VrmaPath>| {
+                already_attached(Some(vrm.single()), &vrma, &PathBuf::from("/root"))
+            },
+        )?;
+        assert!(!attached);
+        Ok(())
+    }
+
+    #[test]
+    fn empty_if_not_removed() -> TestResult {
+        let mut app = test_app();
+        app.world_mut().run_system_once(|mut commands: Commands| {
+            commands.spawn(VrmaPath(PathBuf::from("/")));
+        })?;
+        let all_removed: Vec<_> =
+            app.world_mut()
+                .run_system_once(|vrma: Query<(Entity, &VrmaPath)>| {
+                    obtain_all_remove_vrma_path(&[PathBuf::from("/")], &vrma)
+                })?;
+        assert!(all_removed.is_empty());
+        Ok(())
+    }
+
+    #[test]
+    fn all_removed_len_is_1() -> TestResult {
+        let mut app = test_app();
+        app.world_mut().run_system_once(|mut commands: Commands| {
+            commands.spawn(VrmaPath(PathBuf::from("/")));
+        })?;
+        let all_removed: Vec<_> =
+            app.world_mut()
+                .run_system_once(|vrma: Query<(Entity, &VrmaPath)>| {
+                    obtain_all_remove_vrma_path(&[], &vrma)
+                })?;
+        assert_eq!(all_removed.len(), 1);
+        Ok(())
+    }
+}
