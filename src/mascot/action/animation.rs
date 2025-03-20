@@ -1,4 +1,4 @@
-use crate::mascot::action::{MascotAction, MascotActionExt};
+use crate::mascot::action::MascotActionExt;
 use crate::mascot::MascotEntity;
 use bevy::prelude::*;
 use bevy_flurx::action::once;
@@ -6,7 +6,6 @@ use bevy_flurx::prelude::{ActionSeed, Omit};
 use bevy_vrma::vrma::animation::play::PlayVrma;
 use bevy_vrma::vrma::{VrmaEntity, VrmaPath};
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Reflect)]
 #[reflect(Serialize, Deserialize)]

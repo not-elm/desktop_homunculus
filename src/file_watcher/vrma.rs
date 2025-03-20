@@ -6,11 +6,10 @@ use bevy::asset::io::file::FileWatcher;
 use bevy::asset::io::AssetSourceEvent;
 use bevy::asset::{Handle, LoadedFolder};
 use bevy::core::Name;
-use bevy::ecs::world::DeferredWorld;
 use bevy::log::error;
 use bevy::prelude::{
-    AssetServer, Assets, BuildChildren, Children, Commands, Component, Entity, Event, EventWriter,
-    Local, ParallelCommands, Plugin, PreStartup, Query, Reflect, Res, Trigger, With,
+    AssetServer, Assets, BuildChildren, Children, Commands, Component, Entity, Event,
+    Local, Plugin, PreStartup, Query, Reflect, Res, Trigger, With,
 };
 use bevy_vrma::vrma::VrmaHandle;
 use crossbeam::channel::Receiver;
