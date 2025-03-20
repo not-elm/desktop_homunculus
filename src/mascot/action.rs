@@ -9,7 +9,7 @@ use bevy::prelude::{
 use bevy_flurx::action::once;
 use bevy_flurx::prelude::{ActionSeed, Reactor};
 use serde::de::DeserializeOwned;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 #[derive(Event)]
 pub struct RequestAction {

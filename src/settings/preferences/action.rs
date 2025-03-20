@@ -1,9 +1,6 @@
-use crate::mascot::MascotEntity;
 use crate::new_type;
-use bevy::math::Vec3;
 use bevy::prelude::{Component, Deref, Reflect, Resource};
 use bevy::utils::hashbrown::HashMap;
-use bevy_flurx::task::ReactorTask;
 use serde::{Deserialize, Serialize};
 
 #[macro_export]
@@ -15,7 +12,7 @@ macro_rules! actions {
     }};
 }
 
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone, Resource, Deref)]
+#[derive(PartialEq, Debug, Serialize, Deserialize, Clone, Resource, Deref, Default)]
 pub struct ActionPreferences(pub(crate) HashMap<ActionName, ActionProperties>);
 
 impl ActionPreferences {
@@ -44,12 +41,6 @@ impl ActionPreferences {
         properties: ActionProperties,
     ) {
         self.0.entry(name).insert(properties);
-    }
-}
-
-impl Default for ActionPreferences {
-    fn default() -> Self {
-        Self(HashMap::default())
     }
 }
 
