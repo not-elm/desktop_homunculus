@@ -133,7 +133,6 @@ impl Default for ActionPreferences {
                 actions: vec![MascotAction::animation("drag.vrma", true)],
             },
         );
-
         actions.insert(
             ActionName::drop(),
             ActionProperties {
@@ -142,6 +141,17 @@ impl Default for ActionPreferences {
                     MascotAction::animation("drop.vrma", false),
                     MascotAction::wait_animation(),
                     MascotAction::transition(ActionName::idle()),
+                ],
+            },
+        );
+        actions.insert(
+            ActionName::sit_down(),
+            ActionProperties {
+                tags: vec!["sitting"].into(),
+                actions: vec![
+                    MascotAction::animation("sit_down.vrma", false),
+                    MascotAction::wait_animation(),
+                    MascotAction::transition(ActionName::sitting()),
                 ],
             },
         );
@@ -191,7 +201,7 @@ mod tests {
 
     #[test]
     fn return_none_if_has_not_actions() {
-        let mut preferences = ActionPreferences(HashMap::default());
+        let preferences = ActionPreferences(HashMap::default());
         let next = preferences.random_next_action(&vec!["drag"].into(), &"idle".into());
         assert_eq!(next, None);
     }

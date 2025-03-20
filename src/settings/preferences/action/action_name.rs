@@ -18,6 +18,10 @@ impl ActionName {
         Self::from(Self::SIT_DOWN)
     }
 
+    pub fn sitting() -> Self {
+        Self::from(Self::SITTING)
+    }
+
     pub fn drag_start() -> ActionName {
         ActionName::from(Self::DRAG_START)
     }

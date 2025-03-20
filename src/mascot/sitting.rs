@@ -43,8 +43,8 @@ impl Plugin for MascotSittingPlugin {
     }
 }
 
-fn any_mascots_sitting(mascots: Query<&ActionName>) -> bool {
-    mascots.iter().any(|action| action.is_sitting())
+fn any_mascots_sitting(mascots: Query<&ActionTags>) -> bool {
+    mascots.iter().any(|tags| tags.contains("sitting"))
 }
 
 #[derive(Debug, Default, Clone, Component)]
