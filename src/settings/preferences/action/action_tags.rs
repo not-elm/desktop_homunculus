@@ -1,8 +1,8 @@
-use bevy::prelude::{Component, Reflect};
+use bevy::prelude::{Component, Deref, Reflect};
 use serde::{Deserialize, Serialize};
 
 #[derive(
-    Debug, Default, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Reflect, Component,
+    Debug, Default, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Reflect, Component, Deref,
 )]
 pub struct ActionTags(pub Vec<String>);
 

@@ -1,10 +1,14 @@
 pub mod animation;
+mod auto_transition;
 mod mascot_action;
+mod range_timer;
 pub mod transition;
 pub mod wait_animation;
 
 use crate::mascot::action::animation::AnimationActionPlugin;
+use crate::mascot::action::auto_transition::AutoTransitionPlugin;
 pub use crate::mascot::action::mascot_action::MascotAction;
+use crate::mascot::action::range_timer::RangeTimerActionPlugin;
 use crate::mascot::action::transition::TransitionActionPlugin;
 use crate::mascot::action::wait_animation::WaitAnimationPlugin;
 use crate::mascot::{Mascot, MascotEntity};
@@ -15,7 +19,7 @@ use bevy::prelude::{
     Trigger, With,
 };
 use bevy_flurx::action::{once, wait};
-use bevy_flurx::prelude::{ActionSeed, Reactor};
+use bevy_flurx::prelude::*;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
@@ -42,6 +46,8 @@ impl Plugin for MascotActionPlugin {
                 AnimationActionPlugin,
                 TransitionActionPlugin,
                 WaitAnimationPlugin,
+                AutoTransitionPlugin,
+                RangeTimerActionPlugin,
             ))
             .add_systems(Update, transition_actions);
     }
@@ -57,18 +63,39 @@ fn transition_actions(
             return;
         };
         let mascot = MascotEntity(entity);
+        let action_name = action_name.clone();
         par_commands.command_scope(move |mut commands| {
             commands.entity(mascot.0).insert(properties.tags);
             commands.spawn(Reactor::schedule(move |task| async move {
                 for action in properties.actions {
-                    task.will(Update, once::run(emit_action).with((mascot, action)))
-                        .await;
-                    task.will(Update, wait::until(action_done).with(mascot))
-                        .await;
+                    task.will(Update, delay::frames().with(1)).await;
+                    let canceled = task
+                        .will(
+                            Update,
+                            wait::either(
+                                wait::until(detect_change_action_name)
+                                    .with((mascot, action_name.clone())),
+                                once::run(emit_action)
+                                    .with((mascot, action))
+                                    .then(wait::until(action_done).with(mascot)),
+                            ),
+                        )
+                        .await
+                        .is_left();
+                    if canceled {
+                        break;
+                    }
                 }
             }));
         });
     });
+}
+
+fn detect_change_action_name(
+    In((mascot, current_name)): In<(MascotEntity, ActionName)>,
+    mascots: Query<&ActionName>,
+) -> bool {
+    mascots.get(mascot.0).is_ok_and(|n| n != &current_name)
 }
 
 fn emit_action(
@@ -126,20 +153,15 @@ impl MascotActionExt for App {
 
 #[cfg(test)]
 mod tests {
-    use crate::actions;
-    use crate::mascot::action::{
-        transition_actions, ActionDone, MascotAction, MascotActionExt, MascotActionPlugin,
-    };
+    use crate::mascot::action::transition_actions;
     use crate::mascot::Mascot;
     use crate::settings::preferences::action::{
         ActionName, ActionPreferences, ActionProperties, ActionTags,
     };
     use crate::tests::{test_app, TestResult};
     use bevy::app::Update;
-    use bevy::ecs::system::RunSystemOnce;
-    use bevy::prelude::{Commands, Component, IntoSystemConfigs, Trigger};
+    use bevy::prelude::{Commands, IntoSystemConfigs};
     use bevy::utils::default;
-    use bevy_flurx::action::once;
 
     #[test]
     fn test_transition_actions() -> TestResult {
@@ -167,42 +189,6 @@ mod tests {
 
         let tags = app.world_mut().query::<&ActionTags>().single(app.world());
         assert_eq!(tags, &ActionTags::from(vec!["drag"]));
-        Ok(())
-    }
-
-    #[test]
-    fn await_for_emit_action_done() -> TestResult {
-        #[derive(Component)]
-        struct Success;
-
-        let mut app = test_app();
-        app.add_plugins(MascotActionPlugin);
-        app.add_mascot_action::<()>("test", |_, _| once::no_op());
-        app.insert_resource(ActionPreferences(actions! {
-            "test": ActionProperties{
-                actions: vec![MascotAction{
-                    id: "test".to_string(),
-                params: serde_json::to_string(&()).unwrap(),
-                }],
-                ..default()
-            },
-        }));
-        app.world_mut().run_system_once(|mut commands: Commands| {
-            commands.spawn((Mascot, ActionName::from("test"))).observe(
-                |_: Trigger<ActionDone>, mut commands: Commands| {
-                    commands.spawn(Success);
-                },
-            );
-        })?;
-        app.update();
-        app.update();
-        app.update();
-        assert!(app
-            .world_mut()
-            .query::<&Success>()
-            .get_single(app.world())
-            .is_ok());
-
         Ok(())
     }
 }

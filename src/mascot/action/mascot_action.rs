@@ -1,9 +1,12 @@
 use crate::mascot::action::animation::{AnimationActionParams, AnimationActionPlugin};
+use crate::mascot::action::auto_transition::AutoTransitionPlugin;
+use crate::mascot::action::range_timer::{RangeTimerActionParams, RangeTimerActionPlugin};
 use crate::mascot::action::transition::{TransitionActionParams, TransitionActionPlugin};
 use crate::mascot::action::wait_animation::WaitAnimationPlugin;
 use crate::settings::preferences::action::ActionName;
 use bevy_vrma::vrma::VrmaPath;
 use serde::{Deserialize, Serialize};
+use std::ops::Range;
 use std::path::PathBuf;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
@@ -42,6 +45,20 @@ impl MascotAction {
 
     pub fn transition(next: ActionName) -> Self {
         Self::new(TransitionActionPlugin::ID, TransitionActionParams { next })
+    }
+
+    pub fn auto_transition() -> Self {
+        Self::new(AutoTransitionPlugin::ID, ())
+    }
+
+    pub fn range_timer(range: Range<f32>) -> Self {
+        Self::new(
+            RangeTimerActionPlugin::ID,
+            RangeTimerActionParams {
+                min_sec: range.start,
+                max_sec: range.end,
+            },
+        )
     }
 }
 

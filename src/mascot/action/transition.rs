@@ -1,6 +1,7 @@
 use crate::mascot::action::MascotActionExt;
 use crate::settings::preferences::action::ActionName;
 use bevy::app::{App, Plugin};
+use bevy::log::info;
 use bevy::prelude::Commands;
 use bevy_flurx::action::once;
 use serde::{Deserialize, Serialize};
@@ -23,6 +24,7 @@ impl Plugin for TransitionActionPlugin {
     ) {
         app.add_mascot_action(Self::ID, |mascot, params: TransitionActionParams| {
             once::run(move |mut commands: Commands| {
+                info!("Transition {mascot:?} into {}", params.next);
                 commands.entity(mascot.0).insert(params.next.clone());
             })
         });

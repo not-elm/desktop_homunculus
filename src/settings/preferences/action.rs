@@ -3,6 +3,7 @@ mod action_tags;
 
 use bevy::prelude::{Deref, Resource};
 use bevy::utils::hashbrown::HashMap;
+use rand::prelude::IteratorRandom;
 use serde::{Deserialize, Serialize};
 
 use crate::mascot::action::MascotAction;
@@ -22,6 +23,22 @@ macro_rules! actions {
 pub struct ActionPreferences(pub(crate) HashMap<ActionName, ActionProperties>);
 
 impl ActionPreferences {
+    pub fn random_next_action(
+        &self,
+        tags: &ActionTags,
+        current: &ActionName,
+    ) -> Option<&ActionName> {
+        self.0
+            .iter()
+            .filter(|(name, _)| name != &current)
+            .filter_map(|(name, properties)| {
+                tags.iter()
+                    .any(|tag| properties.tags.contains(tag))
+                    .then_some(name)
+            })
+            .choose(&mut rand::rng())
+    }
+
     pub fn cleanup(
         &mut self,
         exists_actions: &[ActionName],
@@ -54,6 +71,50 @@ impl Default for ActionPreferences {
     fn default() -> Self {
         let mut actions = HashMap::new();
 
+        actions.insert(
+            ActionName::idle(),
+            ActionProperties {
+                tags: vec!["idle"].into(),
+                actions: vec![
+                    MascotAction::animation("idle.vrma", true),
+                    MascotAction::range_timer(10f32..60.),
+                    MascotAction::auto_transition(),
+                ],
+            },
+        );
+        actions.insert(
+            ActionName::from("peace"),
+            ActionProperties {
+                tags: vec!["idle"].into(),
+                actions: vec![
+                    MascotAction::animation("peace.vrma", false),
+                    MascotAction::wait_animation(),
+                    MascotAction::transition(ActionName::idle()),
+                ],
+            },
+        );
+        actions.insert(
+            ActionName::from("destroy"),
+            ActionProperties {
+                tags: vec!["idle"].into(),
+                actions: vec![
+                    MascotAction::animation("destroy.vrma", false),
+                    MascotAction::wait_animation(),
+                    MascotAction::transition(ActionName::idle()),
+                ],
+            },
+        );
+        actions.insert(
+            ActionName::from("rotate"),
+            ActionProperties {
+                tags: vec!["idle"].into(),
+                actions: vec![
+                    MascotAction::animation("rotate.vrma", false),
+                    MascotAction::wait_animation(),
+                    MascotAction::transition(ActionName::idle()),
+                ],
+            },
+        );
         actions.insert(
             ActionName::drag_start(),
             ActionProperties {
@@ -96,7 +157,7 @@ pub struct ActionProperties {
 
 #[cfg(test)]
 mod tests {
-    use crate::settings::preferences::action::{ActionPreferences, ActionProperties};
+    use crate::settings::preferences::action::{ActionName, ActionPreferences, ActionProperties};
     use bevy::prelude::default;
     use bevy::utils::HashMap;
 
@@ -126,5 +187,26 @@ mod tests {
         );
         preferences.cleanup(&[]);
         assert!(preferences.0.is_empty());
+    }
+
+    #[test]
+    fn return_none_if_has_not_actions() {
+        let mut preferences = ActionPreferences(HashMap::default());
+        let next = preferences.random_next_action(&vec!["drag"].into(), &"idle".into());
+        assert_eq!(next, None);
+    }
+
+    #[test]
+    fn return_action_has_same_tag() {
+        let mut preferences = ActionPreferences(HashMap::default());
+        preferences.0.insert(
+            ActionName::drop(),
+            ActionProperties {
+                tags: vec!["drag"].into(),
+                actions: vec![],
+            },
+        );
+        let next = preferences.random_next_action(&vec!["drag"].into(), &"idle".into());
+        assert_eq!(next, Some(&ActionName::drop()));
     }
 }

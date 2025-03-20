@@ -35,6 +35,7 @@ fn read_mascot_locations() -> AppResult<MascotLocationPreferences> {
 }
 
 fn read_actions() -> AppResult<ActionPreferences> {
+    return Ok(ActionPreferences::default());
     let path = actions_json_path();
     if !path.exists() {
         return Ok(ActionPreferences::default());
