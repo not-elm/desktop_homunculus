@@ -1,5 +1,7 @@
-mod animation;
+mod transition;
+pub mod vrma;
 
+use crate::mascot::action::vrma::MascotVrmaActionPlugin;
 use crate::mascot::{Mascot, MascotEntity};
 use crate::settings::preferences::action::{ActionName, ActionPreferences};
 use bevy::app::{App, Update};
@@ -29,6 +31,7 @@ impl Plugin for MascotActionPlugin {
         app: &mut App,
     ) {
         app.add_event::<ActionDone>()
+            .add_plugins(MascotVrmaActionPlugin)
             .add_systems(Update, transition_actions);
     }
 }

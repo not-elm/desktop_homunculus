@@ -25,6 +25,7 @@ fn load_actions(mut commands: Commands) {
 }
 
 fn read_mascot_locations() -> AppResult<MascotLocationPreferences> {
+    return Ok(MascotLocationPreferences::default());
     let path = mascot_locations_json_path();
     if !path.exists() {
         return Ok(MascotLocationPreferences::default());

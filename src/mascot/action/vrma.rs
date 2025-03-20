@@ -16,12 +16,16 @@ pub struct MascotVrmaActionParams {
 
 pub struct MascotVrmaActionPlugin;
 
+impl MascotVrmaActionPlugin {
+    pub const ID: &'static str = "vrma";
+}
+
 impl Plugin for MascotVrmaActionPlugin {
     fn build(
         &self,
         app: &mut App,
     ) {
-        app.add_mascot_action("animation", vrma_animation_action);
+        app.add_mascot_action(Self::ID, vrma_animation_action);
     }
 }
 
@@ -38,6 +42,7 @@ fn vrma_animation(
     vrma: Query<(Entity, &VrmaPath)>,
 ) {
     if let Some(vrma_entity) = find_vrma_from_path_buff(&params.vrma_path, vrma) {
+        info!("Play VRMA({:?}) repeat={}", params.vrma_path, params.repeat);
         commands.entity(mascot.0).trigger(PlayVrma {
             vrma: VrmaEntity(vrma_entity),
             repeat: params.repeat,
@@ -55,7 +60,7 @@ fn find_vrma_from_path_buff(
 
 #[cfg(test)]
 mod tests {
-    use crate::mascot::action::animation::find_vrma_from_path_buff;
+    use crate::mascot::action::vrma::find_vrma_from_path_buff;
     use crate::tests::{test_app, TestResult};
     use bevy::ecs::system::RunSystemOnce;
     use bevy::prelude::{Commands, Entity, Query};

@@ -1,4 +1,5 @@
 use crate::application_windows::hit_test::UpdatedHitTest;
+use crate::file_watcher::vrma::LoadVrma;
 use crate::mascot::Mascot;
 use crate::power_state::Loading;
 use crate::settings::preferences::action::ActionName;
@@ -114,6 +115,7 @@ fn load_models(
             ))
             .observe(enable_hit_test)
             .observe(disable_hit_test);
+        commands.trigger(LoadVrma);
     }
 }
 

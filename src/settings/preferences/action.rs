@@ -1,7 +1,15 @@
-use crate::new_type;
+mod action_name;
+mod action_tags;
+
 use bevy::prelude::{Component, Deref, Reflect, Resource};
 use bevy::utils::hashbrown::HashMap;
+use bevy_vrma::vrma::VrmaPath;
 use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
+
+use crate::mascot::action::vrma::MascotVrmaActionParams;
+pub use action_name::ActionName;
+pub use action_tags::ActionTags;
 
 #[macro_export]
 macro_rules! actions {
@@ -12,7 +20,7 @@ macro_rules! actions {
     }};
 }
 
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone, Resource, Deref, Default)]
+#[derive(PartialEq, Debug, Serialize, Deserialize, Clone, Resource, Deref)]
 pub struct ActionPreferences(pub(crate) HashMap<ActionName, ActionProperties>);
 
 impl ActionPreferences {
@@ -44,92 +52,30 @@ impl ActionPreferences {
     }
 }
 
+impl Default for ActionPreferences {
+    fn default() -> Self {
+        let mut actions = HashMap::new();
+        actions.insert(
+            ActionName::drag_start(),
+            ActionProperties {
+                tags: vec!["drag"].into(),
+                action_id: "vrma".to_string(),
+                params: serde_json::to_string(&MascotVrmaActionParams {
+                    vrma_path: VrmaPath(PathBuf::from("vrma").join("drag_start.vrma")),
+                    repeat: false,
+                })
+                .unwrap(),
+            },
+        );
+        Self(actions)
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug, Default)]
 pub struct ActionProperties {
     pub tags: ActionTags,
     pub action_id: String,
     pub params: String,
-}
-
-#[derive(
-    Debug, Default, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Reflect, Component,
-)]
-pub struct ActionTags(pub Vec<String>);
-
-impl ActionTags {
-    pub fn contains(
-        &self,
-        tag: &str,
-    ) -> bool {
-        self.0.contains(&tag.to_string())
-    }
-}
-
-impl From<Vec<&str>> for ActionTags {
-    fn from(value: Vec<&str>) -> Self {
-        Self(value.iter().map(|v| v.to_string()).collect())
-    }
-}
-
-new_type!(ActionName, String);
-
-impl ActionName {
-    pub const IDLE: &'static str = "idle";
-    pub const SIT_DOWN: &'static str = "sit_down";
-    pub const SITTING: &'static str = "sitting";
-    pub const DRAG: &'static str = "drag";
-    pub const DRAG_START: &'static str = "drag_start";
-    pub const DROP: &'static str = "drag_drop";
-
-    pub fn idle() -> Self {
-        Self::from(Self::IDLE)
-    }
-
-    pub fn sit_down() -> Self {
-        Self::from(Self::SIT_DOWN)
-    }
-
-    pub fn sitting() -> Self {
-        Self::from(Self::SITTING)
-    }
-
-    pub fn drag_start() -> ActionName {
-        ActionName::from(Self::DRAG_START)
-    }
-
-    pub fn drag() -> Self {
-        Self::from(Self::DRAG)
-    }
-
-    pub fn drop() -> Self {
-        Self::from(Self::DROP)
-    }
-
-    #[inline]
-    pub fn is_index(&self) -> bool {
-        self.0 == Self::IDLE
-    }
-
-    #[inline]
-    pub fn is_sit_down(&self) -> bool {
-        self.0 == Self::SIT_DOWN
-    }
-
-    #[inline]
-    pub fn is_sitting(&self) -> bool {
-        self.0 == Self::SITTING
-    }
-
-    #[inline]
-    pub fn is_drag_start(&self) -> bool {
-        self.0 == Self::DRAG_START
-    }
-}
-
-impl Default for ActionName {
-    fn default() -> Self {
-        Self::idle()
-    }
 }
 
 #[cfg(test)]

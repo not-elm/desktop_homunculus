@@ -183,6 +183,7 @@ fn create_window(size: Vec2) -> Window {
         titlebar_shown: false,
         mode: WindowMode::Windowed,
         cursor_options: CursorOptions {
+            #[cfg(not(feature = "develop"))]
             hit_test: false,
             ..default()
         },

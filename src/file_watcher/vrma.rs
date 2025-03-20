@@ -5,6 +5,8 @@ use bevy::app::{App, Startup, Update};
 use bevy::asset::io::file::FileWatcher;
 use bevy::asset::io::AssetSourceEvent;
 use bevy::asset::{Handle, LoadedFolder};
+use bevy::core::Name;
+use bevy::ecs::world::DeferredWorld;
 use bevy::log::error;
 use bevy::prelude::{
     AssetServer, Assets, BuildChildren, Children, Commands, Component, Entity, Event, EventWriter,
@@ -23,7 +25,7 @@ impl Plugin for VrmaFileWatcherPlugin {
         app: &mut App,
     ) {
         app.add_event::<LoadVrma>()
-            .register_type::<AnimationFolderHandle>()
+            .register_type::<VrmaFolderHandle>()
             .add_systems(PreStartup, start_load_folder)
             .add_systems(Startup, start_watching)
             .add_systems(Update, (receive_events, wait_load))
@@ -32,7 +34,7 @@ impl Plugin for VrmaFileWatcherPlugin {
 }
 
 #[derive(Event)]
-struct LoadVrma;
+pub struct LoadVrma;
 
 #[derive(Component)]
 struct VrmaFilesWatcher {
@@ -41,24 +43,20 @@ struct VrmaFilesWatcher {
 }
 
 #[derive(Component, Reflect)]
-struct AnimationFolderHandle(Handle<LoadedFolder>);
+struct VrmaFolderHandle(Handle<LoadedFolder>);
 
 fn start_load_folder(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
 ) {
-    commands.spawn((
-        Loading,
-        AnimationFolderHandle(asset_server.load_folder("animations")),
-    ));
+    commands.spawn((Loading, VrmaFolderHandle(asset_server.load_folder("vrma"))));
 }
 
 fn wait_load(
     mut commands: Commands,
-    mut ew: EventWriter<LoadVrma>,
     mut loaded: Local<bool>,
     folder_assets: Res<Assets<LoadedFolder>>,
-    folder_handle: Query<(Entity, &AnimationFolderHandle)>,
+    folder_handle: Query<(Entity, &VrmaFolderHandle)>,
 ) {
     if *loaded {
         return;
@@ -67,7 +65,7 @@ fn wait_load(
     if folder_assets.get(handle.0.id()).is_some() {
         *loaded = true;
         commands.entity(entity).remove::<Loading>();
-        ew.send(LoadVrma);
+        commands.trigger(LoadVrma);
     }
 }
 
@@ -91,37 +89,36 @@ fn start_watching(mut commands: Commands) {
 }
 
 fn receive_events(
-    mut request_load: EventWriter<LoadVrma>,
+    mut commands: Commands,
     watchers: Query<&VrmaFilesWatcher>,
 ) {
     while watchers.single().receiver.try_recv().is_ok() {
-        request_load.send(LoadVrma);
+        commands.trigger(LoadVrma);
     }
 }
 
 fn observer_load_vrma(
     _: Trigger<LoadVrma>,
-    commands: ParallelCommands,
+    mut commands: Commands,
     asset_server: Res<AssetServer>,
     folder_assets: Res<Assets<LoadedFolder>>,
-    folder_handle: Query<&AnimationFolderHandle>,
+    folder_handle: Query<&VrmaFolderHandle>,
     mascots: Query<(Entity, Option<&Children>), With<Mascot>>,
     // vrma: Query<&ActionProperties, Or<(With<Vrma>, With<VrmaHandle>)>>,
 ) {
     for vrma_path in all_loaded_vrma_path(&folder_assets, &folder_handle) {
-        mascots.par_iter().for_each(|(mascot_entity, children)| {
+        mascots.iter().for_each(|(mascot_entity, children)| {
             // if already_attached(children, &vrma, &state) {
             //     return;
             // }
-            commands.command_scope(|mut commands| {
-                commands
-                    .entity(mascot_entity)
-                    .with_child(VrmaHandle(asset_server.load(vrma_path.clone())));
-            });
+            commands.entity(mascot_entity).with_child((
+                Name::from(format!("{}", vrma_path.display())),
+                VrmaHandle(asset_server.load(vrma_path.clone())),
+            ));
         });
     }
 }
-//
+
 // fn remove_all_removed_vrma(
 //     mut commands: Commands,
 //     folder_assets: Res<Assets<LoadedFolder>>,
@@ -140,7 +137,7 @@ fn observer_load_vrma(
 
 fn all_loaded_vrma_path(
     folder_assets: &Res<Assets<LoadedFolder>>,
-    folder_handle: &Query<&AnimationFolderHandle>,
+    folder_handle: &Query<&VrmaFolderHandle>,
 ) -> Vec<PathBuf> {
     let Some(folder) = folder_handle
         .get_single()
