@@ -2,6 +2,7 @@ pub mod animation;
 mod auto_transition;
 mod mascot_action;
 mod range_timer;
+pub mod scale;
 pub mod transition;
 pub mod wait_animation;
 
@@ -9,6 +10,7 @@ use crate::mascot::action::animation::AnimationActionPlugin;
 use crate::mascot::action::auto_transition::AutoTransitionPlugin;
 pub use crate::mascot::action::mascot_action::MascotAction;
 use crate::mascot::action::range_timer::RangeTimerActionPlugin;
+use crate::mascot::action::scale::ScaleActionPlugin;
 use crate::mascot::action::transition::TransitionActionPlugin;
 use crate::mascot::action::wait_animation::WaitAnimationPlugin;
 use crate::mascot::{Mascot, MascotEntity};
@@ -48,6 +50,7 @@ impl Plugin for MascotActionPlugin {
                 WaitAnimationPlugin,
                 AutoTransitionPlugin,
                 RangeTimerActionPlugin,
+                ScaleActionPlugin,
             ))
             .add_systems(Update, transition_actions);
     }
