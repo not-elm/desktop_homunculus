@@ -23,7 +23,10 @@ impl MascotAabb<'_, '_> {
     //     Rect::from_corners(min.truncate(), max.truncate())
     // }
 
-    pub fn calculate(&self, mesh_root: Entity) -> (Vec3, Vec3) {
+    pub fn calculate(
+        &self,
+        mesh_root: Entity,
+    ) -> (Vec3, Vec3) {
         calculate_aabb(&[mesh_root], true, &self.meshes)
     }
 }

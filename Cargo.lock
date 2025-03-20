@@ -1458,6 +1458,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_test_helper"
+version = "0.1.0"
+source = "git+https://github.com/not-elm/bevy_test_helper?branch=v0.15.0#010f99b8af38882e1b3d818620e6090bcce3f35d"
+dependencies = [
+ "bevy",
+ "bevy_test_helper_macro_impl",
+]
+
+[[package]]
+name = "bevy_test_helper_macro_impl"
+version = "0.1.0"
+source = "git+https://github.com/not-elm/bevy_test_helper?branch=v0.15.0#010f99b8af38882e1b3d818620e6090bcce3f35d"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.98",
+]
+
+[[package]]
 name = "bevy_text"
 version = "0.15.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1577,7 +1596,6 @@ dependencies = [
 [[package]]
 name = "bevy_vrma"
 version = "0.1.0"
-source = "git+https://github.com/not-elm/bevy_vrma#6222c7e3089872ccf1cc8fe141f030eb55b5ded1"
 dependencies = [
  "anyhow",
  "bevy",
@@ -2462,6 +2480,7 @@ dependencies = [
  "bevy",
  "bevy-inspector-egui",
  "bevy_flurx",
+ "bevy_test_helper",
  "bevy_vrma",
  "bevy_webview_wry",
  "core-foundation 0.10.0",

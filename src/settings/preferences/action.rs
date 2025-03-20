@@ -6,20 +6,58 @@ use bevy::utils::hashbrown::HashMap;
 use bevy_flurx::task::ReactorTask;
 use serde::{Deserialize, Serialize};
 
-pub mod scale;
-
+#[macro_export]
 macro_rules! actions {
     ( $( $key:literal: $value:expr ),* $(,)? ) => {{
-        let mut map = HashMap::new();
+        let mut map = bevy::utils::HashMap::new();
         $( map.insert(ActionName::from($key), $value); )*
         map
     }};
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
+#[derive(PartialEq, Debug, Serialize, Deserialize, Clone, Resource, Deref)]
+pub struct ActionPreferences(pub(crate) HashMap<ActionName, ActionProperties>);
+
+impl ActionPreferences {
+    pub fn cleanup(
+        &mut self,
+        exists_actions: &[ActionName],
+    ) {
+        self.0 = self
+            .0
+            .iter()
+            .filter_map(|(k, v)| exists_actions.contains(k).then_some((k.clone(), v.clone())))
+            .collect::<HashMap<_, _>>();
+    }
+
+    pub fn register_if_not_exists(
+        &mut self,
+        name: ActionName,
+        action: ActionProperties,
+    ) {
+        self.0.entry(name).or_insert(action);
+    }
+
+    pub fn update(
+        &mut self,
+        name: ActionName,
+        properties: ActionProperties,
+    ) {
+        self.0.entry(name).insert(properties);
+    }
+}
+
+impl Default for ActionPreferences {
+    fn default() -> Self {
+        Self(HashMap::default())
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug, Default)]
 pub struct ActionProperties {
     pub tags: ActionTags,
-    pub action: MascotAction,
+    pub action_id: String,
+    pub params: String,
 }
 
 #[derive(
@@ -28,7 +66,10 @@ pub struct ActionProperties {
 pub struct ActionTags(pub Vec<String>);
 
 impl ActionTags {
-    pub fn contains(&self, tag: &str) -> bool {
+    pub fn contains(
+        &self,
+        tag: &str,
+    ) -> bool {
         self.0.contains(&tag.to_string())
     }
 }
@@ -100,61 +141,10 @@ impl Default for ActionName {
     }
 }
 
-pub trait ExecuteMascotAction: Send + Sync {
-    async fn execute(&self, mascot: MascotEntity, task: &ReactorTask);
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
-pub enum MascotAction {
-    Scale(scale::ScaleAction),
-}
-
-impl ExecuteMascotAction for MascotAction {
-    async fn execute(&self, mascot: MascotEntity, task: &ReactorTask) {
-        match self {
-            MascotAction::Scale(action) => action.execute(mascot, task).await,
-        }
-    }
-}
-
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone, Resource, Deref)]
-pub struct ActionPreferences(HashMap<ActionName, ActionProperties>);
-
-impl ActionPreferences {
-    pub fn cleanup(&mut self, exists_actions: &[ActionName]) {
-        self.0 = self
-            .0
-            .iter()
-            .filter_map(|(k, v)| exists_actions.contains(k).then_some((k.clone(), v.clone())))
-            .collect::<HashMap<_, _>>();
-    }
-
-    pub fn register_if_not_exists(&mut self, name: ActionName, action: ActionProperties) {
-        self.0.entry(name).or_insert(action);
-    }
-
-    pub fn update(&mut self, name: ActionName, properties: ActionProperties) {
-        self.0.entry(name).insert(properties);
-    }
-}
-
-impl Default for ActionPreferences {
-    fn default() -> Self {
-        Self(actions! {
-            "idle": ActionProperties {
-                tags: vec!["idle"].into(),
-                action: MascotAction::Scale(scale::ScaleAction{
-                    scale: Vec3::splat(3.0),
-                }),
-            },
-        })
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use crate::settings::preferences::action::scale::ScaleAction;
-    use crate::settings::preferences::action::{ActionPreferences, ActionProperties, MascotAction};
+    use crate::settings::preferences::action::{ActionPreferences, ActionProperties};
+    use bevy::prelude::default;
     use bevy::utils::HashMap;
 
     #[test]
@@ -164,7 +154,7 @@ mod tests {
             "rotate".into(),
             ActionProperties {
                 tags: vec!["idle"].into(),
-                action: MascotAction::Scale(ScaleAction::default()),
+                ..default()
             },
         );
         preferences.cleanup(&["rotate".into()]);
@@ -178,7 +168,7 @@ mod tests {
             "rotate".into(),
             ActionProperties {
                 tags: vec!["idle"].into(),
-                action: MascotAction::Scale(ScaleAction::default()),
+                ..default()
             },
         );
         preferences.cleanup(&[]);

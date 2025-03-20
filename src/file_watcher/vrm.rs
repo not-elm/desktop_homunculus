@@ -25,7 +25,10 @@ use std::time::Duration;
 pub struct VrmFileWatcherPlugin;
 
 impl Plugin for VrmFileWatcherPlugin {
-    fn build(&self, app: &mut App) {
+    fn build(
+        &self,
+        app: &mut App,
+    ) {
         app.register_type::<VrmFolderHandle>()
             .add_event::<RequestLoadVrm>()
             .add_systems(
@@ -55,7 +58,10 @@ struct VrmFolderHandle(Handle<LoadedFolder>);
 #[derive(Event)]
 struct RequestLoadVrm;
 
-fn start_load_models_folder(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn start_load_models_folder(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+) {
     remove_mystery_file_if_exists(&models_dir());
     commands.spawn((Loading, VrmFolderHandle(asset_server.load_folder("models"))));
 }
@@ -111,7 +117,10 @@ fn load_models(
     }
 }
 
-fn enable_hit_test(trigger: Trigger<Pointer<Over>>, mut commands: Commands) {
+fn enable_hit_test(
+    trigger: Trigger<Pointer<Over>>,
+    mut commands: Commands,
+) {
     if let NormalizedRenderTarget::Window(window) = trigger.pointer_location.target {
         commands.trigger(UpdatedHitTest {
             window: window.entity(),
@@ -120,7 +129,10 @@ fn enable_hit_test(trigger: Trigger<Pointer<Over>>, mut commands: Commands) {
     }
 }
 
-fn disable_hit_test(trigger: Trigger<Pointer<Out>>, mut commands: Commands) {
+fn disable_hit_test(
+    trigger: Trigger<Pointer<Out>>,
+    mut commands: Commands,
+) {
     if let NormalizedRenderTarget::Window(window) = trigger.pointer_location.target {
         commands.trigger(UpdatedHitTest {
             window: window.entity(),

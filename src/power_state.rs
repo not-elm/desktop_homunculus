@@ -14,7 +14,10 @@ pub struct Loading;
 pub struct PowerStatePlugin;
 
 impl Plugin for PowerStatePlugin {
-    fn build(&self, app: &mut App) {
+    fn build(
+        &self,
+        app: &mut App,
+    ) {
         app.register_type::<Loading>()
             .add_systems(Update, update_active_status);
 

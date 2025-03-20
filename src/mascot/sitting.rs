@@ -21,7 +21,10 @@ struct MoveSittingPos {
 pub struct MascotSittingPlugin;
 
 impl Plugin for MascotSittingPlugin {
-    fn build(&self, app: &mut App) {
+    fn build(
+        &self,
+        app: &mut App,
+    ) {
         app.add_event::<MoveSittingPos>()
             .add_systems(
                 Update,
@@ -51,7 +54,10 @@ pub struct SittingWindow {
 }
 
 impl SittingWindow {
-    pub fn new(global_window: GlobalWindow, sitting_pos: GlobalScreenPos) -> Self {
+    pub fn new(
+        global_window: GlobalWindow,
+        sitting_pos: GlobalScreenPos,
+    ) -> Self {
         Self {
             mascot_viewport_offset: *sitting_pos - global_window.frame.min,
             window: global_window,

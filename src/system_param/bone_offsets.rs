@@ -17,7 +17,10 @@ pub struct BoneOffsets<'w, 's> {
 
 impl BoneOffsets<'_, '_> {
     #[inline]
-    pub fn hips_offset(&self, mascot: MascotEntity) -> Option<Vec3> {
+    pub fn hips_offset(
+        &self,
+        mascot: MascotEntity,
+    ) -> Option<Vec3> {
         let (gf, VrmHipsBoneTo(hips)) = self.mascots.get(mascot.0).ok()?;
         let hips_gf = self.bones.get(*hips).ok()?;
         Some(hips_gf.translation() - gf.translation())

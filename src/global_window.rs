@@ -27,7 +27,10 @@ pub struct GlobalWindow {
 
 impl GlobalWindow {
     #[inline]
-    pub fn sitting_pos(&self, drop_pos: GlobalScreenPos) -> GlobalScreenPos {
+    pub fn sitting_pos(
+        &self,
+        drop_pos: GlobalScreenPos,
+    ) -> GlobalScreenPos {
         GlobalScreenPos(Vec2::new(drop_pos.x, self.frame.min.y))
     }
 
@@ -67,7 +70,10 @@ impl GlobalWindows {
         Self(frames)
     }
 
-    pub fn find_sitting_window(&self, drop_pos: GlobalScreenPos) -> Option<GlobalWindow> {
+    pub fn find_sitting_window(
+        &self,
+        drop_pos: GlobalScreenPos,
+    ) -> Option<GlobalWindow> {
         const SITTING_THRESHOLD_HEIGHT: f32 = 80.;
         let mut areas = Vec::new();
         for sitting_area in self.0.iter() {

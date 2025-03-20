@@ -17,7 +17,10 @@ use std::path::PathBuf;
 pub struct AppSettingsSavePlugin;
 
 impl Plugin for AppSettingsSavePlugin {
-    fn build(&self, app: &mut bevy::app::App) {
+    fn build(
+        &self,
+        app: &mut bevy::app::App,
+    ) {
         app.add_systems(
             PostUpdate,
             (

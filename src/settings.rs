@@ -14,7 +14,10 @@ use std::path::PathBuf;
 pub struct AppSettingsPlugin;
 
 impl Plugin for AppSettingsPlugin {
-    fn build(&self, app: &mut App) {
+    fn build(
+        &self,
+        app: &mut App,
+    ) {
         app.register_type::<MascotLocationPreferences>()
             .add_plugins((AppSettingsLoadPlugin, AppSettingsSavePlugin))
             .init_resource::<ActionPreferences>();

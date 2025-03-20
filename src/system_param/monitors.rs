@@ -33,13 +33,19 @@ impl Monitors<'_, '_> {
             .find(|(_, monitor, _)| monitor_rect(monitor).contains(*global))
     }
 
-    pub fn scale_factor(&self, render_layers: &RenderLayers) -> Option<f32> {
+    pub fn scale_factor(
+        &self,
+        render_layers: &RenderLayers,
+    ) -> Option<f32> {
         let (_, monitor) = self.find_monitor(render_layers)?;
         Some(monitor.scale_factor as f32)
     }
 
     #[inline]
-    pub fn monitor_pos(&self, render_layers: &RenderLayers) -> Option<Vec2> {
+    pub fn monitor_pos(
+        &self,
+        render_layers: &RenderLayers,
+    ) -> Option<Vec2> {
         let (_, monitor, _) = self
             .monitors
             .iter()
@@ -48,7 +54,10 @@ impl Monitors<'_, '_> {
     }
 
     #[inline]
-    pub fn find_monitor(&self, render_layers: &RenderLayers) -> Option<(Entity, &Monitor)> {
+    pub fn find_monitor(
+        &self,
+        render_layers: &RenderLayers,
+    ) -> Option<(Entity, &Monitor)> {
         self.monitors.iter().find_map(|(entity, monitor, layer)| {
             render_layers.intersects(layer).then_some((entity, monitor))
         })

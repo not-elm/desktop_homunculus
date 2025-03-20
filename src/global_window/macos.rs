@@ -118,7 +118,10 @@ unsafe fn obtain_window_frame(window: &CFDictionary) -> Option<Rect> {
     Some(Rect::from_center_size(viewport_pos + size / 2.0, size))
 }
 
-unsafe fn find_as_cf_number(dictionary: &CFDictionary, key: &str) -> Option<CFNumber> {
+unsafe fn find_as_cf_number(
+    dictionary: &CFDictionary,
+    key: &str,
+) -> Option<CFNumber> {
     let num_ref = dictionary.find(CFString::new(key).to_void())?;
     let number = unsafe { CFNumber::wrap_under_get_rule(num_ref.cast()) };
     Some(number)

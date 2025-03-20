@@ -45,7 +45,10 @@ pub struct MenuUnInitialized;
 pub struct MenuPlugin;
 
 impl Plugin for MenuPlugin {
-    fn build(&self, app: &mut App) {
+    fn build(
+        &self,
+        app: &mut App,
+    ) {
         app.add_plugins((MenuScalePlugin, MenuActionsPlugin, MenuResetPositionPlugin))
             .add_systems(
                 Update,
@@ -58,7 +61,10 @@ impl Plugin for MenuPlugin {
     }
 }
 
-fn register_observer(mut commands: Commands, mascots: Query<Entity, Added<Mascot>>) {
+fn register_observer(
+    mut commands: Commands,
+    mascots: Query<Entity, Added<Mascot>>,
+) {
     for mascot in mascots.iter() {
         let mut observer = Observer::new(open_menu);
         observer.watch_entity(mascot);
@@ -125,7 +131,10 @@ fn open_menu(
     ));
 }
 
-fn fit_position(cursor_pos: Vec2, monitor_frame: &Rect) -> (Vec2, WindowResolution) {
+fn fit_position(
+    cursor_pos: Vec2,
+    monitor_frame: &Rect,
+) -> (Vec2, WindowResolution) {
     let menu_window_frame = Rect::new(
         cursor_pos.x,
         cursor_pos.y,
@@ -179,7 +188,10 @@ fn request_close_event(
 }
 
 #[command]
-async fn get_mascot_name(entity: WebviewEntity, task: ReactorTask) -> Option<String> {
+async fn get_mascot_name(
+    entity: WebviewEntity,
+    task: ReactorTask,
+) -> Option<String> {
     task.will(Update, once::run(mascot_name).with(entity)).await
 }
 
@@ -197,7 +209,10 @@ fn mascot_name(
 }
 
 #[command]
-async fn get_scale(entity: WebviewEntity, task: ReactorTask) -> Option<f32> {
+async fn get_scale(
+    entity: WebviewEntity,
+    task: ReactorTask,
+) -> Option<f32> {
     task.will(Update, once::run(scale).with(entity)).await
 }
 

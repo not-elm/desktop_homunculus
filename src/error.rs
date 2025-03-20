@@ -1,11 +1,17 @@
 pub type AppResult<T = ()> = Result<T, anyhow::Error>;
 
 pub trait OutputLog {
-    fn output_log_if_error(&self, tag: &str);
+    fn output_log_if_error(
+        &self,
+        tag: &str,
+    );
 }
 
 impl<T, E: std::error::Error> OutputLog for Result<T, E> {
-    fn output_log_if_error(&self, tag: &str) {
+    fn output_log_if_error(
+        &self,
+        tag: &str,
+    ) {
         if let Err(e) = self {
             bevy::log::error!("[{tag}]: {e}");
         }

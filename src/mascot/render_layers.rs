@@ -9,7 +9,10 @@ use bevy::render::view::RenderLayers;
 pub struct MascotRenderLayersPlugin;
 
 impl Plugin for MascotRenderLayersPlugin {
-    fn build(&self, app: &mut App) {
+    fn build(
+        &self,
+        app: &mut App,
+    ) {
         app.add_systems(Update, (update_children_layers,).chain());
     }
 }

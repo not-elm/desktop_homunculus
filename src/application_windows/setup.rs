@@ -18,7 +18,10 @@ use serde::{Deserialize, Serialize};
 pub struct ApplicationWindowsSetupPlugin;
 
 impl Plugin for ApplicationWindowsSetupPlugin {
-    fn build(&self, app: &mut App) {
+    fn build(
+        &self,
+        app: &mut App,
+    ) {
         app.register_type::<UninitializedCamera>()
             .register_type::<DefaultPrimaryWindow>()
             .register_type::<TargetMonitor>()
@@ -40,7 +43,10 @@ struct UninitializedCamera;
 #[reflect(Component, Serialize, Deserialize)]
 struct DefaultPrimaryWindow;
 
-fn mark_default_window(mut commands: Commands, default_window: Query<Entity, With<PrimaryWindow>>) {
+fn mark_default_window(
+    mut commands: Commands,
+    default_window: Query<Entity, With<PrimaryWindow>>,
+) {
     commands
         .entity(default_window.single())
         .insert(DefaultPrimaryWindow);

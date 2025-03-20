@@ -8,7 +8,10 @@ use serde::Deserialize;
 pub struct MenuResetPositionPlugin;
 
 impl Plugin for MenuResetPositionPlugin {
-    fn build(&self, app: &mut App) {
+    fn build(
+        &self,
+        app: &mut App,
+    ) {
         app.add_ipc_event::<ResetPosition>("reset_position")
             .add_systems(Update, reset_position);
     }

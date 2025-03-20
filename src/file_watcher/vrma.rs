@@ -18,7 +18,10 @@ use std::time::Duration;
 pub struct VrmaFileWatcherPlugin;
 
 impl Plugin for VrmaFileWatcherPlugin {
-    fn build(&self, app: &mut App) {
+    fn build(
+        &self,
+        app: &mut App,
+    ) {
         app.add_event::<LoadVrma>()
             .register_type::<AnimationFolderHandle>()
             .add_systems(PreStartup, start_load_folder)
@@ -40,7 +43,10 @@ struct VrmaFilesWatcher {
 #[derive(Component, Reflect)]
 struct AnimationFolderHandle(Handle<LoadedFolder>);
 
-fn start_load_folder(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn start_load_folder(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+) {
     commands.spawn((
         Loading,
         AnimationFolderHandle(asset_server.load_folder("animations")),
@@ -84,7 +90,10 @@ fn start_watching(mut commands: Commands) {
     }
 }
 
-fn receive_events(mut request_load: EventWriter<LoadVrma>, watchers: Query<&VrmaFilesWatcher>) {
+fn receive_events(
+    mut request_load: EventWriter<LoadVrma>,
+    watchers: Query<&VrmaFilesWatcher>,
+) {
     while watchers.single().receiver.try_recv().is_ok() {
         request_load.send(LoadVrma);
     }

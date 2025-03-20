@@ -122,6 +122,7 @@ pub(crate) mod tests {
     use bevy::render::camera::CameraPlugin;
     use bevy::window::WindowPlugin;
     use bevy::MinimalPlugins;
+    use bevy_flurx::FlurxPlugin;
 
     pub type TestResult<T = ()> = Result<T, Box<dyn std::error::Error>>;
 
@@ -140,6 +141,7 @@ pub(crate) mod tests {
             ImagePlugin::default(),
             WindowPlugin::default(),
             CameraPlugin,
+            FlurxPlugin,
         ));
         app
     }

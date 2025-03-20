@@ -8,7 +8,10 @@ use bevy::prelude::{Commands, Plugin};
 pub struct AppSettingsLoadPlugin;
 
 impl Plugin for AppSettingsLoadPlugin {
-    fn build(&self, app: &mut App) {
+    fn build(
+        &self,
+        app: &mut App,
+    ) {
         app.add_systems(Startup, (load_mascot_locations, load_actions));
     }
 }

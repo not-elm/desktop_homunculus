@@ -12,7 +12,10 @@ use serde::Deserialize;
 pub struct MenuActionsPlugin;
 
 impl Plugin for MenuActionsPlugin {
-    fn build(&self, app: &mut App) {
+    fn build(
+        &self,
+        app: &mut App,
+    ) {
         app.add_ipc_event::<UpdateAction>("update_action")
             .add_systems(
                 Update,
