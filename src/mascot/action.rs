@@ -28,7 +28,7 @@ use serde::Serialize;
 #[derive(Event)]
 pub struct RequestAction {
     pub mascot: MascotEntity,
-    pub params: MascotAction,
+    pub action: MascotAction,
 }
 
 #[derive(Event)]
@@ -65,6 +65,7 @@ fn transition_actions(
         let Some(properties) = preference.get(action_name).cloned() else {
             return;
         };
+
         let mascot = MascotEntity(entity);
         let action_name = action_name.clone();
         par_commands.command_scope(move |mut commands| {
@@ -105,7 +106,10 @@ fn emit_action(
     In((mascot, params)): In<(MascotEntity, MascotAction)>,
     mut commands: Commands,
 ) {
-    commands.trigger(RequestAction { mascot, params });
+    commands.trigger(RequestAction {
+        mascot,
+        action: params,
+    });
 }
 
 fn action_done(
@@ -134,11 +138,11 @@ impl MascotActionExt for App {
     {
         self.add_observer(
             move |trigger: Trigger<RequestAction>, mut commands: Commands| {
-                if trigger.params.id != action_id {
+                if trigger.action.id != action_id {
                     return;
                 }
                 let mascot = trigger.mascot;
-                let event = serde_json::from_str::<Params>(&trigger.params.params).unwrap();
+                let event = serde_json::from_str::<Params>(&trigger.action.params).unwrap();
                 commands.spawn(Reactor::schedule(move |task| async move {
                     task.will(Update, action(mascot, event)).await;
                     task.will(

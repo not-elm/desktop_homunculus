@@ -89,14 +89,7 @@ impl Default for ActionPreferences {
                 ],
             },
             ActionName::drop() => simple_animation("drag", "drop.vrma", ActionName::idle()),
-            ActionName::sit_down() => ActionProperties {
-                tags: vec!["sitting"].into(),
-                actions: vec![
-                    MascotAction::animation("sit_down.vrma", false),
-                    MascotAction::wait_animation(),
-                    MascotAction::transition(ActionName::sitting()),
-                ],
-            },
+            ActionName::sit_down() => simple_animation("sitting", "sit_down.vrma", ActionName::sitting()),
         ))
     }
 }
