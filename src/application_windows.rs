@@ -2,11 +2,7 @@ pub mod hit_test;
 mod setup;
 
 use crate::application_windows::setup::ApplicationWindowsSetupPlugin;
-use crate::error::OutputLog;
 use bevy::app::App;
-use bevy::ecs::component::HookContext;
-use bevy::ecs::system::RunSystemOnce;
-use bevy::ecs::world::DeferredWorld;
 use bevy::prelude::*;
 use bevy::render::view::NoFrustumCulling;
 use bevy_vrma::system_param::cameras::Cameras;

@@ -80,7 +80,7 @@ fn prepare_initial_loading(
     if folders.contains(handle.0.id()) {
         *loaded = true;
         commands.entity(entity).remove::<Loading>();
-        ew.send(RequestLoadVrm);
+        ew.write(RequestLoadVrm);
     }
 }
 

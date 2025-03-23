@@ -82,7 +82,7 @@ fn adjust_sitting_pos_on_sit_down(
 ) {
     for (mascot_entity, action) in mascots.iter() {
         if action.is_sit_down() {
-            ew.send(MoveSittingPos {
+            ew.write(MoveSittingPos {
                 mascot: MascotEntity(mascot_entity),
             });
         }
