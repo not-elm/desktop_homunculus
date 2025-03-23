@@ -5,11 +5,8 @@ use crate::system_param::mascot_tracker::MascotTracker;
 use crate::system_param::GlobalScreenPos;
 use bevy::app::{App, PostUpdate, Update};
 use bevy::math::Vec2;
-use bevy::prelude::{
-    on_event, Changed, Commands, Component, Entity, Event, EventReader, EventWriter,
-    IntoSystemConfigs, Local, ParallelCommands, Plugin, Query, Transform, With,
-};
-use bevy::utils::HashMap;
+use bevy::platform_support::collections::HashMap;
+use bevy::prelude::*;
 use bevy::window::RequestRedraw;
 use itertools::Itertools;
 
@@ -100,7 +97,7 @@ fn adjust_sitting_pos_on_scaling(
     for (entity, tf) in mascots.iter() {
         if let Some(prev_scale) = scales.get(&entity) {
             if f32::EPSILON < (prev_scale - tf.scale.x).abs() {
-                ew.send(MoveSittingPos {
+                ew.write(MoveSittingPos {
                     mascot: MascotEntity(entity),
                 });
             }

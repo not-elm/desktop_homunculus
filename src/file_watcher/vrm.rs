@@ -11,10 +11,7 @@ use bevy::asset::io::file::FileWatcher;
 use bevy::asset::io::AssetSourceEvent;
 use bevy::asset::{Assets, Handle, LoadedFolder};
 use bevy::log::error;
-use bevy::prelude::{
-    on_event, AssetServer, Commands, Component, Entity, Event, EventWriter, IntoSystemConfigs,
-    Local, Out, Over, Plugin, Pointer, Query, Reflect, Res, Trigger,
-};
+use bevy::prelude::*;
 use bevy::render::camera::NormalizedRenderTarget;
 use bevy_vrma::system_param::cameras::Cameras;
 use bevy_vrma::vrm::loader::VrmHandle;
@@ -77,7 +74,9 @@ fn prepare_initial_loading(
     if *loaded {
         return;
     }
-    let (entity, handle) = handle.single();
+    let Ok((entity, handle)) = handle.single() else {
+        return;
+    };
     if folders.contains(handle.0.id()) {
         *loaded = true;
         commands.entity(entity).remove::<Loading>();
@@ -95,7 +94,7 @@ fn load_models(
     mascots: Query<&VrmPath>,
     cameras: Cameras,
 ) {
-    let Some(folder) = folders.get(handle.single().0.id()) else {
+    let Some(folder) = handle.single().ok().and_then(|h| folders.get(h.0.id())) else {
         return;
     };
     let exists_mascots = mascots.iter().map(|p| p.0.as_path()).collect::<Vec<_>>();
@@ -168,7 +167,10 @@ fn receive_events(
     asset_server: Res<AssetServer>,
     watchers: Query<&ModelFilesWatcher>,
 ) {
-    while let Ok(event) = watchers.single().receiver.try_recv() {
+    let Ok(watcher) = watchers.single() else {
+        return;
+    };
+    while let Ok(event) = watcher.receiver.try_recv() {
         if let AssetSourceEvent::AddedAsset(path) = event {
             let relative_path = PathBuf::from("models").join(&path);
             commands.spawn((

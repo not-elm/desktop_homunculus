@@ -1,19 +1,18 @@
 mod action_name;
 mod action_tags;
 
-use bevy::prelude::{Deref, Resource};
-use bevy::utils::hashbrown::HashMap;
-use rand::prelude::IteratorRandom;
-use serde::{Deserialize, Serialize};
-
 use crate::mascot::action::MascotAction;
 pub use action_name::ActionName;
 pub use action_tags::ActionTags;
+use bevy::platform_support::collections::HashMap;
+use bevy::prelude::{Deref, Resource};
+use rand::prelude::IteratorRandom;
+use serde::{Deserialize, Serialize};
 
 #[macro_export]
 macro_rules! actions {
     ( $( $key:expr => $value:expr ),* $(,)? ) => {{
-        let mut map = bevy::utils::HashMap::new();
+        let mut map = HashMap::<ActionName, ActionProperties>::default();
         $( map.insert($key, $value); )*
         map
     }};
@@ -74,14 +73,14 @@ impl Default for ActionPreferences {
                 tags: vec!["idle"].into(),
                 actions: vec![
                     MascotAction::animation("idle.vrma", true),
-                    MascotAction::range_timer(10f32..60.),
+                    MascotAction::range_timer(3f32..5.),
                     MascotAction::auto_transition(),
                 ],
             },
             ActionName::from("peace") => simple_animation("idle", "peace.vrma", ActionName::idle()),
             ActionName::from("destroy") => simple_animation("idle", "destroy.vrma", ActionName::idle()),
             ActionName::from("rotate") => simple_animation("idle", "rotate.vrma", ActionName::idle()),
-            ActionName::drag_start() => simple_animation("idle", "drag_start.vrma", ActionName::drag()),
+            ActionName::drag_start() => simple_animation("drag", "drag_start.vrma", ActionName::drag()),
             ActionName::drag() => ActionProperties {
                 tags: vec!["drag"].into(),
                 actions: vec![
@@ -118,8 +117,8 @@ pub struct ActionProperties {
 #[cfg(test)]
 mod tests {
     use crate::settings::preferences::action::{ActionName, ActionPreferences, ActionProperties};
+    use bevy::platform_support::collections::HashMap;
     use bevy::prelude::default;
-    use bevy::utils::HashMap;
 
     #[test]
     fn test_cleanup() {

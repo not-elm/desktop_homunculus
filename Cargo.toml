@@ -11,14 +11,13 @@ categories = ["games"]
 publish = false
 
 [dependencies]
-bevy = { version = "0.15", features = [
+bevy = { version = "0.16.0-rc.1", features = [
     "file_watcher",
     "bevy_picking",
     "serialize",
 ] }
 bevy_vrma = { path = "../bevy_vrma" }
-bevy_flurx = { version = "0.9", features = ["effect", "state"] }
-bevy_webview_wry = { version = "0.3", features = ["api"] }
+bevy_flurx = { path = "../bevy_flurx", features = ["side-effect", "state"] }
 serde = { version = "1", features = ["derive"] }
 dirs = "6"
 serde_json = "1"
@@ -49,7 +48,7 @@ windows = { version = "0.60", features = [
 ] }
 
 [dev-dependencies]
-bevy_test_helper = { git = "https://github.com/not-elm/bevy_test_helper", branch = "v0.15.0" }
+bevy_test_helper = { git = "https://github.com/not-elm/bevy_test_helper", branch = "v0.16" }
 
 [build-dependencies]
 embed-resource = "3"

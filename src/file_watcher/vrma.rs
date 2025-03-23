@@ -5,12 +5,8 @@ use bevy::app::{App, Startup, Update};
 use bevy::asset::io::file::FileWatcher;
 use bevy::asset::io::AssetSourceEvent;
 use bevy::asset::{Handle, LoadedFolder};
-use bevy::core::Name;
 use bevy::log::error;
-use bevy::prelude::{
-    debug, AssetServer, Assets, BuildChildren, Children, Commands, Component, DespawnRecursiveExt,
-    Entity, Event, Local, Plugin, PreStartup, Query, Reflect, Res, Trigger, With,
-};
+use bevy::prelude::*;
 use bevy_vrma::vrma::{VrmaHandle, VrmaPath};
 use crossbeam::channel::Receiver;
 use std::path::PathBuf;
@@ -61,7 +57,9 @@ fn wait_load(
     if *loaded {
         return;
     }
-    let (entity, handle) = folder_handle.single();
+    let Ok((entity, handle)) = folder_handle.single() else {
+        return;
+    };
     if folder_assets.get(handle.0.id()).is_some() {
         *loaded = true;
         commands.entity(entity).remove::<Loading>();
@@ -92,7 +90,10 @@ fn receive_events(
     mut commands: Commands,
     watchers: Query<&VrmaFilesWatcher>,
 ) {
-    while watchers.single().receiver.try_recv().is_ok() {
+    let Ok(watcher) = watchers.single() else {
+        return;
+    };
+    while watcher.receiver.try_recv().is_ok() {
         commands.trigger(LoadVrma);
     }
 }
@@ -129,7 +130,7 @@ fn observe_removed_vrma(
     let all_loaded_path = all_loaded_vrma_path(&folder_assets, &folder_handle);
     for (remove_vrma_entity, path) in obtain_all_remove_vrma_path(&all_loaded_path, &vrma) {
         debug!("Remove {path:?} from {remove_vrma_entity}");
-        commands.entity(remove_vrma_entity).despawn_recursive();
+        commands.entity(remove_vrma_entity).despawn();
     }
 }
 
@@ -138,7 +139,7 @@ fn all_loaded_vrma_path(
     folder_handle: &Query<&VrmaFolderHandle>,
 ) -> Vec<PathBuf> {
     let Some(folder) = folder_handle
-        .get_single()
+        .single()
         .ok()
         .and_then(|handle| folder_assets.get(handle.0.id()))
     else {
@@ -162,10 +163,9 @@ fn already_attached(
     let Some(children) = children else {
         return false;
     };
-    children.iter().any(|entity| {
-        vrma.get(*entity)
-            .is_ok_and(|vrma_path| &vrma_path.0 == path)
-    })
+    children
+        .iter()
+        .any(|entity| vrma.get(entity).is_ok_and(|vrma_path| &vrma_path.0 == path))
 }
 
 fn obtain_all_remove_vrma_path(
@@ -188,7 +188,6 @@ mod tests {
     use crate::file_watcher::vrma::{already_attached, obtain_all_remove_vrma_path};
     use crate::tests::{test_app, TestResult};
     use bevy::ecs::system::RunSystemOnce;
-    use bevy::hierarchy::BuildChildren;
     use bevy::prelude::{Children, Commands, Entity, Query, With};
     use bevy_vrma::vrm::Vrm;
     use bevy_vrma::vrma::VrmaPath;
@@ -214,7 +213,7 @@ mod tests {
         })?;
         let attached = app.world_mut().run_system_once(
             |vrm: Query<&Children, With<Vrm>>, vrma: Query<&VrmaPath>| {
-                already_attached(Some(vrm.single()), &vrma, &PathBuf::from("/root"))
+                already_attached(Some(vrm.single().unwrap()), &vrma, &PathBuf::from("/root"))
             },
         )?;
         assert!(attached);
@@ -231,7 +230,7 @@ mod tests {
         })?;
         let attached = app.world_mut().run_system_once(
             |vrm: Query<&Children, With<Vrm>>, vrma: Query<&VrmaPath>| {
-                already_attached(Some(vrm.single()), &vrma, &PathBuf::from("/root"))
+                already_attached(Some(vrm.single().unwrap()), &vrma, &PathBuf::from("/root"))
             },
         )?;
         assert!(!attached);

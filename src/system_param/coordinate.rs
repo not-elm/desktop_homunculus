@@ -14,7 +14,7 @@ pub struct Coordinate<'w, 's> {
 
 impl Coordinate<'_, '_> {
     pub fn default_mascot_pos_and_layers(&self) -> Vec3 {
-        let entity = self.primary_camera.single();
+        let entity = self.primary_camera.single().unwrap();
         self.cameras
             .cameras
             .get(entity)

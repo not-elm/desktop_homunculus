@@ -1,7 +1,6 @@
 use bevy::ecs::system::SystemParam;
-use bevy::hierarchy::Children;
 use bevy::math::Vec3;
-use bevy::prelude::{Entity, GlobalTransform, Query};
+use bevy::prelude::{Children, Entity, GlobalTransform, Query};
 use bevy::render::primitives::Aabb;
 
 #[derive(SystemParam)]

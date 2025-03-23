@@ -5,11 +5,9 @@ use crate::settings::{actions_json_path, mascot_locations_json_path, MascotLocat
 use crate::system_param::monitors::Monitors;
 use crate::util::create_parent_dir_all_if_need;
 use bevy::app::{AppExit, PostUpdate};
-use bevy::prelude::{
-    debug, on_event, In, IntoSystem, IntoSystemConfigs, Plugin, Query, Res, Transform, With,
-};
+use bevy::platform_support::collections::HashMap;
+use bevy::prelude::*;
 use bevy::render::view::RenderLayers;
-use bevy::utils::HashMap;
 use bevy_vrma::system_param::cameras::Cameras;
 use bevy_vrma::vrm::VrmPath;
 use std::path::PathBuf;

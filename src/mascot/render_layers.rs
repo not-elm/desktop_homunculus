@@ -1,9 +1,6 @@
 use crate::mascot::Mascot;
 use bevy::app::{App, Update};
-use bevy::hierarchy::Children;
-use bevy::prelude::{
-    Added, Changed, Commands, Entity, IntoSystemConfigs, Or, Plugin, Query, With, Without,
-};
+use bevy::prelude::*;
 use bevy::render::view::RenderLayers;
 
 pub struct MascotRenderLayersPlugin;
@@ -27,7 +24,7 @@ fn update_children_layers(
 ) {
     for (layers, children) in mascots.iter() {
         for child in children.iter() {
-            replace_children_layers(*child, layers.clone(), &mut commands, &meshes);
+            replace_children_layers(child, layers.clone(), &mut commands, &meshes);
         }
     }
 }
@@ -41,7 +38,7 @@ fn replace_children_layers(
     if let Ok((layers, children)) = meshes.get(root_entity) {
         if let Some(children) = children {
             for child in children.iter() {
-                replace_children_layers(*child, render_layers.clone(), commands, meshes);
+                replace_children_layers(child, render_layers.clone(), commands, meshes);
             }
         }
         if layers.is_some() {

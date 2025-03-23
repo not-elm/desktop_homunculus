@@ -9,7 +9,7 @@ mod file_watcher;
 mod global_window;
 mod macros;
 mod mascot;
-mod menu;
+// mod menu;
 mod power_state;
 mod settings;
 mod system_param;
@@ -18,7 +18,6 @@ mod util;
 use crate::application_windows::ApplicationWindowsPlugin;
 use crate::file_watcher::FileWatcherPlugin;
 use crate::mascot::DesktopMascotPlugin;
-use crate::menu::MenuPlugin;
 use crate::power_state::PowerStatePlugin;
 use crate::settings::AppSettingsPlugin;
 use crate::util::app_data_dir;
@@ -31,11 +30,9 @@ use bevy::render::settings::{RenderCreation, WgpuSettings};
 use bevy::render::RenderPlugin;
 use bevy::window::{ExitCondition, WindowPlugin, WindowResolution};
 use bevy::DefaultPlugins;
+use bevy_flurx::FlurxPlugin;
 use bevy_vrma::vrm::VrmPlugin;
 use bevy_vrma::vrma::VrmaPlugin;
-use bevy_webview_wry::api::{AllLogPlugins, AppExitApiPlugin};
-use bevy_webview_wry::prelude::AllDialogPlugins;
-use bevy_webview_wry::WebviewWryPlugin;
 use std::sync::OnceLock;
 use tracing_appender::non_blocking::WorkerGuard;
 use tracing_appender::rolling;
@@ -75,16 +72,17 @@ fn main() {
                 }),
                 ..default()
             }),
-        WebviewWryPlugin {
-            local_root: std::path::PathBuf::from("ui"),
-        },
+        // WebviewWryPlugin {
+        //     local_root: std::path::PathBuf::from("ui"),
+        // },
         MeshPickingPlugin,
-        #[cfg(feature = "develop")]
-        bevy_inspector_egui::quick::WorldInspectorPlugin::default(),
+        // #[cfg(feature = "develop")]
+        // bevy_inspector_egui::quick::WorldInspectorPlugin::default(),
     ))
-    .add_plugins((AllDialogPlugins, AllLogPlugins, AppExitApiPlugin))
+    .add_plugins(FlurxPlugin)
+    // .add_plugins((AllDialogPlugins, AllLogPlugins, AppExitApiPlugin))
     .add_plugins((
-        MenuPlugin,
+        // MenuPlugin,
         DesktopMascotPlugin,
         PowerStatePlugin,
         VrmPlugin,

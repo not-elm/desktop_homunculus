@@ -31,7 +31,7 @@ fn all_animation_finished(
     children.get(mascot.0).is_ok_and(|children| {
         children
             .iter()
-            .filter_map(|c| vrma.get(*c).ok())
+            .filter_map(|c| vrma.get(c).ok())
             .filter_map(|p| player.get(p.0).ok())
             .all(|p| p.all_finished())
     })

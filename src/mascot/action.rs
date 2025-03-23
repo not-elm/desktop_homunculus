@@ -16,9 +16,10 @@ use crate::mascot::action::wait_animation::WaitAnimationPlugin;
 use crate::mascot::{Mascot, MascotEntity};
 use crate::settings::preferences::action::{ActionName, ActionPreferences};
 use bevy::app::{App, Update};
+use bevy::ecs::event::EventCursor;
 use bevy::prelude::{
-    Changed, Commands, Entity, Event, EventReader, In, ParallelCommands, Plugin, Query, Res,
-    Trigger, With,
+    Changed, Commands, Entity, Event, EventWriter, Events, In, Local, ParallelCommands, Plugin,
+    Query, Res, ResMut, Trigger, With,
 };
 use bevy_flurx::action::{once, wait};
 use bevy_flurx::prelude::*;
@@ -72,7 +73,6 @@ fn transition_actions(
             commands.entity(mascot.0).insert(properties.tags);
             commands.spawn(Reactor::schedule(move |task| async move {
                 for action in properties.actions {
-                    task.will(Update, delay::frames().with(1)).await;
                     let canceled = task
                         .will(
                             Update,
@@ -114,9 +114,28 @@ fn emit_action(
 
 fn action_done(
     In(mascot): In<MascotEntity>,
-    mut er: EventReader<ActionDone>,
+    mut er: Local<Option<EventCursor<ActionDone>>>,
+    mut events: ResMut<Events<ActionDone>>,
 ) -> bool {
-    er.read().any(|e| e.mascot == mascot)
+    if er.is_none() {
+        if 0 < events.iter_current_update_events().count() {
+            events.clear();
+            return true;
+        }
+        er.replace(events.get_cursor_current());
+    }
+
+    if er
+        .as_mut()
+        .unwrap()
+        .read(&events)
+        .any(|e| e.mascot == mascot)
+    {
+        events.clear();
+        true
+    } else {
+        false
+    }
 }
 
 pub trait MascotActionExt {
@@ -147,8 +166,8 @@ impl MascotActionExt for App {
                     task.will(Update, action(mascot, event)).await;
                     task.will(
                         Update,
-                        once::run(move |mut commands: Commands| {
-                            commands.send_event(ActionDone { mascot });
+                        once::run(move |mut ew: EventWriter<ActionDone>| {
+                            ew.write(ActionDone { mascot });
                         }),
                     )
                     .await;
@@ -167,7 +186,7 @@ mod tests {
     };
     use crate::tests::{test_app, TestResult};
     use bevy::app::Update;
-    use bevy::prelude::{Commands, IntoSystemConfigs};
+    use bevy::prelude::*;
     use bevy::utils::default;
 
     #[test]
@@ -194,7 +213,7 @@ mod tests {
         app.insert_resource(preference);
         app.update();
 
-        let tags = app.world_mut().query::<&ActionTags>().single(app.world());
+        let tags = app.world_mut().query::<&ActionTags>().single(app.world())?;
         assert_eq!(tags, &ActionTags::from(vec!["drag"]));
         Ok(())
     }

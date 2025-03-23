@@ -6,11 +6,9 @@ use crate::system_param::mascot_tracker::MascotTracker;
 use crate::system_param::windows::Windows;
 use crate::system_param::GlobalScreenPos;
 use bevy::app::{App, Plugin, Update};
+use bevy::ecs::component::HookContext;
 use bevy::log::debug;
-use bevy::prelude::{
-    Commands, Drag, DragEnd, DragStart, Entity, IntoSystemConfigs, ParallelCommands, Pointer,
-    PointerButton, Query, Reflect, Transform, Trigger,
-};
+use bevy::prelude::*;
 use bevy::render::camera::NormalizedRenderTarget;
 use bevy_vrma::system_param::cameras::Cameras;
 use bevy_vrma::vrma::retarget::RetargetBindingSystemSet;
@@ -25,16 +23,16 @@ impl Plugin for MascotDragPlugin {
     ) {
         app.add_systems(Update, on_drag_index.after(RetargetBindingSystemSet));
 
-        app.world_mut()
-            .register_component_hooks::<Mascot>()
-            .on_add(|mut world, entity, _| {
+        app.world_mut().register_component_hooks::<Mascot>().on_add(
+            |mut world, context: HookContext| {
                 world
                     .commands()
-                    .entity(entity)
+                    .entity(context.entity)
                     .observe(on_drag_start)
                     .observe(on_drag_move)
                     .observe(on_drag_drop);
-            });
+            },
+        );
     }
 }
 
@@ -48,7 +46,7 @@ fn on_drag_start(
     if !matches!(trigger.event.button, PointerButton::Primary) {
         return;
     }
-    let mascot = MascotEntity(trigger.entity());
+    let mascot = MascotEntity(trigger.observer());
     if not_playing_sit_down(&actions, mascot.0) {
         let Some(global) = global_cursor_pos(&trigger, &windows) else {
             return;
@@ -104,7 +102,7 @@ fn on_drag_move(
     if !matches!(trigger.event.button, PointerButton::Primary) {
         return;
     }
-    let mascot = MascotEntity(trigger.entity());
+    let mascot = MascotEntity(trigger.observer());
     let NormalizedRenderTarget::Window(window_ref) = trigger.pointer_location.target else {
         return;
     };
@@ -142,7 +140,7 @@ fn on_drag_drop(
     let Some(global_cursor_pos) = global_cursor_pos(&trigger, &windows) else {
         return;
     };
-    let mascot = MascotEntity(trigger.entity());
+    let mascot = MascotEntity(trigger.observer());
     let global_windows: GlobalWindows = obtain_global_windows().unwrap_or_default();
     match global_windows.find_sitting_window(global_cursor_pos) {
         Some(global_window) => {

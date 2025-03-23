@@ -1,8 +1,6 @@
 use crate::application_windows::{PrimaryCamera, TargetMonitor};
 use bevy::app::{App, Update};
-use bevy::core::Name;
 use bevy::ecs::query::With;
-use bevy::ecs::schedule::IntoSystemConfigs;
 use bevy::log::debug;
 use bevy::math::Vec2;
 use bevy::prelude::*;
@@ -48,7 +46,7 @@ fn mark_default_window(
     default_window: Query<Entity, With<PrimaryWindow>>,
 ) {
     commands
-        .entity(default_window.single())
+        .entity(default_window.single().unwrap())
         .insert(DefaultPrimaryWindow);
 }
 
@@ -56,7 +54,7 @@ fn despawn_default_window(
     mut commands: Commands,
     default_window: Query<Entity, With<DefaultPrimaryWindow>>,
 ) {
-    commands.entity(default_window.single()).despawn();
+    commands.entity(default_window.single().unwrap()).despawn();
 }
 
 fn setup_windows(
@@ -66,7 +64,7 @@ fn setup_windows(
     winit_windows: NonSend<WinitWindows>,
 ) {
     let current_monitor_scale_factor = winit_windows
-        .get_window(primary_window.single())
+        .get_window(primary_window.single().unwrap())
         .unwrap()
         .current_monitor()
         .map(|monitor| monitor.scale_factor() as f32)

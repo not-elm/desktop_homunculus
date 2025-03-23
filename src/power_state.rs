@@ -1,4 +1,5 @@
 use bevy::app::{App, Plugin, Update};
+use bevy::ecs::component::HookContext;
 use bevy::ecs::world::DeferredWorld;
 use bevy::log::debug;
 use bevy::prelude::{Commands, Component, Entity, Local, Query, Reflect};
@@ -28,8 +29,8 @@ impl Plugin for PowerStatePlugin {
 
 fn register_loading_target<C: Component>(app: &mut App) {
     app.world_mut().register_component_hooks::<C>().on_add(
-        |mut world: DeferredWorld, entity: Entity, _| {
-            world.commands().entity(entity).insert(Loading);
+        |mut world: DeferredWorld, context: HookContext| {
+            world.commands().entity(context.entity).insert(Loading);
         },
     );
 }
