@@ -32,39 +32,7 @@ Currently, **Windows is supported**, and macOS support is planned.
 
 ## Animation Actions & Transitions
 
-This application uses actions to define different mascot behaviors.  
-Each action belongs to a group, and animations are stored in `assets/animations`.
-
-📂 Example:
-
-```
-assets/animations/
-├── idle/
-│ ├── idle_1.vrma
-│ ├── idle_2.vrma
-├── drag/
-│ ├── drag_start.vrma
-│ ├── drag_loop.vrma
-```
-
-➡️ **Each directory is an action group**, and the `.vrma` files inside define individual actions.
-
-![action_group](./docs/action_group.drawio.png)
-
-### Action Transition Types
-
-Actions can transition between each other using different transition modes:
-
-| Transition Type | Description                                                       |
-|-----------------|-------------------------------------------------------------------|
-| **auto**        | Transitions to another action in the same group after a set time. |
-| **manual**      | Transitions to a specified action after playing.                  |
-| **none**        | No transition (stays in the current action).                      |
-
-🎛️ **How to Configure Transitions**
-
-- You can change action transitions **from the settings menu**.
-- Open the menu by **right-clicking on the mascot**.
+TODO
 
 ## Credits
 
