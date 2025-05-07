@@ -1703,6 +1703,7 @@ dependencies = [
 [[package]]
 name = "bevy_vrma"
 version = "0.1.0"
+source = "git+https://github.com/not-elm/bevy_vrma.git#399da657960aa5e27bdaa1416d27aedb493d1ec9"
 dependencies = [
  "anyhow",
  "bevy",
