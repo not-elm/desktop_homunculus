@@ -4,7 +4,7 @@ mod action_tags;
 use crate::mascot::action::MascotAction;
 pub use action_name::ActionName;
 pub use action_tags::ActionTags;
-use bevy::platform_support::collections::HashMap;
+use bevy::platform::collections::HashMap;
 use bevy::prelude::{Deref, Resource};
 use rand::prelude::IteratorRandom;
 use serde::{Deserialize, Serialize};
@@ -38,6 +38,8 @@ impl ActionPreferences {
             .choose(&mut rand::rng())
     }
 
+    //TODO: cleanup
+    #[allow(unused)]
     pub fn cleanup(
         &mut self,
         exists_actions: &[ActionName],
@@ -49,6 +51,8 @@ impl ActionPreferences {
             .collect::<HashMap<_, _>>();
     }
 
+    //TODO: register_if_not_exists
+    #[allow(unused)]
     pub fn register_if_not_exists(
         &mut self,
         name: ActionName,
@@ -117,7 +121,7 @@ pub struct ActionProperties {
 #[cfg(test)]
 mod tests {
     use crate::settings::preferences::action::{ActionName, ActionPreferences, ActionProperties};
-    use bevy::platform_support::collections::HashMap;
+    use bevy::platform::collections::HashMap;
     use bevy::prelude::default;
 
     #[test]

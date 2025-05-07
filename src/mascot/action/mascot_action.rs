@@ -63,6 +63,7 @@ impl MascotAction {
         )
     }
 
+    #[allow(unused)]
     pub fn scale(scale: Vec3) -> Self {
         Self::new(ScaleActionPlugin::ID, ScaleActionParams { scale })
     }

@@ -12,15 +12,9 @@ use crate::system_param::mesh_aabb::MascotAabb;
 use crate::system_param::monitors::{monitor_rect, Monitors};
 use crate::system_param::windows::Windows;
 use bevy::app::{App, Plugin, PostUpdate, Update};
-use bevy::core::Name;
-use bevy::hierarchy::Parent;
 use bevy::math::{Rect, Vec2};
 use bevy::picking::events::Click;
-use bevy::prelude::{
-    any_with_component, Added, Commands, Component, Entity, HierarchyQueryExt, In,
-    IntoSystemConfigs, NonSend, Observer, Pointer, PointerButton, Query, Transform, Trigger, With,
-    Without,
-};
+use bevy::prelude::*;
 use bevy::render::camera::NormalizedRenderTarget;
 use bevy::render::view::RenderLayers;
 use bevy::utils::default;
@@ -79,7 +73,7 @@ fn open_menu(
     mut commands: Commands,
     monitors: Monitors,
     windows: Windows,
-    parents: Query<&Parent>,
+    parents: Query<&ChildOf>,
     menus: Query<&Menu>,
     mascots: Query<&Name>,
 ) {

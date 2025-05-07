@@ -42,11 +42,12 @@ fn on_drag_start(
     tracker: MascotTracker,
     windows: Windows,
     actions: Query<&ActionName>,
+    parents: Query<&ChildOf>,
 ) {
     if !matches!(trigger.event.button, PointerButton::Primary) {
         return;
     }
-    let mascot = MascotEntity(trigger.observer());
+    let mascot = MascotEntity(parents.root_ancestor(trigger.target));
     if not_playing_sit_down(&actions, mascot.0) {
         let Some(global) = global_cursor_pos(&trigger, &windows) else {
             return;
@@ -98,11 +99,12 @@ fn on_drag_move(
     mut commands: Commands,
     cameras: Cameras,
     transforms: Query<&Transform>,
+    parents: Query<&ChildOf>,
 ) {
     if !matches!(trigger.event.button, PointerButton::Primary) {
         return;
     }
-    let mascot = MascotEntity(trigger.observer());
+    let mascot = MascotEntity(parents.root_ancestor(trigger.target));
     let NormalizedRenderTarget::Window(window_ref) = trigger.pointer_location.target else {
         return;
     };
@@ -130,6 +132,7 @@ fn on_drag_drop(
     mut commands: Commands,
     tracker: MascotTracker,
     windows: Windows,
+    parents: Query<&ChildOf>,
     #[cfg(target_os = "windows")]
     // To run on main thread
     _: bevy::prelude::NonSend<bevy::winit::WinitWindows>,
@@ -140,7 +143,7 @@ fn on_drag_drop(
     let Some(global_cursor_pos) = global_cursor_pos(&trigger, &windows) else {
         return;
     };
-    let mascot = MascotEntity(trigger.observer());
+    let mascot = MascotEntity(parents.root_ancestor(trigger.target));
     let global_windows: GlobalWindows = obtain_global_windows().unwrap_or_default();
     match global_windows.find_sitting_window(global_cursor_pos) {
         Some(global_window) => {

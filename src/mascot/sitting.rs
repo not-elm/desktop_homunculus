@@ -5,7 +5,7 @@ use crate::system_param::mascot_tracker::MascotTracker;
 use crate::system_param::GlobalScreenPos;
 use bevy::app::{App, PostUpdate, Update};
 use bevy::math::Vec2;
-use bevy::platform_support::collections::HashMap;
+use bevy::platform::collections::HashMap;
 use bevy::prelude::*;
 use bevy::window::RequestRedraw;
 use itertools::Itertools;
@@ -121,7 +121,7 @@ fn move_sitting_pos(
             }
         }
     }
-    redraw.send(RequestRedraw);
+    redraw.write(RequestRedraw);
 }
 
 fn track_to_sitting_window(

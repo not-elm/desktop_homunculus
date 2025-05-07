@@ -2,7 +2,7 @@ pub mod action;
 
 use crate::system_param::coordinate::Coordinate;
 use bevy::math::{Quat, Vec3};
-use bevy::platform_support::collections::HashMap;
+use bevy::platform::collections::HashMap;
 use bevy::prelude::{Reflect, Resource, Transform};
 use bevy::utils::default;
 use serde::{Deserialize, Serialize};
