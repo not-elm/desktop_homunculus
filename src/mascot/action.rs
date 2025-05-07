@@ -16,10 +16,9 @@ use crate::mascot::action::wait_animation::WaitAnimationPlugin;
 use crate::mascot::{Mascot, MascotEntity};
 use crate::settings::preferences::action::{ActionName, ActionPreferences};
 use bevy::app::{App, Update};
-use bevy::ecs::event::EventCursor;
 use bevy::prelude::{
-    Changed, Commands, Entity, Event, EventWriter, Events, In, Local, ParallelCommands, Plugin,
-    Query, Res, ResMut, Trigger, With,
+    Changed, Commands, Entity, Event, EventWriter, In, ParallelCommands, Plugin,
+    Query, Res, Trigger, With,
 };
 use bevy_flurx::action::{once, wait};
 use bevy_flurx::prelude::*;
@@ -44,7 +43,8 @@ impl Plugin for MascotActionPlugin {
         &self,
         app: &mut App,
     ) {
-        app.add_event::<ActionDone>()
+        app
+            .add_event::<ActionDone>()
             .add_plugins((
                 AnimationActionPlugin,
                 TransitionActionPlugin,
@@ -73,17 +73,13 @@ fn transition_actions(
             commands.entity(mascot.0).insert(properties.tags);
             commands.spawn(Reactor::schedule(move |task| async move {
                 for action in properties.actions {
-                    let canceled = task
-                        .will(
-                            Update,
-                            wait::either(
-                                wait::until(detect_change_action_name)
-                                    .with((mascot, action_name.clone())),
-                                once::run(emit_action)
-                                    .with((mascot, action))
-                                    .then(wait::until(action_done).with(mascot)),
-                            ),
-                        )
+                    let canceled = task.will(Update, wait::either(
+                        wait::until(detect_change_action_name)
+                            .with((mascot, action_name.clone())),
+                        once::run(emit_action)
+                            .with((mascot, action))
+                            .then(wait::event::comes_and::<ActionDone>(move |e| e.mascot == mascot)),
+                    ))
                         .await
                         .is_left();
                     if canceled {
@@ -110,32 +106,6 @@ fn emit_action(
         mascot,
         action: params,
     });
-}
-
-fn action_done(
-    In(mascot): In<MascotEntity>,
-    mut er: Local<Option<EventCursor<ActionDone>>>,
-    mut events: ResMut<Events<ActionDone>>,
-) -> bool {
-    if er.is_none() {
-        if 0 < events.iter_current_update_events().count() {
-            events.clear();
-            return true;
-        }
-        er.replace(events.get_cursor_current());
-    }
-
-    if er
-        .as_mut()
-        .unwrap()
-        .read(&events)
-        .any(|e| e.mascot == mascot)
-    {
-        events.clear();
-        true
-    } else {
-        false
-    }
 }
 
 pub trait MascotActionExt {
@@ -170,7 +140,7 @@ impl MascotActionExt for App {
                             ew.write(ActionDone { mascot });
                         }),
                     )
-                    .await;
+                        .await;
                 }));
             },
         );
@@ -179,7 +149,7 @@ impl MascotActionExt for App {
 
 #[cfg(test)]
 mod tests {
-    use crate::mascot::action::transition_actions;
+    use crate::mascot::action::{transition_actions, MascotActionPlugin};
     use crate::mascot::Mascot;
     use crate::settings::preferences::action::{
         ActionName, ActionPreferences, ActionProperties, ActionTags,
@@ -192,6 +162,8 @@ mod tests {
     #[test]
     fn test_transition_actions() -> TestResult {
         let mut app = test_app();
+        app.add_plugins(MascotActionPlugin);
+        
         let mut preference = ActionPreferences::default();
         preference.register_if_not_exists(
             ActionName::drop(),
@@ -200,16 +172,12 @@ mod tests {
                 ..default()
             },
         );
-        app.add_systems(
-            Update,
-            (
-                |mut commands: Commands| {
-                    commands.spawn((Mascot, ActionName::drop()));
-                },
-                transition_actions,
-            )
-                .chain(),
-        );
+        app.add_systems(Update, (
+            |mut commands: Commands| {
+                commands.spawn((Mascot, ActionName::drop()));
+            },
+            transition_actions,
+        ).chain());
         app.insert_resource(preference);
         app.update();
 
