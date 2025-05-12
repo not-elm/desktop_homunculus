@@ -1,18 +1,20 @@
+use crate::mascot::action::MascotActionPlugin;
 use crate::mascot::drag::MascotDragPlugin;
 use crate::mascot::render_layers::MascotRenderLayersPlugin;
 use crate::mascot::sitting::MascotSittingPlugin;
-use crate::mascot::state::MascotStatePlugin;
 use bevy::app::{App, Plugin};
 use bevy::asset::Handle;
-use bevy::prelude::{Component, Entity, Gltf, Reflect, ReflectComponent, ReflectDeserialize, ReflectSerialize};
+use bevy::prelude::{
+    Component, Entity, Gltf, Reflect, ReflectComponent, ReflectDeserialize, ReflectSerialize,
+};
 use serde::{Deserialize, Serialize};
 
 mod drag;
-pub mod visibility;
 mod render_layers;
+pub mod visibility;
 
+pub mod action;
 pub mod sitting;
-pub mod state;
 
 #[derive(Component, Reflect, Serialize, Deserialize, Debug)]
 #[reflect(Component, Serialize, Deserialize)]
@@ -30,17 +32,17 @@ struct MascotGltfHandle(Option<Handle<Gltf>>);
 pub struct DesktopMascotPlugin;
 
 impl Plugin for DesktopMascotPlugin {
-    fn build(&self, app: &mut App) {
-        app
-            .register_type::<Mascot>()
+    fn build(
+        &self,
+        app: &mut App,
+    ) {
+        app.register_type::<Mascot>()
             .register_type::<MascotEntity>()
             .add_plugins((
                 MascotDragPlugin,
                 MascotRenderLayersPlugin,
                 MascotSittingPlugin,
-                MascotStatePlugin,
+                MascotActionPlugin,
             ));
     }
 }
-
-

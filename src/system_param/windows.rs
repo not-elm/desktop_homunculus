@@ -12,25 +12,29 @@ pub struct Windows<'w, 's> {
 
 impl Windows<'_, '_> {
     pub fn global_cursor_pos(&self) -> Option<GlobalScreenPos> {
-        self
-            .windows
-            .iter()
-            .find_map(|(_, window, _)| {
-                let cursor = window.cursor_position()?;
-                let WindowPosition::At(position) = window.position else {
-                    return None;
-                };
-                Some(GlobalScreenPos(position.as_vec2() + cursor))
-            })
-    }
-
-    pub fn find_window_from_global_screen_pos(&self, pos: GlobalScreenPos) -> Option<(Entity, &Window, &RenderLayers)> {
-        self.windows.iter().find(|(_, window, _)| {
-            window_to_rect(window).contains(*pos)
+        self.windows.iter().find_map(|(_, window, _)| {
+            let cursor = window.cursor_position()?;
+            let WindowPosition::At(position) = window.position else {
+                return None;
+            };
+            Some(GlobalScreenPos(position.as_vec2() + cursor))
         })
     }
 
-    pub fn to_global_pos(&self, window: Entity, local_pos: Vec2) -> Option<GlobalScreenPos> {
+    pub fn find_window_from_global_screen_pos(
+        &self,
+        pos: GlobalScreenPos,
+    ) -> Option<(Entity, &Window, &RenderLayers)> {
+        self.windows
+            .iter()
+            .find(|(_, window, _)| window_to_rect(window).contains(*pos))
+    }
+
+    pub fn to_global_pos(
+        &self,
+        window: Entity,
+        local_pos: Vec2,
+    ) -> Option<GlobalScreenPos> {
         let (_, window, _) = self.windows.get(window).ok()?;
         let WindowPosition::At(position) = window.position else {
             panic!("Unreachable code");
@@ -39,9 +43,11 @@ impl Windows<'_, '_> {
     }
 }
 
-
 #[inline]
-pub fn window_local_pos(window: &Window, global_screen_pos: GlobalScreenPos) -> Vec2 {
+pub fn window_local_pos(
+    window: &Window,
+    global_screen_pos: GlobalScreenPos,
+) -> Vec2 {
     let WindowPosition::At(position) = window.position else {
         panic!("Unreachable code");
     };

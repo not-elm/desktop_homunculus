@@ -1,38 +1,39 @@
 use crate::menu::TargetMascot;
-use bevy::app::{App, Update};
+use bevy::app::App;
 use bevy::math::Vec3;
-use bevy::prelude::{EventReader, Plugin, Query, Transform};
-use bevy_webview_wry::ipc::{IpcEvent, IpcEventExt};
+use bevy::prelude::{Event, Plugin, Query, Transform, Trigger};
+use bevy_webview_wry::prelude::IpcTriggerExt;
 use serde::Deserialize;
 
 pub struct MenuScalePlugin;
 
 impl Plugin for MenuScalePlugin {
-    fn build(&self, app: &mut App) {
+    fn build(
+        &self,
+        app: &mut App,
+    ) {
         app
-            .add_ipc_event::<ChangeScale>("scale")
-            .add_systems(Update, change_scale);
+            .add_ipc_trigger::<ChangeScale>("scale")
+            .add_observer(apply_change_scale);
     }
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Event)]
 struct ChangeScale {
     scale: f32,
 }
 
-fn change_scale(
-    mut er: EventReader<IpcEvent<ChangeScale>>,
+fn apply_change_scale(
+    trigger: Trigger<ChangeScale>,
     mut mascots: Query<&mut Transform>,
     webview: Query<&TargetMascot>,
 ) {
-    for event in er.read() {
-        let scale = event.payload.scale;
-        let Ok(mut tf) = webview
-            .get(event.webview_entity)
-            .and_then(|target| mascots.get_mut(target.0))
-        else {
-            continue;
-        };
-        tf.scale = Vec3::new(scale, scale, 1.);
-    }
+    let scale = trigger.scale;
+    let Ok(mut tf) = webview
+        .get(trigger.target())
+        .and_then(|target| mascots.get_mut(target.0))
+    else {
+        return;
+    };
+    tf.scale = Vec3::new(scale, scale, 1.);
 }

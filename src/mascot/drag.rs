@@ -1,37 +1,38 @@
-// mod index;
-
 use crate::global_window::{obtain_global_windows, GlobalWindows};
 use crate::mascot::sitting::SittingWindow;
 use crate::mascot::{Mascot, MascotEntity};
-use crate::settings::state::{ActionGroup, ActionName, MascotAction};
-use crate::system_param::cameras::Cameras;
+use crate::settings::preferences::action::ActionName;
 use crate::system_param::mascot_tracker::MascotTracker;
 use crate::system_param::windows::Windows;
 use crate::system_param::GlobalScreenPos;
-use crate::vrma::retarget::RetargetBindingSystemSet;
 use bevy::app::{App, Plugin, Update};
+use bevy::ecs::component::HookContext;
 use bevy::log::debug;
-use bevy::prelude::{Commands, Drag, DragEnd, DragStart, Entity, IntoSystemConfigs, ParallelCommands, Pointer, PointerButton, Query, Reflect, Transform, Trigger};
+use bevy::prelude::*;
 use bevy::render::camera::NormalizedRenderTarget;
+use bevy_vrma::system_param::cameras::Cameras;
+use bevy_vrma::vrma::retarget::RetargetBindingSystemSet;
 use std::fmt::Debug;
 
 pub struct MascotDragPlugin;
 
 impl Plugin for MascotDragPlugin {
-    fn build(&self, app: &mut App) {
+    fn build(
+        &self,
+        app: &mut App,
+    ) {
         app.add_systems(Update, on_drag_index.after(RetargetBindingSystemSet));
 
-        app
-            .world_mut()
-            .register_component_hooks::<Mascot>()
-            .on_add(|mut world, entity, _| {
+        app.world_mut().register_component_hooks::<Mascot>().on_add(
+            |mut world, context: HookContext| {
                 world
                     .commands()
-                    .entity(entity)
+                    .entity(context.entity)
                     .observe(on_drag_start)
                     .observe(on_drag_move)
                     .observe(on_drag_drop);
-            });
+            },
+        );
     }
 }
 
@@ -40,36 +41,33 @@ fn on_drag_start(
     mut commands: Commands,
     tracker: MascotTracker,
     windows: Windows,
-    states: Query<&MascotAction>,
+    actions: Query<&ActionName>,
+    parents: Query<&ChildOf>,
 ) {
     if !matches!(trigger.event.button, PointerButton::Primary) {
         return;
     }
-    let mascot = MascotEntity(trigger.entity());
-    if not_playing_sit_down(&states, mascot.0) {
+    let mascot = MascotEntity(parents.root_ancestor(trigger.target));
+    if not_playing_sit_down(&actions, mascot.0) {
         let Some(global) = global_cursor_pos(&trigger, &windows) else {
             return;
         };
         let Some(transform) = tracker.tracking(mascot, global, 1.) else {
             return;
         };
-        commands.entity(mascot.0).insert((
-            MascotAction::from_group(ActionGroup::drag()),
-            transform,
-        ));
+        commands
+            .entity(mascot.0)
+            .insert((ActionName::drag_start(), transform));
     }
 }
 
 fn not_playing_sit_down(
-    states: &Query<&MascotAction>,
+    actions: &Query<&ActionName>,
     mascot_entity: Entity,
 ) -> bool {
-    states.get(mascot_entity).is_ok_and(|state| {
-        state != &MascotAction {
-            group: ActionGroup::sit_down(),
-            name: ActionName::index(),
-        }
-    })
+    actions
+        .get(mascot_entity)
+        .is_ok_and(|action| !action.is_sit_down())
 }
 
 /// This system is executed while the character is floating up after starting the drag.
@@ -78,10 +76,10 @@ fn on_drag_index(
     par_commands: ParallelCommands,
     windows: Windows,
     tracker: MascotTracker,
-    mascots: Query<(Entity, &MascotAction)>,
+    mascots: Query<(Entity, &ActionName)>,
 ) {
     mascots.par_iter().for_each(|(entity, mascot_action)| {
-        if !(mascot_action.group.is_drag() && mascot_action.name.is_index()) {
+        if !mascot_action.is_drag_start() {
             return;
         }
         let Some(global_cursor_pos) = windows.global_cursor_pos() else {
@@ -101,16 +99,19 @@ fn on_drag_move(
     mut commands: Commands,
     cameras: Cameras,
     transforms: Query<&Transform>,
+    parents: Query<&ChildOf>,
 ) {
     if !matches!(trigger.event.button, PointerButton::Primary) {
         return;
     }
-    let mascot = MascotEntity(trigger.entity());
+    let mascot = MascotEntity(parents.root_ancestor(trigger.target));
     let NormalizedRenderTarget::Window(window_ref) = trigger.pointer_location.target else {
         return;
     };
     let drag_pos = trigger.pointer_location.position;
-    let Some(origin) = cameras.to_world_pos_from_viewport(window_ref.entity(), drag_pos - trigger.delta) else {
+    let Some(origin) =
+        cameras.to_world_pos_from_viewport(window_ref.entity(), drag_pos - trigger.delta)
+    else {
         return;
     };
     let Some(current) = cameras.to_world_pos_from_viewport(window_ref.entity(), drag_pos) else {
@@ -131,6 +132,7 @@ fn on_drag_drop(
     mut commands: Commands,
     tracker: MascotTracker,
     windows: Windows,
+    parents: Query<&ChildOf>,
     #[cfg(target_os = "windows")]
     // To run on main thread
     _: bevy::prelude::NonSend<bevy::winit::WinitWindows>,
@@ -141,27 +143,26 @@ fn on_drag_drop(
     let Some(global_cursor_pos) = global_cursor_pos(&trigger, &windows) else {
         return;
     };
-    let mascot = MascotEntity(trigger.entity());
+    let mascot = MascotEntity(parents.root_ancestor(trigger.target));
     let global_windows: GlobalWindows = obtain_global_windows().unwrap_or_default();
     match global_windows.find_sitting_window(global_cursor_pos) {
         Some(global_window) => {
             let sitting_pos = global_window.sitting_pos(global_cursor_pos);
             let sitting_window = SittingWindow::new(global_window, sitting_pos);
-            let Some(transform) = tracker.tracking_on_sitting(mascot, sitting_window.sitting_pos()) else {
+            let Some(transform) = tracker.tracking_on_sitting(mascot, sitting_window.sitting_pos())
+            else {
                 return;
             };
-            debug!("Sitting application_windows: {:?}", sitting_window.window.title);
-            commands.entity(mascot.0).insert((
-                sitting_window,
-                transform,
-                MascotAction::from_group(ActionGroup::sit_down()),
-            ));
+            debug!(
+                "Sitting application_windows: {:?}",
+                sitting_window.window.title
+            );
+            commands
+                .entity(mascot.0)
+                .insert((sitting_window, transform, ActionName::sit_down()));
         }
         None => {
-            commands.entity(mascot.0).insert(MascotAction {
-                group: ActionGroup::drag(),
-                name: ActionName::drop(),
-            });
+            commands.entity(mascot.0).insert(ActionName::drop());
         }
     }
 }

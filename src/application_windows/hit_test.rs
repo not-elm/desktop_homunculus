@@ -5,9 +5,11 @@ use bevy::window::Window;
 pub struct ApplicationWindowsHitTestPlugin;
 
 impl Plugin for ApplicationWindowsHitTestPlugin {
-    fn build(&self, app: &mut App) {
-        app
-            .register_type::<UpdatedHitTest>()
+    fn build(
+        &self,
+        app: &mut App,
+    ) {
+        app.register_type::<UpdatedHitTest>()
             .add_event::<UpdatedHitTest>()
             .add_observer(update_hit_test);
     }
@@ -27,5 +29,3 @@ fn update_hit_test(
         window.cursor_options.hit_test = trigger.hit_test;
     }
 }
-
-

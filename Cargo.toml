@@ -1,6 +1,6 @@
 [package]
 name = "desktop_homunculus"
-version = "0.1.0-alpha.2"
+version = "0.1.0-alpha.3-dev"
 edition = "2021"
 license = "MIT"
 description = "Desktop mascot built with bevy"
@@ -11,13 +11,14 @@ categories = ["games"]
 publish = false
 
 [dependencies]
-bevy = { version = "0.15", features = [
+bevy = { version = "0.16", features = [
     "file_watcher",
     "bevy_picking",
     "serialize",
 ] }
-bevy_flurx = { version = "0.9", features = ["effect", "state"] }
-bevy_webview_wry = { version = "0.3", features = ["api"] }
+bevy_webview_wry = { version = "0.4", features = ["api"] }
+bevy_vrma = { git = "https://github.com/not-elm/bevy_vrma.git" }
+bevy_flurx = { version = "0.11", features = ["side-effect", "state"] }
 serde = { version = "1", features = ["derive"] }
 dirs = "6"
 serde_json = "1"
@@ -26,15 +27,15 @@ rand = "0.9"
 crossbeam = "0.8.4"
 itertools = "0.14"
 anyhow = "1.0.96"
-bevy-inspector-egui = { version = "0.29", optional = true }
+bevy-inspector-egui = { version = "0.31", optional = true }
 tracing-appender = "0.2.3"
 
 [target.'cfg(target_os="macos")'.dependencies]
 core-graphics = { version = "0.24.0" }
 core-foundation = { version = "0.10.0" }
-objc2 = { version = "0.5", features = ["std"] }
-objc2-foundation = { version = "0.2" }
-objc2-app-kit = { version = "0.2", features = [
+objc2 = { version = "0.6", features = ["std"] }
+objc2-foundation = { version = "0.3" }
+objc2-app-kit = { version = "0.3", features = [
     "NSWindow",
     "NSView",
     "NSApplication",
@@ -46,6 +47,9 @@ windows = { version = "0.60", features = [
     "Win32_Foundation",
     "Win32_UI_WindowsAndMessaging",
 ] }
+
+[dev-dependencies]
+bevy_test_helper = { git = "https://github.com/not-elm/bevy_test_helper", branch = "v0.16" }
 
 [build-dependencies]
 embed-resource = "3"

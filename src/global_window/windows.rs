@@ -1,11 +1,25 @@
 use super::{GlobalWindow, GlobalWindows};
 use bevy::math::Rect;
-use std::{char::{decode_utf16, REPLACEMENT_CHARACTER}, sync::Mutex};
-use windows::{core::BOOL, Win32::{Foundation::{HWND, LPARAM}, UI::WindowsAndMessaging::{EnumWindows, GetForegroundWindow, GetWindowRect, GetWindowTextW, IsWindowVisible}}};
+use std::{
+    char::{decode_utf16, REPLACEMENT_CHARACTER},
+    sync::Mutex,
+};
+use windows::{
+    core::BOOL,
+    Win32::{
+        Foundation::{HWND, LPARAM},
+        UI::WindowsAndMessaging::{
+            EnumWindows, GetForegroundWindow, GetWindowRect, GetWindowTextW, IsWindowVisible,
+        },
+    },
+};
 
 static FOUND_WINDOWS: Mutex<Vec<GlobalWindow>> = Mutex::new(Vec::new());
 
-extern "system" fn enum_windows_proc(hwnd: HWND, _: LPARAM) -> BOOL {
+extern "system" fn enum_windows_proc(
+    hwnd: HWND,
+    _: LPARAM,
+) -> BOOL {
     unsafe {
         let Ok(frame) = obtain_window_rect(hwnd) else {
             return BOOL(1);
@@ -18,9 +32,7 @@ extern "system" fn enum_windows_proc(hwnd: HWND, _: LPARAM) -> BOOL {
             if 0. < frame.width() && 0. < frame.height() && current != hwnd {
                 let mut buf = vec![0u16; 1024];
                 let len = GetWindowTextW(hwnd, &mut buf) as usize;
-                let title = (0 < len).then(|| {
-                    decode_title(&buf, len)
-                });
+                let title = (0 < len).then(|| decode_title(&buf, len));
                 found_windows.push(GlobalWindow {
                     title,
                     frame,
@@ -32,8 +44,10 @@ extern "system" fn enum_windows_proc(hwnd: HWND, _: LPARAM) -> BOOL {
     BOOL(1)
 }
 
-
-fn decode_title(buf: &[u16], len: usize) -> String {
+fn decode_title(
+    buf: &[u16],
+    len: usize,
+) -> String {
     decode_utf16(buf[..len].iter().copied())
         .map(|r| r.unwrap_or(REPLACEMENT_CHARACTER))
         .collect()
@@ -45,16 +59,12 @@ pub fn obtain_global_windows() -> Option<GlobalWindows> {
     }
     FOUND_WINDOWS
         .lock()
-        .map(|mut windows| {
-            GlobalWindows::new(std::mem::take(&mut windows))
-        })
+        .map(|mut windows| GlobalWindows::new(std::mem::take(&mut windows)))
         .ok()
 }
 
 pub fn update_window(hwnd: i64) -> Option<Rect> {
-    unsafe {
-        obtain_window_rect(HWND(hwnd as *mut _)).ok()
-    }
+    unsafe { obtain_window_rect(HWND(hwnd as *mut _)).ok() }
 }
 
 unsafe fn obtain_window_rect(hwnd: HWND) -> windows::core::Result<Rect> {

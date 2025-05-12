@@ -1,174 +1,175 @@
-use crate::settings::state::{ActionGroup, ActionName, MascotAction};
-use bevy::prelude::{Component, Deref, Reflect, Resource};
-use bevy::utils::hashbrown::HashMap;
+mod action_name;
+mod action_tags;
+
+use crate::mascot::action::MascotAction;
+pub use action_name::ActionName;
+pub use action_tags::ActionTags;
+use bevy::platform::collections::HashMap;
+use bevy::prelude::{Deref, Resource};
+use rand::prelude::IteratorRandom;
 use serde::{Deserialize, Serialize};
 
-#[derive(Eq, PartialEq, Debug, Serialize, Deserialize, Clone, Hash, Component, Reflect)]
-pub struct ActionProperties {
-    pub is_repeat_animation: bool,
-    pub transition: TransitionMode,
-}
-
-impl Default for ActionProperties {
-    fn default() -> Self {
-        Self {
-            is_repeat_animation: false,
-            transition: TransitionMode::back_to_idle(),
-        }
-    }
-}
-
-#[derive(Eq, PartialEq, Debug, Default, Serialize, Deserialize, Clone, Hash, Reflect)]
-#[serde(rename_all = "snake_case", tag = "type")]
-pub enum TransitionMode {
-    #[default]
-    None,
-    Auto {
-        min_secs: u64,
-        max_secs: u64,
-    },
-    Manual {
-        next: MascotAction,
-    },
-}
-
-impl TransitionMode {
-    pub fn auto(min_secs: u64, max_secs: u64) -> Self {
-        TransitionMode::Auto { min_secs, max_secs }
-    }
-
-    pub fn back_to_idle() -> Self {
-        Self::Manual { next: MascotAction::default() }
-    }
-
-    pub fn manual(next: MascotAction) -> Self {
-        TransitionMode::Manual { next }
-    }
-}
-
-macro_rules! groups {
-    ( $( $key:literal: $value:expr ),* $(,)? ) => {{
-        let mut map = HashMap::new();
-        $( map.insert(ActionGroup::from($key), $value); )*
-        map
-    }};
-}
-
+#[macro_export]
 macro_rules! actions {
-    ( $( $key:literal: $value:expr ),* $(,)? ) => {{
-        let mut map = HashMap::new();
-        $( map.insert(ActionName::from($key), $value); )*
+    ( $( $key:expr => $value:expr ),* $(,)? ) => {{
+        let mut map = HashMap::<ActionName, ActionProperties>::default();
+        $( map.insert($key, $value); )*
         map
     }};
 }
-
 
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone, Resource, Deref)]
-pub struct ActionPreferences(HashMap<ActionGroup, HashMap<ActionName, ActionProperties>>);
+pub struct ActionPreferences(pub(crate) HashMap<ActionName, ActionProperties>);
 
 impl ActionPreferences {
-    pub fn properties(&self, action: &MascotAction) -> ActionProperties {
+    pub fn random_next_action(
+        &self,
+        tags: &ActionTags,
+        current: &ActionName,
+    ) -> Option<&ActionName> {
         self.0
-            .get(&action.group)
-            .and_then(|group| group.get(&action.name))
-            .cloned()
-            .unwrap_or_default()
-    }
-
-    pub fn cleanup(&mut self, exists_actions: &[MascotAction]) {
-        let mut groups = Self(HashMap::new());
-        for (action, properties) in self.0
             .iter()
-            .flat_map(|(group_name, group)| {
-                group.iter().map(move |(action_name, action)| {
-                    (MascotAction {
-                        group: group_name.clone(),
-                        name: action_name.clone(),
-                    }, action)
-                })
+            .filter(|(name, _)| name != &current)
+            .filter_map(|(name, properties)| {
+                tags.iter()
+                    .any(|tag| properties.tags.contains(tag))
+                    .then_some(name)
             })
-        {
-            if exists_actions.contains(&action) {
-                groups.update(action, properties.clone());
-            }
-        }
-        self.0 = groups.0;
+            .choose(&mut rand::rng())
     }
 
-    pub fn register_if_not_exists(&mut self, action: MascotAction) {
-        self.0
-            .entry(action.group)
-            .or_default()
-            .entry(action.name)
-            .or_default();
+    //TODO: cleanup
+    #[allow(unused)]
+    pub fn cleanup(
+        &mut self,
+        exists_actions: &[ActionName],
+    ) {
+        self.0 = self
+            .0
+            .iter()
+            .filter_map(|(k, v)| exists_actions.contains(k).then_some((k.clone(), v.clone())))
+            .collect::<HashMap<_, _>>();
     }
 
-    pub fn update(&mut self, action: MascotAction, properties: ActionProperties) {
-        self.0
-            .entry(action.group)
-            .or_default()
-            .insert(action.name, properties);
+    //TODO: register_if_not_exists
+    #[allow(unused)]
+    pub fn register_if_not_exists(
+        &mut self,
+        name: ActionName,
+        action: ActionProperties,
+    ) {
+        self.0.entry(name).or_insert(action);
+    }
+
+    pub fn update(
+        &mut self,
+        name: ActionName,
+        properties: ActionProperties,
+    ) {
+        self.0.entry(name).insert(properties);
     }
 }
-
 
 impl Default for ActionPreferences {
     fn default() -> Self {
-        Self(
-            groups! {
-                "idle": actions!{
-                    "index": ActionProperties{
-                        is_repeat_animation: true,
-                        transition: TransitionMode::auto(10, 60),
-                    },
-                },
-                "drag": actions!{
-                    "index": ActionProperties{
-                        is_repeat_animation: false,
-                        transition: TransitionMode::manual(MascotAction {
-                            group: ActionGroup::drag(),
-                            name: ActionName::hold(),
-                        }),
-                    },
-                    "hold": ActionProperties{
-                        is_repeat_animation: true,
-                        transition: TransitionMode::None,
-                    },
-                },
-                "sit_down": actions!{
-                    "index": ActionProperties{
-                        is_repeat_animation: false,
-                        transition: TransitionMode::manual(MascotAction {
-                            group: ActionGroup::sit_down(),
-                            name: ActionName::sitting(),
-                        }),
-                    },
-                    "sitting": ActionProperties{
-                        is_repeat_animation: true,
-                        transition: TransitionMode::None,
-                    },
-                },
-            }
-        )
+        Self(actions!(
+            ActionName::idle() => ActionProperties {
+                tags: vec!["idle"].into(),
+                actions: vec![
+                    MascotAction::animation("idle.vrma", true),
+                    MascotAction::range_timer(3f32..5.),
+                    MascotAction::auto_transition(),
+                ],
+            },
+            ActionName::from("peace") => simple_animation("idle", "peace.vrma", ActionName::idle()),
+            ActionName::from("destroy") => simple_animation("idle", "destroy.vrma", ActionName::idle()),
+            ActionName::from("rotate") => simple_animation("idle", "rotate.vrma", ActionName::idle()),
+            ActionName::drag_start() => simple_animation("drag", "drag_start.vrma", ActionName::drag()),
+            ActionName::drag() => ActionProperties {
+                tags: vec!["drag"].into(),
+                actions: vec![
+                    MascotAction::animation("drag.vrma", true),
+                ],
+            },
+            ActionName::drop() => simple_animation("drag", "drop.vrma", ActionName::idle()),
+            ActionName::sit_down() => simple_animation("sitting", "sit_down.vrma", ActionName::sitting()),
+        ))
     }
+}
+
+fn simple_animation(
+    tag: &str,
+    vrma_name: &str,
+    next: ActionName,
+) -> ActionProperties {
+    ActionProperties {
+        tags: vec![tag].into(),
+        actions: vec![
+            MascotAction::animation(vrma_name, false),
+            MascotAction::wait_animation(),
+            MascotAction::transition(next),
+        ],
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug, Default)]
+pub struct ActionProperties {
+    pub tags: ActionTags,
+    pub actions: Vec<MascotAction>,
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::settings::preferences::action::{ActionPreferences, ActionProperties, TransitionMode};
-    use crate::settings::state::MascotAction;
+    use crate::settings::preferences::action::{ActionName, ActionPreferences, ActionProperties};
+    use bevy::platform::collections::HashMap;
+    use bevy::prelude::default;
 
     #[test]
-    fn not_update_if_already_exists() {
-        let expect = ActionProperties {
-            transition: TransitionMode::None,
-            is_repeat_animation: true,
-        };
-        let mut preferences = ActionPreferences::default();
-        preferences.update(MascotAction::default(), expect.clone());
+    fn test_cleanup() {
+        let mut preferences = ActionPreferences(HashMap::default());
+        preferences.0.insert(
+            "rotate".into(),
+            ActionProperties {
+                tags: vec!["idle"].into(),
+                ..default()
+            },
+        );
+        preferences.cleanup(&["rotate".into()]);
+        assert_eq!(preferences.0.len(), 1);
+    }
 
-        preferences.register_if_not_exists(MascotAction::default());
-        let properties = preferences.properties(&MascotAction::default());
-        assert_eq!(properties, expect);
+    #[test]
+    fn test_remove_all() {
+        let mut preferences = ActionPreferences(HashMap::default());
+        preferences.0.insert(
+            "rotate".into(),
+            ActionProperties {
+                tags: vec!["idle"].into(),
+                ..default()
+            },
+        );
+        preferences.cleanup(&[]);
+        assert!(preferences.0.is_empty());
+    }
+
+    #[test]
+    fn return_none_if_has_not_actions() {
+        let preferences = ActionPreferences(HashMap::default());
+        let next = preferences.random_next_action(&vec!["drag"].into(), &"idle".into());
+        assert_eq!(next, None);
+    }
+
+    #[test]
+    fn return_action_has_same_tag() {
+        let mut preferences = ActionPreferences(HashMap::default());
+        preferences.0.insert(
+            ActionName::drop(),
+            ActionProperties {
+                tags: vec!["drag"].into(),
+                actions: vec![],
+            },
+        );
+        let next = preferences.random_next_action(&vec!["drag"].into(), &"idle".into());
+        assert_eq!(next, Some(&ActionName::drop()));
     }
 }

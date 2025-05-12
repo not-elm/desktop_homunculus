@@ -20,7 +20,7 @@ pub fn app_data_dir() -> PathBuf {
 }
 
 pub fn animations_dir() -> PathBuf {
-    assets_dir().join("animations")
+    assets_dir().join("vrma")
 }
 
 pub fn remove_mystery_file_if_exists(dir: &Path) {

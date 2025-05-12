@@ -11,9 +11,7 @@ pub struct LoadMascotArgs {
 }
 
 #[command]
-pub async fn load_mascot(
-    In(args): In<LoadMascotArgs>,
-) {
+pub async fn load_mascot(In(args): In<LoadMascotArgs>) {
     if let Some(file_name) = args.path.file_name() {
         if let Err(e) = std::fs::copy(&args.path, models_dir().join(file_name)) {
             error!("Failed to copy mascot: {}", e);

@@ -2,8 +2,9 @@ pub mod action;
 
 use crate::system_param::coordinate::Coordinate;
 use bevy::math::{Quat, Vec3};
+use bevy::platform::collections::HashMap;
 use bevy::prelude::{Reflect, Resource, Transform};
-use bevy::utils::{default, HashMap};
+use bevy::utils::default;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
@@ -11,7 +12,11 @@ use std::path::{Path, PathBuf};
 pub struct MascotLocationPreferences(pub HashMap<PathBuf, MascotLocation>);
 
 impl MascotLocationPreferences {
-    pub fn load_transform(&self, path: &Path, coordinate: &Coordinate) -> Transform {
+    pub fn load_transform(
+        &self,
+        path: &Path,
+        coordinate: &Coordinate,
+    ) -> Transform {
         match self.try_load_transform(path, coordinate) {
             Some(transform) => transform,
             None => {
@@ -24,9 +29,14 @@ impl MascotLocationPreferences {
         }
     }
 
-    fn try_load_transform(&self, path: &Path, coordinate: &Coordinate) -> Option<Transform> {
+    fn try_load_transform(
+        &self,
+        path: &Path,
+        coordinate: &Coordinate,
+    ) -> Option<Transform> {
         let location = self.0.get(path)?;
-        let world_pos = coordinate.mascot_position(location.viewport_pos, &location.monitor_name)?;
+        let world_pos =
+            coordinate.mascot_position(location.viewport_pos, &location.monitor_name)?;
         Some(Transform {
             translation: world_pos,
             scale: location.scale,
@@ -42,4 +52,3 @@ pub struct MascotLocation {
     pub scale: Vec3,
     pub rotation: Quat,
 }
-

@@ -1,8 +1,6 @@
-use crate::menu::Menu;
-use crate::settings::preferences::action::{ActionPreferences, ActionProperties};
-use crate::settings::state::MascotAction;
+use crate::settings::preferences::action::{ActionName, ActionPreferences, ActionProperties};
 use bevy::app::{App, Plugin, Update};
-use bevy::prelude::{resource_exists_and_changed, EventReader, IntoSystemConfigs, Query, Res, ResMut, With};
+use bevy::prelude::{resource_exists_and_changed, Commands, Event, IntoScheduleConfigs, Res, ResMut, Trigger};
 use bevy_flurx::prelude::once;
 use bevy_flurx::task::ReactorTask;
 use bevy_webview_wry::prelude::*;
@@ -11,44 +9,41 @@ use serde::Deserialize;
 pub struct MenuActionsPlugin;
 
 impl Plugin for MenuActionsPlugin {
-    fn build(&self, app: &mut App) {
+    fn build(
+        &self,
+        app: &mut App,
+    ) {
         app
-            .add_ipc_event::<UpdateAction>("update_action")
-            .add_systems(Update, (
-                send_action_preferences.run_if(resource_exists_and_changed::<ActionPreferences>),
-                update_action,
-            ));
+            .add_ipc_trigger::<UpdateAction>("update_action")
+            .add_systems(Update, emit_action_preferences.run_if(resource_exists_and_changed::<ActionPreferences>))
+            .add_observer(apply_update_action);
     }
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, Event)]
 struct UpdateAction {
-    action: MascotAction,
+    action: ActionName,
     properties: ActionProperties,
 }
 
 #[command]
-pub async fn request_send_actions(
-    task: ReactorTask,
-) {
-    task.will(Update, once::run(send_action_preferences)).await;
+pub async fn request_send_actions(task: ReactorTask) {
+    task.will(Update, once::run(emit_action_preferences)).await;
 }
 
-fn send_action_preferences(
-    mut webviews: Query<&mut EventEmitter, With<Menu>>,
+fn emit_action_preferences(
+    mut commands: Commands,
     actions: Res<ActionPreferences>,
 ) {
-    for mut emitter in webviews.iter_mut() {
-        emitter.emit("actions", actions.as_ref());
-    }
+    commands.trigger(EmitIpcEvent {
+        id: "actions".to_string(),
+        payload: EventPayload::new(actions.as_ref()),
+    });
 }
 
-fn update_action(
-    mut er: EventReader<IpcEvent<UpdateAction>>,
+fn apply_update_action(
+    trigger: Trigger<UpdateAction>,
     mut actions: ResMut<ActionPreferences>,
 ) {
-    for event in er.read() {
-        let args = event.payload.clone();
-        actions.update(args.action, args.properties.clone());
-    }
+    actions.update(trigger.action.clone(), trigger.properties.clone());
 }

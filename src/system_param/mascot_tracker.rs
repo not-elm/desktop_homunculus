@@ -1,10 +1,10 @@
 use crate::mascot::{Mascot, MascotEntity};
 use crate::system_param::bone_offsets::BoneOffsets;
-use crate::system_param::cameras::Cameras;
 use crate::system_param::windows::{window_local_pos, Windows};
 use crate::system_param::GlobalScreenPos;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{Camera, Query, Transform, With, Without};
+use bevy_vrma::system_param::cameras::Cameras;
 
 #[derive(SystemParam)]
 pub struct MascotTracker<'w, 's> {
@@ -44,7 +44,9 @@ impl MascotTracker<'_, '_> {
         let hips_offset = self.offsets.hips_offset(mascot)?;
         let (window_entity, window, _) = self.windows.find_window_from_global_screen_pos(pos)?;
         let viewport_pos = window_local_pos(window, pos);
-        let mut cursor_pos = self.camera.to_world_pos_from_viewport(window_entity, viewport_pos)?;
+        let mut cursor_pos = self
+            .camera
+            .to_world_pos_from_viewport(window_entity, viewport_pos)?;
         let mut new_tf = *tf;
         cursor_pos.y -= hips_offset.y * adjust;
         new_tf.translation = cursor_pos;

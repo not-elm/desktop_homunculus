@@ -1,23 +1,20 @@
-mod scale;
-mod load_mascot;
 mod actions;
+mod load_mascot;
 mod reset_position;
+mod scale;
 
 use crate::mascot::Mascot;
 use crate::menu::actions::{request_send_actions, MenuActionsPlugin};
 use crate::menu::load_mascot::load_mascot;
 use crate::menu::reset_position::MenuResetPositionPlugin;
 use crate::menu::scale::MenuScalePlugin;
-use crate::system_param::cameras::Cameras;
 use crate::system_param::mesh_aabb::MascotAabb;
 use crate::system_param::monitors::{monitor_rect, Monitors};
 use crate::system_param::windows::Windows;
 use bevy::app::{App, Plugin, PostUpdate, Update};
-use bevy::core::Name;
-use bevy::hierarchy::Parent;
 use bevy::math::{Rect, Vec2};
 use bevy::picking::events::Click;
-use bevy::prelude::{any_with_component, Added, Commands, Component, Entity, HierarchyQueryExt, In, IntoSystemConfigs, NonSend, Observer, Pointer, PointerButton, Query, Transform, Trigger, With, Without};
+use bevy::prelude::*;
 use bevy::render::camera::NormalizedRenderTarget;
 use bevy::render::view::RenderLayers;
 use bevy::utils::default;
@@ -25,6 +22,7 @@ use bevy::window::{Window, WindowPosition, WindowResolution};
 use bevy::winit::WinitWindows;
 use bevy_flurx::action::once;
 use bevy_flurx::prelude::ReactorTask;
+use bevy_vrma::system_param::cameras::Cameras;
 use bevy_webview_wry::ipc::IpcHandlers;
 use bevy_webview_wry::prelude::*;
 use winit::dpi::PhysicalPosition;
@@ -41,17 +39,18 @@ pub struct MenuUnInitialized;
 pub struct MenuPlugin;
 
 impl Plugin for MenuPlugin {
-    fn build(&self, app: &mut App) {
-        app
-            .add_plugins((
-                MenuScalePlugin,
-                MenuActionsPlugin,
-                MenuResetPositionPlugin,
-            ))
-            .add_systems(Update, (
-                mark_initialized_menu.run_if(any_with_component::<MenuUnInitialized>),
-                request_close_event.run_if(any_with_component::<Menu>),
-            ))
+    fn build(
+        &self,
+        app: &mut App,
+    ) {
+        app.add_plugins((MenuScalePlugin, MenuActionsPlugin, MenuResetPositionPlugin))
+            .add_systems(
+                Update,
+                (
+                    mark_initialized_menu.run_if(any_with_component::<MenuUnInitialized>),
+                    request_close_event.run_if(any_with_component::<Menu>),
+                ),
+            )
             .add_systems(PostUpdate, register_observer);
     }
 }
@@ -63,7 +62,6 @@ fn register_observer(
     for mascot in mascots.iter() {
         let mut observer = Observer::new(open_menu);
         observer.watch_entity(mascot);
-
         commands.spawn(observer);
     }
 }
@@ -75,7 +73,7 @@ fn open_menu(
     mut commands: Commands,
     monitors: Monitors,
     windows: Windows,
-    parents: Query<&Parent>,
+    parents: Query<&ChildOf>,
     menus: Query<&Menu>,
     mascots: Query<&Name>,
 ) {
@@ -85,10 +83,13 @@ fn open_menu(
     let NormalizedRenderTarget::Window(window_ref) = trigger.pointer_location.target else {
         return;
     };
-    let Some(global_cursor_pos) = windows.to_global_pos(window_ref.entity(), trigger.pointer_location.position) else {
+    let Some(global_cursor_pos) =
+        windows.to_global_pos(window_ref.entity(), trigger.pointer_location.position)
+    else {
         return;
     };
-    let Some((_, monitor, _)) = monitors.find_monitor_from_global_screen_pos(global_cursor_pos) else {
+    let Some((_, monitor, _)) = monitors.find_monitor_from_global_screen_pos(global_cursor_pos)
+    else {
         return;
     };
     let (position, resolution) = fit_position(*global_cursor_pos, &monitor_rect(monitor));
@@ -99,7 +100,11 @@ fn open_menu(
         Name::new("Menu"),
         TargetMascot(mascot_entity),
         Window {
-            title: mascots.get(mascot_entity).cloned().unwrap_or_default().to_string(),
+            title: mascots
+                .get(mascot_entity)
+                .cloned()
+                .unwrap_or_default()
+                .to_string(),
             resizable: false,
             resolution,
             position: WindowPosition::At(position.as_ivec2()),
@@ -189,9 +194,12 @@ fn mascot_name(
     target: Query<&TargetMascot>,
     mascot: Query<&Name>,
 ) -> Option<String> {
-    target.get(entity.0).ok().and_then(|TargetMascot(mascot_entity)| {
-        mascot.get(*mascot_entity).map(|name| name.to_string()).ok()
-    })
+    target
+        .get(entity.0)
+        .ok()
+        .and_then(|TargetMascot(mascot_entity)| {
+            mascot.get(*mascot_entity).map(|name| name.to_string()).ok()
+        })
 }
 
 #[command]
@@ -207,8 +215,10 @@ fn scale(
     target: Query<&TargetMascot>,
     mascot: Query<&Transform>,
 ) -> Option<f32> {
-    target.get(entity.0).ok().and_then(|TargetMascot(mascot_entity)| {
-        mascot.get(*mascot_entity).map(|tf| tf.scale.x).ok()
-    })
+    target
+        .get(entity.0)
+        .ok()
+        .and_then(|TargetMascot(mascot_entity)| {
+            mascot.get(*mascot_entity).map(|tf| tf.scale.x).ok()
+        })
 }
-
