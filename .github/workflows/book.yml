@@ -1,0 +1,28 @@
+name: Build and Deploy Multiple mdBooks
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup mdBook
+        uses: peaceiris/actions-mdbook@v2
+        with:
+          mdbook-version: 'latest'
+
+      - name: Build mod-manual
+        run: mdbook build docs/mod-manual --dest-dir docs/public/mod-manual
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs/public

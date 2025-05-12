@@ -4,6 +4,11 @@
 src/mascot/assets/
 /test
 
+book/
+
+.claude.json
+.claude.json.backup
+
 /develop/
 
 # Logs
@@ -30,3 +35,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+assets/.env
+
+.turbo/
+demo/

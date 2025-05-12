@@ -12,6 +12,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - uses: actions/cache@v4
         with:
           path: |
@@ -24,27 +26,14 @@ jobs:
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
-      - name: Install alsa and udev
-        run: |
-          sudo apt-get update && sudo apt-get install --no-install-recommends libasound2-dev \
-            libudev-dev \
-            libasound2-dev \
-            libwebkit2gtk-4.1-dev \
-            pkg-config \
-            libudev-dev \
-            libssl-dev \
-            build-essential \
-            libxdo-dev
-        if: runner.os == 'linux'
       - name: Build & run tests
         run: cargo test
   lint:
-    strategy:
-      matrix:
-        os: [ windows-latest, macos-latest ]
-    runs-on: ${{ matrix.os }}
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - uses: actions/cache@v4
         with:
           path: |
@@ -53,7 +42,7 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ubuntu-latest-cargo-lint-${{ hashFiles('**/Cargo.toml') }}
+          key: macos-latest-cargo-lint-${{ hashFiles('**/Cargo.toml') }}
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable

@@ -1,0 +1,47 @@
+{
+  "name": "menu",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite build --watch",
+    "build": "vite build",
+    "check-types": "tsc -b --noEmit",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@homunculus/api": "workspace:*",
+    "@homunculus/core": "workspace:*",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.525.0",
+    "motion": "^12.23.6",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "tailwind-merge": "^3.3.1",
+    "tailwindcss": "^4.1.11",
+    "tailwindcss-animate": "^1.0.7",
+    "use-sound": "^5.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.30.1",
+    "@tailwindcss/vite": "^4.1.11",
+    "@types/node": "^24.0.15",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^4.6.0",
+    "autoprefixer": "^10.4.19",
+    "eslint": "^9.30.1",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
+    "fast-glob": "^3.3.3",
+    "fs": "0.0.1-security",
+    "globals": "^16.3.0",
+    "postcss": "^8.4.38",
+    "typescript": "~5.8.3",
+    "typescript-eslint": "^8.35.1",
+    "vite": "^7.0.4",
+    "vite-plugin-singlefile": "^2.3.0"
+  }
+}

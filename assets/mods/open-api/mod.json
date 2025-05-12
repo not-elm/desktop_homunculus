@@ -1,0 +1,21 @@
+{
+  "name": "open-api",
+  "description": "Provides the OpenAPI guideline",
+  "version": "1.0.0",
+  "author": "notelm",
+  "license": "MIT",
+  "menus": [
+    {
+      "thumbnail": "open-api/icon.png",
+      "text": "OpenAPI",
+      "webview": {
+        "source": "open-api/open-api.html",
+        "resolution": [
+          1280,
+          720
+        ],
+        "shadow": false
+      }
+    }
+  ]
+}

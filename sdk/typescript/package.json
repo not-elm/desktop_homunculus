@@ -1,0 +1,44 @@
+{
+  "name": "@homunculus/api",
+  "version": "1.0.0",
+  "description": "The api for desktop_homunculus",
+  "author": "notelm",
+  "license": "ISC",
+  "type": "module",
+  "main": "dist/index",
+  "types": "dist/index.d.ts",
+  "keywords": [],
+  "scripts": {
+    "dev": "rollup -c --configPlugin typescript --watch",
+    "build": "rollup -c --configPlugin typescript",
+    "check-types": "tsc -b",
+    "tsc": "rimraf dist && tsc --watch",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/not-elm/desktop_homunculus.git"
+  },
+  "files": [
+    "dist"
+  ],
+  "packageManager": "pnpm@10.13.1",
+  "dependencies": {
+    "eventsource": "^4.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^28.0.6",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^11.1.6",
+    "@types/node": "^20.12.12",
+    "fast-glob": "^3.3.2",
+    "rimraf": "^6.0.1",
+    "rollup": ">=4.22.4",
+    "rollup-plugin-dts": "^6.2.1",
+    "tslib": "^2.6.2",
+    "typescript": "^5.4.5"
+  }
+}
