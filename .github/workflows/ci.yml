@@ -21,7 +21,8 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ${{ runner.os }}-cargo-test-${{ hashFiles('**/Cargo.toml') }}
-      - name: Checkout submodules
+      - &submodule_checkout
+        name: Checkout submodules
         run: |
           git submodule sync --recursive
           git submodule update --init --force --recursive
@@ -43,10 +44,7 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: macos-latest-cargo-lint-${{ hashFiles('**/Cargo.toml') }}
-      - name: Checkout submodules
-        run: |
-          git submodule sync --recursive
-          git submodule update --init --force --recursive
+      - *submodule_checkout
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
