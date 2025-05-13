@@ -10,6 +10,11 @@ keywords = ["bevy", "desktop", "game"]
 categories = ["games"]
 publish = false
 
+[workspace]
+members = [
+    "crates/*",
+]
+
 [dependencies]
 bevy = { version = "0.16", features = [
     "file_watcher",
@@ -17,7 +22,7 @@ bevy = { version = "0.16", features = [
     "serialize",
 ] }
 bevy_webview_wry = { version = "0.4", features = ["api"] }
-bevy_vrma = { git = "https://github.com/not-elm/bevy_vrma.git" }
+bevy_vrma = { path = "crates/bevy_vrma" }
 bevy_flurx = { version = "0.11", features = ["side-effect", "state"] }
 serde = { version = "1", features = ["derive"] }
 dirs = "6"
