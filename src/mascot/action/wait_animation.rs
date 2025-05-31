@@ -3,7 +3,7 @@ use crate::mascot::MascotEntity;
 use bevy::prelude::*;
 use bevy_flurx::action::wait;
 use bevy_flurx::prelude::Omit;
-use bevy_vrma::vrma::animation::AnimationPlayerEntityTo;
+use bevy_vrm1::vrma::animation::AnimationPlayerEntityTo;
 
 pub struct WaitAnimationPlugin;
 

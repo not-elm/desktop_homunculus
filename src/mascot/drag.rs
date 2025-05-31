@@ -10,8 +10,8 @@ use bevy::ecs::component::HookContext;
 use bevy::log::debug;
 use bevy::prelude::*;
 use bevy::render::camera::NormalizedRenderTarget;
-use bevy_vrma::system_param::cameras::Cameras;
-use bevy_vrma::vrma::retarget::RetargetBindingSystemSet;
+use bevy_vrm1::system_param::cameras::Cameras;
+use bevy_vrm1::vrma::retarget::RetargetBindingSystemSet;
 use std::fmt::Debug;
 
 pub struct MascotDragPlugin;

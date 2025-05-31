@@ -22,7 +22,7 @@ use bevy::window::{Window, WindowPosition, WindowResolution};
 use bevy::winit::WinitWindows;
 use bevy_flurx::action::once;
 use bevy_flurx::prelude::ReactorTask;
-use bevy_vrma::system_param::cameras::Cameras;
+use bevy_vrm1::system_param::cameras::Cameras;
 use bevy_webview_wry::ipc::IpcHandlers;
 use bevy_webview_wry::prelude::*;
 use winit::dpi::PhysicalPosition;

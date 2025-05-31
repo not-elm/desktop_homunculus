@@ -7,7 +7,7 @@ use bevy::asset::io::AssetSourceEvent;
 use bevy::asset::{Handle, LoadedFolder};
 use bevy::log::error;
 use bevy::prelude::*;
-use bevy_vrma::vrma::{VrmaHandle, VrmaPath};
+use bevy_vrm1::vrma::{VrmaHandle, VrmaPath};
 use crossbeam::channel::Receiver;
 use std::path::PathBuf;
 use std::time::Duration;
@@ -189,8 +189,8 @@ mod tests {
     use crate::tests::{test_app, TestResult};
     use bevy::ecs::system::RunSystemOnce;
     use bevy::prelude::{Children, Commands, Entity, Query, With};
-    use bevy_vrma::vrm::Vrm;
-    use bevy_vrma::vrma::VrmaPath;
+    use bevy_vrm1::vrm::Vrm;
+    use bevy_vrm1::vrma::VrmaPath;
     use std::path::PathBuf;
 
     #[test]

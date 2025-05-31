@@ -3,7 +3,7 @@ use crate::system_param::monitors::Monitors;
 use bevy::ecs::system::SystemParam;
 use bevy::math::Vec3;
 use bevy::prelude::{Entity, Query, Vec3Swizzles, With};
-use bevy_vrma::system_param::cameras::Cameras;
+use bevy_vrm1::system_param::cameras::Cameras;
 
 #[derive(SystemParam)]
 pub struct Coordinate<'w, 's> {

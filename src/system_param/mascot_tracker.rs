@@ -4,7 +4,7 @@ use crate::system_param::windows::{window_local_pos, Windows};
 use crate::system_param::GlobalScreenPos;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::{Camera, Query, Transform, With, Without};
-use bevy_vrma::system_param::cameras::Cameras;
+use bevy_vrm1::system_param::cameras::Cameras;
 
 #[derive(SystemParam)]
 pub struct MascotTracker<'w, 's> {

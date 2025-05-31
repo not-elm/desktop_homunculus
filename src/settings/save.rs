@@ -8,8 +8,8 @@ use bevy::app::{AppExit, PostUpdate};
 use bevy::platform::collections::HashMap;
 use bevy::prelude::*;
 use bevy::render::view::RenderLayers;
-use bevy_vrma::system_param::cameras::Cameras;
-use bevy_vrma::vrm::VrmPath;
+use bevy_vrm1::system_param::cameras::Cameras;
+use bevy_vrm1::vrm::VrmPath;
 use std::path::PathBuf;
 
 pub struct AppSettingsSavePlugin;
@@ -67,7 +67,7 @@ fn save_mascot_locations(
         mascot_locations_json_path(),
         serde_json::to_string(&locations).unwrap(),
     )
-    .output_log_if_error("Save");
+        .output_log_if_error("Save");
 }
 
 fn save_actions(actions: Res<ActionPreferences>) {

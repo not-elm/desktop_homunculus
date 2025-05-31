@@ -4,8 +4,8 @@ use bevy::ecs::world::DeferredWorld;
 use bevy::log::debug;
 use bevy::prelude::{Commands, Component, Local, Query, Reflect};
 use bevy::winit::{UpdateMode, WinitSettings};
-use bevy_vrma::vrm::loader::VrmHandle;
-use bevy_vrma::vrma::VrmaHandle;
+use bevy_vrm1::vrm::loader::VrmHandle;
+use bevy_vrm1::vrma::VrmaHandle;
 use serde::{Deserialize, Serialize};
 
 /// If this component exists, the application is in active state.

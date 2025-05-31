@@ -26,13 +26,13 @@ use bevy::app::{App, PluginGroup};
 use bevy::color::Color;
 use bevy::log::tracing_subscriber::Layer;
 use bevy::log::{BoxedLayer, LogPlugin};
-use bevy::prelude::{default, AmbientLight, ClearColor, MeshPickingPlugin, Window};
+use bevy::prelude::{default, ClearColor, Component, MeshPickingPlugin, Window};
 use bevy::render::settings::{RenderCreation, WgpuSettings};
 use bevy::render::RenderPlugin;
 use bevy::window::{ExitCondition, WindowPlugin, WindowResolution};
 use bevy::DefaultPlugins;
-use bevy_vrma::vrm::VrmPlugin;
-use bevy_vrma::vrma::VrmaPlugin;
+use bevy_vrm1::vrm::VrmPlugin;
+use bevy_vrm1::vrma::VrmaPlugin;
 use bevy_webview_wry::prelude::*;
 use std::sync::OnceLock;
 use tracing_appender::non_blocking::WorkerGuard;
@@ -78,6 +78,8 @@ fn main() {
         },
         MeshPickingPlugin,
         #[cfg(feature = "develop")]
+        bevy_egui::EguiPlugin { enable_multipass_for_primary_context: true },
+        #[cfg(feature = "develop")]
         bevy_inspector_egui::quick::WorldInspectorPlugin::default(),
     ))
         .add_plugins((AllDialogPlugins, AllLogPlugins, AppExitApiPlugin))
@@ -91,10 +93,6 @@ fn main() {
             AppSettingsPlugin,
             FileWatcherPlugin,
         ))
-        .insert_resource(AmbientLight {
-            brightness: 3000.0,
-            ..default()
-        })
         .insert_resource(ClearColor(Color::NONE))
         .run();
 }

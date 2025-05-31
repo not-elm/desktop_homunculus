@@ -22,7 +22,7 @@ bevy = { version = "0.16", features = [
     "serialize",
 ] }
 bevy_webview_wry = { version = "0.4", features = ["api"] }
-bevy_vrma = { path = "crates/bevy_vrma" }
+bevy_vrm1 = { path = "crates/bevy_vrm1" }
 bevy_flurx = { version = "0.11", features = ["side-effect", "state"] }
 serde = { version = "1", features = ["derive"] }
 dirs = "6"
@@ -32,6 +32,7 @@ rand = "0.9"
 crossbeam = "0.8.4"
 itertools = "0.14"
 anyhow = "1.0.96"
+bevy_egui = { version = "0.34.1", optional = true }
 bevy-inspector-egui = { version = "0.31", optional = true }
 tracing-appender = "0.2.3"
 
@@ -61,7 +62,7 @@ embed-resource = "3"
 
 [features]
 default = []
-develop = ["dep:bevy-inspector-egui"]
+develop = ["dep:bevy-inspector-egui", "dep:bevy_egui"]
 
 [profile.dev.package."*"]
 opt-level = 3

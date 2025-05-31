@@ -3,8 +3,8 @@ use crate::mascot::MascotEntity;
 use bevy::prelude::*;
 use bevy_flurx::action::once;
 use bevy_flurx::prelude::{ActionSeed, Omit};
-use bevy_vrma::vrma::animation::play::PlayVrma;
-use bevy_vrma::vrma::{VrmaEntity, VrmaPath};
+use bevy_vrm1::vrma::animation::play::PlayVrma;
+use bevy_vrm1::vrma::{VrmaEntity, VrmaPath};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Reflect)]
@@ -64,7 +64,7 @@ mod tests {
     use crate::tests::{test_app, TestResult};
     use bevy::ecs::system::RunSystemOnce;
     use bevy::prelude::{Commands, Entity, Query};
-    use bevy_vrma::vrma::VrmaPath;
+    use bevy_vrm1::vrma::VrmaPath;
     use std::path::PathBuf;
 
     #[test]

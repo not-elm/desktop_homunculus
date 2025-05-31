@@ -6,7 +6,7 @@ use crate::mascot::action::transition::{TransitionActionParams, TransitionAction
 use crate::mascot::action::wait_animation::WaitAnimationPlugin;
 use crate::settings::preferences::action::ActionName;
 use bevy::prelude::Vec3;
-use bevy_vrma::vrma::VrmaPath;
+use bevy_vrm1::vrma::VrmaPath;
 use serde::{Deserialize, Serialize};
 use std::ops::Range;
 use std::path::PathBuf;

@@ -5,7 +5,7 @@ use crate::application_windows::setup::ApplicationWindowsSetupPlugin;
 use bevy::app::App;
 use bevy::prelude::*;
 use bevy::render::view::NoFrustumCulling;
-use bevy_vrma::system_param::cameras::Cameras;
+use bevy_vrm1::system_param::cameras::Cameras;
 
 #[derive(Debug, Component, Eq, PartialEq, Copy, Clone, Reflect)]
 #[reflect(Component)]
