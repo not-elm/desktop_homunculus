@@ -12,10 +12,7 @@ pub enum MascotVisibilityState {
 pub struct MascotVisibilityPlugin;
 
 impl Plugin for MascotVisibilityPlugin {
-    fn build(
-        &self,
-        app: &mut App,
-    ) {
+    fn build(&self, app: &mut App) {
         app.init_state::<MascotVisibilityState>()
             .add_systems(OnEnter(MascotVisibilityState::Visible), set_visible::<true>)
             .add_systems(

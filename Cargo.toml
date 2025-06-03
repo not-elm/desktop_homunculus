@@ -22,7 +22,7 @@ bevy = { version = "0.16", features = [
     "serialize",
 ] }
 bevy_webview_wry = { version = "0.4", features = ["api"] }
-bevy_vrm1 = { path = "crates/bevy_vrm1" }
+bevy_vrm1 = { path = "crates/bevy_vrm1", features = ["reflect"] }
 bevy_flurx = { version = "0.11", features = ["side-effect", "state"] }
 serde = { version = "1", features = ["derive"] }
 dirs = "6"

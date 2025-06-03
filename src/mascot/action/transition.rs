@@ -18,10 +18,7 @@ impl TransitionActionPlugin {
 }
 
 impl Plugin for TransitionActionPlugin {
-    fn build(
-        &self,
-        app: &mut App,
-    ) {
+    fn build(&self, app: &mut App) {
         app.add_mascot_action(Self::ID, |mascot, params: TransitionActionParams| {
             once::run(move |mut commands: Commands| {
                 info!("Transition {mascot:?} into {}", params.next);

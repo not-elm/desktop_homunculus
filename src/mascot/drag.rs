@@ -17,10 +17,7 @@ use std::fmt::Debug;
 pub struct MascotDragPlugin;
 
 impl Plugin for MascotDragPlugin {
-    fn build(
-        &self,
-        app: &mut App,
-    ) {
+    fn build(&self, app: &mut App) {
         app.add_systems(Update, on_drag_index.after(RetargetBindingSystemSet));
 
         app.world_mut().register_component_hooks::<Mascot>().on_add(
@@ -61,10 +58,7 @@ fn on_drag_start(
     }
 }
 
-fn not_playing_sit_down(
-    actions: &Query<&ActionName>,
-    mascot_entity: Entity,
-) -> bool {
+fn not_playing_sit_down(actions: &Query<&ActionName>, mascot_entity: Entity) -> bool {
     actions
         .get(mascot_entity)
         .is_ok_and(|action| !action.is_sit_down())

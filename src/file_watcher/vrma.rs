@@ -15,10 +15,7 @@ use std::time::Duration;
 pub struct VrmaFileWatcherPlugin;
 
 impl Plugin for VrmaFileWatcherPlugin {
-    fn build(
-        &self,
-        app: &mut App,
-    ) {
+    fn build(&self, app: &mut App) {
         app.add_event::<LoadVrma>()
             .register_type::<VrmaFolderHandle>()
             .add_systems(PreStartup, start_load_folder)
@@ -41,10 +38,7 @@ struct VrmaFilesWatcher {
 #[derive(Component, Reflect)]
 struct VrmaFolderHandle(Handle<LoadedFolder>);
 
-fn start_load_folder(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-) {
+fn start_load_folder(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn((Loading, VrmaFolderHandle(asset_server.load_folder("vrma"))));
 }
 
@@ -86,10 +80,7 @@ fn start_watching(mut commands: Commands) {
     }
 }
 
-fn receive_events(
-    mut commands: Commands,
-    watchers: Query<&VrmaFilesWatcher>,
-) {
+fn receive_events(mut commands: Commands, watchers: Query<&VrmaFilesWatcher>) {
     let Ok(watcher) = watchers.single() else {
         return;
     };
@@ -155,11 +146,7 @@ fn all_loaded_vrma_path(
         .collect()
 }
 
-fn already_attached(
-    children: Option<&Children>,
-    vrma: &Query<&VrmaPath>,
-    path: &PathBuf,
-) -> bool {
+fn already_attached(children: Option<&Children>, vrma: &Query<&VrmaPath>, path: &PathBuf) -> bool {
     let Some(children) = children else {
         return false;
     };

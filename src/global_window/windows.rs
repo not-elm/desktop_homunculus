@@ -16,10 +16,7 @@ use windows::{
 
 static FOUND_WINDOWS: Mutex<Vec<GlobalWindow>> = Mutex::new(Vec::new());
 
-extern "system" fn enum_windows_proc(
-    hwnd: HWND,
-    _: LPARAM,
-) -> BOOL {
+extern "system" fn enum_windows_proc(hwnd: HWND, _: LPARAM) -> BOOL {
     unsafe {
         let Ok(frame) = obtain_window_rect(hwnd) else {
             return BOOL(1);
@@ -44,10 +41,7 @@ extern "system" fn enum_windows_proc(
     BOOL(1)
 }
 
-fn decode_title(
-    buf: &[u16],
-    len: usize,
-) -> String {
+fn decode_title(buf: &[u16], len: usize) -> String {
     decode_utf16(buf[..len].iter().copied())
         .map(|r| r.unwrap_or(REPLACEMENT_CHARACTER))
         .collect()

@@ -30,11 +30,7 @@ impl Windows<'_, '_> {
             .find(|(_, window, _)| window_to_rect(window).contains(*pos))
     }
 
-    pub fn to_global_pos(
-        &self,
-        window: Entity,
-        local_pos: Vec2,
-    ) -> Option<GlobalScreenPos> {
+    pub fn to_global_pos(&self, window: Entity, local_pos: Vec2) -> Option<GlobalScreenPos> {
         let (_, window, _) = self.windows.get(window).ok()?;
         let WindowPosition::At(position) = window.position else {
             panic!("Unreachable code");
@@ -44,10 +40,7 @@ impl Windows<'_, '_> {
 }
 
 #[inline]
-pub fn window_local_pos(
-    window: &Window,
-    global_screen_pos: GlobalScreenPos,
-) -> Vec2 {
+pub fn window_local_pos(window: &Window, global_screen_pos: GlobalScreenPos) -> Vec2 {
     let WindowPosition::At(position) = window.position else {
         panic!("Unreachable code");
     };

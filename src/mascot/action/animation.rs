@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use bevy_flurx::action::once;
 use bevy_flurx::prelude::{ActionSeed, Omit};
 use bevy_vrm1::vrma::animation::play::PlayVrma;
-use bevy_vrm1::vrma::{VrmaEntity, VrmaPath};
+use bevy_vrm1::vrma::VrmaPath;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, Reflect)]
@@ -21,30 +21,23 @@ impl AnimationActionPlugin {
 }
 
 impl Plugin for AnimationActionPlugin {
-    fn build(
-        &self,
-        app: &mut App,
-    ) {
+    fn build(&self, app: &mut App) {
         app.add_mascot_action(Self::ID, vrma_animation_action);
     }
 }
 
-fn vrma_animation_action(
-    mascot: MascotEntity,
-    params: AnimationActionParams,
-) -> ActionSeed {
-    once::run(vrma_animation).with((mascot, params)).omit()
+fn vrma_animation_action(_: MascotEntity, params: AnimationActionParams) -> ActionSeed {
+    once::run(vrma_animation).with(params).omit()
 }
 
 fn vrma_animation(
-    In((mascot, params)): In<(MascotEntity, AnimationActionParams)>,
+    In(params): In<AnimationActionParams>,
     mut commands: Commands,
     vrma: Query<(Entity, &VrmaPath)>,
 ) {
     if let Some(vrma_entity) = find_vrma_from_path_buff(&params.vrma_path, vrma) {
         info!("Play VRMA({:?}) repeat={}", params.vrma_path, params.repeat);
-        commands.entity(mascot.0).trigger(PlayVrma {
-            vrma: VrmaEntity(vrma_entity),
+        commands.entity(vrma_entity).trigger(PlayVrma {
             repeat: params.repeat,
         });
     }

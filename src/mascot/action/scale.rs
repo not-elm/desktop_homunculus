@@ -18,10 +18,7 @@ impl ScaleActionPlugin {
 }
 
 impl Plugin for ScaleActionPlugin {
-    fn build(
-        &self,
-        app: &mut App,
-    ) {
+    fn build(&self, app: &mut App) {
         app.add_mascot_action(Self::ID, |mascot, params: ScaleActionParams| {
             once::run(scale).with((mascot, params.scale)).omit()
         });

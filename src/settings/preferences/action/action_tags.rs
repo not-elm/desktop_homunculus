@@ -7,10 +7,7 @@ use serde::{Deserialize, Serialize};
 pub struct ActionTags(pub Vec<String>);
 
 impl ActionTags {
-    pub fn contains(
-        &self,
-        tag: &str,
-    ) -> bool {
+    pub fn contains(&self, tag: &str) -> bool {
         self.0.contains(&tag.to_string())
     }
 }

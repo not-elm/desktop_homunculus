@@ -19,10 +19,7 @@ impl RangeTimerActionPlugin {
 }
 
 impl Plugin for RangeTimerActionPlugin {
-    fn build(
-        &self,
-        app: &mut bevy::app::App,
-    ) {
+    fn build(&self, app: &mut bevy::app::App) {
         app.add_mascot_action(Self::ID, |_, params: RangeTimerActionParams| {
             let time = rand::random_range(params.min_sec..=params.max_sec);
             info!("Range Timer wait for {} seconds", time);

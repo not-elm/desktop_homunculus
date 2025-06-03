@@ -32,10 +32,7 @@ struct MascotGltfHandle(Option<Handle<Gltf>>);
 pub struct DesktopMascotPlugin;
 
 impl Plugin for DesktopMascotPlugin {
-    fn build(
-        &self,
-        app: &mut App,
-    ) {
+    fn build(&self, app: &mut App) {
         app.register_type::<Mascot>()
             .register_type::<MascotEntity>()
             .add_plugins((

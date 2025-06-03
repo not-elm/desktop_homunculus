@@ -15,10 +15,7 @@ use std::path::PathBuf;
 pub struct AppSettingsSavePlugin;
 
 impl Plugin for AppSettingsSavePlugin {
-    fn build(
-        &self,
-        app: &mut bevy::app::App,
-    ) {
+    fn build(&self, app: &mut bevy::app::App) {
         app.add_systems(
             PostUpdate,
             (
@@ -67,7 +64,7 @@ fn save_mascot_locations(
         mascot_locations_json_path(),
         serde_json::to_string(&locations).unwrap(),
     )
-        .output_log_if_error("Save");
+    .output_log_if_error("Save");
 }
 
 fn save_actions(actions: Res<ActionPreferences>) {

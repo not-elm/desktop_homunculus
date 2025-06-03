@@ -3,7 +3,7 @@ use crate::mascot::MascotEntity;
 use bevy::prelude::*;
 use bevy_flurx::action::wait;
 use bevy_flurx::prelude::Omit;
-use bevy_vrm1::vrma::animation::AnimationPlayerEntityTo;
+use bevy_vrm1::vrma::animation::VrmaAnimationPlayers;
 
 pub struct WaitAnimationPlugin;
 
@@ -12,10 +12,7 @@ impl WaitAnimationPlugin {
 }
 
 impl Plugin for WaitAnimationPlugin {
-    fn build(
-        &self,
-        app: &mut App,
-    ) {
+    fn build(&self, app: &mut App) {
         app.add_mascot_action(Self::ID, |mascot, _: ()| {
             wait::until(all_animation_finished).with(mascot).omit()
         });
@@ -25,14 +22,14 @@ impl Plugin for WaitAnimationPlugin {
 fn all_animation_finished(
     In(mascot): In<MascotEntity>,
     children: Query<&Children>,
-    vrma: Query<&AnimationPlayerEntityTo>,
+    vrma: Query<&VrmaAnimationPlayers>,
     player: Query<&AnimationPlayer>,
 ) -> bool {
     children.get(mascot.0).is_ok_and(|children| {
         children
             .iter()
             .filter_map(|c| vrma.get(c).ok())
-            .filter_map(|p| player.get(p.0).ok())
+            .flat_map(|players| players.iter().flat_map(|p| player.get(*p).ok()))
             .all(|p| p.all_finished())
     })
 }

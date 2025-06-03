@@ -13,6 +13,7 @@ use bevy::asset::{Assets, Handle, LoadedFolder};
 use bevy::log::error;
 use bevy::prelude::*;
 use bevy::render::camera::NormalizedRenderTarget;
+use bevy_vrm1::prelude::LookAt;
 use bevy_vrm1::system_param::cameras::Cameras;
 use bevy_vrm1::vrm::loader::VrmHandle;
 use bevy_vrm1::vrm::VrmPath;
@@ -23,10 +24,7 @@ use std::time::Duration;
 pub struct VrmFileWatcherPlugin;
 
 impl Plugin for VrmFileWatcherPlugin {
-    fn build(
-        &self,
-        app: &mut App,
-    ) {
+    fn build(&self, app: &mut App) {
         app.register_type::<VrmFolderHandle>()
             .add_event::<RequestLoadVrm>()
             .add_systems(
@@ -56,10 +54,7 @@ struct VrmFolderHandle(Handle<LoadedFolder>);
 #[derive(Event)]
 struct RequestLoadVrm;
 
-fn start_load_models_folder(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-) {
+fn start_load_models_folder(mut commands: Commands, asset_server: Res<AssetServer>) {
     remove_mystery_file_if_exists(&models_dir());
     commands.spawn((Loading, VrmFolderHandle(asset_server.load_folder("models"))));
 }
@@ -110,6 +105,7 @@ fn load_models(
                 ActionName::idle(),
                 locations.load_transform(asset_path.path(), &coordinate),
                 VrmHandle(asset_server.load(asset_path)),
+                LookAt::Cursor { camera: None },
                 cameras.all_layers(),
             ))
             .observe(enable_hit_test)
@@ -118,10 +114,7 @@ fn load_models(
     }
 }
 
-fn enable_hit_test(
-    trigger: Trigger<Pointer<Over>>,
-    mut commands: Commands,
-) {
+fn enable_hit_test(trigger: Trigger<Pointer<Over>>, mut commands: Commands) {
     if let NormalizedRenderTarget::Window(window) = trigger.pointer_location.target {
         commands.trigger(UpdatedHitTest {
             window: window.entity(),
@@ -130,10 +123,7 @@ fn enable_hit_test(
     }
 }
 
-fn disable_hit_test(
-    trigger: Trigger<Pointer<Out>>,
-    mut commands: Commands,
-) {
+fn disable_hit_test(trigger: Trigger<Pointer<Out>>, mut commands: Commands) {
     if let NormalizedRenderTarget::Window(window) = trigger.pointer_location.target {
         commands.trigger(UpdatedHitTest {
             window: window.entity(),
@@ -176,6 +166,7 @@ fn receive_events(
             commands.spawn((
                 mascot_preferences.load_transform(&relative_path, &coordinate),
                 VrmHandle(asset_server.load(models_dir().join(path))),
+                LookAt::Cursor { camera: None },
             ));
         }
     }

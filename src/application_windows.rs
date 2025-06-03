@@ -18,10 +18,7 @@ pub struct PrimaryCamera;
 pub struct ApplicationWindowsPlugin;
 
 impl Plugin for ApplicationWindowsPlugin {
-    fn build(
-        &self,
-        app: &mut App,
-    ) {
+    fn build(&self, app: &mut App) {
         app.register_type::<PrimaryCamera>()
             .add_plugins((
                 ApplicationWindowsSetupPlugin,

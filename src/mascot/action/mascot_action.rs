@@ -18,20 +18,14 @@ pub struct MascotAction {
 }
 
 impl MascotAction {
-    pub fn new<P: Serialize>(
-        id: impl Into<String>,
-        params: P,
-    ) -> MascotAction {
+    pub fn new<P: Serialize>(id: impl Into<String>, params: P) -> MascotAction {
         MascotAction {
             id: id.into(),
             params: serde_json::to_string(&params).unwrap(),
         }
     }
 
-    pub fn animation(
-        vrma_name: &str,
-        repeat: bool,
-    ) -> Self {
+    pub fn animation(vrma_name: &str, repeat: bool) -> Self {
         Self::new(
             AnimationActionPlugin::ID,
             AnimationActionParams {

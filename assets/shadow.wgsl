@@ -1,7 +1,7 @@
 #import bevy_pbr::{
     pbr_types,
     pbr_bindings,
-    mesh_view_bindings::view,
+    mesh_view_bindings::{view, lights},
     mesh_view_types,
     lighting,
     lighting::{LAYER_BASE, LAYER_CLEARCOAT},
@@ -30,8 +30,5 @@ fn fragment(
             view.view_from_world[3].z
         ), in.world_position);
     let shadow = apply_pbr_lighting(in);
-    if(0.99 < shadow.r && 0.99 < shadow.g && 0.99 < shadow.b) {
-        discard;
-    }
-    return vec4(vec3(0.), 0.4);
+    return vec4(vec3(0.), 1. - shadows::fetch_directional_shadow(0, in.world_position, in.world_normal, view_z));
 }

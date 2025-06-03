@@ -40,10 +40,7 @@ impl ActionPreferences {
 
     //TODO: cleanup
     #[allow(unused)]
-    pub fn cleanup(
-        &mut self,
-        exists_actions: &[ActionName],
-    ) {
+    pub fn cleanup(&mut self, exists_actions: &[ActionName]) {
         self.0 = self
             .0
             .iter()
@@ -53,19 +50,11 @@ impl ActionPreferences {
 
     //TODO: register_if_not_exists
     #[allow(unused)]
-    pub fn register_if_not_exists(
-        &mut self,
-        name: ActionName,
-        action: ActionProperties,
-    ) {
+    pub fn register_if_not_exists(&mut self, name: ActionName, action: ActionProperties) {
         self.0.entry(name).or_insert(action);
     }
 
-    pub fn update(
-        &mut self,
-        name: ActionName,
-        properties: ActionProperties,
-    ) {
+    pub fn update(&mut self, name: ActionName, properties: ActionProperties) {
         self.0.entry(name).insert(properties);
     }
 }
@@ -97,11 +86,7 @@ impl Default for ActionPreferences {
     }
 }
 
-fn simple_animation(
-    tag: &str,
-    vrma_name: &str,
-    next: ActionName,
-) -> ActionProperties {
+fn simple_animation(tag: &str, vrma_name: &str, next: ActionName) -> ActionProperties {
     ActionProperties {
         tags: vec![tag].into(),
         actions: vec![

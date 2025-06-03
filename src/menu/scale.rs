@@ -8,12 +8,8 @@ use serde::Deserialize;
 pub struct MenuScalePlugin;
 
 impl Plugin for MenuScalePlugin {
-    fn build(
-        &self,
-        app: &mut App,
-    ) {
-        app
-            .add_ipc_trigger::<ChangeScale>("scale")
+    fn build(&self, app: &mut App) {
+        app.add_ipc_trigger::<ChangeScale>("scale")
             .add_observer(apply_change_scale);
     }
 }

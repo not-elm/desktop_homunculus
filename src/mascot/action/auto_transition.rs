@@ -14,10 +14,7 @@ impl AutoTransitionPlugin {
 }
 
 impl Plugin for AutoTransitionPlugin {
-    fn build(
-        &self,
-        app: &mut App,
-    ) {
+    fn build(&self, app: &mut App) {
         app.add_mascot_action(Self::ID, |mascot, _: ()| {
             once::run(auto_transition).with(mascot).omit()
         });

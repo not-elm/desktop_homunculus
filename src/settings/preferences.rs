@@ -12,11 +12,7 @@ use std::path::{Path, PathBuf};
 pub struct MascotLocationPreferences(pub HashMap<PathBuf, MascotLocation>);
 
 impl MascotLocationPreferences {
-    pub fn load_transform(
-        &self,
-        path: &Path,
-        coordinate: &Coordinate,
-    ) -> Transform {
+    pub fn load_transform(&self, path: &Path, coordinate: &Coordinate) -> Transform {
         match self.try_load_transform(path, coordinate) {
             Some(transform) => transform,
             None => {
@@ -29,11 +25,7 @@ impl MascotLocationPreferences {
         }
     }
 
-    fn try_load_transform(
-        &self,
-        path: &Path,
-        coordinate: &Coordinate,
-    ) -> Option<Transform> {
+    fn try_load_transform(&self, path: &Path, coordinate: &Coordinate) -> Option<Transform> {
         let location = self.0.get(path)?;
         let world_pos =
             coordinate.mascot_position(location.viewport_pos, &location.monitor_name)?;

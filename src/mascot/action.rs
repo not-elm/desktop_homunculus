@@ -17,8 +17,8 @@ use crate::mascot::{Mascot, MascotEntity};
 use crate::settings::preferences::action::{ActionName, ActionPreferences};
 use bevy::app::{App, Update};
 use bevy::prelude::{
-    Changed, Commands, Entity, Event, EventWriter, In, ParallelCommands, Plugin,
-    Query, Res, Trigger, With,
+    Changed, Commands, Entity, Event, EventWriter, In, ParallelCommands, Plugin, Query, Res,
+    Trigger, With,
 };
 use bevy_flurx::action::{once, wait};
 use bevy_flurx::prelude::*;
@@ -39,12 +39,8 @@ struct ActionDone {
 pub struct MascotActionPlugin;
 
 impl Plugin for MascotActionPlugin {
-    fn build(
-        &self,
-        app: &mut App,
-    ) {
-        app
-            .add_event::<ActionDone>()
+    fn build(&self, app: &mut App) {
+        app.add_event::<ActionDone>()
             .add_plugins((
                 AnimationActionPlugin,
                 TransitionActionPlugin,
@@ -73,13 +69,19 @@ fn transition_actions(
             commands.entity(mascot.0).insert(properties.tags);
             commands.spawn(Reactor::schedule(move |task| async move {
                 for action in properties.actions {
-                    let canceled = task.will(Update, wait::either(
-                        wait::until(detect_change_action_name)
-                            .with((mascot, action_name.clone())),
-                        once::run(emit_action)
-                            .with((mascot, action))
-                            .then(wait::event::comes_and::<ActionDone>(move |e| e.mascot == mascot)),
-                    ))
+                    let canceled = task
+                        .will(
+                            Update,
+                            wait::either(
+                                wait::until(detect_change_action_name)
+                                    .with((mascot, action_name.clone())),
+                                once::run(emit_action).with((mascot, action)).then(
+                                    wait::event::comes_and::<ActionDone>(move |e| {
+                                        e.mascot == mascot
+                                    }),
+                                ),
+                            ),
+                        )
                         .await
                         .is_left();
                     if canceled {
@@ -98,10 +100,7 @@ fn detect_change_action_name(
     mascots.get(mascot.0).is_ok_and(|n| n != &current_name)
 }
 
-fn emit_action(
-    In((mascot, params)): In<(MascotEntity, MascotAction)>,
-    mut commands: Commands,
-) {
+fn emit_action(In((mascot, params)): In<(MascotEntity, MascotAction)>, mut commands: Commands) {
     commands.trigger(RequestAction {
         mascot,
         action: params,
@@ -140,7 +139,7 @@ impl MascotActionExt for App {
                             ew.write(ActionDone { mascot });
                         }),
                     )
-                        .await;
+                    .await;
                 }));
             },
         );
@@ -163,7 +162,7 @@ mod tests {
     fn test_transition_actions() -> TestResult {
         let mut app = test_app();
         app.add_plugins(MascotActionPlugin);
-        
+
         let mut preference = ActionPreferences::default();
         preference.register_if_not_exists(
             ActionName::drop(),
@@ -172,12 +171,16 @@ mod tests {
                 ..default()
             },
         );
-        app.add_systems(Update, (
-            |mut commands: Commands| {
-                commands.spawn((Mascot, ActionName::drop()));
-            },
-            transition_actions,
-        ).chain());
+        app.add_systems(
+            Update,
+            (
+                |mut commands: Commands| {
+                    commands.spawn((Mascot, ActionName::drop()));
+                },
+                transition_actions,
+            )
+                .chain(),
+        );
         app.insert_resource(preference);
         app.update();
 

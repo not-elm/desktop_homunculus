@@ -1,27 +1,26 @@
 use crate::application_windows::{PrimaryCamera, TargetMonitor};
-use bevy::ecs::system::SystemParamItem;
 use bevy::pbr::{ExtendedMaterial, MaterialExtension};
 use bevy::prelude::*;
 use bevy::render::camera::{RenderTarget, ScalingMode, Viewport};
-use bevy::render::render_resource::{AsBindGroup, AsBindGroupError, BindGroupLayout, BindGroupLayoutEntry, ShaderRef, UnpreparedBindGroup};
-use bevy::render::renderer::RenderDevice;
+use bevy::render::render_resource::{
+    AsBindGroup, ShaderRef,
+};
 use bevy::render::view::RenderLayers;
 use bevy::window::{
     CursorOptions, Monitor, PrimaryMonitor, PrimaryWindow, WindowLevel, WindowMode, WindowRef,
     WindowResolution,
 };
 use bevy::winit::WinitWindows;
+use bevy_vrm1::system_param::cameras::Cameras;
 use serde::{Deserialize, Serialize};
 
 pub struct ApplicationWindowsSetupPlugin;
 
 impl Plugin for ApplicationWindowsSetupPlugin {
-    fn build(
-        &self,
-        app: &mut App,
-    ) {
-        app
-            .add_plugins(MaterialPlugin::<ExtendedMaterial<StandardMaterial, WallMaterial>>::default())
+    fn build(&self, app: &mut App) {
+        app.add_plugins(MaterialPlugin::<
+            ExtendedMaterial<StandardMaterial, WallMaterial>,
+        >::default())
             .register_type::<UninitializedCamera>()
             .register_type::<DefaultPrimaryWindow>()
             .register_type::<TargetMonitor>()
@@ -29,15 +28,27 @@ impl Plugin for ApplicationWindowsSetupPlugin {
                 PreStartup,
                 (mark_default_window, setup_windows, despawn_default_window).chain(),
             )
-            .add_systems(Startup, spawn_wall)
+            .add_systems(Startup, (spawn_directional_light, spawn_wall))
             .add_systems(Update, initialize_camera_position);
     }
+}
+
+fn spawn_directional_light(mut commands: Commands, cameras: Cameras) {
+    commands.spawn((
+        DirectionalLight {
+            shadows_enabled: true,
+            ..default()
+        },
+        Transform::from_rotation(Quat::from_array([-0.1, 0.1, 0., 1.])),
+        cameras.all_layers(),
+    ));
 }
 
 fn spawn_wall(
     mut commands: Commands,
     mut materials: ResMut<Assets<ExtendedMaterial<StandardMaterial, WallMaterial>>>,
     mut meshes: ResMut<Assets<Mesh>>,
+    cameras: Cameras,
 ) {
     commands.spawn((
         Name::new("Wall"),
@@ -45,11 +56,14 @@ fn spawn_wall(
         MeshMaterial3d(materials.add(ExtendedMaterial {
             base: StandardMaterial {
                 unlit: false,
+                alpha_mode: AlphaMode::Mask(0.3),
+                base_color: Color::NONE,
                 ..default()
             },
             extension: WallMaterial {},
         })),
         Transform::from_xyz(0., 0., -1.),
+        cameras.all_layers(),
     ));
 }
 
@@ -63,10 +77,7 @@ struct UninitializedCamera;
 #[reflect(Component, Serialize, Deserialize)]
 struct DefaultPrimaryWindow;
 
-fn mark_default_window(
-    mut commands: Commands,
-    default_window: Query<Entity, With<PrimaryWindow>>,
-) {
+fn mark_default_window(mut commands: Commands, default_window: Query<Entity, With<PrimaryWindow>>) {
     commands
         .entity(default_window.single().unwrap())
         .insert(DefaultPrimaryWindow);
@@ -93,12 +104,6 @@ fn setup_windows(
         .unwrap_or(1.);
     for (layer, (monitor_entity, monitor, primary)) in monitors.iter().enumerate() {
         let mut window = create_window(monitor.physical_size().as_vec2());
-        debug!(
-            "Monitor({:?}) {:?}",
-            monitor.physical_position,
-            monitor.physical_size()
-        );
-
         window
             .position
             .set((monitor.physical_position.as_vec2() * current_monitor_scale_factor).as_ivec2());
@@ -116,7 +121,7 @@ fn setup_windows(
         commands
             .entity(monitor_entity)
             .insert(RenderLayers::layer(layer));
-        spawn_directional_light(layer, &mut commands);
+
         spawn_camera(
             &mut commands,
             window_entity,
@@ -129,20 +134,6 @@ fn setup_windows(
             commands.entity(window_entity).insert(PrimaryWindow);
         }
     }
-}
-
-fn spawn_directional_light(
-    layer: usize,
-    commands: &mut Commands,
-) {
-    commands.spawn((
-        DirectionalLight {
-            shadows_enabled: true,
-            ..default()
-        },
-        Transform::from_xyz(0.5, 0.2, 1.).looking_at(Vec3::ZERO, Vec3::Y),
-        RenderLayers::layer(layer),
-    ));
 }
 
 fn spawn_camera(
@@ -197,6 +188,7 @@ fn initialize_camera_position(
             .viewport_to_world_2d(gtf, center + pos)
             .unwrap_or_default()
             .extend(4.5);
+
         commands
             .entity(entity)
             .insert(Transform::from_translation(camera_pos))
@@ -232,5 +224,9 @@ struct WallMaterial {}
 impl MaterialExtension for WallMaterial {
     fn fragment_shader() -> ShaderRef {
         "shadow.wgsl".into()
+    }
+
+    fn alpha_mode() -> Option<AlphaMode> {
+        Some(AlphaMode::Mask(0.3))
     }
 }

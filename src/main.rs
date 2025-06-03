@@ -26,7 +26,7 @@ use bevy::app::{App, PluginGroup};
 use bevy::color::Color;
 use bevy::log::tracing_subscriber::Layer;
 use bevy::log::{BoxedLayer, LogPlugin};
-use bevy::prelude::{default, ClearColor, Component, MeshPickingPlugin, Window};
+use bevy::prelude::{default, ClearColor, MeshPickingPlugin, Window};
 use bevy::render::settings::{RenderCreation, WgpuSettings};
 use bevy::render::RenderPlugin;
 use bevy::window::{ExitCondition, WindowPlugin, WindowResolution};
@@ -78,23 +78,25 @@ fn main() {
         },
         MeshPickingPlugin,
         #[cfg(feature = "develop")]
-        bevy_egui::EguiPlugin { enable_multipass_for_primary_context: true },
+        bevy_egui::EguiPlugin {
+            enable_multipass_for_primary_context: true,
+        },
         #[cfg(feature = "develop")]
         bevy_inspector_egui::quick::WorldInspectorPlugin::default(),
     ))
-        .add_plugins((AllDialogPlugins, AllLogPlugins, AppExitApiPlugin))
-        .add_plugins((
-            MenuPlugin,
-            DesktopMascotPlugin,
-            PowerStatePlugin,
-            VrmPlugin,
-            VrmaPlugin,
-            ApplicationWindowsPlugin,
-            AppSettingsPlugin,
-            FileWatcherPlugin,
-        ))
-        .insert_resource(ClearColor(Color::NONE))
-        .run();
+    .add_plugins((AllDialogPlugins, AllLogPlugins, AppExitApiPlugin))
+    .add_plugins((
+        MenuPlugin,
+        DesktopMascotPlugin,
+        PowerStatePlugin,
+        VrmPlugin,
+        VrmaPlugin,
+        ApplicationWindowsPlugin,
+        AppSettingsPlugin,
+        FileWatcherPlugin,
+    ))
+    .insert_resource(ClearColor(Color::NONE))
+    .run();
 }
 
 fn custom_layer(_app: &mut App) -> Option<BoxedLayer> {
