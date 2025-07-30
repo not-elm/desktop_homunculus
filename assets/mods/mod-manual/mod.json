@@ -9,7 +9,7 @@
       "thumbnail": "mod-manual/icon.png",
       "text": "MOD Manual",
       "webview": {
-        "source": "https://not-elm.github.io/desktop_homunculus/mod-manual/",
+        "source": "https://not-elm.github.io/desktop_homunculus/",
         "resolution": [
           1280,
           720
