@@ -39,6 +39,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - name: Remove build script
         run: |
           rm build.rs
@@ -89,6 +91,8 @@ jobs:
 #    steps:
 #      - name: Checkout repository
 #        uses: actions/checkout@v4
+#        with:
+#          submodules: recursive
 #      - name: Install rust toolchain
 #        uses: dtolnay/rust-toolchain@master
 #        with:
