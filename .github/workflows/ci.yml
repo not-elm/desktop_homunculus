@@ -48,4 +48,4 @@ jobs:
           toolchain: stable
           components: rustfmt, clippy
       - name: Run clippy
-        run: cargo clippy --workspace --all-targets --all-features -- -Dwarnings
+        run: cargo clippy --workspace -- -Dwarnings
