@@ -6,6 +6,10 @@ Bring your desktop to life with intelligent 3D VRM characters that can chat, rea
 Desktop Homunculus transforms your computer into an interactive companion experience powered by cutting-edge web
 technologies and AI integration.
 
+
+https://github.com/user-attachments/assets/7ff08d8b-845a-4199-baff-6abc49081b68
+
+
 <img src="./assets/icons/icon.png" width="300" alt="Desktop Homunculus Icon">
 
 > > [!CAUTION]
