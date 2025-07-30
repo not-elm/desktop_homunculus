@@ -1,19 +1,14 @@
 # Desktop Homunculus 🧬
 
+<img src="./assets/icons/icon.png" width="200" alt="Desktop Homunculus Icon">
+
 **A Cross-Platform Desktop Pet Application with AI-Powered Characters**
 
 Bring your desktop to life with intelligent 3D VRM characters that can chat, react, and evolve alongside your workflow.
 Desktop Homunculus transforms your computer into an interactive companion experience powered by cutting-edge web
 technologies and AI integration.
 
-
 https://github.com/user-attachments/assets/7ff08d8b-845a-4199-baff-6abc49081b68
-
-
-<img src="./assets/icons/icon.png" width="300" alt="Desktop Homunculus Icon">
-
-> > [!CAUTION]
-> This application is in active development and may undergo breaking changes.
 
 Transition smoothly to drag animations.
 
