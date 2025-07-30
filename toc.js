@@ -1,0 +1,70 @@
+// Populate the sidebar
+//
+// This is a script, and not included directly in the page, to control the total size of the book.
+// The TOC contains an entry for each page, so if each page includes a copy of the TOC,
+// the total size of the page becomes O(n**2).
+class MDBookSidebarScrollbox extends HTMLElement {
+    constructor() {
+        super();
+    }
+    connectedCallback() {
+        this.innerHTML = '<ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">Getting Started</li><li class="chapter-item expanded "><a href="what-is-mod.html"><strong aria-hidden="true">1.</strong> What is MOD?</a></li><li class="chapter-item expanded "><a href="mod-creation/index.html"><strong aria-hidden="true">2.</strong> MOD Creation Guide</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="mod-creation/directory-structure.html"><strong aria-hidden="true">2.1.</strong> Directory Structure</a></li><li class="chapter-item expanded "><a href="mod-creation/mod-json.html"><strong aria-hidden="true">2.2.</strong> Configuration File (mod.json)</a></li><li class="chapter-item expanded "><a href="mod-creation/menus.html"><strong aria-hidden="true">2.3.</strong> Menus Configuration</a></li><li class="chapter-item expanded "><a href="mod-creation/system-menus.html"><strong aria-hidden="true">2.4.</strong> System Menus Configuration</a></li><li class="chapter-item expanded "><a href="mod-creation/startup-scripts.html"><strong aria-hidden="true">2.5.</strong> Startup Scripts</a></li></ol></li><li class="chapter-item expanded "><li class="part-title">Asset Preparation</li><li class="chapter-item expanded "><a href="asset-preparation/how-to-convert-vrm0-to-vrm1.html"><strong aria-hidden="true">3.</strong> How to Convert VRM0.X to VRM1.0</a></li><li class="chapter-item expanded "><a href="asset-preparation/how-to-create-vrma.html"><strong aria-hidden="true">4.</strong> How to create VRMA</a></li><li class="chapter-item expanded affix "><li class="part-title">HTTP Communication</li><li class="chapter-item expanded "><a href="openapi/index.html"><strong aria-hidden="true">5.</strong> OpenAPI</a></li><li class="chapter-item expanded affix "><li class="part-title">TypeScript SDK Reference</li><li class="chapter-item expanded "><a href="sdk/index.html"><strong aria-hidden="true">6.</strong> SDK Overview</a></li><li class="chapter-item expanded "><a href="sdk/entities/index.html"><strong aria-hidden="true">7.</strong> Entities</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="sdk/entities/find-by-name.html"><strong aria-hidden="true">7.1.</strong> Finding Entities</a></li><li class="chapter-item expanded "><a href="sdk/entities/name.html"><strong aria-hidden="true">7.2.</strong> Getting Entity Names</a></li><li class="chapter-item expanded "><a href="sdk/entities/transform.html"><strong aria-hidden="true">7.3.</strong> Transform Management</a></li></ol></li><li class="chapter-item expanded "><a href="sdk/cameras/index.html"><strong aria-hidden="true">8.</strong> Camera Utilities</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="sdk/cameras/world-2d.html"><strong aria-hidden="true">8.1.</strong> Coordinate Conversion</a></li><li class="chapter-item expanded "><a href="sdk/cameras/global-viewport.html"><strong aria-hidden="true">8.2.</strong> World to Viewport</a></li></ol></li><li class="chapter-item expanded "><a href="sdk/vrm/index.html"><strong aria-hidden="true">9.</strong> VRM Management</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="sdk/vrm/spawn.html"><strong aria-hidden="true">9.1.</strong> Spawning VRMs</a></li><li class="chapter-item expanded "><a href="sdk/vrm/find-by-name.html"><strong aria-hidden="true">9.2.</strong> Finding VRMs</a></li><li class="chapter-item expanded "><a href="sdk/vrm/find-bone.html"><strong aria-hidden="true">9.3.</strong> Bone Entities</a></li><li class="chapter-item expanded "><a href="sdk/vrm/events.html"><strong aria-hidden="true">9.4.</strong> VRM Events</a></li><li class="chapter-item expanded "><a href="sdk/vrm/state.html"><strong aria-hidden="true">9.5.</strong> VRM State</a></li><li class="chapter-item expanded "><a href="sdk/vrm/speak-on-voicevox.html"><strong aria-hidden="true">9.6.</strong> Speech Synthesis</a></li><li class="chapter-item expanded "><a href="sdk/vrm/vrma.html"><strong aria-hidden="true">9.7.</strong> Animations (VRMA)</a></li></ol></li><li class="chapter-item expanded "><a href="sdk/vrma/index.html"><strong aria-hidden="true">10.</strong> VRM Animations</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="sdk/vrma/play.html"><strong aria-hidden="true">10.1.</strong> Playing Animations</a></li><li class="chapter-item expanded "><a href="sdk/vrma/stop.html"><strong aria-hidden="true">10.2.</strong> Stopping Animations</a></li></ol></li><li class="chapter-item expanded "><a href="sdk/gpt/index.html"><strong aria-hidden="true">11.</strong> ChatGPT</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="sdk/gpt/chat.html"><strong aria-hidden="true">11.1.</strong> Chat Functionality</a></li><li class="chapter-item expanded "><a href="sdk/gpt/model.html"><strong aria-hidden="true">11.2.</strong> Model Management</a></li><li class="chapter-item expanded "><a href="sdk/gpt/system-prompt.html"><strong aria-hidden="true">11.3.</strong> System Prompts</a></li><li class="chapter-item expanded "><a href="sdk/gpt/web-search.html"><strong aria-hidden="true">11.4.</strong> Web Search</a></li><li class="chapter-item expanded "><a href="sdk/gpt/voicevox-speaker.html"><strong aria-hidden="true">11.5.</strong> Voicevox Speaker</a></li></ol></li><li class="chapter-item expanded "><a href="sdk/webviews/index.html"><strong aria-hidden="true">12.</strong> Webview Management</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="sdk/webviews/open.html"><strong aria-hidden="true">12.1.</strong> Opening Webviews</a></li><li class="chapter-item expanded "><a href="sdk/webviews/close.html"><strong aria-hidden="true">12.2.</strong> Closing Webviews</a></li><li class="chapter-item expanded "><a href="sdk/webviews/is-closed.html"><strong aria-hidden="true">12.3.</strong> Checking Closed</a></li></ol></li><li class="chapter-item expanded "><a href="sdk/effects/index.html"><strong aria-hidden="true">13.</strong> Effects System</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="sdk/effects/sound.html"><strong aria-hidden="true">13.1.</strong> Sound Effects</a></li><li class="chapter-item expanded "><a href="sdk/effects/stamp.html"><strong aria-hidden="true">13.2.</strong> Stamp Effects</a></li></ol></li><li class="chapter-item expanded "><a href="sdk/commands/index.html"><strong aria-hidden="true">14.</strong> Commands System</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="sdk/commands/stream.html"><strong aria-hidden="true">14.1.</strong> Streaming Commands</a></li><li class="chapter-item expanded "><a href="sdk/commands/send.html"><strong aria-hidden="true">14.2.</strong> Sending Commands</a></li></ol></li><li class="chapter-item expanded "><a href="sdk/displays/index.html"><strong aria-hidden="true">15.</strong> Display Management</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="sdk/displays/find-all.html"><strong aria-hidden="true">15.1.</strong> Find All Displays</a></li></ol></li><li class="chapter-item expanded "><a href="sdk/preferences/index.html"><strong aria-hidden="true">16.</strong> Preferences</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="sdk/preferences/load.html"><strong aria-hidden="true">16.1.</strong> Loading Preferences</a></li><li class="chapter-item expanded "><a href="sdk/preferences/save.html"><strong aria-hidden="true">16.2.</strong> Saving Preferences</a></li><li class="chapter-item expanded "><a href="sdk/preferences/vrm-transform.html"><strong aria-hidden="true">16.3.</strong> VRM Transform Persistence</a></li></ol></li><li class="chapter-item expanded "><a href="sdk/settings/index.html"><strong aria-hidden="true">17.</strong> Settings</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="sdk/settings/fps-limit.html"><strong aria-hidden="true">17.1.</strong> FPS Management</a></li></ol></li><li class="chapter-item expanded "><a href="sdk/scripts/index.html"><strong aria-hidden="true">18.</strong> Scripts Execution</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="sdk/scripts/call-javascript.html"><strong aria-hidden="true">18.1.</strong> JavaScript Execution</a></li></ol></li><li class="chapter-item expanded "><a href="sdk/shadow-panel/index.html"><strong aria-hidden="true">19.</strong> Shadow Panel</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="sdk/shadow-panel/alpha.html"><strong aria-hidden="true">19.1.</strong> Alpha Control</a></li></ol></li><li class="chapter-item expanded "><a href="sdk/mods/index.html"><strong aria-hidden="true">20.</strong> MOD Metadata</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="sdk/mods/menus.html"><strong aria-hidden="true">20.1.</strong> Menus</a></li></ol></li><li class="chapter-item expanded "><a href="sdk/math/index.html"><strong aria-hidden="true">21.</strong> Math Types</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="sdk/math/transform.html"><strong aria-hidden="true">21.1.</strong> Transform</a></li><li class="chapter-item expanded "><a href="sdk/math/vec2.html"><strong aria-hidden="true">21.2.</strong> Vec2</a></li><li class="chapter-item expanded "><a href="sdk/math/vec3.html"><strong aria-hidden="true">21.3.</strong> Vec3</a></li><li class="chapter-item expanded "><a href="sdk/math/rect.html"><strong aria-hidden="true">21.4.</strong> Rect</a></li></ol></li><li class="chapter-item expanded "><a href="sdk/utilities/index.html"><strong aria-hidden="true">22.</strong> Utilities</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="sdk/utilities/sleep.html"><strong aria-hidden="true">22.1.</strong> Sleep Function</a></li><li class="chapter-item expanded "><a href="sdk/utilities/runtime.html"><strong aria-hidden="true">22.2.</strong> Runtime Detection</a></li></ol></li><li class="chapter-item expanded "><a href="sdk/host/index.html"><strong aria-hidden="true">23.</strong> Host Communication</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="sdk/host/create-url.html"><strong aria-hidden="true">23.1.</strong> URL Creation</a></li><li class="chapter-item expanded "><a href="sdk/host/get.html"><strong aria-hidden="true">23.2.</strong> GET Requests</a></li><li class="chapter-item expanded "><a href="sdk/host/post.html"><strong aria-hidden="true">23.3.</strong> POST Requests</a></li><li class="chapter-item expanded "><a href="sdk/host/put.html"><strong aria-hidden="true">23.4.</strong> PUT Requests</a></li></ol></li></ol>';
+        // Set the current, active page, and reveal it if it's hidden
+        let current_page = document.location.href.toString().split("#")[0].split("?")[0];
+        if (current_page.endsWith("/")) {
+            current_page += "index.html";
+        }
+        var links = Array.prototype.slice.call(this.querySelectorAll("a"));
+        var l = links.length;
+        for (var i = 0; i < l; ++i) {
+            var link = links[i];
+            var href = link.getAttribute("href");
+            if (href && !href.startsWith("#") && !/^(?:[a-z+]+:)?\/\//.test(href)) {
+                link.href = path_to_root + href;
+            }
+            // The "index" page is supposed to alias the first chapter in the book.
+            if (link.href === current_page || (i === 0 && path_to_root === "" && current_page.endsWith("/index.html"))) {
+                link.classList.add("active");
+                var parent = link.parentElement;
+                if (parent && parent.classList.contains("chapter-item")) {
+                    parent.classList.add("expanded");
+                }
+                while (parent) {
+                    if (parent.tagName === "LI" && parent.previousElementSibling) {
+                        if (parent.previousElementSibling.classList.contains("chapter-item")) {
+                            parent.previousElementSibling.classList.add("expanded");
+                        }
+                    }
+                    parent = parent.parentElement;
+                }
+            }
+        }
+        // Track and set sidebar scroll position
+        this.addEventListener('click', function(e) {
+            if (e.target.tagName === 'A') {
+                sessionStorage.setItem('sidebar-scroll', this.scrollTop);
+            }
+        }, { passive: true });
+        var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+        sessionStorage.removeItem('sidebar-scroll');
+        if (sidebarScrollTop) {
+            // preserve sidebar scroll position when navigating via links within sidebar
+            this.scrollTop = sidebarScrollTop;
+        } else {
+            // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+            var activeSection = document.querySelector('#sidebar .active');
+            if (activeSection) {
+                activeSection.scrollIntoView({ block: 'center' });
+            }
+        }
+        // Toggle buttons
+        var sidebarAnchorToggles = document.querySelectorAll('#sidebar a.toggle');
+        function toggleSection(ev) {
+            ev.currentTarget.parentElement.classList.toggle('expanded');
+        }
+        Array.from(sidebarAnchorToggles).forEach(function (el) {
+            el.addEventListener('click', toggleSection);
+        });
+    }
+}
+window.customElements.define("mdbook-sidebar-scrollbox", MDBookSidebarScrollbox);
