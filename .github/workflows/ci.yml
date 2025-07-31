@@ -10,14 +10,9 @@ jobs:
       matrix:
         os: [ windows-latest, macos-latest ]
     runs-on: ${{ matrix.os }}
+    env:
+      AWS_LC_SYS_PREBUILT_NASM: "1"
     steps:
-      - name: Install NASM (Netwide Assembler)
-        run: choco install -y nasm
-        if: runner.os == 'windows'
-      - name: Refresh environment variables
-        run: refreshenv
-        if: runner.os == 'windows'
-
       - uses: actions/checkout@v4
         with:
           submodules: recursive
