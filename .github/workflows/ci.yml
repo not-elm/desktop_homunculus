@@ -11,9 +11,14 @@ jobs:
         os: [ windows-latest, macos-latest ]
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Install NASM (Netwide Assembler)
+        run: choco install -y nasm
+        if: runner.os == 'windows'
+
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+
       - uses: actions/cache@v4
         with:
           path: |
@@ -23,9 +28,11 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ${{ runner.os }}-cargo-test-${{ hashFiles('**/Cargo.toml') }}
+
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
+
       - name: Build & run tests
         run: cargo test
   lint:
