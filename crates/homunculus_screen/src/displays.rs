@@ -21,7 +21,7 @@ pub struct GlobalDisplays(pub Vec<GlobalDisplay>);
 impl GlobalDisplays {
     #[allow(unreachable_code)]
     pub fn find_all() -> GlobalDisplays {
-        #[cfg(target_os = "macos")]
+        #[cfg(any(target_os = "macos", target_os = "windows"))]
         return Self(macos::all_displays());
         //TODO: Implement for other platforms
         Self(vec![])
