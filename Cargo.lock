@@ -4852,7 +4852,7 @@ dependencies = [
 
 [[package]]
 name = "desktop_homunculus"
-version = "0.1.0-alpha.3"
+version = "0.1.0-alpha.3.2"
 dependencies = [
  "bevy",
  "bevy-inspector-egui",
@@ -6694,7 +6694,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_api"
-version = "0.1.0-alpha.3"
+version = "0.1.0-alpha.3.2"
 dependencies = [
  "async-broadcast",
  "async-channel",
@@ -6725,7 +6725,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_core"
-version = "0.1.0-alpha.3"
+version = "0.1.0-alpha.3.2"
 dependencies = [
  "anyhow",
  "async-broadcast",
@@ -6740,7 +6740,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_deno"
-version = "0.1.0-alpha.3"
+version = "0.1.0-alpha.3.2"
 dependencies = [
  "async-channel",
  "bevy",
@@ -6754,7 +6754,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_drag"
-version = "0.1.0-alpha.3"
+version = "0.1.0-alpha.3.2"
 dependencies = [
  "bevy",
  "bevy_vrm1",
@@ -6765,7 +6765,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_effects"
-version = "0.1.0-alpha.3"
+version = "0.1.0-alpha.3.2"
 dependencies = [
  "bevy",
  "bevy_vrm1",
@@ -6777,7 +6777,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_hit_test"
-version = "0.1.0-alpha.3"
+version = "0.1.0-alpha.3.2"
 dependencies = [
  "bevy",
  "bevy_egui",
@@ -6786,7 +6786,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_http_server"
-version = "0.1.0-alpha.3"
+version = "0.1.0-alpha.3.2"
 dependencies = [
  "async-channel",
  "axum 0.8.4",
@@ -6811,7 +6811,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_macros"
-version = "0.1.0-alpha.3"
+version = "0.1.0-alpha.3.2"
 dependencies = [
  "bevy",
  "proc-macro2",
@@ -6821,7 +6821,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_mod"
-version = "0.1.0-alpha.3"
+version = "0.1.0-alpha.3.2"
 dependencies = [
  "bevy",
  "bevy_common_assets",
@@ -6834,7 +6834,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_power_saver"
-version = "0.1.0-alpha.3"
+version = "0.1.0-alpha.3.2"
 dependencies = [
  "bevy",
  "bevy_framepace",
@@ -6845,7 +6845,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_prefs"
-version = "0.1.0-alpha.3"
+version = "0.1.0-alpha.3.2"
 dependencies = [
  "bevy",
  "bevy_vrm1",
@@ -6857,7 +6857,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_screen"
-version = "0.1.0-alpha.3"
+version = "0.1.0-alpha.3.2"
 dependencies = [
  "apple-sys",
  "bevy",
@@ -6877,7 +6877,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_shadow_panel"
-version = "0.1.0-alpha.3"
+version = "0.1.0-alpha.3.2"
 dependencies = [
  "bevy",
  "bevy_vrm1",
@@ -6886,7 +6886,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_sitting"
-version = "0.1.0-alpha.3"
+version = "0.1.0-alpha.3.2"
 dependencies = [
  "bevy",
  "bevy_vrm1",
@@ -6896,7 +6896,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_speech"
-version = "0.1.0-alpha.3"
+version = "0.1.0-alpha.3.2"
 dependencies = [
  "async-channel",
  "async-compat",
@@ -6912,7 +6912,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_windows"
-version = "0.1.0-alpha.3"
+version = "0.1.0-alpha.3.2"
 dependencies = [
  "bevy",
  "homunculus_core",
