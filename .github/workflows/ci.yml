@@ -53,3 +53,7 @@ jobs:
           components: rustfmt, clippy
       - name: Run clippy
         run: cargo clippy --workspace -- -Dwarnings
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
