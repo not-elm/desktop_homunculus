@@ -13,7 +13,7 @@ bevy = { workspace = true }
 deno_runtime = { version = "0.218", features = ["transpile"] }
 deno_resolver = { version = "=0.41" }
 sys_traits = "0.1"
-rustls = { version = "=0.23.27", default-features = false, features = ["logging", "std", "tls12", "aws_lc_rs"] }
+rustls = { version = "=0.23.27", default-features = false, features = [] }
 async-channel = { workspace = true }
 homunculus_core = { workspace = true }
 
