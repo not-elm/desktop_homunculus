@@ -25,7 +25,7 @@ pub unsafe fn app_window_numbers() -> Vec<u64> {
     }
 }
 
-pub fn obtain_homunculus_screen() -> Option<GlobalWindows> {
+pub fn find_all() -> Option<GlobalWindows> {
     let windows = obtain_all_windows()?;
     let mut areas = windows
         .iter()
@@ -44,7 +44,7 @@ pub fn obtain_homunculus_screen() -> Option<GlobalWindows> {
 ///
 /// Just in case, it is better to read this on the MainThread?
 pub unsafe fn find_above_global_window(window_frame: Rect) -> Option<GlobalWindow> {
-    obtain_homunculus_screen()?
+    find_all()?
         .0
         .iter()
         .find(|w| !w.frame.intersect(window_frame).is_empty())

@@ -1,17 +1,17 @@
 use crate::prelude::{GlobalWindow, GlobalWindows};
 use bevy::math::Rect;
 use std::{
-    char::{REPLACEMENT_CHARACTER, decode_utf16},
+    char::{decode_utf16, REPLACEMENT_CHARACTER},
     sync::Mutex,
 };
 use windows::{
+    core::BOOL,
     Win32::{
         Foundation::{HWND, LPARAM},
         UI::WindowsAndMessaging::{
             EnumWindows, GetForegroundWindow, GetWindowRect, GetWindowTextW, IsWindowVisible,
         },
     },
-    core::BOOL,
 };
 
 static FOUND_WINDOWS: Mutex<Vec<GlobalWindow>> = Mutex::new(Vec::new());
@@ -47,7 +47,7 @@ fn decode_title(buf: &[u16], len: usize) -> String {
         .collect()
 }
 
-pub fn obtain_homunculus_screen() -> Option<GlobalWindows> {
+pub fn find_all() -> Option<GlobalWindows> {
     unsafe {
         EnumWindows(Some(enum_windows_proc), LPARAM(0)).ok()?;
     }
@@ -58,12 +58,25 @@ pub fn obtain_homunculus_screen() -> Option<GlobalWindows> {
 }
 
 pub fn update_window(hwnd: i64) -> Option<Rect> {
-    unsafe { obtain_window_rect(HWND(hwnd as *mut _)).ok() }
+    /// # Safety
+    ///
+    /// This function assumes that the `hwnd` is a valid handle to a window.
+    unsafe {
+        obtain_window_rect(HWND(hwnd as *mut _)).ok()
+    }
 }
 
+/// # Safety
+///
+/// You must ensure that the `hwnd` is a valid handle to a window.
 unsafe fn obtain_window_rect(hwnd: HWND) -> windows::core::Result<Rect> {
     let mut rect = windows::Win32::Foundation::RECT::default();
-    GetWindowRect(hwnd, &mut rect)?;
+    /// # Safety
+    ///
+    /// This function assumes that `hwnd` is a valid handle to a window.
+    unsafe {
+        GetWindowRect(hwnd, &mut rect)?;
+    }
     Ok(Rect::new(
         rect.left as f32,
         rect.bottom as f32,

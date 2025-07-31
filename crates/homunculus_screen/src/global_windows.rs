@@ -3,15 +3,19 @@ pub mod macos;
 #[cfg(target_os = "windows")]
 pub mod windows;
 
-use crate::global_windows::macos::obtain_homunculus_screen;
-use crate::prelude::find_window_from_number;
 use bevy::math::{Rect, Vec2};
 use bevy::prelude::{App, Plugin, Reflect};
 use homunculus_core::prelude::*;
 
+#[cfg(target_os = "macos")]
+use macos::*;
+#[cfg(target_os = "windows")]
+use windows::*;
+
 pub mod prelude {
     #[cfg(target_os = "macos")]
     pub use crate::global_windows::macos::*;
+
     #[cfg(target_os = "windows")]
     pub use crate::global_windows::windows::*;
     pub use crate::global_windows::{GlobalWindow, GlobalWindows};
@@ -51,13 +55,13 @@ impl GlobalWindow {
     pub fn update(&self) -> Option<GlobalWindow> {
         #[cfg(target_os = "macos")]
         {
-            if let Some(updated) = find_window_from_number(self.window_number) {
+            if let Some(updated) = macos::find_window_from_number(self.window_number) {
                 return Some(updated);
             }
         }
         #[cfg(target_os = "windows")]
         {
-            if let Some(updated) = update_window(self.hwnd) {
+            if let Some(updated) = windows::update_window(self.hwnd) {
                 if updated != self.frame {
                     return Some(GlobalWindow {
                         frame: updated,
@@ -80,7 +84,7 @@ impl GlobalWindows {
 
     pub fn find_all() -> Option<Self> {
         #[cfg(any(target_os = "macos", target_os = "windows"))]
-        return obtain_homunculus_screen();
+        return find_all();
         #[cfg(not(any(target_os = "macos", target_os = "windows")))]
         return None;
     }

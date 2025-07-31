@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 
 #[cfg(target_os = "macos")]
 mod macos;
+mod windows;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Deref, Serialize, Deserialize, Reflect)]
 pub struct DisplayId(pub u32);
