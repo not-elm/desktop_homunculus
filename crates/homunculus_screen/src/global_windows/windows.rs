@@ -1,17 +1,17 @@
 use crate::prelude::{GlobalWindow, GlobalWindows};
 use bevy::math::Rect;
 use std::{
-    char::{decode_utf16, REPLACEMENT_CHARACTER},
+    char::{REPLACEMENT_CHARACTER, decode_utf16},
     sync::Mutex,
 };
 use windows::{
-    core::BOOL,
     Win32::{
         Foundation::{HWND, LPARAM},
         UI::WindowsAndMessaging::{
             EnumWindows, GetForegroundWindow, GetWindowRect, GetWindowTextW, IsWindowVisible,
         },
     },
+    core::BOOL,
 };
 
 static FOUND_WINDOWS: Mutex<Vec<GlobalWindow>> = Mutex::new(Vec::new());

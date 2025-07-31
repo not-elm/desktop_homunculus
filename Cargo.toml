@@ -100,7 +100,6 @@ default = []
 develop = [
     "dep:bevy-inspector-egui",
     "dep:bevy_egui",
-    "bevy_vrm1/develop",
     "homunculus_hit_test/develop",
 ]
 

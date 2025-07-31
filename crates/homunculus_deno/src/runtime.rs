@@ -137,11 +137,16 @@ fn create_main_worker(main_module: &ModuleSpecifier) -> MainWorker {
                 unstable_features: unstable_feature_flags(),
                 ..default()
             },
-            // startup_snapshot: HOMUNCULUS_SNAPSHOT,
+            startup_snapshot: HOMUNCULUS_SNAPSHOT,
             ..Default::default()
         },
     )
 }
+
+static HOMUNCULUS_SNAPSHOT: Option<&[u8]> = Some(include_bytes!(concat!(
+    core::env!("OUT_DIR"),
+    "/HOMUNCULUS_SNAPSHOT.bin"
+)));
 
 fn unstable_feature_flags() -> Vec<i32> {
     UNSTABLE_FEATURES.iter().map(|f| f.id).collect()
