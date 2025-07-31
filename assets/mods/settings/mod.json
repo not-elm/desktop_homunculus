@@ -1,0 +1,33 @@
+{
+  "name": "settings",
+  "description": "Provides the basic settings interface",
+  "version": "1.0.0",
+  "author": "notelm",
+  "license": "MIT",
+  "menus": [
+    {
+      "thumbnail": "settings/icon.png",
+      "text": "Settings",
+      "webview": {
+        "source": "settings/index.html",
+        "resolution": [
+          500,
+          500
+        ],
+        "position": {
+          "offset": [
+            -650,
+            -500
+          ]
+        },
+        "transparent": true,
+        "showToolbar": false,
+        "shadow": false,
+        "sounds": {
+          "open": "menu/open.mp3",
+          "close": "menu/close.mp3"
+        }
+      }
+    }
+  ]
+}

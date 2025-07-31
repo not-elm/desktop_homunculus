@@ -1,0 +1,21 @@
+{
+  "name": "mod-manual",
+  "description": "Provides the OpenAPI guideline",
+  "version": "1.0.0",
+  "author": "notelm",
+  "license": "MIT",
+  "menus": [
+    {
+      "thumbnail": "mod-manual/icon.png",
+      "text": "MOD Manual",
+      "webview": {
+        "source": "https://not-elm.github.io/desktop_homunculus/",
+        "resolution": [
+          1280,
+          720
+        ],
+        "shadow": false
+      }
+    }
+  ]
+}

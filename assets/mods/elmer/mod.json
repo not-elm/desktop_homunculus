@@ -1,0 +1,10 @@
+{
+  "name": "elmer",
+  "description": "A simple plugin to spawn Elmer",
+  "version": "1.0.0",
+  "author": "notelm",
+  "license": "MIT",
+  "startupScripts": [
+    "elmer/index.js"
+  ]
+}

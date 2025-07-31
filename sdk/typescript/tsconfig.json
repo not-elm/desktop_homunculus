@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "declaration": true,
+    "newLine": "lf",
+    "pretty": true,
+    "outDir": "./dist",
+    "strict": true,
+    "skipLibCheck": true,
+    "rootDir": "./src"
+  },
+  "include": [
+    "src/*"
+  ]
+}

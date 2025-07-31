@@ -1,0 +1,1 @@
+{"root":["./src/app.ts","./src/cameras.ts","./src/commands.ts","./src/displays.ts","./src/effects.ts","./src/entities.ts","./src/functions.ts","./src/gpt.ts","./src/host.ts","./src/index.ts","./src/math.ts","./src/mods.ts","./src/preferences.ts","./src/scripts.ts","./src/settings.ts","./src/shadowpanel.ts","./src/vrm.ts","./src/vrma.ts","./src/webviews.ts"],"version":"5.8.3"}

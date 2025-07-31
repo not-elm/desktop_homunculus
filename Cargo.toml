@@ -1,58 +1,109 @@
 [package]
 name = "desktop_homunculus"
-version = "0.1.0-alpha.2"
-edition = "2021"
-license = "MIT"
 description = "Desktop mascot built with bevy"
-authors = ["notelm <elmprograminfo@gmail.com>"]
-repository = "https://github.com/not-elm/bevy_baby"
 keywords = ["bevy", "desktop", "game"]
 categories = ["games"]
+authors.workspace = true
+version.workspace = true
+license.workspace = true
+repository.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[workspace.package]
+version = "0.1.0-alpha.3"
+edition = "2024"
+authors = ["notelm <elmprograminfo@gmail.com>"]
+repository = "https://github.com/not-elm/desktop_homunculus"
+license = "LGPL-3.0-only"
 publish = false
 
+[workspace]
+members = [
+    "crates/*",
+]
+exclude = [
+    "crates/bevy_webview_projects",
+    "crates/homunculus_lua",
+]
+
 [dependencies]
-bevy = { version = "0.15", features = [
-    "file_watcher",
-    "bevy_picking",
+bevy = { workspace = true }
+bevy_flurx = { workspace = true }
+bevy_webview_wry = { workspace = true, features = ["hot-reload", "api"] }
+bevy_vrm1 = { path = "crates/bevy_vrm1", features = ["serde"] }
+homunculus_drag = { workspace = true }
+homunculus_core = { workspace = true }
+homunculus_effects = { workspace = true }
+homunculus_windows = { workspace = true }
+homunculus_hit_test = { workspace = true }
+homunculus_screen = { workspace = true }
+homunculus_sitting = { workspace = true }
+homunculus_shadow_panel = { workspace = true }
+homunculus_prefs = { workspace = true }
+homunculus_http_server = { workspace = true }
+homunculus_speech = { workspace = true }
+homunculus_power_saver = { workspace = true }
+homunculus_mod = { workspace = true }
+homunculus_api = { workspace = true }
+homunculus_deno = { workspace = true }
+bevy_egui = { workspace = true, optional = true }
+bevy-inspector-egui = { workspace = true, optional = true }
+tracing-appender = "0.2"
+dotenv = "0.15.0"
+
+[workspace.dependencies]
+bevy = { version = "0.16", features = [
+    "wav",
     "serialize",
+    "file_watcher",
+    "png",
+    "mp3",
 ] }
-bevy_flurx = { version = "0.9", features = ["effect", "state"] }
-bevy_webview_wry = { version = "0.3", features = ["api"] }
+url = { version = "2", features = ["serde"] }
+async-channel = "2.5"
+async-broadcast = "0.7"
+tokio = { version = "1" }
+axum = { version = "0.8" }
+bevy_flurx = { version = "0.12.0", features = ["side-effect", "state", "tokio"] }
+bevy_tray_icon = { version = "0.2.0" }
+bevy_webview_wry = { path = "crates/bevy_webview_projects/crates/bevy_webview_wry" }
+homunculus_core = { path = "crates/homunculus_core" }
+homunculus_drag = { path = "crates/homunculus_drag" }
+homunculus_effects = { path = "crates/homunculus_effects" }
+homunculus_windows = { path = "crates/homunculus_windows" }
+homunculus_hit_test = { path = "crates/homunculus_hit_test" }
+homunculus_power_saver = { path = "crates/homunculus_power_saver" }
+homunculus_screen = { path = "crates/homunculus_screen" }
+homunculus_sitting = { path = "crates/homunculus_sitting" }
+homunculus_shadow_panel = { path = "crates/homunculus_shadow_panel" }
+homunculus_prefs = { path = "crates/homunculus_prefs" }
+homunculus_http_server = { path = "crates/homunculus_http_server" }
+homunculus_speech = { path = "crates/homunculus_speech" }
+homunculus_macros = { path = "crates/homunculus_macros" }
+homunculus_mod = { path = "crates/homunculus_mod" }
+homunculus_api = { path = "crates/homunculus_api" }
+homunculus_deno = { path = "crates/homunculus_deno" }
+bevy_vrm1 = { path = "crates/bevy_vrm1", features = ["serde", "log"] }
 serde = { version = "1", features = ["derive"] }
-dirs = "6"
-serde_json = "1"
-winit = "0.30"
-rand = "0.9"
-crossbeam = "0.8.4"
-itertools = "0.14"
-anyhow = "1.0.96"
-bevy-inspector-egui = { version = "0.29", optional = true }
-tracing-appender = "0.2.3"
-
-[target.'cfg(target_os="macos")'.dependencies]
-core-graphics = { version = "0.24.0" }
-core-foundation = { version = "0.10.0" }
-objc2 = { version = "0.5", features = ["std"] }
-objc2-foundation = { version = "0.2" }
-objc2-app-kit = { version = "0.2", features = [
-    "NSWindow",
-    "NSView",
-    "NSApplication",
-] }
-apple-sys = { version = "0.2", features = ["IOKit"] }
-
-[target.'cfg(target_os="windows")'.dependencies]
-windows = { version = "0.60", features = [
-    "Win32_Foundation",
-    "Win32_UI_WindowsAndMessaging",
-] }
+serde_json = { version = "1" }
+anyhow = { version = "1", features = ["std"] }
+bevy_egui = { version = "0.35" }
+bevy-inspector-egui = { version = "0.32.0" }
+bevy_framepace = "0.19"
+tracing = "0.1"
 
 [build-dependencies]
 embed-resource = "3"
 
 [features]
 default = []
-develop = ["dep:bevy-inspector-egui"]
+develop = [
+    "dep:bevy-inspector-egui",
+    "dep:bevy_egui",
+    "bevy_vrm1/develop",
+    "homunculus_hit_test/develop",
+]
 
 [profile.dev.package."*"]
 opt-level = 3
@@ -75,3 +126,7 @@ opt-level = 3
 lto = true
 codegen-units = 1
 strip = true
+
+[workspace.lints.clippy]
+type_complexity = "allow"
+

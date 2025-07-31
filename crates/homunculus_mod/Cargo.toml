@@ -1,0 +1,20 @@
+[package]
+name = "homunculus_mod"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+bevy = { workspace = true }
+bevy_common_assets = { version = "0.13", features = ["json"] }
+serde = { workspace = true }
+bevy_tray_icon = { workspace = true }
+homunculus_core = { workspace = true }
+homunculus_api = { workspace = true }
+homunculus_deno = { workspace = true }
+
+[lints]
+workspace = true
