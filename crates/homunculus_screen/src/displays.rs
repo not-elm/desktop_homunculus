@@ -3,7 +3,13 @@ use serde::{Deserialize, Serialize};
 
 #[cfg(target_os = "macos")]
 mod macos;
+#[cfg(target_os = "windows")]
 mod windows;
+
+#[cfg(target_os = "macos")]
+use macos::*;
+#[cfg(target_os = "windows")]
+use windows::*;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Deref, Serialize, Deserialize, Reflect)]
 pub struct DisplayId(pub u32);
@@ -22,7 +28,7 @@ impl GlobalDisplays {
     #[allow(unreachable_code)]
     pub fn find_all() -> GlobalDisplays {
         #[cfg(any(target_os = "macos", target_os = "windows"))]
-        return Self(macos::all_displays());
+        return Self(all_displays());
         //TODO: Implement for other platforms
         Self(vec![])
     }
