@@ -80,7 +80,6 @@ homunculus_shadow_panel = { path = "crates/homunculus_shadow_panel" }
 homunculus_prefs = { path = "crates/homunculus_prefs" }
 homunculus_http_server = { path = "crates/homunculus_http_server" }
 homunculus_speech = { path = "crates/homunculus_speech" }
-homunculus_macros = { path = "crates/homunculus_macros" }
 homunculus_mod = { path = "crates/homunculus_mod" }
 homunculus_api = { path = "crates/homunculus_api" }
 homunculus_deno = { path = "crates/homunculus_deno" }
@@ -116,15 +115,15 @@ opt-level = 1
 [profile.release]
 opt-level = "s"
 lto = true
-codegen-units = 1
+codegen-units = 2
 strip = true
 
 # Profile for distribution
 [profile.dist]
 inherits = "release"
-opt-level = 3
-lto = true
-codegen-units = 1
+opt-level = 2
+lto = "thin"
+codegen-units = 2
 strip = true
 
 [workspace.lints.clippy]
