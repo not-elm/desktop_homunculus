@@ -70,6 +70,7 @@ Also, you can use [VoiceVox](https://voicevox.hiroshiba.jp/) to enable speech sy
 Download the latest release from:
 
 - [itch.io](https://notelm.itch.io/desktop-homunculus)
+- [BOOTH](https://notelm.booth.pm/items/6904924)
 
 ### Development Setup
 
@@ -84,6 +85,12 @@ make setup
 # Run in development mode
 make dev
 ```
+
+## 🪛 MOD
+
+- [Manual](https://not-elm.github.io/desktop_homunculus/)
+
+You can add characters, replace animations, and add UI using MODs.
 
 ## ⚙️ Configuration
 
