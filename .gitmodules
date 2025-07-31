@@ -1,18 +1,9 @@
 [submodule "crates/bevy_vrm1"]
 	path = crates/bevy_vrm1
 	url = https://github.com/not-elm/bevy_vrm1
-[submodule "crates/bevy_tray_icon"]
-	path = crates/bevy_tray_icon
-	url = https://github.com/not-elm/bevy_tray_icon
 [submodule "crates/bevy_webview_projects"]
 	path = crates/bevy_webview_projects
 	url = https://github.com/not-elm/bevy_webview_projects
-[submodule "thirdparty/YarnSpinner-Rust"]
-	path = thirdparty/YarnSpinner-Rust
-	url = https://github.com/not-elm/YarnSpinner-Rust
-[submodule "thirdparty/antlr4rust"]
-	path = thirdparty/antlr4rust
-	url = https://github.com/not-elm/antlr4rust
 [submodule "crates/bevy_flurx"]
 	path = crates/bevy_flurx
 	url = https://github.com/not-elm/bevy_flurx
