@@ -1,6 +1,17 @@
 ## v0.1.0-alpha.3
 
-Significantly redesigned.
+Major design overhaul.
+
+### Features
+
+- Completely revamped the menu screen
+    - Added FPS limit feature
+- Added API support
+- Improved animation transitions for smoother playback
+
+### Bug Fixes
+
+- Fixed flickering when dragging or while idle
 
 ## v0.1.0-alpha.2
 
