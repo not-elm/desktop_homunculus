@@ -1,0 +1,33 @@
+{
+  "name": "chat",
+  "description": "Provides an ai chat interface",
+  "version": "1.0.0",
+  "author": "notelm",
+  "license": "MIT",
+  "menus": [
+    {
+      "thumbnail": "chat/icon.png",
+      "text": "Chat",
+      "webview": {
+        "source": "chat/index.html",
+        "resolution": [
+          400,
+          600
+        ],
+        "position": {
+          "bone": "head",
+          "offset": [
+            -550,
+            -150
+          ]
+        },
+        "showToolbar": false,
+        "transparent": true,
+        "sounds": {
+          "open": "menu/open.mp3",
+          "close": "menu/close.mp3"
+        }
+      }
+    }
+  ]
+}

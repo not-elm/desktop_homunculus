@@ -1,0 +1,35 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "tasks": {
+    "build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        "assets/mods/settings/**",
+        "assets/mods/chat/**",
+        "assets/mods/menu/**",
+        "assets/mods/demo/**",
+        "dist/**"
+      ],
+      "inputs": [
+        "ui/**",
+        "sdk/**"
+      ],
+      "cache": false
+    },
+    "check-types": {
+      "dependsOn": [
+        "^check-types"
+      ],
+      "cache": false
+    },
+    "dev": {
+      "dependsOn": [
+        "^build"
+      ],
+      "persistent": true,
+      "cache": false
+    }
+  }
+}

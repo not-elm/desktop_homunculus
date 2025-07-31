@@ -1,0 +1,16 @@
+[package]
+name = "homunculus_windows"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+bevy = { workspace = true }
+serde = { workspace = true }
+homunculus_core = { workspace = true }
+
+[lints]
+workspace = true

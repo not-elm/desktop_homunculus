@@ -1,0 +1,21 @@
+{
+  "name": "github",
+  "description": "Github repository link",
+  "version": "1.0.0",
+  "author": "notelm",
+  "license": "MIT",
+  "menus": [
+    {
+      "thumbnail": "github/icon.png",
+      "text": "GitHub",
+      "webview": {
+        "source": "https://github.com/not-elm/desktop_homunculus",
+        "resolution": [
+          1280,
+          720
+        ],
+        "shadow": false
+      }
+    }
+  ]
+}

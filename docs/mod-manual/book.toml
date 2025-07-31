@@ -1,0 +1,10 @@
+[book]
+authors = ["not-elm"]
+language = "en"
+src = "src"
+title = "MOD Manual"
+
+[preprocessor.alerts]
+
+[output.html]
+site-url = "/mod-manual/"

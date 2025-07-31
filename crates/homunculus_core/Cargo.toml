@@ -1,0 +1,22 @@
+[package]
+name = "homunculus_core"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+bevy = { workspace = true }
+bevy_tray_icon = { workspace = true }
+dirs = "6"
+url = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+bevy_vrm1 = { workspace = true }
+anyhow = { workspace = true }
+async-broadcast = { workspace = true }
+
+[lints]
+workspace = true

@@ -1,0 +1,10 @@
+{
+  "name": "menu",
+  "description": "Provides a mod menu interface",
+  "version": "1.0.0",
+  "author": "notelm",
+  "license": "MIT",
+  "startupScripts": [
+    "menu/index.js"
+  ]
+}

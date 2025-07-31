@@ -1,0 +1,1549 @@
+openapi: 3.0.0
+info:
+  title: Homunculus API
+  version: '1.0.0'
+  description: API for controlling the Homunculus desktop pet.
+servers:
+  - url: http://localhost:3100
+    description: Local development server
+tags:
+  - name: vrm
+    description: VRM model management and control operations
+  - name: vrma
+    description: VRMA animation playback control
+  - name: cameras
+    description: Camera coordinate transformation utilities
+  - name: displays
+    description: Display and monitor information
+  - name: effects
+    description: Visual and audio effects
+  - name: gpt
+    description: ChatGPT integration and configuration
+  - name: webview
+    description: Webview window management
+  - name: mods
+    description: Mod system and menu management
+  - name: preferences
+    description: Application preference storage
+  - name: settings
+    description: Runtime application settings
+  - name: scripts
+    description: JavaScript execution system
+  - name: shadow-panel
+    description: Shadow panel overlay controls
+  - name: commands
+    description: Command execution system
+  - name: app
+    description: Application control
+paths:
+  /app/exit:
+    post:
+      tags:
+        - app
+      summary: Exit the application
+      description: Gracefully shut down the Homunculus application.
+      operationId: exitApplication
+      responses:
+        '200':
+          description: Successfully initiated application exit.
+  /entities/find:
+    get:
+      tags:
+        - entities
+      summary: Find an entity by name
+      description: Locate an entity using its name identifier, optionally within a specific parent entity.
+      operationId: findEntityByName
+      parameters:
+        - name: name
+          in: query
+          required: true
+          description: The name of the entity to find
+          schema:
+            type: string
+        - name: root
+          in: query
+          required: false
+          description: Optional root entity to search within
+          schema:
+            $ref: '#/components/schemas/Entity'
+      responses:
+        '200':
+          description: Successfully found the entity.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Entity'
+        '404':
+          description: Entity not found.
+  /entities/{entity_id}/name:
+    get:
+      tags:
+        - entities
+      summary: Get the name of an entity
+      description: Retrieve the human-readable name of the specified entity.
+      operationId: getEntityName
+      parameters:
+        - name: entity_id
+          in: path
+          required: true
+          description: The unique identifier of the entity
+          schema:
+            $ref: '#/components/schemas/Entity'
+      responses:
+        '200':
+          description: Successfully retrieved the entity name.
+          content:
+            application/json:
+              schema:
+                type: string
+        '404':
+          description: Entity not found.
+  /entities/{entity_id}/transform:
+    get:
+      tags:
+        - entities
+      summary: Get the transform of an entity
+      description: Retrieve position, rotation, and scale data for the specified entity.
+      operationId: getEntityTransform
+      parameters:
+        - name: entity_id
+          in: path
+          required: true
+          description: The unique identifier of the entity
+          schema:
+            $ref: '#/components/schemas/Entity'
+      responses:
+        '200':
+          description: Successfully retrieved the transform.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transform'
+        '404':
+          description: Entity not found.
+    put:
+      tags:
+        - entities
+      summary: Set the transform of an entity
+      description: Update the position, rotation, and scale of the specified entity.
+      operationId: setEntityTransform
+      parameters:
+        - name: entity_id
+          in: path
+          required: true
+          description: The unique identifier of the entity
+          schema:
+            $ref: '#/components/schemas/Entity'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PartialTransform'
+      responses:
+        '200':
+          description: Successfully updated the transform.
+        '404':
+          description: Entity not found.
+  /vrm:
+    get:
+      tags:
+        - vrm
+      summary: Find a VRM model by name
+      description: Locate a VRM model entity using its name identifier.
+      operationId: findVrmByName
+      parameters:
+        - name: name
+          in: query
+          required: true
+          description: The name of the VRM model to find
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully found the VRM model.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Entity'
+        '404':
+          description: VRM model not found.
+    post:
+      tags:
+        - vrm
+      summary: Spawn a VRM model
+      description: Create and display a new VRM 3D model instance in the application with optional transform settings.
+      operationId: spawnVrm
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VrmSpawnArgs'
+      responses:
+        '200':
+          description: Successfully spawned the VRM model.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Entity'
+        '404':
+          description: Asset not found.
+        '500':
+          description: Internal server error.
+  /vrm/wait-load:
+    get:
+      tags:
+        - vrm
+      summary: Wait for a VRM model to load
+      description: Wait for the specified VRM model to finish loading before returning its entity ID.
+      operationId: waitForVrmLoad
+      parameters:
+        - name: name
+          in: query
+          required: true
+          description: The name of the VRM model to wait for
+          schema:
+            type: string
+      responses:
+        '200':
+          description: VRM model has finished loading.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Entity'
+        '404':
+          description: VRM model not found.
+  /vrm/{entity_id}/despawn:
+    delete:
+      tags:
+        - vrm
+      summary: Despawn a VRM model
+      description: Remove and destroy the specified VRM model instance from the application.
+      operationId: despawnVrm
+      parameters:
+        - name: entity_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Entity'
+      responses:
+        '200':
+          description: Successfully despawned the VRM model.
+        '404':
+          description: Entity not found.
+  /vrm/{entity_id}/state:
+    get:
+      tags:
+        - vrm
+      summary: Get the state of a VRM model
+      description: Retrieve the current state/mode of the specified VRM model.
+      operationId: getVrmState
+      parameters:
+        - name: entity_id
+          in: path
+          required: true
+          description: The unique identifier of the VRM model entity
+          schema:
+            $ref: '#/components/schemas/Entity'
+      responses:
+        '200':
+          description: Successfully retrieved the VRM model state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VrmStateResponse'
+        '404':
+          description: Entity not found.
+    put:
+      tags:
+        - vrm
+      summary: Set the state of a VRM model
+      description: Update the state/mode of the specified VRM model to control its behavior.
+      operationId: setVrmState
+      parameters:
+        - name: entity_id
+          in: path
+          required: true
+          description: The unique identifier of the VRM model entity
+          schema:
+            $ref: '#/components/schemas/Entity'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VrmStateRequest'
+      responses:
+        '200':
+          description: Successfully updated the VRM model state.
+        '404':
+          description: Entity not found.
+  /vrm/{entity_id}/events:
+    get:
+      tags:
+        - vrm
+      summary: Subscribe to VRM events
+      description: |
+        Establish a Server-Sent Events stream to receive real-time events from the VRM model.
+        
+        **Available events:**
+        - `drag-start`: Fired when a drag starts
+        - `drag`: Fired when a drag is in progress  
+        - `drag-end`: Fired when a drag ends
+        - `pointer-press`: Fired when a pointer is pressed
+        - `pointer-click`: Fired when a click occurs
+        - `pointer-move`: Fired when a pointer moves
+        - `pointer-release`: Fired when a pointer is released
+        - `pointer-over`: Fired when a pointer is over the VRM
+        - `pointer-out`: Fired when a pointer is out of the VRM
+        - `pointer-cancel`: Fired when a pointer action is canceled
+        - `state-change`: Fired when the VRM state changes
+      operationId: subscribeToVrmEvents
+      parameters:
+        - name: entity_id
+          in: path
+          required: true
+          description: The unique identifier of the VRM model entity
+          schema:
+            $ref: '#/components/schemas/Entity'
+      responses:
+        '200':
+          description: Successfully established event stream.
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: Server-Sent Events stream with VRM interaction events
+        '404':
+          description: Entity not found.
+  /vrm/{entity_id}/vrma:
+    get:
+      tags:
+        - vrm
+      summary: Get or create VRMA animation for a VRM model
+      description: Get or create a VRMA animation entity for the specified VRM model and animation source.
+      operationId: getVrmaAnimation
+      parameters:
+        - name: entity_id
+          in: path
+          required: true
+          description: The unique identifier of the VRM model entity
+          schema:
+            $ref: '#/components/schemas/Entity'
+        - name: source
+          in: query
+          required: true
+          description: The VRMA animation source path relative to the mods directory
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully retrieved or created the VRMA animation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Entity'
+        '404':
+          description: Entity not found.
+  /vrm/{entity_id}/look/target/{target}:
+    put:
+      tags:
+        - vrm
+      summary: Set VRM look-at target
+      description: Configure the VRM model to look at a specific entity target.
+      operationId: setVrmLookTarget
+      parameters:
+        - name: entity_id
+          in: path
+          required: true
+          description: The unique identifier of the VRM model entity
+          schema:
+            $ref: '#/components/schemas/Entity'
+        - name: target
+          in: path
+          required: true
+          description: The entity ID to look at
+          schema:
+            $ref: '#/components/schemas/Entity'
+      responses:
+        '200':
+          description: Successfully set the look-at target.
+        '404':
+          description: Entity not found.
+  /vrm/{entity_id}/look/cursor:
+    put:
+      tags:
+        - vrm
+      summary: Set VRM to look at cursor
+      description: Configure the VRM model to look at the mouse cursor position.
+      operationId: setVrmLookCursor
+      parameters:
+        - name: entity_id
+          in: path
+          required: true
+          description: The unique identifier of the VRM model entity
+          schema:
+            $ref: '#/components/schemas/Entity'
+      responses:
+        '200':
+          description: Successfully configured cursor look-at.
+        '404':
+          description: Entity not found.
+  /vrm/{entity_id}/look:
+    delete:
+      tags:
+        - vrm
+      summary: Disable VRM look-at functionality
+      description: Disable the look-at functionality for the specified VRM model.
+      operationId: disableVrmLook
+      parameters:
+        - name: entity_id
+          in: path
+          required: true
+          description: The unique identifier of the VRM model entity
+          schema:
+            $ref: '#/components/schemas/Entity'
+      responses:
+        '200':
+          description: Successfully disabled look-at functionality.
+        '404':
+          description: Entity not found.
+  /vrm/{entity_id}/speech/voicevox:
+    post:
+      tags:
+        - vrm
+      summary: Speak using VoiceVox
+      description: Generate speech audio using VoiceVox text-to-speech synthesis for the specified VRM model.
+      operationId: speakVoiceVox
+      parameters:
+        - name: entity_id
+          in: path
+          required: true
+          description: The unique identifier of the VRM model entity
+          schema:
+            $ref: '#/components/schemas/Entity'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VoiceVoxRequest'
+      responses:
+        '200':
+          description: Successfully initiated VoiceVox speech synthesis.
+        '404':
+          description: Entity not found.
+  /vrm/all:
+    get:
+      tags:
+        - vrm
+      summary: Fetch all VRM models
+      description: Retrieve a list of all currently spawned VRM models with their metadata. Supports optional streaming response.
+      operationId: fetchAllVrms
+      parameters:
+        - name: stream
+          in: query
+          required: false
+          description: Whether to return results as a streaming response
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Successfully retrieved all VRM models.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VrmMetadata'
+            text/event-stream:
+              schema:
+                $ref: '#/components/schemas/VrmMetadata'
+  /cameras/global-viewport:
+    get:
+      tags:
+        - cameras
+      summary: Get the global viewport from world coordinates
+      description: Convert 3D world coordinates to 2D global viewport coordinates for positioning UI elements or interactions.
+      operationId: getGlobalViewport
+      parameters:
+        - name: x
+          in: query
+          description: X coordinate in world space
+          schema:
+            type: number
+            format: float
+        - name: y
+          in: query
+          description: Y coordinate in world space
+          schema:
+            type: number
+            format: float
+        - name: z
+          in: query
+          description: Z coordinate in world space
+          schema:
+            type: number
+            format: float
+      responses:
+        '200':
+          description: Successfully converted to global viewport.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GlobalViewport'
+        '500':
+          description: Failed to convert.
+  /cameras/world-2d:
+    get:
+      tags:
+        - cameras
+      summary: Convert a global viewport to a 2D world position
+      description: Transform global viewport coordinates back to 2D world position coordinates.
+      operationId: getWorld2d
+      parameters:
+        - name: x
+          in: query
+          description: X coordinate in global viewport space
+          schema:
+            type: number
+            format: float
+        - name: y
+          in: query
+          description: Y coordinate in global viewport space
+          schema:
+            type: number
+            format: float
+      responses:
+        '200':
+          description: Successfully converted to 2D world position.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vec2'
+        '500':
+          description: Failed to convert.
+  /displays:
+    get:
+      tags:
+        - displays
+      summary: Get all display information
+      description: Retrieve information about all connected displays including dimensions, position, and scale factor for multi-monitor support.
+      operationId: getAllDisplays
+      responses:
+        '200':
+          description: Successfully retrieved all display information.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GlobalDisplays'
+  /effects/sounds:
+    post:
+      tags:
+        - effects
+      summary: Play a sound effect
+      description: Trigger playback of a sound effect from the specified mod asset.
+      operationId: playSoundEffect
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ModuleSourceRequest'
+      responses:
+        '200':
+          description: Successfully played the sound effect.
+        '404':
+          description: Asset not found.
+  /effects/stamps:
+    post:
+      tags:
+        - effects
+      summary: Show a stamp effect
+      description: Display a visual stamp effect at the specified position with customizable size, opacity, and duration.
+      operationId: showStampEffect
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StampRequestBody'
+      responses:
+        '200':
+          description: Successfully showed the stamp effect.
+        '404':
+          description: Asset not found.
+  /gpt/available-models:
+    get:
+      tags:
+        - gpt
+      summary: Fetch the available models from the ChatGPT API
+      description: Retrieve a list of all ChatGPT models available for use with the current API configuration.
+      operationId: getAvailableGptModels
+      responses:
+        '200':
+          description: Successfully retrieved the available models.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatGptModels'
+  /gpt/chat:
+    post:
+      tags:
+        - gpt
+      summary: Send a chat message to the GPT API
+      description: Send a user message to the ChatGPT API and receive a structured response including message, dialogue, and emotion data.
+      operationId: sendGptChatMessage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+      responses:
+        '200':
+          description: Successfully received a response from the GPT API.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatGptResponse'
+  /gpt/model:
+    get:
+      tags:
+        - gpt
+      summary: Check the model used by the GPT API
+      description: Get the currently configured ChatGPT model for the specified VRM or global setting.
+      operationId: getGptModel
+      parameters:
+        - name: vrm
+          in: query
+          description: Optional VRM entity to get model for (defaults to global setting)
+          schema:
+            $ref: '#/components/schemas/Entity'
+      responses:
+        '200':
+          description: Successfully retrieved the model name.
+          content:
+            application/json:
+              schema:
+                type: string
+    put:
+      tags:
+        - gpt
+      summary: Set the model used by the GPT API
+      description: Configure which ChatGPT model to use for chat interactions.
+      operationId: setGptModel
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PutChatGptModelRequest'
+      responses:
+        '200':
+          description: Successfully set the model.
+  /gpt/system-prompt:
+    get:
+      tags:
+        - gpt
+      summary: Fetch the system prompt
+      description: Retrieve the current system prompt used to configure the GPT assistant's behavior and personality.
+      operationId: getSystemPrompt
+      parameters:
+        - name: vrm
+          in: query
+          schema:
+            $ref: '#/components/schemas/Entity'
+      responses:
+        '200':
+          description: Successfully retrieved the system prompt.
+          content:
+            application/json:
+              schema:
+                type: string
+    put:
+      tags:
+        - gpt
+      summary: Set the system prompt
+      description: Configure the system prompt that defines the GPT assistant's behavior, personality, and response style.
+      operationId: setSystemPrompt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PutSystemPromptRequest'
+      responses:
+        '200':
+          description: Successfully set the system prompt.
+  /gpt/use-web-search:
+    get:
+      tags:
+        - gpt
+      summary: Check if web search is enabled for the GPT API
+      description: Determine whether the GPT assistant is configured to use web search for enhanced responses.
+      operationId: getUseWebSearch
+      parameters:
+        - name: vrm
+          in: query
+          schema:
+            $ref: '#/components/schemas/Entity'
+      responses:
+        '200':
+          description: Successfully retrieved the web search setting.
+          content:
+            application/json:
+              schema:
+                type: boolean
+    put:
+      tags:
+        - gpt
+      summary: Set whether web search is enabled for the GPT API
+      description: Enable or disable web search functionality for the GPT assistant to access current information.
+      operationId: setUseWebSearch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PutUseWebSearchRequest'
+      responses:
+        '200':
+          description: Successfully set the web search setting.
+  /gpt/speaker/voicevox:
+    get:
+      tags:
+        - gpt
+      summary: Get the VoiceVox speaker ID
+      description: Retrieve the VoiceVox speaker ID used for text-to-speech synthesis.
+      operationId: getVoiceVoxSpeaker
+      parameters:
+        - name: vrm
+          in: query
+          description: Optional VRM entity to get speaker for (defaults to global setting)
+          schema:
+            $ref: '#/components/schemas/Entity'
+      responses:
+        '200':
+          description: Successfully retrieved the VoiceVox speaker ID.
+          content:
+            application/json:
+              schema:
+                type: integer
+                format: uint32
+    put:
+      tags:
+        - gpt
+      summary: Set the VoiceVox speaker ID
+      description: Configure the VoiceVox speaker ID used for text-to-speech synthesis.
+      operationId: setVoiceVoxSpeaker
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PutVoiceVoxSpeakerRequest'
+      responses:
+        '200':
+          description: Successfully set the VoiceVox speaker ID.
+  /webviews:
+    post:
+      tags:
+        - webview
+      summary: Open a webview
+      description: Create and display a new webview window with specified content from a mod asset, with customizable positioning and appearance options.
+      operationId: openWebview
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebviewOpenOptions'
+      responses:
+        '200':
+          description: Successfully opened the webview.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Entity'
+  /webviews/{entity_id}/close:
+    post:
+      tags:
+        - webview
+      summary: Close a webview
+      description: Close and destroy the specified webview window.
+      operationId: closeWebview
+      parameters:
+        - name: entity_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Entity'
+      responses:
+        '200':
+          description: Successfully closed the webview.
+  /webviews/{entity_id}/is-closed:
+    get:
+      tags:
+        - webview
+      summary: Check if a webview is closed
+      description: Determine whether the specified webview window is currently closed or still active.
+      operationId: isWebviewClosed
+      parameters:
+        - name: entity_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Entity'
+      responses:
+        '200':
+          description: Successfully checked if the webview is closed.
+          content:
+            application/json:
+              schema:
+                type: boolean
+  /mods/menus:
+    get:
+      tags:
+        - mods
+      summary: Fetch all mod menus
+      description: Retrieve metadata for all available mod menu items including thumbnails, text, and webview configurations.
+      operationId: getModMenus
+      responses:
+        '200':
+          description: Successfully retrieved all mod menus.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ModMenuMetadata'
+  /preferences/{key}:
+    get:
+      tags:
+        - preferences
+      summary: Load a preference value by key
+      description: Retrieve a stored preference value using its unique key identifier.
+      operationId: loadPreference
+      parameters:
+        - name: key
+          in: path
+          required: true
+          description: The unique key identifier for the preference
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully loaded the preference.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JsonValue'
+        '404':
+          description: Key not found.
+    put:
+      tags:
+        - preferences
+      summary: Save a preference value by key
+      description: Store or update a preference value with the specified key for persistent application settings.
+      operationId: savePreference
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JsonValue'
+      responses:
+        '200':
+          description: Successfully saved the preference.
+  /settings/fps:
+    get:
+      tags:
+        - settings
+      summary: Get the current FPS limit
+      description: Retrieve the current frames per second limit setting for the application rendering.
+      operationId: getFpsLimit
+      responses:
+        '200':
+          description: Successfully retrieved the FPS limit.
+          content:
+            application/json:
+              schema:
+                type: number
+                format: double
+    put:
+      tags:
+        - settings
+      summary: Set the FPS limit
+      description: Configure the maximum frames per second for application rendering to optimize performance.
+      operationId: setFpsLimit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: number
+              format: double
+      responses:
+        '200':
+          description: Successfully set the FPS limit.
+  /scripts/js:
+    post:
+      tags:
+        - scripts
+      summary: Execute a JavaScript file
+      description: Run a JavaScript script from the specified mod asset for custom functionality and automation.
+      operationId: executeJavaScript
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ModuleSourceRequest'
+      responses:
+        '200':
+          description: Successfully executed the script.
+        '404':
+          description: Asset not found.
+  /shadow-panel/alpha:
+    get:
+      tags:
+        - shadow-panel
+      summary: Get the current alpha value of the shadow panel
+      description: Retrieve the current transparency level of the shadow panel overlay.
+      operationId: getShadowPanelAlpha
+      responses:
+        '200':
+          description: Successfully retrieved the alpha value.
+          content:
+            application/json:
+              schema:
+                type: number
+                format: float
+    put:
+      tags:
+        - shadow-panel
+      summary: Set the alpha value of the shadow panel
+      description: Configure the transparency level of the shadow panel with optional speaker and subtitle settings.
+      operationId: setShadowPanelAlpha
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShadowPanelPutBody'
+      responses:
+        '200':
+          description: Successfully set the alpha value.
+  /vrma/{entity_id}/play:
+    put:
+      tags:
+        - vrma
+      summary: Play a VRMA animation
+      description: Start playing a VRMA animation on the specified VRMA entity with optional transition duration and repeat settings.
+      operationId: playVrmaAnimation
+      parameters:
+        - name: entity_id
+          in: path
+          required: true
+          description: The unique identifier of the VRMA animation entity
+          schema:
+            $ref: '#/components/schemas/Entity'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VrmaPlayRequest'
+      responses:
+        '200':
+          description: Successfully started playing the animation.
+        '404':
+          description: Entity not found.
+  /vrma/{entity_id}/stop:
+    put:
+      tags:
+        - vrma
+      summary: Stop a VRMA animation
+      description: Stop the currently playing VRMA animation on the specified VRMA entity.
+      operationId: stopVrmaAnimation
+      parameters:
+        - name: entity_id
+          in: path
+          required: true
+          description: The unique identifier of the VRMA animation entity
+          schema:
+            $ref: '#/components/schemas/Entity'
+      responses:
+        '200':
+          description: Successfully stopped the animation.
+        '404':
+          description: Entity not found.
+  /commands/{command}:
+    get:
+      tags:
+        - commands
+      summary: Stream command results
+      description: Get a streaming response for the specified command execution.
+      operationId: streamCommand
+      parameters:
+        - name: command
+          in: path
+          required: true
+          description: The command to stream results for
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully streaming command results.
+          content:
+            text/event-stream:
+              schema:
+                type: string
+    post:
+      tags:
+        - commands
+      summary: Send a command
+      description: Execute the specified command and return results.
+      operationId: sendCommand
+      parameters:
+        - name: command
+          in: path
+          required: true
+          description: The command to execute
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully executed the command.
+components:
+  schemas:
+    VrmSpawnArgs:
+      type: object
+      required:
+        - asset
+      properties:
+        asset:
+          $ref: '#/components/schemas/ModAssetId'
+        transform:
+          $ref: '#/components/schemas/TransformArgs'
+    TransformArgs:
+      type: object
+      properties:
+        translation:
+          $ref: '#/components/schemas/Vec3'
+        rotation:
+          $ref: '#/components/schemas/Quat'
+        scale:
+          $ref: '#/components/schemas/Vec3'
+    VrmMetadata:
+      type: object
+      required:
+        - name
+        - entity
+      properties:
+        name:
+          type: string
+        entity:
+          $ref: '#/components/schemas/Entity'
+    Vec3:
+      type: object
+      properties:
+        x:
+          type: number
+          format: float
+        y:
+          type: number
+          format: float
+        z:
+          type: number
+          format: float
+    Vec2:
+      type: object
+      properties:
+        x:
+          type: number
+          format: float
+        y:
+          type: number
+          format: float
+    IVec2:
+      type: object
+      properties:
+        x:
+          type: integer
+        y:
+          type: integer
+    Quat:
+      type: object
+      properties:
+        x:
+          type: number
+          format: float
+        y:
+          type: number
+          format: float
+        z:
+          type: number
+          format: float
+        w:
+          type: number
+          format: float
+    ModAssetId:
+      type: string
+      description: "Asset ID for a mod. (e.g. `basic::vrm.vrm`)"
+      example: "basic::vrm.vrm"
+    Entity:
+      type: integer
+      format: uint64
+      description: "The unique identifier for an entity."
+    VrmSetTransformArgs:
+      type: object
+      properties:
+        translation:
+          $ref: '#/components/schemas/Vec3'
+        rotation:
+          $ref: '#/components/schemas/Quat'
+        scale:
+          $ref: '#/components/schemas/Vec3'
+        bone:
+          $ref: '#/components/schemas/VrmBone'
+    VrmBone:
+      type: string
+      description: "VRM bone name."
+      enum:
+        - hips
+        - spine
+        - chest
+        - neck
+        - head
+        - leftShoulder
+        - leftArm
+        - leftForeArm
+        - leftHand
+        - rightShoulder
+        - rightArm
+        - rightForeArm
+        - rightHand
+        - leftUpLeg
+        - leftLeg
+        - leftFoot
+        - rightUpLeg
+        - rightLeg
+        - rightFoot
+    Transform:
+      type: object
+      required:
+        - translation
+        - rotation
+        - scale
+      properties:
+        translation:
+          type: array
+          items:
+            type: number
+            format: float
+          minItems: 3
+          maxItems: 3
+          description: Position in 3D space [x, y, z]
+        rotation:
+          type: array
+          items:
+            type: number
+            format: float
+          minItems: 4
+          maxItems: 4
+          description: Rotation quaternion [x, y, z, w]
+        scale:
+          type: array
+          items:
+            type: number
+            format: float
+          minItems: 3
+          maxItems: 3
+          description: Scale factors [x, y, z]
+    GlobalViewport:
+      type: object
+      properties:
+        x:
+          type: number
+          format: float
+        y:
+          type: number
+          format: float
+    DisplayInfo:
+      type: object
+      properties:
+        width:
+          type: integer
+        height:
+          type: integer
+        x:
+          type: integer
+        y:
+          type: integer
+        scale_factor:
+          type: number
+          format: float
+    GlobalDisplays:
+      type: array
+      items:
+        $ref: '#/components/schemas/DisplayInfo'
+    StampOptions:
+      type: object
+      properties:
+        x:
+          type: number
+          format: float
+        y:
+          type: number
+          format: float
+        width:
+          type: number
+          format: float
+        height:
+          type: number
+          format: float
+        alpha:
+          type: number
+          format: float
+        duration:
+          type: number
+          format: float
+    ModuleSourceRequest:
+      type: object
+      required:
+        - source
+      properties:
+        source:
+          $ref: '#/components/schemas/ModModuleSource'
+    ModModuleSource:
+      type: string
+      description: "Module source identifier (e.g. `basic::sound.wav`)"
+      example: "basic::sound.wav"
+    StampRequestBody:
+      type: object
+      required:
+        - source
+      properties:
+        source:
+          $ref: '#/components/schemas/ModModuleSource'
+        x:
+          type: number
+          format: float
+        y:
+          type: number
+          format: float
+        width:
+          type: number
+          format: float
+        height:
+          type: number
+          format: float
+        alpha:
+          type: number
+          format: float
+        duration:
+          type: number
+          format: float
+    ChatGptModels:
+      type: array
+      items:
+        type: string
+    ChatRequest:
+      type: object
+      required:
+        - userMessage
+      properties:
+        userMessage:
+          type: string
+        options:
+          $ref: '#/components/schemas/ChatVrmRequestOptions'
+    ChatVrmRequestOptions:
+      type: object
+      required:
+        - vrm
+      properties:
+        vrm:
+          type: integer
+          format: uint64
+          description: The VRM entity ID that will respond to the chat message
+        speaker:
+          type: integer
+          description: The VoiceVox speaker ID for text-to-speech
+        pause:
+          type: number
+          format: float
+          description: The pause duration in seconds between sentences
+        waitForCompletion:
+          type: boolean
+          description: If true, the method will wait for the speech to complete
+        subtitle:
+          $ref: '#/components/schemas/SubtitleOptions'
+    ShadowPanelPutBody:
+      type: object
+      required:
+        - alpha
+      properties:
+        alpha:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+        speaker:
+          type: integer
+          format: uint32
+        subtitle:
+          $ref: '#/components/schemas/SubtitleOptions'
+    SubtitleOptions:
+      type: object
+      properties:
+        font:
+          $ref: '#/components/schemas/ModAssetId'
+        fontSize:
+          type: number
+          format: float
+        color:
+          type: array
+          items:
+            type: number
+            format: float
+          minItems: 4
+          maxItems: 4
+    ChatGptResponse:
+      type: object
+      required:
+        - message
+        - dialogue
+        - emotion
+      properties:
+        message:
+          type: string
+        dialogue:
+          type: string
+        emotion:
+          type: string
+          enum:
+            - happy
+            - sad
+            - angry
+            - surprised
+            - neutral
+    PutChatGptModelRequest:
+      type: object
+      required:
+        - model
+      properties:
+        model:
+          type: string
+        vrm:
+          $ref: '#/components/schemas/Entity'
+    PutSystemPromptRequest:
+      type: object
+      required:
+        - systemPrompt
+      properties:
+        systemPrompt:
+          type: string
+        vrm:
+          $ref: '#/components/schemas/Entity'
+    PutUseWebSearchRequest:
+      type: object
+      required:
+        - useWebSearch
+      properties:
+        useWebSearch:
+          type: boolean
+        vrm:
+          $ref: '#/components/schemas/Entity'
+    ModMenuMetadata:
+      type: object
+      required:
+        - text
+        - webviewAssetId
+      properties:
+        thumbnailPath:
+          type: string
+        text:
+          type: string
+        webviewAssetId:
+          $ref: '#/components/schemas/ModAssetId'
+        webviewOptions:
+          $ref: '#/components/schemas/WebviewOpenOptions'
+    WebviewOpenOptions:
+      type: object
+      required:
+        - asset
+      properties:
+        asset:
+          $ref: '#/components/schemas/ModAssetId'
+          description: The mod asset ID for the webview content
+        caller:
+          $ref: '#/components/schemas/Entity'
+        transparent:
+          type: boolean
+        showToolbar:
+          type: boolean
+        shadow:
+          type: boolean
+        position:
+          $ref: '#/components/schemas/WebviewOpenPosition'
+        resolution:
+          $ref: '#/components/schemas/Vec2'
+        openSound:
+          $ref: '#/components/schemas/ModAssetId'
+        closeSound:
+          $ref: '#/components/schemas/ModAssetId'
+    WebviewOpenPosition:
+      oneOf:
+        - $ref: '#/components/schemas/IVec2'
+        - type: object
+          properties:
+            vrm:
+              $ref: '#/components/schemas/Entity'
+            bone:
+              $ref: '#/components/schemas/VrmBone'
+            offset:
+              $ref: '#/components/schemas/IVec2'
+            tracking:
+              type: boolean
+    JsonValue:
+      type: object
+      additionalProperties: true
+    VrmNameResponse:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: The display name of the VRM model
+    VrmStateResponse:
+      type: object
+      required:
+        - state
+      properties:
+        state:
+          type: string
+          description: The current state/mode of the VRM model
+          example: "idle"
+    VrmStateRequest:
+      type: object
+      required:
+        - state
+      properties:
+        state:
+          type: string
+          description: The state/mode to set for the VRM model
+          example: "dancing"
+    VoiceVoxRequest:
+      type: object
+      required:
+        - sentences
+      properties:
+        sentences:
+          type: array
+          items:
+            type: string
+          description: Array of sentences to synthesize into speech
+        speaker:
+          type: integer
+          description: The VoiceVox speaker ID
+        pause:
+          type: number
+          format: float
+          description: The pause duration in seconds between sentences
+        waitForCompletion:
+          type: boolean
+          description: If true, the method will wait for the speech to complete
+        subtitle:
+          $ref: '#/components/schemas/SubtitleOptions'
+    PartialTransform:
+      type: object
+      description: Partial transform data for updating entity position, rotation, and/or scale
+      properties:
+        translation:
+          type: array
+          items:
+            type: number
+            format: float
+          minItems: 3
+          maxItems: 3
+          description: Position in 3D space [x, y, z]
+        rotation:
+          type: array
+          items:
+            type: number
+            format: float
+          minItems: 4
+          maxItems: 4
+          description: Rotation quaternion [x, y, z, w]
+        scale:
+          type: array
+          items:
+            type: number
+            format: float
+          minItems: 3
+          maxItems: 3
+          description: Scale factors [x, y, z]
+    PutVoiceVoxSpeakerRequest:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: integer
+          format: uint32
+          description: The VoiceVox speaker ID to use for text-to-speech synthesis
+        vrm:
+          $ref: '#/components/schemas/Entity'
+          description: Optional VRM entity to set speaker for (defaults to global setting)
+    VrmaPlayRequest:
+      type: object
+      description: Options for playing a VRMA animation
+      properties:
+        transitionSecs:
+          type: number
+          format: float
+          description: Transition duration in seconds for smooth animation blending
+          example: 0.5
+        repeat:
+          $ref: '#/components/schemas/VrmaRepeat'
+    VrmaRepeat:
+      type: object
+      description: Repeat configuration for VRMA animation playback
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum: [ "forever", "never", "count" ]
+          description: Type of repeat behavior
+        count:
+          type: integer
+          format: uint32
+          description: Number of times to repeat (only used when type is "count")
+          example: 3
+    SpeakVoiceVoxOptions:
+      type: object
+      description: Optional configuration for VoiceVox speech synthesis
+      properties:
+        speaker:
+          type: integer
+          description: Speaker ID for voice selection
+          example: 1
+        pause:
+          type: number
+          format: float
+          description: The pause duration in seconds between sentences
+        waitForCompletion:
+          type: boolean
+          description: If true, the method will wait for the speech to complete
+        subtitle:
+          $ref: '#/components/schemas/SubtitleOptions'

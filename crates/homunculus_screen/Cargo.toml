@@ -1,0 +1,38 @@
+[package]
+name = "homunculus_screen"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+bevy = { workspace = true }
+homunculus_core = { path = "../homunculus_core" }
+serde = { workspace = true }
+
+[target.'cfg(target_os="macos")'.dependencies]
+core-graphics = { version = "0.25" }
+core-foundation = { version = "0.10" }
+objc2 = { version = "0.6", features = ["std", "exception"] }
+objc2-foundation = { version = "0.3" }
+objc2-app-kit = { version = "0.3", features = [
+    "NSWindow",
+    "NSView",
+    "NSApplication",
+] }
+apple-sys = { version = "0.2", features = ["IOKit"] }
+cocoa = "0.25.0"
+core-graphics-helmer-fork = "0.24.0"
+screencapturekit = "0.2.8"
+objc = { version = "0.2.7" }
+
+[target.'cfg(target_os="windows")'.dependencies]
+windows = { version = "0.60", features = [
+    "Win32_Foundation",
+    "Win32_UI_WindowsAndMessaging",
+] }
+
+[lints]
+workspace = true

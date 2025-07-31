@@ -1,0 +1,27 @@
+.drawer-open {
+	overflow: hidden;
+}
+.drawer-open[data-state="open"] {
+	animation: drawerOpen 300ms ease-out;
+}
+.drawer-open[data-state="closed"] {
+	animation: drawerClose 300ms ease-out;
+}
+
+@keyframes drawerOpen {
+	from {
+		width: 0;
+	}
+	to {
+		width: var(--radix-collapsible-content-width);
+	}
+}
+
+@keyframes drawerClose {
+	from {
+		width: var(--radix-collapsible-content-width);
+	}
+	to {
+		width: 0;
+	}
+} 

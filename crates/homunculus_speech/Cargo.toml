@@ -1,0 +1,30 @@
+[package]
+name = "homunculus_speech"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+bevy = { workspace = true }
+bevy_vrm1 = { workspace = true }
+homunculus_core = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+reqwest = { version = "0.12", features = ["json"] }
+bevy_flurx = { workspace = true }
+async-channel = { workspace = true }
+tokio = { workspace = true }
+async-compat = "0.2.4"
+#dasp = { version = "0.11", features = ["ring_buffer", "signal"] }
+#hound = "3.5"
+#rustfft = { version = "6.4" }
+#num-complex = "0.4"
+
+[dev-dependencies]
+tokio = { version = "1.45", features = ["full"] }
+
+[lints]
+workspace = true

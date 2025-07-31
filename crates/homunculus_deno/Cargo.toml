@@ -1,0 +1,21 @@
+[package]
+name = "homunculus_deno"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+tokio = { version = "1" }
+bevy = { workspace = true }
+deno_runtime = { version = "0.218", features = ["hmr"] }
+deno_resolver = { version = "=0.41" }
+sys_traits = "0.1"
+rustls = { version = "=0.23.27", default-features = false, features = ["logging", "std", "tls12", "aws_lc_rs"] }
+async-channel = { workspace = true }
+homunculus_core = { workspace = true }
+
+[lints]
+workspace = true

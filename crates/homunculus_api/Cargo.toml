@@ -1,0 +1,58 @@
+[package]
+name = "homunculus_api"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+bevy = { workspace = true }
+bevy_flurx = { workspace = true }
+bevy_webview_wry = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+async-channel = { workspace = true }
+async-broadcast = { workspace = true }
+bevy_vrm1 = { workspace = true }
+homunculus_core = { workspace = true }
+homunculus_effects = { workspace = true }
+homunculus_prefs = { workspace = true }
+homunculus_shadow_panel = { workspace = true }
+homunculus_speech = { workspace = true }
+homunculus_deno = { workspace = true }
+homunculus_power_saver = { workspace = true }
+thiserror = "2"
+axum = { workspace = true, optional = true }
+tracing = { workspace = true }
+async-openai = "0.29.0"
+tokio = "1"
+
+[target.'cfg(any(target_os = "ios", target_os = "macos"))'.dependencies]
+winit = { version = "0.30" }
+block2 = { version = "0.6" }
+objc2 = { version = "0.6", features = ["std"] }
+objc2-app-kit = { version = "0.3", features = [
+    "NSApplication",
+    "NSEvent",
+    "NSWindow",
+    "NSView",
+    "NSPasteboard",
+    "NSPanel",
+    "NSResponder",
+    "NSOpenPanel",
+    "NSSavePanel",
+    "NSMenu",
+    "NSGraphics",
+    "NSTrackingArea",
+    "block2",
+] }
+objc2-foundation = { version = "0.3" }
+
+[features]
+default = []
+axum = ["dep:axum"]
+
+[lints]
+workspace = true
