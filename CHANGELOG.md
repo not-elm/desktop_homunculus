@@ -1,3 +1,9 @@
+## v0.1.0-alpha.3.2
+
+### Bug Fixes
+
+- Fixed the issue where the `.env` file was not being read correctly when launched from the app file.
+
 ## v0.1.0-alpha.3
 
 Major design overhaul.

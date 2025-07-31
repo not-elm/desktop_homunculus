@@ -43,8 +43,7 @@ pub struct GptApiPlugin;
 
 impl Plugin for GptApiPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(HomunculusChatGpt(Client::new()))
-            .add_systems(Startup, fetch_available_models);
+        app.add_systems(Startup, fetch_available_models);
     }
 }
 
@@ -133,7 +132,8 @@ pub struct ChatGptResponse {
     pub emotion: String,
 }
 
-fn fetch_available_models(mut commands: Commands, gpt: Res<HomunculusChatGpt>) {
+fn fetch_available_models(mut commands: Commands) {
+    let gpt = HomunculusChatGpt(Client::default());
     let client = gpt.clone();
     let models = tokio::runtime::Runtime::new()
         .unwrap()
@@ -149,6 +149,7 @@ fn fetch_available_models(mut commands: Commands, gpt: Res<HomunculusChatGpt>) {
             }
         });
     commands.insert_resource(ChatGptModels(models));
+    commands.insert_resource(gpt);
 }
 
 impl GptApi {
