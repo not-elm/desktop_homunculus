@@ -214,7 +214,7 @@ fn spawn_camera(
             scale: 1.5,
             ..OrthographicProjection::default_3d()
         }),
-        Transform::from_xyz(0., 0., 10.0),
+        Transform::from_xyz(0., 0., 20.0),
     ));
     if is_primary {
         cmd.insert(PrimaryCamera);

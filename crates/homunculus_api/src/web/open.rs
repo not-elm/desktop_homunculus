@@ -37,6 +37,7 @@ fn open(
             cameras.all_layers(),
             Mesh3d(meshes.add(Plane3d::new(Vec3::Z, Vec2::ONE))),
             MeshMaterial3d(materials.add(WebviewExtendStandardMaterial::default())),
+            Transform::from_xyz(0.0, 0.0, 10.0),
         ))
         .id()
 }
