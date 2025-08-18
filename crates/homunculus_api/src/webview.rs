@@ -29,8 +29,8 @@ impl Plugin for WebviewApiPlugin {
     }
 }
 
-#[derive(Resource, Debug, Default)]
-struct ClosingWebviewSounds(HashMap<Entity, ModModuleSource>);
+#[derive(Resource, Debug, Default, Deref, DerefMut)]
+pub(crate) struct ClosingWebviewSounds(HashMap<Entity, ModModuleSource>);
 
 #[derive(Component, Debug, Clone)]
 struct WebviewTracking {

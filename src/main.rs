@@ -13,6 +13,7 @@ use bevy::prelude::*;
 use bevy::render::RenderPlugin;
 use bevy::render::settings::{PowerPreference, RenderCreation, WgpuSettings};
 use bevy::window::{ExitCondition, WindowPlugin, WindowResolution};
+use bevy_cef::CefPlugin;
 use bevy_flurx::FlurxPlugin;
 use bevy_vrm1::vrm::VrmPlugin;
 use bevy_vrm1::vrma::VrmaPlugin;
@@ -124,6 +125,7 @@ fn main() {
             homunculus_deno::HomunculusDenoPlugin,
             HomunculusPrefsPlugin,
             HomunculusHttpServerPlugin,
+            CefPlugin,
         ));
     }
     app.add_systems(PreStartup, load_env);

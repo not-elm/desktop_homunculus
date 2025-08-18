@@ -11,6 +11,7 @@ publish.workspace = true
 bevy = { workspace = true, features = ["bevy_render"] }
 bevy_vrm1 = { workspace = true }
 bevy_egui = { workspace = true, optional = true }
+bevy_cef = { workspace = true }
 
 [features]
 default = []

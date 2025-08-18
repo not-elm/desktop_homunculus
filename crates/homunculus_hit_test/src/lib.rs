@@ -38,8 +38,8 @@ use bevy::prelude::*;
 use bevy::render::view::RenderLayers;
 use bevy::utils::default;
 use bevy::window::Window;
+use bevy_cef::prelude::WebviewExtendStandardMaterial;
 use bevy_vrm1::prelude::{Cameras, MToonMaterial};
-use bevy_vrm1::vrm::Vrm;
 use std::fmt::Debug;
 
 #[derive(Debug, Clone, PartialEq, Reflect, Event)]
@@ -95,6 +95,7 @@ fn update_hit_test(
     mut windows: Query<(Entity, &mut Window), With<RenderLayers>>,
     cameras: Cameras,
     mtoon_materials: Query<&MeshMaterial3d<MToonMaterial>>,
+    webview_materials: Query<&MeshMaterial3d<WebviewExtendStandardMaterial>>,
     #[cfg(feature = "develop")] mut ctx: bevy_egui::EguiContexts,
 ) {
     #[cfg(feature = "develop")]
@@ -117,7 +118,7 @@ fn update_hit_test(
             .cast_ray(
                 ray,
                 &MeshRayCastSettings {
-                    filter: &|e| mtoon_materials.get(e).is_ok(),
+                    filter: &|e| mtoon_materials.get(e).is_ok() || webview_materials.get(e).is_ok(),
                     ..default()
                 },
             )
@@ -135,7 +136,7 @@ fn update_hit_test(
     }
 }
 
-fn observe_hit_test(mut commands: Commands, vrms: Query<Entity, Added<Vrm>>) {
+fn observe_hit_test(mut commands: Commands, vrms: Query<Entity, Added<Mesh3d>>) {
     for vrm in vrms.iter() {
         commands
             .entity(vrm)

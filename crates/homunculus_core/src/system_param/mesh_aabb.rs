@@ -45,12 +45,10 @@ fn calculate_aabb(
                     let mut entity_bounds = bounds.map_or(default_bounds, |bounds| {
                         (tf * Vec3::from(bounds.min()), tf * Vec3::from(bounds.max()))
                     });
-                    if include_children {
-                        if let Some(children) = children {
-                            let children_bounds =
-                                calculate_aabb(children, include_children, entities_query);
-                            entity_bounds = combine_bounds(entity_bounds, children_bounds);
-                        }
+                    if include_children && let Some(children) = children {
+                        let children_bounds =
+                            calculate_aabb(children, include_children, entities_query);
+                        entity_bounds = combine_bounds(entity_bounds, children_bounds);
                     }
                     entity_bounds
                 })

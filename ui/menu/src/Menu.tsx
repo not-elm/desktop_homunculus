@@ -51,6 +51,7 @@ export const Menu: FC<mods.ModMenuMetadata> = (p) => {
         <Card
             className="h-[80px] flex p-4 transition-transform duration-200 ease-in-out max-w-[90vw] hover:translate-y-[-2px] active:translate-y-[2px] hover:[&_.thumbnail]:opacity-100"
             onClick={async () => {
+                console.log("Menu clicked:", p.text);
                 const vrm = Vrm.caller();
                 if (vrm) {
                     if (p.script) {

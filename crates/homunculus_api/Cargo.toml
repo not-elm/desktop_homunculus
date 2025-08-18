@@ -28,6 +28,7 @@ axum = { workspace = true, optional = true }
 tracing = { workspace = true }
 async-openai = "0.29.0"
 tokio = "1"
+bevy_cef = { version = "0.1.0" }
 
 [target.'cfg(any(target_os = "ios", target_os = "macos"))'.dependencies]
 winit = { version = "0.30" }
@@ -52,6 +53,7 @@ objc2-foundation = { version = "0.3" }
 
 [features]
 default = []
+develop = ["bevy_cef/debug"]
 axum = ["dep:axum"]
 
 [lints]

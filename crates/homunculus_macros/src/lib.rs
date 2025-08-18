@@ -7,16 +7,16 @@ pub fn script_args(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let struct_name = input.ident;
     let mut fields = Vec::new();
-    if let Data::Struct(ref data) = input.data {
-        if let Fields::Named(ref field_names) = data.fields {
-            for field in field_names.named.iter() {
-                let field_ident = field.ident.as_ref().unwrap();
-                let field_name = field_ident.to_string();
-                if let Some(field_token) = get_field(&field_name, &field.ty) {
-                    fields.push(quote! {
-                        #field_ident: #field_token
-                    });
-                }
+    if let Data::Struct(ref data) = input.data
+        && let Fields::Named(ref field_names) = data.fields
+    {
+        for field in field_names.named.iter() {
+            let field_ident = field.ident.as_ref().unwrap();
+            let field_name = field_ident.to_string();
+            if let Some(field_token) = get_field(&field_name, &field.ty) {
+                fields.push(quote! {
+                    #field_ident: #field_token
+                });
             }
         }
     }
@@ -51,25 +51,22 @@ fn get_field(field_name: &str, ty: &Type) -> Option<proc_macro2::TokenStream> {
 }
 
 fn get_type_ident(ty: &Type) -> Option<proc_macro2::Ident> {
-    if let Type::Path(ty_path) = ty {
-        if let Some(segment) = ty_path.path.segments.last() {
-            return Some(segment.ident.clone());
-        }
+    if let Type::Path(ty_path) = ty
+        && let Some(segment) = ty_path.path.segments.last()
+    {
+        return Some(segment.ident.clone());
     }
     None
 }
 
 fn get_option_inner_type(ty: &Type) -> Option<&Type> {
-    if let Type::Path(ty_path) = ty {
-        if let Some(segment) = ty_path.path.segments.last() {
-            if segment.ident == "Option" {
-                if let PathArguments::AngleBracketed(gen_args) = &segment.arguments {
-                    if let Some(GenericArgument::Type(inner_ty)) = gen_args.args.first() {
-                        return Some(inner_ty);
-                    }
-                }
-            }
-        }
+    if let Type::Path(ty_path) = ty
+        && let Some(segment) = ty_path.path.segments.last()
+        && segment.ident == "Option"
+        && let PathArguments::AngleBracketed(gen_args) = &segment.arguments
+        && let Some(GenericArgument::Type(inner_ty)) = gen_args.args.first()
+    {
+        return Some(inner_ty);
     }
     None
 }

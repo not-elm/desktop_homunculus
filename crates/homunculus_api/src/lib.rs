@@ -50,6 +50,7 @@ mod shadow_panel;
 mod speech;
 pub mod vrm;
 mod vrma;
+mod web;
 mod webview;
 
 use crate::commands::CommandsApiPlugin;
@@ -63,7 +64,7 @@ pub mod prelude {
     pub use crate::{
         app::*, cameras::*, commands::CommandsApi, display::*, effects::*, entities::*, error::*,
         gpt::*, mods::*, preferences::*, reactor::*, scripts::*, settings::*, shadow_panel::*,
-        speech::*, vrm::*, vrma::*, webview::*,
+        speech::*, vrm::*, vrma::*, web::*, webview::*,
     };
 }
 
@@ -107,10 +108,10 @@ impl PluginGroup for HomunculusApiPlugin {
 /// ```rust
 /// use homunculus_api::api;
 ///
-/// api! {
+/// api!(
 ///     /// Custom API for specific functionality.
 ///     MyCustomApi
-/// }
+/// );
 /// ```
 #[macro_export]
 macro_rules! api {
