@@ -36,7 +36,15 @@ fn open(
             webview_uri,
             cameras.all_layers(),
             Mesh3d(meshes.add(Plane3d::new(Vec3::Z, Vec2::ONE))),
-            MeshMaterial3d(materials.add(WebviewExtendStandardMaterial::default())),
+            MeshMaterial3d(materials.add(WebviewExtendStandardMaterial {
+                base: StandardMaterial {
+                    unlit: true,
+                    #[cfg(target_os = "macos")]
+                    alpha_mode: AlphaMode::Premultiplied,
+                    ..default()
+                },
+                ..default()
+            })),
             Transform::from_xyz(0.0, 0.0, 10.0),
         ))
         .id()
