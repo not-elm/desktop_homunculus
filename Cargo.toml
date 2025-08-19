@@ -69,7 +69,7 @@ axum = { version = "0.8" }
 bevy_flurx = { version = "0.12.0", features = ["side-effect", "state", "tokio"] }
 bevy_tray_icon = { version = "0.2.0" }
 bevy_webview_wry = { path = "crates/bevy_webview_projects/crates/bevy_webview_wry" }
-bevy_cef = { version = "0.1" }
+bevy_cef = { path = "../bevy_cef", version = "0.1" }
 homunculus_core = { path = "crates/homunculus_core" }
 homunculus_drag = { path = "crates/homunculus_drag" }
 homunculus_effects = { path = "crates/homunculus_effects" }

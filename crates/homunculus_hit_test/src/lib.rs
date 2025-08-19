@@ -118,6 +118,7 @@ fn update_hit_test(
             .cast_ray(
                 ray,
                 &MeshRayCastSettings {
+                    visibility: RayCastVisibility::VisibleInView,
                     filter: &|e| mtoon_materials.get(e).is_ok() || webview_materials.get(e).is_ok(),
                     ..default()
                 },

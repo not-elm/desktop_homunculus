@@ -53,7 +53,7 @@
 use bevy::animation::RepeatAnimation;
 use bevy::prelude::*;
 use bevy::render::camera::NormalizedRenderTarget;
-use bevy_vrm1::prelude::{Initialized, ParentSearcher, PlayVrma};
+use bevy_vrm1::prelude::{Initialized, MToonMaterial, PlayVrma};
 use bevy_vrm1::vrm::Vrm;
 use bevy_vrm1::vrma::VrmaHandle;
 use homunculus_core::prelude::{
@@ -122,8 +122,13 @@ fn observe_vrm(
             .observe(on_drag_end)
             .add_child(drag_vrma)
             .observe(
-                move |trigger: Trigger<Pointer<DragStart>>, mut commands: Commands| {
+                move |trigger: Trigger<Pointer<DragStart>>,
+                      mut commands: Commands,
+                      mtoon_materials: Query<&MeshMaterial3d<MToonMaterial>>| {
                     if !matches!(trigger.event.button, PointerButton::Primary) {
+                        return;
+                    }
+                    if !mtoon_materials.contains(trigger.target) {
                         return;
                     }
                     commands.entity(drag_vrma).trigger(PlayVrma {
@@ -138,15 +143,16 @@ fn observe_vrm(
 fn on_drag_start(
     trigger: Trigger<Pointer<DragStart>>,
     mut commands: Commands,
-    parent_searcher: ParentSearcher,
     bone_offsets: BoneOffsets,
+    mtoon_materials: Query<&MeshMaterial3d<MToonMaterial>>,
 ) {
     if !matches!(trigger.event.button, PointerButton::Primary) {
         return;
     }
-    let Some(vrm_entity) = parent_searcher.find_vrm(trigger.target()) else {
+    if !mtoon_materials.contains(trigger.target) {
         return;
-    };
+    }
+    let vrm_entity = trigger.target();
     let Some(hips) = bone_offsets.hips_offset(vrm_entity) else {
         return;
     };
@@ -159,17 +165,18 @@ fn on_drag_start(
 fn on_drag_move(
     trigger: Trigger<Pointer<Drag>>,
     mut commands: Commands,
-    parent_searcher: ParentSearcher,
     coordinate: Coordinate,
+    mtoon_materials: Query<&MeshMaterial3d<MToonMaterial>>,
     transforms: Query<(&Transform, &DragHipsOffset)>,
 ) {
     if !matches!(trigger.event.button, PointerButton::Primary) {
         return;
     }
-    let location = &trigger.pointer_location;
-    let Some(vrm_entity) = parent_searcher.find_vrm(trigger.target()) else {
+    if !mtoon_materials.contains(trigger.target) {
         return;
-    };
+    }
+    let location = &trigger.pointer_location;
+    let vrm_entity = trigger.target();
     let Ok((transform, hips_offset)) = transforms.get(vrm_entity) else {
         return;
     };
@@ -193,15 +200,15 @@ fn on_drag_end(
     mut commands: Commands,
     windows: AppWindows,
     tracker: MascotTracker,
-    parent_searcher: ParentSearcher,
+    mtoon_materials: Query<&MeshMaterial3d<MToonMaterial>>,
 ) {
     if !matches!(trigger.event.button, PointerButton::Primary) {
         return;
     }
-    let Some(vrm) = parent_searcher.find_vrm(trigger.target) else {
+    if !mtoon_materials.contains(trigger.target) {
         return;
-    };
-
+    }
+    let vrm = trigger.target();
     let Some(global_cursor_pos) = global_cursor_pos(&trigger, &windows) else {
         return;
     };
