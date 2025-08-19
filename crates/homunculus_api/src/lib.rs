@@ -57,6 +57,7 @@ use crate::commands::CommandsApiPlugin;
 use crate::gpt::GptApiPlugin;
 use crate::prelude::{ShadowPanelApiPlugin, WebviewApiPlugin};
 use crate::reactor::ApiReactorPlugin;
+use crate::web::open::WebviewOpenPlugin;
 use bevy::app::PluginGroupBuilder;
 use bevy::prelude::*;
 
@@ -93,6 +94,7 @@ impl PluginGroup for HomunculusApiPlugin {
             .add(GptApiPlugin)
             .add(CommandsApiPlugin)
             .add(ShadowPanelApiPlugin)
+            .add(WebviewOpenPlugin)
             .build()
     }
 }

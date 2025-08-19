@@ -1,6 +1,6 @@
 mod close;
 mod is_closed;
-mod open;
+pub(super) mod open;
 
 use crate::api;
 

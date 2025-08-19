@@ -25,6 +25,14 @@ impl WebApi {
     }
 }
 
+pub(crate) struct WebviewOpenPlugin;
+
+impl Plugin for WebviewOpenPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(Update, visible);
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Default)]
 pub struct WebOpenOptions {
     /// The source of the webview, which can be a URL or a local file path(Relative to `assets/mods` dir).
@@ -69,6 +77,7 @@ fn open(
                 },
                 ..default()
             })),
+            Visibility::Hidden,
             Transform::from_xyz(0.0, 0.0, 10.0),
         ))
         .id();
@@ -88,6 +97,23 @@ fn open(
         commands.entity(vrm).add_child(webview);
     }
     webview
+}
+
+fn visible(
+    mut webviews: Query<(
+        &mut Visibility,
+        &MeshMaterial3d<WebviewExtendStandardMaterial>,
+    )>,
+    materials: Res<Assets<WebviewExtendStandardMaterial>>,
+) {
+    for (mut visibility, handle) in webviews.iter_mut() {
+        if matches!(*visibility, Visibility::Hidden)
+            && let Some(material) = materials.get(handle)
+            && material.extension.surface.is_some()
+        {
+            *visibility = Visibility::Visible;
+        }
+    }
 }
 
 fn insert_preload_scripts(commands: &mut Commands, webview: Entity, options: &WebviewOpenOptions) {
