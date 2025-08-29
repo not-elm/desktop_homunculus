@@ -1,15 +1,6 @@
 import {type FC, useState} from "react";
 import {motion} from "motion/react";
-import {
-    commands,
-    mods,
-    type OpenAroundVrm,
-    type OpenOptions,
-    type OpenPosition,
-    scripts,
-    Vrm,
-    Webview
-} from "@homunculus/api";
+import {commands, mods, type OpenOptions, scripts, Vrm, Webview} from "@homunculus/api";
 import {Card} from "@homunculus/core";
 
 export const Menus: FC<{
@@ -83,36 +74,10 @@ const openModUi = async (
     vrm: Vrm,
     options: OpenOptions,
 ) => {
-    const width = options?.resolution?.[0] ?? 500;
-    const margin = 100;
-    let position: OpenPosition | undefined;
-    if (isAbsolutePosition(options?.position)) {
-        position = options?.position;
-    } else if (isVrmRelativePosition(options?.position)) {
-        position = {
-            vrm: vrm.entity,
-            //@ts-ignore
-            bone: options?.position?.bone,
-            //@ts-ignore
-            offset: options?.position?.offset ?? [-width - margin, 0],
-            //@ts-ignore
-            tracking: options?.position?.tracking ?? true,
-        };
-    }
     const modWebview = await Webview.open({
         ...options,
-        position,
-        caller: vrm.entity,
+        vrm: vrm.entity,
+        parent: await vrm.findBoneEntity("head"),
     });
     await commands.send("menu::mod::open", modWebview.entity);
-}
-
-const isAbsolutePosition = (position: unknown): position is [number, number] => {
-    return Array.isArray(position);
-}
-
-const isVrmRelativePosition = (position: unknown): position is OpenAroundVrm => {
-    return !!position && typeof position === "object" &&
-        // @ts-ignore
-        (!!position?.bone || !!position?.offset || !!position?.tracking);
 }

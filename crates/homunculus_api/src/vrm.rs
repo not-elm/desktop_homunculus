@@ -1,3 +1,4 @@
+mod bone;
 mod despawn;
 mod fetch_all;
 mod find_by_name;

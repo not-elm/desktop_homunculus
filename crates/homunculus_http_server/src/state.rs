@@ -2,7 +2,7 @@ use axum::extract::FromRef;
 use homunculus_api::preferences::PrefsApi;
 use homunculus_api::prelude::{
     ApiReactor, AppApi, CameraApi, CommandsApi, EffectsApi, EntitiesApi, GptApi, ModsApi,
-    ScriptsApi, SettingsApi, ShadowPanelApi, SpeechApi, VrmAnimationApi, WebApi, WebviewApi,
+    ScriptsApi, SettingsApi, ShadowPanelApi, SpeechApi, VrmAnimationApi, WebviewApi,
 };
 use homunculus_api::vrm::VrmApi;
 
@@ -16,7 +16,6 @@ pub struct HttpState {
     pub camera: CameraApi,
     pub shadow_panel: ShadowPanelApi,
     pub webview: WebviewApi,
-    pub web: WebApi,
     pub effects: EffectsApi,
     pub speak: SpeechApi,
     pub script: ScriptsApi,
@@ -36,7 +35,6 @@ impl From<ApiReactor> for HttpState {
             prefs: PrefsApi::from(reactor.clone()),
             camera: CameraApi::from(reactor.clone()),
             shadow_panel: ShadowPanelApi::from(reactor.clone()),
-            web: WebApi::from(reactor.clone()),
             webview: WebviewApi::from(reactor.clone()),
             effects: EffectsApi::from(reactor.clone()),
             speak: SpeechApi::from(reactor.clone()),

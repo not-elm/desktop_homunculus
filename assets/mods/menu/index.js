@@ -13,20 +13,13 @@
                         webview = null;
                     }
                     if (webview === null) {
-                        const webviewWidth = 500;
-                        const webviewHeight = 600;
                         webview = await Deno.api.Webview.open({
                             source: "menu/index.html",
-                            caller: vrm.entity,
-                            position: {
-                                vrm: vrm.entity,
-                                offset: [-webviewWidth - 100, -180],
-                                bone: "head",
-                                tracking: true,
+                            vrm: vrm.entity,
+                            parent: await vrm.findBoneEntity("head"),
+                            transform: {
+                                translation: [-1.0, 0, 0]
                             },
-                            transparent: true,
-                            showToolbar: false,
-                            resolution: [webviewWidth, webviewHeight],
                             sounds: {
                                 "open": "menu/open.mp3",
                             }

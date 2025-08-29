@@ -50,14 +50,12 @@ mod shadow_panel;
 mod speech;
 pub mod vrm;
 mod vrma;
-mod web;
 mod webview;
 
 use crate::commands::CommandsApiPlugin;
 use crate::gpt::GptApiPlugin;
 use crate::prelude::{ShadowPanelApiPlugin, WebviewApiPlugin};
 use crate::reactor::ApiReactorPlugin;
-use crate::web::open::WebviewOpenPlugin;
 use bevy::app::PluginGroupBuilder;
 use bevy::prelude::*;
 
@@ -65,7 +63,7 @@ pub mod prelude {
     pub use crate::{
         app::*, cameras::*, commands::CommandsApi, display::*, effects::*, entities::*, error::*,
         gpt::*, mods::*, preferences::*, reactor::*, scripts::*, settings::*, shadow_panel::*,
-        speech::*, vrm::*, vrma::*, web::*, webview::*,
+        speech::*, vrm::*, vrma::*, webview::*, webview::*,
     };
 }
 
@@ -94,7 +92,6 @@ impl PluginGroup for HomunculusApiPlugin {
             .add(GptApiPlugin)
             .add(CommandsApiPlugin)
             .add(ShadowPanelApiPlugin)
-            .add(WebviewOpenPlugin)
             .build()
     }
 }

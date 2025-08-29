@@ -166,7 +166,7 @@ export namespace entities {
         name: string,
         options?: FindOptions
     ): Promise<number> => {
-        const response = await host.get(host.createUrl("entities/find", {
+        const response = await host.get(host.createUrl("entities", {
             name,
             root: options?.root
         }));

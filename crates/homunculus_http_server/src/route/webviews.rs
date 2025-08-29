@@ -1,9 +1,9 @@
 use crate::extract::EntityId;
-use axum::Json;
 use axum::extract::State;
+use axum::Json;
 use bevy::prelude::Entity;
-use homunculus_api::prelude::WebApi;
 use homunculus_api::prelude::axum::{HttpResult, IntoHttpResult};
+use homunculus_api::prelude::WebviewApi;
 use homunculus_core::prelude::*;
 
 /// Open a webview.
@@ -12,7 +12,7 @@ use homunculus_core::prelude::*;
 ///
 /// `POST /webview/`
 pub async fn open(
-    State(api): State<WebApi>,
+    State(api): State<WebviewApi>,
     Json(options): Json<WebviewOpenOptions>,
 ) -> HttpResult<Entity> {
     api.open(options).await.into_http_result()
@@ -23,7 +23,7 @@ pub async fn open(
 /// ### Path
 ///
 /// `DELETE /webview/:entity_id/close`
-pub async fn close(State(api): State<WebApi>, EntityId(entity): EntityId) -> HttpResult {
+pub async fn close(State(api): State<WebviewApi>, EntityId(entity): EntityId) -> HttpResult {
     api.close(entity).await.into_http_result()
 }
 
@@ -32,6 +32,9 @@ pub async fn close(State(api): State<WebApi>, EntityId(entity): EntityId) -> Htt
 /// ### Path
 ///
 /// `GET /webview/:entity_id/is-closed`
-pub async fn is_closed(State(api): State<WebApi>, EntityId(entity): EntityId) -> HttpResult<bool> {
+pub async fn is_closed(
+    State(api): State<WebviewApi>,
+    EntityId(entity): EntityId,
+) -> HttpResult<bool> {
     api.is_closed(entity).await.into_http_result()
 }

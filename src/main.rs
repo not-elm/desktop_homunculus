@@ -4,28 +4,22 @@
     windows_subsystem = "windows"
 )]
 
-use bevy::DefaultPlugins;
 use bevy::app::{App, PluginGroup};
 use bevy::asset::io::file::FileAssetReader;
 use bevy::log::tracing_subscriber::Layer;
 use bevy::log::{BoxedLayer, LogPlugin};
 use bevy::prelude::*;
-use bevy::render::RenderPlugin;
 use bevy::render::settings::{PowerPreference, RenderCreation, WgpuSettings};
+use bevy::render::RenderPlugin;
 use bevy::window::{ExitCondition, WindowPlugin, WindowResolution};
+use bevy::DefaultPlugins;
 use bevy_cef::CefPlugin;
 use bevy_flurx::FlurxPlugin;
 use bevy_vrm1::vrm::VrmPlugin;
 use bevy_vrm1::vrma::VrmaPlugin;
-use bevy_webview_wry::WebviewWryPlugin;
-use bevy_webview_wry::api::{
-    AllAppPlugins, AllClipboardPlugins, AllDialogPlugins, AllFsPlugins, AllHttpPlugins,
-    AllMonitorPlugins, AllPathPlugins, AllWebWindowPlugins,
-};
-use bevy_webview_wry::prelude::AllLogPlugins;
 use homunculus_api::HomunculusApiPlugin;
-use homunculus_core::HomunculusCorePlugin;
 use homunculus_core::prelude::app_data_dir;
+use homunculus_core::HomunculusCorePlugin;
 use homunculus_drag::HomunculusDragPlugin;
 use homunculus_effects::HomunculusEffectsPlugin;
 use homunculus_hit_test::HomunculusHitTestPlugin;
@@ -38,7 +32,6 @@ use homunculus_shadow_panel::HomunculusShadowPanelPlugin;
 use homunculus_sitting::HomunculusSittingPlugin;
 use homunculus_speech::HomunculusSpeechPlugin;
 use homunculus_windows::HomunculusWindowsPlugin;
-use std::path::PathBuf;
 use std::sync::OnceLock;
 use tracing_appender::non_blocking::WorkerGuard;
 use tracing_appender::rolling;
@@ -86,25 +79,7 @@ fn main() {
             #[cfg(feature = "develop")]
             bevy_inspector_egui::quick::WorldInspectorPlugin::default(),
         ))
-        .add_plugins((
-            FlurxPlugin,
-            WebviewWryPlugin {
-                local_root: PathBuf::from(""),
-            },
-            VrmPlugin,
-            VrmaPlugin,
-        ))
-        .add_plugins((
-            AllWebWindowPlugins,
-            AllAppPlugins,
-            AllClipboardPlugins,
-            AllFsPlugins,
-            AllDialogPlugins,
-            AllLogPlugins,
-            AllPathPlugins,
-            AllMonitorPlugins,
-            AllHttpPlugins,
-        ))
+        .add_plugins((FlurxPlugin, VrmPlugin, VrmaPlugin))
         .add_plugins((
             HomunculusCorePlugin,
             HomunculusEffectsPlugin,

@@ -1,7 +1,9 @@
 use crate::error::ApiResult;
 use crate::prelude::WebviewApi;
-use crate::webview::ClosingWebviewSounds;
+use bevy::platform::collections::HashMap;
+use bevy::prelude::*;
 use bevy_flurx::prelude::*;
+use homunculus_core::prelude::ModModuleSource;
 use homunculus_effects::{AssetServer, AudioPlayer, Commands, Entity, In, Res, ResMut, Update};
 
 impl WebviewApi {
@@ -23,6 +25,9 @@ impl WebviewApi {
     }
 }
 
+#[derive(Resource, Debug, Default, Deref, DerefMut)]
+pub(super) struct ClosingWebviewSounds(pub HashMap<Entity, ModModuleSource>);
+
 fn close(In(entity): In<Entity>, mut commands: Commands) {
     commands.entity(entity).try_despawn();
 }
@@ -33,7 +38,7 @@ fn play_close_sound(
     mut closing_sounds: ResMut<ClosingWebviewSounds>,
     asset_server: Res<AssetServer>,
 ) {
-    if let Some(sound) = closing_sounds.0.remove(&webview_entity) {
+    if let Some(sound) = closing_sounds.remove(&webview_entity) {
         commands.spawn(AudioPlayer::new(asset_server.load(sound.to_string())));
     }
 }

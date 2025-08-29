@@ -3,8 +3,8 @@ pub mod transform;
 
 use axum::extract::{Query, State};
 use bevy::prelude::{Entity, Name};
-use homunculus_api::prelude::EntitiesApi;
 use homunculus_api::prelude::axum::{HttpResult, IntoHttpResult};
+use homunculus_api::prelude::EntitiesApi;
 use serde::{Deserialize, Serialize};
 
 /// Find an entity by its name.
@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 /// If `root` entity is specified, it will search recursively from that entity's children.
 ///
 /// ### Path
-/// `GET /entities/find`
+/// `GET /entities/`
 pub async fn get(
     State(api): State<EntitiesApi>,
     Query(query): Query<EntitiesFindQuery>,

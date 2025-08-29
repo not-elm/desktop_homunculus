@@ -1,4 +1,5 @@
 import {host} from "./host";
+import {Transform} from "./math";
 
 /**
  * Webview management for creating and controlling embedded web interfaces.
@@ -58,36 +59,9 @@ export interface OpenOptions {
      * This creates an association between the webview and a specific VRM character,
      * useful for tracking purposes and enables VRM-specific APIs within the webview.
      */
-    caller?: number,
-
-    /**
-     * Whether the webview background should be transparent.
-     * When true, only the rendered HTML content is visible, allowing for
-     * overlay-style UIs and seamless integration with the 3D environment.
-     * @defaultValue false
-     */
-    transparent?: boolean;
-    /**
-     * Whether to display the webview's toolbar with navigation controls.
-     * Disable for immersive UI experiences or when the webview is purely decorative.
-     * @defaultValue true
-     */
-    showToolbar?: boolean,
-    /**
-     * Whether the webview window should cast a shadow.
-     * This visual effect is only applied on macOS platforms.
-     * @defaultValue true
-     */
-    shadow?: boolean,
-    /** Position configuration for the webview (screen coordinates or VRM-relative) */
-    position?: OpenPosition,
-    /**
-     * The size of the webview window in pixels [width, height].
-     * If not specified, uses Bevy's default webview dimensions.
-     * @example [800, 600] for an 800x600 pixel webview
-     */
-    resolution?: [number, number],
-
+    vrm?: number,
+    parent?: number,
+    transform?: Transform,
     sounds?: {
         /**
          * Sound to play when the webview is opened.

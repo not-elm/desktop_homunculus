@@ -1,20 +1,12 @@
 use crate::error::ApiResult;
 use crate::prelude::WebviewApi;
-use crate::webview::{ClosingWebviewSounds, WebviewTracking};
-use bevy::window::{WindowLevel, WindowResolution};
+use crate::webview::close::ClosingWebviewSounds;
+use bevy::prelude::*;
+use bevy_cef::prelude::{CefWebviewUri, PreloadScripts, WebviewExtendStandardMaterial};
 use bevy_flurx::action::once;
-use bevy_webview_wry::core::{
-    Background, BrowserAcceleratorKeys, EnableClipboard, InitializationScripts, UseDevtools,
-    WebViewBundle, Webview, WebviewUri,
-};
-use homunculus_core::prelude::{
-    BoneOffsets, Coordinate, ModModuleSpecifier, WebviewOpenOptions, WebviewOpenPosition,
-    WebviewSoundOptions,
-};
-use homunculus_effects::{
-    AssetServer, AudioPlayer, Commands, Entity, IVec2, In, Query, Res, ResMut, Transform, Update,
-    Window, WindowPosition, default,
-};
+use bevy_vrm1::prelude::Cameras;
+use homunculus_core::prelude::{ModModuleSpecifier, WebviewOpenOptions, WebviewSoundOptions};
+use homunculus_effects::{Entity, Update};
 
 impl WebviewApi {
     /// Opens a webview with the specified options.
@@ -22,120 +14,105 @@ impl WebviewApi {
     /// The webview created by this API will have `window.api` defined.
     pub async fn open(&self, options: WebviewOpenOptions) -> ApiResult<Entity> {
         self.0
-            .schedule(move |task| async move {
-                task.will(Update, once::run(open_webview).with(options))
-                    .await
-            })
-            .await?
+            .schedule(
+                move |task| async move { task.will(Update, once::run(open).with(options)).await },
+            )
+            .await
     }
 }
 
-fn open_webview(
+pub(crate) struct WebviewOpenPlugin;
+
+impl Plugin for WebviewOpenPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(Update, visible);
+    }
+}
+
+fn open(
     In(options): In<WebviewOpenOptions>,
     mut commands: Commands,
-    mut closing_sounds: ResMut<ClosingWebviewSounds>,
-    coordinate: Coordinate,
-    bone_offsets: BoneOffsets,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<WebviewExtendStandardMaterial>>,
     asset_server: Res<AssetServer>,
-    transforms: Query<&Transform>,
-) -> ApiResult<Entity> {
-    let webview_url = match options.source.to_specifier() {
-        ModModuleSpecifier::Remote(url) => WebviewUri::new(url),
-        ModModuleSpecifier::Local(path) => WebviewUri::relative_local(path),
+    cameras: Cameras,
+) -> Entity {
+    let webview_uri = match options.source.to_specifier() {
+        ModModuleSpecifier::Remote(url) => CefWebviewUri::new(url),
+        ModModuleSpecifier::Local(path) => CefWebviewUri::local(path.display().to_string()),
     };
-    let mut window = Window::default();
-    let mut background = Background::default();
-    if let Some(resolution) = options.resolution {
-        window.resolution = WindowResolution::new(resolution.x, resolution.y);
-    }
-    window.position = window_position(&options.position, &coordinate, &bone_offsets, &transforms)
-        .unwrap_or_default();
-    if options.transparent.is_some_and(|transparent| transparent) {
-        background = Background::Transparent;
-        window.transparent = true;
-        window.composite_alpha_mode = bevy::window::CompositeAlphaMode::PostMultiplied;
-    }
-    window.has_shadow = options.shadow.unwrap_or(true);
-    window.titlebar_shown = options.show_toolbar.unwrap_or(true);
-    window.window_level = WindowLevel::AlwaysOnTop;
-    let webview_entity = commands.spawn_empty().id();
-    commands.entity(webview_entity).insert((
-        WebViewBundle {
-            webview: Webview::Uri(webview_url),
-            background,
-            enable_clipboard: EnableClipboard(true),
-            use_devtools: UseDevtools(true),
-            browser_accelerator_keys: BrowserAcceleratorKeys(true),
-            ..default()
-        },
-        window,
-        InitializationScripts::new(vec![
-            include_str!("./webview.js"),
-            include_str!("./api.js"),
-            &include_str!("./caller.js").replace(
-                "undefined",
-                &options
-                    .caller
-                    .map(|s| s.to_string())
-                    .unwrap_or_else(|| "undefined".to_string()),
-            ),
-            &include_str!("./webviewEntity.js")
-                .replace("undefined", &webview_entity.to_bits().to_string()),
-        ]),
-    ));
-    insert_tracking(&mut commands, webview_entity, &options);
+    let webview = commands
+        .spawn((
+            webview_uri,
+            cameras.all_layers(),
+            Mesh3d(meshes.add(Plane3d::new(Vec3::Z, Vec2::ONE))),
+            MeshMaterial3d(materials.add(WebviewExtendStandardMaterial {
+                base: StandardMaterial {
+                    unlit: true,
+                    #[cfg(target_os = "macos")]
+                    alpha_mode: AlphaMode::Premultiplied,
+                    ..default()
+                },
+                ..default()
+            })),
+            Visibility::Hidden,
+            options
+                .transform
+                .as_ref()
+                .map(|t| t.as_transform())
+                .unwrap_or(Transform::from_xyz(0.0, 0.0, 10.0)),
+        ))
+        .id();
+
+    insert_preload_scripts(&mut commands, webview, &options);
     feed_sound_options(
-        webview_entity,
+        webview,
         &mut commands,
-        &mut closing_sounds,
+        &mut ClosingWebviewSounds::default(),
         &asset_server,
         options.sounds.as_ref(),
     );
-    Ok(webview_entity)
+    set_parent(&mut commands, webview, &options);
+    webview
 }
 
-fn window_position(
-    position: &Option<WebviewOpenPosition>,
-    coordinate: &Coordinate,
-    bone_offsets: &BoneOffsets,
-    transforms: &Query<&Transform>,
-) -> Option<WindowPosition> {
-    match position.as_ref()? {
-        WebviewOpenPosition::At(offset) => Some(WindowPosition::At(IVec2::new(offset.x, offset.y))),
-        WebviewOpenPosition::Vrm {
-            vrm: Some(vrm),
-            bone,
-            offset,
-            ..
-        } => {
-            let vrm_entity = Entity::from_bits(*vrm);
-            let tf = transforms.get(vrm_entity).ok()?;
-            let world_pos = match bone {
-                Some(bone) => tf.translation + bone_offsets.offset(vrm_entity, bone)?,
-                None => tf.translation,
-            };
-            let viewport = coordinate.to_viewport_by_world(world_pos)?;
-            let offset = offset.unwrap_or(IVec2::ZERO);
-            Some(WindowPosition::At(viewport.as_ivec2() + offset))
+fn visible(
+    mut webviews: Query<(
+        &mut Visibility,
+        &MeshMaterial3d<WebviewExtendStandardMaterial>,
+    )>,
+    materials: Res<Assets<WebviewExtendStandardMaterial>>,
+) {
+    for (mut visibility, handle) in webviews.iter_mut() {
+        if matches!(*visibility, Visibility::Hidden)
+            && let Some(material) = materials.get(handle)
+            && material.extension.surface.is_some()
+        {
+            *visibility = Visibility::Visible;
         }
-        _ => None,
     }
 }
 
-fn insert_tracking(commands: &mut Commands, webview_entity: Entity, options: &WebviewOpenOptions) {
-    if let Some(WebviewOpenPosition::Vrm {
-        tracking: Some(true),
-        vrm: Some(vrm),
-        bone,
-        offset,
-    }) = &options.position
-    {
-        let vrm_entity = Entity::from_bits(*vrm);
-        commands.entity(webview_entity).insert(WebviewTracking {
-            vrm: vrm_entity,
-            bone: bone.clone(),
-            offset: *offset,
-        });
+fn insert_preload_scripts(commands: &mut Commands, webview: Entity, options: &WebviewOpenOptions) {
+    commands.entity(webview).insert(PreloadScripts::from([
+        include_str!("../webview/webview.js"),
+        include_str!("../webview/api.js"),
+        &include_str!("../webview/vrm.js").replace(
+            "undefined",
+            &options
+                .vrm
+                .map(|s| s.to_string())
+                .unwrap_or_else(|| "undefined".to_string()),
+        ),
+        &include_str!("../webview/webviewEntity.js")
+            .replace("undefined", &webview.to_bits().to_string()),
+    ]));
+}
+
+fn set_parent(commands: &mut Commands, webview: Entity, options: &WebviewOpenOptions) {
+    if let Some(parent) = options.parent {
+        let parent = Entity::from_bits(parent);
+        commands.entity(parent).add_child(webview);
     }
 }
 

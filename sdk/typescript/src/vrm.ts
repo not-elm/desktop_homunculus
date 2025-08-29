@@ -182,9 +182,8 @@ export class Vrm {
      * Finds the entity ID of a bone by its name.
      */
     async findBoneEntity(bone: Bones): Promise<number> {
-        return await entities.findByName(bone, {
-            root: this.entity,
-        });
+        const response = await host.get(host.createUrl(`vrm/${this.entity}/bone/${bone}`));
+        return Number(await response.json());
     }
 
     /**

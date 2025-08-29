@@ -1,6 +1,7 @@
 //! `/vrm` provides methods for interacting with VRM models.
 
 mod all;
+pub mod bone;
 mod despawn;
 mod events;
 mod get;

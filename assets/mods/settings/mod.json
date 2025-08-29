@@ -10,19 +10,6 @@
       "text": "Settings",
       "webview": {
         "source": "settings/index.html",
-        "resolution": [
-          500,
-          500
-        ],
-        "position": {
-          "offset": [
-            -650,
-            -500
-          ]
-        },
-        "transparent": true,
-        "showToolbar": false,
-        "shadow": false,
         "sounds": {
           "open": "menu/open.mp3",
           "close": "menu/close.mp3"
