@@ -63,7 +63,7 @@ pub mod prelude {
     pub use crate::{
         app::*, cameras::*, commands::CommandsApi, display::*, effects::*, entities::*, error::*,
         gpt::*, mods::*, preferences::*, reactor::*, scripts::*, settings::*, shadow_panel::*,
-        speech::*, vrm::*, vrma::*, webview::*, webview::*,
+        speech::*, vrm::*, vrma::*, webview::*,
     };
 }
 

@@ -1,8 +1,8 @@
 use axum::extract::{Path, State};
 use bevy::prelude::Entity;
 use bevy_vrm1::vrm::VrmBone;
-use homunculus_api::prelude::axum::{HttpResult, IntoHttpResult};
 use homunculus_api::prelude::VrmApi;
+use homunculus_api::prelude::axum::{HttpResult, IntoHttpResult};
 
 /// Fetch all VRM models.
 pub async fn get(

@@ -4,22 +4,22 @@
     windows_subsystem = "windows"
 )]
 
+use bevy::DefaultPlugins;
 use bevy::app::{App, PluginGroup};
 use bevy::asset::io::file::FileAssetReader;
 use bevy::log::tracing_subscriber::Layer;
 use bevy::log::{BoxedLayer, LogPlugin};
 use bevy::prelude::*;
-use bevy::render::settings::{PowerPreference, RenderCreation, WgpuSettings};
 use bevy::render::RenderPlugin;
+use bevy::render::settings::{PowerPreference, RenderCreation, WgpuSettings};
 use bevy::window::{ExitCondition, WindowPlugin, WindowResolution};
-use bevy::DefaultPlugins;
 use bevy_cef::CefPlugin;
 use bevy_flurx::FlurxPlugin;
 use bevy_vrm1::vrm::VrmPlugin;
 use bevy_vrm1::vrma::VrmaPlugin;
 use homunculus_api::HomunculusApiPlugin;
-use homunculus_core::prelude::app_data_dir;
 use homunculus_core::HomunculusCorePlugin;
+use homunculus_core::prelude::app_data_dir;
 use homunculus_drag::HomunculusDragPlugin;
 use homunculus_effects::HomunculusEffectsPlugin;
 use homunculus_hit_test::HomunculusHitTestPlugin;

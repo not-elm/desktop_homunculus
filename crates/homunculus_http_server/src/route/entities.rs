@@ -3,8 +3,8 @@ pub mod transform;
 
 use axum::extract::{Query, State};
 use bevy::prelude::{Entity, Name};
-use homunculus_api::prelude::axum::{HttpResult, IntoHttpResult};
 use homunculus_api::prelude::EntitiesApi;
+use homunculus_api::prelude::axum::{HttpResult, IntoHttpResult};
 use serde::{Deserialize, Serialize};
 
 /// Find an entity by its name.

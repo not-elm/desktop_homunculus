@@ -73,8 +73,8 @@ mod state;
 
 use crate::route::{cameras, displays, preferences, scripts, shadow_panel, vrm, vrma, webviews};
 use crate::state::HttpState;
-use axum::routing::{delete, get, post, put};
 use axum::Router;
+use axum::routing::{delete, get, post, put};
 use bevy::prelude::*;
 use bevy::tasks::IoTaskPool;
 use homunculus_api::prelude::ApiReactor;
@@ -294,14 +294,14 @@ fn commands_router() -> Router<HttpState> {
 #[cfg(test)]
 mod tests {
     use crate::create_router;
+    use axum::Router;
     use axum::body::Body;
     use axum::http::{Request, Response, StatusCode};
-    use axum::Router;
     use bevy::prelude::*;
     use bevy::render::camera::CameraPlugin;
     use bevy::tasks::{block_on, poll_once};
-    use homunculus_api::prelude::{ApiReactor, ShadowPanelApiPlugin};
     use homunculus_api::HomunculusApiPlugin;
+    use homunculus_api::prelude::{ApiReactor, ShadowPanelApiPlugin};
     use homunculus_prefs::PrefsDatabase;
     use http_body_util::BodyExt;
     use serde::de::DeserializeOwned;

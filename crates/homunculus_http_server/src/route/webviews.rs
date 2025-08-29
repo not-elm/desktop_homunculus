@@ -1,9 +1,9 @@
 use crate::extract::EntityId;
-use axum::extract::State;
 use axum::Json;
+use axum::extract::State;
 use bevy::prelude::Entity;
-use homunculus_api::prelude::axum::{HttpResult, IntoHttpResult};
 use homunculus_api::prelude::WebviewApi;
+use homunculus_api::prelude::axum::{HttpResult, IntoHttpResult};
 use homunculus_core::prelude::*;
 
 /// Open a webview.
