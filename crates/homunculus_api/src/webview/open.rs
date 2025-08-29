@@ -44,6 +44,7 @@ fn open(
     };
     let webview = commands
         .spawn((
+            Name::new("Webview"),
             webview_uri,
             cameras.all_layers(),
             NotShadowCaster,

@@ -10,6 +10,13 @@
       "text": "Settings",
       "webview": {
         "source": "settings/index.html",
+        "transform": {
+          "translation": [
+            -1,
+            0,
+            1
+          ]
+        },
         "sounds": {
           "open": "menu/open.mp3",
           "close": "menu/close.mp3"

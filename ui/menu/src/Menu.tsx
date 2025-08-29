@@ -77,7 +77,7 @@ const openModUi = async (
     const modWebview = await Webview.open({
         ...options,
         vrm: vrm.entity,
-        parent: await vrm.findBoneEntity("head"),
+        parent: vrm.entity,
     });
     await commands.send("menu::mod::open", modWebview.entity);
 }
