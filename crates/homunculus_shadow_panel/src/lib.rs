@@ -42,7 +42,8 @@
 //! - Alpha blending for smooth transparency effects
 
 use bevy::app::{App, Plugin};
-use bevy::asset::{Asset, load_internal_asset, weak_handle};
+use bevy::asset::{load_internal_asset, weak_handle, Asset};
+use bevy::pbr::{NotShadowCaster, NotShadowReceiver, ShadowView};
 use bevy::prelude::*;
 use bevy::render::render_resource::{AsBindGroup, ShaderRef};
 use bevy_vrm1::prelude::Cameras;

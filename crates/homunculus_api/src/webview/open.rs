@@ -1,6 +1,7 @@
 use crate::error::ApiResult;
 use crate::prelude::WebviewApi;
 use crate::webview::close::ClosingWebviewSounds;
+use bevy::pbr::NotShadowCaster;
 use bevy::prelude::*;
 use bevy_cef::prelude::{CefWebviewUri, PreloadScripts, WebviewExtendStandardMaterial};
 use bevy_flurx::action::once;
@@ -45,6 +46,7 @@ fn open(
         .spawn((
             webview_uri,
             cameras.all_layers(),
+            NotShadowCaster,
             Mesh3d(meshes.add(Plane3d::new(Vec3::Z, Vec2::ONE))),
             MeshMaterial3d(materials.add(WebviewExtendStandardMaterial {
                 base: StandardMaterial {

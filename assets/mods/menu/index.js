@@ -16,9 +16,9 @@
                         webview = await Deno.api.Webview.open({
                             source: "menu/index.html",
                             vrm: vrm.entity,
-                            parent: await vrm.findBoneEntity("head"),
+                            parent: await vrm.findBoneEntity("neck"),
                             transform: {
-                                translation: [-1.0, 0, 0]
+                                translation: [-1.0, 0, 1]
                             },
                             sounds: {
                                 "open": "menu/open.mp3",
