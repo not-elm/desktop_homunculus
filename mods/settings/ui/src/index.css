@@ -367,11 +367,12 @@ body {
   flex: 1;
   -webkit-appearance: none;
   appearance: none;
-  height: 4px;
-  background: oklch(0.25 0.02 250 / 0.6);
+  height: 14px;
+  background: transparent;
   border-radius: 2px;
   outline: none;
   cursor: pointer;
+  padding: 0;
 }
 
 .settings-slider::-webkit-slider-thumb {
@@ -379,6 +380,7 @@ body {
   appearance: none;
   width: 14px;
   height: 14px;
+  margin-top: -5px;
   border-radius: 50%;
   background: oklch(0.72 0.14 192);
   border: 2px solid oklch(0.72 0.14 192 / 0.5);
