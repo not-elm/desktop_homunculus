@@ -44,9 +44,9 @@ jobs:
             exit 1
           fi
 
-          # Read SDK and MCP server versions from package.json
-          SDK_VERSION=$(node -p "require('./packages/sdk/package.json').version")
-          MCP_VERSION=$(node -p "require('./packages/mcp-server/package.json').version")
+          # Read SDK and MCP server versions from package.json (using sed to avoid Node.js dependency)
+          SDK_VERSION=$(sed -n 's/.*"version": *"\(.*\)".*/\1/p' packages/sdk/package.json | head -1)
+          MCP_VERSION=$(sed -n 's/.*"version": *"\(.*\)".*/\1/p' packages/mcp-server/package.json | head -1)
           echo "sdk_version=$SDK_VERSION" >> "$GITHUB_OUTPUT"
           echo "mcp_version=$MCP_VERSION" >> "$GITHUB_OUTPUT"
 
@@ -170,8 +170,8 @@ jobs:
           key: cef-${{ matrix.arch }}-144.4.0
 
       - name: Install dependencies
+        working-directory: .
         run: |
-          cd ..
           pnpm install --frozen-lockfile
           pnpm build
 
@@ -209,6 +209,7 @@ jobs:
         with:
           node-version: 22
           registry-url: https://registry.npmjs.org
+          cache: pnpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -333,7 +334,7 @@ jobs:
 
   create-release:
     needs: [validate, publish-npm]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       contents: write
