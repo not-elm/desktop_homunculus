@@ -77,7 +77,7 @@ impl PrefsKeys {
     ///
     /// ```
     /// use homunculus_prefs::PrefsKeys;
-    /// assert_eq!(PrefsKeys::persona("elmer:vrm"), "persona::elmer:vrm");
+    /// assert_eq!(PrefsKeys::persona("vrm:elmer"), "persona::vrm:elmer");
     /// ```
     pub fn persona(asset_id: &str) -> String {
         format!("persona::{asset_id}")
@@ -89,10 +89,10 @@ impl PrefsKeys {
     ///
     /// ```
     /// use homunculus_prefs::PrefsKeys;
-    /// assert_eq!(PrefsKeys::asset_transform("elmer:vrm"), "elmer:vrm:transform");
+    /// assert_eq!(PrefsKeys::asset_transform("vrm:elmer"), "transoform::vrm:elmer");
     /// ```
     pub fn asset_transform(asset_id: &str) -> String {
-        format!("{asset_id}:transform")
+        format!("transform::{asset_id}")
     }
 
     /// Preferences key for the shadow panel's alpha (opacity) value.
