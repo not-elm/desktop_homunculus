@@ -99,7 +99,7 @@ fn register_macos_delegate(flag: &Arc<AtomicBool>) {
                 _sender: &NSApplication,
             ) -> NSApplicationTerminateReply {
                 let already_shutting_down = SHUTDOWN_FLAG.with(|f| {
-                    f.take().map_or(false, |shutdown_flag| {
+                    f.take().is_some_and(|shutdown_flag| {
                         let was_set = shutdown_flag.swap(true, Ordering::SeqCst);
                         f.set(Some(shutdown_flag));
                         was_set
@@ -126,8 +126,7 @@ fn register_macos_delegate(flag: &Arc<AtomicBool>) {
 
     // Create the delegate: alloc + init via msg_send
     let alloc = HomunculusAppDelegate::alloc(mtm);
-    let delegate: Retained<HomunculusAppDelegate> =
-        unsafe { msg_send![alloc, init] };
+    let delegate: Retained<HomunculusAppDelegate> = unsafe { msg_send![alloc, init] };
 
     // Register the delegate via msg_send to avoid NSObjectProtocol trait bound issues
     let app = NSApp(mtm);
