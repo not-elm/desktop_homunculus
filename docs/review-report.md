@@ -10,12 +10,12 @@
 
 | 重要度 | 件数 |
 |--------|------|
-| High   | 1    |
-| Medium | 4    |
-| Low    | 2    |
-| **合計** | **7** |
+| High   | 0    |
+| Medium | 1    |
+| Low    | 0    |
+| **合計** | **1** |
 
-*(2026-03-03 更新: 22件を追加修正 — 詳細は下記 "修正済み" セクション参照)*
+*(2026-03-03 更新: 追加修正あり — 詳細は下記 "修正済み" セクション参照)*
 
 ---
 
@@ -23,42 +23,7 @@
 
 ### Getting Started / Mods
 
-#### [Medium] Quick Start と Installation での MOD 一覧の不整合
-- **ファイル**: `docs/getting-started/installation.md:81` vs `docs/getting-started/quick-start.md:46-52`
-- **問題**: installation では4MOD、quick-start では voicevox を加えた5MODを紹介。voicevox が突然登場してユーザーが混乱する。
-- **推奨**: Quick Start の MOD テーブルに「Recommended / Optional」区分を追加するか、voicevox を "Additional MODs" セクションに分離する。
-
-#### ~~[Low] mods/settings.md の設定項目が具体的でない~~ ✅ 修正済み
-- **ファイル**: `docs/mods/settings.md:17-19`
-- **問題**: 設定可能な項目の一覧が皆無。
-- **推奨**: 設定可能な項目（キャラクター位置、表示サイズ、音量など）を具体的に記載する。
-
----
-
-### MOD Development / SDK
-
-#### ~~[Medium] sdk/index.md — `shadowPanel` モジュールが direct-http.md に埋め込まれている~~ ✅ 修正済み
-- **ファイル**: `docs/mod-development/sdk/direct-http.md:111-128`
-- **問題**: SDK Overview のモジュールマップでは `shadowPanel` を独立モジュールとして記載しているが、direct-http.md に埋め込まれており独立ページがない。
-- **推奨**: `sdk/shadow-panel.md` を作成し、direct-http.md からはリンクのみにする。
-
----
-
-### AI Integration / Reference
-
-#### [Medium] Codex 設定: `--mcp-config` のインライン JSON 形式の検証
-- **ファイル**: `docs/ai-integration/setup/codex.md:20`
-- **問題**: `codex --mcp-config '{"homunculus":...}'` のインライン JSON 形式が実際の Codex CLI でサポートされているか未検証。バージョンによってはファイルパス形式のみ対応の可能性がある。
-- **推奨**: Codex 公式ドキュメントで確認し、ファイルパス形式の代替例も併記する。
-
----
-
-### Contributing / Project
-
-#### [High] project/ 配下 4ページ全てがスタブ（フッターから直接リンクあり）
-- **ファイル**: `docs/project/changelog.md`, `license.md`, `security.md`, `code-of-conduct.md`
-- **問題**: 全て "under construction" のみだが、`docusaurus.config.ts` のフッターから直接リンクされており、ユーザーが空ページに到達する。特に `security.md` が空のままプロダクション公開されているのは不適切。
-- **推奨**: `security.md` から優先的に内容を整備する（脆弱性報告先・対応プロセス）。`license.md` には Three-Lane Permissive Model の内容を記載する（SYNTHESIS.md 参照）。
+~~#### [Medium] Quick Start と Installation での MOD 一覧の不整合~~ ✅ 修正済み
 
 ---
 
@@ -71,11 +36,6 @@
 - **問題**: assets / elmer / menu / settings / voicevox で見出し構成がバラバラ。特に voicevox のみ Prerequisites と Troubleshooting を持つが、他ページに共通構造がない。
 - **推奨**: 共通テンプレートを定義: `Overview → Usage/Features → Prerequisites（任意）→ Notes → Troubleshooting（任意）`
 
-#### [Low] `project/` セクションがサイドバーに存在せずフッターのみからアクセス可能
-- **ファイル**: `docs/website/sidebars.ts`, `docs/website/docusaurus.config.ts`
-- **問題**: changelog, license, security, code-of-conduct はフッターリンクからのみアクセス可能。サイドバーから発見できない。
-- **推奨**: サイドバー末尾に `project` セクションを追加することを検討する。
-
 ---
 
 ## 推奨対応優先順位
@@ -86,7 +46,7 @@
 2. ~~**bin-commands.md エンドポイント修正**~~ ✅ 修正済み
 3. ~~**bin-commands.md タイムアウト値修正**~~ ✅ 修正済み
 4. ~~**CLI 実装タイポ修正**~~ ✅ 修正済み
-5. **security.md の整備** — 脆弱性報告先・対応プロセスを最低限記載
+5. ~~**project/ スタブページとフッターリンクの整理**~~ ✅ 修正済み（不要ページを削除）
 6. ~~**SDK Node.js バージョン修正**~~ ✅ 修正済み
 
 ### P2 — 短期対応（Medium / 開発者・ユーザーの混乱源）
@@ -101,7 +61,7 @@
 ### P3 — 中長期対応（Low / 品質向上）
 
 13. ~~**MCP サーバーバージョンのハードコード解消**~~ ✅ 修正済み（@latest に統一）
-14. **project/ ページ（changelog, license, code-of-conduct）の整備**
+14. ~~**project/ ページ（changelog, license, code-of-conduct）の整備**~~ ✅ 修正済み（不要のため削除）
 15. ~~**`sleep` utility のドキュメント追加**~~ ✅ 修正済み
 16. ~~**`speakOnVoiceVox()` への誤った言及を削除**~~ ✅ 修正済み
 17. ~~**skills/README.md の空テーブルをプレースホルダーに置換**~~ ✅ 修正済み
@@ -139,7 +99,7 @@
 | 21 | Medium | `docs/ai-integration/setup/claude-code.md` | Custom Port セクション追加（HOMUNCULUS_HOST env 設定例） |
 | 22 | Medium | `docs/ai-integration/setup/codex.md` | Custom Port セクション追加（HOMUNCULUS_HOST env 設定例） |
 | 23 | Medium | `docs/ai-integration/setup/claude-code.md` | `~/.claude/settings.json` 近くに Claude Code 公式ドキュメントリンク追加 |
-| 24 | Medium | `docs/reference/mcp-tools/index.md` | カテゴリリンクパス `./mcp-tools/XXX` → `./XXX` に修正（8件） |
+| 24 | Medium | `docs/reference/mcp-tools/index.md` | カテゴリリンクパスを `./mcp-tools/XXX` 形式に修正（8件） |
 | 25 | Medium | `docs/contributing/index.md` | PR ガイドラインに Conventional Commits スタイル追記 |
 | 26 | Medium | `docs/contributing/index.md` | Development Setup セクション追加（`make setup` / `make debug`） |
 | 27 | Medium | `docs/contributing/index.md` | DCO セクション追加（Developer Certificate of Origin） |
@@ -152,3 +112,6 @@
 | 34 | Low | `skills/README.md` | Available Skills 空テーブルにプレースホルダー追加 |
 | 35 | Low | `docs/mods/settings.md` | 設定項目をタブ別テーブルで具体的に記載（Basic / Persona / OCEAN） |
 | 36 | Medium | `docs/mod-development/sdk/shadow-panel.md` | shadowPanel を direct-http.md から独立ページに分離 |
+| 37 | High | `docs/website/docs/project/` 4ファイル | `changelog.md` / `license.md` / `security.md` / `code-of-conduct.md` の不要スタブページを削除 |
+| 38 | Low | `docs/website/docusaurus.config.ts`, `docs/website/docs/project/_category_.json` | フッターの Project リンク4件を削除し、不要カテゴリ定義を削除 |
+| 39 | Medium | `docs/website/docs/getting-started/quick-start.md` | voicevox を "Additional MODs" セクションに分離し Installation の4件と一致させる |
