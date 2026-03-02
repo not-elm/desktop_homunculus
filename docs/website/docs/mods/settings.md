@@ -7,14 +7,14 @@ sidebar_position: 5
 
 The Settings MOD (`@hmcs/settings`) provides a WebView-based settings panel for configuring characters and application preferences.
 
-## Usage
+## Overview
 
 Open the settings panel in one of these ways:
 
 - **Right-click a character** and select **"Settings"** from the [context menu](./menu)
 - The panel opens next to the character as a floating WebView window
 
-## What You Can Configure
+## Features
 
 The settings panel is organized into three tabs. Changes take effect after clicking **Save**. All settings are persisted to `~/.homunculus/prefs.db`.
 

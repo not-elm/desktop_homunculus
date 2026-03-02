@@ -7,6 +7,10 @@ sidebar_position: 6
 
 The VoiceVox MOD (`@hmcs/voicevox`) integrates the [VoiceVox](https://voicevox.hiroshiba.jp/) text-to-speech engine with Desktop Homunculus. It enables characters to speak with lip-synced audio.
 
+## Overview
+
+This MOD connects to a locally running VoiceVox engine to synthesize speech. When invoked, it sends text to the VoiceVox API, receives synthesized audio, and plays it back with automatic lip-sync on the character model.
+
 ## Prerequisites
 
 1. **Download and install VoiceVox** from [voicevox.hiroshiba.jp](https://voicevox.hiroshiba.jp/)
@@ -17,7 +21,7 @@ The VoiceVox MOD (`@hmcs/voicevox`) integrates the [VoiceVox](https://voicevox.h
 hmcs mod install @hmcs/voicevox
 ```
 
-## Bin Commands
+## Features
 
 The VoiceVox MOD provides three [bin commands](/docs/mod-development/bin-commands) that other MODs and MCP tools can invoke:
 

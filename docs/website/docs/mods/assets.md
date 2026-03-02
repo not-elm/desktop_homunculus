@@ -7,7 +7,7 @@ sidebar_position: 2
 
 The Assets MOD (`@hmcs/assets`) provides the default resources that other MODs depend on — a VRM character model, VRMA animations, and sound effects.
 
-## Included Assets
+## Overview
 
 | Asset ID | Type | Description |
 |---|---|---|
@@ -18,7 +18,7 @@ The Assets MOD (`@hmcs/assets`) provides the default resources that other MODs d
 | `se:open` | Sound | HUD open sound effect |
 | `se:close` | Sound | HUD close sound effect |
 
-## Usage
+## Features
 
 These assets are referenced by their asset ID in other MODs and SDK calls. For example, the Elmer MOD spawns the default character with:
 
@@ -31,4 +31,5 @@ MOD developers can reference these assets in their own MODs using the same IDs. 
 ## Notes
 
 - This MOD has no startup script — it only provides static asset files.
+- The `@hmcs/elmer` MOD depends on this MOD — it uses `vrm:elmer`, `vrma:idle-maid`, `vrma:grabbed`, and `vrma:idle-sitting` to spawn and animate the default character.
 - Removing this MOD will break the Elmer MOD and any other MODs that reference these asset IDs.
