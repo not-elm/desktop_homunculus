@@ -167,4 +167,39 @@ mod tests {
 
         assert!(app.should_exit().is_none());
     }
+
+    /// Integration test: ShutdownFlag → AppExit → save_vrm_transforms persists data.
+    #[test]
+    fn shutdown_flag_triggers_vrm_transform_save() {
+        use bevy_vrm1::vrm::Vrm;
+        use homunculus_core::prelude::{AssetId, AssetIdComponent};
+        use homunculus_prefs::{PrefsDatabase, PrefsKeys};
+
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins)
+            .add_plugins(GracefulShutdownPlugin)
+            .insert_non_send_resource(PrefsDatabase::open_in_memory())
+            .add_plugins(homunculus_prefs::HomunculusPrefsPlugin);
+
+        let asset_id = AssetId::new("test:vrm");
+        let expected = Transform::from_xyz(1.0, 2.0, 3.0);
+        app.world_mut()
+            .spawn((AssetIdComponent(asset_id.clone()), expected, Vrm));
+
+        // Simulate OS termination signal
+        let flag = app.world().resource::<ShutdownFlag>().clone();
+        flag.0.store(true, Ordering::SeqCst);
+
+        // Frame 1: First-schedule polls flag → writes AppExit
+        app.update();
+        // Frame 2: on_message::<AppExit> fires → save_vrm_transforms runs
+        app.update();
+
+        let key = PrefsKeys::asset_transform(asset_id.as_ref());
+        let db = app.world().non_send_resource::<PrefsDatabase>();
+        let saved = db
+            .load_as::<Transform>(&key)
+            .expect("loading transform should not fail");
+        assert_eq!(saved, Some(expected));
+    }
 }
