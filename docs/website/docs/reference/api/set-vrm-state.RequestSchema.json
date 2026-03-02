@@ -1,0 +1,1 @@
+{"title":"Body","body":{"required":true,"content":{"application/json":{"schema":{"type":"object","required":["state"],"properties":{"state":{"type":"string","description":"The state/mode to set for the VRM model","example":"dancing"}},"title":"VrmStateRequest"}}}}}

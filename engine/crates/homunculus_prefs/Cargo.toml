@@ -1,0 +1,26 @@
+[package]
+name = "homunculus_prefs"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+rusqlite     = { version = "0.38", features = ["bundled"] }
+serde_json   = { workspace = true }
+serde        = { workspace = true }
+homunculus_utils = { workspace = true, default-features = false }
+
+# bevy feature でのみ引き込まれる
+bevy           = { workspace = true, optional = true }
+bevy_vrm1      = { workspace = true, optional = true }
+homunculus_core = { workspace = true, optional = true }
+
+[features]
+default = ["bevy"]
+bevy = ["dep:bevy", "dep:bevy_vrm1", "dep:homunculus_core"]
+
+[lints]
+workspace = true

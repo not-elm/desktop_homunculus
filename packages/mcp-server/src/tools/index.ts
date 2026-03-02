@@ -1,0 +1,45 @@
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { HomunculusMcpState } from "../state.js";
+import { registerGetCharacterSnapshot } from "./get-character-snapshot.js";
+import { registerPlayReaction } from "./play-reaction.js";
+import { registerPlaySound } from "./play-sound.js";
+import { registerExecuteCommand } from "./execute-command.js";
+import { registerSpeakMessage } from "./speak-message.js";
+import { registerSelectCharacter } from "./select-character.js";
+import { registerMoveCharacter } from "./move-character.js";
+import { registerControlBgm } from "./control-bgm.js";
+import { registerTweenPosition } from "./tween-position.js";
+import { registerTweenRotation } from "./tween-rotation.js";
+import { registerTweenScale } from "./tween-scale.js";
+import { registerSpawnCharacter } from "./spawn-character.js";
+import { registerRemoveCharacter } from "./remove-character.js";
+import { registerSetExpression } from "./set-expression.js";
+import { registerPlayAnimation } from "./play-animation.js";
+import { registerSetPersona } from "./set-persona.js";
+import { registerOpenWebview } from "./open-webview.js";
+import { registerCloseWebview } from "./close-webview.js";
+import { registerNavigateWebview } from "./navigate-webview.js";
+import { registerSetLookAt } from "./set-look-at.js";
+
+export function registerTools(server: McpServer, state: HomunculusMcpState): void {
+  registerGetCharacterSnapshot(server, state);
+  registerPlayReaction(server, state);
+  registerPlaySound(server);
+  registerExecuteCommand(server);
+  registerSpeakMessage(server, state);
+  registerSelectCharacter(server, state);
+  registerMoveCharacter(server, state);
+  registerControlBgm(server);
+  registerTweenPosition(server, state);
+  registerTweenRotation(server, state);
+  registerTweenScale(server, state);
+  registerSpawnCharacter(server, state);
+  registerRemoveCharacter(server, state);
+  registerSetExpression(server, state);
+  registerPlayAnimation(server, state);
+  registerSetPersona(server, state);
+  registerOpenWebview(server, state);
+  registerCloseWebview(server, state);
+  registerNavigateWebview(server, state);
+  registerSetLookAt(server, state);
+}

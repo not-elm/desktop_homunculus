@@ -1,0 +1,1 @@
+{"responses":{"200":{"description":"Successfully spawned the VRM model.","content":{"application/json":{"schema":{"type":"integer","format":"uint64","description":"The unique identifier for an entity.","title":"Entity"}}}},"404":{"description":"Asset not found."},"500":{"description":"Internal server error."}}}

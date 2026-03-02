@@ -1,0 +1,9 @@
+packages:
+  - packages/*
+  - mods/*
+  - docs/website
+  - sandbox
+onlyBuiltDependencies:
+  - '@swc/core'
+  - esbuild
+linkWorkspacePackages: deep

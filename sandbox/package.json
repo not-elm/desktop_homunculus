@@ -1,0 +1,12 @@
+{
+  "name": "@hmcs/sandbox",
+  "private": true,
+  "license": "MIT",
+  "dependencies": {
+    "@hmcs/elmer": "workspace:*",
+    "@hmcs/assets": "workspace:*",
+    "@hmcs/menu": "workspace:*",
+    "@hmcs/settings": "workspace:*",
+    "@hmcs/voicevox": "workspace:*"
+  }
+}

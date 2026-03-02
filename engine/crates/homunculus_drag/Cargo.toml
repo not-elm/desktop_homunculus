@@ -1,0 +1,18 @@
+[package]
+name = "homunculus_drag"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+bevy = { workspace = true }
+homunculus_screen = { workspace = true }
+homunculus_sitting = { workspace = true }
+bevy_vrm1 = { workspace = true }
+homunculus_core = { workspace = true }
+
+[lints]
+workspace = true

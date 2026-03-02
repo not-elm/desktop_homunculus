@@ -1,0 +1,1 @@
+{"responses":{"204":{"description":"Successfully resumed background music."},"409":{"description":"BGM is not paused."}}}

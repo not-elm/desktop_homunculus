@@ -1,0 +1,43 @@
+# ide
+.vscode/
+.idea/
+
+# Git worktrees
+.worktrees/
+
+# Logs logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+.turbo/
+target
+node_modules
+dist
+dist-ssr
+storybook-static
+*.tsbuildinfo
+*.local
+
+docs/plans/
+docs/memo.md
+docs/reviews/
+
+# Local agent work artifacts
+**/.claude/settings.local.json
+.claude/SYNTHESIS*.md
+.claude/WHITEBOARD*.md
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

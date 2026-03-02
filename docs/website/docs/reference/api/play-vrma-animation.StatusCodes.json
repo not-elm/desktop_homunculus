@@ -1,0 +1,1 @@
+{"responses":{"200":{"description":"Successfully started playing the animation."},"404":{"description":"Entity or animation source not found."}}}

@@ -1,0 +1,20 @@
+{
+  "name": "@hmcs/voicevox",
+  "version": "1.0.0",
+  "author": "notelm",
+  "license": "MIT",
+  "description": "VoiceVox TTS integration for Desktop Homunculus",
+  "type": "module",
+  "bin": {
+    "voicevox:speak": "bin/speak.ts",
+    "voicevox:speakers": "bin/speakers.ts",
+    "voicevox:initialize": "bin/initialize.ts"
+  },
+  "homunculus": {
+    "assets": {}
+  },
+  "dependencies": {
+    "@hmcs/sdk": "workspace:*",
+    "zod": "^3.25.0"
+  }
+}

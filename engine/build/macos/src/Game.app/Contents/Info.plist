@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+    <dict>
+        <key>CFBundleDevelopmentRegion</key>
+        <string>en</string>
+        <key>CFBundleDisplayName</key>
+        <string>Desktop Homunculus</string>
+        <key>CFBundleExecutable</key>
+        <string>desktop_homunculus</string>
+        <key>CFBundleIdentifier</key>
+        <string>not.elm.homunculus.desktop</string>
+        <key>CFBundleIconFile</key>
+        <string>AppIcon.icns</string>
+        <key>CFBundleInfoDictionaryVersion</key>
+        <string>6.0</string>
+        <key>CFBundlePackageType</key>
+        <string>APPL</string>
+        <key>CFBundleShortVersionString</key>
+        <!-- Version -->
+        <string>0.1.0</string>
+        <key>CFBundleSupportedPlatforms</key>
+        <array>
+            <string>MacOSX</string>
+        </array>
+    </dict>
+</plist>

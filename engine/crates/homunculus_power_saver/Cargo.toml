@@ -1,0 +1,18 @@
+[package]
+name = "homunculus_power_saver"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+bevy = { workspace = true }
+bevy_framepace = { workspace = true }
+bevy_vrm1 = { workspace = true }
+homunculus_core = { workspace = true }
+homunculus_prefs = { workspace = true }
+
+[lints]
+workspace = true

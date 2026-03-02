@@ -1,0 +1,66 @@
+{
+  "version.label": {
+    "message": "次期バージョン",
+    "description": "The label for version current"
+  },
+  "sidebar.docs.category.Getting Started": {
+    "message": "はじめに",
+    "description": "The label for category 'Getting Started' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Mods": {
+    "message": "MOD",
+    "description": "The label for category 'Mods' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.MOD Development": {
+    "message": "MOD開発",
+    "description": "The label for category 'MOD Development' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Project Setup": {
+    "message": "プロジェクト設定",
+    "description": "The label for category 'Project Setup' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Assets": {
+    "message": "アセット",
+    "description": "The label for category 'Assets' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Asset Preparation": {
+    "message": "アセット準備",
+    "description": "The label for category 'Asset Preparation' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.WebView UI": {
+    "message": "WebView UI",
+    "description": "The label for category 'WebView UI' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.SDK": {
+    "message": "SDK",
+    "description": "The label for category 'SDK' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.VRM": {
+    "message": "VRM",
+    "description": "The label for category 'VRM' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.AI Integration": {
+    "message": "AI連携",
+    "description": "The label for category 'AI Integration' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Setup": {
+    "message": "セットアップ",
+    "description": "The label for category 'Setup' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Reference": {
+    "message": "リファレンス",
+    "description": "The label for category 'Reference' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.api": {
+    "message": "API",
+    "description": "The label for category 'api' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Contributing": {
+    "message": "コントリビュート",
+    "description": "The label for category 'Contributing' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Project": {
+    "message": "プロジェクト",
+    "description": "The label for category 'Project' in sidebar 'docs'"
+  }
+}

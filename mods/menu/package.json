@@ -1,0 +1,43 @@
+{
+  "name": "@hmcs/menu",
+  "version": "1.0.0",
+  "description": "Right-click context menu mod that provides a WebView-based HUD overlay for quick in-app actions",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "author": "notelm",
+  "main": "index.ts",
+  "scripts": {
+    "build": "vite build ui",
+    "dev": "vite dev ui",
+    "storybook": "storybook dev -p 6007",
+    "build-storybook": "storybook build"
+  },
+  "homunculus": {
+    "assets": {
+      "menu:ui": {
+        "path": "ui/dist/index.html",
+        "type": "html",
+        "description": "Menu HUD UI"
+      }
+    }
+  },
+  "dependencies": {
+    "@hmcs/sdk": "workspace:*",
+    "@hmcs/ui": "workspace:*",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@storybook/react-vite": "^10.2.8",
+    "@tailwindcss/vite": "^4.0.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@vitejs/plugin-react-swc": "^4.0.0",
+    "storybook": "^10.2.8",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.8.0",
+    "vite": "^6.0.0",
+    "vite-plugin-singlefile": "^2.3.0"
+  }
+}
