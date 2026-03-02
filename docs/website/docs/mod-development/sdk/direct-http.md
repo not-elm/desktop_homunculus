@@ -108,24 +108,7 @@ import { HomunculusStreamError } from "@hmcs/sdk";
 // err.rawLine contains the unparseable line
 ```
 
-## Shadow Panel
-
-The `shadowPanel` module controls the shadow overlay panel -- a fullscreen transparent layer used for atmospheric effects or focus dimming.
-
-```typescript
-import { shadowPanel } from "@hmcs/sdk";
-
-// Dim the background
-await shadowPanel.setAlpha(0.7);
-
-// Read the current alpha
-const current = await shadowPanel.alpha();
-
-// Remove the overlay
-await shadowPanel.setAlpha(0);
-```
-
-`alpha` ranges from `0` (fully transparent / invisible) to `1` (fully opaque).
+For the shadow overlay panel module, see [Shadow Panel](./shadow-panel).
 
 ## Next Steps
 
