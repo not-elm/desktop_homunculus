@@ -14,10 +14,16 @@ Set up Codex to control your Desktop Homunculus characters.
 
 ## Configuration
 
-Pass the MCP server configuration via the `--mcp-config` flag:
+Register the MCP server with `codex mcp add`:
 
 ```bash
-codex --mcp-config '{"homunculus":{"command":"npx","args":["-y","@hmcs/mcp-server@0.1.0"]}}'
+codex mcp add homunculus -- npx -y @hmcs/mcp-server@latest
+```
+
+You can verify registration with:
+
+```bash
+codex mcp list
 ```
 
 ## Verify
@@ -27,6 +33,22 @@ Ask Codex:
 > "What characters are currently loaded on my desktop?"
 
 If the connection is working, Codex will read the `homunculus://characters` resource and describe your loaded characters.
+
+## Custom Port
+
+If Desktop Homunculus runs on a non-default port, set the `HOMUNCULUS_HOST` environment variable when registering the MCP server:
+
+```bash
+codex mcp add homunculus --env HOMUNCULUS_HOST=localhost:4000 -- npx -y @hmcs/mcp-server@latest
+```
+
+If `homunculus` is already registered, remove it first and then re-add it:
+
+```bash
+codex mcp remove homunculus
+```
+
+The default value is `localhost:3100`. You can change the port in `~/.homunculus/config.toml`.
 
 ## Next Steps
 

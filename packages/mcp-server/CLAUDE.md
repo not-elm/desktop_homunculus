@@ -58,12 +58,20 @@ Add to project's `.mcp.json` or `~/.claude/settings.json`:
 ### Codex
 
 ```bash
-codex --mcp-config '{"homunculus":{"command":"node","args":["/path/to/desktop-homunculus/packages/mcp-server/dist/index.js"]}}'
+codex mcp add homunculus -- node /path/to/desktop-homunculus/packages/mcp-server/dist/index.js
+```
+
+Verify registration:
+
+```bash
+codex mcp list
 ```
 
 ### Custom host (non-default port)
 
-Set the `HOMUNCULUS_HOST` environment variable:
+Set the `HOMUNCULUS_HOST` environment variable.
+
+For Claude Desktop / Claude Code:
 
 ```json
 {
@@ -77,6 +85,18 @@ Set the `HOMUNCULUS_HOST` environment variable:
     }
   }
 }
+```
+
+For Codex:
+
+```bash
+codex mcp add homunculus --env HOMUNCULUS_HOST=localhost:4000 -- node /path/to/desktop-homunculus/packages/mcp-server/dist/index.js
+```
+
+If `homunculus` is already registered in Codex, remove it first and re-add:
+
+```bash
+codex mcp remove homunculus
 ```
 
 ## Environment Variables
