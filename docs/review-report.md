@@ -37,7 +37,7 @@
 
 ### MOD Development / SDK
 
-#### [Medium] sdk/index.md — `shadowPanel` モジュールが direct-http.md に埋め込まれている
+#### ~~[Medium] sdk/index.md — `shadowPanel` モジュールが direct-http.md に埋め込まれている~~ ✅ 修正済み
 - **ファイル**: `docs/mod-development/sdk/direct-http.md:111-128`
 - **問題**: SDK Overview のモジュールマップでは `shadowPanel` を独立モジュールとして記載しているが、direct-http.md に埋め込まれており独立ページがない。
 - **推奨**: `sdk/shadow-panel.md` を作成し、direct-http.md からはリンクのみにする。
@@ -96,7 +96,7 @@
 9. ~~**commands.md の shebang 修正**~~ ✅ 修正済み
 10. ~~**Contributing ガイドの充実**~~ ✅ 修正済み（Conventional Commits / DCO / 開発環境セットアップ）
 11. **MOD ページ構成の統一** — 共通テンプレートを適用
-12. **`shadowPanel` の独立ドキュメントページ作成**
+12. ~~**`shadowPanel` の独立ドキュメントページ作成**~~ ✅ 修正済み
 
 ### P3 — 中長期対応（Low / 品質向上）
 
@@ -151,3 +151,4 @@
 | 33 | Low | `docs/contributing/index.md` | PR 前の `make test` / `make fix-lint` 手順を追記 |
 | 34 | Low | `skills/README.md` | Available Skills 空テーブルにプレースホルダー追加 |
 | 35 | Low | `docs/mods/settings.md` | 設定項目をタブ別テーブルで具体的に記載（Basic / Persona / OCEAN） |
+| 36 | Medium | `docs/mod-development/sdk/shadow-panel.md` | shadowPanel を direct-http.md から独立ページに分離 |
