@@ -40,8 +40,10 @@ use tracing_appender::non_blocking::WorkerGuard;
 use tracing_appender::rolling;
 
 mod cef_fetch;
+mod graceful_shutdown;
 
 use crate::cef_fetch::CefFetchPlugin;
+use crate::graceful_shutdown::GracefulShutdownPlugin;
 
 fn main() {
     let config = HomunculusConfig::load().unwrap_or_else(|e| {
@@ -121,6 +123,7 @@ fn main() {
             },
             CefFetchPlugin,
         ))
+        .add_plugins(GracefulShutdownPlugin)
         .add_systems(
             Update,
             (
