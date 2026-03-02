@@ -28,7 +28,7 @@
 - **問題**: installation では4MOD、quick-start では voicevox を加えた5MODを紹介。voicevox が突然登場してユーザーが混乱する。
 - **推奨**: Quick Start の MOD テーブルに「Recommended / Optional」区分を追加するか、voicevox を "Additional MODs" セクションに分離する。
 
-#### [Low] mods/settings.md の設定項目が具体的でない
+#### ~~[Low] mods/settings.md の設定項目が具体的でない~~ ✅ 修正済み
 - **ファイル**: `docs/mods/settings.md:17-19`
 - **問題**: 設定可能な項目の一覧が皆無。
 - **推奨**: 設定可能な項目（キャラクター位置、表示サイズ、音量など）を具体的に記載する。
