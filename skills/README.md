@@ -6,7 +6,7 @@ Claude Code Skills for controlling Desktop Homunculus characters. Each skill cha
 
 | Skill | Description |
 |-------|-------------|
-| | |
+| *(none yet — be the first to contribute!)* | |
 
 ## Installation
 
