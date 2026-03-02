@@ -10,12 +10,12 @@
 
 | 重要度 | 件数 |
 |--------|------|
-| High   | 2    |
-| Medium | 11   |
-| Low    | 16   |
-| **合計** | **29** |
+| High   | 1    |
+| Medium | 4    |
+| Low    | 2    |
+| **合計** | **7** |
 
-*(2026-03-02 更新: 15件を実装差異として修正済み — 詳細は下記 "修正済み" セクション参照)*
+*(2026-03-03 更新: 22件を追加修正 — 詳細は下記 "修正済み" セクション参照)*
 
 ---
 
@@ -28,107 +28,28 @@
 - **問題**: installation では4MOD、quick-start では voicevox を加えた5MODを紹介。voicevox が突然登場してユーザーが混乱する。
 - **推奨**: Quick Start の MOD テーブルに「Recommended / Optional」区分を追加するか、voicevox を "Additional MODs" セクションに分離する。
 
-#### [Medium] MOD 紹介ページの構成が不統一
-- **ファイル**: `docs/mods/` 各ファイル
-- **問題**: assets / elmer / menu / settings / voicevox で見出し構成がバラバラ。特に voicevox のみ Prerequisites と Troubleshooting を持つが、他ページに共通構造がない。
-- **推奨**: 共通テンプレートを定義: `Overview → Usage/Features → Prerequisites（任意）→ Notes → Troubleshooting（任意）`
-
-
-#### [Low] Assets / Elmer の役割分担の説明が不明確
-- **ファイル**: `docs/mods/index.md:14` vs `docs/mods/elmer.md:8`
-- **問題**: Assets は「Default VRM character model」を提供し Elmer がそれを使うという役割分担がユーザーに伝わりにくい。
-- **推奨**: Assets の説明に「Elmer MOD がこのデータを使ってキャラクターを表示します」を追記する。
-
-#### [Low] getting-started/index.md の「Next Steps」に Quick Start リンクがない
-- **ファイル**: `docs/getting-started/index.md:36-38`
-- **推奨**: `[Quick Start](/docs/getting-started/quick-start)` へのリンクを追加する。
-
 #### [Low] mods/settings.md の設定項目が具体的でない
 - **ファイル**: `docs/mods/settings.md:17-19`
 - **問題**: 設定可能な項目の一覧が皆無。
 - **推奨**: 設定可能な項目（キャラクター位置、表示サイズ、音量など）を具体的に記載する。
 
-#### [Low] installation.md の CLI インストール時の Windows 対応注記
-- **ファイル**: `docs/getting-started/installation.md`
-- **問題**: `@hmcs/cli` はネイティブバイナリ配布だが、Windows での挙動が不明確。
-- **推奨**: Windows 注意書きで、CLI も含めて Windows 未対応であることを明記する。
-
 ---
 
 ### MOD Development / SDK
-
-#### [High] mods-api.md vs app.md — `ModInfo` のフィールド名 snake_case / camelCase 混在
-- **ファイル**: `mods.ts:48-53` vs `app.ts:51-67`
-- **問題**: `mods.ts` の `ModInfo` は `has_main`, `bin_commands`, `asset_ids` (snake_case)。`app.ts` の `InfoMod` は `hasMain`, `binCommands`, `assetIds` (camelCase)。同じ「MOD情報」が2つの API から異なるフィールド名で返される。CLAUDE.md の規約では「HTTP structs は camelCase」であり、mods.ts の snake_case 自体が問題の可能性がある。
-- **推奨**: ドキュメント上でこの相違を明記する。長期的には HTTP レスポンスを camelCase に統一することを推奨。
 
 #### [Medium] sdk/index.md — `shadowPanel` モジュールが direct-http.md に埋め込まれている
 - **ファイル**: `docs/mod-development/sdk/direct-http.md:111-128`
 - **問題**: SDK Overview のモジュールマップでは `shadowPanel` を独立モジュールとして記載しているが、direct-http.md に埋め込まれており独立ページがない。
 - **推奨**: `sdk/shadow-panel.md` を作成し、direct-http.md からはリンクのみにする。
 
-#### [Medium] preferences.md — `delete` 操作の欠如と未記載
-- **ファイル**: `docs/mod-development/sdk/preferences.md`
-- **問題**: `save`, `load`, `list` のみ記載。CLI では `hmcs prefs delete` が存在するが SDK レベルでは未実装の可能性がある。この機能ギャップへの言及がない。
-- **推奨**: SDK での deletion 未サポートを明記し、代替手段 (`hmcs prefs delete`) を案内する。
-
-#### [Medium] mods-api.md — `mods.get()` サンプルで snake_case プロパティを使用
-- **ファイル**: `docs/mod-development/sdk/mods-api.md:29`
-- **問題**: `elmer.asset_ids` を使用しているが、`mods.ts` の `ModInfo` は snake_case であり doc は実装と一致済み。上位の ModInfo snake_case/camelCase 混在問題（High 指摘）として追跡中。
-- **ステータス**: 変更不要（実装と一致）
-
-#### [Low] sdk/index.md — `sleep` utility のドキュメント欠如
-- **ファイル**: `packages/sdk/src/utils.ts:7`
-- **問題**: `sleep()` 関数が SDK から export されているが、どのドキュメントページにも記載がない。
-- **推奨**: SDK Overview のモジュールマップに追加する。
-
-
-#### [Low] displays.md — `GlobalDisplay` の参照先が不正確
-- **ファイル**: `docs/mod-development/sdk/displays.md:51`
-- **問題**: "See Coordinates for `GlobalDisplay`" と案内しているが、`coordinates.md` には `GlobalDisplay` の型定義がない。実際の定義は `coordinates.ts:79-86`。
-- **推奨**: `coordinates.md` に `GlobalDisplay` の型情報を追加するか参照先の説明を修正する。
-
-#### [Low] component-library.md — Storybook コマンド (`pnpm storybook`) の存在確認
-- **ファイル**: `docs/mod-development/webview-ui/component-library.md:334`
-- **推奨**: `packages/ui/package.json` の scripts に storybook が含まれることを確認し、なければ記載を削除する。
-
-#### [Low] mod-development/index.md — `@hmcs/elmer` の package.json サンプルが実際と乖離
-- **ファイル**: `docs/mod-development/index.md:44-63`
-- **問題**: サンプルに `elmer:vrm` アセット宣言があるが、実際の `mods/elmer/package.json` の `homunculus` フィールドは空 (`{}`)。
-- **推奨**: サンプルコードであることを明記するか、実際の実装と合わせて修正する。
-
-
 ---
 
 ### AI Integration / Reference
-
-
-#### [Medium] AI Integration: セットアップページに `HOMUNCULUS_HOST` 環境変数の設定例が欠落
-- **ファイル**: `claude-desktop.md`, `claude-code.md`, `codex.md` (いずれも env 設定なし)
-- **問題**: カスタムポート使用時の設定方法が主要クライアントページから欠落。`other-clients.md` のみ記載あり。
-- **推奨**: 各セットアップページに「カスタムポート設定」セクションを追加し `env: { "HOMUNCULUS_HOST": "localhost:4000" }` の例を示す。
 
 #### [Medium] Codex 設定: `--mcp-config` のインライン JSON 形式の検証
 - **ファイル**: `docs/ai-integration/setup/codex.md:20`
 - **問題**: `codex --mcp-config '{"homunculus":...}'` のインライン JSON 形式が実際の Codex CLI でサポートされているか未検証。バージョンによってはファイルパス形式のみ対応の可能性がある。
 - **推奨**: Codex 公式ドキュメントで確認し、ファイルパス形式の代替例も併記する。
-
-#### [Medium] MCP Reference: `reference/mcp-tools/index.md` のカテゴリリンクパス検証
-- **ファイル**: `docs/reference/mcp-tools/index.md:21-28`
-- **問題**: リンクが `./mcp-tools/character` 形式になっており、スラッグオーバーライド (`slug: /reference/mcp-tools`) との組み合わせでリンク解決が正しくない可能性がある。
-- **推奨**: `pnpm build` でリンク検証を実施し、壊れている場合は `./character` に修正する。
-
-#### [Medium] Claude Code 設定: 設定ファイルパスの公式ドキュメントとの整合性確認
-- **ファイル**: `docs/ai-integration/setup/claude-code.md:32`
-- **問題**: `~/.claude/settings.json` の `mcpServers` キーを案内しているが、Claude Code のバージョンアップで設定方法が変わる可能性がある。
-- **推奨**: Claude Code 公式ドキュメントへのリンクを追記し、バージョン変更への耐性を持たせる。
-
-
-#### [Low] AI Integration: MCP サーバーのバージョンがハードコードされている
-- **ファイル**: `claude-desktop.md:27`, `claude-code.md:27,39`, `codex.md:20`, `other-clients.md:20`, `troubleshooting.md:59`
-- **問題**: すべてのページで `@hmcs/mcp-server@0.1.0` がハードコード。バージョン更新時に全ページの修正が必要。
-- **推奨**: `@latest` の使用を検討する。または Docusaurus の変数機能 (MDX 等) でバージョンを一元管理する。
-
 
 ---
 
@@ -139,51 +60,21 @@
 - **問題**: 全て "under construction" のみだが、`docusaurus.config.ts` のフッターから直接リンクされており、ユーザーが空ページに到達する。特に `security.md` が空のままプロダクション公開されているのは不適切。
 - **推奨**: `security.md` から優先的に内容を整備する（脆弱性報告先・対応プロセス）。`license.md` には Three-Lane Permissive Model の内容を記載する（SYNTHESIS.md 参照）。
 
-#### [Medium] contributing/index.md — Conventional Commits スタイルへの言及がない
-- **ファイル**: `docs/contributing/index.md`
-- **問題**: CLAUDE.md では `feat:`, `fix:`, `docs:` 等の Conventional Commits が明記されているが、Contributing ガイドに記載がない。
-- **推奨**: PR ガイドラインに「コミットメッセージは Conventional Commits スタイルを使用してください (`feat:`, `fix:`, `docs:` 等)」を追加する。
-
-#### [Medium] contributing/index.md — 開発環境セットアップへのリンク・手順が欠落
-- **ファイル**: `docs/contributing/index.md`
-- **問題**: 「Fork the repo, create a branch」という記載のみで、実際のセットアップ手順 (`make setup`, `make debug` 等) への案内がない。
-- **推奨**: 「Development Setup」セクションを追加し、`make setup` および `make debug` への参照を加える。
-
-#### [Medium] contributing/index.md — DCO/CLA 要件の未記載
-- **ファイル**: `docs/contributing/index.md`
-- **問題**: ライセンス戦略として DCO 採用を決定済みだが、Contributing ガイドに DCO への言及がない。
-- **推奨**: 「By contributing, you certify the DCO (Developer Certificate of Origin)」の旨を追記する。
-
-#### [Low] contributing/index.md — PR 前の CI チェック手順が不明確
-- **推奨**: PR 前に `make test` (テスト) と `make fix-lint` (lint) を実行することを明記する。
-
-#### [Low] skills/README.md — Available Skills テーブルが空
-- **ファイル**: `skills/README.md:9-10`
-- **問題**: Contributing ページからリンクされているが、テーブルが `| | |` の空行のみ。
-- **推奨**: 実際のスキルが追加されるまで「No skills available yet. Be the first to contribute!」等のプレースホルダーを置くか、テーブルを削除する。
-
 ---
 
 ## 横断的問題点
 
 ### 構成・一貫性
 
-#### [Medium] `project/` セクションがサイドバーに存在せずフッターのみからアクセス可能
+#### [Medium] MOD 紹介ページの構成が不統一
+- **ファイル**: `docs/mods/` 各ファイル
+- **問題**: assets / elmer / menu / settings / voicevox で見出し構成がバラバラ。特に voicevox のみ Prerequisites と Troubleshooting を持つが、他ページに共通構造がない。
+- **推奨**: 共通テンプレートを定義: `Overview → Usage/Features → Prerequisites（任意）→ Notes → Troubleshooting（任意）`
+
+#### [Low] `project/` セクションがサイドバーに存在せずフッターのみからアクセス可能
 - **ファイル**: `docs/website/sidebars.ts`, `docs/website/docusaurus.config.ts`
 - **問題**: changelog, license, security, code-of-conduct はフッターリンクからのみアクセス可能。サイドバーから発見できない。
 - **推奨**: サイドバー末尾に `project` セクションを追加することを検討する。
-
-#### [Medium] Asset ID のフォーマットがサイト全体で統一されていない（詳細は AI Integration / Reference セクション参照）
-- ドキュメントは `mod-name:asset-id` 形式（`vrma:idle-maid`）、MCP ツールの describe テキストは `mod-name::filename.ext` 形式（`elmer::wave.vrma`）が混在。どちらか一方に統一が必要。
-
-### 実装差異
-
-#### [Medium] MCP サーバーのバージョン `0.1.0` が5箇所でハードコード
-
-### 視認性
-
-特定のページで視認性の問題は少ない。全体的なコードブロックの使い方は適切。ただし以下を指摘:
-- スタブページ4件がフッターに露出している（見た目上、コンテンツがないページへのリンクになる）
 
 ---
 
@@ -201,26 +92,27 @@
 ### P2 — 短期対応（Medium / 開発者・ユーザーの混乱源）
 
 7. ~~**Asset ID フォーマット統一**~~ ✅ 修正済み（MCP ツール describe テキストを `mod-name:asset-id` 形式に統一）
-8. **`HOMUNCULUS_HOST` 環境変数をセットアップページに追記**
+8. ~~**`HOMUNCULUS_HOST` 環境変数をセットアップページに追記**~~ ✅ 修正済み
 9. ~~**commands.md の shebang 修正**~~ ✅ 修正済み
-10. **Contributing ガイドの充実** — Conventional Commits / DCO / 開発環境セットアップ を追加
+10. ~~**Contributing ガイドの充実**~~ ✅ 修正済み（Conventional Commits / DCO / 開発環境セットアップ）
 11. **MOD ページ構成の統一** — 共通テンプレートを適用
 12. **`shadowPanel` の独立ドキュメントページ作成**
 
 ### P3 — 中長期対応（Low / 品質向上）
 
-13. **MCP サーバーバージョンのハードコード解消**
+13. ~~**MCP サーバーバージョンのハードコード解消**~~ ✅ 修正済み（@latest に統一）
 14. **project/ ページ（changelog, license, code-of-conduct）の整備**
-15. ~~**`sleep` utility のドキュメント追加**~~ ✅ 修正済み（sdk/index.md に utils モジュール行追加）
+15. ~~**`sleep` utility のドキュメント追加**~~ ✅ 修正済み
 16. ~~**`speakOnVoiceVox()` への誤った言及を削除**~~ ✅ 修正済み
-17. **skills/README.md の空テーブルをプレースホルダーに置換**
-18. **preferences.md に delete 操作の代替案（CLI）を追記**
-19. ~~**MOD バージョン出力例を `1.0.0` に更新**~~ ✅ 修正済み（mods/index.md, reference/cli/mod.md）
-20. **mcp-tools/index.md のリンクパス検証**
+17. ~~**skills/README.md の空テーブルをプレースホルダーに置換**~~ ✅ 修正済み
+18. ~~**preferences.md に delete 操作の代替案（CLI）を追記**~~ ✅ 修正済み
+19. ~~**MOD バージョン出力例を `1.0.0` に更新**~~ ✅ 修正済み
+20. ~~**mcp-tools/index.md のリンクパス検証**~~ ✅ 修正済み
+21. ~~**mods/settings.md の設定項目が具体的でない** の修正~~ ✅ 修正済み
 
 ---
 
-## 修正済み一覧（2026-03-02）
+## 修正済み一覧（2026-03-02 / 2026-03-03）
 
 | # | 重要度 | 対象ファイル | 内容 |
 |---|--------|-------------|------|
@@ -241,3 +133,21 @@
 | 15 | Low | `docs/mod-development/sdk/speech.md` | 存在しない `speakOnVoiceVox()` への言及を削除、VoiceVox 連携案内に差し替え |
 | 16 | Low | `docs/reference/mcp-tools/prompts.md` | description を実装と一致させる |
 | 17 | Low | `docs/mods/index.md`, `docs/reference/cli/mod.md` | hmcs mod list 出力例のバージョン `0.1.0` → `1.0.0` |
+| 18 | High | `docs/mod-development/sdk/mods-api.md` | ModInfo の snake_case/camelCase 混在を Warning ノートで文書化 |
+| 19 | Medium | `docs/mod-development/sdk/preferences.md` | SDK での delete 未サポートを明記し `hmcs prefs delete` を案内 |
+| 20 | Medium | `docs/ai-integration/setup/claude-desktop.md` | Custom Port セクション追加（HOMUNCULUS_HOST env 設定例） |
+| 21 | Medium | `docs/ai-integration/setup/claude-code.md` | Custom Port セクション追加（HOMUNCULUS_HOST env 設定例） |
+| 22 | Medium | `docs/ai-integration/setup/codex.md` | Custom Port セクション追加（HOMUNCULUS_HOST env 設定例） |
+| 23 | Medium | `docs/ai-integration/setup/claude-code.md` | `~/.claude/settings.json` 近くに Claude Code 公式ドキュメントリンク追加 |
+| 24 | Medium | `docs/reference/mcp-tools/index.md` | カテゴリリンクパス `./mcp-tools/XXX` → `./XXX` に修正（8件） |
+| 25 | Medium | `docs/contributing/index.md` | PR ガイドラインに Conventional Commits スタイル追記 |
+| 26 | Medium | `docs/contributing/index.md` | Development Setup セクション追加（`make setup` / `make debug`） |
+| 27 | Medium | `docs/contributing/index.md` | DCO セクション追加（Developer Certificate of Origin） |
+| 28 | Low | 5ファイル（ai-integration/setup/） | `@hmcs/mcp-server@0.1.0` → `@hmcs/mcp-server@latest` に統一 |
+| 29 | Low | `docs/mods/assets.md` | Elmer MOD が Assets MOD に依存する旨を Notes セクションに追記 |
+| 30 | Low | `docs/getting-started/index.md` | Next Steps に Quick Start リンク追加 |
+| 31 | Low | `docs/getting-started/installation.md` | Step 3 に macOS 専用 CLI の注記（Platform Support）追加 |
+| 32 | Low | `docs/mod-development/index.md` | サンプルの asset ID `elmer:vrm` → `vrm:elmer` 修正 + 説明ノート追加 |
+| 33 | Low | `docs/contributing/index.md` | PR 前の `make test` / `make fix-lint` 手順を追記 |
+| 34 | Low | `skills/README.md` | Available Skills 空テーブルにプレースホルダー追加 |
+| 35 | Low | `docs/mods/settings.md` | 設定項目をタブ別テーブルで具体的に記載（Basic / Persona / OCEAN） |
