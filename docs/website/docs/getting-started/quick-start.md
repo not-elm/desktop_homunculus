@@ -47,15 +47,20 @@ Desktop Homunculus ships with a set of official MODs under the `@hmcs` scope:
 |---|---|
 | `@hmcs/elmer` | Controls the default character (Elmer) — spawns the character, manages animations and cursor tracking |
 | `@hmcs/assets` | Default VRMA animations (`idle-maid`, `grabbed`, `idle-sitting`) and sound effects |
-| `@hmcs/voicevox` | Text-to-speech integration using the [VoiceVox](https://voicevox.hiroshiba.jp/) engine |
 | `@hmcs/settings` | Settings panel UI accessible from the context menu |
 | `@hmcs/menu` | Right-click context menu overlay |
+
+## Additional MODs
+
+You can extend Desktop Homunculus with optional MODs. Install any of them at any time using the CLI:
+
+| MOD | Description |
+|---|---|
+| `@hmcs/voicevox` | Text-to-speech integration using the [VoiceVox](https://voicevox.hiroshiba.jp/) engine |
 
 :::info[VoiceVox Setup]
 The `@hmcs/voicevox` MOD requires the VoiceVox engine to be installed and running separately. Visit the [VoiceVox website](https://voicevox.hiroshiba.jp/) for installation instructions.
 :::
-
-Install additional MODs at any time using the CLI:
 
 ```shell
 hmcs mod install @hmcs/voicevox
