@@ -77,13 +77,6 @@ fn main() {
                     exit_condition: ExitCondition::OnAllClosed,
                     ..default()
                 })
-                .set(RenderPlugin {
-                    render_creation: RenderCreation::Automatic(WgpuSettings {
-                        power_preference: PowerPreference::LowPower,
-                        ..default()
-                    }),
-                    ..default()
-                })
                 .set(AssetPlugin {
                     file_path: if std::env::var("CARGO_MANIFEST_DIR").is_ok() {
                         "assets".to_string()
