@@ -1893,7 +1893,9 @@ dependencies = [
 
 [[package]]
 name = "bevy_tray_icon"
-version = "0.3.0"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6cf6a262c0393bd85423a0af365e57b4ee89d166f636b2ddfef21fefccd7ea4a"
 dependencies = [
  "bevy",
  "thiserror 2.0.18",
