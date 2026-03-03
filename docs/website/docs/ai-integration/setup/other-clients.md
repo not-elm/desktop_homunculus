@@ -17,7 +17,7 @@ Any MCP-compatible client can connect to Desktop Homunculus. The MCP server uses
 Configure your MCP client to spawn the server with:
 
 - **Command:** `npx`
-- **Arguments:** `["-y", "@hmcs/mcp-server@0.1.0"]`
+- **Arguments:** `["-y", "@hmcs/mcp-server@latest"]`
 - **Transport:** stdio
 
 ## Environment Variables

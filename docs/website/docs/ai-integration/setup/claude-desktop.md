@@ -24,7 +24,7 @@ Add the following to your Claude Desktop configuration file:
   "mcpServers": {
     "homunculus": {
       "command": "npx",
-      "args": ["-y", "@hmcs/mcp-server@0.1.0"]
+      "args": ["-y", "@hmcs/mcp-server@latest"]
     }
   }
 }
@@ -41,6 +41,26 @@ Ask Claude:
 > "What characters are currently loaded on my desktop?"
 
 If the connection is working, Claude will read the `homunculus://characters` resource and describe your loaded characters.
+
+## Custom Port
+
+If Desktop Homunculus runs on a non-default port, set the `HOMUNCULUS_HOST` environment variable:
+
+```json
+{
+  "mcpServers": {
+    "homunculus": {
+      "command": "npx",
+      "args": ["-y", "@hmcs/mcp-server@latest"],
+      "env": {
+        "HOMUNCULUS_HOST": "localhost:4000"
+      }
+    }
+  }
+}
+```
+
+The default value is `localhost:3100`. You can change the port in `~/.homunculus/config.toml`.
 
 ## Next Steps
 

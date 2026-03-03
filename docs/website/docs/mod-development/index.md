@@ -52,7 +52,7 @@ Here is the `package.json` for a MOD that loads a VRM character:
   },
   "homunculus": {
     "assets": {
-      "elmer:vrm": {
+      "vrm:elmer": {
         "path": "assets/Elmer.vrm",
         "type": "vrm",
         "description": "VRM model named Elmer"
@@ -62,7 +62,11 @@ Here is the `package.json` for a MOD that loads a VRM character:
 }
 ```
 
-The `main` field points to a TypeScript startup script that uses the SDK to spawn the character and set up its behavior. The `homunculus.assets` field registers a VRM model with the asset ID `elmer:vrm`.
+The `main` field points to a TypeScript startup script that uses the SDK to spawn the character and set up its behavior. The `homunculus.assets` field registers a VRM model with the asset ID `vrm:elmer`.
+
+:::note
+This is an illustrative example. In practice, the official `@hmcs/elmer` MOD does not declare its own VRM asset — instead it consumes `vrm:elmer` from the `@hmcs/assets` MOD. Asset IDs follow `type:name` format (e.g. `vrm:elmer`, `vrma:idle-maid`, `se:open`).
+:::
 
 ## Get Started
 

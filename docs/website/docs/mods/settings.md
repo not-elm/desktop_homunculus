@@ -16,7 +16,7 @@ Open the settings panel in one of these ways:
 
 ## Features
 
-The settings panel is organized into three tabs. Changes take effect after clicking **Save**. All settings are persisted to `~/.homunculus/prefs.db`.
+The settings panel is organized into three tabs. Changes take effect after clicking **Save**. All settings are persisted to `~/.homunculus/preferences.db`.
 
 ### Basic
 

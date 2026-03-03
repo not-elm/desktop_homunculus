@@ -62,6 +62,10 @@ Install **pnpm** (package manager) and **@hmcs/cli** (MOD management CLI) global
 npm install -g pnpm @hmcs/cli
 ```
 
+:::info[Platform Support]
+The `hmcs` CLI is currently supported on **macOS only**. Windows support is planned for a future release.
+:::
+
 Verify the installation:
 
 ```shell

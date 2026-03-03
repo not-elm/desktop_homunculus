@@ -7,6 +7,18 @@ sidebar_position: 1
 
 Thank you for your interest in contributing! Desktop Homunculus is in active development and welcomes contributions of all kinds — from asset creation to mod development to bug reports.
 
+## Development Setup
+
+```shell
+# 1. Install all tools (Rust, Node, CEF framework)
+make setup
+
+# 2. Start the app in debug mode (with hot-reload and DevTools)
+make debug
+```
+
+See the root `Makefile` for all available commands.
+
 ## How to Contribute
 
 - **Report bugs**: Open an issue on [GitHub Issues](https://github.com/not-elm/desktop-homunculus/issues)
@@ -18,9 +30,11 @@ Thank you for your interest in contributing! Desktop Homunculus is in active dev
 
 1. Fork the repository and create a feature branch
 2. Make your changes with clear, descriptive commits
+   Use [Conventional Commits](https://www.conventionalcommits.org/) style: `feat:`, `fix:`, `docs:`, `refactor:`, etc.
 3. Ensure CI checks pass
-4. Open a PR with a description of what you changed and why
-5. Respond to review feedback
+4. Before opening a PR, run `make test` (tests) and `make fix-lint` (lint) locally.
+5. Open a PR with a description of what you changed and why
+6. Respond to review feedback
 
 ## Wanted Contributions
 
@@ -61,6 +75,10 @@ We welcome contributions that improve the shared `@hmcs/ui` component library us
 - **Documentation and examples** — Improve component docs, usage guidance, and practical examples for MOD authors
 
 See the [Component Library guide](/docs/mod-development/webview-ui/component-library) for current usage and API examples.
+
+## Developer Certificate of Origin (DCO)
+
+By contributing, you certify that the contribution is your original work and that you have the right to submit it under the project license (the [Developer Certificate of Origin](https://developercertificate.org/)).
 
 ## License
 

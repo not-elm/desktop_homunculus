@@ -56,7 +56,7 @@ If you'd like to help build template MODs or improve MCP tools, see the [Contrib
 **Cause:** The MCP server failed to start or Node.js is missing/outdated.
 
 **Solution:**
-1. Verify that `npx -y @hmcs/mcp-server@0.1.0` runs without errors
+1. Verify that `npx -y @hmcs/mcp-server@latest` runs without errors
 2. Ensure Node.js >= 22 is installed (`node --version`)
 
 ### Tools Return Unexpected Errors

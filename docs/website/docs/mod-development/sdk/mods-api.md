@@ -13,6 +13,10 @@ Discover installed MODs, execute bin commands with buffered or streaming output,
 import { mods } from "@hmcs/sdk";
 ```
 
+:::warning Field Name Convention
+`mods.get()` returns `ModInfo` with **snake_case** field names (`has_main`, `bin_commands`, `asset_ids`). This differs from the application info endpoint which returns camelCase field names. The field names are planned to be unified in a future release.
+:::
+
 ## Listing MODs
 
 `mods.list()` returns metadata for every MOD discovered at startup. `mods.get(modName)` retrieves a single MOD by name.

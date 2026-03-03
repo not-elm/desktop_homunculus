@@ -81,6 +81,21 @@ coordinates.toViewport(
 
 See [Math Types](./math) for `Vec2`, `Vec3`, and `Rect`.
 
+### GlobalDisplay
+
+```typescript
+interface GlobalDisplay {
+  /** Unique display identifier. */
+  id: number;
+  /** Human-readable display name. */
+  title: string;
+  /** Display frame rectangle in screen coordinates. */
+  frame: Rect;
+}
+```
+
+See [Math Types](./math) for the `Rect` definition.
+
 ## Next Steps
 
 - **[Entities](./entities)** -- Position and animate entities using world-space transforms.

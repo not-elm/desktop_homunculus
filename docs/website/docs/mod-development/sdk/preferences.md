@@ -57,6 +57,14 @@ for (const key of keys) {
 }
 ```
 
+## Delete
+
+The SDK does not currently support deleting individual preference keys. To delete a key, use the CLI:
+
+```shell
+hmcs prefs delete <key>
+```
+
 ## Example: Saving Character Position
 
 A common pattern is saving a character's transform so it restores on next launch.
