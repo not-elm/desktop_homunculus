@@ -99,7 +99,7 @@ fn setup_tray(
 
     commands.insert_resource(registry);
     commands.insert_resource(TrayIcon {
-        icon: Some(asset_server.load("icon.png")),
+        icon: Some(asset_server.load("icons/icon.png")),
         tooltip: Some("Desktop Homunculus".to_string()),
         menu,
         show_menu_on_left_click: true,
