@@ -19,9 +19,7 @@ license = "MIT OR Apache-2.0"
 publish = false
 
 [workspace]
-members = [
-    "crates/*",
-]
+members = ["crates/*"]
 
 [dependencies]
 bevy = { workspace = true }
@@ -65,6 +63,7 @@ bevy = { version = "0.18", features = [
     "png",
     "mp3",
 ] }
+bevy_tray_icon = { version = "0.3" }
 url = { version = "2", features = ["serde"] }
 async-channel = "2.5"
 async-broadcast = "0.7"
@@ -88,8 +87,9 @@ homunculus_speech = { path = "crates/homunculus_speech" }
 homunculus_mod = { path = "crates/homunculus_mod" }
 homunculus_api = { path = "crates/homunculus_api" }
 homunculus_audio = { path = "crates/homunculus_audio" }
+homunculus_tray = { path = "crates/homunculus_tray" }
 homunculus_utils = { path = "crates/homunculus_utils", default-features = false }
-bevy_vrm1 = {  version = "0.6", features = ["serde", "log"] }
+bevy_vrm1 = { version = "0.6", features = ["serde", "log"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1" }
 anyhow = { version = "1", features = ["std"] }
@@ -116,7 +116,7 @@ develop = [
     "dep:bevy-inspector-egui",
     "dep:bevy_egui",
     "homunculus_hit_test/develop",
-    "bevy_cef/debug"
+    "bevy_cef/debug",
 ]
 
 [profile.dev.package."*"]
@@ -145,4 +145,6 @@ strip = true
 type_complexity = "allow"
 
 [workspace.lints.rust]
-unexpected_cfgs = { level = "warn", check-cfg = ['cfg(feature, values("cargo-clippy"))'] }
+unexpected_cfgs = { level = "warn", check-cfg = [
+    'cfg(feature, values("cargo-clippy"))',
+] }
