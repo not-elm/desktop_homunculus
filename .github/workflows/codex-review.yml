@@ -31,11 +31,12 @@ jobs:
       - name: Pre-fetch base and head refs
         run: |
           git fetch --no-tags origin \
-            ${{ github.event.pull_request.base.ref }} \
-            +refs/pull/${{ github.event.pull_request.number }}/head
+            +${{ github.event.pull_request.base.sha }}:refs/remotes/origin/__codex_base__ \
+            +refs/pull/${{ github.event.pull_request.number }}/head:refs/remotes/origin/__codex_head__
 
       - name: Run Codex review
         id: codex
+        continue-on-error: true
         uses: openai/codex-action@94bb7a052e529936e5260a35838e61b190855739 # v1
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
@@ -45,26 +46,32 @@ jobs:
           safety-strategy: drop-sudo
 
       - name: Post review comment
-        if: steps.codex.outputs.final-message != ''
         uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
           github-token: ${{ github.token }}
           script: |
-            const body = process.env.CODEX_OUTPUT;
-            if (!body || body.trim() === '') {
-              console.log('No Codex output to post');
-              return;
-            }
+            const body = process.env.CODEX_OUTPUT?.trim();
+            const outcome = process.env.CODEX_OUTCOME;
+            const reviewBody = (outcome === 'success' && body)
+              ? `## Codex Review\n\n${body}`
+              : [
+                  '## Codex Review',
+                  '',
+                  'Codex review could not be completed for this run.',
+                  '',
+                  `Step outcome: \`${outcome}\``,
+                ].join('\n');
 
             await github.rest.pulls.createReview({
               owner: context.repo.owner,
               repo: context.repo.repo,
               pull_number: context.payload.pull_request.number,
               event: 'COMMENT',
-              body: `## Codex Review\n\n${body}`,
+              body: reviewBody,
             });
         env:
           CODEX_OUTPUT: ${{ steps.codex.outputs.final-message }}
+          CODEX_OUTCOME: ${{ steps.codex.outcome }}
 
   # Post a friendly comment on fork PRs explaining the policy
   fork-notice:
@@ -78,15 +85,17 @@ jobs:
           github-token: ${{ github.token }}
           script: |
             // Check if we already posted a notice on this PR
-            const comments = await github.rest.issues.listComments({
+            const marker = '<!-- codex-fork-notice -->';
+            const comments = await github.paginate(github.rest.issues.listComments, {
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.payload.pull_request.number,
+              per_page: 100,
             });
 
-            const botNotice = comments.data.find(c =>
-              c.user.type === 'Bot' &&
-              c.body.includes('<!-- codex-fork-notice -->')
+            const botNotice = comments.find(c =>
+              c.user?.type === 'Bot' &&
+              c.body?.includes(marker)
             );
 
             if (botNotice) {
