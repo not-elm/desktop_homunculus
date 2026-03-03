@@ -34,6 +34,33 @@
 - Use crate-level imports: `use crate::error::ApiResult;`.
 - Group imports: std → external crates → crate-internal.
 
+## Item Ordering
+
+ファイル内のアイテムはトップダウンに配置する。上に高位の部品、下に行くほど低位の詳細。
+
+### ファイル内の配置順序
+
+1. モジュール宣言 (`mod` / `pub mod`)・再エクスポート (`pub use`)
+2. インポート (`use`)
+3. 定数・型定義 (`const`, `static`, `struct`, `enum`, `type`)
+4. エントリポイント（`main`, `Plugin` struct + `impl Plugin`, `api!` マクロ呼び出し）
+5. パブリック関数・メソッド実装 (`pub fn`, `pub async fn`)
+6. クレート内部関数 (`pub(crate) fn`)
+7. プライベート関数・ヘルパー (`fn`)
+8. テスト (`#[cfg(test)]`)
+
+### impl ブロック内の配置順序
+
+1. `pub` メソッド
+2. `pub(crate)` メソッド
+3. プライベートメソッド
+
+### 原則
+
+- **呼び出す側が上、呼ばれる側が下。** `main` → それが呼ぶ関数 → さらにその下位関数。
+- **struct/enum 定義は、それを使う impl より上に置く。** 型定義はファイル上部にまとめる。
+- **Bevy Plugin はエントリポイント。** Plugin struct + `impl Plugin` を上に、`build()` から登録されるシステム関数を下に配置する。
+
 ## Function Granularity
 
 - Extract functions at a granularity where the calling code reads naturally as prose.
