@@ -7,7 +7,7 @@ import { input } from "@hmcs/sdk/commands";
 try {
   const vrm = await input.parseMenu();
   await Webview.open({
-    source: webviewSource.local("settings:ui"),
+    source: webviewSource.local("character-settings:ui"),
     size: [1, 0.9],
     viewportSize: [900, 700],
     offset: [1.1, 0],

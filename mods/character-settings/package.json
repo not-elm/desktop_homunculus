@@ -1,7 +1,7 @@
 {
-  "name": "@hmcs/settings",
+  "name": "@hmcs/character-settings",
   "version": "1.0.0",
-  "description": "Settings panel mod that provides a WebView UI to configure characters and application preferences",
+  "description": "Character settings panel mod that provides a WebView UI to configure individual character preferences",
   "private": true,
   "license": "MIT",
   "type": "module",
@@ -13,16 +13,16 @@
   "homunculus": {
     "menus": [
       {
-        "id": "open-settings",
-        "text": "Settings",
+        "id": "open-character-settings",
+        "text": "Character Settings",
         "command": "open-ui"
       }
     ],
     "assets": {
-      "settings:ui": {
+      "character-settings:ui": {
         "path": "ui/dist/index.html",
         "type": "html",
-        "description": "Settings panel UI"
+        "description": "Character settings panel UI"
       }
     }
   },
