@@ -8,7 +8,7 @@ Bring your desktop to life with interactive 3D VRM characters. Desktop Homunculu
 
 ## Documentation
 
-See the [documentation site](https://not-elm.github.io/desktop-homunculus/) for user guides, MOD development, and API reference.
+See the [documentation site](https://not-elm.github.io/desktop_homunculus/) for user guides, MOD development, and API reference.
 
 ## Features
 
@@ -33,7 +33,7 @@ See the [documentation site](https://not-elm.github.io/desktop-homunculus/) for 
 
 ## Contributing
 
-See the [Contributing Guide](https://not-elm.github.io/desktop-homunculus/contributing) for guidelines.
+See the [Contributing Guide](https://not-elm.github.io/desktop_homunculus/contributing) for guidelines.
 
 ## License
 
