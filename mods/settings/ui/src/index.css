@@ -69,6 +69,7 @@ body {
   background: oklch(0.15 0.01 250 / 0.92);
   border-radius: 12px;
   padding: 20px;
+  height: 100vh;
   max-width: 100vw;
   max-height: 100vh;
   display: flex;
@@ -291,6 +292,11 @@ body {
   position: relative;
   z-index: 7;
   min-height: 0;
+  scrollbar-width: none;
+}
+
+.settings-content::-webkit-scrollbar {
+  display: none;
 }
 
 .settings-section {

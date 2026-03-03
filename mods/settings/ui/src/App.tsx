@@ -68,7 +68,7 @@ export function App() {
       </div>
 
       {/* Content */}
-      <div className="settings-content">
+      <div className={`settings-content${tab === "basic" ? " settings-content--visible" : ""}`}>
         {tab === "basic" && (
           <BasicTab name={name} scale={scale} onScaleChange={setScale} />
         )}
