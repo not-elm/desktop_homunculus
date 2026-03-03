@@ -5,12 +5,11 @@
   "license": "MIT",
   "author": "notelm",
   "type": "module",
-  "main": "index.ts",
   "scripts": {},
   "dependencies": {
     "@hmcs/sdk": "workspace:*"
   },
   "homunculus": {
-
+    "service": "index.ts"
   }
 }

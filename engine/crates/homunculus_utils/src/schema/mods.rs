@@ -41,9 +41,6 @@ pub(crate) struct ModPackageJson {
     pub author: Option<String>,
     #[serde(default)]
     pub license: Option<String>,
-    /// Entry point script (e.g., "index.js"), relative to the mod root.
-    #[serde(default)]
-    pub main: Option<String>,
     /// Executable scripts keyed by command name, e.g. `{ "do-something": "./scripts/do-something.js" }`.
     #[serde(default)]
     pub bin: Option<HashMap<String, String>>,
@@ -54,6 +51,9 @@ pub(crate) struct ModPackageJson {
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 pub struct ModManifest {
+    /// Service script path (e.g., "index.ts"), relative to the mod root.
+    #[serde(default)]
+    pub service: Option<String>,
     #[serde(default)]
     pub menus: Option<Vec<ModMenu>>,
     /// Asset declarations keyed by asset ID.

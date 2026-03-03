@@ -54,8 +54,8 @@ Make sure your `package.json` includes all required fields:
   "version": "1.0.0",
   "type": "module",
   "description": "A short description of your MOD",
-  "main": "index.ts",
   "homunculus": {
+    "service": "index.ts",
     "assets": {}
   }
 }
@@ -71,7 +71,7 @@ Key fields:
 | `description` | Yes      | Shown in `hmcs mod list`      |
 | `homunculus`  | Yes      | What makes it a MOD           |
 
-See [Package Configuration](./project-setup/package-json.md) for full details on the `homunculus` field, `main`, and `bin`.
+See [Package Configuration](./project-setup/package-json.md) for full details on the `homunculus` field and `bin`.
 
 ### 3. Control what gets published
 

@@ -15,14 +15,13 @@ A MOD's `package.json` includes:
 |---|---|---|
 | `name` | Package name (used to derive asset IDs) | Yes |
 | `type` | Must be `"module"` for ES module support | Yes |
-| `main` | Service (long-running process, runs on app launch) | No |
 | `bin` | On-demand commands (invoked via HTTP API) | No |
-| `homunculus` | Engine metadata: assets and menus | Yes |
+| `homunculus` | Engine metadata: service, assets, and menus | Yes |
 | `dependencies` | Must include `@hmcs/sdk` when using SDK features | No |
 
 ## The `homunculus` Field
 
-The `homunculus` field is what makes a package a MOD. It has two sub-fields:
+The `homunculus` field is what makes a package a MOD. It has three sub-fields:
 
 ### `assets`
 
@@ -113,25 +112,27 @@ Declares entries for the right-click context menu. Each menu entry triggers a `b
 
 When the user right-clicks the character and selects "Settings", the engine invokes the `open-ui` bin command.
 
-## Service
+### `service`
 
-The `main` field specifies a **service** — a long-running Node.js process that runs automatically when Desktop Homunculus launches. The engine executes it as a child process using `node --experimental-strip-types`, so you can write TypeScript directly without a build step.
+The `homunculus.service` field specifies a **service** — a long-running Node.js process that runs automatically when Desktop Homunculus launches. The engine executes it as a child process using `node --experimental-strip-types`, so you can write TypeScript directly without a build step.
 
 ```json
 {
-  "main": "index.ts"
+  "homunculus": {
+    "service": "index.ts"
+  }
 }
 ```
 
 Services are typically used to spawn VRM characters and set up behaviors. The service starts at launch and stays alive as long as the app is running.
 
 :::warning
-The `main` script runs every time the app starts. Make sure it handles errors gracefully -- an unhandled exception will cause the script process to exit.
+The service script runs every time the app starts. Make sure it handles errors gracefully -- an unhandled exception will cause the script process to exit.
 :::
 
 ## Bin Commands
 
-The `bin` field exposes on-demand scripts that can be invoked through the HTTP API. Unlike `main`, these scripts run only when explicitly called.
+The `bin` field exposes on-demand scripts that can be invoked through the HTTP API. Unlike the service script, these scripts run only when explicitly called.
 
 ```json
 {

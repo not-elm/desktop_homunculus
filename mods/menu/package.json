@@ -6,7 +6,6 @@
   "license": "MIT",
   "type": "module",
   "author": "notelm",
-  "main": "index.ts",
   "scripts": {
     "build": "vite build ui",
     "dev": "vite dev ui",
@@ -14,6 +13,7 @@
     "build-storybook": "storybook build"
   },
   "homunculus": {
+    "service": "index.ts",
     "assets": {
       "menu:ui": {
         "path": "ui/dist/index.html",

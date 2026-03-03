@@ -30,7 +30,7 @@ export namespace mods {
      * ```typescript
      * const allMods = await mods.list();
      * for (const mod of allMods) {
-     *   console.log(`${mod.name}@${mod.version} (${mod.bin_commands.length} commands)`);
+     *   console.log(`${mod.name}@${mod.version} (${mod.commands.length} commands)`);
      * }
      * ```
      */
@@ -45,12 +45,16 @@ export namespace mods {
         author?: string;
         /** Optional license from package.json. */
         license?: string;
-        /** Whether the mod has a main script (auto-executed at startup). */
-        has_main: boolean;
+        /** Service script path (auto-launched at startup), or null if no service. */
+        serviceScriptPath?: string;
         /** Available bin command names. */
-        bin_commands: string[];
-        /** Asset IDs registered by this mod. */
-        asset_ids: string[];
+        commands: string[];
+        /** Asset declarations keyed by asset ID. */
+        assets: Record<string, { path: string; type: string; description: string }>;
+        /** Menu entries registered by this mod. */
+        menus: Array<{ id: string; text: string; command: string }>;
+        /** Absolute path to the mod's root directory. */
+        modDir: string;
     }
 
     /**
@@ -68,12 +72,12 @@ export namespace mods {
      * console.log(`${allMods.length} mods installed`);
      *
      * // Find mods with bin commands
-     * const withCommands = allMods.filter(m => m.bin_commands.length > 0);
+     * const withCommands = allMods.filter(m => m.commands.length > 0);
      *
-     * // Get asset IDs from a specific mod
+     * // Get assets from a specific mod
      * const elmer = allMods.find(m => m.name === "elmer");
      * if (elmer) {
-     *   console.log("Elmer assets:", elmer.asset_ids);
+     *   console.log("Elmer assets:", Object.keys(elmer.assets));
      * }
      * ```
      */
@@ -92,7 +96,7 @@ export namespace mods {
      * ```typescript
      * const elmer = await mods.get("elmer");
      * console.log(`${elmer.name}@${elmer.version}`);
-     * console.log("Commands:", elmer.bin_commands);
+     * console.log("Commands:", elmer.commands);
      * ```
      */
     export async function get(modName: string): Promise<ModInfo> {

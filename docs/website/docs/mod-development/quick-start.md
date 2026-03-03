@@ -40,18 +40,18 @@ pnpm add @hmcs/sdk
 
 ## Step 2: Configure package.json
 
-Open `package.json` and add the `homunculus` field along with the `main` and `type` fields. You will also need a VRM model file -- place it in an `assets/` directory inside your project.
+Open `package.json` and add the `homunculus` field along with the `type` field. You will also need a VRM model file -- place it in an `assets/` directory inside your project.
 
 ```json
 {
   "name": "my-character",
   "version": "1.0.0",
   "type": "module",
-  "main": "index.ts",
   "dependencies": {
     "@hmcs/sdk": "..."
   },
   "homunculus": {
+    "service": "index.ts",
     "assets": {
       "my-character:vrm": {
         "path": "assets/MyModel.vrm",

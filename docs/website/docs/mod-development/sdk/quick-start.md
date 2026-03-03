@@ -21,7 +21,7 @@ The SDK requires **Node.js 22 or later**. MOD scripts run directly as TypeScript
 
 ## Your First Script
 
-A MOD's `main` script runs automatically when Desktop Homunculus starts. Create `index.ts` in your MOD's root:
+A MOD's service script runs automatically when Desktop Homunculus starts. Create `index.ts` in your MOD's root:
 
 ```typescript
 import { Vrm, repeat } from "@hmcs/sdk";
@@ -45,7 +45,7 @@ character.events().on("state-change", async (e) => {
 });
 ```
 
-Set `"main": "index.ts"` in your `package.json` so the engine knows which file to run at startup.
+Set `"service": "index.ts"` inside the `"homunculus"` field of your `package.json` so the engine knows which file to run at startup.
 
 ## Key Concepts
 

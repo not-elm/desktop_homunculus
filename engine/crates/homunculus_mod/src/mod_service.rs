@@ -6,7 +6,7 @@ use std::process::Command;
 /// A MOD service identified by its absolute filesystem path.
 ///
 /// Services are long-running Node.js child processes that run for the
-/// entire app session, declared via the `main` field in a MOD's `package.json`.
+/// entire app session, declared via the `homunculus.service` field in a MOD's `package.json`.
 #[derive(Component)]
 pub(crate) struct ModService(pub PathBuf);
 

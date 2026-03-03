@@ -15,7 +15,7 @@ Every MOD is a **pnpm package** with a special `homunculus` field in its `packag
 
 When Desktop Homunculus launches, the engine discovers installed MODs by running `pnpm ls` in the mods directory (`~/.homunculus/mods/`) and reading each MOD's `package.json`. MODs are installed with the `hmcs mod install` command. Each MOD can declare:
 
-- A **service** (`main` field) -- a long-running Node.js child process that runs automatically when the app starts
+- A **service** (`homunculus.service` field) -- a long-running Node.js child process that runs automatically when the app starts
 - **On-demand commands** (`bin` field) -- invoked through the HTTP API when needed
 - **Assets** (`homunculus.assets` field) -- files bundled with the MOD (VRM models, animations, sounds, UI)
 
@@ -27,7 +27,7 @@ MODs combine any mix of the following capabilities. A single MOD can do one of t
 
 - **Spawn characters** — Load a VRM 3D model and control its animations, expressions, and behavior. The `@hmcs/elmer` MOD spawns the default character that idles on your desktop and reacts to dragging.
 
-- **Run a service** — Run a long-running TypeScript process when the app launches (declared via the `main` field). Services typically set up characters and event listeners. The `@hmcs/menu` MOD uses a service to initialize the right-click menu overlay.
+- **Run a service** — Run a long-running TypeScript process when the app launches (declared via the `homunculus.service` field). Services typically set up characters and event listeners. The `@hmcs/menu` MOD uses a service to initialize the right-click menu overlay.
 
 - **Expose on-demand commands** — Provide commands other MODs or AI agents can invoke through the HTTP API (declared via the `bin` field). The `@hmcs/voicevox` MOD exposes `voicevox:speak` and `voicevox:speakers` commands for text-to-speech.
 
@@ -46,11 +46,11 @@ Here is the `package.json` for a MOD that loads a VRM character:
   "name": "@hmcs/elmer",
   "version": "1.0.0",
   "type": "module",
-  "main": "index.ts",
   "dependencies": {
     "@hmcs/sdk": "workspace:*"
   },
   "homunculus": {
+    "service": "index.ts",
     "assets": {
       "vrm:elmer": {
         "path": "assets/Elmer.vrm",
@@ -62,7 +62,7 @@ Here is the `package.json` for a MOD that loads a VRM character:
 }
 ```
 
-The `main` field points to a TypeScript service that uses the SDK to spawn the character and set up its behavior. The `homunculus.assets` field registers a VRM model with the asset ID `vrm:elmer`.
+The `homunculus.service` field points to a TypeScript service that uses the SDK to spawn the character and set up its behavior. The `homunculus.assets` field registers a VRM model with the asset ID `vrm:elmer`.
 
 :::note
 This is an illustrative example. In practice, the official `@hmcs/elmer` MOD does not declare its own VRM asset — instead it consumes `vrm:elmer` from the `@hmcs/assets` MOD. Asset IDs follow `type:name` format (e.g. `vrm:elmer`, `vrma:idle-maid`, `se:open`).

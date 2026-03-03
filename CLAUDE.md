@@ -127,7 +127,7 @@ Mods are pnpm workspace packages. Each mod's `package.json` must include a `"hom
 - **assets**: Objects with `path`, `type` (`vrm`, `vrma`, `sound`, `image`, `html`), and `description`. Asset IDs use format `"mod-name:asset-id"`.
 - **menus** (optional): Right-click context menu entries that can open webviews.
 
-The `"main"` script runs automatically as a long-running Node.js child process (service) at startup using `node --experimental-strip-types` (TypeScript files run directly without a build step). On-demand scripts are exposed via `"bin"` and invoked through the HTTP API (`POST /mods/{mod_name}/bin/{command}`). Mods use the `@hmcs/sdk` SDK.
+The `"homunculus.service"` script runs automatically as a long-running Node.js child process (service) at startup using `node --experimental-strip-types` (TypeScript files run directly without a build step). On-demand scripts are exposed via `"bin"` and invoked through the HTTP API (`POST /mods/{mod_name}/bin/{command}`). Mods use the `@hmcs/sdk` SDK.
 
 **Mod discovery**: The engine runs `pnpm ls --parseable` in the mods directory (`~/.homunculus/mods/`) to discover installed mods, then reads each mod's `package.json` directly.
 
