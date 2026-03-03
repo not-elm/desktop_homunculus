@@ -26,13 +26,13 @@
 
 mod load;
 mod mod_asset_reader;
-mod node_process;
 mod mod_service;
+mod node_process;
 
 use crate::load::ModLoadPlugin;
 use crate::mod_asset_reader::ModAssetReader;
-use crate::node_process::NodeProcessPlugin;
 use crate::mod_service::ModServicePlugin;
+use crate::node_process::NodeProcessPlugin;
 use bevy::asset::io::{AssetSourceBuilder, AssetSourceId};
 use bevy::prelude::*;
 use homunculus_core::prelude::{AssetRegistry, HomunculusConfig, ModRegistry};

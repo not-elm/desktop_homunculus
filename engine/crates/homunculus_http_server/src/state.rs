@@ -3,8 +3,8 @@ use homunculus_api::assets::AssetsApi;
 use homunculus_api::mods::ModsApi;
 use homunculus_api::preferences::PrefsApi;
 use homunculus_api::prelude::{
-    ApiReactor, AppApi, AudioBgmApi, AudioSeApi, CameraApi, EffectsApi, EntitiesApi,
-    SettingsApi, ShadowPanelApi, SignalsApi, SpeechApi, VrmAnimationApi, WebviewApi,
+    ApiReactor, AppApi, AudioBgmApi, AudioSeApi, CameraApi, EffectsApi, EntitiesApi, SettingsApi,
+    ShadowPanelApi, SignalsApi, SpeechApi, VrmAnimationApi, WebviewApi,
 };
 use homunculus_api::vrm::VrmApi;
 use homunculus_utils::config::HomunculusConfig;

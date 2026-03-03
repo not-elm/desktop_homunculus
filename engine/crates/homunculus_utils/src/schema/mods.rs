@@ -106,7 +106,8 @@ mod tests {
 
     #[test]
     fn deserialize_tray_submenu() {
-        let json = r#"{"id":"tools","text":"Tools","items":[{"id":"a","text":"A","command":"run-a"}]}"#;
+        let json =
+            r#"{"id":"tools","text":"Tools","items":[{"id":"a","text":"A","command":"run-a"}]}"#;
         let item: TrayMenuItem = serde_json::from_str(json).unwrap();
         assert_eq!(item.id, "tools");
         assert!(item.command.is_none());

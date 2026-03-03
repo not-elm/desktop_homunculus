@@ -28,10 +28,7 @@ pub async fn get(State(api): State<SettingsApi>) -> HttpResult<f64> {
         (status = 200, description = "FPS updated"),
     ),
 )]
-pub async fn put(
-    State(api): State<SettingsApi>,
-    Json(body): Json<SetFpsBody>,
-) -> HttpResult {
+pub async fn put(State(api): State<SettingsApi>, Json(body): Json<SetFpsBody>) -> HttpResult {
     api.set_fps(body.fps).await.into_http_result()
 }
 
