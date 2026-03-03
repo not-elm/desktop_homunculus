@@ -1,0 +1,34 @@
+{
+  "link.title.Docs": {
+    "message": "ドキュメント",
+    "description": "The title of the footer links column with title=Docs in the footer"
+  },
+  "link.title.Community": {
+    "message": "コミュニティ",
+    "description": "The title of the footer links column with title=Community in the footer"
+  },
+  "link.item.label.Getting Started": {
+    "message": "はじめに",
+    "description": "The label of footer link with label=Getting Started linking to /docs/getting-started"
+  },
+  "link.item.label.MOD Development": {
+    "message": "MOD開発",
+    "description": "The label of footer link with label=MOD Development linking to /docs/mod-development"
+  },
+  "link.item.label.AI Integration": {
+    "message": "AI連携",
+    "description": "The label of footer link with label=AI Integration linking to /docs/ai-integration"
+  },
+  "link.item.label.GitHub Issues": {
+    "message": "GitHub Issues",
+    "description": "The label of footer link with label=GitHub Issues linking to https://github.com/not-elm/desktop-homunculus/issues"
+  },
+  "link.item.label.GitHub Discussions": {
+    "message": "GitHub Discussions",
+    "description": "The label of footer link with label=GitHub Discussions linking to https://github.com/not-elm/desktop-homunculus/discussions"
+  },
+  "copyright": {
+    "message": "Copyright © 2026 not-elm. コンポーネントごとのライセンス（Rust: MIT/Apache-2.0、TypeScript: MIT、ドキュメント/アセット: CC-BY-4.0）",
+    "description": "The footer copyright"
+  }
+}

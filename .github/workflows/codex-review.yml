@@ -1,0 +1,120 @@
+name: Codex Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - "engine/**"
+      - "packages/**"
+      - "mods/**"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: codex-review-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    # Skip fork PRs — secrets are not available and we don't want to use pull_request_target.
+    # See docs/plans/2026-03-03-codex-review-workflow-design.md for security rationale.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: refs/pull/${{ github.event.pull_request.number }}/merge
+
+      - name: Pre-fetch base and head refs
+        run: |
+          git fetch --no-tags origin \
+            +${{ github.event.pull_request.base.sha }}:refs/remotes/origin/__codex_base__ \
+            +refs/pull/${{ github.event.pull_request.number }}/head:refs/remotes/origin/__codex_head__
+
+      - name: Run Codex review
+        id: codex
+        continue-on-error: true
+        uses: openai/codex-action@94bb7a052e529936e5260a35838e61b190855739 # v1
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          prompt-file: .github/codex/prompts/review.md
+          output-file: codex-output.md
+          sandbox: read-only
+          safety-strategy: drop-sudo
+
+      - name: Post review comment
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const body = process.env.CODEX_OUTPUT?.trim();
+            const outcome = process.env.CODEX_OUTCOME;
+            const reviewBody = (outcome === 'success' && body)
+              ? `## Codex Review\n\n${body}`
+              : [
+                  '## Codex Review',
+                  '',
+                  'Codex review could not be completed for this run.',
+                  '',
+                  `Step outcome: \`${outcome}\``,
+                ].join('\n');
+
+            await github.rest.pulls.createReview({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+              event: 'COMMENT',
+              body: reviewBody,
+            });
+        env:
+          CODEX_OUTPUT: ${{ steps.codex.outputs.final-message }}
+          CODEX_OUTCOME: ${{ steps.codex.outcome }}
+
+  # Post a friendly comment on fork PRs explaining the policy
+  fork-notice:
+    if: github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Post fork PR notice
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            // Check if we already posted a notice on this PR
+            const marker = '<!-- codex-fork-notice -->';
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              per_page: 100,
+            });
+
+            const botNotice = comments.find(c =>
+              c.user?.type === 'Bot' &&
+              c.body?.includes(marker)
+            );
+
+            if (botNotice) {
+              console.log('Fork notice already posted, skipping');
+              return;
+            }
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body: [
+                '<!-- codex-fork-notice -->',
+                'Thanks for your contribution! :tada:',
+                '',
+                'Our automated Codex code review is restricted to collaborator PRs for',
+                'security reasons (see [design rationale](docs/plans/2026-03-03-codex-review-workflow-design.md#decision-fork-pr-handling)).',
+                'A maintainer will review your changes shortly.',
+                '',
+                'See [CONTRIBUTING.md](CONTRIBUTING.md) for details on our review process.',
+              ].join('\n'),
+            });

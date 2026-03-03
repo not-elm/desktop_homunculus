@@ -1,0 +1,1 @@
+{"responses":{"200":{"description":"SSE stream of VRM load events.","content":{"text/event-stream":{"schema":{"type":"object","required":["name","entity"],"properties":{"name":{"type":"string"},"entity":{"type":"integer","format":"uint64","description":"The unique identifier for an entity.","title":"Entity"}},"title":"VrmMetadata"}}}}}}

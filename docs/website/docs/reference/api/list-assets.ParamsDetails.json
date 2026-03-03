@@ -1,0 +1,1 @@
+{"parameters":[{"name":"type","in":"query","required":false,"description":"Filter by asset type","schema":{"type":"string","description":"The type classification of an asset.","enum":["Vrm","Vrma","Sound","Image","Html"],"title":"AssetType"}},{"name":"mod","in":"query","required":false,"description":"Filter by mod name","schema":{"type":"string"}}]}

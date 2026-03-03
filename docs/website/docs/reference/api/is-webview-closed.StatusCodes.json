@@ -1,0 +1,1 @@
+{"responses":{"200":{"description":"Successfully checked webview status.","content":{"application/json":{"schema":{"type":"boolean"}}}}}}

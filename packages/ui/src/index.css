@@ -1,0 +1,434 @@
+/* Outfit — geometric, modern, slightly rounded. Futuristic yet warm. */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
+
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "vaul/style.css" layer(base);
+@import "./animation.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ━━ Design Token Registry ━━ */
+
+@theme inline {
+  /* Typography */
+  --font-sans: "Outfit", system-ui, "Hiragino Kaku Gothic ProN", "Yu Gothic UI", sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", "Fira Code", monospace;
+
+  /* Border radius */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /* Semantic colors */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Holographic accent palette */
+  --color-holo-cyan: var(--holo-cyan);
+  --color-holo-violet: var(--holo-violet);
+  --color-holo-rose: var(--holo-rose);
+  --color-holo-teal: var(--holo-teal);
+  --color-holo-indigo: var(--holo-indigo);
+  --color-holo-amber: var(--holo-amber);
+
+  /* Holographic shadow system — luminous glow effects */
+  --shadow-holo-xs: inset 0 0 6px oklch(0.72 0.14 192 / 0.08), 0 0 4px oklch(0.72 0.14 192 / 0.04);
+  --shadow-holo-sm: 0 0 10px oklch(0.72 0.14 192 / 0.12), 0 0 20px oklch(0.72 0.14 192 / 0.06);
+  --shadow-holo: 0 0 20px oklch(0.72 0.14 192 / 0.2), 0 0 40px oklch(0.72 0.14 192 / 0.1);
+  --shadow-holo-lg: 0 0 30px oklch(0.72 0.14 192 / 0.25), 0 0 60px oklch(0.72 0.14 192 / 0.12), 0 0 80px oklch(0.72 0.14 192 / 0.06);
+  --shadow-holo-intense: 0 0 30px oklch(0.72 0.14 192 / 0.35), 0 0 60px oklch(0.72 0.14 192 / 0.2), 0 0 90px oklch(0.72 0.14 192 / 0.1);
+  --shadow-holo-multi: 0 0 20px oklch(0.72 0.14 192 / 0.25), 0 0 40px oklch(0.72 0.14 192 / 0.15), 0 0 60px oklch(0.72 0.14 192 / 0.12);
+  --shadow-glow-destructive: 0 0 20px oklch(0.6 0.22 25 / 0.2), 0 0 40px oklch(0.6 0.22 25 / 0.08);
+
+  /* Animation tokens */
+  --animate-holo-shimmer: holo-shimmer 6s ease-in-out infinite;
+  --animate-holo-pulse: holo-pulse 4s ease-in-out infinite;
+  --animate-holo-border: holo-border 8s linear infinite;
+  --animate-holo-progress: holo-progress 3s linear infinite;
+  --animate-holo-refract: holo-refract 10s linear infinite;
+  --animate-holo-glow-pulse: holo-glow-pulse 2s ease-in-out infinite;
+  --animate-holo-color-shift: holo-color-shift 6s linear infinite;
+  --animate-accordion-down: accordion-down 0.25s ease-out;
+  --animate-accordion-up: accordion-up 0.25s ease-out;
+}
+
+/* ━━ Light Mode — Luminous Glass ━━ */
+
+:root {
+  --radius: 0.625rem;
+
+  --background: oklch(0.97 0.005 250 / 0.85);
+  --foreground: oklch(0.12 0.02 250);
+  --card: oklch(0.97 0 0 / 0.6);
+  --card-foreground: oklch(0.12 0.02 250);
+  --popover: oklch(1 0 0 / 0.8);
+  --popover-foreground: oklch(0.12 0.02 250);
+  --primary: oklch(0.55 0.16 192);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.5 0.14 280);
+  --secondary-foreground: oklch(1 0 0);
+  --muted: oklch(0.93 0.01 250);
+  --muted-foreground: oklch(0.4 0.02 250);
+  --accent: oklch(0.93 0.01 250);
+  --accent-foreground: oklch(0.12 0.02 250);
+  --destructive: oklch(0.55 0.22 25);
+  --border: oklch(0 0 0 / 0.1);
+  --input: oklch(0 0 0 / 0.05);
+  --ring: oklch(0.55 0.16 192 / 0.5);
+
+  --holo-cyan: oklch(0.65 0.15 192);
+  --holo-violet: oklch(0.55 0.16 285);
+  --holo-rose: oklch(0.6 0.14 350);
+  --holo-teal: oklch(0.68 0.12 175);
+  --holo-indigo: oklch(0.58 0.20 270);
+  --holo-amber: oklch(0.78 0.14 80);
+
+  /* Light mode shadow overrides — ~50% opacity of dark mode */
+  --shadow-holo-xs: inset 0 0 6px oklch(0.65 0.15 192 / 0.04), 0 0 4px oklch(0.65 0.15 192 / 0.02);
+  --shadow-holo-sm: 0 0 10px oklch(0.65 0.15 192 / 0.06), 0 0 20px oklch(0.65 0.15 192 / 0.03);
+  --shadow-holo: 0 0 20px oklch(0.65 0.15 192 / 0.1), 0 0 40px oklch(0.65 0.15 192 / 0.05);
+  --shadow-holo-lg: 0 0 30px oklch(0.65 0.15 192 / 0.12), 0 0 60px oklch(0.65 0.15 192 / 0.06), 0 0 80px oklch(0.65 0.15 192 / 0.03);
+  --shadow-holo-intense: 0 0 30px oklch(0.65 0.15 192 / 0.18), 0 0 60px oklch(0.65 0.15 192 / 0.1), 0 0 90px oklch(0.65 0.15 192 / 0.05);
+  --shadow-holo-multi: 0 0 20px oklch(0.65 0.15 192 / 0.12), 0 0 40px oklch(0.65 0.15 192 / 0.08), 0 0 60px oklch(0.65 0.15 192 / 0.06);
+
+  /* Semantic effect tokens */
+  --fx-surface-glow: var(--shadow-holo);
+  --fx-focus-ring: var(--shadow-holo-sm);
+  --fx-active-burst: var(--shadow-holo-intense);
+  --fx-border-gradient: linear-gradient(135deg, var(--holo-cyan), oklch(from var(--holo-cyan) calc(l - 0.05) c h), var(--holo-cyan));
+  --fx-text-glow: 0 0 8px var(--holo-teal);
+
+  /* Effect level system */
+  --fx-level: full;
+
+  /* Light mode: decorative animations 1.5x slower */
+  --animate-holo-shimmer: holo-shimmer 9s ease-in-out infinite;
+  --animate-holo-pulse: holo-pulse 6s ease-in-out infinite;
+  --animate-holo-border: holo-border 12s linear infinite;
+  --animate-holo-refract: holo-refract 15s linear infinite;
+  --animate-holo-color-shift: holo-color-shift 9s linear infinite;
+}
+
+/* ━━ Dark Mode — Holographic Spirit Interface ━━ */
+
+.dark {
+  --background: oklch(0.08 0.025 250 / 0.9);
+  --foreground: oklch(0.92 0.01 230);
+  --card: oklch(0.13 0 0 / 0.65);
+  --card-foreground: oklch(0.92 0.01 230);
+  --popover: oklch(0.1 0.025 250 / 0.85);
+  --popover-foreground: oklch(0.92 0.01 230);
+  --primary: oklch(0.72 0.14 192);
+  --primary-foreground: oklch(0.05 0.02 250);
+  --secondary: oklch(0.6 0.15 280);
+  --secondary-foreground: oklch(0.95 0.01 250);
+  --muted: oklch(0.2 0.02 250);
+  --muted-foreground: oklch(0.55 0.02 250);
+  --accent: oklch(0.25 0.03 250);
+  --accent-foreground: oklch(0.92 0.01 230);
+  --destructive: oklch(0.6 0.22 25);
+  --border: oklch(1 0 0 / 0.1);
+  --input: oklch(1 0 0 / 0.06);
+  --ring: oklch(0.72 0.14 192 / 0.5);
+
+  --holo-cyan: oklch(0.75 0.16 192);
+  --holo-violet: oklch(0.65 0.18 285);
+  --holo-rose: oklch(0.7 0.16 350);
+  --holo-teal: oklch(0.68 0.12 175);
+  --holo-indigo: oklch(0.58 0.20 270);
+  --holo-amber: oklch(0.78 0.14 80);
+
+  /* Dark mode shadow values (full intensity) */
+  --shadow-holo-xs: inset 0 0 6px oklch(0.72 0.14 192 / 0.08), 0 0 4px oklch(0.72 0.14 192 / 0.04);
+  --shadow-holo-sm: 0 0 10px oklch(0.72 0.14 192 / 0.12), 0 0 20px oklch(0.72 0.14 192 / 0.06);
+  --shadow-holo: 0 0 20px oklch(0.72 0.14 192 / 0.2), 0 0 40px oklch(0.72 0.14 192 / 0.1);
+  --shadow-holo-lg: 0 0 30px oklch(0.72 0.14 192 / 0.25), 0 0 60px oklch(0.72 0.14 192 / 0.12), 0 0 80px oklch(0.72 0.14 192 / 0.06);
+  --shadow-holo-intense: 0 0 30px oklch(0.72 0.14 192 / 0.35), 0 0 60px oklch(0.72 0.14 192 / 0.2), 0 0 90px oklch(0.72 0.14 192 / 0.1);
+  --shadow-holo-multi: 0 0 20px oklch(0.72 0.14 192 / 0.25), 0 0 40px oklch(0.72 0.14 192 / 0.15), 0 0 60px oklch(0.72 0.14 192 / 0.12);
+
+  /* Semantic effect tokens */
+  --fx-surface-glow: var(--shadow-holo);
+  --fx-focus-ring: var(--shadow-holo-sm);
+  --fx-active-burst: var(--shadow-holo-intense);
+  --fx-border-gradient: linear-gradient(135deg, var(--holo-cyan), oklch(from var(--holo-cyan) calc(l - 0.05) c h), var(--holo-cyan));
+  --fx-text-glow: 0 0 8px var(--holo-cyan);
+}
+
+/* ━━ Keyframes ━━ */
+
+@keyframes holo-shimmer {
+  0%, 100% {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+  50% {
+    opacity: 0.7;
+    transform: translateX(100%);
+  }
+}
+
+@keyframes holo-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes holo-border {
+  0%, 100% { border-color: oklch(0.65 0.12 192 / 0.3); }
+  33% { border-color: oklch(0.72 0.12 192 / 0.4); }
+  66% { border-color: oklch(0.65 0.12 192 / 0.2); }
+}
+
+@keyframes holo-progress {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+@property --holo-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes holo-refract {
+  from { --holo-angle: 0deg; }
+  to { --holo-angle: 360deg; }
+}
+
+@keyframes holo-glow-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+@keyframes holo-color-shift {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 300% 50%; }
+}
+
+@keyframes accordion-down {
+  from { height: 0; }
+  to { height: var(--radix-accordion-content-height); }
+}
+
+@keyframes accordion-up {
+  from { height: var(--radix-accordion-content-height); }
+  to { height: 0; }
+}
+
+/* ━━ Base Layer ━━ */
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-transparent text-foreground antialiased;
+    font-feature-settings: "cv11", "ss01";
+    backdrop-filter: blur(12px);
+  }
+}
+
+/* ━━ Scrollbar ━━ */
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: oklch(0.72 0.14 192 / 0.3);
+  border-radius: 3px;
+  transition: background-color 0.2s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: oklch(0.72 0.14 192 / 0.5);
+}
+
+/* ━━ Holographic Utilities ━━ */
+
+@layer components {
+.holo-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.holo-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    oklch(1 0 0 / 0.03) 45%,
+    oklch(1 0 0 / 0.06) 50%,
+    oklch(1 0 0 / 0.03) 55%,
+    transparent 60%
+  );
+  background-size: 250% 100%;
+  animation: var(--animate-holo-shimmer);
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.holo-separator {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    oklch(0.72 0.14 192 / 0.4) 20%,
+    oklch(0.72 0.14 192 / 0.25) 50%,
+    oklch(0.72 0.14 192 / 0.4) 80%,
+    transparent
+  );
+}
+
+.holo-separator[data-orientation="vertical"] {
+  background: linear-gradient(
+    180deg,
+    transparent,
+    oklch(0.72 0.14 192 / 0.4) 20%,
+    oklch(0.72 0.14 192 / 0.25) 50%,
+    oklch(0.72 0.14 192 / 0.4) 80%,
+    transparent
+  );
+}
+
+.holo-border-gradient {
+  position: relative;
+  border: 1px solid transparent;
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  background-image:
+    linear-gradient(var(--background), var(--background)),
+    linear-gradient(135deg, var(--holo-cyan), oklch(from var(--holo-cyan) calc(l - 0.05) c h), var(--holo-cyan));
+}
+
+/* Animated prismatic border via @property --holo-angle.
+   Uses background-clip trick — NO pseudo-elements, so it composes
+   cleanly with holo-shimmer (::after) and holo-noise (::before). */
+.holo-refract-border {
+  --holo-refract-fill: var(--card);
+  position: relative;
+  border: 1px solid transparent;
+  background-color: transparent;
+  background-image:
+    linear-gradient(var(--holo-refract-fill), var(--holo-refract-fill)),
+    conic-gradient(
+      from var(--holo-angle),
+      var(--holo-cyan),
+      oklch(from var(--holo-cyan) l c h / 0.6),
+      var(--holo-cyan)
+    );
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  animation: var(--animate-holo-refract);
+}
+
+.holo-glass {
+  backdrop-filter: blur(24px);
+  background: var(--card);
+  border: 1px solid oklch(1 0 0 / 0.1);
+}
+
+.holo-text-glow {
+  text-shadow: var(--fx-text-glow);
+}
+
+.holo-noise {
+  position: relative;
+}
+
+.holo-noise::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 128px 128px;
+  opacity: 0.04;
+  pointer-events: none;
+  border-radius: inherit;
+  z-index: 1;
+}
+
+:root .holo-noise::before {
+  opacity: 0.02;
+}
+
+.dark .holo-noise::before {
+  opacity: 0.04;
+}
+}
+
+/* ━━ Accessibility — Reduced Motion ━━ */
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --fx-level: off;
+    --animate-holo-shimmer: none;
+    --animate-holo-pulse: none;
+    --animate-holo-border: none;
+    --animate-holo-progress: none;
+    --animate-holo-refract: none;
+    --animate-holo-glow-pulse: none;
+    --animate-holo-color-shift: none;
+  }
+
+  .holo-shimmer::after {
+    animation: none !important;
+  }
+
+  .holo-refract-border {
+    animation: none !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

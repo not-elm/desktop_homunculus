@@ -1,0 +1,151 @@
+[package]
+name = "desktop_homunculus"
+description = "Desktop mascot built with bevy"
+keywords = ["bevy", "desktop", "game"]
+categories = ["games"]
+authors.workspace = true
+version.workspace = true
+license.workspace = true
+repository.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[workspace.package]
+version = "0.1.0-alpha.4"
+edition = "2024"
+authors = ["notelm <elmprograminfo@gmail.com>"]
+repository = "https://github.com/not-elm/desktop_homunculus"
+license = "MIT OR Apache-2.0"
+publish = false
+
+[workspace]
+members = ["crates/*"]
+
+[dependencies]
+bevy = { workspace = true }
+bevy_flurx = { workspace = true }
+bevy_cef = { workspace = true }
+bevy_vrm1 = { workspace = true }
+base64 = { workspace = true }
+reqwest = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+homunculus_drag = { workspace = true }
+homunculus_core = { workspace = true }
+homunculus_effects = { workspace = true }
+homunculus_windows = { workspace = true }
+homunculus_hit_test = { workspace = true }
+homunculus_screen = { workspace = true }
+homunculus_sitting = { workspace = true }
+homunculus_shadow_panel = { workspace = true }
+homunculus_prefs = { workspace = true }
+homunculus_http_server = { workspace = true }
+homunculus_speech = { workspace = true }
+homunculus_power_saver = { workspace = true }
+homunculus_mod = { workspace = true }
+homunculus_api = { workspace = true }
+homunculus_audio = { workspace = true }
+homunculus_tray = { workspace = true }
+bevy_egui = { workspace = true, optional = true }
+bevy-inspector-egui = { workspace = true, optional = true }
+tracing-appender = "0.2"
+homunculus_utils = { workspace = true, features = ["bevy"] }
+async-channel = "2.5.0"
+tokio = { workspace = true }
+
+[target.'cfg(unix)'.dependencies]
+signal-hook = { workspace = true }
+
+[workspace.dependencies]
+bevy = { version = "0.18", features = [
+    "wav",
+    "serialize",
+    "file_watcher",
+    "png",
+    "mp3",
+] }
+bevy_tray_icon = { version = "0.3" }
+url = { version = "2", features = ["serde"] }
+async-channel = "2.5"
+async-broadcast = "0.7"
+dirs = "6"
+tokio = { version = "1", features = ["rt-multi-thread", "rt"] }
+axum = { version = "0.8" }
+bevy_flurx = { version = "0.14", features = ["side-effect", "state", "tokio"] }
+bevy_cef = { version = "0.2.0" }
+homunculus_core = { path = "crates/homunculus_core" }
+homunculus_drag = { path = "crates/homunculus_drag" }
+homunculus_effects = { path = "crates/homunculus_effects" }
+homunculus_windows = { path = "crates/homunculus_windows" }
+homunculus_hit_test = { path = "crates/homunculus_hit_test" }
+homunculus_power_saver = { path = "crates/homunculus_power_saver" }
+homunculus_screen = { path = "crates/homunculus_screen" }
+homunculus_sitting = { path = "crates/homunculus_sitting" }
+homunculus_shadow_panel = { path = "crates/homunculus_shadow_panel" }
+homunculus_prefs = { path = "crates/homunculus_prefs" }
+homunculus_http_server = { path = "crates/homunculus_http_server" }
+homunculus_speech = { path = "crates/homunculus_speech" }
+homunculus_mod = { path = "crates/homunculus_mod" }
+homunculus_api = { path = "crates/homunculus_api" }
+homunculus_audio = { path = "crates/homunculus_audio" }
+homunculus_tray = { path = "crates/homunculus_tray" }
+homunculus_utils = { path = "crates/homunculus_utils", default-features = false }
+bevy_vrm1 = { version = "0.6", features = ["serde", "log"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1" }
+anyhow = { version = "1", features = ["std"] }
+base64 = "0.22"
+reqwest = { version = "0.12", features = ["json"] }
+signal-hook = "0.3"
+bevy_egui = { version = "0.39.0" }
+bevy-inspector-egui = { version = "0.36.0" }
+bevy_framepace = "0.21"
+tracing = "0.1"
+thiserror = "2"
+clap = { version = "4", features = ["derive"] }
+comfy-table = "7"
+toml = "0.8"
+utoipa = { version = "5", features = ["yaml"] }
+utoipa-axum = { version = "0.2" }
+
+[build-dependencies]
+embed-resource = "3"
+
+[features]
+default = []
+develop = [
+    "dep:bevy-inspector-egui",
+    "dep:bevy_egui",
+    "homunculus_hit_test/develop",
+    "bevy_cef/debug",
+]
+
+[profile.dev.package."*"]
+opt-level = 3
+
+[profile.dev]
+opt-level = 1
+
+# This is used by trunk as it doesn't support custom profiles: https://github.com/trunk-rs/trunk/issues/605
+# xbuild also uses this profile for building android AABs because I couldn't find a configuration for it
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 2
+strip = true
+
+# Profile for distribution
+[profile.dist]
+inherits = "release"
+opt-level = 2
+lto = "thin"
+codegen-units = 2
+strip = true
+
+[workspace.lints.clippy]
+type_complexity = "allow"
+
+[workspace.lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = [
+    'cfg(feature, values("cargo-clippy"))',
+] }

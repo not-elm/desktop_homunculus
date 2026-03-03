@@ -1,0 +1,47 @@
+{
+  "name": "@hmcs/settings",
+  "version": "1.0.0",
+  "description": "Application settings mod — provides a tray menu to open the settings panel",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "author": "notelm",
+  "scripts": {
+    "build": "vite build ui",
+    "dev": "vite dev ui"
+  },
+  "homunculus": {
+    "tray": {
+      "id": "open-settings",
+      "text": "Settings",
+      "command": "settings-open-ui"
+    },
+    "assets": {
+      "settings:ui": {
+        "path": "ui/dist/index.html",
+        "type": "html",
+        "description": "Application settings panel UI"
+      }
+    }
+  },
+  "bin": {
+    "settings-open-ui": "commands/open-ui.ts"
+  },
+  "dependencies": {
+    "@hmcs/sdk": "workspace:*",
+    "@hmcs/ui": "workspace:*",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.0.0",
+    "@types/node": "^25.3.3",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@vitejs/plugin-react-swc": "^4.0.0",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.8.0",
+    "vite": "^6.0.0",
+    "vite-plugin-singlefile": "^2.3.0"
+  }
+}

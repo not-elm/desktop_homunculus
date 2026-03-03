@@ -1,0 +1,1 @@
+{"responses":{"200":{"description":"Speech playback completed (when waitForCompletion is true or omitted)."},"202":{"description":"Speech queued for playback (when waitForCompletion is false)."},"400":{"description":"Invalid input (bad base64, invalid WAV header, negative keyframe duration)."},"404":{"description":"Entity not found."}}}
