@@ -29,7 +29,6 @@ jobs:
         id: check
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
           # Validate semver format (reject non-semver tags)
           if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$'; then
@@ -47,20 +46,18 @@ jobs:
           # Read SDK and MCP server versions from package.json (using sed to avoid Node.js dependency)
           SDK_VERSION=$(sed -n 's/.*"version": *"\(.*\)".*/\1/p' packages/sdk/package.json | head -1)
           MCP_VERSION=$(sed -n 's/.*"version": *"\(.*\)".*/\1/p' packages/mcp-server/package.json | head -1)
-          echo "sdk_version=$SDK_VERSION" >> "$GITHUB_OUTPUT"
-          echo "mcp_version=$MCP_VERSION" >> "$GITHUB_OUTPUT"
 
           # Prerelease detection
-          if echo "$VERSION" | grep -qE '-(alpha|beta|rc)'; then
-            echo "is_prerelease=true" >> "$GITHUB_OUTPUT"
+          if echo "$VERSION" | grep -qE -- '-(alpha|beta|rc)'; then
+            IS_PRERELEASE=true
           else
-            echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
+            IS_PRERELEASE=false
           fi
 
           # Per-package dist-tag computation
           compute_tag() {
             local ver="$1"
-            if echo "$ver" | grep -qE '-(alpha|beta|rc)'; then
+            if echo "$ver" | grep -qE -- '-(alpha|beta|rc)'; then
               # Extract prerelease label (e.g., "alpha" from "0.1.0-alpha.4")
               echo "$ver" | sed -E 's/.*-(alpha|beta|rc).*/\1/'
             else
@@ -68,9 +65,19 @@ jobs:
             fi
           }
 
-          echo "cli_tag=$(compute_tag "$VERSION")" >> "$GITHUB_OUTPUT"
-          echo "sdk_tag=$(compute_tag "$SDK_VERSION")" >> "$GITHUB_OUTPUT"
-          echo "mcp_tag=$(compute_tag "$MCP_VERSION")" >> "$GITHUB_OUTPUT"
+          CLI_TAG="$(compute_tag "$VERSION")"
+          SDK_TAG="$(compute_tag "$SDK_VERSION")"
+          MCP_TAG="$(compute_tag "$MCP_VERSION")"
+
+          {
+            echo "version=$VERSION"
+            echo "sdk_version=$SDK_VERSION"
+            echo "mcp_version=$MCP_VERSION"
+            echo "is_prerelease=$IS_PRERELEASE"
+            echo "cli_tag=$CLI_TAG"
+            echo "sdk_tag=$SDK_TAG"
+            echo "mcp_tag=$MCP_TAG"
+          } >> "$GITHUB_OUTPUT"
 
   build-cli:
     needs: validate
@@ -84,7 +91,7 @@ jobs:
             target: aarch64-apple-darwin
             platform-name: darwin-arm64
             exe-suffix: ""
-          - os: macos-13
+          - os: macos-15-intel
             target: x86_64-apple-darwin
             platform-name: darwin-x64
             exe-suffix: ""
@@ -139,7 +146,7 @@ jobs:
           - os: macos-14
             arch: arm64
             make-target: release-macos-arm
-          - os: macos-13
+          - os: macos-15-intel
             arch: x86
             make-target: release-macos-x86
     runs-on: ${{ matrix.os }}
