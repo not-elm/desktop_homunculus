@@ -180,23 +180,11 @@ jobs:
           echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
           echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
 
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-
       - name: Cache CEF framework
         uses: actions/cache@v4
         with:
           path: ~/.local/share/Chromium Embedded Framework.framework
           key: cef-${{ matrix.arch }}-144.4.0
-
-      - name: Install dependencies
-        working-directory: .
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm build
 
       - name: Install cargo-binstall
         uses: cargo-bins/cargo-binstall@main
