@@ -1,0 +1,22 @@
+{
+  "name": "@hmcs/settings",
+  "version": "1.0.0",
+  "description": "Application settings mod — provides a tray menu to open the settings panel",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "author": "notelm",
+  "homunculus": {
+    "tray": {
+      "id": "open-settings",
+      "text": "Settings",
+      "command": "open-ui"
+    }
+  },
+  "bin": {
+    "open-ui": "commands/open-ui.ts"
+  },
+  "dependencies": {
+    "@hmcs/sdk": "workspace:*"
+  }
+}

@@ -7,6 +7,7 @@
     "@hmcs/assets": "workspace:*",
     "@hmcs/menu": "workspace:*",
     "@hmcs/character-settings": "workspace:*",
-    "@hmcs/voicevox": "workspace:*"
+    "@hmcs/voicevox": "workspace:*",
+    "@hmcs/settings": "workspace:*"
   }
 }
