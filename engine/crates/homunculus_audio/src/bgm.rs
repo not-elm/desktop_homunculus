@@ -9,20 +9,6 @@ use crate::se::volume_to_decibels;
 #[derive(Resource)]
 pub struct BgmChannel;
 
-pub(crate) struct BgmPlugin;
-
-impl Plugin for BgmPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_audio_channel::<BgmChannel>()
-            .init_resource::<BgmState>()
-            .add_observer(play_bgm)
-            .add_observer(stop_bgm)
-            .add_observer(pause_bgm)
-            .add_observer(resume_bgm)
-            .add_observer(update_bgm);
-    }
-}
-
 #[derive(Resource)]
 pub struct BgmState {
     pub current_asset: Option<AssetId>,
@@ -124,6 +110,20 @@ pub struct RequestBgmUpdate {
     pub volume: Option<f64>,
     pub speed: Option<f64>,
     pub tween: Option<FadeTween>,
+}
+
+pub(crate) struct BgmPlugin;
+
+impl Plugin for BgmPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_audio_channel::<BgmChannel>()
+            .init_resource::<BgmState>()
+            .add_observer(play_bgm)
+            .add_observer(stop_bgm)
+            .add_observer(pause_bgm)
+            .add_observer(resume_bgm)
+            .add_observer(update_bgm);
+    }
 }
 
 // --- Observers ---

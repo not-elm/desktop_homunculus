@@ -1,20 +1,13 @@
+mod list;
+mod send;
+mod stream;
+
 use async_broadcast::{Receiver, Sender};
 use bevy::platform::collections::HashMap;
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
-mod list;
-mod send;
-mod stream;
-
 use crate::api;
-
-api!(
-    /// Provides access to the signals API.
-    ///
-    /// Signals are used to send messages to the application or external processes.
-    SignalsApi
-);
 
 /// Information about an active signal channel.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -29,6 +22,21 @@ pub struct SignalInfo {
 
 #[derive(Resource, Debug, Clone, Deref, DerefMut, Default)]
 struct SignalsChannels(HashMap<String, (Sender<serde_json::Value>, Receiver<serde_json::Value>)>);
+
+api!(
+    /// Provides access to the signals API.
+    ///
+    /// Signals are used to send messages to the application or external processes.
+    SignalsApi
+);
+
+pub(super) struct SignalsApiPlugin;
+
+impl Plugin for SignalsApiPlugin {
+    fn build(&self, app: &mut App) {
+        app.init_resource::<SignalsChannels>();
+    }
+}
 
 impl SignalsChannels {
     pub fn send_blocking(
@@ -50,13 +58,5 @@ impl SignalsChannels {
             sender.set_overflow(true);
             (sender, receiver)
         })
-    }
-}
-
-pub(super) struct SignalsApiPlugin;
-
-impl Plugin for SignalsApiPlugin {
-    fn build(&self, app: &mut App) {
-        app.init_resource::<SignalsChannels>();
     }
 }

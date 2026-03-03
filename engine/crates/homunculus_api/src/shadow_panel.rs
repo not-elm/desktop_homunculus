@@ -10,6 +10,14 @@ use homunculus_shadow_panel::{ShadowPanelMaterial, ShadowPanelSetup};
 
 api!(ShadowPanelApi);
 
+pub struct ShadowPanelApiPlugin;
+
+impl Plugin for ShadowPanelApiPlugin {
+    fn build(&self, app: &mut bevy::app::App) {
+        app.add_systems(Startup, load_preference.after(ShadowPanelSetup));
+    }
+}
+
 impl ShadowPanelApi {
     pub async fn alpha(&self) -> ApiResult<f32> {
         self.0
@@ -27,14 +35,6 @@ impl ShadowPanelApi {
                     .await;
             })
             .await
-    }
-}
-
-pub struct ShadowPanelApiPlugin;
-
-impl Plugin for ShadowPanelApiPlugin {
-    fn build(&self, app: &mut bevy::app::App) {
-        app.add_systems(Startup, load_preference.after(ShadowPanelSetup));
     }
 }
 

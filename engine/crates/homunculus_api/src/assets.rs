@@ -5,11 +5,6 @@ use bevy_flurx::prelude::once;
 use homunculus_core::prelude::{AssetId, AssetRegistry, AssetType};
 use serde::{Deserialize, Serialize};
 
-api!(
-    /// Provides asset listing API.
-    AssetsApi
-);
-
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 pub struct AssetFilter {
@@ -30,6 +25,11 @@ pub struct AssetInfo {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
 }
+
+api!(
+    /// Provides asset listing API.
+    AssetsApi
+);
 
 impl AssetsApi {
     pub async fn list(&self, filter: AssetFilter) -> ApiResult<Vec<AssetInfo>> {

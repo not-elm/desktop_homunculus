@@ -4,6 +4,8 @@
     windows_subsystem = "windows"
 )]
 
+mod cef_fetch;
+
 use bevy::DefaultPlugins;
 use bevy::app::{App, PluginGroup};
 use bevy::asset::UnapprovedPathMode;
@@ -26,19 +28,17 @@ use homunculus_hit_test::HomunculusHitTestPlugin;
 use homunculus_http_server::HomunculusHttpServerPlugin;
 use homunculus_mod::HomunculusModPlugin;
 use homunculus_power_saver::HomunculusPowerSaverPlugin;
-use homunculus_tray::HomunculusTrayPlugin;
 use homunculus_prefs::HomunculusPrefsPlugin;
 use homunculus_screen::HomunculusScreenPlugin;
 use homunculus_shadow_panel::HomunculusShadowPanelPlugin;
 use homunculus_sitting::HomunculusSittingPlugin;
 use homunculus_speech::HomunculusSpeechPlugin;
+use homunculus_tray::HomunculusTrayPlugin;
 use homunculus_utils::config::HomunculusConfig;
 use homunculus_windows::HomunculusWindowsPlugin;
 use std::sync::OnceLock;
 use tracing_appender::non_blocking::WorkerGuard;
 use tracing_appender::rolling;
-
-mod cef_fetch;
 
 use crate::cef_fetch::CefFetchPlugin;
 

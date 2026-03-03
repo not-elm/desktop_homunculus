@@ -64,6 +64,10 @@ mod extract;
 mod route;
 mod state;
 
+pub mod prelude {
+    pub use crate::HomunculusHttpServerPlugin;
+}
+
 use crate::route::{
     assets, audio, coordinates, displays, info, preferences, settings, shadow_panel, vrm, webviews,
 };
@@ -111,19 +115,6 @@ use utoipa_axum::{router::OpenApiRouter, routes};
 )]
 pub struct ApiDoc;
 
-/// Build the OpenAPI specification without starting the HTTP server.
-///
-/// This constructs the full router tree to collect all path annotations,
-/// then extracts the OpenAPI spec without actually starting any server.
-pub fn create_openapi() -> utoipa::openapi::OpenApi {
-    let (_, api) = build_openapi_router().split_for_parts();
-    api
-}
-
-pub mod prelude {
-    pub use crate::HomunculusHttpServerPlugin;
-}
-
 /// Plugin that provides a REST API HTTP server for external control of the Homunculus application.
 ///
 /// This plugin starts an HTTP server that exposes comprehensive REST endpoints
@@ -165,6 +156,15 @@ impl Plugin for HomunculusHttpServerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, setup);
     }
+}
+
+/// Build the OpenAPI specification without starting the HTTP server.
+///
+/// This constructs the full router tree to collect all path annotations,
+/// then extracts the OpenAPI spec without actually starting any server.
+pub fn create_openapi() -> utoipa::openapi::OpenApi {
+    let (_, api) = build_openapi_router().split_for_parts();
+    api
 }
 
 fn setup(reactor: Res<ApiReactor>, config: Res<HomunculusConfig>) {

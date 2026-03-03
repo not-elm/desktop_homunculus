@@ -15,20 +15,6 @@ use bevy_tray_icon::resource::{Menu, MenuItem, TrayIcon};
 use homunculus_core::prelude::{HomunculusConfig, ModRegistry, TrayMenuItem};
 use tracing::{error, info};
 
-/// Plugin that provides system tray integration for Desktop Homunculus.
-///
-/// Adds the `TrayIconPlugin`, builds a tray menu from mod declarations,
-/// and dispatches menu clicks to mod commands.
-pub struct HomunculusTrayPlugin;
-
-impl Plugin for HomunculusTrayPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_plugins(TrayIconPlugin)
-            .add_systems(Startup, setup_tray)
-            .add_systems(Update, handle_tray_clicks);
-    }
-}
-
 /// Maps prefixed menu IDs (`"{mod_name}::{item_id}"`) to the mod name and
 /// command string that should be executed when the item is clicked.
 #[derive(Resource, Debug, Default)]
@@ -58,6 +44,20 @@ impl TrayMenuRegistry {
     #[inline]
     pub fn lookup(&self, prefixed_id: &str) -> Option<&(String, String)> {
         self.entries.get(prefixed_id)
+    }
+}
+
+/// Plugin that provides system tray integration for Desktop Homunculus.
+///
+/// Adds the `TrayIconPlugin`, builds a tray menu from mod declarations,
+/// and dispatches menu clicks to mod commands.
+pub struct HomunculusTrayPlugin;
+
+impl Plugin for HomunculusTrayPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_plugins(TrayIconPlugin)
+            .add_systems(Startup, setup_tray)
+            .add_systems(Update, handle_tray_clicks);
     }
 }
 

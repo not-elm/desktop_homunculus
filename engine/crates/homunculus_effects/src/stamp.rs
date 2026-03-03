@@ -8,15 +8,6 @@ use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::time::Duration;
 
-pub(crate) struct StampEffectsPlugin;
-
-impl Plugin for StampEffectsPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_systems(Update, despawn_stamp)
-            .add_observer(apply_request);
-    }
-}
-
 #[derive(Event, Serialize, Deserialize)]
 pub struct RequestStampEffect {
     pub image_path: PathBuf,
@@ -44,6 +35,15 @@ pub struct StampOptions {
 
 #[derive(Deref, DerefMut, Component)]
 struct StampTimer(pub Timer);
+
+pub(crate) struct StampEffectsPlugin;
+
+impl Plugin for StampEffectsPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(Update, despawn_stamp)
+            .add_observer(apply_request);
+    }
+}
 
 fn despawn_stamp(
     mut commands: Commands,
