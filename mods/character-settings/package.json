@@ -1,6 +1,6 @@
 {
   "name": "@hmcs/character-settings",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Character settings panel mod that provides a WebView UI to configure individual character preferences",
   "license": "MIT",
   "type": "module",
