@@ -179,6 +179,7 @@ Coding style rules are defined in `engine/.claude/rules/`:
 Additional conventions:
 - TypeScript SDK: All public APIs must have JSDoc with `@example` blocks.
 - Commits: Conventional commits (`feat:`, `fix:`, `docs:`). Short prefixes like `update:`, `add:` also used.
+- **Do NOT commit `docs/plans/`**: Files in `docs/plans/` are local design documents and working notes. Never include them in git commits.
 - Application settings are stored in `~/.homunculus/config.toml` (TOML, snake_case keys: `port`, `mods_dir`).
 - Logs are written to `~/.homunculus/Logs/log.txt` (daily rolling). Debug builds log at INFO level, release builds at ERROR.
 - Preferences stored in SQLite at `~/.homunculus/prefs.db` (JSON key-value pairs).
