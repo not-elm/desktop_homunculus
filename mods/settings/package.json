@@ -1,6 +1,6 @@
 {
   "name": "@hmcs/settings",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Application settings mod — provides a tray menu to open the settings panel",
   "license": "MIT",
   "type": "module",
