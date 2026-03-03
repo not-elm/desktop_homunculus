@@ -1,5 +1,8 @@
 # Desktop Homunculus
 
+> [!NOTE]
+> This project is in **early alpha** (`v0.1.0-alpha.4`). APIs, features, and MOD interfaces may change without notice.
+
 <img src="./docs/images/icon.png" width="200" alt="Desktop Homunculus">
 
 **A cross-platform desktop mascot with AI-powered 3D VRM characters**
