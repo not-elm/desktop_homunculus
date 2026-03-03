@@ -1,18 +1,11 @@
-/target
-/.idea
-/.vscode
-src/mascot/assets/
-/test
+# ide
+.vscode/
+.idea/
 
-book/
+# Git worktrees
+.worktrees/
 
-.claude.json
-.claude.json.backup
-
-/develop/
-
-# Logs
-logs
+# Logs logs
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -20,10 +13,23 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+.turbo/
+target
 node_modules
 dist
 dist-ssr
+storybook-static
+*.tsbuildinfo
 *.local
+
+docs/plans/
+docs/memo.md
+docs/reviews/
+
+# Local agent work artifacts
+**/.claude/settings.local.json
+.claude/SYNTHESIS*.md
+.claude/WHITEBOARD*.md
 
 # Editor directories and files
 .vscode/*
@@ -35,7 +41,3 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-assets/.env
-
-.turbo/
-demo/

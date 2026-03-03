@@ -1,0 +1,8 @@
+/* Storybook 環境では body の backdrop-filter を無効化。
+   backdrop-filter は fixed 配置の子要素に対して containing block を
+   形成するため、Dialog 等のモーダルが正しく配置されなくなる。
+   本番環境では CEF WebView の透明ウィンドウ上で必要だが、
+   Storybook ではデコレータの scene layer が背景を提供する。 */
+body {
+  backdrop-filter: none !important;
+}

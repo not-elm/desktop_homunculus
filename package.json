@@ -1,10 +1,16 @@
 {
+  "name": "desktop-homunculus",
+  "private": true,
+  "license": "MIT",
+  "packageManager": "pnpm@10.30.2",
   "scripts": {
-    "build": "turbo build check-types"
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "check-types": "turbo run check-types",
+    "test": "turbo run test",
+    "lint": "turbo run lint"
   },
-  "packageManager": "pnpm@10.0.0",
-  "dependencies": {
-    "claude": "^0.1.2",
-    "turbo": "^2.5.5"
+  "devDependencies": {
+    "turbo": "^2.8.3"
   }
 }

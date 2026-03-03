@@ -2,114 +2,199 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Repository Layout
+
+This is a monorepo for **Desktop Homunculus**, a cross-platform desktop mascot application built with the Bevy game engine. It renders transparent-window VRM 3D characters with WebView-based UI overlays.
+
+```
+desktop-homunculus/
+├── engine/              # Main Bevy application (Rust workspace)
+│   ├── crates/          # Rust plugin crates (homunculus_*)
+│   │   └── homunculus_cli/  # Rust CLI binary (hmcs)
+│   ├── src/main.rs      # App entry point — composes all plugins
+│   └── assets/mods/     # Installed mods (runtime)
+├── packages/
+│   ├── sdk/             # @hmcs/sdk — TypeScript SDK for mods/extensions
+│   ├── ui/              # @hmcs/ui — Shared React component library (Radix + Tailwind)
+│   └── mcp-server/      # MCP server — exposes character control to AI agents via stdio
+├── mods/                # Mods (NPM packages): elmer/, settings/, menu/, assets/, voicevox/, character-settings/
+├── docs/website/        # Docusaurus documentation site
+└── sandbox/             # Dev sandbox — aggregates all mods for workspace linking validation
+```
+
+Sub-directories have their own CLAUDE.md with detailed architecture: `engine/`, `packages/sdk/`, `packages/ui/`, `packages/mcp-server/`.
+
 ## Development Commands
 
-### Core Development
+### Workspace (from repo root)
 
-- `make dev` - Run application in development mode with features enabled
-- `cargo run --features develop` - Alternative development run command
-- `make setup` - Install development dependencies (mdbook, pnpm packages)
-- `make fix` - Auto-format and fix linting issues across workspace
+```bash
+pnpm install          # Install all workspace dependencies
+pnpm build            # Build all packages in dependency order (turbo)
+pnpm dev              # Start all dev watchers (turbo)
+pnpm check-types      # Type-check all packages (turbo)
+pnpm test             # Run all TypeScript tests (turbo)
+make setup            # pnpm install + engine tooling setup + CEF framework download
+make debug            # pnpm build + cargo run (debug with inspector)
+make test             # pnpm test (TS) + cargo test --workspace (Rust)
+make fix-lint         # cargo clippy --fix + cargo fmt (Rust only, no TS lint)
+make release-macos    # pnpm build + native arch release → DMG
+```
 
-### Building
+### Engine (Rust) — run from `engine/`
 
-- `pnpm build` - Build TypeScript frontend components using Turbo
-- `cargo build` - Build Rust components
-- `make doc-build` - Generate API documentation from OpenAPI spec
+```bash
+make debug               # cargo run --features develop (bevy_egui inspector + CEF debug)
+make test                # cargo test --workspace
+make fix-lint            # cargo clippy --workspace --fix --allow-dirty && cargo fmt --all
+make gen-open-api        # Regenerate OpenAPI spec via gen_openapi binary
+```
 
-### Frontend Development
+Single test:
+```bash
+cargo test -p homunculus_http_server            # All tests in one crate
+cargo test -p homunculus_http_server test_health # Single test by name
+```
 
-Individual UI components can be developed independently:
+Release builds use `--profile dist` (not `--release`), which enables `lto = "thin"` and `strip = true`:
+```bash
+make release-macos           # Native arch → .app bundle → DMG
+make release-macos-arm       # Apple Silicon
+make release-macos-x86       # Intel
+make release-macos-universal # Universal binary (ARM + x86)
+```
 
-- `pnpm dev` (in ui/settings/, ui/chat/, ui/menu/) - Watch mode builds
-- `pnpm check-types` - TypeScript type checking
-- `pnpm lint` - ESLint checking
+### First-time setup (from `engine/`)
+
+```bash
+make setup               # Install all Rust/Node tools + download CEF framework (~300MB, skipped if present)
+make setup-cef            # Download CEF framework only (macOS; skips if already installed)
+```
+
+### TypeScript SDK — run from `packages/sdk/`
+
+```bash
+pnpm build               # Rollup → ESM/CJS + bundled .d.ts
+pnpm dev                 # Watch mode
+pnpm check-types         # tsc --noEmit
+```
+
+### Shared UI Library — run from `packages/ui/`
+
+```bash
+pnpm build               # Vite library build → dist/ (ES + UMD + rolled .d.ts)
+pnpm check-types         # tsc --noEmit
+pnpm lint                # ESLint
+```
+
+### UI Mod Apps — run from `mods/{settings,menu}/ui/`
+
+```bash
+pnpm dev                 # Vite dev server
+pnpm build               # Vite build → dist/
+```
+
+### MCP Server — run from `packages/mcp-server/`
+
+```bash
+pnpm build               # TypeScript → dist/
+pnpm test                # vitest
+```
+
+### Documentation Site — run from `docs/website/`
+
+```bash
+pnpm dev                 # Docusaurus dev server (English)
+pnpm dev:ja              # Docusaurus dev server (Japanese)
+pnpm build               # Production build
+```
 
 ## Architecture Overview
 
-### Core Structure
+The engine is built from ~18 independent Bevy plugins in `engine/crates/`, following a Core → API → HTTP layering. The HTTP API (Axum on `localhost:3100`) bridges async requests to Bevy's single-threaded ECS via the `ApiReactor` pattern. See `engine/CLAUDE.md` for detailed Rust architecture, code examples, and crate descriptions.
 
-Desktop Homunculus is a cross-platform desktop mascot application built with Bevy game engine. The architecture follows
-a modular plugin system with clear separation of concerns:
+Asset path resolution: dev mode uses `assets/` relative to `CARGO_MANIFEST_DIR`; release uses `../Resources/assets` (inside `.app` bundle).
 
-**Main Application (`src/main.rs`):**
+### WebView Integration (bevy_cef)
 
-- Transparent window desktop application
-- Plugin-based architecture using Bevy ECS
-- VRM/VRMA model support for 3D mascots
-- WebView integration for UI components
+UI components (settings, right-click menu) are React apps embedded via Chromium Embedded Framework (`bevy_cef`). They communicate with the Rust backend through the HTTP API and SSE-based pub/sub (`signals` module in the SDK). CEF runs with `disable-web-security` to allow cross-origin requests from WebViews to `localhost:3100`. A `CefFetchPlugin` proxies JavaScript `fetch` calls from WebViews through native `reqwest`.
 
-**Core Modules (`crates/`):**
+WebView keyboard shortcuts: `F1`/`F2` open/close DevTools, `Cmd+[`/`Cmd+]` navigate back/forward.
 
-- `homunculus_core` - Core data structures, events, resources
-- `homunculus_api` - External API interfaces (GPT, VoiceVox, etc.)
-- `homunculus_http_server` - REST API server for external control
-- `bevy_vrm1` - VRM model loading and animation system
-- `homunculus_*` modules - Specialized functionality (drag, effects, speech, etc.)
+WebView sources can be URLs, inline HTML, or local mod assets using `{ "type": "local", "id": "mod-name:asset-id" }`.
 
-**Frontend (`ui/`):**
+### MOD System
 
-- React + TypeScript components built with Vite
-- Shared component library in `ui/core/`
-- Individual apps: settings, chat, menu
-- Communication with Rust backend via WebView IPC
+Mods are pnpm workspace packages. Each mod's `package.json` must include a `"homunculus"` field declaring:
+- **assets**: Objects with `path`, `type` (`vrm`, `vrma`, `sound`, `image`, `html`), and `description`. Asset IDs use format `"mod-name:asset-id"`.
+- **menus** (optional): Right-click context menu entries that can open webviews.
+- **tray** (optional): System tray menu entries (distinct from `menus`). Processed by `homunculus_tray` via `bevy_tray_icon`.
 
-**SDK (`sdk/typescript/`):**
+The `"homunculus.service"` script runs automatically as a long-running Node.js child process (service) at startup using `node --experimental-strip-types` (TypeScript files run directly without a build step). On-demand scripts are exposed via `"bin"` and invoked through the HTTP API (`POST /mods/{mod_name}/bin/{command}`). Mods use the `@hmcs/sdk` SDK.
 
-- TypeScript API client for external integrations
-- Provides typed interfaces for all backend functionality
+**Mod discovery**: The engine runs `pnpm ls --parseable` in the mods directory (`~/.homunculus/mods/`) to discover installed mods, then reads each mod's `package.json` directly.
 
-### Key Architectural Patterns
+Source mods live in `mods/` (in the repo, for development). At runtime, mods are installed to `~/.homunculus/mods/` (configurable via `config.toml` `mods_dir` field). The built-in `@hmcs/assets` mod provides default VRMA animations (`vrma:idle-maid`, `vrma:grabbed`, `vrma:idle-sitting`) and sound effects (`se:open`, `se:close`).
 
-**Plugin System:**
-Each major feature is implemented as a Bevy plugin, allowing modular development and easy feature toggling. Plugins
-communicate through Bevy's ECS events and resources.
+### Frontend UI (Mod-Based)
 
-**WebView Integration:**
-UI components run as embedded web applications using `bevy_webview_wry`. This enables modern web development while
-maintaining native performance for 3D rendering.
+UI apps live in `mods/` as mod packages — **settings** (`mods/settings/ui/`), **menu** (`mods/menu/ui/`), and **character-settings** (`mods/character-settings/ui/`). They are React 19 + Vite + Tailwind CSS v4 apps that import `@hmcs/ui` (from `packages/ui/`) as the shared component library. Build output goes to each mod's `ui/dist/` (bundled into a single `index.html` via `vite-plugin-singlefile` for CEF loading) and is declared as an asset in the mod's `package.json`.
 
-**Multi-Monitor Support:**
-The application can spawn multiple VRM models across different monitors with independent behavior and interactions.
+**Design language**: Glassmorphism — semi-transparent backgrounds (`bg-primary/30`), `backdrop-blur-sm`, subtle borders (`border-white/20`), white text. This is the canonical style for all WebView UI overlays on the transparent Bevy window. The `@hmcs/ui` library is built on **shadcn/ui (new-york style)** with Radix UI primitives and **lucide-react** icons. Use the `cn()` utility from `@hmcs/ui` (clsx + tailwind-merge) for conditional class names.
 
-**Asset Management:**
-VRM models and VRMA animations are dynamically loaded. Mods system allows for custom JavaScript/HTML extensions.
+### MCP Server (`packages/mcp-server/`)
 
-**Mod System:**
-The application supports a mod system where users can create custom JavaScript/HTML components that interact with the
-Rust backend.
-This allows for extensibility and user-generated content.
-To add a mod, create a directory in `./assets/mods/` for each mod.
-Inside the directory, place HTML for UI, JavaScript for scripts, and other assets. Write the configuration in
-`mod.json`, which is read at application startup.
+Exposes ~20 tools (e.g. `play_reaction`, `speak_message`, `move_character`, `open_webview`) and 4 resources (`homunculus://info`, `homunculus://characters`, `homunculus://mods`, `homunculus://assets`) for AI agent control. Connects to the engine's HTTP API at `HOMUNCULUS_HOST` (default: `localhost:3100`).
 
-### Development Notes
+### Rust CLI (`engine/crates/homunculus_cli/`)
 
-**Platform Considerations:**
+The `hmcs` binary is a Rust CLI built with `clap`. Current subcommands:
+- `hmcs mod install|uninstall` — Install/uninstall mods to `~/.homunculus/mods/`
+- `hmcs prefs list|get|set|delete` — Manage preferences in `~/.homunculus/preferences.db`
 
-- Primary support: macOS
-- Partial support: Windows (OpenGL backend required due to transparency limitations)
-- The application uses OpenGL on Windows to work around transparency issues with Vulkan/DX12
+## Important Workflows
 
-**Build System:**
+- **After changing `engine/crates/homunculus_http_server/src/**`**: Update the OpenAPI spec. Run the `sync-api-docs` skill if available, or manually update `packages/sdk/src/` types to match.
+- **After Rust changes**: Run `cargo test --workspace` from `engine/`.
+- **After TypeScript SDK changes**: Run `pnpm build` from `packages/sdk/`.
+- **After shared UI library changes**: Run `pnpm build` from `packages/ui/`, then rebuild consuming mod UIs.
 
-- Rust workspace with multiple crates
-- Turbo.js for frontend build orchestration
-- PNPM for package management
-- Mixed development environment supporting both Rust and TypeScript
+## CI
 
-**Testing:**
+- **Rust CI** (`ci-rust.yml`): Runs on `macos-14` (Apple Silicon). Checks `cargo fmt --all --check`, `cargo clippy --workspace -- -Dwarnings`, and `cargo test --workspace --locked`. The `--locked` flag means `Cargo.lock` must be kept committed and up to date.
+- **TypeScript CI** (`ci-ts.yml`): Runs on `ubuntu-latest`. Runs `pnpm install --frozen-lockfile` → `pnpm build` → `pnpm check-types` → `pnpm test` → `pnpm lint` in sequence.
 
-- If you change the Rust code, run `cargo test --workspace` at the end of the task to test.
-- If you change the TypeScript code, verify that you can build it with pnpm build at the end of the task.
+## Platform Notes
 
-**Documentation:**
+- **macOS**: Primary development platform. Default Bevy rendering backend.
+- **Windows**: Known issue: black window background on Windows 11 with RTX GPUs.
+- **Linux**: Planned, not yet supported.
 
-- If you change `./crates/homunculus_http_server/src/**`, update the OpenAPI spec in
-  `./sdk/typescript/src/api/openapi.json`.
+## Requirements
 
-**Hot Reload:**
+- **Rust**: Latest stable toolchain
+- **Node.js**: >= 22.0.0 (required for `--experimental-strip-types` used by mod services)
+- **pnpm**: 10.x (set via `packageManager` in root `package.json`)
 
-- WebView components support hot reload during development
-- Rust components require restart for changes
+## Key Dependencies
 
+- **Bevy 0.18** — ECS game engine (Rust edition 2024)
+- **bevy_cef** — Chromium Embedded Framework for WebViews (local path dependency at `../../bevys/bevy_cef`)
+- **bevy_vrm1** — VRM/VRMA model loader (local path dependency at `../../bevys/bevy_vrm1`)
+- **bevy_flurx** — Async task scheduling for Bevy (used by the ApiReactor pattern)
+- **Axum** — HTTP server framework (for the REST API)
+
+## Conventions
+
+Coding style rules are defined in `engine/.claude/rules/`:
+- `rust-style.md` — Rust naming, formatting, serde (`camelCase` for all HTTP structs), error handling, imports, workspace inheritance for new crates
+- `bevy-patterns.md` — Plugin architecture, ApiReactor pattern, ECS patterns (prefer `try_insert` over `insert`)
+
+Additional conventions:
+- TypeScript SDK: All public APIs must have JSDoc with `@example` blocks. Each module exports a `namespace` (e.g., `export namespace vrm { ... }`). Never use `fetch` directly in SDK modules — always go through `host.ts` (`host.get/post/put/deleteMethod` with `host.createUrl()`). Prefer function declarations over arrow functions for exported top-level APIs.
+- Commits: Conventional commits (`feat:`, `fix:`, `docs:`). Short prefixes like `update:`, `add:` also used.
+- **Do NOT commit `docs/plans/`**: Files in `docs/plans/` are local design documents and working notes. Never include them in git commits.
+- Application settings are stored in `~/.homunculus/config.toml` (TOML, snake_case keys: `port`, `mods_dir`).
+- Logs are written to `~/.homunculus/Logs/log.txt` (daily rolling). Debug builds log at INFO level, release builds at ERROR.
+- Preferences stored in SQLite at `~/.homunculus/preferences.db` (JSON key-value pairs).
+- Workspace version: `0.1.0-alpha.4`. License: MIT/Apache-2.0 (Rust), MIT (TypeScript), CC-BY-4.0 (docs/assets).

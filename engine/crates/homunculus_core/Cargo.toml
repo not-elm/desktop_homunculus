@@ -1,0 +1,25 @@
+[package]
+name = "homunculus_core"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+repository.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+bevy = { workspace = true }
+homunculus_utils = { workspace = true, features = ["bevy"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+bevy_vrm1 = { workspace = true }
+anyhow = { workspace = true }
+async-broadcast = { workspace = true }
+utoipa = { workspace = true, optional = true }
+
+[features]
+default = []
+openapi = ["dep:utoipa"]
+
+[lints]
+workspace = true

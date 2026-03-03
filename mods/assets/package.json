@@ -1,0 +1,42 @@
+{
+  "name": "@hmcs/assets",
+  "version": "1.0.0",
+  "description": "Official built-in assets for Desktop Homunculus — includes the default VRM character, VRMA animations, and UI sound effects",
+  "license": "MIT AND CC-BY-4.0",
+  "author": "notelm",
+  "type": "commonjs",
+  "homunculus": {
+    "assets": { 
+      "vrm:elmer": {
+        "path": "vrm/Elmer.vrm",
+        "type": "vrm",
+        "description": "VRM model named Elmer"
+      }, 
+      "vrma:idle-maid": {
+        "path": "vrma/idle-maid.vrma",
+        "type": "vrma",
+        "description": "Maid-style standing idle with hands clasped in front"
+      },
+      "vrma:grabbed": {
+        "path": "vrma/grabbed.vrma",
+        "type": "vrma",
+        "description": "Reactive pose while being dragged by the user"
+      },
+      "vrma:idle-sitting": {
+        "path": "vrma/idle-sitting.vrma",
+        "type": "vrma",
+        "description": "Seated idle loop with legs together"
+      },
+      "se:open": {
+        "path": "se/open.mp3",
+        "type": "sound",
+        "description": "The sound effects to open a HUD"
+      },
+      "se:close": {
+        "path": "se/close.mp3",
+        "type": "sound",
+        "description": "The sound effects to close a HUD"
+      }
+    }
+  }
+}

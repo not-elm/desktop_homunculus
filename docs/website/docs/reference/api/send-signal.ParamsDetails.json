@@ -1,0 +1,1 @@
+{"parameters":[{"name":"signal","in":"path","required":true,"description":"The signal channel name to broadcast to","schema":{"type":"string"}}]}

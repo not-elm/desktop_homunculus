@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+    <dict>
+        <key>CFBundleDevelopmentRegion</key>
+        <string>en</string>
+        <key>CFBundleDisplayName</key>
+        <string>Desktop Homunculus</string>
+        <key>CFBundleExecutable</key>
+        <string>desktop_homunculus</string>
+        <key>CFBundleIdentifier</key>
+        <string>not.elm.homunculus.desktop</string>
+        <key>CFBundleIconFile</key>
+        <string>AppIcon.icns</string>
+        <key>CFBundleInfoDictionaryVersion</key>
+        <string>6.0</string>
+        <key>CFBundlePackageType</key>
+        <string>APPL</string>
+        <key>CFBundleShortVersionString</key>
+        <string>__VERSION__</string>
+        <key>CFBundleVersion</key>
+        <string>__VERSION__</string>
+        <key>CFBundleSupportedPlatforms</key>
+        <array>
+            <string>MacOSX</string>
+        </array>
+        <key>LSEnvironment</key>
+        <dict>
+            <key>MallocNanoZone</key>
+            <string>0</string>
+        </dict>
+        <key>LSMinimumSystemVersion</key>
+        <string>11.0</string>
+        <key>NSSupportsAutomaticGraphicsSwitching</key>
+        <true/>
+    </dict>
+</plist>

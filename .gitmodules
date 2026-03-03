@@ -1,9 +1,0 @@
-[submodule "crates/bevy_vrm1"]
-	path = crates/bevy_vrm1
-	url = https://github.com/not-elm/bevy_vrm1
-[submodule "crates/bevy_webview_projects"]
-	path = crates/bevy_webview_projects
-	url = https://github.com/not-elm/bevy_webview_projects
-[submodule "crates/bevy_flurx"]
-	path = crates/bevy_flurx
-	url = https://github.com/not-elm/bevy_flurx

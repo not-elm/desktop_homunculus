@@ -1,0 +1,1 @@
+{"responses":{"200":{"description":"Successfully retrieved VRM entity IDs.","content":{"application/json":{"schema":{"type":"array","items":{"type":"integer","format":"uint64","description":"The unique identifier for an entity.","title":"Entity"}}}}}}}

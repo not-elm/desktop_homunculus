@@ -1,0 +1,1 @@
+{"responses":{"200":{"description":"Successfully started the rotation tween animation."},"400":{"description":"Invalid request (e.g., duration must be greater than 0)."},"404":{"description":"Entity not found."}}}

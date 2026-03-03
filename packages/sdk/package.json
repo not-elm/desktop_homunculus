@@ -1,0 +1,62 @@
+{
+  "name": "@hmcs/sdk",
+  "version": "1.0.0",
+  "description": "TypeScript SDK for building mods and extensions for Desktop Homunculus",
+  "author": "notelm",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.js"
+    },
+    "./commands": {
+      "types": "./dist/commands.d.ts",
+      "import": "./dist/commands.js",
+      "require": "./dist/commands.cjs",
+      "default": "./dist/commands.js"
+    }
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "keywords": [],
+  "scripts": {
+    "dev": "rollup -c --configPlugin typescript --watch",
+    "build": "rollup -c --configPlugin typescript",
+    "check-types": "tsc --noEmit",
+    "prepare": "pnpm build",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/desktop-homunculus/typescript-sdk.git",
+    "directory": "packages/sdk"
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "eventsource": "^4.1.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "@rollup/plugin-typescript": "^11.1.6",
+    "@types/node": "^20.19.33",
+    "eslint": "^9.39.2",
+    "rimraf": "^6.1.2",
+    "rollup": "^4.57.1",
+    "rollup-plugin-dts": "^6.3.0",
+    "tslib": "^2.8.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.56.0",
+    "vitest": "^3.0.0"
+  }
+}

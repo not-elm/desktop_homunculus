@@ -1,0 +1,30 @@
+/**
+ * Any CSS included here will be global. The classic template
+ * bundles Infima by default. Infima is a CSS framework designed to
+ * work well for content-centric websites.
+ */
+
+/* Purple/violet theme to match the "homunculus" mystical aesthetic */
+:root {
+  --ifm-color-primary: #7c3aed;
+  --ifm-color-primary-dark: #6d28d9;
+  --ifm-color-primary-darker: #6322cd;
+  --ifm-color-primary-darkest: #5216a8;
+  --ifm-color-primary-light: #8b5cf6;
+  --ifm-color-primary-lighter: #9570f7;
+  --ifm-color-primary-lightest: #a78bfa;
+  --ifm-code-font-size: 95%;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+}
+
+/* For readability concerns, you should choose a lighter palette in dark mode. */
+[data-theme="dark"] {
+  --ifm-color-primary: #a78bfa;
+  --ifm-color-primary-dark: #9171f8;
+  --ifm-color-primary-darker: #8664f8;
+  --ifm-color-primary-darkest: #6539f5;
+  --ifm-color-primary-light: #bda5fc;
+  --ifm-color-primary-lighter: #c8b2fc;
+  --ifm-color-primary-lightest: #ddd2fd;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+}

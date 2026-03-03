@@ -1,0 +1,17 @@
+{
+  "name": "@hmcs/cli",
+  "version": "0.1.0-alpha.4",
+  "description": "CLI for Desktop Homunculus — manage mods, preferences, and configuration",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/not-elm/desktop_homunculus",
+    "directory": "packages/cli"
+  },
+  "bin": {
+    "hmcs": "bin/hmcs"
+  },
+  "files": [
+    "bin"
+  ]
+}

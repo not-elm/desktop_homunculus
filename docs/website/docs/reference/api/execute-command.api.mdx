@@ -1,0 +1,76 @@
+---
+id: execute-command
+title: "Execute a command"
+description: "Execute a command via `npx --no` in the mods directory with NDJSON streaming output."
+sidebar_label: "Execute a command"
+hide_title: true
+hide_table_of_contents: true
+api: eJztVttuGzcQ/ZXBPMnGWpIbI0D3zYkN1EUTG7GDPtgGRC1HWsZcckPOyhIEAf2H/mG/pBju6mLLqVMEfateVsvlXDhzzuEskdU0Yn6Lha8q5XTE+ww1xSKYmo13mOP5nIqGCRR0e2BmFIxcPYejI+dHYBxwSVB5HUGbQAX7sIBHwyV8PPv1+vIjRA6kKuOm4BuuG+7fuZuSIFCsvYsEJoLqNoGfgKNHaxwdabKmMkwakheakeOYwyiy9g2PsvSPQhhlIGmNaG541L9zd+7w8L13kYMyYnF4eOeOYKTCNI5yqNQc3p4AWarEXwakijKtngx/fgtFqYIqmEJMRpG1cZ3VMXww79Iqm4p8wx/E3/Fff/z5Zig/6GmaqMYypPeDO4cZ+pqCklJeaMyR2mK+byuJGQb62lDkd14vMF+mVxNIY86hoQwL75gcyydV19YUydXgS5TWLDEWJVVK/vGiJszRj79QwZ3f1tGmt9LaOkg+bCiK0frD1j5yMG6KzzEg3Vp3nz10p3gGBFxlKDXecadCUAvM0DBVcT/M6nmc0zBtUlckSq1ievJO8N53dC8epPxTJzC/vV9lmLr4+jHPFCuJ+BgM0zp0HXxBMULy0SaQgHAg6W+AsOPcOKYpBcxw4kOlGHNsjOO3J/tlba2FQZWx1kQqvNMReltMZfAUU7hKUdnSlpodmj61UMLVSvasyZUy+2k4lMfT6J1Z103j3ZqCvZa2B338JgDnR07vg/Cp/478ibZAlWFhsm6k8pt+bmL34cyIcWWckn3jBYykniOYGLK633LJ0eUE89t/hnv6lqFWrPYh3xruA4FcU4lxqy0ooEkOXsXMKYhWiWxFVk6roDuRkz5k/22mFMKPZUoh+PD9iRZey0NAry+lSv82Z1HolHHy9BJlXGOtGgu6WwF8fhcZBrGVU+ySsyd2YCbwYKxt4RPN1Cm7YWlKeBtx7L0l5faK9HtJXFJ4IjqPKq796qbVhZa44rsN83r1r9M+4FIxMIU1zp8c4rMzc/DOLoTmq/st0TuqnguVOn6fvETpCzdT1mjobhXopddEWZgoY0kf9JOCVMSllwup9lGaXSsuMcfBegwYdBKPGUYKMwox0a4JFnMsmet8MLC+ULb0kfM3x8Ph3oF/k8+gaUbW1yLW0HpCOZhox6ft1Xc+V1Vt6cmdtC1ke6ncrhfuN3q+3bKjw8NVhsZNfGpJV79ffNW4orFNhNOrC8xQTtSmedwf9veTP726gIkPIPIXvLWiWdKqHUea4gP7GmrivgBBKlmppIhOVfTS5PQ8zHIrr/+PWT82ZnXkY5rzoLbKOGlJguuyA/fOjJut5zDBkiBYvi6XYxXpc7CrlSx/bSgsZHzIcKaCaTUpDRMlKU0h8eGBFomdqYlHN61KzpRt0vDzfGATlW0tTouCav7G3s3dKkTZEPXq8voGMxx3g2KVBBSDehSpVo+YYxo2xUOS4rS2RKvctFFT2dv6lN/fhsgfqw==
+sidebar_class_name: "post api-method"
+info_path: docs/reference/api/homunculus-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Execute a command"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/commands/execute"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Execute a command via `npx --no` in the mods directory with NDJSON streaming output.
+The response is a stream of newline-delimited JSON events: `stdout`, `stderr`, and `exit`.
+
+**Constraints:**
+- `args`: max 64 elements, each max 4096 characters
+- `stdin`: max 1 MiB
+- `timeoutMs`: 1–300000 (default 30000)
+
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  parameters={undefined}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./execute-command.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./execute-command.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

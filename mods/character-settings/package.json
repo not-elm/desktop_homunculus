@@ -1,0 +1,50 @@
+{
+  "name": "@hmcs/character-settings",
+  "version": "1.0.0",
+  "description": "Character settings panel mod that provides a WebView UI to configure individual character preferences",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "author": "notelm",
+  "scripts": {
+    "build": "vite build ui",
+    "dev": "vite dev ui"
+  },
+  "homunculus": {
+    "menus": [
+      {
+        "id": "open-character-settings",
+        "text": "Character Settings",
+        "command": "open-ui"
+      }
+    ],
+    "assets": {
+      "character-settings:ui": {
+        "path": "ui/dist/index.html",
+        "type": "html",
+        "description": "Character settings panel UI"
+      }
+    }
+  },
+  "bin": {
+    "open-ui": "commands/open-ui.ts"
+  },
+  "dependencies": {
+    "@hmcs/sdk": "workspace:*",
+    "@hmcs/ui": "workspace:*",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.0.0",
+    "@types/node": "^25.3.2",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@vitejs/plugin-react-swc": "^4.0.0",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.8.0",
+    "vite": "^6.0.0",
+    "vite-plugin-singlefile": "^2.3.0"
+  }
+}

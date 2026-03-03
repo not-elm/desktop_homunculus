@@ -1,0 +1,26 @@
+# Rust Third-Party Licenses
+
+This file is auto-generated from `Cargo.lock` using `cargo-about`.
+Do not edit manually.
+
+## License Summary
+
+{{#each overview}}
+- {{{name}}} ({{count}})
+{{/each}}
+
+## License Texts
+
+{{#each licenses}}
+### {{{name}}}
+
+Used by:
+{{#each used_by}}
+- {{{crate.name}}} {{{crate.version}}} ({{#if crate.repository}}{{{crate.repository}}}{{else}}https://crates.io/crates/{{{crate.name}}}{{/if}})
+{{/each}}
+
+```text
+{{{text}}}
+```
+
+{{/each}}

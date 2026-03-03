@@ -1,0 +1,1 @@
+{"parameters":[{"name":"name","in":"query","required":false,"description":"Optional name filter. If provided, returns only snapshots matching the name.","schema":{"type":"string"}}]}
