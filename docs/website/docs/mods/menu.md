@@ -1,9 +1,9 @@
 ---
-title: "Context Menu"
+title: "@hmcs/menu"
 sidebar_position: 4
 ---
 
-# Context Menu
+# @hmcs/menu
 
 The Context Menu MOD (`@hmcs/menu`) provides a right-click menu that appears when you right-click on a character. It displays a WebView-based HUD overlay with available actions.
 

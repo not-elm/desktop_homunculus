@@ -1,9 +1,9 @@
 ---
-title: "Speech"
+title: "speech"
 sidebar_position: 6
 ---
 
-# Speech
+# speech
 
 Utilities for converting phoneme data into timeline keyframes for VRM lip-sync. The `speech` module produces keyframe arrays that you pass to `vrm.speakWithTimeline()`.
 

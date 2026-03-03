@@ -1,9 +1,9 @@
 ---
-title: "Commands"
+title: "commands"
 sidebar_position: 18
 ---
 
-# Commands
+# commands
 
 Stdin/stdout utilities for bin scripts. `@hmcs/sdk/commands` is a **separate entry point** that provides structured input parsing and output helpers for on-demand commands declared in your MOD's `package.json` under `"bin"`.
 

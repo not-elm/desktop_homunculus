@@ -1,9 +1,9 @@
 ---
-title: "Effects"
+title: "effects"
 sidebar_position: 8
 ---
 
-# Effects
+# effects
 
 画面上にビジュアルスタンプエフェクトを表示します -- 指定された位置に、サイズ、不透明度、表示時間を設定可能な画像を表示します。
 

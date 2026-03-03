@@ -1,9 +1,9 @@
 ---
-title: "Displays"
+title: "displays"
 sidebar_position: 12
 ---
 
-# Displays
+# displays
 
 Query connected monitors -- their identifiers, names, and screen-space frame rectangles.
 

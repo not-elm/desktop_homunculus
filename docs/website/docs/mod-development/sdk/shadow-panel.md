@@ -1,9 +1,9 @@
 ---
-title: "Shadow Panel"
+title: "shadowPanel"
 sidebar_position: 16.5
 ---
 
-# Shadow Panel
+# shadowPanel
 
 The `shadowPanel` module controls the shadow overlay panel -- a fullscreen transparent layer used for atmospheric effects or focus dimming.
 

@@ -1,9 +1,9 @@
 ---
-title: "Settings"
+title: "@hmcs/settings"
 sidebar_position: 6
 ---
 
-# Settings
+# @hmcs/settings
 
 The Settings MOD (`@hmcs/settings`) provides an application-wide settings panel for tuning rendering and display preferences. It registers a **system tray menu** entry so you can open it without right-clicking a character.
 

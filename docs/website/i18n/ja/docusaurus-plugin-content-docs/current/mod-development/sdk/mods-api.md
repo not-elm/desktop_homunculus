@@ -1,9 +1,9 @@
 ---
-title: "Mods API"
+title: "mods"
 sidebar_position: 14
 ---
 
-# Mods API
+# mods
 
 インストール済み MOD の検出、バッファリングまたはストリーミング出力による bin コマンドの実行、登録済みコンテキストメニューエントリの照会を行います。
 

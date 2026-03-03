@@ -1,9 +1,9 @@
 ---
-title: "Character Settings"
+title: "@hmcs/character-settings"
 sidebar_position: 5
 ---
 
-# Character Settings
+# @hmcs/character-settings
 
 The Character Settings MOD (`@hmcs/character-settings`) provides a WebView-based settings panel for configuring individual characters.
 

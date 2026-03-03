@@ -1,9 +1,9 @@
 ---
-title: "Preferences"
+title: "preferences"
 sidebar_position: 11
 ---
 
-# Preferences
+# preferences
 
 Persistent key-value storage with JSON serialization, backed by SQLite at `~/.homunculus/preferences.db`. Use preferences to save MOD settings, character state, or any data that should survive restarts.
 

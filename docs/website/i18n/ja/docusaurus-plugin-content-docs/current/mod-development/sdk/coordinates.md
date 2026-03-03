@@ -1,9 +1,9 @@
 ---
-title: "Coordinates"
+title: "coordinates"
 sidebar_position: 10
 ---
 
-# Coordinates
+# coordinates
 
 スクリーン空間（ビューポート）と 3D ワールド空間の座標変換を行います。エフェクトの配置、キャラクターに対する相対的な WebView の位置決め、マウス/タッチ入力からワールド位置へのマッピングに不可欠です。
 

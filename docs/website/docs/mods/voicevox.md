@@ -1,9 +1,9 @@
 ---
-title: "VoiceVox"
+title: "@hmcs/voicevox"
 sidebar_position: 6
 ---
 
-# VoiceVox
+# @hmcs/voicevox
 
 The VoiceVox MOD (`@hmcs/voicevox`) integrates the [VoiceVox](https://voicevox.hiroshiba.jp/) text-to-speech engine with Desktop Homunculus. It enables characters to speak with lip-synced audio.
 

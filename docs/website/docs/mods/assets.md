@@ -1,9 +1,9 @@
 ---
-title: "Assets"
+title: "@hmcs/assets"
 sidebar_position: 2
 ---
 
-# Assets
+# @hmcs/assets
 
 The Assets MOD (`@hmcs/assets`) provides the default resources that other MODs depend on — a VRM character model, VRMA animations, and sound effects.
 

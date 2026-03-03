@@ -1,9 +1,9 @@
 ---
-title: "Mods API"
+title: "mods"
 sidebar_position: 14
 ---
 
-# Mods API
+# mods
 
 Discover installed MODs, execute bin commands with buffered or streaming output, and query registered context menu entries.
 

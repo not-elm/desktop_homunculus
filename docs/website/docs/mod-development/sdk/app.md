@@ -1,9 +1,9 @@
 ---
-title: "App"
+title: "app"
 sidebar_position: 15
 ---
 
-# App
+# app
 
 Application lifecycle, health checks, and platform information. Use `app` to verify the engine is running, query its version and features, or shut down the application.
 

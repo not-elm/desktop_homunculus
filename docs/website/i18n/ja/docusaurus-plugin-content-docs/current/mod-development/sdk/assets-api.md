@@ -1,9 +1,9 @@
 ---
-title: "アセット API"
+title: "assets"
 sidebar_position: 13
 ---
 
-# アセット API
+# assets
 
 アセットレジストリへのクエリ -- アセットの種類や MOD でフィルタリングして一覧を取得します。アセットは各 MOD の `package.json` で宣言され、`"mod-name:asset-name"` 形式のグローバルに一意な ID で参照されます。
 

@@ -1,9 +1,9 @@
 ---
-title: "Entities"
+title: "entities"
 sidebar_position: 3
 ---
 
-# Entities
+# entities
 
 Query and manipulate Bevy ECS entities by name. Entities are the building blocks of the 3D scene -- VRM characters, cameras, webviews, and spawned objects are all entities with a numeric ID, an optional name, and a transform (position, rotation, scale).
 

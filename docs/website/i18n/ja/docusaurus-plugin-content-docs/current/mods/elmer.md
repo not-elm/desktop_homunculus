@@ -1,15 +1,15 @@
 ---
-title: "Elmer"
+title: "@hmcs/elmer"
 sidebar_position: 3
 ---
 
-# Elmer
+# @hmcs/elmer
 
 Elmer MOD（`@hmcs/elmer`）はデフォルトのキャラクター MOD です。デスクトップ上に Elmer VRM キャラクターを生成し、アニメーションと動作を管理します。
 
 ## 概要
 
-Desktop Homunculus が起動すると、Elmer MOD は [Assets](./assets) MOD の `vrm:elmer` モデルを使用して自動的に Elmer キャラクターを生成し、アイドルアニメーションをループ再生します。
+Desktop Homunculus が起動すると、Elmer MOD は [@hmcs/assets](./assets) MOD の `vrm:elmer` モデルを使用して自動的に Elmer キャラクターを生成し、アイドルアニメーションをループ再生します。
 
 ## 機能
 
@@ -22,5 +22,5 @@ Desktop Homunculus が起動すると、Elmer MOD は [Assets](./assets) MOD の
 
 ## 備考
 
-- Elmer MOD は VRM モデルとアニメーションのために [Assets](./assets) MOD を必要とします。
+- Elmer MOD は VRM モデルとアニメーションのために [@hmcs/assets](./assets) MOD を必要とします。
 - キャラクターの位置はプリファレンスを通じて自動的に保存され、次回起動時に復元されます。

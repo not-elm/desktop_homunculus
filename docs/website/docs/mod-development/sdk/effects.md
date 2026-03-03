@@ -1,9 +1,9 @@
 ---
-title: "Effects"
+title: "effects"
 sidebar_position: 8
 ---
 
-# Effects
+# effects
 
 Trigger visual stamp effects on screen -- images displayed at a given position with configurable size, opacity, and duration.
 

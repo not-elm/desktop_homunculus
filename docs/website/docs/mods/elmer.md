@@ -1,15 +1,15 @@
 ---
-title: "Elmer"
+title: "@hmcs/elmer"
 sidebar_position: 3
 ---
 
-# Elmer
+# @hmcs/elmer
 
 The Elmer MOD (`@hmcs/elmer`) is the default character MOD. It spawns the Elmer VRM character on your desktop and manages its animations and behavior.
 
 ## Overview
 
-When Desktop Homunculus starts, the Elmer MOD automatically spawns the Elmer character using the `vrm:elmer` model from the [Assets](./assets) MOD and plays the idle animation on loop.
+When Desktop Homunculus starts, the Elmer MOD automatically spawns the Elmer character using the `vrm:elmer` model from the [@hmcs/assets](./assets) MOD and plays the idle animation on loop.
 
 ## Features
 
@@ -22,5 +22,5 @@ When Desktop Homunculus starts, the Elmer MOD automatically spawns the Elmer cha
 
 ## Notes
 
-- The Elmer MOD requires the [Assets](./assets) MOD for its VRM model and animations.
+- The Elmer MOD requires the [@hmcs/assets](./assets) MOD for its VRM model and animations.
 - Character position is saved automatically via preferences and restored on next launch.

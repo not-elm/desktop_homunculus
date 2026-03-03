@@ -1,9 +1,9 @@
 ---
-title: "Audio (SE & BGM)"
+title: "audio"
 sidebar_position: 5
 ---
 
-# Audio (SE & BGM)
+# audio
 
 Play sound effects (SE) and background music (BGM) with volume, fading, and playback control. Sound effects are one-shot; BGM is continuous with transport controls.
 

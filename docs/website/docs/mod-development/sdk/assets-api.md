@@ -1,9 +1,9 @@
 ---
-title: "Assets API"
+title: "assets"
 sidebar_position: 13
 ---
 
-# Assets API
+# assets
 
 Query the asset registry -- list and filter assets by type and MOD. Assets are declared in each MOD's `package.json` and referenced by globally unique IDs using the format `"mod-name:asset-name"`.
 

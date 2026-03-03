@@ -1,9 +1,9 @@
 ---
-title: "シグナル"
+title: "signals"
 sidebar_position: 9
 ---
 
-# シグナル
+# signals
 
 Server-Sent Events（SSE）によるクロスプロセスの Pub/Sub メッセージングです。シグナルを使うことで、MOD サービス、bin コマンド、WebView 間でリアルタイムに通信できます。
 

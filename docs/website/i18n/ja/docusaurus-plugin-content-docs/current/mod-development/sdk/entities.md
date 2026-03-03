@@ -1,9 +1,9 @@
 ---
-title: "Entities"
+title: "entities"
 sidebar_position: 3
 ---
 
-# Entities
+# entities
 
 名前による Bevy ECS エンティティ（entity）の検索と操作を行います。エンティティは 3D シーンの構成要素です -- VRM キャラクター、カメラ、WebView、スポーンされたオブジェクトはすべて、数値 ID、オプションの名前、トランスフォーム（位置、回転、スケール）を持つエンティティです。
 

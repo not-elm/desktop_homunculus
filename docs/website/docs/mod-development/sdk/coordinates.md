@@ -1,9 +1,9 @@
 ---
-title: "Coordinates"
+title: "coordinates"
 sidebar_position: 10
 ---
 
-# Coordinates
+# coordinates
 
 Convert between screen-space (viewport) and 3D world-space positions. This is essential for placing effects, positioning webviews relative to characters, and mapping mouse/touch input to world locations.
 

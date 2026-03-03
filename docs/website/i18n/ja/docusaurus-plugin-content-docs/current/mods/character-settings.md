@@ -1,9 +1,9 @@
 ---
-title: "キャラクター設定"
+title: "@hmcs/character-settings"
 sidebar_position: 5
 ---
 
-# キャラクター設定
+# @hmcs/character-settings
 
 キャラクター設定 MOD（`@hmcs/character-settings`）は、個々のキャラクターを構成するための WebView ベースの設定パネルを提供します。
 

@@ -1,9 +1,9 @@
 ---
-title: "Tweening"
+title: "tweening"
 sidebar_position: 4
 ---
 
-# Tweening
+# tweening
 
 Smooth property animations using easing functions. Tweening is accessed through the `entities` module and supports animating position, rotation, and scale independently.
 

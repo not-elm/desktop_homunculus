@@ -1,9 +1,9 @@
 ---
-title: "Shadow Panel"
+title: "shadowPanel"
 sidebar_position: 16.5
 ---
 
-# Shadow Panel
+# shadowPanel
 
 `shadowPanel` モジュールは、シャドウオーバーレイパネルを制御します -- 雰囲気演出やフォーカス暗転に使用される、フルスクリーンの透明レイヤーです。
 

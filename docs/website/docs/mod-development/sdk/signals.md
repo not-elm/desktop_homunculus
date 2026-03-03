@@ -1,9 +1,9 @@
 ---
-title: "Signals"
+title: "signals"
 sidebar_position: 9
 ---
 
-# Signals
+# signals
 
 Cross-process pub/sub messaging via Server-Sent Events (SSE). Signals let MOD services, bin commands, and WebViews communicate in real time.
 

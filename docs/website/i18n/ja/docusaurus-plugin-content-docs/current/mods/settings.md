@@ -1,9 +1,9 @@
 ---
-title: "設定"
+title: "@hmcs/settings"
 sidebar_position: 6
 ---
 
-# 設定
+# @hmcs/settings
 
 設定 MOD（`@hmcs/settings`）は、レンダリングや表示のプリファレンスを調整するためのアプリケーション全体の設定パネルを提供します。キャラクターを右クリックせずに開けるよう、**システムトレイメニュー**エントリを登録します。
 

@@ -1,9 +1,9 @@
 ---
-title: "スピーチ"
+title: "speech"
 sidebar_position: 6
 ---
 
-# スピーチ
+# speech
 
 音素データを VRM リップシンク用のタイムラインキーフレームに変換するユーティリティです。`speech` モジュールは `vrm.speakWithTimeline()` に渡すキーフレーム配列を生成します。
 

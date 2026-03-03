@@ -1,9 +1,9 @@
 ---
-title: "Settings"
+title: "settings"
 sidebar_position: 16.3
 ---
 
-# Settings
+# settings
 
 The `settings` module reads and updates application-wide rendering settings.
 

@@ -1,9 +1,9 @@
 ---
-title: "Audio（効果音 & BGM）"
+title: "audio"
 sidebar_position: 5
 ---
 
-# Audio（効果音 & BGM）
+# audio
 
 効果音（SE）と BGM の再生。音量、フェード、再生制御に対応しています。効果音はワンショット再生で、BGM はトランスポートコントロール付きの連続再生です。
 

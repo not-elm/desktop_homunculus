@@ -1,9 +1,9 @@
 ---
-title: "Direct HTTP"
+title: "host"
 sidebar_position: 16
 ---
 
-# Direct HTTP
+# host
 
 :::warning
 ほとんどの開発者は、HTTP API を直接呼び出す代わりに、高レベルのモジュール API（`entities`、`Vrm`、`audio` など）を使用してください。このモジュールは、SDK ラッパーがまだ存在しない高度なユースケース向けです。

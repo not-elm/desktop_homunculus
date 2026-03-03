@@ -1,9 +1,9 @@
 ---
-title: "Displays"
+title: "displays"
 sidebar_position: 12
 ---
 
-# Displays
+# displays
 
 接続されたモニターの情報を照会します -- 識別子、名前、スクリーン空間のフレーム矩形。
 

@@ -1,9 +1,9 @@
 ---
-title: "VoiceVox"
+title: "@hmcs/voicevox"
 sidebar_position: 6
 ---
 
-# VoiceVox
+# @hmcs/voicevox
 
 VoiceVox MOD（`@hmcs/voicevox`）は、[VoiceVox](https://voicevox.hiroshiba.jp/) 音声合成エンジンを Desktop Homunculus と連携させます。キャラクターがリップシンク付きの音声で話せるようになります。
 

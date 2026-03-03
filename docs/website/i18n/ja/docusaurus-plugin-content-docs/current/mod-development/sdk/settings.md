@@ -1,9 +1,9 @@
 ---
-title: "Settings"
+title: "settings"
 sidebar_position: 16.3
 ---
 
-# Settings
+# settings
 
 `settings` モジュールは、アプリケーション全体のレンダリング設定の読み取りと更新を行います。
 

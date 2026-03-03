@@ -1,9 +1,9 @@
 ---
-title: "WebViews"
+title: "Webview"
 sidebar_position: 7
 ---
 
-# WebViews
+# Webview
 
 Create and control embedded HTML interfaces in 3D space. WebViews can float freely or be linked to a VRM character so they follow as the character moves.
 

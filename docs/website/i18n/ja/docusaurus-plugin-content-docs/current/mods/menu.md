@@ -1,9 +1,9 @@
 ---
-title: "コンテキストメニュー"
+title: "@hmcs/menu"
 sidebar_position: 4
 ---
 
-# コンテキストメニュー
+# @hmcs/menu
 
 コンテキストメニュー MOD（`@hmcs/menu`）は、キャラクターを右クリックしたときに表示されるメニューを提供します。利用可能なアクションを表示する WebView ベースの HUD オーバーレイです。
 

@@ -1,9 +1,9 @@
 ---
-title: "Commands"
+title: "commands"
 sidebar_position: 18
 ---
 
-# Commands
+# commands
 
 bin スクリプト用の stdin/stdout ユーティリティです。`@hmcs/sdk/commands` は、MOD の `package.json` の `"bin"` で宣言されるオンデマンドコマンド用の構造化された入力パースと出力ヘルパーを提供する **別エントリーポイント** です。
 

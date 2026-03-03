@@ -1,9 +1,9 @@
 ---
-title: "WebViews"
+title: "Webview"
 sidebar_position: 7
 ---
 
-# WebViews
+# Webview
 
 3D 空間内に埋め込み HTML インターフェースを作成・制御します。WebView は自由に浮遊させることも、VRM キャラクターにリンクしてキャラクターの移動に追従させることもできます。
 

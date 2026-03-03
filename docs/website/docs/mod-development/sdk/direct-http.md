@@ -1,9 +1,9 @@
 ---
-title: "Direct HTTP"
+title: "host"
 sidebar_position: 16
 ---
 
-# Direct HTTP
+# host
 
 :::warning
 Most developers should use the higher-level module APIs (`entities`, `Vrm`, `audio`, etc.) instead of calling the HTTP API directly. This module is for advanced use cases where no SDK wrapper exists yet.

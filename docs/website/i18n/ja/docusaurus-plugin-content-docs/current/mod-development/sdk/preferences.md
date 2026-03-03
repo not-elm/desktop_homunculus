@@ -1,9 +1,9 @@
 ---
-title: "Preferences"
+title: "preferences"
 sidebar_position: 11
 ---
 
-# Preferences
+# preferences
 
 JSON シリアライゼーションによる永続的なキーバリューストレージです。`~/.homunculus/preferences.db` の SQLite によりバックアップされています。プリファレンスを使用して、MOD の設定、キャラクターの状態、再起動後も残す必要のあるデータを保存できます。
 
