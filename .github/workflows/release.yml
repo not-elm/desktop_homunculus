@@ -284,6 +284,10 @@ jobs:
             pnpm --filter @hmcs/mcp-server publish --provenance --access public --tag "${TAG}" --no-git-checks
           fi
 
+      # --- Build @hmcs/ui (required by MOD UIs that import its CSS) ---
+      - name: Build @hmcs/ui
+        run: pnpm --filter @hmcs/ui build
+
       # --- Publish official MOD packages ---
       - name: Publish official MOD packages
         env:
