@@ -61,6 +61,10 @@
 - **struct/enum 定義は、それを使う impl より上に置く。** 型定義はファイル上部にまとめる。
 - **Bevy Plugin はエントリポイント。** Plugin struct + `impl Plugin` を上に、`build()` から登録されるシステム関数を下に配置する。
 
+### 例外
+
+- `macro_rules!` によるマクロ定義は配置順序の規定対象外とする。
+
 ## Function Granularity
 
 - Extract functions at a granularity where the calling code reads naturally as prose.
