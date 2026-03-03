@@ -137,7 +137,7 @@ jobs:
 
   build-engine:
     needs: validate
-    timeout-minutes: 60
+    timeout-minutes: 90
     permissions:
       contents: read
     strategy:
@@ -145,10 +145,10 @@ jobs:
         include:
           - os: macos-14
             arch: arm64
-            make-target: release-macos-arm
+            target: aarch64-apple-darwin
           - os: macos-15-intel
             arch: x86
-            make-target: release-macos-x86
+            target: x86_64-apple-darwin
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -159,10 +159,26 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Cache cargo-installed binaries
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin
+          key: cargo-bin-${{ matrix.arch }}-setup-v1
+
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: "engine -> target"
           shared-key: ${{ matrix.arch }}-engine-dist
+
+      - name: Setup sccache
+        uses: mozilla-actions/sccache-action@v0.0.7
+        with:
+          version: "v0.9.1"
+
+      - name: Configure sccache for Rust
+        run: |
+          echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
+          echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
 
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
@@ -182,11 +198,25 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm build
 
-      - name: Setup engine tools and CEF
-        run: make setup
+      - name: Install cargo-binstall
+        uses: cargo-bins/cargo-binstall@main
 
-      - name: Build, bundle, and create DMG
-        run: make ${{ matrix.make-target }}
+      - name: Setup engine tools and CEF
+        run: make setup-ci
+
+      - name: Build engine binary
+        run: |
+          SDKROOT=$(xcrun -sdk macosx --show-sdk-path) \
+            cargo build --profile dist --target=${{ matrix.target }} --locked
+        env:
+          CARGO_PROFILE_DIST_CODEGEN_UNITS: ${{ matrix.arch == 'x86' && '8' || '2' }}
+
+      - name: Bundle .app and create DMG
+        run: |
+          make bundle-macos-app BIN_SOURCE=target/${{ matrix.target }}/dist/desktop_homunculus
+          make package-macos-dmg
+        env:
+          SKIP_GEN_CREDITS: "1"
 
       - name: Rename DMG with arch suffix
         run: |
