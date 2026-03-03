@@ -20,7 +20,7 @@ CEF_SENTINEL      := $(CEF_FRAMEWORK_DIR)/Chromium Embedded Framework
 
 # --- Existing targets ---
 
-.PHONY: setup setup-cef debug gen-open-api fix-lint test gen-credits
+.PHONY: setup setup-ci setup-cef debug gen-open-api fix-lint test gen-credits
 
 setup:
 	cargo install \
@@ -30,6 +30,14 @@ setup:
 		"bevy_cef_bundle_app@0.2.0" \
 		"cargo-about"
 	npm i -g @redocly/cli
+	$(MAKE) setup-cef
+
+setup-ci: ## CI release build setup (uses cargo-binstall, skips cargo-about and redocly)
+	cargo binstall --no-confirm \
+		"export-cef-dir@144.4.0+144.0.13" \
+		"bevy_cef_debug_render_process@0.2.0" \
+		"bevy_cef_render_process@0.2.0" \
+		"bevy_cef_bundle_app@0.2.0"
 	$(MAKE) setup-cef
 
 setup-cef:
@@ -78,21 +86,21 @@ release-macos: ## Build for native arch, bundle .app, create DMG
 
 release-macos-arm: ## Build for Apple Silicon, bundle .app, create DMG
 	SDKROOT=$$(xcrun -sdk macosx --show-sdk-path) \
-		cargo build --profile dist --target=aarch64-apple-darwin
+		cargo build --profile dist --target=aarch64-apple-darwin --locked
 	$(MAKE) bundle-macos-app BIN_SOURCE=target/aarch64-apple-darwin/dist/$(BIN_NAME)
 	$(MAKE) package-macos-dmg
 
 release-macos-x86: ## Build for Intel Mac, bundle .app, create DMG
 	SDKROOT=$$(xcrun -sdk macosx --show-sdk-path) \
-		cargo build --profile dist --target=x86_64-apple-darwin
+		cargo build --profile dist --target=x86_64-apple-darwin --locked
 	$(MAKE) bundle-macos-app BIN_SOURCE=target/x86_64-apple-darwin/dist/$(BIN_NAME)
 	$(MAKE) package-macos-dmg
 
 release-macos-universal: ## Build universal binary, bundle .app, create DMG
 	SDKROOT=$$(xcrun -sdk macosx --show-sdk-path) \
-		cargo build --profile dist --target=aarch64-apple-darwin
+		cargo build --profile dist --target=aarch64-apple-darwin --locked
 	SDKROOT=$$(xcrun -sdk macosx --show-sdk-path) \
-		cargo build --profile dist --target=x86_64-apple-darwin
+		cargo build --profile dist --target=x86_64-apple-darwin --locked
 	mkdir -p target/dist
 	lipo -create -output target/dist/$(BIN_NAME) \
 		target/aarch64-apple-darwin/dist/$(BIN_NAME) \
@@ -110,7 +118,9 @@ bundle-macos-app: ## Assemble .app bundle (internal: requires BIN_SOURCE)
 	sed 's/__VERSION__/$(VERSION)/g' $(PLIST_TEMPLATE) > $(CONTENTS)/Info.plist
 	cp $(BIN_SOURCE) $(CONTENTS)/MacOS/$(BIN_NAME)
 	cp -r assets $(CONTENTS)/Resources/assets
+ifndef SKIP_GEN_CREDITS
 	$(MAKE) gen-credits
+endif
 	cp -r credits $(CONTENTS)/Resources/credits
 	cp $(ICNS_FILE) $(CONTENTS)/Resources/AppIcon.icns
 	$(MAKE) bundle-macos-cef
