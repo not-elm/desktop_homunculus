@@ -17,7 +17,7 @@ desktop-homunculus/
 │   ├── sdk/             # @hmcs/sdk — TypeScript SDK for mods/extensions
 │   ├── ui/              # @hmcs/ui — Shared React component library (Radix + Tailwind)
 │   └── mcp-server/      # MCP server — exposes character control to AI agents via stdio
-├── mods/                # Mods (NPM packages): elmer/, settings/, menu/, assets/, voicevox/
+├── mods/                # Mods (NPM packages): elmer/, settings/, menu/, assets/, voicevox/, character-settings/
 ├── docs/website/        # Docusaurus documentation site
 └── sandbox/             # Dev sandbox — aggregates all mods for workspace linking validation
 ```
@@ -37,7 +37,7 @@ pnpm test             # Run all TypeScript tests (turbo)
 make setup            # pnpm install + engine tooling setup + CEF framework download
 make debug            # pnpm build + cargo run (debug with inspector)
 make test             # pnpm test (TS) + cargo test --workspace (Rust)
-make fix-lint         # cargo clippy --fix + cargo fmt
+make fix-lint         # cargo clippy --fix + cargo fmt (Rust only, no TS lint)
 make release-macos    # pnpm build + native arch release → DMG
 ```
 
@@ -56,7 +56,7 @@ cargo test -p homunculus_http_server            # All tests in one crate
 cargo test -p homunculus_http_server test_health # Single test by name
 ```
 
-Release builds (macOS):
+Release builds use `--profile dist` (not `--release`), which enables `lto = "thin"` and `strip = true`:
 ```bash
 make release-macos           # Native arch → .app bundle → DMG
 make release-macos-arm       # Apple Silicon
@@ -111,7 +111,9 @@ pnpm build               # Production build
 
 ## Architecture Overview
 
-The engine is built from independent Bevy plugins in `engine/crates/`, following a Core → API → HTTP layering. The HTTP API (Axum on `localhost:3100`) bridges async requests to Bevy's single-threaded ECS via the `ApiReactor` pattern. See `engine/CLAUDE.md` for detailed Rust architecture, code examples, and crate descriptions.
+The engine is built from ~18 independent Bevy plugins in `engine/crates/`, following a Core → API → HTTP layering. The HTTP API (Axum on `localhost:3100`) bridges async requests to Bevy's single-threaded ECS via the `ApiReactor` pattern. See `engine/CLAUDE.md` for detailed Rust architecture, code examples, and crate descriptions.
+
+Asset path resolution: dev mode uses `assets/` relative to `CARGO_MANIFEST_DIR`; release uses `../Resources/assets` (inside `.app` bundle).
 
 ### WebView Integration (bevy_cef)
 
@@ -126,16 +128,23 @@ WebView sources can be URLs, inline HTML, or local mod assets using `{ "type": "
 Mods are pnpm workspace packages. Each mod's `package.json` must include a `"homunculus"` field declaring:
 - **assets**: Objects with `path`, `type` (`vrm`, `vrma`, `sound`, `image`, `html`), and `description`. Asset IDs use format `"mod-name:asset-id"`.
 - **menus** (optional): Right-click context menu entries that can open webviews.
+- **tray** (optional): System tray menu entries (distinct from `menus`). Processed by `homunculus_tray` via `bevy_tray_icon`.
 
 The `"homunculus.service"` script runs automatically as a long-running Node.js child process (service) at startup using `node --experimental-strip-types` (TypeScript files run directly without a build step). On-demand scripts are exposed via `"bin"` and invoked through the HTTP API (`POST /mods/{mod_name}/bin/{command}`). Mods use the `@hmcs/sdk` SDK.
 
 **Mod discovery**: The engine runs `pnpm ls --parseable` in the mods directory (`~/.homunculus/mods/`) to discover installed mods, then reads each mod's `package.json` directly.
 
-Source mods live in `mods/` (in the repo, for development). At runtime, mods are installed to `~/.homunculus/mods/` (configurable via `config.toml` `mods_dir` field). The built-in `@hmcs/assets` mod provides default VRMA animations (`vrma:idle-maid`, `vrma:grabbed`, `vrma:idle-sitting`) and sound effects (`se:open`).
+Source mods live in `mods/` (in the repo, for development). At runtime, mods are installed to `~/.homunculus/mods/` (configurable via `config.toml` `mods_dir` field). The built-in `@hmcs/assets` mod provides default VRMA animations (`vrma:idle-maid`, `vrma:grabbed`, `vrma:idle-sitting`) and sound effects (`se:open`, `se:close`).
 
 ### Frontend UI (Mod-Based)
 
-UI apps live in `mods/` as mod packages — **settings** (`mods/settings/ui/`) and **menu** (`mods/menu/ui/`). They are React 19 + Vite + Tailwind apps that import `@hmcs/ui` (from `packages/ui/`) as the shared component library. Build output goes to each mod's `ui/dist/` and is declared as an asset in the mod's `package.json`.
+UI apps live in `mods/` as mod packages — **settings** (`mods/settings/ui/`), **menu** (`mods/menu/ui/`), and **character-settings** (`mods/character-settings/ui/`). They are React 19 + Vite + Tailwind CSS v4 apps that import `@hmcs/ui` (from `packages/ui/`) as the shared component library. Build output goes to each mod's `ui/dist/` (bundled into a single `index.html` via `vite-plugin-singlefile` for CEF loading) and is declared as an asset in the mod's `package.json`.
+
+**Design language**: Glassmorphism — semi-transparent backgrounds (`bg-primary/30`), `backdrop-blur-sm`, subtle borders (`border-white/20`), white text. This is the canonical style for all WebView UI overlays on the transparent Bevy window. The `@hmcs/ui` library is built on **shadcn/ui (new-york style)** with Radix UI primitives and **lucide-react** icons. Use the `cn()` utility from `@hmcs/ui` (clsx + tailwind-merge) for conditional class names.
+
+### MCP Server (`packages/mcp-server/`)
+
+Exposes ~20 tools (e.g. `play_reaction`, `speak_message`, `move_character`, `open_webview`) and 4 resources (`homunculus://info`, `homunculus://characters`, `homunculus://mods`, `homunculus://assets`) for AI agent control. Connects to the engine's HTTP API at `HOMUNCULUS_HOST` (default: `localhost:3100`).
 
 ### Rust CLI (`engine/crates/homunculus_cli/`)
 
@@ -149,6 +158,11 @@ The `hmcs` binary is a Rust CLI built with `clap`. Current subcommands:
 - **After Rust changes**: Run `cargo test --workspace` from `engine/`.
 - **After TypeScript SDK changes**: Run `pnpm build` from `packages/sdk/`.
 - **After shared UI library changes**: Run `pnpm build` from `packages/ui/`, then rebuild consuming mod UIs.
+
+## CI
+
+- **Rust CI** (`ci-rust.yml`): Runs on `macos-14` (Apple Silicon). Checks `cargo fmt --all --check`, `cargo clippy --workspace -- -Dwarnings`, and `cargo test --workspace --locked`. The `--locked` flag means `Cargo.lock` must be kept committed and up to date.
+- **TypeScript CI** (`ci-ts.yml`): Runs on `ubuntu-latest`. Runs `pnpm install --frozen-lockfile` → `pnpm build` → `pnpm check-types` → `pnpm test` → `pnpm lint` in sequence.
 
 ## Platform Notes
 
@@ -177,7 +191,7 @@ Coding style rules are defined in `engine/.claude/rules/`:
 - `bevy-patterns.md` — Plugin architecture, ApiReactor pattern, ECS patterns (prefer `try_insert` over `insert`)
 
 Additional conventions:
-- TypeScript SDK: All public APIs must have JSDoc with `@example` blocks.
+- TypeScript SDK: All public APIs must have JSDoc with `@example` blocks. Each module exports a `namespace` (e.g., `export namespace vrm { ... }`). Never use `fetch` directly in SDK modules — always go through `host.ts` (`host.get/post/put/deleteMethod` with `host.createUrl()`). Prefer function declarations over arrow functions for exported top-level APIs.
 - Commits: Conventional commits (`feat:`, `fix:`, `docs:`). Short prefixes like `update:`, `add:` also used.
 - **Do NOT commit `docs/plans/`**: Files in `docs/plans/` are local design documents and working notes. Never include them in git commits.
 - Application settings are stored in `~/.homunculus/config.toml` (TOML, snake_case keys: `port`, `mods_dir`).

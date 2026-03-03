@@ -82,7 +82,7 @@ If you see `EACCES` permission errors, see the [npm docs on resolving permission
 Install the recommended set of official MODs:
 
 ```shell
-hmcs mod install @hmcs/assets @hmcs/elmer @hmcs/menu @hmcs/settings
+hmcs mod install @hmcs/assets @hmcs/elmer @hmcs/menu @hmcs/character-settings @hmcs/settings
 ```
 
 | MOD | Description |
@@ -90,7 +90,8 @@ hmcs mod install @hmcs/assets @hmcs/elmer @hmcs/menu @hmcs/settings
 | `@hmcs/assets` | Default animations and sound effects |
 | `@hmcs/elmer` | Default character model |
 | `@hmcs/menu` | Right-click context menu |
-| `@hmcs/settings` | Settings UI panel |
+| `@hmcs/character-settings` | Per-character settings panel |
+| `@hmcs/settings` | Application settings (frame rate, shadow opacity) via system tray |
 
 ## Step 5: Verify Installation
 

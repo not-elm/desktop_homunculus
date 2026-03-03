@@ -47,7 +47,8 @@ Desktop Homunculus ships with a set of official MODs under the `@hmcs` scope:
 |---|---|
 | `@hmcs/elmer` | Controls the default character (Elmer) — spawns the character, manages animations and cursor tracking |
 | `@hmcs/assets` | Default VRMA animations (`idle-maid`, `grabbed`, `idle-sitting`) and sound effects |
-| `@hmcs/settings` | Settings panel UI accessible from the context menu |
+| `@hmcs/character-settings` | Per-character settings panel accessible from the context menu |
+| `@hmcs/settings` | Application settings panel accessible from the system tray |
 | `@hmcs/menu` | Right-click context menu overlay |
 
 ## Additional MODs

@@ -9,7 +9,7 @@ The Context Menu MOD (`@hmcs/menu`) provides a right-click menu that appears whe
 
 ## Overview
 
-**Right-click on a character** to open the context menu. The menu shows the character's name and a list of available actions. Actions are contributed by other installed MODs — for example, the [Settings](./settings) MOD adds a "Settings" entry.
+**Right-click on a character** to open the context menu. The menu shows the character's name and a list of available actions. Actions are contributed by other installed MODs — for example, the [Character Settings](./character-settings) MOD adds a "Character Settings" entry.
 
 Press **Escape** or click outside the menu to close it.
 

@@ -14,7 +14,8 @@ MODs extend Desktop Homunculus with characters, animations, sound effects, UI pa
 | [Assets](./assets) | Default VRM character model, VRMA animations, and sound effects | Recommended |
 | [Elmer](./elmer) | Default character that spawns Elmer with idle, grab, and sitting animations | Recommended |
 | [Context Menu](./menu) | Right-click context menu with a WebView-based HUD overlay | Recommended |
-| [Settings](./settings) | Settings panel for configuring characters and application preferences | Recommended |
+| [Character Settings](./character-settings) | Per-character settings panel (name, scale, persona, OCEAN traits) | Recommended |
+| [Settings](./settings) | Application settings panel (frame rate, shadow opacity) via system tray | Recommended |
 | [VoiceVox](./voicevox) | Text-to-speech integration using the VoiceVox engine | Optional |
 
 ## Managing MODs

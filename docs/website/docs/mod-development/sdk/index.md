@@ -19,7 +19,7 @@ Desktop Homunculus MODs require **Node.js 22 or later** to run TypeScript files 
 
 ## Module Map
 
-The SDK is organized into 17 modules, all available from the main `@hmcs/sdk` entry point, plus a separate `@hmcs/sdk/commands` entry point for bin script utilities.
+The SDK is organized into 18 modules, all available from the main `@hmcs/sdk` entry point, plus a separate `@hmcs/sdk/commands` entry point for bin script utilities.
 
 | Module | Import | Description |
 |---|---|---|
@@ -36,6 +36,7 @@ The SDK is organized into 17 modules, all available from the main `@hmcs/sdk` en
 | **app** | `import { app } from "@hmcs/sdk"` | Application lifecycle -- health checks, platform info, engine version, loaded MODs. |
 | **mods** | `import { mods } from "@hmcs/sdk"` | List installed MODs, execute bin commands, stream command output, query menus. |
 | **assets** | `import { assets } from "@hmcs/sdk"` | Query the asset registry -- list assets by type (`vrm`, `vrma`, `sound`, `image`, `html`) or MOD. |
+| **settings** | `import { settings } from "@hmcs/sdk"` | Read and update application settings (frame rate, rendering preferences). |
 | **shadowPanel** | `import { shadowPanel } from "@hmcs/sdk"` | Control the shadow overlay panel transparency for atmospheric effects. |
 | **host** | `import { host } from "@hmcs/sdk"` | Low-level HTTP client for direct API calls. Used internally by all other modules. |
 | **Math types** | `import { type Transform, type Vec3 } from "@hmcs/sdk"` | Transform, Vec2, Vec3, Quat, and Rect type definitions. |

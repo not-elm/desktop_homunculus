@@ -1,50 +1,53 @@
 ---
 title: "Settings"
-sidebar_position: 5
+sidebar_position: 6
 ---
 
 # Settings
 
-The Settings MOD (`@hmcs/settings`) provides a WebView-based settings panel for configuring characters and application preferences.
+The Settings MOD (`@hmcs/settings`) provides an application-wide settings panel for tuning rendering and display preferences. It registers a **system tray menu** entry so you can open it without right-clicking a character.
 
 ## Overview
 
-Open the settings panel in one of these ways:
+Open the settings panel from the **system tray icon**:
 
-- **Right-click a character** and select **"Settings"** from the [context menu](./menu)
-- The panel opens next to the character as a floating WebView window
+1. Click the Desktop Homunculus tray icon in your OS menu bar / system tray
+2. Select **"Settings"**
+3. The settings panel opens as a floating WebView window
 
 ## Features
 
-The settings panel is organized into three tabs. Changes take effect after clicking **Save**. All settings are persisted to `~/.homunculus/preferences.db`.
+Changes take effect after clicking **Save**. All settings are persisted to `~/.homunculus/preferences.db`.
 
-### Basic
+### Frame Rate
 
-| Setting | Description | Range / Type |
-|---------|-------------|--------------|
-| Name    | Display name of the character (read-only) | — |
-| Scale   | Character display size | 0.10 – 3.00 |
+| Setting | Description | Range |
+|---------|-------------|-------|
+| Frame Rate | Controls the rendering frame rate. Lower values reduce CPU/GPU usage. | 1+ fps |
 
-### Persona
+### Shadow Opacity
 
-| Setting | Description |
-|---------|-------------|
-| Profile | Character background and profile description (free text) |
-| Personality | Personality traits written in natural language (free text) |
+| Setting | Description | Range |
+|---------|-------------|-------|
+| Shadow Opacity | Controls the transparency of the shadow panel overlay behind the character. | 0 – 100% |
 
-### OCEAN
+## SDK
 
-Adjusts the character's Big Five personality dimensions. Each trait is set with a slider and visualized on a radar chart.
+The `settings` namespace in `@hmcs/sdk` provides programmatic access to application settings:
 
-| Trait | Low | High |
-|-------|-----|------|
-| Openness | Conservative | Curious |
-| Conscientiousness | Spontaneous | Organized |
-| Extraversion | Introverted | Extroverted |
-| Agreeableness | Independent | Cooperative |
-| Neuroticism | Stable | Sensitive |
+```typescript
+import { settings } from "@hmcs/sdk";
+
+// Read the current FPS
+const currentFps = await settings.fps();
+
+// Set a new FPS value
+await settings.setFps(30);
+```
+
+See the [Settings SDK reference](../mod-development/sdk/settings) for full API documentation.
 
 ## Notes
 
-- The Settings MOD adds a "Settings" entry to the [Context Menu](./menu).
+- The Settings MOD uses a [tray menu](../mod-development/tray-menus) instead of a context menu, because application settings are not tied to a specific character.
 - The settings panel UI uses the shared `@hmcs/ui` component library.

@@ -16,12 +16,12 @@ A MOD's `package.json` includes:
 | `name` | Package name (used to derive asset IDs) | Yes |
 | `type` | Must be `"module"` for ES module support | Yes |
 | `bin` | On-demand commands (invoked via HTTP API) | No |
-| `homunculus` | Engine metadata: service, assets, and menus | Yes |
+| `homunculus` | Engine metadata: service, assets, menus, and tray | Yes |
 | `dependencies` | Must include `@hmcs/sdk` when using SDK features | No |
 
 ## The `homunculus` Field
 
-The `homunculus` field is what makes a package a MOD. It has three sub-fields:
+The `homunculus` field is what makes a package a MOD. It has four sub-fields:
 
 ### `assets`
 
@@ -94,15 +94,15 @@ Declares entries for the right-click context menu. Each menu entry triggers a `b
 }
 ```
 
-**Example** -- the `@hmcs/settings` MOD adds a "Settings" entry:
+**Example** -- the `@hmcs/character-settings` MOD adds a "Character Settings" entry to the context menu:
 
 ```json
 {
   "homunculus": {
     "menus": [
       {
-        "id": "open-settings",
-        "text": "Settings",
+        "id": "open-character-settings",
+        "text": "Character Settings",
         "command": "open-ui"
       }
     ]
@@ -110,7 +110,39 @@ Declares entries for the right-click context menu. Each menu entry triggers a `b
 }
 ```
 
-When the user right-clicks the character and selects "Settings", the engine invokes the `open-ui` bin command.
+When the user right-clicks the character and selects "Character Settings", the engine invokes the `open-ui` bin command.
+
+### `tray`
+
+Declares an item for the system tray menu. Unlike `menus` (which appear on right-click), tray items appear in the OS menu bar / system tray icon menu and are application-wide.
+
+```json
+{
+  "homunculus": {
+    "tray": {
+      "id": "<unique-id>",
+      "text": "<display-label>",
+      "command": "<bin-command-name>"
+    }
+  }
+}
+```
+
+Tray items can also contain nested `items` for submenus. See [Tray Menus](../tray-menus.md) for the full guide.
+
+**Example** -- the `@hmcs/settings` MOD adds a "Settings" entry to the tray:
+
+```json
+{
+  "homunculus": {
+    "tray": {
+      "id": "open-settings",
+      "text": "Settings",
+      "command": "settings-open-ui"
+    }
+  }
+}
+```
 
 ### `service`
 

@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 make debug               # cargo run --features develop (bevy_egui inspector + CEF debug)
 make test                # cargo test --workspace
 make fix-lint            # cargo clippy --workspace --fix --allow-dirty && cargo fmt --all
-make build-open-api      # Rebuild OpenAPI HTML docs via redocly
+make gen-open-api        # Regenerate OpenAPI spec → docs/website/static/api/open-api.yml
 make setup               # Install all Rust/Node tools + download CEF framework (~300MB, skipped if present)
 make setup-cef            # Download CEF framework only (macOS; skips if already installed)
 ```

@@ -31,7 +31,7 @@ MODs combine any mix of the following capabilities. A single MOD can do one of t
 
 - **Expose on-demand commands** — Provide commands other MODs or AI agents can invoke through the HTTP API (declared via the `bin` field). The `@hmcs/voicevox` MOD exposes `voicevox:speak` and `voicevox:speakers` commands for text-to-speech.
 
-- **Embed UI panels** — Bundle a WebView-based interface (React + Vite) as an HTML asset. The `@hmcs/settings` MOD combines an HTML asset, a `bin` command to open the panel, and a menu entry — showing how capabilities work together.
+- **Embed UI panels** — Bundle a WebView-based interface (React + Vite) as an HTML asset. The `@hmcs/character-settings` MOD combines an HTML asset, a `bin` command to open the panel, and a menu entry — showing how capabilities work together.
 
 - **Add menu entries** — Register items in the right-click context menu that trigger commands or open webviews (declared via `homunculus.menus`).
 
