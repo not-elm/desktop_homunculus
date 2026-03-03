@@ -8,7 +8,14 @@ Bring your desktop to life with interactive 3D VRM characters. Desktop Homunculu
 
 ## Documentation
 
-See the [documentation site](https://not-elm.github.io/desktop_homunculus/) for user guides, MOD development, and API reference.
+[![Read the Docs](https://img.shields.io/badge/Read%20the%20Docs-Desktop%20Homunculus-0A7EA4?style=for-the-badge)](https://not-elm.github.io/desktop_homunculus/)
+
+| I want to... | Go here |
+| ------------ | ------- |
+| Install and run quickly | [Getting Started](https://not-elm.github.io/desktop_homunculus/getting-started/) |
+| Build MODs (SDK, WebView UI, assets) | [MOD Development](https://not-elm.github.io/desktop_homunculus/mod-development/) |
+| Integrate AI agents (MCP, Claude Code, Codex) | [AI Integration](https://not-elm.github.io/desktop_homunculus/ai-integration/) |
+| Look up CLI and MCP tools | [Reference](https://not-elm.github.io/desktop_homunculus/reference/) |
 
 ## Features
 
