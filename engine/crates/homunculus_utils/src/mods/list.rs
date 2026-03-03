@@ -73,6 +73,7 @@ fn convert_to_mod_info(pkg: ModPackageJson, path: &Path) -> ModInfo {
             .unwrap_or_default(),
         assets: pkg.homunculus.assets.unwrap_or_default(),
         menus: pkg.homunculus.menus.unwrap_or_default(),
+        tray: pkg.homunculus.tray,
         mod_dir: path.to_path_buf(),
     }
 }

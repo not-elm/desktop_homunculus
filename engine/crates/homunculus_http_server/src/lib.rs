@@ -467,6 +467,7 @@ mod tests {
                     },
                 )]),
                 menus: vec![],
+                tray: None,
                 mod_dir: PathBuf::default(),
             });
         let request = Request::get("/mods").body(Body::empty()).unwrap();
@@ -491,6 +492,7 @@ mod tests {
                     },
                 )]),
                 menus: vec![],
+                tray: None,
                 mod_dir: PathBuf::default(),
             }],
         ));
@@ -553,6 +555,7 @@ mod tests {
                     },
                 )]),
                 menus: vec![],
+                tray: None,
                 mod_dir: PathBuf::default(),
             });
         let request = Request::get("/mods/test-mod").body(Body::empty()).unwrap();
@@ -577,6 +580,7 @@ mod tests {
                     },
                 )]),
                 menus: vec![],
+                tray: None,
                 mod_dir: PathBuf::default(),
             },
         ));
@@ -654,6 +658,7 @@ mod tests {
                     },
                 )]),
                 menus: vec![],
+                tray: None,
                 mod_dir: PathBuf::default(),
             });
         let request = Request::get("/app/info").body(Body::empty()).unwrap();
@@ -688,6 +693,7 @@ mod tests {
                         },
                     )]),
                     menus: vec![],
+                    tray: None,
                     mod_dir: PathBuf::default(),
                 }],
             },
