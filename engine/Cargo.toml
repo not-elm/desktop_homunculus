@@ -64,7 +64,7 @@ bevy = { version = "0.18", features = [
     "png",
     "mp3",
 ] }
-bevy_tray_icon = { version = "0.3" }
+bevy_tray_icon = { path = "../../bevys/bevy_tray_icon/", version = "0.3" }
 url = { version = "2", features = ["serde"] }
 async-channel = "2.5"
 async-broadcast = "0.7"

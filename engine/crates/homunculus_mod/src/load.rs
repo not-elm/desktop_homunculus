@@ -11,7 +11,7 @@ pub(crate) struct ModLoadPlugin;
 
 impl Plugin for ModLoadPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, discover_mods);
+        app.add_systems(PreStartup, discover_mods);
     }
 }
 
@@ -46,7 +46,10 @@ fn schedule_service(info: &ModInfo, commands: &mut Commands) {
         if service_script_path.exists() {
             commands.spawn(ModService(service_script_path.clone()));
         } else {
-            warn!("Service script not found: {}", service_script_path.display());
+            warn!(
+                "Service script not found: {}",
+                service_script_path.display()
+            );
         }
     }
 }

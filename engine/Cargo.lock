@@ -1894,8 +1894,6 @@ dependencies = [
 [[package]]
 name = "bevy_tray_icon"
 version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f2472e67e84468b007579d12c7c1b40311f20fdddc182b189269682accdb4b77"
 dependencies = [
  "bevy",
  "thiserror 2.0.18",
@@ -2998,6 +2996,7 @@ dependencies = [
  "homunculus_shadow_panel",
  "homunculus_sitting",
  "homunculus_speech",
+ "homunculus_tray",
  "homunculus_utils",
  "homunculus_windows",
  "reqwest",

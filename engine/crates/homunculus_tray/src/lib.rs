@@ -8,11 +8,26 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 use bevy::prelude::*;
+use bevy::tasks::IoTaskPool;
 use bevy_tray_icon::plugin::TrayIconPlugin;
 use bevy_tray_icon::plugin::menu_event::MenuMessage;
 use bevy_tray_icon::resource::{Menu, MenuItem, TrayIcon};
 use homunculus_core::prelude::{HomunculusConfig, ModRegistry, TrayMenuItem};
 use tracing::{error, info};
+
+/// Plugin that provides system tray integration for Desktop Homunculus.
+///
+/// Adds the `TrayIconPlugin`, builds a tray menu from mod declarations,
+/// and dispatches menu clicks to mod commands.
+pub struct HomunculusTrayPlugin;
+
+impl Plugin for HomunculusTrayPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_plugins(TrayIconPlugin)
+            .add_systems(Startup, setup_tray)
+            .add_systems(Update, handle_tray_clicks);
+    }
+}
 
 /// Maps prefixed menu IDs (`"{mod_name}::{item_id}"`) to the mod name and
 /// command string that should be executed when the item is clicked.
@@ -40,26 +55,88 @@ impl TrayMenuRegistry {
     }
 
     /// Look up the mod name and command for a prefixed menu ID.
+    #[inline]
     pub fn lookup(&self, prefixed_id: &str) -> Option<&(String, String)> {
         self.entries.get(prefixed_id)
     }
 }
 
-/// Convert a `TrayMenuItem` to a `bevy_tray_icon` `MenuItem`.
+/// Startup system that builds the tray icon with menu items from all mods.
+fn setup_tray(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mod_registry: Res<ModRegistry>,
+) {
+    let (menu, registry) = build_menu(&mod_registry);
+    commands.insert_resource(registry);
+    commands.insert_resource(TrayIcon {
+        icon: Some(asset_server.load("icons/icon.png")),
+        tooltip: Some("Desktop Homunculus".to_string()),
+        menu,
+        show_menu_on_left_click: true,
+    });
+}
+
+/// Update system that handles tray menu click events.
 ///
-/// Leaf items (those with `command`) become `MenuItem::Common`.
-/// Items with `items` become `MenuItem::SubMenu`.
-/// IDs are prefixed with `"{mod_name}::"`.
-fn to_bevy_menu_item(mod_name: &str, item: &TrayMenuItem) -> MenuItem {
-    let prefixed_id = format!("{mod_name}::{}", item.id);
-    if let Some(ref children) = item.items {
-        let child_items: Vec<MenuItem> = children
-            .iter()
-            .map(|child| to_bevy_menu_item(mod_name, child))
-            .collect();
-        MenuItem::submenu(prefixed_id, &item.text, true, Menu::new(child_items))
-    } else {
-        MenuItem::common(prefixed_id, &item.text, true, None)
+/// Looks up the clicked menu ID in the registry and spawns a fire-and-forget
+/// task to execute the associated mod command.
+fn handle_tray_clicks(
+    mut mr: MessageReader<MenuMessage>,
+    registry: Option<Res<TrayMenuRegistry>>,
+    config: Res<HomunculusConfig>,
+) {
+    let Some(registry) = registry else {
+        return;
+    };
+    let mods_dir = config.mods_dir.clone();
+    for message in mr.read() {
+        let id = &message.id.0;
+        if let Some((_mod_name, command)) = registry.lookup(id) {
+            let mods_dir = mods_dir.clone();
+            let command = command.clone();
+            info!("Tray menu clicked: id={id}, command={command}");
+            IoTaskPool::get()
+                .spawn(async move {
+                    execute_command(mods_dir, command).await;
+                })
+                .detach();
+            // tokio::runtime::Builder::new_current_thread()
+            //     .build()
+            //     .unwrap()
+            //     .spawn(async move {
+            //         execute_command(mods_dir, command).await;
+            //     });
+        } else {
+            tracing::warn!("Unknown tray menu id: {id}");
+        }
+    }
+}
+
+/// Execute a mod command via `pnpm exec` in the mods directory.
+///
+/// Stdout is discarded; stderr is piped and logged on failure.
+async fn execute_command(mods_dir: PathBuf, command: String) {
+    let result = std::process::Command::new("pnpm")
+        .arg("exec")
+        .arg(&command)
+        .current_dir(&mods_dir)
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .output();
+
+    match result {
+        Ok(output) if !output.status.success() => {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            error!(
+                "Tray command `{command}` failed (status {}): {stderr}",
+                output.status
+            );
+        }
+        Err(e) => {
+            error!("Failed to spawn tray command `{command}`: {e}");
+        }
+        _ => {}
     }
 }
 
@@ -71,7 +148,6 @@ fn build_menu(mod_registry: &ModRegistry) -> (Menu, TrayMenuRegistry) {
     let mut menu_items: Vec<MenuItem> = Vec::new();
     let mut registry = TrayMenuRegistry::default();
     let mut first = true;
-
     for mod_info in mod_registry.all() {
         let Some(ref tray_item) = mod_info.tray else {
             continue;
@@ -89,89 +165,21 @@ fn build_menu(mod_registry: &ModRegistry) -> (Menu, TrayMenuRegistry) {
     (Menu::new(menu_items), registry)
 }
 
-/// Startup system that builds the tray icon with menu items from all mods.
-fn setup_tray(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mod_registry: Res<ModRegistry>,
-) {
-    let (menu, registry) = build_menu(&mod_registry);
-
-    commands.insert_resource(registry);
-    commands.insert_resource(TrayIcon {
-        icon: Some(asset_server.load("icons/icon.png")),
-        tooltip: Some("Desktop Homunculus".to_string()),
-        menu,
-        show_menu_on_left_click: true,
-    });
-}
-
-/// Update system that handles tray menu click events.
+/// Convert a `TrayMenuItem` to a `bevy_tray_icon` `MenuItem`.
 ///
-/// Looks up the clicked menu ID in the registry and spawns a fire-and-forget
-/// task to execute the associated mod command.
-fn handle_tray_clicks(
-    mut er: MessageReader<MenuMessage>,
-    registry: Option<Res<TrayMenuRegistry>>,
-    config: Res<HomunculusConfig>,
-) {
-    let Some(registry) = registry else {
-        return;
-    };
-    let mods_dir = config.mods_dir.clone();
-
-    for event in er.read() {
-        let id = &event.id.0;
-        if let Some((_mod_name, command)) = registry.lookup(id) {
-            let mods_dir = mods_dir.clone();
-            let command = command.clone();
-            info!("Tray menu clicked: id={id}, command={command}");
-            tokio::spawn(execute_command(mods_dir, command));
-        } else {
-            tracing::warn!("Unknown tray menu id: {id}");
-        }
-    }
-}
-
-/// Execute a mod command via `pnpm exec` in the mods directory.
-///
-/// Stdout is discarded; stderr is piped and logged on failure.
-async fn execute_command(mods_dir: PathBuf, command: String) {
-    let result = tokio::process::Command::new("pnpm")
-        .arg("exec")
-        .arg(&command)
-        .current_dir(&mods_dir)
-        .stdout(std::process::Stdio::null())
-        .stderr(std::process::Stdio::piped())
-        .output()
-        .await;
-
-    match result {
-        Ok(output) if !output.status.success() => {
-            let stderr = String::from_utf8_lossy(&output.stderr);
-            error!(
-                "Tray command `{command}` failed (status {}): {stderr}",
-                output.status
-            );
-        }
-        Err(e) => {
-            error!("Failed to spawn tray command `{command}`: {e}");
-        }
-        _ => {}
-    }
-}
-
-/// Plugin that provides system tray integration for Desktop Homunculus.
-///
-/// Adds the `TrayIconPlugin`, builds a tray menu from mod declarations,
-/// and dispatches menu clicks to mod commands.
-pub struct HomunculusTrayPlugin;
-
-impl Plugin for HomunculusTrayPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_plugins(TrayIconPlugin)
-            .add_systems(Startup, setup_tray)
-            .add_systems(Update, handle_tray_clicks);
+/// Leaf items (those with `command`) become `MenuItem::Common`.
+/// Items with `items` become `MenuItem::SubMenu`.
+/// IDs are prefixed with `"{mod_name}::"`.
+fn to_bevy_menu_item(mod_name: &str, item: &TrayMenuItem) -> MenuItem {
+    let prefixed_id = format!("{mod_name}::{}", item.id);
+    if let Some(ref children) = item.items {
+        let child_items: Vec<MenuItem> = children
+            .iter()
+            .map(|child| to_bevy_menu_item(mod_name, child))
+            .collect();
+        MenuItem::submenu(prefixed_id, &item.text, true, Menu::new(child_items))
+    } else {
+        MenuItem::common(prefixed_id, &item.text, true, None)
     }
 }
 
