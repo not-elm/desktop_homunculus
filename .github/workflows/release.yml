@@ -284,6 +284,58 @@ jobs:
             pnpm --filter @hmcs/mcp-server publish --provenance --access public --tag "${TAG}" --no-git-checks
           fi
 
+      # --- Publish official MOD packages ---
+      - name: Publish official MOD packages
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          compute_tag() {
+            local ver="$1"
+            if echo "$ver" | grep -qE -- '-(alpha|beta|rc)'; then
+              echo "$ver" | sed -E 's/.*-(alpha|beta|rc).*/\1/'
+            else
+              echo "latest"
+            fi
+          }
+
+          MOD_PACKAGE_FILES="$(find mods -mindepth 2 -maxdepth 2 -name package.json | sort)"
+
+          if [ -z "$MOD_PACKAGE_FILES" ]; then
+            echo "::error::No package.json files found under mods/"
+            exit 1
+          fi
+
+          while IFS= read -r PACKAGE_JSON; do
+            PKG_NAME="$(node -e 'const fs=require("fs"); const p=JSON.parse(fs.readFileSync(process.argv[1], "utf8")); process.stdout.write(p.name ?? "")' "$PACKAGE_JSON")"
+            VERSION="$(node -e 'const fs=require("fs"); const p=JSON.parse(fs.readFileSync(process.argv[1], "utf8")); process.stdout.write(p.version ?? "")' "$PACKAGE_JSON")"
+            IS_PRIVATE="$(node -e 'const fs=require("fs"); const p=JSON.parse(fs.readFileSync(process.argv[1], "utf8")); process.stdout.write(String(Boolean(p.private)))' "$PACKAGE_JSON")"
+            HAS_BUILD="$(node -e 'const fs=require("fs"); const p=JSON.parse(fs.readFileSync(process.argv[1], "utf8")); process.stdout.write(String(Boolean(p.scripts && p.scripts.build)))' "$PACKAGE_JSON")"
+
+            if [ -z "$PKG_NAME" ] || [ -z "$VERSION" ]; then
+              echo "::error::Missing name/version in ${PACKAGE_JSON}"
+              exit 1
+            fi
+
+            if [ "$IS_PRIVATE" = "true" ]; then
+              echo "::error::${PKG_NAME} is marked private. Remove \"private: true\" to publish from release workflow."
+              exit 1
+            fi
+
+            TAG="$(compute_tag "$VERSION")"
+
+            echo "--- Publishing ${PKG_NAME}@${VERSION} (tag: ${TAG}) from ${PACKAGE_JSON} ---"
+
+            if [ "$HAS_BUILD" = "true" ]; then
+              pnpm --filter "${PKG_NAME}" build
+            fi
+
+            if npm view "${PKG_NAME}@${VERSION}" version 2>/dev/null; then
+              echo "${PKG_NAME}@${VERSION} already published, skipping."
+            else
+              pnpm --filter "${PKG_NAME}" publish --provenance --access public --tag "${TAG}" --no-git-checks
+            fi
+          done <<< "$MOD_PACKAGE_FILES"
+
       # --- Publish CLI platform packages ---
       - name: Publish CLI platform packages
         env:
