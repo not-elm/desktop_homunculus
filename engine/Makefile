@@ -65,7 +65,7 @@ test:
 
 gen-credits:
 	mkdir -p credits/licenses
-	cargo about generate --workspace --locked --offline --config about.toml --output-file $(RUST_LICENSES_OUTPUT) about.hbs
+	cargo about generate --workspace --locked --config about.toml --output-file $(RUST_LICENSES_OUTPUT) about.hbs
 
 # --- Release targets ---
 
