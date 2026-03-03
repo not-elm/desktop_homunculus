@@ -50,10 +50,6 @@ pub async fn my_handler(
 - Add the route in `homunculus_http_server/src/lib.rs` → `create_router()`.
 - Add the API resource to `HttpState` (implements `FromRef` for all domain APIs).
 
-## Entity Operations
-
-- Use `try_insert` instead of `insert` when adding components to entities. `insert` panics if the entity does not exist, while `try_insert` silently skips missing entities.
-
 ## Event Channels
 
 - Use `VrmEventSender<E>` / `VrmEventReceiver<E>` for async broadcast events.
