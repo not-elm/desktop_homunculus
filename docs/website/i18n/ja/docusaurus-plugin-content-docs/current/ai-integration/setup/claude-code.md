@@ -56,7 +56,7 @@ Claude Code に以下のように尋ねてください：
 
 Claude Code の **スキル（Skills）** は MCP ツール呼び出しを連鎖させて複雑なワークフローを実現します。例えば、`tech-lecture` スキルは `open_webview`、`speak_message`、`set_expression` を組み合わせて、キャラクターにスライドとナレーション付きのレクチャーを行わせます。
 
-公式スキルはリポジトリの [`skills/` ディレクトリ](https://github.com/not-elm/desktop-homunculus/tree/main/skills)にあります。インストール方法と完全なカタログについては、そこの README をご覧ください。
+公式スキルはリポジトリの [`skills/` ディレクトリ](https://github.com/not-elm/desktop_homunculus/tree/main/skills)にあります。インストール方法と完全なカタログについては、そこの README をご覧ください。
 
 ## カスタムポート
 

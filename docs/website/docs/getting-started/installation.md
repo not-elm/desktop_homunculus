@@ -22,7 +22,7 @@ Windows support is planned. Currently, only macOS is supported.
 
 ## Step 1: Install Desktop Homunculus
 
-Download the latest release from the [GitHub Releases page](https://github.com/not-elm/desktop-homunculus/releases).
+Download the latest release from the [GitHub Releases page](https://github.com/not-elm/desktop_homunculus/releases).
 
 1. Download the `.dmg` file
 2. Open the DMG and drag **Desktop Homunculus** into your `/Applications` folder
