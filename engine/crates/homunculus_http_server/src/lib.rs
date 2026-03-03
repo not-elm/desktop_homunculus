@@ -456,7 +456,7 @@ mod tests {
                 description: Some("A test mod".to_string()),
                 author: None,
                 license: None,
-                entry_point_path: Some(PathBuf::from("/main.js")),
+                service_script_path: Some(PathBuf::from("/main.js")),
                 commands: vec!["build".to_string()],
                 assets: HashMap::from([(
                     "test-asset".to_string(),
@@ -480,7 +480,7 @@ mod tests {
                 description: Some("A test mod".to_string()),
                 author: None,
                 license: None,
-                entry_point_path: Some(PathBuf::from("/main.js")),
+                service_script_path: Some(PathBuf::from("/main.js")),
                 commands: vec!["build".to_string()],
                 assets: HashMap::from([(
                     "test-asset".to_string(),
@@ -542,7 +542,7 @@ mod tests {
                 description: Some("A test mod".to_string()),
                 author: None,
                 license: None,
-                entry_point_path: Some(PathBuf::from("/main.js")),
+                service_script_path: Some(PathBuf::from("/main.js")),
                 commands: vec!["build".to_string()],
                 assets: HashMap::from([(
                     "test-asset".to_string(),
@@ -566,7 +566,7 @@ mod tests {
                 description: Some("A test mod".to_string()),
                 author: None,
                 license: None,
-                entry_point_path: Some(PathBuf::from("/main.js")),
+                service_script_path: Some(PathBuf::from("/main.js")),
                 commands: vec!["build".to_string()],
                 assets: HashMap::from([(
                     "test-asset".to_string(),
@@ -643,7 +643,7 @@ mod tests {
                 description: Some("A test mod".to_string()),
                 author: None,
                 license: None,
-                entry_point_path: Some(PathBuf::from("/main.js")),
+                service_script_path: Some(PathBuf::from("/main.js")),
                 commands: vec!["build".to_string()],
                 assets: HashMap::from([(
                     "test-asset".to_string(),
@@ -677,7 +677,7 @@ mod tests {
                     description: Some("A test mod".to_string()),
                     author: None,
                     license: None,
-                    entry_point_path: Some(PathBuf::from("/main.js")),
+                    service_script_path: Some(PathBuf::from("/main.js")),
                     commands: vec!["build".to_string()],
                     assets: HashMap::from([(
                         "test-asset".to_string(),

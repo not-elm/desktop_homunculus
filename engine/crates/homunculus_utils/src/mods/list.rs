@@ -59,7 +59,7 @@ fn convert_to_mod_info(pkg: ModPackageJson, path: &Path) -> ModInfo {
     ModInfo {
         author: pkg.author,
         name: pkg.name,
-        entry_point_path: pkg.main.and_then(|p| path.join(p).canonicalize().ok()),
+        service_script_path: pkg.main.and_then(|p| path.join(p).canonicalize().ok()),
         license: pkg.license,
         version: pkg.version,
         description: pkg.description,

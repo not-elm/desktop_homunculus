@@ -15,10 +15,10 @@ pub struct ModInfo {
     pub author: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub license: Option<String>,
-    /// main script path (auto-executed at startup).
+    /// Service script path (long-running process, auto-launched at startup).
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "openapi", schema(value_type = Option<String>))]
-    pub entry_point_path: Option<PathBuf>,
+    pub service_script_path: Option<PathBuf>,
     /// Available bin command names (paths are not included).
     pub commands: Vec<String>,
     /// Assets registered by this mod.

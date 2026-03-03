@@ -5,7 +5,7 @@ sidebar_position: 2
 
 # SDK Quick Start
 
-Get started with `@hmcs/sdk` -- installation, your first startup script, and the commands entry point for bin scripts.
+Get started with `@hmcs/sdk` -- installation, your first service, and the commands entry point for bin scripts.
 
 :::tip
 This page covers the SDK itself. For a full end-to-end guide to creating a MOD (project setup, `package.json`, assets, installation), see the [MOD Quick Start](../quick-start).

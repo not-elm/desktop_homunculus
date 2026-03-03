@@ -6,7 +6,7 @@ info:
     name: notelm
     email: elmprograminfo@gmail.com
   license:
-    name: MIT OR Apache-2.0
+    name: LGPL-3.0-only
   version: 1.0.0
 servers:
 - url: http://localhost:3100
@@ -1976,11 +1976,6 @@ components:
           type:
           - string
           - 'null'
-        entryPointPath:
-          type:
-          - string
-          - 'null'
-          description: main script path (auto-executed at startup).
         license:
           type:
           - string
@@ -1995,6 +1990,11 @@ components:
           description: Absolute path to the mod's root directory on disk.
         name:
           type: string
+        serviceScriptPath:
+          type:
+          - string
+          - 'null'
+          description: Service script path (long-running process, auto-launched at startup).
         version:
           type: string
     ModMenu:

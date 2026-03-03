@@ -74,7 +74,7 @@ const character = await Vrm.waitLoadByName("MyAvatar");
 ```
 
 :::tip
-Use `waitLoadByName` in MOD startup scripts when you depend on a character spawned by another MOD. Use `findByName` when you expect the character to already exist.
+Use `waitLoadByName` in MOD services when you depend on a character spawned by another MOD. Use `findByName` when you expect the character to already exist.
 :::
 
 ## Listing All Characters

@@ -63,7 +63,7 @@ Open `package.json` and add the `homunculus` field along with the `main` and `ty
 }
 ```
 
-## Step 3: Write the Startup Script
+## Step 3: Write the Service
 
 Create `index.ts` in the project root. This script runs automatically when Desktop Homunculus starts.
 

@@ -5,7 +5,7 @@ sidebar_position: 9
 
 # Signals
 
-Cross-process pub/sub messaging via Server-Sent Events (SSE). Signals let MOD startup scripts, bin commands, and WebViews communicate in real time.
+Cross-process pub/sub messaging via Server-Sent Events (SSE). Signals let MOD services, bin commands, and WebViews communicate in real time.
 
 ## Import
 
@@ -66,9 +66,9 @@ for (const ch of channels) {
 
 ## Example: Real-Time Sync
 
-A common pattern is using signals to synchronize a MOD's startup script with its WebView UI.
+A common pattern is using signals to synchronize a MOD's service with its WebView UI.
 
-**Startup script** (runs in Node.js):
+**Service** (runs in Node.js):
 
 ```typescript
 import { signals, Vrm } from "@hmcs/sdk";
@@ -87,7 +87,7 @@ signals.stream<{ action: string }>("my-mod:ui-cmd", async (cmd) => {
 ```typescript
 import { signals } from "@hmcs/sdk";
 
-// Send a command to the startup script
+// Send a command to the service
 document.getElementById("wave-btn")?.addEventListener("click", () => {
   signals.send("my-mod:ui-cmd", { action: "wave" });
 });

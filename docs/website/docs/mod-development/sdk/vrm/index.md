@@ -267,7 +267,7 @@ eventSource.on("state-change", (e) => { /* ... */ });
 
 ## Complete Example
 
-The following is the full startup script from the `@hmcs/elmer` MOD. It demonstrates spawning a character, playing animations based on state, and cursor tracking.
+The following is the full service from the `@hmcs/elmer` MOD. It demonstrates spawning a character, playing animations based on state, and cursor tracking.
 
 ```typescript
 import { type TransformArgs, Vrm, preferences, repeat } from "@hmcs/sdk";

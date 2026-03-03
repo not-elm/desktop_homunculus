@@ -30,6 +30,6 @@ MOD developers can reference these assets in their own MODs using the same IDs. 
 
 ## Notes
 
-- This MOD has no startup script — it only provides static asset files.
+- This MOD has no service — it only provides static asset files.
 - The `@hmcs/elmer` MOD depends on this MOD — it uses `vrm:elmer`, `vrma:idle-maid`, `vrma:grabbed`, and `vrma:idle-sitting` to spawn and animate the default character.
 - Removing this MOD will break the Elmer MOD and any other MODs that reference these asset IDs.

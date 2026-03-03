@@ -5,7 +5,7 @@ sidebar_position: 7
 
 # Bin Commands
 
-Bin commands are on-demand scripts that MODs expose through the `bin` field in `package.json`. Unlike `main` scripts that run automatically at startup, bin commands run only when explicitly invoked through the HTTP API.
+Bin commands are on-demand scripts that MODs expose through the `bin` field in `package.json`. Unlike services that run automatically at startup, bin commands run only when explicitly invoked through the HTTP API.
 
 See [Package Configuration](./project-setup/package-json.md#bin-commands) for how to declare the `bin` field in your `package.json`.
 

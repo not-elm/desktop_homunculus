@@ -127,7 +127,7 @@ Mods are pnpm workspace packages. Each mod's `package.json` must include a `"hom
 - **assets**: Objects with `path`, `type` (`vrm`, `vrma`, `sound`, `image`, `html`), and `description`. Asset IDs use format `"mod-name:asset-id"`.
 - **menus** (optional): Right-click context menu entries that can open webviews.
 
-The `"main"` script runs automatically as a Node.js child process at startup using `node --experimental-strip-types` (TypeScript files run directly without a build step). On-demand scripts are exposed via `"bin"` and invoked through the HTTP API (`POST /mods/{mod_name}/bin/{command}`). Mods use the `@hmcs/sdk` SDK.
+The `"main"` script runs automatically as a long-running Node.js child process (service) at startup using `node --experimental-strip-types` (TypeScript files run directly without a build step). On-demand scripts are exposed via `"bin"` and invoked through the HTTP API (`POST /mods/{mod_name}/bin/{command}`). Mods use the `@hmcs/sdk` SDK.
 
 **Mod discovery**: The engine runs `pnpm ls --parseable` in the mods directory (`~/.homunculus/mods/`) to discover installed mods, then reads each mod's `package.json` directly.
 
@@ -159,7 +159,7 @@ The `hmcs` binary is a Rust CLI built with `clap`. Current subcommands:
 ## Requirements
 
 - **Rust**: Latest stable toolchain
-- **Node.js**: >= 22.0.0 (required for `--experimental-strip-types` used by mod startup scripts)
+- **Node.js**: >= 22.0.0 (required for `--experimental-strip-types` used by mod services)
 - **pnpm**: 10.x (set via `packageManager` in root `package.json`)
 
 ## Key Dependencies

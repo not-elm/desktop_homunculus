@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use crate::startup_scripts::StartupScript;
+use crate::mod_service::ModService;
 use bevy::prelude::*;
 use homunculus_core::prelude::{
     AssetEntry, AssetId, AssetRegistry, HomunculusConfig, ModInfo, ModMenuMetadata,
@@ -33,7 +33,7 @@ fn discover_mods(
         }
     };
     for m in mods {
-        schedule_entry_point(&m, &mut commands);
+        schedule_service(&m, &mut commands);
         load_assets(&m, &mut registry);
         load_menus(&m, &mut menus);
         info!("Loaded mod: [{}]", m.name);
@@ -41,12 +41,12 @@ fn discover_mods(
     }
 }
 
-fn schedule_entry_point(info: &ModInfo, commands: &mut Commands) {
-    if let Some(entry_point_path) = &info.entry_point_path {
-        if entry_point_path.exists() {
-            commands.spawn(StartupScript(entry_point_path.clone()));
+fn schedule_service(info: &ModInfo, commands: &mut Commands) {
+    if let Some(service_script_path) = &info.service_script_path {
+        if service_script_path.exists() {
+            commands.spawn(ModService(service_script_path.clone()));
         } else {
-            warn!("Startup script not found: {}", entry_point_path.display());
+            warn!("Service script not found: {}", service_script_path.display());
         }
     }
 }

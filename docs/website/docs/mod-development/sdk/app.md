@@ -15,7 +15,7 @@ import { app } from "@hmcs/sdk";
 
 ## Health Check
 
-Returns `true` if the Desktop Homunculus engine is reachable and healthy, `false` otherwise. Useful for startup scripts that need to wait for the engine before proceeding.
+Returns `true` if the Desktop Homunculus engine is reachable and healthy, `false` otherwise. Useful for services that need to wait for the engine before proceeding.
 
 ```typescript
 const alive = await app.health();

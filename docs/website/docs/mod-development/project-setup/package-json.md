@@ -15,7 +15,7 @@ A MOD's `package.json` includes:
 |---|---|---|
 | `name` | Package name (used to derive asset IDs) | Yes |
 | `type` | Must be `"module"` for ES module support | Yes |
-| `main` | Startup script (runs automatically on app launch) | No |
+| `main` | Service (long-running process, runs on app launch) | No |
 | `bin` | On-demand commands (invoked via HTTP API) | No |
 | `homunculus` | Engine metadata: assets and menus | Yes |
 | `dependencies` | Must include `@hmcs/sdk` when using SDK features | No |
@@ -113,9 +113,9 @@ Declares entries for the right-click context menu. Each menu entry triggers a `b
 
 When the user right-clicks the character and selects "Settings", the engine invokes the `open-ui` bin command.
 
-## Startup Scripts
+## Service
 
-The `main` field specifies a script that runs automatically when Desktop Homunculus launches. The engine executes it as a Node.js child process using `node --experimental-strip-types`, so you can write TypeScript directly without a build step.
+The `main` field specifies a **service** — a long-running Node.js process that runs automatically when Desktop Homunculus launches. The engine executes it as a child process using `node --experimental-strip-types`, so you can write TypeScript directly without a build step.
 
 ```json
 {
@@ -123,7 +123,7 @@ The `main` field specifies a script that runs automatically when Desktop Homuncu
 }
 ```
 
-Startup scripts are typically used to spawn VRM characters and set up behaviors. The script runs once at launch and stays alive as long as the app is running.
+Services are typically used to spawn VRM characters and set up behaviors. The service starts at launch and stays alive as long as the app is running.
 
 :::warning
 The `main` script runs every time the app starts. Make sure it handles errors gracefully -- an unhandled exception will cause the script process to exit.
