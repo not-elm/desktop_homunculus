@@ -34,6 +34,6 @@ Once connected, read the `homunculus://characters` resource. If it returns chara
 
 ## Next Steps
 
-- [MCP Reference](/docs/reference/mcp-tools) — Explore all available tools, resources, and prompts
+- [MCP Reference](/reference/mcp-tools) — Explore all available tools, resources, and prompts
 - [MCP Protocol Specification](https://modelcontextprotocol.io) — Official MCP documentation
 - [Troubleshooting](../troubleshooting) — Common issues and solutions

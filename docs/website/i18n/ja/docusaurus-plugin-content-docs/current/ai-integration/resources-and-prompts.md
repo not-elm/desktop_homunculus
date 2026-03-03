@@ -7,7 +7,7 @@ sidebar_position: 3
 
 MCP リソースとプロンプトの詳細なドキュメントは MCP リファレンスに掲載されています：
 
-- **[リソース](/docs/reference/mcp-tools/resources)** — アプリの状態、キャラクター、MOD、アセットを照会するための 4 つの読み取り専用リソース
-- **[プロンプト](/docs/reference/mcp-tools/prompts)** — 開発イベント、キャラクターインタラクション、MOD 発見のための 3 つの定義済みインタラクションパターン
+- **[リソース](/reference/mcp-tools/resources)** — アプリの状態、キャラクター、MOD、アセットを照会するための 4 つの読み取り専用リソース
+- **[プロンプト](/reference/mcp-tools/prompts)** — 開発イベント、キャラクターインタラクション、MOD 発見のための 3 つの定義済みインタラクションパターン
 
 リソースとプロンプトが MCP アーキテクチャにどのように組み込まれるかについては、[AI 連携](./#how-it-works)をご覧ください。

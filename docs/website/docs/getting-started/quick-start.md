@@ -6,7 +6,7 @@ sidebar_position: 3
 # Quick Start
 
 :::tip[Before You Begin]
-Make sure you have completed the [Installation](/docs/getting-started/installation) guide. Desktop Homunculus and the official MODs should be installed and the app should be running.
+Make sure you have completed the [Installation](/getting-started/installation) guide. Desktop Homunculus and the official MODs should be installed and the app should be running.
 :::
 
 ## Meet Your Character
@@ -69,5 +69,5 @@ hmcs mod install @hmcs/voicevox
 
 ## What's Next?
 
-- **[MOD Development](/docs/mod-development)** — Build your own MODs with the TypeScript SDK
-- **[API Reference](/docs/reference/api/homunculus-api)** — Explore the full HTTP API documentation
+- **[MOD Development](/mod-development)** — Build your own MODs with the TypeScript SDK
+- **[API Reference](/reference/api/homunculus-api)** — Explore the full HTTP API documentation

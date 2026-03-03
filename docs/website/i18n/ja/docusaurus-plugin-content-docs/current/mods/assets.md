@@ -26,7 +26,7 @@ Assets MOD（`@hmcs/assets`）は、他の MOD が依存するデフォルトの
 const elmer = await Vrm.spawn("vrm:elmer");
 ```
 
-MOD 開発者は同じ ID を使ってこれらのアセットを自分の MOD から参照できます。詳細は [SDK ドキュメント](/docs/mod-development/sdk)をご覧ください。
+MOD 開発者は同じ ID を使ってこれらのアセットを自分の MOD から参照できます。詳細は [SDK ドキュメント](/mod-development/sdk)をご覧ください。
 
 ## 備考
 

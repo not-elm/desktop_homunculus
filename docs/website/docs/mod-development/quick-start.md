@@ -14,7 +14,7 @@ Before you begin, make sure you have:
 - **Node.js 22 or later** -- required for TypeScript support via `--experimental-strip-types`
 - **pnpm** -- the package manager used by the MOD system
 - **Desktop Homunculus** running on your machine
-- **`hmcs` CLI** installed globally (see [Installation](/docs/getting-started/installation))
+- **`hmcs` CLI** installed globally (see [Installation](/getting-started/installation))
 
 :::tip
 Run `node -v` and `hmcs --version` to verify your setup before continuing.

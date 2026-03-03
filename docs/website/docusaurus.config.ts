@@ -64,6 +64,7 @@ const config: Config = {
           docItemComponent: "@theme/ApiItem",
           editUrl:
             "https://github.com/not-elm/desktop_homunculus/tree/main/docs/website/",
+          routeBasePath: "/",
         },
         blog: false,
         theme: {
@@ -106,8 +107,8 @@ const config: Config = {
         {
           title: "Docs",
           items: [
-            { label: "Getting Started", to: "/docs/getting-started" },
-            { label: "MOD Development", to: "/docs/mod-development" },
+            { label: "Getting Started", to: "/getting-started" },
+            { label: "MOD Development", to: "/mod-development" },
           ],
         },
         {

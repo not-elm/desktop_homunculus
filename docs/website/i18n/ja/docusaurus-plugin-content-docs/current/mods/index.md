@@ -52,4 +52,4 @@ hmcs mod install @hmcs/voicevox
 hmcs mod uninstall <package>...
 ```
 
-CLI の詳細なリファレンスは [`hmcs mod`](/docs/reference/cli/mod) をご覧ください。
+CLI の詳細なリファレンスは [`hmcs mod`](/reference/cli/mod) をご覧ください。

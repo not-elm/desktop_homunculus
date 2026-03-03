@@ -57,7 +57,7 @@ All contributed assets must have a compatible license (e.g., CC0, CC-BY). Please
 
 If you have ideas for official mods, we welcome Pull Requests. You can also propose ideas via Issues or Discussions before writing code.
 
-See the [MOD Development Guide](/docs/mod-development/quick-start) for how to create mods.
+See the [MOD Development Guide](/mod-development/quick-start) for how to create mods.
 
 ### User Skills
 
@@ -74,7 +74,7 @@ We welcome contributions that improve the shared `@hmcs/ui` component library us
 - **Design and interaction polish** — Refine visual consistency, spacing, states, and motion to improve usability
 - **Documentation and examples** — Improve component docs, usage guidance, and practical examples for MOD authors
 
-See the [Component Library guide](/docs/mod-development/webview-ui/component-library) for current usage and API examples.
+See the [Component Library guide](/mod-development/webview-ui/component-library) for current usage and API examples.
 
 ## Developer Certificate of Origin (DCO)
 

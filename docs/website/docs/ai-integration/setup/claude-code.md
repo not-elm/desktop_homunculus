@@ -80,5 +80,5 @@ The default value is `localhost:3100`. You can change the port in `~/.homunculus
 
 ## Next Steps
 
-- [MCP Reference](/docs/reference/mcp-tools) — Explore all available tools, resources, and prompts
+- [MCP Reference](/reference/mcp-tools) — Explore all available tools, resources, and prompts
 - [Troubleshooting](../troubleshooting) — Common issues and solutions

@@ -52,4 +52,4 @@ hmcs mod install @hmcs/voicevox
 hmcs mod uninstall <package>...
 ```
 
-For detailed CLI reference, see [`hmcs mod`](/docs/reference/cli/mod).
+For detailed CLI reference, see [`hmcs mod`](/reference/cli/mod).

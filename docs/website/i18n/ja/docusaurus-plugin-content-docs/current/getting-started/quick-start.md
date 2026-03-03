@@ -6,7 +6,7 @@ sidebar_position: 3
 # クイックスタート
 
 :::tip[始める前に]
-[インストール](/docs/getting-started/installation)ガイドを完了していることを確認してください。Desktop Homunculus と公式 MOD がインストールされ、アプリが起動している必要があります。
+[インストール](/getting-started/installation)ガイドを完了していることを確認してください。Desktop Homunculus と公式 MOD がインストールされ、アプリが起動している必要があります。
 :::
 
 ## キャラクターとの出会い
@@ -69,5 +69,5 @@ hmcs mod install @hmcs/voicevox
 
 ## 次のステップ
 
-- **[MOD 開発](/docs/mod-development)** — TypeScript SDK で独自の MOD を作成
-- **[API リファレンス](/docs/reference/api/homunculus-api)** — HTTP API の完全なドキュメントを参照
+- **[MOD 開発](/mod-development)** — TypeScript SDK で独自の MOD を作成
+- **[API リファレンス](/reference/api/homunculus-api)** — HTTP API の完全なドキュメントを参照
