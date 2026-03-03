@@ -11,8 +11,6 @@ use bevy::input::common_conditions::{input_just_pressed, input_pressed};
 use bevy::log::tracing_subscriber::Layer;
 use bevy::log::{BoxedLayer, LogPlugin};
 use bevy::prelude::*;
-use bevy::render::RenderPlugin;
-use bevy::render::settings::{PowerPreference, RenderCreation, WgpuSettings};
 use bevy::window::{ExitCondition, WindowPlugin, WindowResolution};
 use bevy_cef::CefPlugin;
 use bevy_cef::prelude::*;
@@ -28,6 +26,7 @@ use homunculus_hit_test::HomunculusHitTestPlugin;
 use homunculus_http_server::HomunculusHttpServerPlugin;
 use homunculus_mod::HomunculusModPlugin;
 use homunculus_power_saver::HomunculusPowerSaverPlugin;
+use homunculus_tray::HomunculusTrayPlugin;
 use homunculus_prefs::HomunculusPrefsPlugin;
 use homunculus_screen::HomunculusScreenPlugin;
 use homunculus_shadow_panel::HomunculusShadowPanelPlugin;
@@ -93,6 +92,7 @@ fn main() {
             bevy_inspector_egui::quick::WorldInspectorPlugin::default(),
         ))
         .add_plugins((FlurxPlugin, VrmPlugin, VrmaPlugin))
+        .add_plugins(HomunculusTrayPlugin)
         .add_plugins((
             HomunculusCorePlugin,
             HomunculusAudioPlugin,

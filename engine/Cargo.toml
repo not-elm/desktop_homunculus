@@ -45,6 +45,7 @@ homunculus_power_saver = { workspace = true }
 homunculus_mod = { workspace = true }
 homunculus_api = { workspace = true }
 homunculus_audio = { workspace = true }
+homunculus_tray = { workspace = true }
 bevy_egui = { workspace = true, optional = true }
 bevy-inspector-egui = { workspace = true, optional = true }
 tracing-appender = "0.2"
