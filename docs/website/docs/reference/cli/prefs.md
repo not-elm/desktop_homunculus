@@ -55,7 +55,7 @@ Failure example:
 ### Behavior
 
 - Prints keys only, one per line.
-- Reads from `~/.homunculus/prefs.db`.
+- Reads from `~/.homunculus/preferences.db`.
 
 ### Related
 
@@ -71,9 +71,9 @@ hmcs prefs get <key>
 
 ### Arguments
 
-| Name | Required | Description |
-|---|---|---|
-| `key` | Yes | Preference key to load. |
+| Name  | Required | Description             |
+| ----- | -------- | ----------------------- |
+| `key` | Yes      | Preference key to load. |
 
 ### Examples
 
@@ -132,10 +132,10 @@ hmcs prefs set <key> <value>
 
 ### Arguments
 
-| Name | Required | Description |
-|---|---|---|
-| `key` | Yes | Preference key to write. |
-| `value` | Yes | Value string parsed by type inference. |
+| Name    | Required | Description                            |
+| ------- | -------- | -------------------------------------- |
+| `key`   | Yes      | Preference key to write.               |
+| `value` | Yes      | Value string parsed by type inference. |
 
 ### Examples
 
@@ -157,7 +157,7 @@ Failure example:
 
 ### Behavior
 
-- Writes to `~/.homunculus/prefs.db`.
+- Writes to `~/.homunculus/preferences.db`.
 - Infers type in this order:
   1. `null`
   2. `bool`
@@ -181,9 +181,9 @@ hmcs prefs delete <key>
 
 ### Arguments
 
-| Name | Required | Description |
-|---|---|---|
-| `key` | Yes | Preference key to remove. |
+| Name  | Required | Description               |
+| ----- | -------- | ------------------------- |
+| `key` | Yes      | Preference key to remove. |
 
 ### Examples
 

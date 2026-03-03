@@ -18,11 +18,11 @@ hmcs mod --help
 
 ## Command Map
 
-| Command | Purpose |
-|---|---|
-| `hmcs prefs ...` | Read and write preference values in `prefs.db`. |
-| `hmcs config ...` | Read and write app config values in `config.toml`. |
-| `hmcs mod ...` | List, install, and uninstall MOD packages. |
+| Command           | Purpose                                               |
+| ----------------- | ----------------------------------------------------- |
+| `hmcs prefs ...`  | Read and write preference values in `preferences.db`. |
+| `hmcs config ...` | Read and write app config values in `config.toml`.    |
+| `hmcs mod ...`    | List, install, and uninstall MOD packages.            |
 
 ## Output and Exit Codes
 
@@ -33,10 +33,10 @@ hmcs mod --help
 
 ## Data Paths
 
-| Data | Path |
-|---|---|
-| App config | `~/.homunculus/config.toml` |
-| Preferences DB | `~/.homunculus/prefs.db` |
+| Data           | Path                           |
+| -------------- | ------------------------------ |
+| App config     | `~/.homunculus/config.toml`    |
+| Preferences DB | `~/.homunculus/preferences.db` |
 
 ## Subcommands
 

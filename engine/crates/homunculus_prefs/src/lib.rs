@@ -21,7 +21,7 @@
 //! ## Database Location
 //!
 //! The preference database is stored in the application's data directory:
-//! - **All platforms**: `~/.homunculus/prefs.db`
+//! - **All platforms**: `~/.homunculus/preferences.db`
 //!
 //! ## Error Handling
 //!

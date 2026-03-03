@@ -150,7 +150,7 @@ Exposes ~20 tools (e.g. `play_reaction`, `speak_message`, `move_character`, `ope
 
 The `hmcs` binary is a Rust CLI built with `clap`. Current subcommands:
 - `hmcs mod install|uninstall` — Install/uninstall mods to `~/.homunculus/mods/`
-- `hmcs prefs list|get|set|delete` — Manage preferences in `~/.homunculus/prefs.db`
+- `hmcs prefs list|get|set|delete` — Manage preferences in `~/.homunculus/preferences.db`
 
 ## Important Workflows
 
@@ -196,5 +196,5 @@ Additional conventions:
 - **Do NOT commit `docs/plans/`**: Files in `docs/plans/` are local design documents and working notes. Never include them in git commits.
 - Application settings are stored in `~/.homunculus/config.toml` (TOML, snake_case keys: `port`, `mods_dir`).
 - Logs are written to `~/.homunculus/Logs/log.txt` (daily rolling). Debug builds log at INFO level, release builds at ERROR.
-- Preferences stored in SQLite at `~/.homunculus/prefs.db` (JSON key-value pairs).
+- Preferences stored in SQLite at `~/.homunculus/preferences.db` (JSON key-value pairs).
 - Workspace version: `0.1.0-alpha.4`. License: MIT/Apache-2.0 (Rust), MIT (TypeScript), CC-BY-4.0 (docs/assets).

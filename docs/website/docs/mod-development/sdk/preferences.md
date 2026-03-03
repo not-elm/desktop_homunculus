@@ -5,7 +5,7 @@ sidebar_position: 11
 
 # Preferences
 
-Persistent key-value storage with JSON serialization, backed by SQLite at `~/.homunculus/prefs.db`. Use preferences to save MOD settings, character state, or any data that should survive restarts.
+Persistent key-value storage with JSON serialization, backed by SQLite at `~/.homunculus/preferences.db`. Use preferences to save MOD settings, character state, or any data that should survive restarts.
 
 ## Import
 
