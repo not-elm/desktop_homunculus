@@ -45,6 +45,7 @@ export * from "./effects";
 export * from "./host";
 export * from "./preferences";
 export * from "./math";
+export * from "./settings";
 export * from "./shadowPanel";
 export * from "./vrm";
 export * from "./speech";

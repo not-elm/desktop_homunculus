@@ -65,7 +65,7 @@ mod route;
 mod state;
 
 use crate::route::{
-    assets, audio, coordinates, displays, info, preferences, shadow_panel, vrm, webviews,
+    assets, audio, coordinates, displays, info, preferences, settings, shadow_panel, vrm, webviews,
 };
 use crate::state::HttpState;
 use axum::Router;
@@ -98,6 +98,7 @@ use utoipa_axum::{router::OpenApiRouter, routes};
         (name = "effects", description = "Visual effects"),
         (name = "preferences", description = "User preferences"),
         (name = "signals", description = "Pub/sub signal system"),
+        (name = "settings", description = "Application settings"),
         (name = "shadow-panel", description = "Shadow panel transparency"),
         (name = "displays", description = "Display information"),
         (name = "mods", description = "Mod management"),
@@ -199,6 +200,7 @@ async fn start_http_server(
 fn build_openapi_router() -> OpenApiRouter<HttpState> {
     OpenApiRouter::with_openapi(ApiDoc::openapi())
         .nest("/app", app_router())
+        .nest("/settings", settings_router())
         .nest("/shadow-panel", shadow_panel_router())
         .nest("/entities", entities_router())
         .nest("/vrm", vrm_router())
@@ -320,6 +322,10 @@ fn coordinates_router() -> OpenApiRouter<HttpState> {
     OpenApiRouter::new()
         .routes(routes!(coordinates::world_2d::world_2d))
         .routes(routes!(coordinates::global_viewport::global_viewport))
+}
+
+fn settings_router() -> OpenApiRouter<HttpState> {
+    OpenApiRouter::new().routes(routes!(settings::get, settings::put))
 }
 
 fn shadow_panel_router() -> OpenApiRouter<HttpState> {

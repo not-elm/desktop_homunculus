@@ -4,7 +4,7 @@ use homunculus_api::mods::ModsApi;
 use homunculus_api::preferences::PrefsApi;
 use homunculus_api::prelude::{
     ApiReactor, AppApi, AudioBgmApi, AudioSeApi, CameraApi, EffectsApi, EntitiesApi,
-    ShadowPanelApi, SignalsApi, SpeechApi, VrmAnimationApi, WebviewApi,
+    SettingsApi, ShadowPanelApi, SignalsApi, SpeechApi, VrmAnimationApi, WebviewApi,
 };
 use homunculus_api::vrm::VrmApi;
 use homunculus_utils::config::HomunculusConfig;
@@ -19,6 +19,7 @@ pub struct HttpState {
     pub vrma: VrmAnimationApi,
     pub prefs: PrefsApi,
     pub camera: CameraApi,
+    pub settings: SettingsApi,
     pub shadow_panel: ShadowPanelApi,
     pub webview: WebviewApi,
     pub effects: EffectsApi,
@@ -40,6 +41,7 @@ impl HttpState {
             vrma: VrmAnimationApi::from(reactor.clone()),
             prefs: PrefsApi::from(reactor.clone()),
             camera: CameraApi::from(reactor.clone()),
+            settings: SettingsApi::from(reactor.clone()),
             shadow_panel: ShadowPanelApi::from(reactor.clone()),
             webview: WebviewApi::from(reactor.clone()),
             effects: EffectsApi::from(reactor.clone()),
