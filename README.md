@@ -10,8 +10,6 @@ Bring your desktop to life with interactive 3D VRM characters. Desktop Homunculu
 
 See the [documentation site](https://not-elm.github.io/desktop-homunculus/) for user guides, MOD development, and API reference.
 
-https://github.com/user-attachments/assets/7ff08d8b-845a-4199-baff-6abc49081b68
-
 ## Features
 
 - **VRM 3D Characters** — Display multiple VRM models simultaneously with VRMA animations and multi-monitor support
