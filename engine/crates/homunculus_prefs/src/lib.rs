@@ -89,7 +89,7 @@ impl PrefsKeys {
     ///
     /// ```
     /// use homunculus_prefs::PrefsKeys;
-    /// assert_eq!(PrefsKeys::asset_transform("vrm:elmer"), "transoform::vrm:elmer");
+    /// assert_eq!(PrefsKeys::asset_transform("vrm:elmer"), "transform::vrm:elmer");
     /// ```
     pub fn asset_transform(asset_id: &str) -> String {
         format!("transform::{asset_id}")
