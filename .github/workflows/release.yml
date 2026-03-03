@@ -171,9 +171,9 @@ jobs:
           shared-key: ${{ matrix.arch }}-engine-dist
 
       - name: Setup sccache
-        uses: mozilla-actions/sccache-action@v0.0.7
+        uses: mozilla-actions/sccache-action@v0.0.9
         with:
-          version: "v0.9.1"
+          version: "v0.10.0"
 
       - name: Configure sccache for Rust
         run: |
@@ -194,6 +194,11 @@ jobs:
 
       - name: Build engine binary
         run: |
+          # Verify sccache is working; fall back to plain cargo if not
+          if ! sccache --start-server 2>/dev/null && ! sccache --show-stats 2>/dev/null; then
+            echo "::warning::sccache unavailable, falling back to plain cargo build"
+            unset RUSTC_WRAPPER
+          fi
           SDKROOT=$(xcrun -sdk macosx --show-sdk-path) \
             cargo build --profile dist --target=${{ matrix.target }} --locked
         env:
