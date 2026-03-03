@@ -18,5 +18,8 @@
   },
   "dependencies": {
     "@hmcs/sdk": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.3"
   }
 }
