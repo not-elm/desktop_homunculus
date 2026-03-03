@@ -69,7 +69,7 @@ AI agents should read `homunculus://characters` and `homunculus://mods` resource
 
 The MCP server tracks the active character within a session. Calling `select_character` affects all subsequent tool calls. Personas set via `set_persona` also persist within the session.
 
-For the full tool reference, see [MCP Reference](/docs/reference/mcp-tools).
+For the full tool reference, see [MCP Reference](/reference/mcp-tools).
 
 ## Use Cases
 
@@ -89,10 +89,10 @@ AI Integration is functional today, but some workflows have performance constrai
 
 The solution is dedicated **template MODs** — MODs that ship pre-built Webview assets (presentation templates, dashboards, review UIs). Instead of the AI generating HTML from scratch, it fills in data via MOD commands. This leverages the existing MOD asset system where `open_webview` loads pre-built local assets.
 
-If you'd like to help build template MODs or improve MCP tools, see the [Contributing guide](/docs/contributing).
+If you'd like to help build template MODs or improve MCP tools, see the [Contributing guide](/contributing).
 
 ## Next Steps {#next-steps}
 
 - **[Set up your AI client](./setup/claude-desktop)** — Get connected in minutes
-- **[Explore MCP capabilities](/docs/reference/mcp-tools)** — Full reference for all 20 tools, 4 resources, and 3 prompts
-- **[Build a MOD](/docs/mod-development/quick-start)** — Create template MODs for richer AI workflows
+- **[Explore MCP capabilities](/reference/mcp-tools)** — Full reference for all 20 tools, 4 resources, and 3 prompts
+- **[Build a MOD](/mod-development/quick-start)** — Create template MODs for richer AI workflows

@@ -33,7 +33,7 @@ Desktop Homunculus is currently in **alpha** (v0.1.0-alpha.4). APIs and MOD spec
 
 ## Next Steps
 
-- **[Installation](/docs/getting-started/installation)** — Download the app and set up your MOD environment
-- **[Quick Start](/docs/getting-started/quick-start)** — Get up and running in minutes: configure settings, interact with your character, and explore official MODs
-- **[MOD Development](/docs/mod-development)** — Build your own MODs with the TypeScript SDK
-- **[AI Integration](/docs/ai-integration)** — Connect AI assistants to your character via MCP
+- **[Installation](/getting-started/installation)** — Download the app and set up your MOD environment
+- **[Quick Start](/getting-started/quick-start)** — Get up and running in minutes: configure settings, interact with your character, and explore official MODs
+- **[MOD Development](/mod-development)** — Build your own MODs with the TypeScript SDK
+- **[AI Integration](/ai-integration)** — Connect AI assistants to your character via MCP

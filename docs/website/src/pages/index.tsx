@@ -31,7 +31,7 @@ function HeroSection(): ReactNode {
         <div className={styles.buttons}>
           <Link
             className="button button--secondary button--lg"
-            to="/docs/getting-started"
+            to="/getting-started"
           >
             <Translate id="homepage.hero.getStarted">Get Started</Translate>
           </Link>
@@ -45,17 +45,17 @@ function PersonaCards(): ReactNode {
   const personas = [
     {
       title: translate({ id: "homepage.card.getStarted.title", message: "Get Started" }),
-      to: "/docs/getting-started",
+      to: "/getting-started",
       description: translate({ id: "homepage.card.getStarted.description", message: "Install and start using Desktop Homunculus" }),
     },
     {
       title: translate({ id: "homepage.card.buildMod.title", message: "Build a MOD" }),
-      to: "/docs/mod-development",
+      to: "/mod-development",
       description: translate({ id: "homepage.card.buildMod.description", message: "Create custom characters, UIs, and integrations" }),
     },
     {
       title: translate({ id: "homepage.card.contribute.title", message: "Contribute" }),
-      to: "/docs/contributing",
+      to: "/contributing",
       description: translate({ id: "homepage.card.contribute.description", message: "Help improve Desktop Homunculus" }),
     },
   ];

@@ -52,5 +52,5 @@ codex mcp remove homunculus
 
 ## 次のステップ
 
-- [MCP リファレンス](/docs/reference/mcp-tools) — 利用可能なすべてのツール、リソース、プロンプトを確認
+- [MCP リファレンス](/reference/mcp-tools) — 利用可能なすべてのツール、リソース、プロンプトを確認
 - [トラブルシューティング](../troubleshooting) — よくある問題と解決策

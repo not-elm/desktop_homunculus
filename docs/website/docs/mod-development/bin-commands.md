@@ -24,7 +24,7 @@ Every TypeScript bin command must start with a shebang line that enables direct 
 The shebang tells the system to run the file with Node.js using the `--experimental-strip-types` flag, which strips TypeScript syntax at runtime. The `/// <reference types="node" />` directive provides Node.js type definitions (like `process.stdin`).
 
 :::warning
-Node.js 22 or later is required for `--experimental-strip-types`. See [Installation](/docs/getting-started/installation) for setup instructions.
+Node.js 22 or later is required for `--experimental-strip-types`. See [Installation](/getting-started/installation) for setup instructions.
 :::
 
 ### Parsing Input with `input.parse`

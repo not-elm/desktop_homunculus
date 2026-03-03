@@ -33,7 +33,7 @@ Desktop Homunculus は現在 **アルファ版**（v0.1.0-alpha.4）です。API
 
 ## 次のステップ
 
-- **[インストール](/docs/getting-started/installation)** — アプリをダウンロードして MOD 環境をセットアップ
-- **[クイックスタート](/docs/getting-started/quick-start)** — 数分で使い始める：設定の構成、キャラクターとのインタラクション、公式 MOD の探索
-- **[MOD 開発](/docs/mod-development)** — TypeScript SDK で独自の MOD を作成
-- **[AI 連携](/docs/ai-integration)** — MCP を通じて AI アシスタントをキャラクターに接続
+- **[インストール](/getting-started/installation)** — アプリをダウンロードして MOD 環境をセットアップ
+- **[クイックスタート](/getting-started/quick-start)** — 数分で使い始める：設定の構成、キャラクターとのインタラクション、公式 MOD の探索
+- **[MOD 開発](/mod-development)** — TypeScript SDK で独自の MOD を作成
+- **[AI 連携](/ai-integration)** — MCP を通じて AI アシスタントをキャラクターに接続

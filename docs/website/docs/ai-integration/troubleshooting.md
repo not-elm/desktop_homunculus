@@ -21,7 +21,7 @@ Speech generation through VoiceVox has noticeable delay, especially for longer t
 
 Both limitations can be addressed by creating dedicated **template MODs** that ship pre-built Webview assets. Instead of generating HTML from scratch, the AI fills in data via MOD commands — significantly reducing latency.
 
-If you'd like to help build template MODs or improve MCP tools, see the [Contributing guide](/docs/contributing).
+If you'd like to help build template MODs or improve MCP tools, see the [Contributing guide](/contributing).
 
 ## Common Issues
 
