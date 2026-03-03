@@ -69,4 +69,4 @@ If you'd like to help build template MODs or improve MCP tools, see the [Contrib
 
 ## Getting Help
 
-If you encounter an issue not listed here, please [open an issue on GitHub](https://github.com/not-elm/desktop-homunculus/issues).
+If you encounter an issue not listed here, please [open an issue on GitHub](https://github.com/not-elm/desktop_homunculus/issues).

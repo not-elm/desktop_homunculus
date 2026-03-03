@@ -63,7 +63,7 @@ const config: Config = {
           sidebarPath: "./sidebars.ts",
           docItemComponent: "@theme/ApiItem",
           editUrl:
-            "https://github.com/not-elm/desktop-homunculus/tree/main/docs/website/",
+            "https://github.com/not-elm/desktop_homunculus/tree/main/docs/website/",
         },
         blog: false,
         theme: {
@@ -94,7 +94,7 @@ const config: Config = {
           position: "right",
         },
         {
-          href: "https://github.com/not-elm/desktop-homunculus",
+          href: "https://github.com/not-elm/desktop_homunculus",
           label: "GitHub",
           position: "right",
         },
@@ -115,11 +115,11 @@ const config: Config = {
           items: [
             {
               label: "GitHub Issues",
-              href: "https://github.com/not-elm/desktop-homunculus/issues",
+              href: "https://github.com/not-elm/desktop_homunculus/issues",
             },
             {
               label: "GitHub Discussions",
-              href: "https://github.com/not-elm/desktop-homunculus/discussions",
+              href: "https://github.com/not-elm/desktop_homunculus/discussions",
             },
           ],
         },
