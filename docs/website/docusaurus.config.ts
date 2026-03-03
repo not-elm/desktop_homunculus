@@ -7,7 +7,7 @@ const config: Config = {
   favicon: "img/favicon.ico",
 
   url: "https://not-elm.github.io",
-  baseUrl: "/desktop-homunculus/",
+  baseUrl: "/desktop_homunculus/",
 
   organizationName: "not-elm",
   projectName: "desktop-homunculus",
