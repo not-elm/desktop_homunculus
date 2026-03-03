@@ -21,6 +21,7 @@ https://github.com/user-attachments/assets/7ff08d8b-845a-4199-baff-6abc49081b68
 
 ## Download
 
+- [Github Releases](https://github.com/not-elm/desktop_homunculus/releases)
 - [itch.io](https://notelm.itch.io/desktop-homunculus)
 - [BOOTH](https://notelm.booth.pm/items/6904924)
 
@@ -29,7 +30,7 @@ https://github.com/user-attachments/assets/7ff08d8b-845a-4199-baff-6abc49081b68
 | Platform | Status                                             |
 | -------- | -------------------------------------------------- |
 | macOS    | Fully supported                                    |
-| Windows  | Partial support (transparency issues on some GPUs) |
+| Windows  | Planned (transparency issues on some GPUs) |
 | Linux    | Planned                                            |
 
 ## Contributing
