@@ -146,7 +146,7 @@ MOD にバンドルされるファイルを宣言します。各エントリは*
 
 ### `service`
 
-`homunculus.service` フィールドは**サービス**を指定します。これは Desktop Homunculus の起動時に自動実行される長時間稼働の Node.js プロセスです。エンジンは `node --experimental-strip-types` を使って子プロセスとして実行するため、ビルドステップなしで TypeScript を直接記述できます。
+`homunculus.service` フィールドは**サービス**を指定します。これは Desktop Homunculus の起動時に自動実行される長時間稼働の Node.js プロセスです。エンジンは `tsx` を使って子プロセスとして実行するため、ビルドステップなしで TypeScript を直接記述できます。
 
 ```json
 {

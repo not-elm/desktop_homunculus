@@ -78,7 +78,7 @@ You can create submenus by nesting items with the `items` field. A parent item w
 Unlike context menu commands which receive a character entity via stdin, tray commands receive **no stdin input**. They run as simple fire-and-forget scripts. This is because tray actions are application-wide, not tied to a specific character.
 
 ```typescript
-#!/usr/bin/env -S node --experimental-strip-types
+#!/usr/bin/env tsx
 
 /// <reference types="node" />
 
@@ -144,7 +144,7 @@ This example adds a "Settings" entry to the system tray that opens an applicatio
 **`commands/open-ui.ts`**:
 
 ```typescript
-#!/usr/bin/env -S node --experimental-strip-types
+#!/usr/bin/env tsx
 
 /// <reference types="node" />
 

@@ -146,7 +146,7 @@ Tray items can also contain nested `items` for submenus. See [Tray Menus](../tra
 
 ### `service`
 
-The `homunculus.service` field specifies a **service** — a long-running Node.js process that runs automatically when Desktop Homunculus launches. The engine executes it as a child process using `node --experimental-strip-types`, so you can write TypeScript directly without a build step.
+The `homunculus.service` field specifies a **service** — a long-running Node.js process that runs automatically when Desktop Homunculus launches. The engine executes it using `tsx`, so you can write TypeScript directly without a build step.
 
 ```json
 {

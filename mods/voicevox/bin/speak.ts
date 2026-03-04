@@ -1,4 +1,4 @@
-#!/usr/bin/env -S node --experimental-strip-types
+#!/usr/bin/env tsx
 
 import { z } from "zod";
 import { Vrm } from "@hmcs/sdk";

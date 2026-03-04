@@ -21,7 +21,7 @@ my-character/
 
 **`package.json`** -- `"type": "module"` とサービススクリプトおよびアセットを宣言する `"homunculus"` フィールドを含む必要があります。各フィールドの詳細は[パッケージ設定](./package-json.md)を参照してください。
 
-**`index.ts`** -- `"homunculus.service"` で指定されるサービススクリプト。エンジンは `node --experimental-strip-types` 経由で自動実行するため、ビルドステップなしで TypeScript を直接記述できます。このスクリプトは通常、キャラクターの生成と動作の設定を行います。
+**`index.ts`** -- `"homunculus.service"` で指定されるサービススクリプト。エンジンは `tsx` 経由で自動実行するため、ビルドステップなしで TypeScript を直接記述できます。このスクリプトは通常、キャラクターの生成と動作の設定を行います。
 
 **`assets/`** -- バイナリアセット（VRM モデル、アニメーション、サウンド、画像）を格納する規約です。ディレクトリ名は柔軟に変更可能です。実際のファイルパスは `package.json` で宣言しますが、`assets/` が公式 MOD 全体での標準です。
 

@@ -38,7 +38,7 @@ If macOS shows "Desktop Homunculus can't be opened because it is from an unident
 
 ## Step 2: Install Node.js
 
-Desktop Homunculus MODs require **Node.js 22 or later** to run TypeScript scripts directly using `--experimental-strip-types`.
+Desktop Homunculus MODs require **Node.js 22 or later** to run TypeScript scripts directly using tsx.
 
 1. Visit the [Node.js download page](https://nodejs.org/en/download)
 2. Download and install the **LTS** version (22 or later)
@@ -119,7 +119,7 @@ Your terminal doesn't recognize the `hmcs` command.
 
 ### Node.js version is below 22
 
-MODs require Node.js 22+ to run TypeScript scripts directly (`--experimental-strip-types`). Download the latest LTS from [nodejs.org](https://nodejs.org/download).
+MODs require Node.js 22+ to run TypeScript scripts directly via tsx. Download the latest LTS from [nodejs.org](https://nodejs.org/download).
 
 ### App blocked by Gatekeeper
 

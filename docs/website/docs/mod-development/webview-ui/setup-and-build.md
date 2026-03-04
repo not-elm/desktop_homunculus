@@ -237,7 +237,7 @@ const vrm = await webview?.linkedVrm();
 Create a bin command to open the webview on demand. Add `commands/open-ui.ts`:
 
 ```typescript
-#!/usr/bin/env -S node --experimental-strip-types
+#!/usr/bin/env tsx
 
 /// <reference types="node" />
 

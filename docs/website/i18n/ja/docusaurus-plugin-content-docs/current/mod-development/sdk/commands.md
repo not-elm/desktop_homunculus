@@ -142,7 +142,7 @@ try {
 バリデーション済みの入力を読み取り、構造化された出力を書き込む完全な bin コマンドスクリプトです：
 
 ```typescript
-#!/usr/bin/env -S node --experimental-strip-types
+#!/usr/bin/env tsx
 import { z } from "zod";
 import { input, output } from "@hmcs/sdk/commands";
 

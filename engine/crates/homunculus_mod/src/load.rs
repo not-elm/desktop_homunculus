@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use crate::mod_service::ModService;
 use bevy::prelude::*;
@@ -25,6 +25,9 @@ fn discover_mods(
     let mods_root = config.mods_dir.clone();
     info!("Mods root: {}", mods_root.display());
     create_dir_all_if_need(&mods_root);
+    if let Err(e) = homunculus_utils::mods::ensure_tsx() {
+        warn!("Failed to install tsx in mods directory: {e}");
+    }
     let mods = match homunculus_utils::mods::list::list_installation_mods() {
         Ok(mods) => mods,
         Err(e) => {
@@ -33,7 +36,7 @@ fn discover_mods(
         }
     };
     for m in mods {
-        schedule_service(&m, &mut commands);
+        schedule_service(&m, &mut commands, &mods_root);
         load_assets(&m, &mut registry);
         load_menus(&m, &mut menus);
         info!("Loaded mod: [{}]", m.name);
@@ -41,10 +44,13 @@ fn discover_mods(
     }
 }
 
-fn schedule_service(info: &ModInfo, commands: &mut Commands) {
+fn schedule_service(info: &ModInfo, commands: &mut Commands, mods_dir: &Path) {
     if let Some(service_script_path) = &info.service_script_path {
         if service_script_path.exists() {
-            commands.spawn(ModService(service_script_path.clone()));
+            commands.spawn(ModService {
+                script_path: service_script_path.clone(),
+                mods_dir: mods_dir.to_path_buf(),
+            });
         } else {
             warn!(
                 "Service script not found: {}",

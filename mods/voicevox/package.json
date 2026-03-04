@@ -1,6 +1,6 @@
 {
   "name": "@hmcs/voicevox",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "notelm",
   "license": "MIT",
   "description": "VoiceVox TTS integration for Desktop Homunculus",
