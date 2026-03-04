@@ -107,6 +107,7 @@ comfy-table = "7"
 toml = "0.8"
 utoipa = { version = "5", features = ["yaml"] }
 utoipa-axum = { version = "0.2" }
+libc = "0.2"
 
 [build-dependencies]
 embed-resource = "3"

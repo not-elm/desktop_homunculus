@@ -3,6 +3,7 @@
 /// <reference types="node" />
 
 import { audio, Webview, webviewSource } from "@hmcs/sdk";
+import { output } from "@hmcs/sdk/commands";
 
 try {
   await Webview.open({
@@ -12,6 +13,7 @@ try {
     offset: [1.1, 0],
   });
   await audio.se.play("se:open");
+  output.succeed();
 } catch (e) {
-  console.error(e);
+  output.fail("OPEN_UI_FAILED", (e as Error).message);
 }
