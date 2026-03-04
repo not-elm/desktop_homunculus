@@ -3,7 +3,8 @@
 /// <reference types="node" />
 
 import { audio, Webview, webviewSource } from "@hmcs/sdk";
-import { input } from "@hmcs/sdk/commands";
+import { input, output } from "@hmcs/sdk/commands";
+
 try {
   const vrm = await input.parseMenu();
   await Webview.open({
@@ -14,7 +15,7 @@ try {
     linkedVrm: vrm.entity,
   });
   await audio.se.play("se:open");
+  output.succeed();
 } catch (e) {
-  console.error(e)
+  output.fail("OPEN_UI_FAILED", (e as Error).message);
 }
-process.exit(0);
