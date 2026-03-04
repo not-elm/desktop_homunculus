@@ -272,6 +272,18 @@ describe("output.succeed", () => {
     expect(fs.writeFileSync).toHaveBeenCalledWith(1, '{"ok":true}\n');
     expect(exitSpy).toHaveBeenCalledWith(0);
   });
+
+  it("exits with code 0 without writing to stdout when called with no arguments", async () => {
+    vi.doMock("node:fs", () => ({
+      writeFileSync: vi.fn(),
+    }));
+    const exitSpy = vi.spyOn(process, "exit").mockImplementation(() => undefined as never);
+    const { output } = await import("./commands");
+    const fs = await import("node:fs");
+    output.succeed();
+    expect(fs.writeFileSync).not.toHaveBeenCalled();
+    expect(exitSpy).toHaveBeenCalledWith(0);
+  });
 });
 
 describe("output.fail", () => {

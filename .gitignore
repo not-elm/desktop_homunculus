@@ -25,6 +25,7 @@ storybook-static
 docs/plans/
 docs/memo.md
 docs/reviews/
+docs/discussions/
 
 # Local agent work artifacts
 **/.claude/settings.local.json

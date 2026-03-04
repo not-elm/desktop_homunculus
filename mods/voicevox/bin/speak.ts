@@ -2,9 +2,9 @@
 
 import { z } from "zod";
 import { Vrm } from "@hmcs/sdk";
-import { input as commandInput, StdinParseError } from "@hmcs/sdk/commands";
+import { input as commandInput, output, StdinParseError } from "@hmcs/sdk/commands";
 import { voicevoxToTimeline } from "../lib/timeline.ts";
-import { fail, fetchWithTimeout } from "../lib/utils.ts";
+import { fetchWithTimeout } from "../lib/utils.ts";
 
 const DEFAULT_SPEAKER = 0;
 const DEFAULT_VOICEVOX_HOST = "http://localhost:50021";
@@ -32,7 +32,7 @@ try {
   parsed = await commandInput.parse(schema) as Input;
 } catch (err) {
   if (err instanceof StdinParseError) {
-    fail("INVALID_INPUT", err.message, 2);
+    output.fail("INVALID_INPUT", err.message, 2);
   }
   throw err;
 }
@@ -55,14 +55,14 @@ for (const sentence of sentences) {
   } catch (err: unknown) {
     const error = err as Error;
     if (error.name === "AbortError") {
-      fail("VOICEVOX_UNREACHABLE", `VoiceVox audio_query timed out after ${fetchTimeoutMs}ms`, 1);
+      output.fail("VOICEVOX_UNREACHABLE", `VoiceVox audio_query timed out after ${fetchTimeoutMs}ms`, 1);
     }
-    fail("VOICEVOX_UNREACHABLE", `Cannot reach VoiceVox at ${voicevoxHost}: ${error.message}`, 1);
+    output.fail("VOICEVOX_UNREACHABLE", `Cannot reach VoiceVox at ${voicevoxHost}: ${error.message}`, 1);
   }
 
   if (!aqResponse.ok) {
     const body = await aqResponse.text().catch(() => "");
-    fail("AUDIO_QUERY_FAILED", `audio_query returned ${aqResponse.status}: ${body}`, 1);
+    output.fail("AUDIO_QUERY_FAILED", `audio_query returned ${aqResponse.status}: ${body}`, 1);
   }
 
   const query = await aqResponse.json();
@@ -87,7 +87,7 @@ for (const sentence of sentences) {
     keyframes = voicevoxToTimeline(query);
   } catch (err: unknown) {
     const error = err as Error;
-    fail("TIMELINE_FAILED", `Failed to generate timeline: ${error.message}`, 1);
+    output.fail("TIMELINE_FAILED", `Failed to generate timeline: ${error.message}`, 1);
   }
 
   // Step 4: Synthesise audio with the SAME modified query
@@ -102,14 +102,14 @@ for (const sentence of sentences) {
   } catch (err: unknown) {
     const error = err as Error;
     if (error.name === "AbortError") {
-      fail("VOICEVOX_UNREACHABLE", `VoiceVox synthesis timed out after ${fetchTimeoutMs}ms`, 1);
+      output.fail("VOICEVOX_UNREACHABLE", `VoiceVox synthesis timed out after ${fetchTimeoutMs}ms`, 1);
     }
-    fail("VOICEVOX_UNREACHABLE", `Cannot reach VoiceVox at ${voicevoxHost}: ${error.message}`, 1);
+    output.fail("VOICEVOX_UNREACHABLE", `Cannot reach VoiceVox at ${voicevoxHost}: ${error.message}`, 1);
   }
 
   if (!synthResponse.ok) {
     const body = await synthResponse.text().catch(() => "");
-    fail("SYNTHESIS_FAILED", `synthesis returned ${synthResponse.status}: ${body}`, 1);
+    output.fail("SYNTHESIS_FAILED", `synthesis returned ${synthResponse.status}: ${body}`, 1);
   }
 
   const wav = await synthResponse.arrayBuffer();
@@ -121,15 +121,15 @@ for (const sentence of sentences) {
   } catch (err: unknown) {
     const msg = (err as Error).message ?? String(err);
     if (/not.found/i.test(msg) || /404/i.test(msg)) {
-      fail("ENTITY_NOT_FOUND", `Entity ${parsed.entity} not found: ${msg}`, 1);
+      output.fail("ENTITY_NOT_FOUND", `Entity ${parsed.entity} not found: ${msg}`, 1);
     }
-    fail("SYNTHESIS_FAILED", `speakWithTimeline failed: ${msg}`, 1);
+    output.fail("SYNTHESIS_FAILED", `speakWithTimeline failed: ${msg}`, 1);
   }
 }
 
 // --- Success output ---
-console.log(JSON.stringify({
+output.succeed({
   success: true,
   sentences: sentences.length,
   speaker,
-}));
+});

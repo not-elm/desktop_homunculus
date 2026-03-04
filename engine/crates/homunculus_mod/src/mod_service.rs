@@ -27,13 +27,20 @@ impl Plugin for ModServicePlugin {
 fn run_mod_services(mut commands: Commands, services: Query<(Entity, &ModService)>) {
     for (entity, service) in services.iter() {
         info!("Starting mod service: {}", service.script_path.display());
-        match Command::new("pnpm")
-            .arg("exec")
+        let mut cmd = Command::new("pnpm");
+        cmd.arg("exec")
             .arg("tsx")
             .arg(&service.script_path)
-            .current_dir(&service.mods_dir)
-            .spawn()
+            .current_dir(&service.mods_dir);
+
+        // Spawn in a new process group so Drop can kill the entire tree.
+        #[cfg(unix)]
         {
+            use std::os::unix::process::CommandExt;
+            cmd.process_group(0);
+        }
+
+        match cmd.spawn() {
             Ok(child) => {
                 commands.spawn(NodeProcessHandle(child));
             }

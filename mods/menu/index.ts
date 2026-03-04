@@ -34,6 +34,12 @@ signals.stream<{ entity: number }>("menu:close", async (payload) => {
 });
 
 Vrm.stream(async (vrm) => {
+  // Close existing EventSource for this VRM before creating a new one.
+  // Vrm.stream() replays existing VRMs on SSE reconnection, which would
+  // otherwise accumulate duplicate listeners.
+  const oldEs = eventSources.get(vrm.entity);
+  if (oldEs) oldEs.close();
+
   const es = vrm.events();
   eventSources.set(vrm.entity, es);
 
