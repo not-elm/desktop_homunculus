@@ -1,8 +1,8 @@
 #!/usr/bin/env tsx
 
 import { z } from "zod";
-import { input as commandInput, StdinParseError } from "@hmcs/sdk/commands";
-import { fail, fetchWithTimeout } from "../lib/utils.ts";
+import { input as commandInput, output, StdinParseError } from "@hmcs/sdk/commands";
+import { fetchWithTimeout } from "../lib/utils.ts";
 
 const FETCH_TIMEOUT_MS = 10_000;
 const DEFAULT_VOICEVOX_HOST = "http://localhost:50021";
@@ -41,17 +41,17 @@ try {
 } catch (err: unknown) {
   const error = err as Error;
   if (error.name === "AbortError") {
-    fail("VOICEVOX_UNREACHABLE", `VoiceVox /speakers timed out after ${FETCH_TIMEOUT_MS}ms`, 1);
+    output.fail("VOICEVOX_UNREACHABLE", `VoiceVox /speakers timed out after ${FETCH_TIMEOUT_MS}ms`);
   }
-  fail("VOICEVOX_UNREACHABLE", `Cannot reach VoiceVox at ${voicevoxHost}: ${error.message}`, 1);
+  output.fail("VOICEVOX_UNREACHABLE", `Cannot reach VoiceVox at ${voicevoxHost}: ${error.message}`);
 }
 
 if (!response.ok) {
   const body = await response.text().catch(() => "");
-  fail("SPEAKERS_FAILED", `/speakers returned ${response.status}: ${body}`, 1);
+  output.fail("SPEAKERS_FAILED", `/speakers returned ${response.status}: ${body}`);
 }
 
 const speakers = await response.json();
 
 // --- Success output ---
-console.log(JSON.stringify(speakers));
+output.succeed(speakers);

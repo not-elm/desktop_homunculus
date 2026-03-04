@@ -1,14 +1,6 @@
 const DEFAULT_TIMEOUT_MS = 30_000;
 
 /**
- * Write a structured error to stderr and exit with the given code.
- */
-export function fail(code: string, message: string, exitCode: number): never {
-  console.error(JSON.stringify({ code, message }));
-  process.exit(exitCode);
-}
-
-/**
  * Fetch with a timeout. Rejects if the request takes longer than `ms`.
  */
 export async function fetchWithTimeout(
