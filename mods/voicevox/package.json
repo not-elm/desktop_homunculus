@@ -15,6 +15,6 @@
   },
   "dependencies": {
     "@hmcs/sdk": "workspace:*",
-    "zod": "^3.25.0"
+    "zod": "^3.25.76"
   }
 }
