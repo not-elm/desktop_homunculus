@@ -8,7 +8,10 @@ use std::process::Command;
 /// Services are long-running Node.js child processes that run for the
 /// entire app session, declared via the `homunculus.service` field in a MOD's `package.json`.
 #[derive(Component)]
-pub(crate) struct ModService(pub PathBuf);
+pub(crate) struct ModService {
+    pub script_path: PathBuf,
+    pub mods_dir: PathBuf,
+}
 
 pub(crate) struct ModServicePlugin;
 
@@ -23,18 +26,23 @@ impl Plugin for ModServicePlugin {
 
 fn run_mod_services(mut commands: Commands, services: Query<(Entity, &ModService)>) {
     for (entity, service) in services.iter() {
-        info!("Starting mod service: {}", service.0.display());
-        match Command::new("node")
-            .arg("--experimental-strip-types")
-            .arg(&service.0)
-            .current_dir(service.0.parent().unwrap_or(&service.0))
+        info!("Starting mod service: {}", service.script_path.display());
+        match Command::new("pnpm")
+            .arg("dlx")
+            .arg("tsx")
+            .arg(&service.script_path)
+            .current_dir(&service.mods_dir)
             .spawn()
         {
             Ok(child) => {
                 commands.spawn(NodeProcessHandle(child));
             }
             Err(e) => {
-                error!("Failed to start mod service {}: {}", service.0.display(), e);
+                error!(
+                    "Failed to start mod service {}: {}",
+                    service.script_path.display(),
+                    e
+                );
             }
         }
         commands.entity(entity).despawn();
