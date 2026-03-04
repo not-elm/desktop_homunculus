@@ -78,7 +78,7 @@ Desktop Homunculus が起動すると、インストール済みのすべての 
 コンテキストメニューのコマンドがキャラクターのエンティティを stdin 経由で受け取るのとは異なり、トレイコマンドは **stdin 入力を受け取りません**。単純なファイア・アンド・フォーゲット（fire-and-forget）スクリプトとして実行されます。これは、トレイ操作が特定のキャラクターに紐づかないアプリケーション全体のものだからです。
 
 ```typescript
-#!/usr/bin/env -S node --experimental-strip-types
+#!/usr/bin/env tsx
 
 /// <reference types="node" />
 
@@ -144,7 +144,7 @@ try {
 **`commands/open-ui.ts`**：
 
 ```typescript
-#!/usr/bin/env -S node --experimental-strip-types
+#!/usr/bin/env tsx
 
 /// <reference types="node" />
 

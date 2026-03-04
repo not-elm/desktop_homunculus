@@ -60,7 +60,7 @@ Desktop Homunculus が起動すると、インストール済みのすべての 
 この入力を解析してキャラクターに操作を行う最小限のコマンドハンドラーです：
 
 ```typescript
-#!/usr/bin/env -S node --experimental-strip-types
+#!/usr/bin/env tsx
 
 /// <reference types="node" />
 
@@ -112,7 +112,7 @@ WebView を開くには、`package.json` で HTML アセットを宣言し、コ
 **`commands/open-ui.ts`**：
 
 ```typescript
-#!/usr/bin/env -S node --experimental-strip-types
+#!/usr/bin/env tsx
 
 /// <reference types="node" />
 
@@ -169,7 +169,7 @@ try {
 **`commands/wave.ts`**：
 
 ```typescript
-#!/usr/bin/env -S node --experimental-strip-types
+#!/usr/bin/env tsx
 
 /// <reference types="node" />
 

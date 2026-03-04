@@ -52,6 +52,32 @@ fn validate_package_name(spec: &str) -> UtilResult {
     Ok(())
 }
 
+/// Pinned tsx version for deterministic mod service execution.
+const TSX_PACKAGE: &str = "tsx@4.21.0";
+
+/// Ensure tsx is installed in the mods directory.
+///
+/// Runs `pnpm -C <mods_dir> add --save-dev --save-exact tsx@4.21.0` on every
+/// app startup. If the pinned version is already installed, pnpm resolves
+/// quickly without network access.
+/// The installed tsx is used by mod services via `pnpm exec tsx`.
+pub fn ensure_tsx() -> UtilResult {
+    let status = create_pnpm_command_base()?
+        .arg("add")
+        .arg("--save-dev")
+        .arg("--save-exact")
+        .arg(TSX_PACKAGE)
+        .status()
+        .map_err(|e| UtilError::Mods(ModsError::Install(e)))?;
+
+    if !status.success() {
+        return Err(UtilError::ForkProcess(format!(
+            "pnpm add {TSX_PACKAGE} failed with status: {status}"
+        )));
+    }
+    Ok(())
+}
+
 /// Install the mod.
 /// The argument `pkg` is same as `pnpm add <pkg>`.
 pub fn install<S: AsRef<str>>(pkg: &[S]) -> UtilResult {

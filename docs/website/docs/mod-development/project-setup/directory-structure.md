@@ -21,7 +21,7 @@ my-character/
 
 **`package.json`** -- Must include `"type": "module"` and the `"homunculus"` field declaring your service script and assets. See [Package Configuration](./package-json.md) for details on every field.
 
-**`index.ts`** -- The service script specified by `"homunculus.service"`. The engine runs it automatically via `node --experimental-strip-types`, so you can write TypeScript directly without a build step. This script typically spawns your character and sets up behaviors.
+**`index.ts`** -- The service script specified by `"homunculus.service"`. The engine runs it automatically via `tsx`, so you can write TypeScript directly without a build step. This script typically spawns your character and sets up behaviors.
 
 **`assets/`** -- Convention for storing binary assets (VRM models, animations, sounds, images). The directory name is flexible -- the actual file paths are declared in `package.json` -- but `assets/` is the standard across official MODs.
 

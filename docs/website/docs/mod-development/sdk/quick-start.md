@@ -17,7 +17,7 @@ This page covers the SDK itself. For a full end-to-end guide to creating a MOD (
 pnpm add @hmcs/sdk
 ```
 
-The SDK requires **Node.js 22 or later**. MOD scripts run directly as TypeScript via `node --experimental-strip-types` -- no build step needed.
+The SDK requires **Node.js 22 or later**. MOD scripts run directly as TypeScript via `tsx` -- no build step needed.
 
 ## Your First Script
 
