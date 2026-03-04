@@ -56,6 +56,7 @@ fn validate_package_name(spec: &str) -> UtilResult {
 ///
 /// Runs `pnpm -C <mods_dir> add --save-dev tsx` on every app startup.
 /// If tsx is already installed, pnpm resolves quickly without network access.
+/// The installed tsx is used by mod services via `pnpm exec tsx`.
 pub fn ensure_tsx() -> UtilResult {
     let status = create_pnpm_command_base()?
         .arg("add")

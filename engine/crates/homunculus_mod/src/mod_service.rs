@@ -28,7 +28,7 @@ fn run_mod_services(mut commands: Commands, services: Query<(Entity, &ModService
     for (entity, service) in services.iter() {
         info!("Starting mod service: {}", service.script_path.display());
         match Command::new("pnpm")
-            .arg("dlx")
+            .arg("exec")
             .arg("tsx")
             .arg(&service.script_path)
             .current_dir(&service.mods_dir)
