@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Webview, mods, signals } from "@hmcs/sdk";
 import type { MenuItemData } from "./useMenuData";
 
@@ -20,19 +20,23 @@ export function useMenuActions(entity: number | null) {
     }, 180);
   }, [closing]);
 
+  const selectedRef = useRef(false);
+
   const handleSelect = useCallback(
-    async (item: MenuItemData) => {
+    (item: MenuItemData) => {
+      if (selectedRef.current) return;
+      selectedRef.current = true;
+      handleClose();
       if (item.command && entity != null) {
-        try {
-          await mods.executeCommand({
+        mods
+          .executeCommand({
             command: item.command,
             stdin: JSON.stringify({ linkedVrm: entity }),
+          })
+          .catch((err) => {
+            console.error("Command execution failed:", err);
           });
-        } catch (err) {
-          console.error("Command execution failed:", err);
-        }
       }
-      handleClose();
     },
     [entity, handleClose],
   );
