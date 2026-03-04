@@ -8,7 +8,9 @@
     "@hmcs/elmer": "workspace:*",
     "@hmcs/menu": "workspace:*",
     "@hmcs/settings": "workspace:*",
-    "@hmcs/voicevox": "workspace:*",
+    "@hmcs/voicevox": "workspace:*"
+  },
+  "devDependencies": {
     "tsx": "^4.21.0"
   }
 }
