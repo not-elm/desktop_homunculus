@@ -7,6 +7,7 @@ settings:
 overrides:
   serialize-javascript@<7.0.3: 7.0.3
   minimatch@>=10.0.0 <10.2.3: 10.2.4
+  lodash@>=4.0.0 <4.17.23: 4.17.23
 
 importers:
 
@@ -6741,9 +6742,6 @@ packages:
 
   lodash.uniq@4.5.0:
     resolution: {integrity: sha512-xfBaXQd9ryd9dlSDvnvI0lvxfLJlYAZzXomUYzLKtUeOQvOP5piqAWuGtrhWeqaXK9hhoM/iyJc5AV+XfsX3HQ==}
-
-  lodash@4.17.21:
-    resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
 
   lodash@4.17.23:
     resolution: {integrity: sha512-LgVTMpQtIopCi79SJeDiP0TfWi5CNEc/L/aRdTh3yIvmZXTnheWpKjSZhnvMl8iXbC1tFg9gdHHDMLoV7CnG+w==}
@@ -17047,8 +17045,6 @@ snapshots:
 
   lodash.uniq@4.5.0: {}
 
-  lodash@4.17.21: {}
-
   lodash@4.17.23: {}
 
   longest-streak@3.1.0: {}
@@ -17891,7 +17887,7 @@ snapshots:
       js-yaml: 4.1.0
       json-pointer: 0.6.2
       json-schema-merge-allof: 0.8.1
-      lodash: 4.17.21
+      lodash: 4.17.23
       neotraverse: 0.6.15
       oas-resolver-browser: 2.5.6
       object-hash: 3.0.0
@@ -18547,7 +18543,7 @@ snapshots:
     dependencies:
       async: 3.2.2
       detect-package-manager: 3.0.2
-      lodash: 4.17.21
+      lodash: 4.17.23
       path: 0.12.7
       postman-collection: 5.3.0
       shelljs: 0.8.5
