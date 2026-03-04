@@ -11,6 +11,6 @@
     "@hmcs/voicevox": "workspace:*"
   },
   "devDependencies": {
-    "tsx": "^4.21.0"
+    "tsx": "4.21.0"
   }
 }
