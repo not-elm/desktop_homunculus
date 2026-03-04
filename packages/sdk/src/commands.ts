@@ -255,24 +255,33 @@ export namespace output {
   }
 
   /**
-   * Write a JSON result to stdout and exit the process with code 0.
+   * Exit the process with code 0, optionally writing a JSON result to stdout.
    *
-   * This is a convenience wrapper that calls {@link output.write} followed by
-   * `process.exit(0)`. Use this as the final call in a successful bin command.
+   * When called with a `data` argument, serializes it to stdout via
+   * {@link output.write} before exiting. When called without arguments,
+   * exits immediately without writing to stdout — useful for commands
+   * that perform a side effect (e.g., opening a UI) with no return value.
    *
-   * @param data - The value to serialize as JSON and write to stdout
+   * @param data - Optional value to serialize as JSON and write to stdout
    *
    * @example
    * ```typescript
    * import { input, output } from "@hmcs/sdk/commands";
    *
+   * // With payload
    * const data = await input.parse(schema);
    * const result = await doWork(data);
    * output.succeed({ processed: result.count });
+   *
+   * // Without payload (side-effect only command)
+   * await openWebview();
+   * output.succeed();
    * ```
    */
-  export function succeed(data: unknown): never {
-    write(data);
+  export function succeed(data?: unknown): never {
+    if (data !== undefined) {
+      write(data);
+    }
     process.exit(0);
   }
 
