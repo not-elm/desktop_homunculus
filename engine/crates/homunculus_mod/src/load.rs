@@ -25,6 +25,9 @@ fn discover_mods(
     let mods_root = config.mods_dir.clone();
     info!("Mods root: {}", mods_root.display());
     create_dir_all_if_need(&mods_root);
+    if let Err(e) = homunculus_utils::mods::ensure_tsx() {
+        warn!("Failed to install tsx in mods directory: {e}");
+    }
     let mods = match homunculus_utils::mods::list::list_installation_mods() {
         Ok(mods) => mods,
         Err(e) => {

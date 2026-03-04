@@ -52,6 +52,25 @@ fn validate_package_name(spec: &str) -> UtilResult {
     Ok(())
 }
 
+/// Ensure tsx is installed in the mods directory.
+///
+/// Runs `pnpm -C <mods_dir> add tsx` on every app startup.
+/// If tsx is already installed, pnpm resolves quickly without network access.
+pub fn ensure_tsx() -> UtilResult {
+    let status = create_pnpm_command_base()?
+        .arg("add")
+        .arg("tsx")
+        .status()
+        .map_err(|e| UtilError::Mods(ModsError::Install(e)))?;
+
+    if !status.success() {
+        return Err(UtilError::ForkProcess(format!(
+            "pnpm add tsx failed with status: {status}"
+        )));
+    }
+    Ok(())
+}
+
 /// Install the mod.
 /// The argument `pkg` is same as `pnpm add <pkg>`.
 pub fn install<S: AsRef<str>>(pkg: &[S]) -> UtilResult {
