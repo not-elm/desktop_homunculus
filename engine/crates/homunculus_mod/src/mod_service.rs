@@ -24,24 +24,32 @@ impl Plugin for ModServicePlugin {
     }
 }
 
+/// Append a child PID to `~/.homunculus/mod_pids` so stale processes can be
+/// detected and cleaned up on next launch.
+fn append_pid_file(pid: u32) {
+    use std::io::Write;
+    let path = homunculus_utils::path::homunculus_dir().join("mod_pids");
+    if let Ok(mut f) = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&path)
+    {
+        let _ = writeln!(f, "{pid}");
+    }
+}
+
 fn run_mod_services(mut commands: Commands, services: Query<(Entity, &ModService)>) {
     for (entity, service) in services.iter() {
         info!("Starting mod service: {}", service.script_path.display());
-        let mut cmd = Command::new("pnpm");
-        cmd.arg("exec")
+        let mut cmd = Command::new("node");
+        cmd.arg("--import")
             .arg("tsx")
             .arg(&service.script_path)
             .current_dir(&service.mods_dir);
 
-        // Spawn in a new process group so Drop can kill the entire tree.
-        #[cfg(unix)]
-        {
-            use std::os::unix::process::CommandExt;
-            cmd.process_group(0);
-        }
-
         match cmd.spawn() {
             Ok(child) => {
+                append_pid_file(child.id());
                 commands.spawn(NodeProcessHandle(child));
             }
             Err(e) => {
