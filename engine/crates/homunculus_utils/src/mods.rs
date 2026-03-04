@@ -60,7 +60,7 @@ const TSX_PACKAGE: &str = "tsx@4.21.0";
 /// Runs `pnpm -C <mods_dir> add --save-dev --save-exact tsx@4.21.0` on every
 /// app startup. If the pinned version is already installed, pnpm resolves
 /// quickly without network access.
-/// The installed tsx is used by mod services via `pnpm exec tsx`.
+/// The installed tsx is used by mod services via `node --import tsx`.
 pub fn ensure_tsx() -> UtilResult {
     let status = create_pnpm_command_base()?
         .arg("add")
