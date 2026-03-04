@@ -130,7 +130,7 @@ Mods are pnpm workspace packages. Each mod's `package.json` must include a `"hom
 - **menus** (optional): Right-click context menu entries that can open webviews.
 - **tray** (optional): System tray menu entries (distinct from `menus`). Processed by `homunculus_tray` via `bevy_tray_icon`.
 
-The `"homunculus.service"` script runs automatically as a long-running child process (service) at startup using `pnpm exec tsx` (TypeScript files run directly without a build step; tsx is installed locally in the mods directory by `ensure_tsx()`). On-demand scripts are exposed via `"bin"` and invoked through the HTTP API (`POST /mods/{mod_name}/bin/{command}`). Mods use the `@hmcs/sdk` SDK.
+The `"homunculus.service"` script runs automatically as a long-running child process (service) at startup using `node --import tsx` (TypeScript files run directly without a build step; tsx is installed locally in the mods directory by `ensure_tsx()`). On-demand scripts are exposed via `"bin"` and invoked through the HTTP API (`POST /mods/{mod_name}/bin/{command}`). Mods use the `@hmcs/sdk` SDK.
 
 **Mod discovery**: The engine runs `pnpm ls --parseable` in the mods directory (`~/.homunculus/mods/`) to discover installed mods, then reads each mod's `package.json` directly.
 
