@@ -14,7 +14,18 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
+  fmt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - run: cargo fmt --all --check
+        working-directory: engine
+
+  check:
     runs-on: macos-14
     timeout-minutes: 45
     defaults:
@@ -22,27 +33,27 @@ jobs:
         working-directory: engine
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: "engine -> target"
-          shared-key: macos-stable-engine
-      - run: cargo test --workspace --locked
 
-  lint:
-    runs-on: macos-14
-    timeout-minutes: 30
-    defaults:
-      run:
-        working-directory: engine
-    steps:
-      - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
         with:
-          components: clippy, rustfmt
+          components: clippy
+
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: "engine -> target"
           shared-key: macos-stable-engine
-      - run: cargo fmt --all --check
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: Setup sccache
+        uses: mozilla-actions/sccache-action@v0.0.9
+        with:
+          version: "v0.10.0"
+
+      - name: Configure sccache
+        run: |
+          echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
+          echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
+          echo "CARGO_INCREMENTAL=0" >> $GITHUB_ENV
+
       - run: cargo clippy --workspace -- -Dwarnings
+      - run: cargo test --workspace --locked
