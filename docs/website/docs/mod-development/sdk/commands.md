@@ -142,7 +142,7 @@ try {
 A full bin command script that reads validated input and writes structured output:
 
 ```typescript
-#!/usr/bin/env -S node --experimental-strip-types
+#!/usr/bin/env tsx
 import { z } from "zod";
 import { input, output } from "@hmcs/sdk/commands";
 

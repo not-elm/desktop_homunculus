@@ -60,7 +60,7 @@ The `linkedVrm` field is the numeric entity ID of the VRM character that was rig
 Here is a minimal command handler that parses this input and acts on the character:
 
 ```typescript
-#!/usr/bin/env -S node --experimental-strip-types
+#!/usr/bin/env tsx
 
 /// <reference types="node" />
 
@@ -112,7 +112,7 @@ To open a webview, declare an HTML asset in your `package.json` and use `Webview
 **`commands/open-ui.ts`**:
 
 ```typescript
-#!/usr/bin/env -S node --experimental-strip-types
+#!/usr/bin/env tsx
 
 /// <reference types="node" />
 
@@ -169,7 +169,7 @@ This example adds a "Wave" menu item that makes the right-clicked character play
 **`commands/wave.ts`**:
 
 ```typescript
-#!/usr/bin/env -S node --experimental-strip-types
+#!/usr/bin/env tsx
 
 /// <reference types="node" />
 

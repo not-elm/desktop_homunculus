@@ -16,15 +16,15 @@ See [Package Configuration](./project-setup/package-json.md#bin-commands) for ho
 Every TypeScript bin command must start with a shebang line that enables direct execution without a compile step:
 
 ```typescript
-#!/usr/bin/env -S node --experimental-strip-types
+#!/usr/bin/env tsx
 
 /// <reference types="node" />
 ```
 
-The shebang tells the system to run the file with Node.js using the `--experimental-strip-types` flag, which strips TypeScript syntax at runtime. The `/// <reference types="node" />` directive provides Node.js type definitions (like `process.stdin`).
+The shebang tells the system to run the file with tsx, which transpiles TypeScript at runtime. The `/// <reference types="node" />` directive provides Node.js type definitions (like `process.stdin`).
 
 :::warning
-Node.js 22 or later is required for `--experimental-strip-types`. See [Installation](/getting-started/installation) for setup instructions.
+Node.js 22 or later is required for tsx. See [Installation](/getting-started/installation) for setup instructions.
 :::
 
 ### Parsing Input with `input.parse`
@@ -238,7 +238,7 @@ Here is a complete bin command that builds a greeting message based on input par
 **`bin/greet.ts`**:
 
 ```typescript
-#!/usr/bin/env -S node --experimental-strip-types
+#!/usr/bin/env tsx
 
 /// <reference types="node" />
 

@@ -19,7 +19,7 @@ When Desktop Homunculus launches, the engine discovers installed MODs by running
 - **On-demand commands** (`bin` field) -- invoked through the HTTP API when needed
 - **Assets** (`homunculus.assets` field) -- files bundled with the MOD (VRM models, animations, sounds, UI)
 
-MODs communicate with the engine through a local **HTTP API** running on `localhost:3100`. The TypeScript SDK (`@hmcs/sdk`) wraps this API with a high-level, type-safe interface. Scripts run via `node --experimental-strip-types`, so you can write TypeScript directly without a build step.
+MODs communicate with the engine through a local **HTTP API** running on `localhost:3100`. The TypeScript SDK (`@hmcs/sdk`) wraps this API with a high-level, type-safe interface. Scripts run via `tsx`, so you can write TypeScript directly without a build step.
 
 ## What Can a MOD Do?
 
