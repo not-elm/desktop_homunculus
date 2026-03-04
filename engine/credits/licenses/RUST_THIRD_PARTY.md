@@ -5,7 +5,7 @@ Do not edit manually.
 
 ## License Summary
 
-- Apache License 2.0 (611)
+- Apache License 2.0 (610)
 - MIT License (177)
 - Unicode License v3 (19)
 - BSD 3-Clause "New" or "Revised" License (10)
@@ -23,7 +23,6 @@ Do not edit manually.
 ### Apache License 2.0
 
 Used by:
-- alsa 0.9.1 (https://github.com/diwic/alsa-rs)
 - fdeflate 0.3.7 (https://github.com/image-rs/fdeflate)
 - miniz_oxide 0.8.9 (https://github.com/Frommi/miniz_oxide/tree/master/miniz_oxide)
 - pin-project-internal 1.1.10 (https://github.com/taiki-e/pin-project)
@@ -2566,7 +2565,6 @@ Used by:
 Used by:
 - ab_glyph 0.2.32 (https://github.com/alexheretic/ab-glyph)
 - ab_glyph_rasterizer 0.1.10 (https://github.com/alexheretic/ab-glyph)
-- android-activity 0.6.0 (https://github.com/rust-mobile/android-activity)
 - atomicow 1.1.0 (https://github.com/bevyengine/atomicow)
 - disqualified 1.0.0 (https://github.com/bevyengine/disqualified)
 - field-offset 0.3.6 (https://github.com/Diggsey/rust-field-offset)
@@ -13644,32 +13642,6 @@ limitations under the License.
 ### Apache License 2.0
 
 Used by:
-- android_log-sys 0.3.2 (https://github.com/rust-mobile/android_log-sys-rs)
-
-```text
-# Bindings to Android log Library
-
-## License
-
-Licensed under either of
-
- * Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
- * MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
-
-at your option.
-
-### Contribution
-
-Unless you explicitly state otherwise, any contribution intentionally
-submitted for inclusion in the work by you, as defined in the Apache-2.0
-license, shall be dual licensed as above, without any additional terms or
-conditions.
-
-```
-
-### Apache License 2.0
-
-Used by:
 - nonmax 0.5.5 (https://github.com/LPGhatguy/nonmax)
 
 ```text
@@ -15008,6 +14980,9 @@ Used by:
 - accesskit_macos 0.22.2 (https://github.com/AccessKit/accesskit)
 - accesskit_windows 0.29.2 (https://github.com/AccessKit/accesskit)
 - accesskit_winit 0.29.2 (https://github.com/AccessKit/accesskit)
+- alsa 0.9.1 (https://github.com/diwic/alsa-rs)
+- android-activity 0.6.0 (https://github.com/rust-mobile/android-activity)
+- android_system_properties 0.1.5 (https://github.com/nical/android_system_properties)
 - anyhow 1.0.102 (https://github.com/dtolnay/anyhow)
 - bevy 0.18.0 (https://github.com/bevyengine/bevy)
 - bevy_a11y 0.18.0 (https://github.com/bevyengine/bevy)
@@ -15247,28 +15222,6 @@ Used by:
 
 ```text
 Copyright 2015 Nicholas Allegra (comex).
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
-```
-
-### Apache License 2.0
-
-Used by:
-- android_system_properties 0.1.5 (https://github.com/nical/android_system_properties)
-
-```text
-Copyright 2016 Nicolas Silva
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
