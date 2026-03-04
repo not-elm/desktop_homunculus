@@ -2,12 +2,27 @@ use bevy::prelude::*;
 use std::process::{Child, Command};
 
 /// Handle to a running Node.js child process for a mod's `main` script.
+///
+/// On Unix, the child is spawned in its own process group so that
+/// [`Drop`] can kill the entire group (pnpm → tsx → node chain).
 #[derive(Component)]
 pub(crate) struct NodeProcessHandle(pub Child);
 
 impl Drop for NodeProcessHandle {
     fn drop(&mut self) {
-        let _ = self.0.kill();
+        #[cfg(unix)]
+        {
+            let pid = self.0.id() as libc::pid_t;
+            // Kill the entire process group (negative PID).
+            // The child was spawned with process_group(0), so its PID == PGID.
+            unsafe {
+                libc::kill(-pid, libc::SIGKILL);
+            }
+        }
+        #[cfg(not(unix))]
+        {
+            let _ = self.0.kill();
+        }
     }
 }
 

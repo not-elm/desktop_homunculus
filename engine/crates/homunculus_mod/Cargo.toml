@@ -14,5 +14,8 @@ homunculus_core = { workspace = true }
 homunculus_utils = { workspace = true }
 futures-lite = "2"
 
+[target.'cfg(unix)'.dependencies]
+libc = { workspace = true }
+
 [lints]
 workspace = true
