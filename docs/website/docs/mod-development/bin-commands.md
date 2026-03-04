@@ -87,6 +87,12 @@ import { output } from "@hmcs/sdk/commands";
 output.succeed({ speakers: [...], count: 5 });
 ```
 
+**Success exit (no output)** — Exit with code 0 without writing to stdout. Useful for commands that perform a side effect like opening a UI:
+
+```typescript
+output.succeed();
+```
+
 **Error output** — Write a structured error to stderr and exit with a non-zero code:
 
 ```typescript
@@ -130,7 +136,7 @@ When `input.parse` fails, it throws a `StdinParseError` with one of three error 
 
 ```typescript
 import { z } from "zod";
-import { input } from "@hmcs/sdk/commands";
+import { input, output } from "@hmcs/sdk/commands";
 
 try {
   const data = await input.parse(
@@ -138,8 +144,7 @@ try {
   );
   // ... use data ...
 } catch (e) {
-  console.error(e);
-  process.exit(1);
+  output.fail("INVALID_INPUT", (e as Error).message);
 }
 ```
 
@@ -243,7 +248,7 @@ Here is a complete bin command that builds a greeting message based on input par
 /// <reference types="node" />
 
 import { z } from "zod";
-import { input, StdinParseError } from "@hmcs/sdk/commands";
+import { input, output, StdinParseError } from "@hmcs/sdk/commands";
 
 // Define input schema with defaults
 const schema = z.object({
@@ -265,8 +270,8 @@ const greetings = { en: "Hello", ja: "こんにちは" };
 const greeting = greetings[parsed.language];
 const message = `${greeting}, ${parsed.name}!`;
 
-// Output as JSON
-console.log(JSON.stringify({ message }));
+// Output result and exit
+output.succeed({ message });
 ```
 
 **Invoke with `curl`:**
