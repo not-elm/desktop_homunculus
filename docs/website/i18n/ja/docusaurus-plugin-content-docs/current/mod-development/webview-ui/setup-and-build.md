@@ -237,7 +237,7 @@ const vrm = await webview?.linkedVrm();
 WebView をオンデマンドで開く bin コマンドを作成します。`commands/open-ui.ts` を追加します：
 
 ```typescript
-#!/usr/bin/env -S node --experimental-strip-types
+#!/usr/bin/env tsx
 
 /// <reference types="node" />
 

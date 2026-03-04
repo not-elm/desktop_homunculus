@@ -14,7 +14,7 @@ pnpm add @hmcs/sdk
 ```
 
 :::info[Node.js の要件]
-Desktop Homunculus MOD は、`--experimental-strip-types` を使用して TypeScript ファイルを直接実行するために **Node.js 22 以降** が必要です。MOD スクリプトにビルドステップは不要です。
+Desktop Homunculus MOD は、`tsx` を使用して TypeScript ファイルを直接実行するために **Node.js 22 以降** が必要です。MOD スクリプトにビルドステップは不要です。
 :::
 
 ## モジュールマップ

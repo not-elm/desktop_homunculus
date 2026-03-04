@@ -17,7 +17,7 @@ sidebar_position: 2
 pnpm add @hmcs/sdk
 ```
 
-SDK は **Node.js 22 以降** が必要です。MOD スクリプトは `node --experimental-strip-types` により TypeScript として直接実行されます -- ビルドステップは不要です。
+SDK は **Node.js 22 以降** が必要です。MOD スクリプトは `tsx` により TypeScript として直接実行されます -- ビルドステップは不要です。
 
 ## 最初のスクリプト
 
