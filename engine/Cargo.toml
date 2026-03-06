@@ -72,7 +72,7 @@ dirs = "6"
 tokio = { version = "1", features = ["rt-multi-thread", "rt"] }
 axum = { version = "0.8" }
 bevy_flurx = { version = "0.14", features = ["side-effect", "state", "tokio"] }
-bevy_cef = { version = "0.2.0" }
+bevy_cef = { path = "../../bevy_cef/", version = "0.2.0" }
 homunculus_core = { path = "crates/homunculus_core" }
 homunculus_drag = { path = "crates/homunculus_drag" }
 homunculus_effects = { path = "crates/homunculus_effects" }
@@ -108,6 +108,7 @@ toml = "0.8"
 utoipa = { version = "5", features = ["yaml"] }
 utoipa-axum = { version = "0.2" }
 libc = "0.2"
+windows = "0.60"
 
 [build-dependencies]
 embed-resource = "3"
