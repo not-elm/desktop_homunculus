@@ -156,7 +156,7 @@ pub async fn execute_command(
     let (tx, rx) = tokio::sync::mpsc::channel::<Vec<u8>>(64);
 
     tokio::spawn(async move {
-        let mut child = match tokio::process::Command::new("pnpm")
+        let mut child = match tokio::process::Command::new(homunculus_utils::mods::pnpm_program())
             .arg("exec")
             .arg(&command)
             .args(&args)
