@@ -13,50 +13,32 @@ OPENAPI_OUTPUT ?= ../docs/website/static/api/open-api.yml
 VERSION = $(shell cargo metadata --format-version 1 --no-deps 2>/dev/null \
 	| jq -r '.packages[] | select(.name=="$(BIN_NAME)") | .version')
 
-# --- CEF variables ---
+# --- Platform detection ---
+UNAME_S    := $(shell uname -s)
+IS_WINDOWS := $(findstring MINGW,$(UNAME_S))$(findstring MSYS,$(UNAME_S))
+
+# Python command: python3 on macOS/Linux, python on Windows
+ifeq ($(IS_WINDOWS),)
+  PYTHON ?= python3
+else
+  PYTHON ?= python
+endif
+
+# --- CEF variables (used by release targets) ---
 BUNDLE_ID_BASE    := not.elm.homunculus.desktop
-CEF_FRAMEWORK_DIR := $(HOME)/.local/share/Chromium Embedded Framework.framework
-CEF_SENTINEL      := $(CEF_FRAMEWORK_DIR)/Chromium Embedded Framework
 
 # --- Existing targets ---
 
 .PHONY: setup setup-ci setup-cef debug gen-open-api fix-lint test gen-credits
 
 setup:
-	cargo install \
-		"export-cef-dir@144.4.0+144.0.13" \
-		"bevy_cef_debug_render_process@0.2.0" \
-		"bevy_cef_render_process@0.2.0" \
-		"bevy_cef_bundle_app@0.2.0" \
-		"cargo-about"
-	npm i -g @redocly/cli
-	$(MAKE) setup-cef
+	$(PYTHON) scripts/setup.py
 
 setup-ci: ## CI release build setup (uses cargo-binstall, skips cargo-about and redocly)
-	cargo binstall --no-confirm \
-		"export-cef-dir@144.4.0+144.0.13" \
-		"bevy_cef_debug_render_process@0.2.0" \
-		"bevy_cef_render_process@0.2.0" \
-		"bevy_cef_bundle_app@0.2.0"
-	$(MAKE) setup-cef
+	$(PYTHON) scripts/setup_ci.py
 
 setup-cef:
-	@set -e; \
-	if [ "$$(uname)" = "Darwin" ]; then \
-		command -v export-cef-dir >/dev/null 2>&1 \
-			|| { echo "ERROR: export-cef-dir not found. Run 'make setup' first."; exit 1; }; \
-		if [ ! -f "$(CEF_SENTINEL)" ]; then \
-			echo "==> Downloading CEF framework..."; \
-			export-cef-dir --force "$(HOME)/.local/share"; \
-		else \
-			echo "==> CEF framework already installed. Skipping download."; \
-		fi; \
-		echo "==> Copying debug render process..."; \
-		cp "$(HOME)/.cargo/bin/bevy_cef_debug_render_process" \
-			"$(CEF_FRAMEWORK_DIR)/Libraries/bevy_cef_debug_render_process"; \
-	else \
-		echo "WARNING: CEF setup is not yet supported on $$(uname). Skipping CEF setup."; \
-	fi
+	$(PYTHON) scripts/setup_cef.py
 
 debug:
 	cargo run --features develop
