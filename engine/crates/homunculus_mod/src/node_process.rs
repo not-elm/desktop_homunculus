@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use std::process::{Child, Command};
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 /// Handle to a running Node.js child process for a mod's `main` script.
 ///
@@ -15,32 +15,33 @@ impl NodeProcessHandle {
     ///
     /// Sends SIGTERM, waits up to `grace` for the process to exit,
     /// then falls back to SIGKILL + wait.
-    pub(crate) fn shutdown(&mut self, grace: Duration) {
+    pub(crate) fn shutdown(&mut self, _grace: Duration) {
         if let Ok(Some(_)) = self.0.try_wait() {
             return;
         }
 
-        #[cfg(unix)]
-        unsafe {
-            libc::kill(self.0.id() as libc::pid_t, libc::SIGTERM);
-        }
         #[cfg(not(unix))]
         {
             let _ = self.0.kill();
             let _ = self.0.wait();
-            return;
         }
 
-        let deadline = Instant::now() + grace;
-        while Instant::now() < deadline {
-            if let Ok(Some(_)) = self.0.try_wait() {
-                return;
+        #[cfg(unix)]
+        {
+            unsafe {
+                libc::kill(self.0.id() as libc::pid_t, libc::SIGTERM);
             }
-            std::thread::sleep(Duration::from_millis(25));
-        }
+            let deadline = std::time::Instant::now() + _grace;
+            while std::time::Instant::now() < deadline {
+                if let Ok(Some(_)) = self.0.try_wait() {
+                    return;
+                }
+                std::thread::sleep(Duration::from_millis(25));
+            }
 
-        let _ = self.0.kill();
-        let _ = self.0.wait();
+            let _ = self.0.kill();
+            let _ = self.0.wait();
+        }
     }
 }
 

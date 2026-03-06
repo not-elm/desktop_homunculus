@@ -1,5 +1,8 @@
 use crate::displays::{DisplayId, GlobalDisplay};
-use bevy::math::{Rect, Vec2};
+use bevy::{
+    math::{Rect, Vec2},
+    utils::default,
+};
 use std::char::{REPLACEMENT_CHARACTER, decode_utf16};
 use windows::{
     Win32::{
@@ -12,7 +15,6 @@ use windows::{
     core::{BOOL, PCWSTR},
 };
 
-/// Win32 GDI API で接続中の全ディスプレイを列挙する。
 pub fn all_displays() -> Vec<GlobalDisplay> {
     let mut displays: Vec<GlobalDisplay> = Vec::new();
     let data = LPARAM(&mut displays as *mut Vec<GlobalDisplay> as isize);
@@ -77,7 +79,6 @@ fn decode_device_name(sz_device: &[u16]) -> String {
         .collect()
 }
 
-/// デバイス名 `\\.\DISPLAY{N}` から数値 N をパースする。
 fn parse_display_id(device_name: &str) -> Option<u32> {
     device_name
         .strip_prefix("\\\\.\\DISPLAY")
@@ -89,8 +90,10 @@ fn obtain_friendly_name(device_name: &str) -> Option<String> {
         .encode_utf16()
         .chain(std::iter::once(0))
         .collect();
-    let mut device = DISPLAY_DEVICEW::default();
-    device.cb = std::mem::size_of::<DISPLAY_DEVICEW>() as u32;
+    let mut device = DISPLAY_DEVICEW {
+        cb: std::mem::size_of::<DISPLAY_DEVICEW>() as u32,
+        ..default()
+    };
     let success = unsafe { EnumDisplayDevicesW(PCWSTR(wide.as_ptr()), 0, &mut device, 0) };
     if !success.as_bool() {
         return None;

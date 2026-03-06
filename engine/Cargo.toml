@@ -146,6 +146,7 @@ strip = true
 
 [workspace.lints.clippy]
 type_complexity = "allow"
+result_large_err = "allow"
 
 [workspace.lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = [
