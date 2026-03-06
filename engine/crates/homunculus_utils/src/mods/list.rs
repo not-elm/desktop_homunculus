@@ -59,10 +59,7 @@ fn convert_to_mod_info(pkg: ModPackageJson, path: &Path) -> ModInfo {
     ModInfo {
         author: pkg.author,
         name: pkg.name,
-        service_script_path: pkg
-            .homunculus
-            .service
-            .and_then(|p| path.join(p).canonicalize().ok()),
+        service_script_path: pkg.homunculus.service.map(|p| path.join(p)),
         license: pkg.license,
         version: pkg.version,
         description: pkg.description,
