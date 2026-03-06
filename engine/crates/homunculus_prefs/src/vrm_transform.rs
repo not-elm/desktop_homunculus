@@ -4,10 +4,9 @@
 //! termination (SIGKILL, Force Quit, power loss).
 
 use crate::{PrefsDatabase, PrefsKeys};
-use bevy::{prelude::*, time::common_conditions::on_timer};
+use bevy::prelude::*;
 use bevy_vrm1::vrm::Vrm;
 use homunculus_core::prelude::AssetIdComponent;
-use std::time::Duration;
 
 /// Interval in seconds between periodic VRM transform saves.
 pub(super) struct PrefsVrmTransformPlugin;

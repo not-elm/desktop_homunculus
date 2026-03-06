@@ -124,11 +124,7 @@ pub fn uninstall<S: AsRef<str>>(mod_names: &[S]) -> UtilResult {
 /// On Windows, pnpm is installed as `pnpm.cmd` (a batch script),
 /// which `std::process::Command` does not resolve automatically.
 pub fn pnpm_program() -> &'static str {
-    if cfg!(windows) {
-        "pnpm.cmd"
-    } else {
-        "pnpm"
-    }
+    if cfg!(windows) { "pnpm.cmd" } else { "pnpm" }
 }
 
 fn create_pnpm_command_base() -> UtilResult<Command> {

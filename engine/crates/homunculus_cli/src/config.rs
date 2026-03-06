@@ -1,6 +1,7 @@
 //! `hmcs config` subcommand — manage application configuration
 mod get;
 mod list;
+mod reset;
 mod set;
 
 use crate::config::{get::cmd_get, list::cmd_list, set::cmd_set};
@@ -31,6 +32,11 @@ pub enum ConfigSubcommand {
         /// Value to set
         value: String,
     },
+    /// Reset a config to default value
+    Reset {
+        /// Config key (e.g. port, mods_dir)
+        key: String,
+    },
 }
 
 impl ConfigArgs {
@@ -39,6 +45,7 @@ impl ConfigArgs {
             ConfigSubcommand::List => cmd_list(),
             ConfigSubcommand::Get { key } => cmd_get(&key),
             ConfigSubcommand::Set { key, value } => cmd_set(&key, &value),
+            ConfigSubcommand::Reset { key: _ } => todo!("TODO Implement mod config"),
         }
     }
 }
