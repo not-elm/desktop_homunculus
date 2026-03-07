@@ -3,11 +3,12 @@
 //! VRM transforms are also periodically saved to protect against unexpected
 //! termination (SIGKILL, Force Quit, power loss).
 
+use std::time::Duration;
+
 use crate::{PrefsDatabase, PrefsKeys};
 use bevy::{prelude::*, time::common_conditions::on_timer};
 use bevy_vrm1::vrm::Vrm;
 use homunculus_core::prelude::AssetIdComponent;
-use std::time::Duration;
 
 /// Interval in seconds between periodic VRM transform saves.
 pub(super) struct PrefsVrmTransformPlugin;
@@ -15,8 +16,6 @@ pub(super) struct PrefsVrmTransformPlugin;
 impl Plugin for PrefsVrmTransformPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Update, save_vrm_transforms.run_if(on_message::<AppExit>));
-        // Since `AppExit` is not realiably triggered on mac, saves will be performed periodically.
-        #[cfg(target_os = "macos")]
         app.add_systems(
             Update,
             periodic_save_vrm_transforms.run_if(on_timer(Duration::from_secs(5))),

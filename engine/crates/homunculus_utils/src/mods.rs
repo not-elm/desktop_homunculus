@@ -119,9 +119,17 @@ pub fn uninstall<S: AsRef<str>>(mod_names: &[S]) -> UtilResult {
     Ok(())
 }
 
+/// Returns the correct program name for pnpm on the current platform.
+///
+/// On Windows, pnpm is installed as `pnpm.cmd` (a batch script),
+/// which `std::process::Command` does not resolve automatically.
+pub fn pnpm_program() -> &'static str {
+    if cfg!(windows) { "pnpm.cmd" } else { "pnpm" }
+}
+
 fn create_pnpm_command_base() -> UtilResult<Command> {
     let config = HomunculusConfig::load()?;
-    let mut command = Command::new("pnpm");
+    let mut command = Command::new(pnpm_program());
     command.args(["-C", &format!("{}", &config.mods_dir.display())]);
     Ok(command)
 }

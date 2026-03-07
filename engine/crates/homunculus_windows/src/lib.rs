@@ -60,7 +60,6 @@ use bevy::camera::visibility::RenderLayers;
 use bevy::camera::{RenderTarget, ScalingMode};
 use bevy::prelude::*;
 use bevy::window::*;
-use bevy::winit::WINIT_WINDOWS;
 use homunculus_core::prelude::{AppWindow, CameraOrders, PrimaryCamera};
 use serde::{Deserialize, Serialize};
 
@@ -143,55 +142,42 @@ fn despawn_default_window(
 fn setup_windows(
     mut commands: Commands,
     monitors: Query<(Entity, &Monitor, Option<&PrimaryMonitor>)>,
-    primary_window: Query<Entity, With<PrimaryWindow>>,
 ) {
-    WINIT_WINDOWS.with(|winit_windows| {
-        let winit_windows = winit_windows.borrow();
-        let current_monitor_scale_factor = primary_window
-            .single()
-            .ok()
-            .and_then(|entity| winit_windows.get_window(entity))
-            .and_then(|w| w.current_monitor())
-            .map(|monitor| monitor.scale_factor() as f32)
-            .unwrap_or(1.);
-        for (layer, (monitor_entity, monitor, primary)) in monitors.iter().enumerate() {
-            let mut window = create_window(layer, monitor.physical_size().as_vec2());
-            let window_position =
-                monitor.physical_position.as_vec2() * current_monitor_scale_factor;
-            window.position.set(window_position.as_ivec2());
-            window
-                .resolution
-                .set_scale_factor(monitor.scale_factor as f32);
-            let window_entity = commands
-                .spawn((
-                    Name::new(format!("Window({:?})", monitor.physical_position)),
-                    RenderLayers::layer(layer),
-                    window,
-                    AppWindow,
-                    CursorOptions {
-                        hit_test: false,
-                        ..default()
-                    },
-                ))
-                .id();
-            commands
-                .entity(monitor_entity)
-                .try_insert(RenderLayers::layer(layer));
+    for (layer, (monitor_entity, monitor, primary)) in monitors.iter().enumerate() {
+        let mut window = create_window(layer, monitor.physical_size().as_vec2());
+        let s = monitor.scale_factor as f32;
+        let window_position = monitor.physical_position.as_vec2() / s;
+        window.position.set(window_position.as_ivec2());
+        window.resolution.set_scale_factor(s);
+        let window_entity = commands
+            .spawn((
+                Name::new(format!("Window({:?})", monitor.physical_position)),
+                RenderLayers::layer(layer),
+                window,
+                AppWindow,
+                CursorOptions {
+                    hit_test: true,
+                    ..default()
+                },
+            ))
+            .id();
+        commands
+            .entity(monitor_entity)
+            .try_insert(RenderLayers::layer(layer));
 
-            spawn_camera(
-                &mut commands,
-                window_entity,
-                layer,
-                primary.is_some(),
-                monitor.physical_size().as_vec2(),
-                window_position,
-            );
+        spawn_camera(
+            &mut commands,
+            window_entity,
+            layer,
+            primary.is_some(),
+            monitor.physical_size().as_vec2(),
+            window_position,
+        );
 
-            if primary.is_some() {
-                commands.entity(window_entity).try_insert(PrimaryWindow);
-            }
+        if primary.is_some() {
+            commands.entity(window_entity).try_insert(PrimaryWindow);
         }
-    });
+    }
 }
 
 /// Stores the target window position for camera initialization.

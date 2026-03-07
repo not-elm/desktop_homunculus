@@ -2,6 +2,8 @@
 .vscode/
 .idea/
 
+.serena/
+
 # Git worktrees
 .worktrees/
 
@@ -26,6 +28,8 @@ docs/plans/
 docs/memo.md
 docs/reviews/
 docs/discussions/
+docs/issues/
+docs/brainstorms/
 
 # Local agent work artifacts
 **/.claude/settings.local.json

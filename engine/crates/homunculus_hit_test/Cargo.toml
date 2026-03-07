@@ -13,6 +13,12 @@ bevy_vrm1 = { workspace = true }
 bevy_egui = { workspace = true, optional = true }
 bevy_cef = { workspace = true }
 
+[target.'cfg(target_os="windows")'.dependencies]
+windows = { workspace = true, features = [
+    "Win32_Foundation",
+    "Win32_UI_WindowsAndMessaging",
+] }
+
 [features]
 default = []
 develop = ["dep:bevy_egui"]

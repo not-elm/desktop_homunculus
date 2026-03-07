@@ -58,12 +58,7 @@ pub fn find_all() -> Option<GlobalWindows> {
 }
 
 pub fn update_window(hwnd: i64) -> Option<Rect> {
-    /// # Safety
-    ///
-    /// This function assumes that the `hwnd` is a valid handle to a window.
-    unsafe {
-        obtain_window_rect(HWND(hwnd as *mut _)).ok()
-    }
+    unsafe { obtain_window_rect(HWND(hwnd as *mut _)).ok() }
 }
 
 /// # Safety
@@ -71,9 +66,6 @@ pub fn update_window(hwnd: i64) -> Option<Rect> {
 /// You must ensure that the `hwnd` is a valid handle to a window.
 unsafe fn obtain_window_rect(hwnd: HWND) -> windows::core::Result<Rect> {
     let mut rect = windows::Win32::Foundation::RECT::default();
-    /// # Safety
-    ///
-    /// This function assumes that `hwnd` is a valid handle to a window.
     unsafe {
         GetWindowRect(hwnd, &mut rect)?;
     }

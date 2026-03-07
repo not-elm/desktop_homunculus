@@ -26,7 +26,10 @@ jobs:
         working-directory: engine
 
   check:
-    runs-on: macos-14
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 45
     defaults:
       run:

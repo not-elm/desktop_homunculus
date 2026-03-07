@@ -117,7 +117,7 @@ fn handle_tray_clicks(
 ///
 /// Stdout is discarded; stderr is piped and logged on failure.
 async fn execute_command(mods_dir: PathBuf, command: String) {
-    let result = std::process::Command::new("pnpm")
+    let result = std::process::Command::new(homunculus_utils::mods::pnpm_program())
         .arg("exec")
         .arg(&command)
         .current_dir(&mods_dir)
