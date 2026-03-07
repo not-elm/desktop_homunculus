@@ -66,7 +66,7 @@ def release_windows() -> None:
 
     # 6. Copy MSI to target/bundle/
     BUNDLE_DIR.mkdir(parents=True, exist_ok=True)
-    msi_source = INSTALLER_PROJECT.parent / "bin" / "Release" / "installer.msi"
+    msi_source = INSTALLER_PROJECT.parent / "bin" / "Release" / "en-US" / "installer.msi"
     msi_dest = BUNDLE_DIR / f"{BIN_NAME}-{version}.msi"
     shutil.copy2(msi_source, msi_dest)
     log(f"Done: {msi_dest}")
