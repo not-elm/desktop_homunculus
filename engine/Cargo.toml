@@ -58,6 +58,10 @@ signal-hook = { workspace = true }
 
 [workspace.dependencies]
 bevy_cef = { version = "0.3.0" }
+bevy_flurx = { version = "0.14", features = ["side-effect", "state", "tokio"] }
+bevy_vrm1 = { version = "0.6.1", features = ["serde", "log"] }
+bevy_tray_icon = { version = "0.3" }
+url = { version = "2", features = ["serde"] }
 bevy = { version = "0.18", features = [
     "wav",
     "serialize",
@@ -65,14 +69,11 @@ bevy = { version = "0.18", features = [
     "png",
     "mp3",
 ] }
-bevy_tray_icon = { version = "0.3" }
-url = { version = "2", features = ["serde"] }
 async-channel = "2.5"
 async-broadcast = "0.7"
 dirs = "6"
 tokio = { version = "1", features = ["rt-multi-thread", "rt"] }
 axum = { version = "0.8" }
-bevy_flurx = { version = "0.14", features = ["side-effect", "state", "tokio"] }
 homunculus_core = { path = "crates/homunculus_core" }
 homunculus_drag = { path = "crates/homunculus_drag" }
 homunculus_effects = { path = "crates/homunculus_effects" }
@@ -90,7 +91,6 @@ homunculus_api = { path = "crates/homunculus_api" }
 homunculus_audio = { path = "crates/homunculus_audio" }
 homunculus_tray = { path = "crates/homunculus_tray" }
 homunculus_utils = { path = "crates/homunculus_utils", default-features = false }
-bevy_vrm1 = { version = "0.6", features = ["serde", "log"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1" }
 anyhow = { version = "1", features = ["std"] }
