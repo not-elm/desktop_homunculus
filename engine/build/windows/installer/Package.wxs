@@ -1,10 +1,9 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
-    <!-- ToDo use your own keys for Name and Manufacturer, as well as a new UUID for UpgradeCode -->
     <Package
-        Name="bevy_baby"
-        Manufacturer="My Name"
-        UpgradeCode="12345678-de4f-4893-a535-93dfd0597731"
-        Version="0.1.0"
+        Name="DesktopHomunculus"
+        Manufacturer="not-elm"
+        UpgradeCode="74746dfe-d3dd-5a66-9a64-8f112c287b23"
+        Version="$(var.Version)"
 
         Scope="perUserOrMachine">
         <MajorUpgrade DowngradeErrorMessage="!(loc.DowngradeError)" />
@@ -35,7 +34,7 @@
         <!-- Installs the actual files -->
         <ComponentGroup Id="MainComponent" Directory="INSTALLFOLDER">
             <Component>
-                <File Id="Executable" Source="..\..\..\target\dist\bevy_game.exe" Vital="true" />  <!-- ToDo this should point to your executable -->
+                <File Id="Executable" Source="..\..\..\target\dist\desktop_homunculus.exe" Vital="true" />
             </Component>
         </ComponentGroup>
 

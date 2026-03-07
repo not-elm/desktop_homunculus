@@ -59,7 +59,10 @@ gen-credits:
 
 # --- Release targets ---
 
-.PHONY: release-macos release-macos-arm release-macos-x86 release-macos-universal bundle-macos-app package-macos-dmg bundle-macos-cef
+.PHONY: release-windows release-macos release-macos-arm release-macos-x86 release-macos-universal bundle-macos-app package-macos-dmg bundle-macos-cef
+
+release-windows: ## Build Windows MSI installer
+	$(PYTHON) scripts/release_windows.py
 
 release-macos: ## Build for native arch, bundle .app, create DMG
 	cargo build --profile dist

@@ -79,6 +79,8 @@ fn main() {
                 .set(AssetPlugin {
                     file_path: if std::env::var("CARGO_MANIFEST_DIR").is_ok() {
                         "assets".to_string()
+                    } else if cfg!(target_os = "windows") {
+                        "assets".to_string()
                     } else {
                         "../Resources/assets".to_string()
                     },
