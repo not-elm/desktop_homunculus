@@ -5,6 +5,7 @@
         <OutputName>installer</OutputName>
         <Version>0.1.0</Version>
         <DefineConstants>Version=$(Version)</DefineConstants>
+        <SuppressValidation>true</SuppressValidation>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="WixToolset.UI.wixext" Version="4.0.6" />

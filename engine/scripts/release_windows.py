@@ -11,6 +11,7 @@ from utils import command_exists, error, log, run
 BIN_NAME = "desktop_homunculus"
 INSTALLER_PROJECT = Path("build/windows/installer/Installer.wixproj")
 BUNDLE_DIR = Path("target/bundle")
+RUST_LICENSES_OUTPUT = Path("credits/licenses/RUST_THIRD_PARTY.md")
 
 
 def get_version() -> str:
@@ -40,7 +41,14 @@ def release_windows() -> None:
     run(["cargo", "build", "--profile", "dist", "--locked"])
 
     # 3. Generate credits
-    run(["make", "gen-credits"])
+    RUST_LICENSES_OUTPUT.parent.mkdir(parents=True, exist_ok=True)
+    run([
+        "cargo", "about", "generate",
+        "--workspace", "--locked",
+        "--config", "about.toml",
+        "--output-file", str(RUST_LICENSES_OUTPUT),
+        "about.hbs",
+    ])
 
     # 4. Get version (3-part numeric for MSI)
     version = get_version()
