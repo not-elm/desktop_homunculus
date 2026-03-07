@@ -16,7 +16,9 @@ desktop-homunculus/
 ├── packages/
 │   ├── sdk/             # @hmcs/sdk — TypeScript SDK for mods/extensions
 │   ├── ui/              # @hmcs/ui — Shared React component library (Radix + Tailwind)
-│   └── mcp-server/      # MCP server — exposes character control to AI agents via stdio
+│   ├── mcp-server/      # MCP server — exposes character control to AI agents via stdio
+│   ├── cli/             # @hmcs/cli — Node CLI wrapper (distributes platform-specific Rust binary)
+│   └── cli-platform/    # Platform-specific binary packages for hmcs CLI
 ├── mods/                # Mods (NPM packages): elmer/, settings/, menu/, assets/, voicevox/, character-settings/
 ├── docs/website/        # Docusaurus documentation site
 └── sandbox/             # Dev sandbox — aggregates all mods for workspace linking validation
@@ -167,7 +169,7 @@ The `hmcs` binary is a Rust CLI built with `clap`. Current subcommands:
 ## Platform Notes
 
 - **macOS**: Primary development platform. Default Bevy rendering backend.
-- **Windows**: Known issue: black window background on Windows 11 with RTX GPUs.
+- **Windows**: In progress (`support-windows` branch). Known issue: black window background on Windows 11 with RTX GPUs.
 - **Linux**: Planned, not yet supported.
 
 ## Requirements
@@ -197,4 +199,4 @@ Additional conventions:
 - Application settings are stored in `~/.homunculus/config.toml` (TOML, snake_case keys: `port`, `mods_dir`).
 - Logs are written to `~/.homunculus/Logs/log.txt` (daily rolling). Debug builds log at INFO level, release builds at ERROR.
 - Preferences stored in SQLite at `~/.homunculus/preferences.db` (JSON key-value pairs).
-- Workspace version: `0.1.0-alpha.4`. License: MIT/Apache-2.0 (Rust), MIT (TypeScript), CC-BY-4.0 (docs/assets).
+- Workspace version: `0.1.0-alpha.4.1`. License: MIT/Apache-2.0 (Rust), MIT (TypeScript), CC-BY-4.0 (docs/assets).
