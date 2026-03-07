@@ -77,10 +77,12 @@ fn main() {
                     ..default()
                 })
                 .set(AssetPlugin {
-                    file_path: if std::env::var("CARGO_MANIFEST_DIR").is_ok() {
-                        "assets".to_string()
-                    } else {
+                    file_path: if cfg!(target_os = "macos")
+                        && std::env::var("CARGO_MANIFEST_DIR").is_err()
+                    {
                         "../Resources/assets".to_string()
+                    } else {
+                        "assets".to_string()
                     },
                     unapproved_path_mode: UnapprovedPathMode::Allow,
                     ..default()
