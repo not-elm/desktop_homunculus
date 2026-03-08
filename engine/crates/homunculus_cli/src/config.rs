@@ -4,7 +4,7 @@ mod list;
 mod reset;
 mod set;
 
-use crate::config::{get::cmd_get, list::cmd_list, set::cmd_set};
+use crate::config::{get::cmd_get, list::cmd_list, reset::cmd_reset, set::cmd_set};
 use clap::{Args, Subcommand};
 use homunculus_utils::error::UtilResult;
 
@@ -34,8 +34,11 @@ pub enum ConfigSubcommand {
     },
     /// Reset a config to default value
     Reset {
-        /// Config key (e.g. port, mods_dir)
-        key: String,
+        /// Config key to reset (e.g. port, mods_dir)
+        key: Option<String>,
+        /// Reset all config keys to defaults
+        #[arg(long)]
+        all: bool,
     },
 }
 
@@ -45,7 +48,7 @@ impl ConfigArgs {
             ConfigSubcommand::List => cmd_list(),
             ConfigSubcommand::Get { key } => cmd_get(&key),
             ConfigSubcommand::Set { key, value } => cmd_set(&key, &value),
-            ConfigSubcommand::Reset { key: _ } => todo!("TODO Implement mod config"),
+            ConfigSubcommand::Reset { key, all } => cmd_reset(key.as_deref(), all),
         }
     }
 }
