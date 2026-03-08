@@ -3696,8 +3696,8 @@ Used by:
 ### Apache License 2.0
 
 Used by:
-- bevy_cef 0.4.0-dev (https://github.com/not-elm/bevy_cef)
 - assert_type_match 0.1.1 (https://github.com/MrGVSV/assert_type_match)
+- bevy_cef 0.4.0 (https://github.com/not-elm/bevy_cef)
 - bevy_flurx 0.14.0 (https://github.com/not-elm/bevy_flurx)
 - bevy_tray_icon 0.3.1 (https://github.com/not-elm/bevy_tray_icon)
 - bevy_vrm1 0.6.1 (https://github.com/not-elm/bevy_vrm1)
@@ -13164,7 +13164,6 @@ limitations under the License.
 ### Apache License 2.0
 
 Used by:
-- bevy_cef_core 0.4.0-dev (https://github.com/not-elm/bevy_cef)
 - desktop_homunculus 0.1.0-alpha.4.1 (https://github.com/not-elm/desktop_homunculus)
 - homunculus_api 0.1.0-alpha.4.1 (https://github.com/not-elm/desktop_homunculus)
 - homunculus_audio 0.1.0-alpha.4.1 (https://github.com/not-elm/desktop_homunculus)
@@ -13207,6 +13206,7 @@ Used by:
 - bevy_asset_macros 0.18.1 (https://github.com/bevyengine/bevy)
 - bevy_audio 0.18.1 (https://github.com/bevyengine/bevy)
 - bevy_camera 0.18.1 (https://github.com/bevyengine/bevy)
+- bevy_cef_core 0.4.0 (https://github.com/not-elm/bevy_cef)
 - bevy_color 0.18.1 (https://github.com/bevyengine/bevy)
 - bevy_core_pipeline 0.18.1 (https://github.com/bevyengine/bevy)
 - bevy_derive 0.18.1 (https://github.com/bevyengine/bevy)

@@ -4554,7 +4554,9 @@ version = "0.1.0-alpha.4.1"
 dependencies = [
  "bevy",
  "homunculus_core",
+ "raw-window-handle",
  "serde",
+ "windows 0.60.0",
 ]
 
 [[package]]

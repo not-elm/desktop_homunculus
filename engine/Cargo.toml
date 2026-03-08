@@ -109,6 +109,7 @@ utoipa = { version = "5", features = ["yaml"] }
 utoipa-axum = { version = "0.2" }
 libc = "0.2"
 windows = "0.60"
+raw-window-handle = "0.6"
 
 [build-dependencies]
 embed-resource = "3"

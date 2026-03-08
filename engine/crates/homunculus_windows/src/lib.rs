@@ -105,8 +105,19 @@ impl Plugin for HomunculusWindowsPlugin {
             .register_type::<CameraWindowPosition>()
             .add_systems(PreStartup, setup_windows)
             .add_systems(Update, initialize_camera_position);
+
+        #[cfg(target_os = "windows")]
+        app.register_type::<NeedsTaskbarHide>()
+            .add_systems(Update, hide_windows_from_taskbar);
     }
 }
+
+/// Marker component for windows that need the `WS_EX_TOOLWINDOW` style applied
+/// to hide them from the taskbar and Alt+Tab.
+#[cfg(target_os = "windows")]
+#[derive(Component, Debug, Reflect)]
+#[reflect(Component)]
+struct NeedsTaskbarHide;
 
 #[derive(Component, Debug, Reflect, Serialize, Deserialize)]
 #[reflect(Component, Serialize, Deserialize)]
@@ -130,7 +141,8 @@ fn setup_windows(
             if let Some(entity) = default_window_entity {
                 // Reuse the existing default primary window to preserve the wgpu surface/swapchain.
                 // Despawning the original window on Windows destroys the rendering context.
-                commands.entity(entity).insert((
+                let mut cmd = commands.entity(entity);
+                cmd.insert((
                     Name::new(format!("Window({:?})", monitor.physical_position)),
                     RenderLayers::layer(layer),
                     window,
@@ -140,35 +152,39 @@ fn setup_windows(
                         ..default()
                     },
                 ));
+                #[cfg(target_os = "windows")]
+                cmd.insert(NeedsTaskbarHide);
                 entity
             } else {
-                commands
-                    .spawn((
-                        Name::new(format!("Window({:?})", monitor.physical_position)),
-                        RenderLayers::layer(layer),
-                        window,
-                        PrimaryWindow,
-                        AppWindow,
-                        CursorOptions {
-                            hit_test: true,
-                            ..default()
-                        },
-                    ))
-                    .id()
-            }
-        } else {
-            commands
-                .spawn((
+                let mut cmd = commands.spawn((
                     Name::new(format!("Window({:?})", monitor.physical_position)),
                     RenderLayers::layer(layer),
                     window,
+                    PrimaryWindow,
                     AppWindow,
                     CursorOptions {
                         hit_test: true,
                         ..default()
                     },
-                ))
-                .id()
+                ));
+                #[cfg(target_os = "windows")]
+                cmd.insert(NeedsTaskbarHide);
+                cmd.id()
+            }
+        } else {
+            let mut cmd = commands.spawn((
+                Name::new(format!("Window({:?})", monitor.physical_position)),
+                RenderLayers::layer(layer),
+                window,
+                AppWindow,
+                CursorOptions {
+                    hit_test: true,
+                    ..default()
+                },
+            ));
+            #[cfg(target_os = "windows")]
+            cmd.insert(NeedsTaskbarHide);
+            cmd.id()
         };
 
         commands
@@ -265,6 +281,42 @@ fn initialize_camera_position(
             .remove::<UninitializedCamera>()
             .remove::<CameraWindowPosition>();
     }
+}
+
+/// Applies `WS_EX_TOOLWINDOW` to windows marked with [`NeedsTaskbarHide`],
+/// hiding them from the taskbar and Alt+Tab on Windows.
+#[cfg(target_os = "windows")]
+fn hide_windows_from_taskbar(
+    mut commands: Commands,
+    windows: Query<Entity, (With<Window>, With<NeedsTaskbarHide>)>,
+) {
+    use bevy::winit::WINIT_WINDOWS;
+    use raw_window_handle::HasWindowHandle;
+    use windows::Win32::Foundation::HWND;
+    use windows::Win32::UI::WindowsAndMessaging::{
+        GetWindowLongPtrW, SetWindowLongPtrW, GWL_EXSTYLE, WS_EX_TOOLWINDOW,
+    };
+
+    WINIT_WINDOWS.with(|winit_windows| {
+        let winit_windows = winit_windows.borrow();
+        for entity in windows.iter() {
+            let Some(winit_window) = winit_windows.get_window(entity) else {
+                continue;
+            };
+            let Ok(handle) = winit_window.window_handle() else {
+                continue;
+            };
+            let raw_window_handle::RawWindowHandle::Win32(win32_handle) = handle.as_raw() else {
+                continue;
+            };
+            let hwnd = HWND(win32_handle.hwnd.get() as *mut core::ffi::c_void);
+            unsafe {
+                let style = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
+                SetWindowLongPtrW(hwnd, GWL_EXSTYLE, style | WS_EX_TOOLWINDOW.0 as isize);
+            }
+            commands.entity(entity).remove::<NeedsTaskbarHide>();
+        }
+    });
 }
 
 fn create_window(layer: usize, size: Vec2) -> Window {
