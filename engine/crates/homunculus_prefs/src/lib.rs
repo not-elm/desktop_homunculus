@@ -214,6 +214,26 @@ impl PrefsDatabase {
         Ok(keys)
     }
 
+    /// Returns all preference entries as `(key, value)` pairs.
+    pub fn list_entries(&self) -> Result<Vec<(String, serde_json::Value)>, rusqlite::Error> {
+        let mut stmt = self
+            .0
+            .prepare("SELECT key, value, value_type FROM preferences")?;
+        let entries = stmt
+            .query_map([], |row| {
+                let key: String = row.get(0)?;
+                let value: SqlValue = row.get(1)?;
+                let value_type: String = row.get(2)?;
+                Ok((key, value, value_type))
+            })?
+            .filter_map(|r| r.ok())
+            .filter_map(|(key, value, value_type)| {
+                sql_to_json(value, &value_type).map(|v| (key, v))
+            })
+            .collect();
+        Ok(entries)
+    }
+
     /// Deletes a preference entry by key.
     ///
     /// Returns `Ok(())` even if the key did not exist.
@@ -361,6 +381,27 @@ mod test {
         let mut keys = db.list_keys().unwrap();
         keys.sort();
         assert_eq!(keys, vec!["a", "b"]);
+    }
+
+    #[test]
+    fn test_list_entries() {
+        let db = PrefsDatabase::open_in_memory();
+        db.save_json("name", &serde_json::json!("alice")).unwrap();
+        db.save_json("age", &serde_json::json!(30)).unwrap();
+        db.save_json("active", &serde_json::json!(true)).unwrap();
+        let mut entries = db.list_entries().unwrap();
+        entries.sort_by(|a, b| a.0.cmp(&b.0));
+        assert_eq!(entries.len(), 3);
+        assert_eq!(entries[0], ("active".to_string(), serde_json::json!(true)));
+        assert_eq!(entries[1], ("age".to_string(), serde_json::json!(30)));
+        assert_eq!(entries[2], ("name".to_string(), serde_json::json!("alice")));
+    }
+
+    #[test]
+    fn test_list_entries_empty() {
+        let db = PrefsDatabase::open_in_memory();
+        let entries = db.list_entries().unwrap();
+        assert!(entries.is_empty());
     }
 
     #[test]
