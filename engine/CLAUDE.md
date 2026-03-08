@@ -11,6 +11,7 @@ make fix-lint            # cargo clippy --workspace --fix --allow-dirty && cargo
 make gen-open-api        # Regenerate OpenAPI spec → docs/website/static/api/open-api.yml
 make setup               # Install all Rust/Node tools + download CEF framework (~300MB, skipped if present)
 make setup-cef            # Download CEF framework only (macOS; skips if already installed)
+make release-windows     # Build MSI installer via WiX 4.x (Windows only)
 ```
 
 Single test:
@@ -124,4 +125,36 @@ After changing Rust code, run `cargo test --workspace`.
 - HTTP server port is configured via `~/.homunculus/config.toml` (`port` field, defaults to `3100`). Config uses snake_case TOML keys (e.g., `mods_dir`).
 - Logs are written to `~/.homunculus/Logs/log.txt` (daily rolling). Debug builds: INFO level. Release builds: ERROR level.
 - WebView shortcuts: `F1`/`F2` open/close DevTools, `Cmd+[`/`Cmd+]` navigate back/forward.
-- Asset path resolution: dev mode uses `assets/` relative to `CARGO_MANIFEST_DIR`; release uses `../Resources/assets` (inside `.app` bundle).
+- Asset path resolution varies by platform:
+  - Dev: `assets/` relative to `CARGO_MANIFEST_DIR`
+  - macOS release: `../Resources/assets` (inside `.app` bundle)
+  - Windows release: exe-relative path via `std::env::current_exe()` (avoids CWD dependency from MSI installs)
+
+## Platform-Specific Notes
+
+### Windows
+
+- **Composite alpha**: Uses `CompositeAlphaMode::Auto` (macOS uses `PostMultiplied`).
+- **Panic hook**: Release builds show `MessageBoxW` dialogs instead of silent crashes.
+- **Logging filter**: `wgpu_hal=off` suppresses noisy GPU backend logs.
+- **Window sizing**: Windows are created 1px smaller than monitor size to work around transparency issues.
+- **Build artifacts**: `build.rs` embeds the exe icon via `embed-resource` on Windows targets (`build/windows/icon.rc`).
+- **Path handling**: Use forward slashes or `Path` APIs — raw backslashes break TOML parsing in `hmcs config set`.
+- **Process spawning**: Uses `pnpm.cmd` (not `pnpm`) on Windows for mod discovery and command execution.
+
+### Multi-Monitor Window Management (`homunculus_windows`)
+
+Each monitor gets its own Bevy window with an isolated render layer. The primary window is **reused** (not despawned) to preserve the wgpu surface/swapchain — despawning would destroy the rendering context. Cameras are initialized in two phases: spawn with `UninitializedCamera` marker, then align with desktop coordinates via `viewport_to_world` ray casting.
+
+## Build Profiles
+
+- **`dev`**: `opt-level = 1` for faster iteration.
+- **`release`**: Full LTO enabled.
+- **`dist`** (for distribution): `opt-level = 2`, `lto = "thin"`, `strip = true`. Used by `make release-macos` and `make release-windows`.
+
+## Build Scripts (`scripts/`)
+
+- `setup.py` — Platform-aware setup (detects macOS vs Windows, installs appropriate tools).
+- `setup_cef.py` — Downloads and extracts CEF framework for the current platform.
+- `setup_ci.py` — CI-specific setup (uses `cargo-binstall`, skips `cargo-about`).
+- `release_windows.py` — Stages CEF DLLs/resources into `build/windows/installer/cef_runtime/` and builds MSI via WiX 4.x.
