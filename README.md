@@ -38,7 +38,7 @@ Bring your desktop to life with interactive 3D VRM characters. Desktop Homunculu
 | Platform | Status                                             |
 | -------- | -------------------------------------------------- |
 | macOS    | Fully supported                                    |
-| Windows  | Planned (transparency issues on some GPUs) |
+| Windows  | Supported (NVIDIA GPU configuration required) |
 | Linux    | Planned                                            |
 
 ## Contributing

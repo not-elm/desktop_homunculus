@@ -3,26 +3,28 @@ title: "Installation"
 sidebar_position: 2
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Installation
 
 Follow these steps to install Desktop Homunculus and set up your MOD environment.
 
 ## System Requirements
 
-| | macOS |
-|---|---|
-| **OS** | macOS 12 (Monterey) or later |
-| **CPU** | Apple Silicon or Intel |
-| **Node.js** | 22 or later |
-| **Disk Space** | 500 MB or more |
-
-:::info[Windows Support]
-Windows support is planned. Currently, only macOS is supported.
-:::
+| | macOS | Windows |
+|---|---|---|
+| **OS** | macOS 12 (Monterey) or later | Windows 10 or later |
+| **CPU** | Apple Silicon or Intel | x86_64 |
+| **Node.js** | 22 or later | 22 or later |
+| **Disk Space** | 500 MB or more | 500 MB or more |
 
 ## Step 1: Install Desktop Homunculus
 
 Download the latest release from the [GitHub Releases page](https://github.com/not-elm/desktop_homunculus/releases).
+
+<Tabs>
+<TabItem value="macos" label="macOS" default>
 
 1. Download the `.dmg` file
 2. Open the DMG and drag **Desktop Homunculus** into your `/Applications` folder
@@ -35,6 +37,28 @@ If macOS shows "Desktop Homunculus can't be opened because it is from an unident
 2. Scroll down and click **Open Anyway**
 3. Click **Open** in the confirmation dialog
 :::
+
+</TabItem>
+<TabItem value="windows" label="Windows">
+
+:::caution[NVIDIA GPU Users — Required Before First Launch]
+If you have an NVIDIA GPU, you **must** configure the following setting before launching Desktop Homunculus, otherwise the window background will be black instead of transparent:
+
+1. Open **NVIDIA Control Panel**
+2. Go to **Manage 3D Settings**
+3. Find **"Vulkan/OpenGL present method"**
+4. Set it to **"Prefer native"**
+5. Click **Apply**
+
+This must be done **before first launch**. See [bevyengine/bevy#7544](https://github.com/bevyengine/bevy/issues/7544) for details.
+:::
+
+1. Download the `.msi` file
+2. Run the installer and follow the prompts
+3. Launch **Desktop Homunculus** from the Start Menu
+
+</TabItem>
+</Tabs>
 
 ## Step 2: Install Node.js
 
@@ -61,10 +85,6 @@ Install **pnpm** (package manager) and **@hmcs/cli** (MOD management CLI) global
 ```shell
 npm install -g pnpm @hmcs/cli
 ```
-
-:::info[Platform Support]
-The `hmcs` CLI is currently supported on **macOS only**. Windows support is planned for a future release.
-:::
 
 Verify the installation:
 
@@ -124,6 +144,10 @@ MODs require Node.js 22+ to run TypeScript scripts directly via tsx. Download th
 ### App blocked by Gatekeeper
 
 See [Step 1](#step-1-install-desktop-homunculus) for instructions on allowing the app.
+
+### Black/opaque window background on Windows
+
+If the window background appears black instead of transparent on Windows, you likely have an NVIDIA GPU that requires a configuration change. See the [NVIDIA GPU setup instructions](#step-1-install-desktop-homunculus) in Step 1 (Windows tab).
 
 ### No character appears after installing MODs
 
