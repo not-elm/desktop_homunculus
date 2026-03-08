@@ -81,8 +81,11 @@ fn apply_request(
     else {
         return;
     };
+    let Some(local_pos) = window_local_pos(window, stamp_viewport) else {
+        return;
+    };
     let stamp_pos = cameras
-        .to_world_2d_pos_from_viewport(window_entity, window_local_pos(window, stamp_viewport))
+        .to_world_2d_pos_from_viewport(window_entity, local_pos)
         .unwrap_or_default();
     commands.spawn((
         layers.clone(),
