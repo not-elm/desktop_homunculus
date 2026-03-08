@@ -156,8 +156,8 @@ pub async fn execute_command(
     let (tx, rx) = tokio::sync::mpsc::channel::<Vec<u8>>(64);
 
     tokio::spawn(async move {
-        let mut child = match tokio::process::Command::new(homunculus_utils::mods::pnpm_program())
-            .arg("exec")
+        let mut cmd = tokio::process::Command::new(homunculus_utils::mods::pnpm_program());
+        cmd.arg("exec")
             .arg(&command)
             .args(&args)
             .current_dir(&mods_dir)
@@ -167,8 +167,10 @@ pub async fn execute_command(
                 std::process::Stdio::piped()
             } else {
                 std::process::Stdio::null()
-            })
-            .spawn()
+            });
+        #[cfg(windows)]
+        cmd.creation_flags(0x08000000);
+        let mut child = match cmd.spawn()
         {
             Ok(c) => c,
             Err(_) => {

@@ -88,7 +88,7 @@ Custom `SystemParam` types available in `homunculus_core::system_param::prelude`
 
 ### Plugin Composition
 
-`src/main.rs` composes ~15 independent plugins. `HomunculusModPlugin` must be added first (enables asset loading). The `develop` feature flag adds `bevy_egui` inspector and CEF debug mode. `CefPlugin` runs with `disable-web-security` and includes a `CefFetchPlugin` that proxies JavaScript `fetch` calls from WebViews through native `reqwest`.
+`src/main.rs` composes ~15 independent plugins. `HomunculusModPlugin` must be added first (enables asset loading). The `develop` feature flag adds `bevy_egui` inspector and CEF debug mode. `CefPlugin` runs with `disable-web-security` and includes a `CefFetchPlugin` that proxies JavaScript `fetch` calls from WebViews through native `reqwest`. On non-macOS platforms, `early_exit_if_subprocess()` must run before Bevy app setup to handle CEF subprocess re-execution.
 
 ### Crates
 

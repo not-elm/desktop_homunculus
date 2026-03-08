@@ -4,6 +4,7 @@ use std::process::Command;
 use crate::{
     config::HomunculusConfig,
     error::{ModsError, UtilError, UtilResult},
+    process::CommandNoWindow,
 };
 
 /// Validate an npm package specifier for safe use with `pnpm add`/`pnpm remove`.
@@ -130,7 +131,9 @@ pub fn pnpm_program() -> &'static str {
 fn create_pnpm_command_base() -> UtilResult<Command> {
     let config = HomunculusConfig::load()?;
     let mut command = Command::new(pnpm_program());
-    command.args(["-C", &format!("{}", &config.mods_dir.display())]);
+    command
+        .no_window()
+        .args(["-C", &format!("{}", &config.mods_dir.display())]);
     Ok(command)
 }
 

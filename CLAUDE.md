@@ -40,7 +40,9 @@ make setup            # pnpm install + engine tooling setup + CEF framework down
 make debug            # pnpm build + cargo run (debug with inspector)
 make test             # pnpm test (TS) + cargo test --workspace (Rust)
 make fix-lint         # cargo clippy --fix + cargo fmt (Rust only, no TS lint)
+make gen-open-api     # Regenerate OpenAPI spec + pnpm build (rebuilds SDK types)
 make release-macos    # pnpm build + native arch release → DMG
+make release-windows  # pnpm build + MSI installer via WiX 4.x (Windows only)
 ```
 
 ### Engine (Rust) — run from `engine/`
