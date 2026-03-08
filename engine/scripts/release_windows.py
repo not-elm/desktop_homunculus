@@ -12,6 +12,10 @@ BIN_NAME = "desktop_homunculus"
 INSTALLER_PROJECT = Path("build/windows/installer/Installer.wixproj")
 BUNDLE_DIR = Path("target/bundle")
 RUST_LICENSES_OUTPUT = Path("credits/licenses/RUST_THIRD_PARTY.md")
+CEF_STAGING_DIR = Path("build/windows/installer/cef_runtime")
+DIST_DIR = Path("target/dist")
+CEF_EXTENSIONS = {".dll", ".pak", ".dat", ".bin"}
+CEF_EXCLUDE_EXTENSIONS = {".exe", ".lib", ".pdb", ".d", ".exp"}
 
 
 def get_version() -> str:
@@ -28,6 +32,31 @@ def get_version() -> str:
             # Strip pre-release suffix: "0.1.0-alpha.4" -> "0.1.0"
             return version.split("-")[0]
     error(f"Package '{BIN_NAME}' not found in cargo metadata")
+
+
+def stage_cef_files() -> None:
+    """Stage CEF runtime files from target/dist/ into the installer staging directory."""
+    if CEF_STAGING_DIR.exists():
+        shutil.rmtree(CEF_STAGING_DIR)
+    CEF_STAGING_DIR.mkdir(parents=True)
+
+    count = 0
+    for item in DIST_DIR.iterdir():
+        if item.is_file() and item.suffix in CEF_EXTENSIONS:
+            shutil.copy2(item, CEF_STAGING_DIR / item.name)
+            count += 1
+        elif item.is_dir() and item.name == "locales":
+            shutil.copytree(item, CEF_STAGING_DIR / "locales")
+            count += 1
+
+    log(f"Staged {count} CEF items to {CEF_STAGING_DIR}")
+
+
+def cleanup_cef_staging() -> None:
+    """Remove the CEF staging directory after the build."""
+    if CEF_STAGING_DIR.exists():
+        shutil.rmtree(CEF_STAGING_DIR)
+        log(f"Cleaned up {CEF_STAGING_DIR}")
 
 
 def release_windows() -> None:
@@ -50,11 +79,14 @@ def release_windows() -> None:
         "about.hbs",
     ])
 
-    # 4. Get version (3-part numeric for MSI)
+    # 4. Stage CEF runtime files for installer
+    stage_cef_files()
+
+    # 5. Get version (3-part numeric for MSI)
     version = get_version()
     log(f"Version: {version}")
 
-    # 5. Build MSI (pass version via MSBuild property)
+    # 6. Build MSI (pass version via MSBuild property)
     run([
         "dotnet",
         "build",
@@ -64,12 +96,15 @@ def release_windows() -> None:
         f"-p:Version={version}",
     ])
 
-    # 6. Copy MSI to target/bundle/
+    # 7. Copy MSI to target/bundle/
     BUNDLE_DIR.mkdir(parents=True, exist_ok=True)
     msi_source = INSTALLER_PROJECT.parent / "bin" / "Release" / "en-US" / "installer.msi"
     msi_dest = BUNDLE_DIR / f"{BIN_NAME}-{version}.msi"
     shutil.copy2(msi_source, msi_dest)
     log(f"Done: {msi_dest}")
+
+    # 8. Clean up CEF staging directory
+    cleanup_cef_staging()
 
 
 if __name__ == "__main__":

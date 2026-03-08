@@ -29,4 +29,13 @@
         </HarvestDirectory>
         <BindPath Include="..\..\..\credits" />
     </ItemGroup>
+
+    <ItemGroup>
+        <HarvestDirectory Include="cef_runtime">
+              <ComponentGroupName>CefDirectory</ComponentGroupName>
+              <DirectoryRefId>INSTALLFOLDER</DirectoryRefId>
+              <SuppressRootDirectory>true</SuppressRootDirectory>
+        </HarvestDirectory>
+        <BindPath Include="cef_runtime" />
+    </ItemGroup>
 </Project>

@@ -5,7 +5,7 @@
         UpgradeCode="74746dfe-d3dd-5a66-9a64-8f112c287b23"
         Version="$(var.Version)"
 
-        Scope="perUserOrMachine">
+        Scope="perMachine">
         <MajorUpgrade DowngradeErrorMessage="!(loc.DowngradeError)" />
 
         <Media Id="1" Cabinet="myapplication.cab" EmbedCab="yes" />
@@ -22,13 +22,14 @@
         </StandardDirectory>
 
          <!-- Shows a UI that allows customizing the install location -->
-        <ui:WixUI Id="WixUI_CustomInstallDir" InstallDirectory="INSTALLFOLDER" />
+        <ui:WixUI Id="WixUI_InstallDir" InstallDirectory="INSTALLFOLDER" />
 
         <Feature Id="Main">
             <ComponentGroupRef Id="MainComponent" />
             <ComponentRef Id="StartMenuShortcut" />
             <ComponentGroupRef Id="AssetsDirectory" />
             <ComponentGroupRef Id="CreditsDirectory" />
+            <ComponentGroupRef Id="CefDirectory" />
         </Feature>
 
         <!-- Installs the actual files -->
