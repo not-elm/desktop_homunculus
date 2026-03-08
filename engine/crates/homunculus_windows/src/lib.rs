@@ -50,11 +50,11 @@
 //!
 //! ## Initialization Process
 //!
-//! 1. **Default Window Handling**: Marks and later removes Bevy's default window
-//! 2. **Monitor Detection**: Discovers all available monitors and their properties
-//! 3. **Window Creation**: Creates transparent windows sized and positioned for each monitor
-//! 4. **Camera Setup**: Spawns orthographic cameras for each window
-//! 5. **Position Calculation**: Aligns cameras with desktop coordinate systems
+//! 1. **Monitor Detection**: Discovers all available monitors and their properties
+//! 2. **Window Creation**: Reuses Bevy's default primary window for the primary monitor,
+//!    spawns new windows for secondary monitors
+//! 3. **Camera Setup**: Spawns orthographic cameras for each window
+//! 4. **Position Calculation**: Aligns cameras with desktop coordinate systems
 
 use bevy::camera::visibility::RenderLayers;
 use bevy::camera::{RenderTarget, ScalingMode};
@@ -89,9 +89,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// # Systems
 ///
-/// - `mark_default_window`: Identifies Bevy's default window for removal
-/// - `setup_windows`: Creates windows and cameras for each monitor
-/// - `despawn_default_window`: Removes the default window after setup
+/// - `setup_windows`: Creates windows and cameras for each monitor (reuses the default primary window)
 /// - `initialize_camera_position`: Aligns cameras with desktop coordinates
 ///
 /// # Multi-Monitor Support
@@ -104,12 +102,8 @@ pub struct HomunculusWindowsPlugin;
 impl Plugin for HomunculusWindowsPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<UninitializedCamera>()
-            .register_type::<DefaultPrimaryWindow>()
             .register_type::<CameraWindowPosition>()
-            .add_systems(
-                PreStartup,
-                (mark_default_window, setup_windows, despawn_default_window).chain(),
-            )
+            .add_systems(PreStartup, setup_windows)
             .add_systems(Update, initialize_camera_position);
     }
 }
@@ -118,49 +112,65 @@ impl Plugin for HomunculusWindowsPlugin {
 #[reflect(Component, Serialize, Deserialize)]
 struct UninitializedCamera;
 
-/// The default primary window is only used to adjust the position of the window, and
-/// it is despawn after all windows are created.
-#[derive(Component, Debug, Reflect, Serialize, Deserialize)]
-#[reflect(Component, Serialize, Deserialize)]
-struct DefaultPrimaryWindow;
-
-fn mark_default_window(mut commands: Commands, default_window: Query<Entity, With<PrimaryWindow>>) {
-    if let Ok(window) = default_window.single() {
-        commands.entity(window).try_insert(DefaultPrimaryWindow);
-    }
-}
-
-fn despawn_default_window(
-    mut commands: Commands,
-    default_window: Query<Entity, With<DefaultPrimaryWindow>>,
-) {
-    if let Ok(window) = default_window.single() {
-        commands.entity(window).despawn();
-    }
-}
-
 fn setup_windows(
     mut commands: Commands,
     monitors: Query<(Entity, &Monitor, Option<&PrimaryMonitor>)>,
+    default_window: Query<Entity, With<PrimaryWindow>>,
 ) {
+    let default_window_entity = default_window.single().ok();
+
     for (layer, (monitor_entity, monitor, primary)) in monitors.iter().enumerate() {
         let mut window = create_window(layer, monitor.physical_size().as_vec2());
         let s = monitor.scale_factor as f32;
         let window_position = monitor.physical_position.as_vec2() / s;
         window.position.set(window_position.as_ivec2());
         window.resolution.set_scale_factor(s);
-        let window_entity = commands
-            .spawn((
-                Name::new(format!("Window({:?})", monitor.physical_position)),
-                RenderLayers::layer(layer),
-                window,
-                AppWindow,
-                CursorOptions {
-                    hit_test: true,
-                    ..default()
-                },
-            ))
-            .id();
+
+        let window_entity = if primary.is_some() {
+            if let Some(entity) = default_window_entity {
+                // Reuse the existing default primary window to preserve the wgpu surface/swapchain.
+                // Despawning the original window on Windows destroys the rendering context.
+                commands.entity(entity).insert((
+                    Name::new(format!("Window({:?})", monitor.physical_position)),
+                    RenderLayers::layer(layer),
+                    window,
+                    AppWindow,
+                    CursorOptions {
+                        hit_test: true,
+                        ..default()
+                    },
+                ));
+                entity
+            } else {
+                commands
+                    .spawn((
+                        Name::new(format!("Window({:?})", monitor.physical_position)),
+                        RenderLayers::layer(layer),
+                        window,
+                        PrimaryWindow,
+                        AppWindow,
+                        CursorOptions {
+                            hit_test: true,
+                            ..default()
+                        },
+                    ))
+                    .id()
+            }
+        } else {
+            commands
+                .spawn((
+                    Name::new(format!("Window({:?})", monitor.physical_position)),
+                    RenderLayers::layer(layer),
+                    window,
+                    AppWindow,
+                    CursorOptions {
+                        hit_test: true,
+                        ..default()
+                    },
+                ))
+                .id()
+        };
+
         commands
             .entity(monitor_entity)
             .try_insert(RenderLayers::layer(layer));
@@ -173,10 +183,6 @@ fn setup_windows(
             monitor.physical_size().as_vec2(),
             window_position,
         );
-
-        if primary.is_some() {
-            commands.entity(window_entity).try_insert(PrimaryWindow);
-        }
     }
 }
 
