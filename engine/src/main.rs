@@ -43,6 +43,13 @@ use tracing_appender::rolling;
 use crate::cef_fetch::CefFetchPlugin;
 
 fn main() {
+    // CEF subprocesses (renderer, GPU, utility) re-execute this binary.
+    // Detect and exit before any Bevy/window initialization.
+    #[cfg(not(target_os = "macos"))]
+    bevy_cef::prelude::early_exit_if_subprocess();
+
+    setup_panic_hook();
+
     let config = HomunculusConfig::load().unwrap_or_else(|e| {
         eprintln!("Failed to load config: {e}");
         HomunculusConfig::default()
@@ -73,17 +80,11 @@ fn main() {
                         transparent: true,
                         ..default()
                     }),
-                    exit_condition: ExitCondition::OnAllClosed,
+                    exit_condition: ExitCondition::DontExit,
                     ..default()
                 })
                 .set(AssetPlugin {
-                    file_path: if cfg!(target_os = "macos")
-                        && std::env::var("CARGO_MANIFEST_DIR").is_err()
-                    {
-                        "../Resources/assets".to_string()
-                    } else {
-                        "assets".to_string()
-                    },
+                    file_path: resolve_asset_path(),
                     unapproved_path_mode: UnapprovedPathMode::Allow,
                     ..default()
                 }),
@@ -113,6 +114,12 @@ fn main() {
                 command_line_config: CommandLineConfig::default()
                     .with_switch("disable-web-security"),
                 extensions: CefExtensions::new().add("cef-fetch", include_str!("./cef_fetch.js")),
+                root_cache_path: Some(
+                    homunculus_dir()
+                        .join("cef_data")
+                        .to_string_lossy()
+                        .into_owned(),
+                ),
             },
             CefFetchPlugin,
         ))
@@ -131,6 +138,97 @@ fn main() {
             ),
         )
         .run();
+}
+
+/// Resolves the asset directory path based on the current platform and build mode.
+///
+/// - **Dev builds** (CARGO_MANIFEST_DIR set): Uses `"assets"` relative to CWD (Cargo convention).
+/// - **macOS release**: Uses `"../Resources/assets"` (inside `.app` bundle).
+/// - **Windows release**: Uses exe-relative `"assets"` to avoid CWD dependency.
+/// - **Fallback**: `"assets"` relative to CWD.
+fn resolve_asset_path() -> String {
+    // Dev builds: Cargo sets CARGO_MANIFEST_DIR, use default relative path
+    if std::env::var("CARGO_MANIFEST_DIR").is_ok() {
+        return "assets".to_string();
+    }
+
+    if cfg!(target_os = "macos") {
+        return "../Resources/assets".to_string();
+    }
+
+    if cfg!(target_os = "windows") {
+        // Use exe-relative path so MSI installs work regardless of CWD
+        if let Ok(exe_path) = std::env::current_exe()
+            && let Some(exe_dir) = exe_path.parent()
+        {
+            let assets_dir = exe_dir.join("assets");
+            if assets_dir.exists() {
+                return assets_dir.to_string_lossy().into_owned();
+            }
+        }
+    }
+
+    "assets".to_string()
+}
+
+/// Installs a custom panic hook that writes to a log file and shows a message box on Windows.
+///
+/// In release builds with `windows_subsystem = "windows"`, panics are invisible because
+/// there is no console. This hook ensures panics are always visible to the user.
+fn setup_panic_hook() {
+    let default_hook = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |info| {
+        let message = format!("Desktop Homunculus crashed:\n\n{info}");
+
+        // Write panic to log file
+        let log_dir = homunculus_dir().join("Logs");
+        let _ = std::fs::create_dir_all(&log_dir);
+        let log_path = log_dir.join("panic.log");
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(&log_path)
+        {
+            use std::io::Write;
+            let _ = writeln!(file, "{message}");
+        }
+
+        // Show message box on Windows release builds (no console available)
+        #[cfg(all(target_os = "windows", not(debug_assertions)))]
+        show_error_message_box(&message);
+
+        default_hook(info);
+    }));
+}
+
+/// Shows a native Windows error dialog. Used only in release builds where
+/// `windows_subsystem = "windows"` suppresses the console.
+#[cfg(all(target_os = "windows", not(debug_assertions)))]
+fn show_error_message_box(message: &str) {
+    use std::ffi::OsStr;
+    use std::os::windows::ffi::OsStrExt;
+
+    const MB_OK: u32 = 0x0000_0000;
+    const MB_ICONERROR: u32 = 0x0000_0010;
+
+    unsafe extern "system" {
+        fn MessageBoxW(hwnd: *mut u8, text: *const u16, caption: *const u16, typ: u32) -> i32;
+    }
+
+    let wide_message: Vec<u16> = OsStr::new(message).encode_wide().chain(Some(0)).collect();
+    let wide_title: Vec<u16> = OsStr::new("Desktop Homunculus - Error")
+        .encode_wide()
+        .chain(Some(0))
+        .collect();
+    // SAFETY: MessageBoxW is a standard Win32 API call with null parent window.
+    unsafe {
+        MessageBoxW(
+            std::ptr::null_mut(),
+            wide_message.as_ptr(),
+            wide_title.as_ptr(),
+            MB_OK | MB_ICONERROR,
+        );
+    }
 }
 
 fn custom_layer(_app: &mut App) -> Option<BoxedLayer> {
