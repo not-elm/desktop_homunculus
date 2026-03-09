@@ -6,6 +6,7 @@
 
 mod cef_fetch;
 
+use crate::cef_fetch::CefFetchPlugin;
 use bevy::DefaultPlugins;
 use bevy::app::{App, PluginGroup};
 use bevy::asset::UnapprovedPathMode;
@@ -13,7 +14,7 @@ use bevy::input::common_conditions::{input_just_pressed, input_pressed};
 use bevy::log::tracing_subscriber::Layer;
 use bevy::log::{BoxedLayer, LogPlugin};
 use bevy::prelude::*;
-use bevy::window::{ExitCondition, WindowPlugin, WindowResolution};
+use bevy::window::{ExitCondition, WindowLevel, WindowPlugin, WindowResolution};
 use bevy_cef::CefPlugin;
 use bevy_cef::prelude::*;
 use bevy_flurx::FlurxPlugin;
@@ -39,8 +40,6 @@ use homunculus_windows::HomunculusWindowsPlugin;
 use std::sync::OnceLock;
 use tracing_appender::non_blocking::WorkerGuard;
 use tracing_appender::rolling;
-
-use crate::cef_fetch::CefFetchPlugin;
 
 fn main() {
     // CEF subprocesses (renderer, GPU, utility) re-execute this binary.
@@ -79,6 +78,7 @@ fn main() {
                         decorations: false,
                         transparent: true,
                         skip_taskbar: true,
+                        window_level: WindowLevel::AlwaysOnTop,
                         ..default()
                     }),
                     exit_condition: ExitCondition::OnAllClosed,

@@ -2043,9 +2043,9 @@ dependencies = [
 
 [[package]]
 name = "bevy_vrm1"
-version = "0.6.1"
+version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5ad29cc25c6c271947883c81cc9f355d3115f4446c3dae4ceaf2903ca8357538"
+checksum = "627d36a13fe1ca23dde82f125b9822277e0f7ac70932e970e86ffeb9dca34a4c"
 dependencies = [
  "anyhow",
  "bevy",
@@ -3077,7 +3077,6 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
- "signal-hook",
  "tokio",
  "tracing-appender",
 ]
@@ -7232,16 +7231,6 @@ name = "shlex"
 version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
-
-[[package]]
-name = "signal-hook"
-version = "0.3.18"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d881a16cf4426aa584979d30bd82cb33429027e42122b169753d6ef1085ed6e2"
-dependencies = [
- "libc",
- "signal-hook-registry",
-]
 
 [[package]]
 name = "signal-hook-registry"
