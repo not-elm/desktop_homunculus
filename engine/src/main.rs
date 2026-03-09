@@ -80,7 +80,7 @@ fn main() {
                         transparent: true,
                         ..default()
                     }),
-                    exit_condition: ExitCondition::DontExit,
+                    exit_condition: ExitCondition::OnAllClosed,
                     ..default()
                 })
                 .set(AssetPlugin {
