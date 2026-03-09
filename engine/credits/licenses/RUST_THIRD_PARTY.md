@@ -5,7 +5,7 @@ Do not edit manually.
 
 ## License Summary
 
-- Apache License 2.0 (601)
+- Apache License 2.0 (600)
 - MIT License (171)
 - Unicode License v3 (19)
 - BSD 3-Clause "New" or "Revised" License (10)
@@ -3698,9 +3698,9 @@ Used by:
 Used by:
 - assert_type_match 0.1.1 (https://github.com/MrGVSV/assert_type_match)
 - bevy_cef 0.4.0 (https://github.com/not-elm/bevy_cef)
-- bevy_flurx 0.14.0 (https://github.com/not-elm/bevy_flurx)
+- bevy_flurx 0.14.1 (https://github.com/not-elm/bevy_flurx)
 - bevy_tray_icon 0.3.1 (https://github.com/not-elm/bevy_tray_icon)
-- bevy_vrm1 0.6.1 (https://github.com/not-elm/bevy_vrm1)
+- bevy_vrm1 0.6.2 (https://github.com/not-elm/bevy_vrm1)
 - codespan-reporting 0.12.0 (https://github.com/brendanzab/codespan)
 - cpal 0.15.3 (https://github.com/rustaudio/cpal)
 - self_cell 1.2.2 (https://github.com/Voultapher/self_cell)
@@ -8904,7 +8904,6 @@ Used by:
 - security-framework 3.7.0 (https://github.com/kornelski/rust-security-framework)
 - send_wrapper 0.6.0 (https://github.com/thk1/send_wrapper)
 - signal-hook-registry 1.4.8 (https://github.com/vorner/signal-hook)
-- signal-hook 0.3.18 (https://github.com/vorner/signal-hook)
 - smallvec 1.15.1 (https://github.com/servo/rust-smallvec)
 - smol-hyper 0.1.1 (https://codeberg.org/notgull/smol-hyper)
 - smol_str 0.2.2 (https://github.com/rust-analyzer/smol_str)
