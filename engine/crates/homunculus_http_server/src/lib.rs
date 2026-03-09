@@ -168,7 +168,6 @@ pub fn create_openapi() -> utoipa::openapi::OpenApi {
 }
 
 fn setup(reactor: Res<ApiReactor>, config: Res<HomunculusConfig>) {
-    println!("===================== A");
     let reactor = reactor.clone();
     let config = config.clone();
     let addr = config.host();
