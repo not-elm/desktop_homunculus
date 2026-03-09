@@ -46,6 +46,7 @@ homunculus_mod = { workspace = true }
 homunculus_api = { workspace = true }
 homunculus_audio = { workspace = true }
 homunculus_tray = { workspace = true }
+homunculus_mcp = { workspace = true }
 bevy_egui = { workspace = true, optional = true }
 bevy-inspector-egui = { workspace = true, optional = true }
 tracing-appender = "0.2"
@@ -91,6 +92,7 @@ homunculus_mod = { path = "crates/homunculus_mod" }
 homunculus_api = { path = "crates/homunculus_api" }
 homunculus_audio = { path = "crates/homunculus_audio" }
 homunculus_tray = { path = "crates/homunculus_tray" }
+homunculus_mcp = { path = "crates/homunculus_mcp" }
 homunculus_utils = { path = "crates/homunculus_utils", default-features = false }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1" }
