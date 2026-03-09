@@ -131,8 +131,9 @@ fn setup_windows(
     monitors: Query<(Entity, &Monitor, Option<&PrimaryMonitor>)>,
     default_window: Query<Entity, With<PrimaryWindow>>,
 ) {
-    let default_window_entity = default_window.single().ok();
-
+    let default_window_entity = default_window
+        .single()
+        .expect("failed to obtain the primary window entity");
     for (layer, (monitor_entity, monitor, primary)) in monitors.iter().enumerate() {
         let mut window = create_window(layer, monitor.physical_size().as_vec2());
         let s = monitor.scale_factor as f32;
@@ -141,54 +142,23 @@ fn setup_windows(
         window.resolution.set_scale_factor(s);
 
         let window_entity = if primary.is_some() {
-            if let Some(entity) = default_window_entity {
-                // Reuse the existing default primary window to preserve the wgpu surface/swapchain.
-                // Despawning the original window on Windows destroys the rendering context.
-                let mut cmd = commands.entity(entity);
-                cmd.insert((
-                    Name::new(format!("Window({:?})", monitor.physical_position)),
-                    RenderLayers::layer(layer),
-                    window,
-                    AppWindow,
-                    CursorOptions {
-                        hit_test: true,
-                        ..default()
-                    },
-                ));
-                #[cfg(target_os = "windows")]
-                cmd.insert(NeedsActivation);
-                entity
-            } else {
-                let mut cmd = commands.spawn((
-                    Name::new(format!("Window({:?})", monitor.physical_position)),
-                    RenderLayers::layer(layer),
-                    window,
-                    PrimaryWindow,
-                    AppWindow,
-                    CursorOptions {
-                        hit_test: true,
-                        ..default()
-                    },
-                ));
-                #[cfg(target_os = "windows")]
-                cmd.insert(NeedsActivation);
-                cmd.id()
-            }
+            default_window_entity
         } else {
-            let mut cmd = commands.spawn((
-                Name::new(format!("Window({:?})", monitor.physical_position)),
-                RenderLayers::layer(layer),
-                window,
-                AppWindow,
-                CursorOptions {
-                    hit_test: true,
-                    ..default()
-                },
-            ));
-            #[cfg(target_os = "windows")]
-            cmd.insert(NeedsActivation);
-            cmd.id()
+            commands.spawn_empty().id()
         };
+
+        commands.entity(window_entity).insert((
+            Name::new(format!("Window({:?})", monitor.physical_position)),
+            RenderLayers::layer(layer),
+            window,
+            AppWindow,
+            CursorOptions {
+                hit_test: true,
+                ..default()
+            },
+            #[cfg(target_os = "windows")]
+            NeedsActivation,
+        ));
 
         commands
             .entity(monitor_entity)
