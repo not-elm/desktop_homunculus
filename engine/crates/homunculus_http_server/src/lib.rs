@@ -75,6 +75,8 @@ use crate::state::HttpState;
 use axum::Router;
 use bevy::prelude::*;
 use bevy::tasks::IoTaskPool;
+use bevy_flurx::action::side_effect;
+use bevy_flurx::prelude::Reactor;
 use homunculus_api::prelude::ApiReactor;
 use homunculus_core::prelude::OutputLog;
 use homunculus_utils::config::HomunculusConfig;
@@ -167,21 +169,32 @@ pub fn create_openapi() -> utoipa::openapi::OpenApi {
     api
 }
 
-fn setup(reactor: Res<ApiReactor>, config: Res<HomunculusConfig>) {
+fn setup(mut commands: Commands, reactor: Res<ApiReactor>, config: Res<HomunculusConfig>) {
     let reactor = reactor.clone();
     let config = config.clone();
     let addr = config.host();
-    IoTaskPool::get()
-        .spawn(async move {
-            let Ok(rt) = Runtime::new() else {
-                error!("Failed to create Tokio runtime for HTTP server");
-                return;
-            };
-            rt.spawn(async move { start_http_server(reactor, config, addr).await })
-                .await
-                .output_log_if_error("HTTP");
-        })
-        .detach();
+    commands.spawn(Reactor::schedule(|task| async move {
+        task.will(
+            Update,
+            side_effect::tokio::spawn(async move {
+                if let Err(e) = start_http_server(reactor, config, addr).await {
+                    error!("Failed to start http server: {e}");
+                }
+            }),
+        )
+        .await;
+    }));
+    // IoTaskPool::get()
+    //     .spawn(async move {
+    //         let Ok(rt) = Runtime::new() else {
+    //             error!("Failed to create Tokio runtime for HTTP server");
+    //             return;
+    //         };
+    //         rt.spawn(async move { start_http_server(reactor, config, addr).await })
+    //             .await
+    //             .output_log_if_error("HTTP");
+    //     })
+    //     .detach();
 }
 
 async fn start_http_server(
