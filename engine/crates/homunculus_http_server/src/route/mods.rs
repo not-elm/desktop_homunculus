@@ -170,8 +170,7 @@ pub async fn execute_command(
             });
         #[cfg(windows)]
         cmd.creation_flags(0x08000000);
-        let mut child = match cmd.spawn()
-        {
+        let mut child = match cmd.spawn() {
             Ok(c) => c,
             Err(_) => {
                 let _ = tx

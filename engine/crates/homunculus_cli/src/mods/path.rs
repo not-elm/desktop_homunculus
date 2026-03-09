@@ -26,10 +26,7 @@ fn update_path(raw: &str) -> UtilResult {
     let resolved = resolve_path(raw);
 
     std::fs::create_dir_all(&resolved).map_err(|e| {
-        anyhow::anyhow!(
-            "failed to create directory \"{}\": {e}",
-            resolved.display()
-        )
+        anyhow::anyhow!("failed to create directory \"{}\": {e}", resolved.display())
     })?;
 
     let mut config = HomunculusConfig::load()?;
@@ -44,7 +41,11 @@ fn update_path(raw: &str) -> UtilResult {
 fn resolve_path(raw: &str) -> PathBuf {
     let expanded = if raw.starts_with('~') {
         if let Some(home) = dirs::home_dir() {
-            home.join(raw.strip_prefix("~/").or(raw.strip_prefix('~')).unwrap_or(raw))
+            home.join(
+                raw.strip_prefix("~/")
+                    .or(raw.strip_prefix('~'))
+                    .unwrap_or(raw),
+            )
         } else {
             PathBuf::from(raw)
         }

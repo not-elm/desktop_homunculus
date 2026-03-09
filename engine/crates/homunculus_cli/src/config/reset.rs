@@ -1,4 +1,3 @@
-use anyhow;
 use homunculus_utils::{
     config::HomunculusConfig,
     error::{UtilError, UtilResult},

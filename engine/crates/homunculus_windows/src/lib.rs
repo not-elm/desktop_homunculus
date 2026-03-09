@@ -294,7 +294,7 @@ fn hide_windows_from_taskbar(
     use raw_window_handle::HasWindowHandle;
     use windows::Win32::Foundation::HWND;
     use windows::Win32::UI::WindowsAndMessaging::{
-        GetWindowLongPtrW, SetWindowLongPtrW, GWL_EXSTYLE, WS_EX_TOOLWINDOW,
+        GWL_EXSTYLE, GetWindowLongPtrW, SetWindowLongPtrW, WS_EX_TOOLWINDOW,
     };
 
     WINIT_WINDOWS.with(|winit_windows| {
