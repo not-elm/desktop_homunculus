@@ -58,7 +58,11 @@ signal-hook = { workspace = true }
 
 [workspace.dependencies]
 bevy_cef = { version = "0.4.0" }
-bevy_flurx = { version = "0.14", features = ["side-effect", "state", "tokio"] }
+bevy_flurx = { version = "0.14.1", features = [
+    "side-effect",
+    "state",
+    "tokio",
+] }
 bevy_vrm1 = { version = "0.6.1", features = ["serde", "log"] }
 bevy_tray_icon = { version = "0.3" }
 url = { version = "2", features = ["serde"] }

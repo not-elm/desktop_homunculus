@@ -1093,9 +1093,9 @@ dependencies = [
 
 [[package]]
 name = "bevy_flurx"
-version = "0.14.0"
+version = "0.14.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e57374fc21ffaa415f1f9ad6a3523c6e4d87d5a83c2b190f02ae6ee7a755585d"
+checksum = "1b4b9f4f656937751e7abfe4cb9bf49ed70abf6b932e7d45330081002ccc55ba"
 dependencies = [
  "async-compat",
  "bevy",
