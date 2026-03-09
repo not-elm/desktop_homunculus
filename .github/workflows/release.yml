@@ -229,8 +229,62 @@ jobs:
           name: engine-macos-${{ matrix.arch }}
           path: engine/target/bundle/desktop-homunculus-${{ needs.validate.outputs.version }}-${{ matrix.arch }}.dmg
 
+  build-engine-windows:
+    needs: validate
+    runs-on: windows-2022
+    timeout-minutes: 90
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: engine
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "engine -> target"
+          shared-key: x64-engine-dist
+
+      - name: Setup sccache
+        uses: mozilla-actions/sccache-action@v0.0.9
+        with:
+          version: "v0.10.0"
+
+      - name: Configure sccache for Rust
+        run: |
+          echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
+          echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
+
+      - name: Cache CEF framework
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/cef
+          key: cef-windows-x64-144.4.0
+
+      - name: Install cargo-binstall
+        uses: cargo-bins/cargo-binstall@main
+
+      - name: Setup engine tools and CEF
+        run: make setup-ci
+
+      - name: Build MSI installer
+        run: make release-windows
+        env:
+          SKIP_GEN_CREDITS: "1"
+
+      - name: Upload MSI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: engine-windows-x64
+          path: engine/target/bundle/desktop-homunculus-${{ needs.validate.outputs.version }}-x64.msi
+
   publish-npm:
-    needs: [validate, build-cli, build-engine]
+    needs: [validate, build-cli, build-engine, build-engine-windows]
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     environment: npm-publish
