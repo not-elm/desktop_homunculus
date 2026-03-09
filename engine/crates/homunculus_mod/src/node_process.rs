@@ -94,6 +94,7 @@ fn cleanup_stale_mod_processes() {
 
 #[cfg(unix)]
 fn kill_if_mod_service(pid: u32) {
+    use std::time::{Duration, Instant};
     // Check if the process is still alive.
     let alive = unsafe { libc::kill(pid as libc::pid_t, 0) } == 0;
     if !alive {
