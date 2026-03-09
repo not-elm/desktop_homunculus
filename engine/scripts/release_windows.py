@@ -1,6 +1,7 @@
 """Build Windows MSI installer for Desktop Homunculus."""
 
 import json
+import os
 import shutil
 import sys
 from pathlib import Path
@@ -18,8 +19,11 @@ CEF_EXTENSIONS = {".dll", ".pak", ".dat", ".bin"}
 CEF_EXCLUDE_EXTENSIONS = {".exe", ".lib", ".pdb", ".d", ".exp"}
 
 
-def get_version() -> str:
-    """Extract version from cargo metadata, strip pre-release for MSI (3-part numeric only)."""
+def get_versions() -> tuple[str, str]:
+    """Extract versions from cargo metadata.
+
+    Returns (full_version, msi_version) where msi_version is 3-part numeric only.
+    """
     result = run(
         ["cargo", "metadata", "--format-version", "1", "--no-deps"],
         capture_output=True,
@@ -28,9 +32,10 @@ def get_version() -> str:
     metadata = json.loads(result.stdout)
     for pkg in metadata["packages"]:
         if pkg["name"] == BIN_NAME:
-            version = pkg["version"]
+            full_version = pkg["version"]
             # Strip pre-release suffix: "0.1.0-alpha.4" -> "0.1.0"
-            return version.split("-")[0]
+            msi_version = full_version.split("-")[0]
+            return full_version, msi_version
     error(f"Package '{BIN_NAME}' not found in cargo metadata")
 
 
@@ -63,43 +68,49 @@ def release_windows() -> None:
     # 1. Validate prerequisites
     if not command_exists("dotnet"):
         error("dotnet CLI not found. Install .NET SDK first.")
-    if not command_exists("cargo-about"):
+
+    skip_credits = os.environ.get("SKIP_GEN_CREDITS", "")
+
+    if not skip_credits and not command_exists("cargo-about"):
         error("cargo-about not found. Run 'make setup' first.")
 
     # 2. Build
     run(["cargo", "build", "--profile", "dist", "--locked"])
 
-    # 3. Generate credits
-    RUST_LICENSES_OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-    run([
-        "cargo", "about", "generate",
-        "--workspace", "--locked",
-        "--config", "about.toml",
-        "--output-file", str(RUST_LICENSES_OUTPUT),
-        "about.hbs",
-    ])
+    # 3. Generate credits (skip in CI where committed credits are used)
+    if skip_credits:
+        log("SKIP_GEN_CREDITS set, using committed credits file.")
+    else:
+        RUST_LICENSES_OUTPUT.parent.mkdir(parents=True, exist_ok=True)
+        run([
+            "cargo", "about", "generate",
+            "--workspace", "--locked",
+            "--config", "about.toml",
+            "--output-file", str(RUST_LICENSES_OUTPUT),
+            "about.hbs",
+        ])
 
     # 4. Stage CEF runtime files for installer
     stage_cef_files()
 
-    # 5. Get version (3-part numeric for MSI)
-    version = get_version()
-    log(f"Version: {version}")
+    # 5. Get versions
+    full_version, msi_version = get_versions()
+    log(f"Full version: {full_version}, MSI version: {msi_version}")
 
-    # 6. Build MSI (pass version via MSBuild property)
+    # 6. Build MSI (pass 3-part numeric version via MSBuild property)
     run([
         "dotnet",
         "build",
         str(INSTALLER_PROJECT),
         "-c",
         "Release",
-        f"-p:Version={version}",
+        f"-p:Version={msi_version}",
     ])
 
-    # 7. Copy MSI to target/bundle/
+    # 7. Copy MSI to target/bundle/ with unified naming
     BUNDLE_DIR.mkdir(parents=True, exist_ok=True)
     msi_source = INSTALLER_PROJECT.parent / "bin" / "Release" / "en-US" / "installer.msi"
-    msi_dest = BUNDLE_DIR / f"{BIN_NAME}-{version}.msi"
+    msi_dest = BUNDLE_DIR / f"desktop-homunculus-{full_version}-x64.msi"
     shutil.copy2(msi_source, msi_dest)
     log(f"Done: {msi_dest}")
 
