@@ -107,17 +107,21 @@ impl Plugin for HomunculusWindowsPlugin {
             .add_systems(Update, initialize_camera_position);
 
         #[cfg(target_os = "windows")]
-        app.register_type::<NeedsTaskbarHide>()
-            .add_systems(Update, hide_windows_from_taskbar);
+        app.register_type::<NeedsActivation>()
+            .add_systems(Update, activate_windows);
     }
 }
 
-/// Marker component for windows that need the `WS_EX_TOOLWINDOW` style applied
-/// to hide them from the taskbar and Alt+Tab.
+/// Marker component for windows that need activation: `WS_EX_TOOLWINDOW` style
+/// for Alt+Tab hiding, then made visible via Bevy's `Window.visible` field.
+///
+/// `skip_taskbar: true` handles taskbar hiding via `ITaskbarList::DeleteTab`
+/// (called by winit before `set_visible`), so this system only needs to handle
+/// ALT+TAB hiding and deferred visibility.
 #[cfg(target_os = "windows")]
 #[derive(Component, Debug, Reflect)]
 #[reflect(Component)]
-struct NeedsTaskbarHide;
+struct NeedsActivation;
 
 #[derive(Component, Debug, Reflect, Serialize, Deserialize)]
 #[reflect(Component, Serialize, Deserialize)]
@@ -153,7 +157,7 @@ fn setup_windows(
                     },
                 ));
                 #[cfg(target_os = "windows")]
-                cmd.insert(NeedsTaskbarHide);
+                cmd.insert(NeedsActivation);
                 entity
             } else {
                 let mut cmd = commands.spawn((
@@ -168,7 +172,7 @@ fn setup_windows(
                     },
                 ));
                 #[cfg(target_os = "windows")]
-                cmd.insert(NeedsTaskbarHide);
+                cmd.insert(NeedsActivation);
                 cmd.id()
             }
         } else {
@@ -183,7 +187,7 @@ fn setup_windows(
                 },
             ));
             #[cfg(target_os = "windows")]
-            cmd.insert(NeedsTaskbarHide);
+            cmd.insert(NeedsActivation);
             cmd.id()
         };
 
@@ -283,12 +287,17 @@ fn initialize_camera_position(
     }
 }
 
-/// Applies `WS_EX_TOOLWINDOW` to windows marked with [`NeedsTaskbarHide`],
-/// hiding them from the taskbar and Alt+Tab on Windows.
+/// Applies `WS_EX_TOOLWINDOW` for Alt+Tab hiding and makes windows visible.
+///
+/// Taskbar hiding is handled by `skip_taskbar: true` on each [`Window`] component,
+/// which causes winit to call `ITaskbarList::DeleteTab` before the window is shown.
+/// This system handles the remaining activation steps:
+/// 1. Apply `WS_EX_TOOLWINDOW` to hide from Alt+Tab
+/// 2. Set `Window.visible = true` so winit shows the window via `SW_SHOWNOACTIVATE`
 #[cfg(target_os = "windows")]
-fn hide_windows_from_taskbar(
+fn activate_windows(
     mut commands: Commands,
-    windows: Query<Entity, (With<Window>, With<NeedsTaskbarHide>)>,
+    mut windows: Query<(Entity, &mut Window), With<NeedsActivation>>,
 ) {
     use bevy::winit::WINIT_WINDOWS;
     use raw_window_handle::HasWindowHandle;
@@ -299,7 +308,7 @@ fn hide_windows_from_taskbar(
 
     WINIT_WINDOWS.with(|winit_windows| {
         let winit_windows = winit_windows.borrow();
-        for entity in windows.iter() {
+        for (entity, mut window) in windows.iter_mut() {
             let Some(winit_window) = winit_windows.get_window(entity) else {
                 continue;
             };
@@ -314,7 +323,8 @@ fn hide_windows_from_taskbar(
                 let style = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
                 SetWindowLongPtrW(hwnd, GWL_EXSTYLE, style | WS_EX_TOOLWINDOW.0 as isize);
             }
-            commands.entity(entity).remove::<NeedsTaskbarHide>();
+            window.visible = true;
+            commands.entity(entity).remove::<NeedsActivation>();
         }
     });
 }
@@ -343,6 +353,12 @@ fn create_window(layer: usize, size: Vec2) -> Window {
         resolution: WindowResolution::new(size.x, size.y),
         titlebar_shown: false,
         mode: WindowMode::Windowed,
+        // On Windows, create hidden and let activate_windows() show after applying WS_EX_TOOLWINDOW.
+        // skip_taskbar uses ITaskbarList::DeleteTab (called by winit before set_visible).
+        #[cfg(target_os = "windows")]
+        visible: false,
+        #[cfg(target_os = "windows")]
+        skip_taskbar: true,
         ..default()
     }
 }
