@@ -153,7 +153,7 @@ jobs:
             arch: arm64
             target: aarch64-apple-darwin
           - os: macos-15-intel
-            arch: x86
+            arch: x86_64
             target: x86_64-apple-darwin
     runs-on: ${{ matrix.os }}
     defaults:
@@ -208,7 +208,7 @@ jobs:
           SDKROOT=$(xcrun -sdk macosx --show-sdk-path) \
             cargo build --profile dist --target=${{ matrix.target }} --locked
         env:
-          CARGO_PROFILE_DIST_CODEGEN_UNITS: ${{ matrix.arch == 'x86' && '8' || '2' }}
+          CARGO_PROFILE_DIST_CODEGEN_UNITS: ${{ matrix.arch == 'x86_64' && '8' || '2' }}
 
       - name: Bundle .app and create DMG
         run: |
@@ -221,13 +221,13 @@ jobs:
         run: |
           VERSION="${{ needs.validate.outputs.version }}"
           mv target/bundle/desktop_homunculus.dmg \
-             target/bundle/DesktopHomunculus-${VERSION}-${{ matrix.arch }}.dmg
+             target/bundle/desktop-homunculus-${VERSION}-${{ matrix.arch }}.dmg
 
       - name: Upload DMG artifact
         uses: actions/upload-artifact@v4
         with:
           name: engine-macos-${{ matrix.arch }}
-          path: engine/target/bundle/DesktopHomunculus-${{ needs.validate.outputs.version }}-${{ matrix.arch }}.dmg
+          path: engine/target/bundle/desktop-homunculus-${{ needs.validate.outputs.version }}-${{ matrix.arch }}.dmg
 
   publish-npm:
     needs: [validate, build-cli, build-engine]
