@@ -79,6 +79,8 @@ def release_windows() -> None:
 
     # 3. Generate credits (skip in CI where committed credits are used)
     if skip_credits:
+        if not RUST_LICENSES_OUTPUT.exists():
+            error(f"SKIP_GEN_CREDITS set but {RUST_LICENSES_OUTPUT} not found. Commit credits first.")
         log("SKIP_GEN_CREDITS set, using committed credits file.")
     else:
         RUST_LICENSES_OUTPUT.parent.mkdir(parents=True, exist_ok=True)
