@@ -78,7 +78,6 @@ fn main() {
                         resolution: WindowResolution::new(0, 0),
                         decorations: false,
                         transparent: true,
-                        visible: false,
                         skip_taskbar: true,
                         ..default()
                     }),
