@@ -210,6 +210,19 @@ importers:
         specifier: ^2.3.0
         version: 2.3.0(rollup@4.59.0)(vite@6.4.1(@types/node@25.3.3)(jiti@2.6.1)(lightningcss@1.31.1)(sass@1.97.3)(terser@5.46.0)(tsx@4.21.0))
 
+  mods/tray-exit:
+    dependencies:
+      '@hmcs/sdk':
+        specifier: workspace:*
+        version: link:../../packages/sdk
+    devDependencies:
+      '@types/node':
+        specifier: ^25.3.3
+        version: 25.3.3
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
   mods/voicevox:
     dependencies:
       '@hmcs/sdk':
@@ -535,6 +548,9 @@ importers:
       '@hmcs/settings':
         specifier: workspace:*
         version: link:../mods/settings
+      '@hmcs/tray-exit':
+        specifier: workspace:*
+        version: link:../mods/tray-exit
       '@hmcs/voicevox':
         specifier: workspace:*
         version: link:../mods/voicevox
@@ -14111,7 +14127,7 @@ snapshots:
 
   '@types/sax@1.2.7':
     dependencies:
-      '@types/node': 17.0.45
+      '@types/node': 25.3.3
 
   '@types/send@0.17.6':
     dependencies:
