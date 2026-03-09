@@ -500,11 +500,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download DMG artifacts
+      - name: Download engine artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
-          pattern: engine-macos-*
+          pattern: engine-*
 
       - name: Create GitHub Release
         env:
@@ -514,9 +514,12 @@ jobs:
           VERSION="${{ needs.validate.outputs.version }}"
           IS_PRERELEASE="${{ needs.validate.outputs.is_prerelease }}"
 
-          # Collect DMG files
-          ARM64_DMG="artifacts/engine-macos-arm64/DesktopHomunculus-${VERSION}-arm64.dmg"
-          X86_DMG="artifacts/engine-macos-x86/DesktopHomunculus-${VERSION}-x86.dmg"
+          # Collect installer files
+          ARM64_DMG="artifacts/engine-macos-arm64/desktop-homunculus-${VERSION}-arm64.dmg"
+          X86_64_DMG="artifacts/engine-macos-x86_64/desktop-homunculus-${VERSION}-x86_64.dmg"
+          X64_MSI="artifacts/engine-windows-x64/desktop-homunculus-${VERSION}-x64.msi"
+
+          INSTALLERS=("$ARM64_DMG" "$X86_64_DMG" "$X64_MSI")
 
           # Build gh release create args
           ARGS=(
@@ -529,19 +532,19 @@ jobs:
             ARGS+=(--prerelease)
           fi
 
-          # Add DMG files if they exist
-          for DMG in "$ARM64_DMG" "$X86_DMG"; do
-            if [ -f "$DMG" ]; then
-              ARGS+=("$DMG")
+          # Add installer files if they exist
+          for FILE in "${INSTALLERS[@]}"; do
+            if [ -f "$FILE" ]; then
+              ARGS+=("$FILE")
             fi
           done
 
           # Try creating the release; if it already exists, upload assets instead
           if gh release view "$TAG" &>/dev/null; then
             echo "Release $TAG already exists. Uploading assets..."
-            for DMG in "$ARM64_DMG" "$X86_DMG"; do
-              if [ -f "$DMG" ]; then
-                gh release upload "$TAG" "$DMG" --clobber
+            for FILE in "${INSTALLERS[@]}"; do
+              if [ -f "$FILE" ]; then
+                gh release upload "$TAG" "$FILE" --clobber
               fi
             done
           else
