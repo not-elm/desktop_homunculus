@@ -80,9 +80,9 @@ pub fn create_job_for_child(child: &std::process::Child) -> Option<JobHandle> {
     use std::mem::{size_of, zeroed};
     use windows_sys::Win32::Foundation::CloseHandle;
     use windows_sys::Win32::System::JobObjects::{
-        AssignProcessToJobObject, CreateJobObjectW, JobObjectExtendedLimitInformation,
-        SetInformationJobObject, JOBOBJECT_EXTENDED_LIMIT_INFORMATION,
-        JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
+        AssignProcessToJobObject, CreateJobObjectW, JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
+        JOBOBJECT_EXTENDED_LIMIT_INFORMATION, JobObjectExtendedLimitInformation,
+        SetInformationJobObject,
     };
     use windows_sys::Win32::System::Threading::OpenProcess;
 
@@ -172,7 +172,7 @@ pub fn terminate_job(job: &JobHandle) {
 /// Returns `true` if the event was sent successfully.
 #[cfg(windows)]
 pub fn send_ctrl_break(pid: u32) -> bool {
-    use windows_sys::Win32::System::Console::{GenerateConsoleCtrlEvent, CTRL_BREAK_EVENT};
+    use windows_sys::Win32::System::Console::{CTRL_BREAK_EVENT, GenerateConsoleCtrlEvent};
     // SAFETY: pid is a valid process group ID (same as PID when spawned
     // with CREATE_NEW_PROCESS_GROUP). CTRL_BREAK_EVENT works with nonzero
     // dwProcessGroupId (unlike CTRL_C_EVENT which is silently ignored).
@@ -187,8 +187,8 @@ pub fn send_ctrl_break(pid: u32) -> bool {
 pub fn kill_if_mod_service_windows(pid: u32) {
     use windows_sys::Win32::Foundation::CloseHandle;
     use windows_sys::Win32::System::Threading::{
-        OpenProcess, QueryFullProcessImageNameW, TerminateProcess, WaitForSingleObject,
-        PROCESS_QUERY_LIMITED_INFORMATION, PROCESS_TERMINATE,
+        OpenProcess, PROCESS_QUERY_LIMITED_INFORMATION, PROCESS_TERMINATE,
+        QueryFullProcessImageNameW, TerminateProcess, WaitForSingleObject,
     };
 
     // Try to open the process — if this fails, the PID is not alive.

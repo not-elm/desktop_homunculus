@@ -27,10 +27,7 @@ impl NodeProcessHandle {
 
     /// Create a new handle wrapping a child process with an optional Job Object.
     #[cfg(windows)]
-    pub(crate) fn new(
-        child: Child,
-        job: Option<homunculus_utils::process::JobHandle>,
-    ) -> Self {
+    pub(crate) fn new(child: Child, job: Option<homunculus_utils::process::JobHandle>) -> Self {
         Self { child, job }
     }
 
