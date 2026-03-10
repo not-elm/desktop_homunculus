@@ -4,6 +4,7 @@ use std::process::Command;
 use crate::{
     config::HomunculusConfig,
     error::{ModsError, UtilError, UtilResult},
+    process::CommandNoWindow,
 };
 
 /// Validate an npm package specifier for safe use with `pnpm add`/`pnpm remove`.
@@ -119,10 +120,20 @@ pub fn uninstall<S: AsRef<str>>(mod_names: &[S]) -> UtilResult {
     Ok(())
 }
 
+/// Returns the correct program name for pnpm on the current platform.
+///
+/// On Windows, pnpm is installed as `pnpm.cmd` (a batch script),
+/// which `std::process::Command` does not resolve automatically.
+pub fn pnpm_program() -> &'static str {
+    if cfg!(windows) { "pnpm.cmd" } else { "pnpm" }
+}
+
 fn create_pnpm_command_base() -> UtilResult<Command> {
     let config = HomunculusConfig::load()?;
-    let mut command = Command::new("pnpm");
-    command.args(["-C", &format!("{}", &config.mods_dir.display())]);
+    let mut command = Command::new(pnpm_program());
+    command
+        .no_window()
+        .args(["-C", &format!("{}", &config.mods_dir.display())]);
     Ok(command)
 }
 

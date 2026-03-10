@@ -1,54 +1,112 @@
 use bevy::prelude::*;
+use homunculus_utils::process::CommandNoWindow;
 use std::process::{Child, Command};
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 /// Handle to a running Node.js child process for a mod's `main` script.
 ///
 /// The child is spawned as a single `node --import tsx` process.
+/// On Windows, an optional Job Object handle ensures the entire process tree
+/// (including tsx grandchildren) is terminated when the handle is closed.
+///
 /// [`Drop`] performs best-effort cleanup (kill + reap).
 /// For graceful shutdown, use [`NodeProcessHandle::shutdown`].
 #[derive(Component)]
-pub(crate) struct NodeProcessHandle(pub Child);
+pub(crate) struct NodeProcessHandle {
+    child: Child,
+    #[cfg(windows)]
+    job: Option<homunculus_utils::process::JobHandle>,
+}
 
 impl NodeProcessHandle {
+    /// Create a new handle wrapping a child process.
+    #[cfg(not(windows))]
+    pub(crate) fn new(child: Child) -> Self {
+        Self { child }
+    }
+
+    /// Create a new handle wrapping a child process with an optional Job Object.
+    #[cfg(windows)]
+    pub(crate) fn new(child: Child, job: Option<homunculus_utils::process::JobHandle>) -> Self {
+        Self { child, job }
+    }
+
     /// Gracefully shut down the child process.
     ///
-    /// Sends SIGTERM, waits up to `grace` for the process to exit,
+    /// On Unix: sends SIGTERM, waits up to `grace` for the process to exit,
     /// then falls back to SIGKILL + wait.
-    pub(crate) fn shutdown(&mut self, grace: Duration) {
-        if let Ok(Some(_)) = self.0.try_wait() {
+    ///
+    /// On Windows: sends CTRL_BREAK_EVENT (best-effort), waits up to `grace`,
+    /// then falls back to TerminateJobObject (or kill) + wait.
+    pub(crate) fn shutdown(&mut self, _grace: Duration) {
+        if let Ok(Some(_)) = self.child.try_wait() {
             return;
         }
 
         #[cfg(unix)]
-        unsafe {
-            libc::kill(self.0.id() as libc::pid_t, libc::SIGTERM);
-        }
-        #[cfg(not(unix))]
         {
-            let _ = self.0.kill();
-            let _ = self.0.wait();
-            return;
-        }
-
-        let deadline = Instant::now() + grace;
-        while Instant::now() < deadline {
-            if let Ok(Some(_)) = self.0.try_wait() {
-                return;
+            unsafe {
+                libc::kill(self.child.id() as libc::pid_t, libc::SIGTERM);
             }
-            std::thread::sleep(Duration::from_millis(25));
+            let deadline = std::time::Instant::now() + _grace;
+            while std::time::Instant::now() < deadline {
+                if let Ok(Some(_)) = self.child.try_wait() {
+                    return;
+                }
+                std::thread::sleep(Duration::from_millis(25));
+            }
+
+            let _ = self.child.kill();
+            let _ = self.child.wait();
         }
 
-        let _ = self.0.kill();
-        let _ = self.0.wait();
+        #[cfg(windows)]
+        {
+            // Best-effort graceful signal: CTRL_BREAK_EVENT to the process group.
+            // Only works if spawned with CREATE_NEW_PROCESS_GROUP.
+            // Node.js translates this to SIGBREAK (not SIGINT).
+            let _ = homunculus_utils::process::send_ctrl_break(self.child.id());
+
+            let deadline = std::time::Instant::now() + _grace;
+            while std::time::Instant::now() < deadline {
+                if let Ok(Some(_)) = self.child.try_wait() {
+                    return;
+                }
+                std::thread::sleep(Duration::from_millis(25));
+            }
+
+            // Grace period expired — forceful termination.
+            if let Some(ref job) = self.job {
+                homunculus_utils::process::terminate_job(job);
+            } else {
+                let _ = self.child.kill();
+            }
+            let _ = self.child.wait();
+        }
+
+        #[cfg(not(any(unix, windows)))]
+        {
+            let _ = self.child.kill();
+            let _ = self.child.wait();
+        }
     }
 }
 
 impl Drop for NodeProcessHandle {
     fn drop(&mut self) {
-        // Best-effort cleanup: kill + reap to prevent zombie.
-        let _ = self.0.kill();
-        let _ = self.0.try_wait();
+        // Best-effort cleanup: close job (kills tree via KILL_ON_JOB_CLOSE),
+        // then kill direct child, then reap.
+        #[cfg(windows)]
+        {
+            // Drop the job handle first — CloseHandle triggers
+            // JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE, terminating the entire tree.
+            // If shutdown() already closed it, this is harmless.
+            self.job.take();
+        }
+
+        // Kill direct child (redundant if job killed it; necessary if no job).
+        let _ = self.child.kill();
+        let _ = self.child.try_wait();
     }
 }
 
@@ -73,6 +131,10 @@ impl Plugin for NodeProcessPlugin {
 ///
 /// Reads PIDs from `~/.homunculus/mod_pids`, verifies each is still a
 /// `node --import` process, and sends SIGTERM (then SIGKILL after 500 ms).
+///
+/// On Windows with Job Objects, stale cleanup is typically unnecessary
+/// (the OS kills the tree when the job handle closes at crash time), but
+/// this remains as a fallback for processes where `AssignProcessToJobObject` failed.
 fn cleanup_stale_mod_processes() {
     let pid_path = homunculus_utils::path::homunculus_dir().join("mod_pids");
     let Ok(content) = std::fs::read_to_string(&pid_path) else {
@@ -92,6 +154,7 @@ fn cleanup_stale_mod_processes() {
 
 #[cfg(unix)]
 fn kill_if_mod_service(pid: u32) {
+    use std::time::{Duration, Instant};
     // Check if the process is still alive.
     let alive = unsafe { libc::kill(pid as libc::pid_t, 0) } == 0;
     if !alive {
@@ -129,13 +192,18 @@ fn kill_if_mod_service(pid: u32) {
     }
 }
 
-#[cfg(not(unix))]
+#[cfg(windows)]
+fn kill_if_mod_service(pid: u32) {
+    homunculus_utils::process::kill_if_mod_service_windows(pid);
+}
+
+#[cfg(not(any(unix, windows)))]
 fn kill_if_mod_service(_pid: u32) {
-    // Windows: best-effort, skip for now.
+    // Unsupported platform — best-effort, skip.
 }
 
 fn check_node_available(mut commands: Commands) {
-    match Command::new("node").arg("--version").output() {
+    match Command::new("node").no_window().arg("--version").output() {
         Ok(output) if output.status.success() => {
             let version = String::from_utf8_lossy(&output.stdout);
             info!("Node.js available: {}", version.trim());

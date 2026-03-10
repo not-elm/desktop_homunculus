@@ -153,7 +153,7 @@ jobs:
             arch: arm64
             target: aarch64-apple-darwin
           - os: macos-15-intel
-            arch: x86
+            arch: x86_64
             target: x86_64-apple-darwin
     runs-on: ${{ matrix.os }}
     defaults:
@@ -208,7 +208,7 @@ jobs:
           SDKROOT=$(xcrun -sdk macosx --show-sdk-path) \
             cargo build --profile dist --target=${{ matrix.target }} --locked
         env:
-          CARGO_PROFILE_DIST_CODEGEN_UNITS: ${{ matrix.arch == 'x86' && '8' || '2' }}
+          CARGO_PROFILE_DIST_CODEGEN_UNITS: ${{ matrix.arch == 'x86_64' && '8' || '2' }}
 
       - name: Bundle .app and create DMG
         run: |
@@ -221,16 +221,70 @@ jobs:
         run: |
           VERSION="${{ needs.validate.outputs.version }}"
           mv target/bundle/desktop_homunculus.dmg \
-             target/bundle/DesktopHomunculus-${VERSION}-${{ matrix.arch }}.dmg
+             target/bundle/desktop-homunculus-${VERSION}-${{ matrix.arch }}.dmg
 
       - name: Upload DMG artifact
         uses: actions/upload-artifact@v4
         with:
           name: engine-macos-${{ matrix.arch }}
-          path: engine/target/bundle/DesktopHomunculus-${{ needs.validate.outputs.version }}-${{ matrix.arch }}.dmg
+          path: engine/target/bundle/desktop-homunculus-${{ needs.validate.outputs.version }}-${{ matrix.arch }}.dmg
+
+  build-engine-windows:
+    needs: validate
+    runs-on: windows-2022
+    timeout-minutes: 90
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: engine
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "engine -> target"
+          shared-key: x64-engine-dist
+
+      - name: Setup sccache
+        uses: mozilla-actions/sccache-action@v0.0.9
+        with:
+          version: "v0.10.0"
+
+      - name: Configure sccache for Rust
+        run: |
+          echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
+          echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
+
+      - name: Cache CEF framework
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/cef
+          key: cef-windows-x64-144.4.0
+
+      - name: Install cargo-binstall
+        uses: cargo-bins/cargo-binstall@main
+
+      - name: Setup engine tools and CEF
+        run: python scripts/setup_ci.py
+
+      - name: Build MSI installer
+        run: python scripts/release_windows.py
+        env:
+          SKIP_GEN_CREDITS: "1"
+
+      - name: Upload MSI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: engine-windows-x64
+          path: engine/target/bundle/desktop-homunculus-${{ needs.validate.outputs.version }}-x64.msi
 
   publish-npm:
-    needs: [validate, build-cli, build-engine]
+    needs: [validate, build-cli, build-engine, build-engine-windows]
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     environment: npm-publish
@@ -446,11 +500,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download DMG artifacts
+      - name: Download engine artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
-          pattern: engine-macos-*
+          pattern: engine-*
 
       - name: Create GitHub Release
         env:
@@ -460,9 +514,12 @@ jobs:
           VERSION="${{ needs.validate.outputs.version }}"
           IS_PRERELEASE="${{ needs.validate.outputs.is_prerelease }}"
 
-          # Collect DMG files
-          ARM64_DMG="artifacts/engine-macos-arm64/DesktopHomunculus-${VERSION}-arm64.dmg"
-          X86_DMG="artifacts/engine-macos-x86/DesktopHomunculus-${VERSION}-x86.dmg"
+          # Collect installer files
+          ARM64_DMG="artifacts/engine-macos-arm64/desktop-homunculus-${VERSION}-arm64.dmg"
+          X86_64_DMG="artifacts/engine-macos-x86_64/desktop-homunculus-${VERSION}-x86_64.dmg"
+          X64_MSI="artifacts/engine-windows-x64/desktop-homunculus-${VERSION}-x64.msi"
+
+          INSTALLERS=("$ARM64_DMG" "$X86_64_DMG" "$X64_MSI")
 
           # Build gh release create args
           ARGS=(
@@ -475,19 +532,19 @@ jobs:
             ARGS+=(--prerelease)
           fi
 
-          # Add DMG files if they exist
-          for DMG in "$ARM64_DMG" "$X86_DMG"; do
-            if [ -f "$DMG" ]; then
-              ARGS+=("$DMG")
+          # Add installer files if they exist
+          for FILE in "${INSTALLERS[@]}"; do
+            if [ -f "$FILE" ]; then
+              ARGS+=("$FILE")
             fi
           done
 
           # Try creating the release; if it already exists, upload assets instead
           if gh release view "$TAG" &>/dev/null; then
             echo "Release $TAG already exists. Uploading assets..."
-            for DMG in "$ARM64_DMG" "$X86_DMG"; do
-              if [ -f "$DMG" ]; then
-                gh release upload "$TAG" "$DMG" --clobber
+            for FILE in "${INSTALLERS[@]}"; do
+              if [ -f "$FILE" ]; then
+                gh release upload "$TAG" "$FILE" --clobber
               fi
             done
           else

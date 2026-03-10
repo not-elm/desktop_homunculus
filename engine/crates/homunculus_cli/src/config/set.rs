@@ -40,19 +40,18 @@ fn apply_set(config: &HomunculusConfig, key: &str, value: &str) -> UtilResult<Ho
 
     // Parse value as TOML literal. Wrap in a dummy key to parse as valid TOML.
     let toml_str = format!("v = {value}");
-    let parsed: toml::Value = match toml::from_str(&toml_str) {
-        Ok(v) => v,
+    let parsed_value = match toml::from_str::<toml::Value>(&toml_str) {
+        Ok(v) => v
+            .as_table()
+            .and_then(|t| t.get("v"))
+            .cloned()
+            .ok_or_else(|| anyhow::anyhow!("failed to parse value"))?,
         Err(_) => {
-            // Fall back to treating the value as a string
-            let toml_str = format!("v = \"{value}\"");
-            toml::from_str(&toml_str).map_err(|e| anyhow::anyhow!("invalid value: {e}"))?
+            // Treat as plain string — avoid TOML string formatting to prevent
+            // backslash escape issues on Windows paths (e.g. C:\Users)
+            toml::Value::String(value.to_string())
         }
     };
-    let parsed_value = parsed
-        .as_table()
-        .and_then(|t| t.get("v"))
-        .cloned()
-        .ok_or_else(|| anyhow::anyhow!("failed to parse value"))?;
 
     map.insert(key.to_string(), parsed_value);
 
@@ -99,5 +98,27 @@ mod tests {
         let config = HomunculusConfig::default();
         let result = apply_set(&config, "port", "not_a_number");
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_set_mods_dir_windows_backslash() {
+        let config = HomunculusConfig::default();
+        let result = apply_set(&config, "mods_dir", r"C:\Users\elmpr\workspace");
+        assert!(result.is_ok());
+        assert_eq!(
+            result.unwrap().mods_dir,
+            PathBuf::from(r"C:\Users\elmpr\workspace")
+        );
+    }
+
+    #[test]
+    fn test_set_mods_dir_with_spaces() {
+        let config = HomunculusConfig::default();
+        let result = apply_set(&config, "mods_dir", r"C:\Program Files\homunculus");
+        assert!(result.is_ok());
+        assert_eq!(
+            result.unwrap().mods_dir,
+            PathBuf::from(r"C:\Program Files\homunculus")
+        );
     }
 }

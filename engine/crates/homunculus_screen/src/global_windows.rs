@@ -61,13 +61,13 @@ impl GlobalWindow {
         }
         #[cfg(target_os = "windows")]
         {
-            if let Some(updated) = windows::update_window(self.hwnd) {
-                if updated != self.frame {
-                    return Some(GlobalWindow {
-                        frame: updated,
-                        ..self.clone()
-                    });
-                }
+            if let Some(updated) = windows::update_window(self.hwnd)
+                && updated != self.frame
+            {
+                return Some(GlobalWindow {
+                    frame: updated,
+                    ..self.clone()
+                });
             }
         }
         None

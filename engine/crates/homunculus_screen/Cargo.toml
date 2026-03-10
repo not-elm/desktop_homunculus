@@ -34,8 +34,10 @@ screencapturekit = "0.2.8"
 objc = { version = "0.2.7" }
 
 [target.'cfg(target_os="windows")'.dependencies]
-windows = { version = "0.60", features = [
+windows = { workspace = true, features = [
     "Win32_Foundation",
+    "Win32_Graphics_Gdi",
+    "Win32_UI_HiDpi",
     "Win32_UI_WindowsAndMessaging",
 ] }
 

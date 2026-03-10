@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" Sdk="WixToolset.Sdk/4.0.0-rc.2">
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" Sdk="WixToolset.Sdk/4.0.6">
     <PropertyGroup>
         <DebugType>none</DebugType>
         <OutputName>installer</OutputName>
+        <Version>0.1.0</Version>
+        <DefineConstants>Version=$(Version)</DefineConstants>
+        <SuppressValidation>true</SuppressValidation>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="WixToolset.UI.wixext" Version="4.0.0-rc.2" />
-        <PackageReference Include="WixToolset.Heat" Version="4.0.0-rc.2" />
+        <PackageReference Include="WixToolset.UI.wixext" Version="4.0.6" />
+        <PackageReference Include="WixToolset.Heat" Version="4.0.6" />
     </ItemGroup>
 
     <ItemGroup>
@@ -25,5 +28,14 @@
               <SuppressRootDirectory>false</SuppressRootDirectory>
         </HarvestDirectory>
         <BindPath Include="..\..\..\credits" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <HarvestDirectory Include="cef_runtime">
+              <ComponentGroupName>CefDirectory</ComponentGroupName>
+              <DirectoryRefId>INSTALLFOLDER</DirectoryRefId>
+              <SuppressRootDirectory>true</SuppressRootDirectory>
+        </HarvestDirectory>
+        <BindPath Include="cef_runtime" />
     </ItemGroup>
 </Project>
