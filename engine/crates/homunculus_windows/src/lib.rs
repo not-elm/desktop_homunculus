@@ -105,22 +105,8 @@ impl Plugin for HomunculusWindowsPlugin {
             .register_type::<CameraWindowPosition>()
             .add_systems(PreStartup, setup_windows)
             .add_systems(Update, initialize_camera_position);
-
-        #[cfg(target_os = "windows")]
-        app.register_type::<NeedsActivation>()
-            .add_systems(Update, activate_windows);
     }
 }
-
-/// Marker component for windows that need `WS_EX_TOOLWINDOW` style for Alt+Tab hiding.
-///
-/// `skip_taskbar: true` handles taskbar hiding via `ITaskbarList::DeleteTab`
-/// (called by winit before `set_visible`), so this system only needs to handle
-/// Alt+Tab hiding.
-#[cfg(target_os = "windows")]
-#[derive(Component, Debug, Reflect)]
-#[reflect(Component)]
-struct NeedsActivation;
 
 #[derive(Component, Debug, Reflect, Serialize, Deserialize)]
 #[reflect(Component, Serialize, Deserialize)]
@@ -156,8 +142,6 @@ fn setup_windows(
                 hit_test: true,
                 ..default()
             },
-            #[cfg(target_os = "windows")]
-            NeedsActivation,
         ));
 
         commands
@@ -254,44 +238,6 @@ fn initialize_camera_position(
             .remove::<UninitializedCamera>()
             .remove::<CameraWindowPosition>();
     }
-}
-
-/// Applies `WS_EX_TOOLWINDOW` to hide windows from Alt+Tab.
-///
-/// Taskbar hiding is handled by `skip_taskbar: true` on each [`Window`] component,
-/// which causes winit to call `ITaskbarList::DeleteTab` before the window is shown.
-#[cfg(target_os = "windows")]
-fn activate_windows(
-    mut commands: Commands,
-    windows: Query<Entity, (With<Window>, With<NeedsActivation>)>,
-) {
-    use bevy::winit::WINIT_WINDOWS;
-    use raw_window_handle::HasWindowHandle;
-    use windows::Win32::Foundation::HWND;
-    use windows::Win32::UI::WindowsAndMessaging::{
-        GWL_EXSTYLE, GetWindowLongPtrW, SetWindowLongPtrW, WS_EX_TOOLWINDOW,
-    };
-
-    WINIT_WINDOWS.with(|winit_windows| {
-        let winit_windows = winit_windows.borrow();
-        for entity in windows.iter() {
-            let Some(winit_window) = winit_windows.get_window(entity) else {
-                continue;
-            };
-            let Ok(handle) = winit_window.window_handle() else {
-                continue;
-            };
-            let raw_window_handle::RawWindowHandle::Win32(win32_handle) = handle.as_raw() else {
-                continue;
-            };
-            let hwnd = HWND(win32_handle.hwnd.get() as *mut core::ffi::c_void);
-            unsafe {
-                let style = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
-                SetWindowLongPtrW(hwnd, GWL_EXSTYLE, style | WS_EX_TOOLWINDOW.0 as isize);
-            }
-            commands.entity(entity).remove::<NeedsActivation>();
-        }
-    });
 }
 
 fn create_window(layer: usize, size: Vec2) -> Window {
