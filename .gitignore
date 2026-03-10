@@ -17,6 +17,7 @@ lerna-debug.log*
 
 .turbo/
 target
+**/__pycache__/
 node_modules
 dist
 dist-ssr
