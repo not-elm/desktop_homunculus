@@ -4540,11 +4540,13 @@ dependencies = [
  "anyhow",
  "bevy",
  "dirs",
+ "log",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
  "toml 0.8.2",
  "utoipa",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]

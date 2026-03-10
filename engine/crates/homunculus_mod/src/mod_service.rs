@@ -43,7 +43,7 @@ fn run_mod_services(mut commands: Commands, services: Query<(Entity, &ModService
     for (entity, service) in services.iter() {
         info!("Starting mod service: {}", service.script_path.display());
         let mut cmd = Command::new("node");
-        cmd.no_window()
+        cmd.no_window_process_group()
             .arg("--import")
             .arg("tsx")
             .arg(&service.script_path)
@@ -52,7 +52,17 @@ fn run_mod_services(mut commands: Commands, services: Query<(Entity, &ModService
         match cmd.spawn() {
             Ok(child) => {
                 append_pid_file(child.id());
-                commands.spawn(NodeProcessHandle(child));
+
+                // Create a Job Object for the child process tree (Windows only).
+                #[cfg(windows)]
+                let job = homunculus_utils::process::create_job_for_child(&child);
+
+                #[cfg(windows)]
+                let handle = NodeProcessHandle::new(child, job);
+                #[cfg(not(windows))]
+                let handle = NodeProcessHandle::new(child);
+
+                commands.spawn(handle);
             }
             Err(e) => {
                 error!(
