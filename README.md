@@ -33,6 +33,9 @@ Bring your desktop to life with interactive 3D VRM characters. Desktop Homunculu
 - [itch.io](https://notelm.itch.io/desktop-homunculus)
 - [BOOTH](https://notelm.booth.pm/items/6904924)
 
+> [!WARNING]
+> **Windows with NVIDIA GPU:** You must configure the NVIDIA Control Panel **before first launch**, or the window will have a black background instead of being transparent. See the [Installation Guide](https://not-elm.github.io/desktop_homunculus/getting-started/installation) for step-by-step instructions.
+
 ## Platform Support
 
 | Platform | Status                                             |
