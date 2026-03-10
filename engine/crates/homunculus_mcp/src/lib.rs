@@ -4,5 +4,5 @@
 //! capabilities to AI agents via the streamable HTTP transport, mounted on the
 //! engine's existing Axum router.
 
-mod handler;
+pub mod handler;
 mod service;
