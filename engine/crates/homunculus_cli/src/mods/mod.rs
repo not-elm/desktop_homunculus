@@ -1,3 +1,5 @@
+mod path;
+
 use clap::{Args, Subcommand};
 use homunculus_utils::error::UtilResult;
 
@@ -24,6 +26,11 @@ pub enum ModsSubcommand {
         #[arg(required = true)]
         mod_names: Vec<String>,
     },
+    /// View or update the mods directory path
+    Path {
+        /// New mods directory path (omit to display current)
+        mods_dir_path: Option<String>,
+    },
 }
 
 impl ModsArgs {
@@ -34,6 +41,7 @@ impl ModsArgs {
             ModsSubcommand::Uninstall { mod_names } => {
                 homunculus_utils::mods::uninstall(&mod_names)
             }
+            ModsSubcommand::Path { mods_dir_path } => path::cmd_path(mods_dir_path.as_deref()),
         }
     }
 }

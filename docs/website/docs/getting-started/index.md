@@ -23,7 +23,7 @@ The engine, built on Bevy, renders a transparent desktop window containing your 
 
 | Requirement | Version |
 |---|---|
-| **OS** | macOS 12+ (Windows support is planned) |
+| **OS** | macOS 12+ / Windows 10+ |
 | **Node.js** | 22 or later |
 | **pnpm** | 10.x |
 

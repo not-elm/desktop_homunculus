@@ -12,5 +12,12 @@ bevy = { workspace = true }
 serde = { workspace = true }
 homunculus_core = { workspace = true }
 
+[target.'cfg(target_os="windows")'.dependencies]
+windows = { workspace = true, features = [
+    "Win32_Foundation",
+    "Win32_UI_WindowsAndMessaging",
+] }
+raw-window-handle = { workspace = true }
+
 [lints]
 workspace = true

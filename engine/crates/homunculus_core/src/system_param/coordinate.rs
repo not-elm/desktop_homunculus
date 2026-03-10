@@ -53,14 +53,14 @@ impl<Camera: Component> Coordinate<'_, '_, Camera> {
         let (window_entity, window, _) = self.windows.find_by_global_viewport(global_cursor)?;
         self.cameras.to_world_by_viewport(
             window_entity,
-            window_local_pos(window, global_cursor),
+            window_local_pos(window, global_cursor)?,
             vrm_pos,
         )
     }
 
     pub fn to_world_2d_by_global(&self, screen_pos: GlobalViewport) -> Option<Vec2> {
         let (window_entity, window, _) = self.windows.find_by_global_viewport(screen_pos)?;
-        let viewport_pos = window_local_pos(window, screen_pos);
+        let viewport_pos = window_local_pos(window, screen_pos)?;
         self.cameras
             .to_world_2d_pos_from_viewport(window_entity, viewport_pos)
     }
@@ -72,7 +72,7 @@ impl<Camera: Component> Coordinate<'_, '_, Camera> {
 
     pub fn to_viewport_by_global(&self, screen_pos: GlobalViewport) -> Option<Vec2> {
         let (_, window, _) = self.windows.find_by_global_viewport(screen_pos)?;
-        Some(window_local_pos(window, screen_pos))
+        window_local_pos(window, screen_pos)
     }
 
     pub fn to_global_by_world(&self, world_pos: Vec3) -> Option<GlobalViewport> {

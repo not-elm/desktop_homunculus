@@ -23,7 +23,7 @@ impl MascotTracker<'_, '_> {
         let tf = self.mascots.get(vrm).ok()?;
         let hips_offset = self.offsets.hips_offset(vrm)?;
         let (window_entity, window, _) = self.windows.find_by_global_viewport(pos)?;
-        let viewport_pos = window_local_pos(window, pos);
+        let viewport_pos = window_local_pos(window, pos)?;
 
         let mut cursor_pos =
             self.camera
@@ -49,7 +49,7 @@ impl MascotTracker<'_, '_> {
     ) -> Option<Transform> {
         let tf = self.mascots.get(vrm).ok()?;
         let (window_entity, window, _) = self.windows.find_by_global_viewport(pos)?;
-        let viewport_pos = window_local_pos(window, pos);
+        let viewport_pos = window_local_pos(window, pos)?;
 
         let mut cursor_pos =
             self.camera

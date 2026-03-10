@@ -10,6 +10,7 @@ publish.workspace = true
 [dependencies]
 bevy = { workspace = true, optional = true }
 dirs = { workspace = true }
+log = "0.4"
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
@@ -21,6 +22,15 @@ utoipa = { workspace = true, optional = true }
 default = ["bevy"]
 bevy = ["dep:bevy"]
 openapi = ["dep:utoipa"]
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.59", features = [
+    "Win32_Foundation",
+    "Win32_Security",
+    "Win32_System_Console",
+    "Win32_System_JobObjects",
+    "Win32_System_Threading",
+] }
 
 [lints]
 workspace = true

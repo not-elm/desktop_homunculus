@@ -69,6 +69,19 @@ importers:
         specifier: ~5.6.3
         version: 5.6.3
 
+  mods/app-exit:
+    dependencies:
+      '@hmcs/sdk':
+        specifier: workspace:*
+        version: link:../../packages/sdk
+    devDependencies:
+      '@types/node':
+        specifier: ^25.3.3
+        version: 25.3.3
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
   mods/assets: {}
 
   mods/character-settings:
@@ -522,6 +535,9 @@ importers:
 
   sandbox:
     dependencies:
+      '@hmcs/app-exit':
+        specifier: workspace:*
+        version: link:../mods/app-exit
       '@hmcs/assets':
         specifier: workspace:*
         version: link:../mods/assets
@@ -14107,7 +14123,7 @@ snapshots:
 
   '@types/sax@1.2.7':
     dependencies:
-      '@types/node': 17.0.45
+      '@types/node': 25.3.3
 
   '@types/send@0.17.6':
     dependencies:

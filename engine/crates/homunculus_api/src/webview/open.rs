@@ -146,7 +146,6 @@ fn spawn_webview_entity(
         MeshMaterial3d(materials.add(WebviewExtendStandardMaterial {
             base: StandardMaterial {
                 unlit: true,
-                #[cfg(target_os = "macos")]
                 alpha_mode: AlphaMode::Premultiplied,
                 ..default()
             },

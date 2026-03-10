@@ -52,7 +52,7 @@ impl AppWindows<'_, '_> {
     pub fn to_global_viewport(&self, window: Entity, local_pos: Vec2) -> Option<GlobalViewport> {
         let (_, window, _) = self.windows.get(window).ok()?;
         let WindowPosition::At(position) = window.position else {
-            panic!("Unreachable code");
+            return None;
         };
         Some(GlobalViewport(position.as_vec2() + local_pos))
     }
@@ -69,17 +69,17 @@ pub fn global_cursor_pos<E: Debug + Clone + Reflect>(
 }
 
 #[inline]
-pub fn window_local_pos(window: &Window, global_screen_pos: GlobalViewport) -> Vec2 {
+pub fn window_local_pos(window: &Window, global_screen_pos: GlobalViewport) -> Option<Vec2> {
     let WindowPosition::At(position) = window.position else {
-        panic!("Unreachable code");
+        return None;
     };
-    *global_screen_pos - position.as_vec2()
+    Some(*global_screen_pos - position.as_vec2())
 }
 
 #[inline]
 fn window_to_rect(window: &Window) -> Rect {
     let WindowPosition::At(position) = window.position else {
-        panic!("Unreachable code");
+        return Rect::default();
     };
     let position = position.as_vec2();
     Rect::from_corners(position, position + window.resolution.size())

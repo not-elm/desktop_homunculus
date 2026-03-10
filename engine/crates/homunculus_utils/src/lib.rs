@@ -8,6 +8,7 @@ pub mod consts;
 pub mod error;
 pub mod mods;
 pub mod path;
+pub mod process;
 pub mod schema;
 
 pub mod prelude {

@@ -25,8 +25,11 @@ jobs:
       - run: cargo fmt --all --check
         working-directory: engine
 
-  check:
-    runs-on: macos-14
+  clippy:
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 45
     defaults:
       run:
@@ -39,21 +42,101 @@ jobs:
           components: clippy
 
       - uses: Swatinem/rust-cache@v2
+        if: runner.os == 'macOS'
         with:
           workspaces: "engine -> target"
           shared-key: macos-stable-engine
           save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: Configure Windows build environment
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          Add-MpPreference -ExclusionPath "${{ github.workspace }}\engine\target"
+          Add-MpPreference -ExclusionPath "$env:USERPROFILE\.cargo\registry"
 
       - name: Setup sccache
         uses: mozilla-actions/sccache-action@v0.0.9
         with:
           version: "v0.10.0"
 
-      - name: Configure sccache
+      - name: Configure sccache (Windows)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          Add-Content $env:GITHUB_ENV "SCCACHE_GHA_ENABLED=true"
+          Add-Content $env:GITHUB_ENV "RUSTC_WRAPPER=sccache"
+          Add-Content $env:GITHUB_ENV "CARGO_INCREMENTAL=0"
+
+      - name: Configure sccache (macOS)
+        if: runner.os == 'macOS'
         run: |
           echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
           echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
           echo "CARGO_INCREMENTAL=0" >> $GITHUB_ENV
 
-      - run: cargo clippy --workspace -- -Dwarnings
-      - run: cargo test --workspace --locked
+      - name: Verify sccache setup
+        shell: bash
+        run: |
+          which sccache && sccache --version
+          echo "RUSTC_WRAPPER=$RUSTC_WRAPPER"
+          echo "SCCACHE_GHA_ENABLED=$SCCACHE_GHA_ENABLED"
+
+      - run: cargo clippy --workspace --profile ci -- -Dwarnings
+
+  test:
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: engine
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        if: runner.os == 'macOS'
+        with:
+          workspaces: "engine -> target"
+          shared-key: macos-stable-engine
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: Configure Windows build environment
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          Add-MpPreference -ExclusionPath "${{ github.workspace }}\engine\target"
+          Add-MpPreference -ExclusionPath "$env:USERPROFILE\.cargo\registry"
+
+      - name: Setup sccache
+        uses: mozilla-actions/sccache-action@v0.0.9
+        with:
+          version: "v0.10.0"
+
+      - name: Configure sccache (Windows)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          Add-Content $env:GITHUB_ENV "SCCACHE_GHA_ENABLED=true"
+          Add-Content $env:GITHUB_ENV "RUSTC_WRAPPER=sccache"
+          Add-Content $env:GITHUB_ENV "CARGO_INCREMENTAL=0"
+
+      - name: Configure sccache (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
+          echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
+          echo "CARGO_INCREMENTAL=0" >> $GITHUB_ENV
+
+      - name: Verify sccache setup
+        shell: bash
+        run: |
+          which sccache && sccache --version
+          echo "RUSTC_WRAPPER=$RUSTC_WRAPPER"
+          echo "SCCACHE_GHA_ENABLED=$SCCACHE_GHA_ENABLED"
+
+      - run: cargo test --workspace --locked --profile ci

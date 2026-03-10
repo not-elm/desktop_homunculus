@@ -100,9 +100,15 @@ fn update_hit_test(
     let on_egui = ctx.ctx_mut().is_ok_and(|c| c.is_pointer_over_area());
 
     for (window_entity, window, mut cursor) in windows.iter_mut() {
-        let Some(cursor_pos) = window.cursor_position() else {
-            cursor.hit_test = false;
-            continue;
+        let cursor_pos = match window.cursor_position() {
+            Some(pos) => pos,
+            None => match fallback_cursor_position(window) {
+                Some(pos) => pos,
+                None => {
+                    cursor.hit_test = false;
+                    continue;
+                }
+            },
         };
         let Some((_, camera, _, tf, _)) = cameras.find_camera_from_window(window_entity) else {
             cursor.hit_test = false;
@@ -161,6 +167,51 @@ fn apply_pointer<P: Debug + Clone + Reflect>(
     mut ew: MessageWriter<RequestDetermineHitTest>,
 ) {
     ew.write(RequestDetermineHitTest);
+}
+
+/// Returns the cursor position in window-local logical coordinates by polling the OS.
+///
+/// On Windows, uses `GetCursorPos` to get the global cursor position and converts
+/// it to window-local coordinates. On other platforms, returns `None` since Bevy's
+/// event-driven cursor tracking is sufficient.
+fn fallback_cursor_position(window: &Window) -> Option<Vec2> {
+    #[cfg(target_os = "windows")]
+    {
+        get_cursor_pos_in_window(window)
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        let _ = window;
+        None
+    }
+}
+
+#[cfg(target_os = "windows")]
+fn get_cursor_pos_in_window(window: &Window) -> Option<Vec2> {
+    use bevy::window::WindowPosition;
+    use windows::Win32::Foundation::POINT;
+    use windows::Win32::UI::WindowsAndMessaging::GetCursorPos;
+    let mut point = POINT::default();
+    unsafe { GetCursorPos(&mut point).ok()? };
+
+    let WindowPosition::At(window_pos) = window.position else {
+        return None;
+    };
+
+    let scale = window.scale_factor();
+    let global_logical = Vec2::new(point.x as f32 / scale, point.y as f32 / scale);
+    let window_logical = global_logical - window_pos.as_vec2();
+
+    let size = window.resolution.size();
+    if window_logical.x >= 0.0
+        && window_logical.y >= 0.0
+        && window_logical.x <= size.x
+        && window_logical.y <= size.y
+    {
+        Some(window_logical)
+    } else {
+        None
+    }
 }
 
 /// Checks if a ray cast hit is on an opaque part of the texture.

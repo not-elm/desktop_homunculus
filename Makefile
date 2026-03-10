@@ -20,6 +20,10 @@ gen-open-api:
 	$(MAKE) -C engine gen-open-api
 	pnpm build
 
+release-windows:
+	pnpm build
+	$(MAKE) -C engine release-windows
+
 release-macos:
 	pnpm build
 	$(MAKE) -C engine release-macos

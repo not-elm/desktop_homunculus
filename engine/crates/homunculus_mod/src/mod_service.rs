@@ -1,5 +1,6 @@
 use crate::node_process::{NodeAvailable, NodeProcessHandle};
 use bevy::prelude::*;
+use homunculus_utils::process::CommandNoWindow;
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -42,7 +43,8 @@ fn run_mod_services(mut commands: Commands, services: Query<(Entity, &ModService
     for (entity, service) in services.iter() {
         info!("Starting mod service: {}", service.script_path.display());
         let mut cmd = Command::new("node");
-        cmd.arg("--import")
+        cmd.no_window_process_group()
+            .arg("--import")
             .arg("tsx")
             .arg(&service.script_path)
             .current_dir(&service.mods_dir);
@@ -50,7 +52,17 @@ fn run_mod_services(mut commands: Commands, services: Query<(Entity, &ModService
         match cmd.spawn() {
             Ok(child) => {
                 append_pid_file(child.id());
-                commands.spawn(NodeProcessHandle(child));
+
+                // Create a Job Object for the child process tree (Windows only).
+                #[cfg(windows)]
+                let job = homunculus_utils::process::create_job_for_child(&child);
+
+                #[cfg(windows)]
+                let handle = NodeProcessHandle::new(child, job);
+                #[cfg(not(windows))]
+                let handle = NodeProcessHandle::new(child);
+
+                commands.spawn(handle);
             }
             Err(e) => {
                 error!(

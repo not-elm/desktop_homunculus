@@ -11,7 +11,7 @@ edition.workspace = true
 publish.workspace = true
 
 [workspace.package]
-version = "0.1.0-alpha.4.1"
+version = "0.1.0-alpha.4.2-dev"
 edition = "2024"
 authors = ["notelm <elmprograminfo@gmail.com>"]
 repository = "https://github.com/not-elm/desktop_homunculus"
@@ -53,10 +53,16 @@ homunculus_utils = { workspace = true, features = ["bevy"] }
 async-channel = "2.5.0"
 tokio = { workspace = true }
 
-[target.'cfg(unix)'.dependencies]
-signal-hook = { workspace = true }
-
 [workspace.dependencies]
+bevy_cef = { version = "0.4.0" }
+bevy_flurx = { version = "0.14.1", features = [
+    "side-effect",
+    "state",
+    "tokio",
+] }
+bevy_vrm1 = { version = "0.6.2", features = ["serde", "log"] }
+bevy_tray_icon = { version = "0.3" }
+url = { version = "2", features = ["serde"] }
 bevy = { version = "0.18", features = [
     "wav",
     "serialize",
@@ -64,15 +70,11 @@ bevy = { version = "0.18", features = [
     "png",
     "mp3",
 ] }
-bevy_tray_icon = { version = "0.3" }
-url = { version = "2", features = ["serde"] }
 async-channel = "2.5"
 async-broadcast = "0.7"
 dirs = "6"
 tokio = { version = "1", features = ["rt-multi-thread", "rt"] }
 axum = { version = "0.8" }
-bevy_flurx = { version = "0.14", features = ["side-effect", "state", "tokio"] }
-bevy_cef = { version = "0.2.0" }
 homunculus_core = { path = "crates/homunculus_core" }
 homunculus_drag = { path = "crates/homunculus_drag" }
 homunculus_effects = { path = "crates/homunculus_effects" }
@@ -90,13 +92,11 @@ homunculus_api = { path = "crates/homunculus_api" }
 homunculus_audio = { path = "crates/homunculus_audio" }
 homunculus_tray = { path = "crates/homunculus_tray" }
 homunculus_utils = { path = "crates/homunculus_utils", default-features = false }
-bevy_vrm1 = { version = "0.6", features = ["serde", "log"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1" }
 anyhow = { version = "1", features = ["std"] }
 base64 = "0.22"
 reqwest = { version = "0.12", features = ["json"] }
-signal-hook = "0.3"
 bevy_egui = { version = "0.39.0" }
 bevy-inspector-egui = { version = "0.36.0" }
 bevy_framepace = "0.21"
@@ -108,6 +108,8 @@ toml = "0.8"
 utoipa = { version = "5", features = ["yaml"] }
 utoipa-axum = { version = "0.2" }
 libc = "0.2"
+windows = "0.60"
+raw-window-handle = "0.6"
 
 [build-dependencies]
 embed-resource = "3"
@@ -125,6 +127,13 @@ develop = [
 opt-level = 3
 
 [profile.dev]
+opt-level = 1
+
+[profile.ci]
+inherits = "dev"
+opt-level = 1
+
+[profile.ci.package."*"]
 opt-level = 1
 
 # This is used by trunk as it doesn't support custom profiles: https://github.com/trunk-rs/trunk/issues/605
@@ -145,6 +154,7 @@ strip = true
 
 [workspace.lints.clippy]
 type_complexity = "allow"
+result_large_err = "allow"
 
 [workspace.lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = [
