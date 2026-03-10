@@ -3,3 +3,6 @@ rustflags = [
   "--check-cfg=cfg(cargo_clippy)",
   "--check-cfg=cfg(feature,values(\"cargo-clippy\"))",
 ]
+
+[target.x86_64-pc-windows-msvc]
+linker = "rust-lld.exe"
