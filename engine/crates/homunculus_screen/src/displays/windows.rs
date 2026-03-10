@@ -11,6 +11,7 @@ use windows::{
             DISPLAY_DEVICEW, EnumDisplayDevicesW, EnumDisplayMonitors, GetMonitorInfoW, HDC,
             HMONITOR, MONITORINFO, MONITORINFOEXW,
         },
+        UI::HiDpi::{GetDpiForMonitor, MDT_EFFECTIVE_DPI},
     },
     core::{BOOL, PCWSTR},
 };
@@ -44,15 +45,23 @@ fn build_display(hmonitor: HMONITOR, index: u32) -> Option<GlobalDisplay> {
     // パース失敗時は index + 1000 で正常IDとの衝突を回避
     let id = parse_display_id(&device_name).unwrap_or(index + 1000);
     let title = obtain_friendly_name(&device_name).unwrap_or(device_name);
+    let scale = monitor_scale_factor(hmonitor);
     let frame = Rect::from_corners(
-        Vec2::new(rc.left as f32, rc.top as f32),
-        Vec2::new(rc.right as f32, rc.bottom as f32),
+        Vec2::new(rc.left as f32 / scale, rc.top as f32 / scale),
+        Vec2::new(rc.right as f32 / scale, rc.bottom as f32 / scale),
     );
     Some(GlobalDisplay {
         id: DisplayId(id),
         title,
         frame,
     })
+}
+
+fn monitor_scale_factor(hmonitor: HMONITOR) -> f32 {
+    let mut dpi_x: u32 = 96;
+    let mut dpi_y: u32 = 96;
+    let _ = unsafe { GetDpiForMonitor(hmonitor, MDT_EFFECTIVE_DPI, &mut dpi_x, &mut dpi_y) };
+    dpi_x as f32 / 96.0
 }
 
 fn obtain_monitor_info(hmonitor: HMONITOR) -> Option<MONITORINFOEXW> {

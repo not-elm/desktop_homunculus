@@ -112,9 +112,10 @@ fn display_rect(
         })
         .or_else(|| {
             let m = primary_window.single().ok()?;
-            let p = m.physical_position.as_vec2();
-            let size = m.physical_size().as_vec2();
-            Some(Rect::from_corners(p, p + size))
+            let scale = m.scale_factor as f32;
+            let pos = m.physical_position.as_vec2() / scale;
+            let size = m.physical_size().as_vec2() / scale;
+            Some(Rect::from_corners(pos, pos + size))
         })
 }
 

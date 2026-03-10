@@ -4,11 +4,16 @@ use std::{
     char::{REPLACEMENT_CHARACTER, decode_utf16},
     sync::Mutex,
 };
+use bevy::math::Vec2;
 use windows::{
     Win32::{
         Foundation::{HWND, LPARAM},
-        UI::WindowsAndMessaging::{
-            EnumWindows, GetForegroundWindow, GetWindowRect, GetWindowTextW, IsWindowVisible,
+        Graphics::Gdi::{MONITOR_DEFAULTTONEAREST, MonitorFromWindow},
+        UI::{
+            HiDpi::{GetDpiForMonitor, MDT_EFFECTIVE_DPI},
+            WindowsAndMessaging::{
+                EnumWindows, GetForegroundWindow, GetWindowRect, GetWindowTextW, IsWindowVisible,
+            },
         },
     },
     core::BOOL,
@@ -69,10 +74,13 @@ unsafe fn obtain_window_rect(hwnd: HWND) -> windows::core::Result<Rect> {
     unsafe {
         GetWindowRect(hwnd, &mut rect)?;
     }
-    Ok(Rect::new(
-        rect.left as f32,
-        rect.bottom as f32,
-        rect.right as f32,
-        rect.top as f32,
+    let monitor = unsafe { MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST) };
+    let mut dpi_x: u32 = 96;
+    let mut dpi_y: u32 = 96;
+    let _ = unsafe { GetDpiForMonitor(monitor, MDT_EFFECTIVE_DPI, &mut dpi_x, &mut dpi_y) };
+    let scale = dpi_x as f32 / 96.0;
+    Ok(Rect::from_corners(
+        Vec2::new(rect.left as f32 / scale, rect.top as f32 / scale),
+        Vec2::new(rect.right as f32 / scale, rect.bottom as f32 / scale),
     ))
 }
