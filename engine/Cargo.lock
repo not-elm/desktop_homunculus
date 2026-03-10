@@ -4484,6 +4484,7 @@ dependencies = [
  "homunculus_audio",
  "homunculus_core",
  "homunculus_effects",
+ "homunculus_mcp",
  "homunculus_prefs",
  "homunculus_screen",
  "homunculus_utils",

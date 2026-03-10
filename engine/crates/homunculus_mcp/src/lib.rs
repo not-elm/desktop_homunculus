@@ -6,3 +6,5 @@
 
 pub mod handler;
 mod service;
+
+pub use service::create_mcp_service;
