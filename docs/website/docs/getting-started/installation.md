@@ -12,12 +12,12 @@ Follow these steps to install Desktop Homunculus and set up your MOD environment
 
 ## System Requirements
 
-| | macOS | Windows |
-|---|---|---|
-| **OS** | macOS 12 (Monterey) or later | Windows 10 or later |
-| **CPU** | Apple Silicon or Intel | x86_64 |
-| **Node.js** | 22 or later | 22 or later |
-| **Disk Space** | 500 MB or more | 500 MB or more |
+|                | macOS                        | Windows             |
+| -------------- | ---------------------------- | ------------------- |
+| **OS**         | macOS 12 (Monterey) or later | Windows 10 or later |
+| **CPU**        | Apple Silicon or Intel       | x86_64              |
+| **Node.js**    | 22 or later                  | 22 or later         |
+| **Disk Space** | 500 MB or more               | 500 MB or more      |
 
 ## Step 1: Install Desktop Homunculus
 
@@ -36,7 +36,7 @@ If macOS shows "Desktop Homunculus can't be opened because it is from an unident
 1. Open **System Settings** > **Privacy & Security**
 2. Scroll down and click **Open Anyway**
 3. Click **Open** in the confirmation dialog
-:::
+   :::
 
 </TabItem>
 <TabItem value="windows" label="Windows">
@@ -50,7 +50,7 @@ If you have an NVIDIA GPU, you **must** configure the following setting before l
 4. Set it to **"Prefer native"**
 5. Click **Apply**
 
-This must be done **before first launch**. See [bevyengine/bevy#7544](https://github.com/bevyengine/bevy/issues/7544) for details.
+This must be done **before first launch**.
 :::
 
 1. Download the `.msi` file
@@ -105,14 +105,14 @@ Install the recommended set of official MODs:
 hmcs mod install @hmcs/assets @hmcs/elmer @hmcs/menu @hmcs/character-settings @hmcs/settings @hmcs/app-exit
 ```
 
-| MOD | Description |
-|---|---|
-| `@hmcs/assets` | Default animations and sound effects |
-| `@hmcs/elmer` | Default character model |
-| `@hmcs/menu` | Right-click context menu |
-| `@hmcs/character-settings` | Per-character settings panel |
-| `@hmcs/settings` | Application settings (frame rate, shadow opacity) via system tray |
-| `@hmcs/app-exit` | Exit menu in the system tray |
+| MOD                        | Description                                                       |
+| -------------------------- | ----------------------------------------------------------------- |
+| `@hmcs/assets`             | Default animations and sound effects                              |
+| `@hmcs/elmer`              | Default character model                                           |
+| `@hmcs/menu`               | Right-click context menu                                          |
+| `@hmcs/character-settings` | Per-character settings panel                                      |
+| `@hmcs/settings`           | Application settings (frame rate, shadow opacity) via system tray |
+| `@hmcs/app-exit`           | Exit menu in the system tray                                      |
 
 ## Step 5: Verify Installation
 
