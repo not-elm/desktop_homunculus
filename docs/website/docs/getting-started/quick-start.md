@@ -39,6 +39,18 @@ Right-click the character to open the context menu overlay. From here you can ac
 
 Open the Settings panel through the right-click context menu. The settings UI lets you configure the application and MOD-specific options.
 
+### Exiting the App
+
+Desktop Homunculus runs as a transparent overlay without a standard window title bar, so there is no close button. To quit the application:
+
+1. Find the **Desktop Homunculus** icon in the **system tray** (notification area)
+2. Click the tray icon to open the tray menu
+3. Select **Exit**
+
+:::tip
+The `@hmcs/app-exit` MOD provides the Exit option in the system tray. Make sure it is installed — especially on Windows, where the app is hidden from the taskbar and Alt+Tab.
+:::
+
 ## Explore Official MODs
 
 Desktop Homunculus ships with a set of official MODs under the `@hmcs` scope:
@@ -49,6 +61,7 @@ Desktop Homunculus ships with a set of official MODs under the `@hmcs` scope:
 | `@hmcs/assets` | Default VRMA animations (`idle-maid`, `grabbed`, `idle-sitting`) and sound effects |
 | `@hmcs/character-settings` | Per-character settings panel accessible from the context menu |
 | `@hmcs/settings` | Application settings panel accessible from the system tray |
+| `@hmcs/app-exit` | Exit menu in the system tray (required on Windows) |
 | `@hmcs/menu` | Right-click context menu overlay |
 
 ## Additional MODs

@@ -270,10 +270,10 @@ jobs:
         uses: cargo-bins/cargo-binstall@main
 
       - name: Setup engine tools and CEF
-        run: make setup-ci
+        run: python scripts/setup_ci.py
 
       - name: Build MSI installer
-        run: make release-windows
+        run: python scripts/release_windows.py
         env:
           SKIP_GEN_CREDITS: "1"
 
