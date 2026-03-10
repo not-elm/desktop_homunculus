@@ -18,6 +18,7 @@ homunculus_api = { workspace = true, features = ["axum", "openapi"] }
 homunculus_utils = { workspace = true, features = ["bevy"] }
 homunculus_audio = { workspace = true }
 homunculus_effects = { workspace = true }
+homunculus_mcp = { workspace = true }
 homunculus_prefs = { workspace = true }
 homunculus_screen = { workspace = true, features = ["openapi"] }
 serde = { workspace = true }
