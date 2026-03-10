@@ -1,10 +1,10 @@
 use crate::prelude::{GlobalWindow, GlobalWindows};
 use bevy::math::Rect;
+use bevy::math::Vec2;
 use std::{
     char::{REPLACEMENT_CHARACTER, decode_utf16},
     sync::Mutex,
 };
-use bevy::math::Vec2;
 use windows::{
     Win32::{
         Foundation::{HWND, LPARAM},
