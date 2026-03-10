@@ -41,7 +41,7 @@ use bevy::pbr::MeshMaterial3d;
 use bevy::picking::mesh_picking::ray_cast::RayMeshHit;
 use bevy::prelude::*;
 use bevy::render::render_resource::TextureFormat;
-use bevy::window::{CursorOptions, Window, WindowPosition};
+use bevy::window::{CursorOptions, Window};
 use bevy_cef::prelude::WebviewExtendStandardMaterial;
 use bevy_vrm1::prelude::{Cameras, MToonMaterial};
 use std::fmt::Debug;
@@ -188,9 +188,9 @@ fn fallback_cursor_position(window: &Window) -> Option<Vec2> {
 
 #[cfg(target_os = "windows")]
 fn get_cursor_pos_in_window(window: &Window) -> Option<Vec2> {
+    use bevy::window::WindowPosition;
     use windows::Win32::Foundation::POINT;
     use windows::Win32::UI::WindowsAndMessaging::GetCursorPos;
-
     let mut point = POINT::default();
     unsafe { GetCursorPos(&mut point).ok()? };
 
