@@ -65,28 +65,20 @@ fn resource_definitions() -> Vec<Resource> {
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
 pub struct OpenWebviewParams {
     /// Inline HTML content to display (mutually exclusive with url).
-    #[schemars(description = "Inline HTML content to display (mutually exclusive with url)")]
     pub html: Option<String>,
     /// URL or mod asset path to load (mutually exclusive with html).
-    #[schemars(description = "URL or mod asset path to load (mutually exclusive with html)")]
     pub url: Option<String>,
     /// Panel width in world units.
-    #[schemars(description = "Panel width in world units")]
     pub size_x: Option<f32>,
     /// Panel height in world units.
-    #[schemars(description = "Panel height in world units")]
     pub size_y: Option<f32>,
     /// Internal browser width in pixels.
-    #[schemars(description = "Internal browser width in pixels")]
     pub viewport_width: Option<u32>,
     /// Internal browser height in pixels.
-    #[schemars(description = "Internal browser height in pixels")]
     pub viewport_height: Option<u32>,
     /// Horizontal offset from character center.
-    #[schemars(description = "Horizontal offset from character center")]
     pub offset_x: Option<f32>,
     /// Vertical offset from character center (positive = above).
-    #[schemars(description = "Vertical offset from character center (positive = above)")]
     pub offset_y: Option<f32>,
 }
 
@@ -94,10 +86,8 @@ pub struct OpenWebviewParams {
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
 pub struct CloseWebviewParams {
     /// Entity ID of the webview to close. If omitted, closes the most recently opened.
-    #[schemars(description = "Entity ID of the webview to close. If omitted, closes the most recently opened.")]
     pub entity: Option<u64>,
     /// Close all open webviews (default: false).
-    #[schemars(description = "Close all open webviews (default: false)")]
     pub all: Option<bool>,
 }
 
@@ -105,10 +95,8 @@ pub struct CloseWebviewParams {
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
 pub struct NavigateWebviewParams {
     /// Entity ID of the webview to navigate. If omitted, navigates the most recently opened.
-    #[schemars(description = "Entity ID of the webview to navigate. If omitted, navigates the most recently opened.")]
     pub entity: Option<u64>,
     /// New inline HTML content to display.
-    #[schemars(description = "New inline HTML content to display")]
     pub html: String,
 }
 
@@ -271,20 +259,14 @@ impl HomunculusMcpHandler {
     async fn open_webview(&self, params: Parameters<OpenWebviewParams>) -> String {
         let args = params.0;
 
-        // Validate: exactly one of html or url must be provided.
-        match (&args.html, &args.url) {
-            (None, None) => return "Error: Either 'html' or 'url' must be provided.".to_string(),
+        let source = match (args.html, args.url) {
+            (Some(html), None) => WebviewSource::Html { content: html },
+            (None, Some(url)) => WebviewSource::Url { url },
             (Some(_), Some(_)) => {
                 return "Error: 'html' and 'url' are mutually exclusive.".to_string();
             }
-            _ => {}
-        }
-
-        let source = if let Some(html) = args.html {
-            WebviewSource::Html { content: html }
-        } else {
-            WebviewSource::Url {
-                url: args.url.unwrap(),
+            (None, None) => {
+                return "Error: Either 'html' or 'url' must be provided.".to_string();
             }
         };
 
