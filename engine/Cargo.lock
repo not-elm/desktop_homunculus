@@ -4508,12 +4508,9 @@ dependencies = [
  "bevy",
  "homunculus_api",
  "homunculus_core",
- "homunculus_utils",
  "rmcp",
  "serde",
  "serde_json",
- "tokio",
- "tracing",
 ]
 
 [[package]]

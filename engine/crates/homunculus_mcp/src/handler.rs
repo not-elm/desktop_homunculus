@@ -397,3 +397,161 @@ impl HomunculusMcpHandler {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use homunculus_api::prelude::ApiReactor;
+
+    /// Creates a handler backed by a dummy reactor (no Bevy app).
+    fn test_handler() -> HomunculusMcpHandler {
+        let reactor = ApiReactor::__test_dummy();
+        HomunculusMcpHandler::new(reactor)
+    }
+
+    #[test]
+    fn get_info_returns_correct_server_name_and_version() {
+        let handler = test_handler();
+        let info = ServerHandler::get_info(&handler);
+
+        assert_eq!(info.server_info.name, "homunculus");
+        assert_eq!(info.server_info.version, env!("CARGO_PKG_VERSION"));
+    }
+
+    #[test]
+    fn get_info_enables_tools_and_resources() {
+        let handler = test_handler();
+        let info = ServerHandler::get_info(&handler);
+
+        let caps = info.capabilities;
+        assert!(caps.tools.is_some(), "tools capability should be enabled");
+        assert!(
+            caps.resources.is_some(),
+            "resources capability should be enabled"
+        );
+    }
+
+    #[test]
+    fn get_info_includes_instructions() {
+        let handler = test_handler();
+        let info = ServerHandler::get_info(&handler);
+
+        let instructions = info.instructions.expect("instructions should be set");
+        assert!(
+            instructions.contains("Desktop Homunculus"),
+            "instructions should mention Desktop Homunculus"
+        );
+    }
+
+    #[test]
+    fn tool_router_lists_three_tools() {
+        let router = HomunculusMcpHandler::tool_router();
+        let tools = router.list_all();
+
+        assert_eq!(tools.len(), 3, "expected 3 tools, got {}", tools.len());
+
+        let names: Vec<&str> = tools.iter().map(|t| t.name.as_ref()).collect();
+        assert!(names.contains(&"open_webview"), "missing open_webview tool");
+        assert!(
+            names.contains(&"close_webview"),
+            "missing close_webview tool"
+        );
+        assert!(
+            names.contains(&"navigate_webview"),
+            "missing navigate_webview tool"
+        );
+    }
+
+    #[test]
+    fn tool_router_tools_have_descriptions() {
+        let router = HomunculusMcpHandler::tool_router();
+        let tools = router.list_all();
+
+        for tool in &tools {
+            assert!(
+                tool.description.is_some(),
+                "tool '{}' should have a description",
+                tool.name
+            );
+            assert!(
+                !tool.description.as_ref().unwrap().is_empty(),
+                "tool '{}' description should not be empty",
+                tool.name
+            );
+        }
+    }
+
+    #[test]
+    fn tool_router_tools_have_input_schemas() {
+        let router = HomunculusMcpHandler::tool_router();
+        let tools = router.list_all();
+
+        for tool in &tools {
+            assert!(
+                !tool.input_schema.is_empty(),
+                "tool '{}' should have an input schema",
+                tool.name
+            );
+        }
+    }
+
+    #[test]
+    fn resource_definitions_lists_four_resources() {
+        let resources = resource_definitions();
+        assert_eq!(
+            resources.len(),
+            4,
+            "expected 4 resources, got {}",
+            resources.len()
+        );
+    }
+
+    #[test]
+    fn resource_definitions_have_correct_uris() {
+        let resources = resource_definitions();
+        let uris: Vec<&str> = resources.iter().map(|r| r.raw.uri.as_str()).collect();
+
+        assert!(uris.contains(&"homunculus://info"), "missing info resource");
+        assert!(
+            uris.contains(&"homunculus://characters"),
+            "missing characters resource"
+        );
+        assert!(uris.contains(&"homunculus://mods"), "missing mods resource");
+        assert!(
+            uris.contains(&"homunculus://assets"),
+            "missing assets resource"
+        );
+    }
+
+    #[test]
+    fn resource_definitions_have_json_mime_type() {
+        let resources = resource_definitions();
+        for resource in &resources {
+            assert_eq!(
+                resource.raw.mime_type.as_deref(),
+                Some("application/json"),
+                "resource '{}' should have application/json mime type",
+                resource.raw.uri
+            );
+        }
+    }
+
+    #[test]
+    fn resource_definitions_have_descriptions() {
+        let resources = resource_definitions();
+        for resource in &resources {
+            assert!(
+                resource.raw.description.is_some(),
+                "resource '{}' should have a description",
+                resource.raw.uri
+            );
+        }
+    }
+
+    #[test]
+    fn handler_starts_with_empty_webview_tracker() {
+        let handler = test_handler();
+        let tracked = handler.open_webviews.lock().unwrap();
+        assert!(tracked.is_empty(), "new handler should have no tracked webviews");
+    }
+}
