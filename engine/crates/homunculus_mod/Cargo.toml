@@ -9,7 +9,6 @@ publish.workspace = true
 
 [dependencies]
 bevy = { workspace = true }
-serde_json = { workspace = true }
 homunculus_core = { workspace = true }
 homunculus_utils = { workspace = true }
 futures-lite = "2"
