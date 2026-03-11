@@ -68,6 +68,23 @@ def stage_cef_files() -> None:
     log(f"Staged {count} CEF items to {CEF_STAGING_DIR}")
 
 
+CEF_REQUIRED_FILES = ["libcef.dll", "v8_context_snapshot.bin", "icudtl.dat"]
+
+
+def verify_cef_staging() -> None:
+    """Verify all required CEF runtime files are present in staging."""
+    missing = [name for name in CEF_REQUIRED_FILES if not (CEF_STAGING_DIR / name).exists()]
+    if missing:
+        error(f"Required CEF files missing from staging: {', '.join(missing)}")
+
+    render_process = CEF_STAGING_DIR / "bevy_cef_render_process.exe"
+    if not render_process.exists():
+        error("bevy_cef_render_process.exe missing from CEF staging. "
+              "CEF subprocesses will fall back to the main executable, causing console windows.")
+
+    log(f"CEF staging verification passed ({len(CEF_REQUIRED_FILES) + 1} required files present)")
+
+
 def cleanup_cef_staging() -> None:
     """Remove the CEF staging directory after the build."""
     if CEF_STAGING_DIR.exists():
@@ -105,6 +122,7 @@ def release_windows() -> None:
 
     # 4. Stage CEF runtime files for installer
     stage_cef_files()
+    verify_cef_staging()
 
     # 5. Get versions
     full_version, msi_version = get_versions()
