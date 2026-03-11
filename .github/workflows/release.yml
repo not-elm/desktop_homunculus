@@ -87,10 +87,11 @@ jobs:
             target: aarch64-apple-darwin
             platform-name: darwin-arm64
             exe-suffix: ""
-          - os: macos-15-intel
-            target: x86_64-apple-darwin
-            platform-name: darwin-x64
-            exe-suffix: ""
+          # Temporarily excluded beacuse the build is too slow and times out.
+          # - os: macos-15-intel
+          #   target: x86_64-apple-darwin
+          #   platform-name: darwin-x64
+          #   exe-suffix: ""
           - os: windows-2022
             target: x86_64-pc-windows-msvc
             platform-name: win32-x64
