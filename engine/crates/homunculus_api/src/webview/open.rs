@@ -102,9 +102,10 @@ pub(crate) fn source_to_webview_source(
                     actual: entry.asset_type.clone(),
                 });
             }
-            Ok(bevy_cef::prelude::WebviewSource::local(
-                entry.absolute_path.display().to_string(),
-            ))
+            // Use forward slashes for URL compatibility. Windows backslash paths
+            // in `cef://localhost/C:\...` URLs can be mangled by CEF's URL parser.
+            let path = entry.absolute_path.display().to_string().replace('\\', "/");
+            Ok(bevy_cef::prelude::WebviewSource::local(path))
         }
     }
 }

@@ -63,3 +63,5 @@ CEF_DEBUG_RENDER_DST = CEF_FRAMEWORK_DIR / "Libraries" / "bevy_cef_debug_render_
 # Windows
 CEF_DIR_WINDOWS = HOME / ".local" / "share" / "cef"
 CEF_SENTINEL_WINDOWS = CEF_DIR_WINDOWS / "Release"
+CEF_RENDER_PROCESS_SRC_WINDOWS = HOME / ".cargo" / "bin" / "bevy_cef_render_process.exe"
+CEF_RENDER_PROCESS_DST_WINDOWS = CEF_DIR_WINDOWS / "bevy_cef_render_process.exe"
