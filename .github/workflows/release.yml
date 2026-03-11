@@ -150,43 +150,10 @@ jobs:
       run:
         working-directory: engine
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Cache cargo-installed binaries
-        uses: actions/cache@v4
+      - uses: ./.github/actions/setup-engine-build
         with:
-          path: ~/.cargo/bin
-          key: cargo-bin-${{ matrix.arch }}-setup-v1
-
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: "engine -> target"
           shared-key: ${{ matrix.arch }}-engine-dist
-
-      - name: Setup sccache
-        uses: mozilla-actions/sccache-action@v0.0.9
-        with:
-          version: "v0.10.0"
-
-      - name: Configure sccache for Rust
-        run: |
-          echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
-          echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
-
-      - name: Cache CEF framework
-        uses: actions/cache@v4
-        with:
-          path: ~/.local/share/Chromium Embedded Framework.framework
-          key: cef-${{ matrix.arch }}-144.4.0
-
-      - name: Install cargo-binstall
-        uses: cargo-bins/cargo-binstall@main
-
-      - name: Setup engine tools and CEF
-        run: make setup-ci
+          cef-cache-key: cef-${{ matrix.arch }}-144.4.0
 
       - name: Build engine binary
         run: |
@@ -230,37 +197,10 @@ jobs:
         working-directory: engine
         shell: bash
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-
-      - uses: Swatinem/rust-cache@v2
+      - uses: ./.github/actions/setup-engine-build
         with:
-          workspaces: "engine -> target"
           shared-key: x64-engine-dist
-
-      - name: Setup sccache
-        uses: mozilla-actions/sccache-action@v0.0.9
-        with:
-          version: "v0.10.0"
-
-      - name: Configure sccache for Rust
-        run: |
-          echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
-          echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
-
-      - name: Cache CEF framework
-        uses: actions/cache@v4
-        with:
-          path: ~/.local/share/cef
-          key: cef-windows-x64-144.4.0
-
-      - name: Install cargo-binstall
-        uses: cargo-bins/cargo-binstall@main
-
-      - name: Setup engine tools and CEF
-        run: python scripts/setup_ci.py
+          cef-cache-key: cef-windows-x64-144.4.0
 
       - name: Build MSI installer
         run: python scripts/release_windows.py
@@ -434,6 +374,16 @@ jobs:
           ARM64_DMG="artifacts/engine-macos-arm64/desktop-homunculus-${VERSION}-arm64.dmg"
           X86_64_DMG="artifacts/engine-macos-x86_64/desktop-homunculus-${VERSION}-x86_64.dmg"
           X64_MSI="artifacts/engine-windows-x64/desktop-homunculus-${VERSION}-x64.msi"
+
+          # Validate all installer artifacts exist
+          MISSING=0
+          for FILE in "$ARM64_DMG" "$X86_64_DMG" "$X64_MSI"; do
+            if [ ! -f "$FILE" ]; then
+              echo "::error::Missing expected artifact: $FILE"
+              MISSING=1
+            fi
+          done
+          [ "$MISSING" -eq 0 ] || exit 1
 
           INSTALLERS=("$ARM64_DMG" "$X86_64_DMG" "$X64_MSI")
 
