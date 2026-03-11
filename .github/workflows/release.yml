@@ -87,7 +87,7 @@ jobs:
             target: aarch64-apple-darwin
             platform-name: darwin-arm64
             exe-suffix: ""
-          # Temporarily excluded beacuse the build is too slow and times out.
+          #  The build is too slow and times out, so it has been temporarily excluded.
           # - os: macos-15-intel
           #   target: x86_64-apple-darwin
           #   platform-name: darwin-x64
