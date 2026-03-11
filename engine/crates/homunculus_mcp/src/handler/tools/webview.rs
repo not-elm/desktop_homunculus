@@ -1,0 +1,206 @@
+//! Webview tool implementations for the MCP handler.
+
+use bevy::math::Vec2;
+use bevy::prelude::Entity;
+use homunculus_core::prelude::{WebviewOffset, WebviewOpenOptions, WebviewSource};
+use rmcp::handler::server::wrapper::Parameters;
+use rmcp::schemars;
+use rmcp::schemars::JsonSchema;
+use rmcp::tool;
+use serde::{Deserialize, Serialize};
+
+use super::super::HomunculusMcpHandler;
+
+// ---------------------------------------------------------------------------
+// Parameter structs
+// ---------------------------------------------------------------------------
+
+/// Parameters for the `open_webview` tool.
+#[derive(Debug, Serialize, Deserialize, JsonSchema)]
+pub struct OpenWebviewParams {
+    /// Inline HTML content to display (mutually exclusive with url).
+    pub html: Option<String>,
+    /// URL or mod asset path to load (mutually exclusive with html).
+    pub url: Option<String>,
+    /// Panel width in world units.
+    pub size_x: Option<f32>,
+    /// Panel height in world units.
+    pub size_y: Option<f32>,
+    /// Internal browser width in pixels.
+    pub viewport_width: Option<u32>,
+    /// Internal browser height in pixels.
+    pub viewport_height: Option<u32>,
+    /// Horizontal offset from character center.
+    pub offset_x: Option<f32>,
+    /// Vertical offset from character center (positive = above).
+    pub offset_y: Option<f32>,
+}
+
+/// Parameters for the `close_webview` tool.
+#[derive(Debug, Serialize, Deserialize, JsonSchema)]
+pub struct CloseWebviewParams {
+    /// Entity ID of the webview to close. If omitted, closes the most recently opened.
+    pub entity: Option<u64>,
+    /// Close all open webviews (default: false).
+    pub all: Option<bool>,
+}
+
+/// Parameters for the `navigate_webview` tool.
+#[derive(Debug, Serialize, Deserialize, JsonSchema)]
+pub struct NavigateWebviewParams {
+    /// Entity ID of the webview to navigate. If omitted, navigates the most recently opened.
+    pub entity: Option<u64>,
+    /// New inline HTML content to display.
+    pub html: String,
+}
+
+// ---------------------------------------------------------------------------
+// Tool implementations
+// ---------------------------------------------------------------------------
+
+#[rmcp::tool_router(router = webview_tool_router, vis = "pub(super)")]
+impl HomunculusMcpHandler {
+    /// Open a webview panel displaying HTML content or a URL near the active character.
+    #[tool(
+        name = "open_webview",
+        description = "Open a webview panel displaying HTML content or a URL near the active character. Returns the webview entity ID. Use close_webview to close it."
+    )]
+    async fn open_webview(&self, params: Parameters<OpenWebviewParams>) -> String {
+        let args = params.0;
+
+        let source = match (args.html, args.url) {
+            (Some(html), None) => WebviewSource::Html { content: html },
+            (None, Some(url)) => WebviewSource::Url { url },
+            (Some(_), Some(_)) => {
+                return "Error: 'html' and 'url' are mutually exclusive.".to_string();
+            }
+            (None, None) => {
+                return "Error: Either 'html' or 'url' must be provided.".to_string();
+            }
+        };
+
+        let size_x = args.size_x.unwrap_or(0.7);
+        let size_y = args.size_y.unwrap_or(0.5);
+        let viewport_width = args.viewport_width.unwrap_or(800);
+        let viewport_height = args.viewport_height.unwrap_or(600);
+        let offset_x = args.offset_x.unwrap_or(0.0);
+        let offset_y = args.offset_y.unwrap_or(0.5);
+
+        let options = WebviewOpenOptions {
+            source,
+            size: Some(Vec2::new(size_x, size_y)),
+            viewport_size: Some(Vec2::new(viewport_width as f32, viewport_height as f32)),
+            offset: Some(WebviewOffset(Vec2::new(offset_x, offset_y))),
+            linked_vrm: None,
+        };
+
+        match self.webview_api.open(options).await {
+            Ok(entity) => {
+                let entity_id = entity.to_bits();
+                if let Ok(mut webviews) = self.open_webviews.lock() {
+                    webviews.push(entity_id);
+                }
+                format!("Opened webview (entity {entity_id})")
+            }
+            Err(e) => format!("Error opening webview: {e}"),
+        }
+    }
+
+    /// Close a webview panel.
+    #[tool(
+        name = "close_webview",
+        description = "Close a webview panel. If no entity ID is given, closes the most recently opened webview. Use all=true to close all webviews."
+    )]
+    async fn close_webview(&self, params: Parameters<CloseWebviewParams>) -> String {
+        let args = params.0;
+        let close_all = args.all.unwrap_or(false);
+
+        if close_all {
+            let webviews = match self.webview_api.list().await {
+                Ok(list) => list,
+                Err(e) => return format!("Error listing webviews: {e}"),
+            };
+
+            if webviews.is_empty() {
+                return "No webviews are open.".to_string();
+            }
+
+            let total = webviews.len();
+            let mut failures = 0;
+            for info in &webviews {
+                if self.webview_api.close(info.entity).await.is_err() {
+                    failures += 1;
+                }
+            }
+
+            if let Ok(mut tracked) = self.open_webviews.lock() {
+                tracked.clear();
+            }
+
+            if failures > 0 {
+                format!("Closed {} webview(s), {failures} failed.", total - failures)
+            } else {
+                format!("Closed {total} webview(s).")
+            }
+        } else {
+            let target_entity_id = if let Some(id) = args.entity {
+                id
+            } else {
+                let last = self
+                    .open_webviews
+                    .lock()
+                    .ok()
+                    .and_then(|v| v.last().copied());
+                match last {
+                    Some(id) => id,
+                    None => return "No webviews tracked.".to_string(),
+                }
+            };
+
+            let entity = Entity::from_bits(target_entity_id);
+            match self.webview_api.close(entity).await {
+                Ok(()) => {
+                    if let Ok(mut tracked) = self.open_webviews.lock() {
+                        tracked.retain(|&id| id != target_entity_id);
+                    }
+                    format!("Closed webview (entity {target_entity_id}).")
+                }
+                Err(e) => format!("Error closing webview: {e}"),
+            }
+        }
+    }
+
+    /// Navigate an existing webview to new HTML content.
+    #[tool(
+        name = "navigate_webview",
+        description = "Navigate an existing webview to new HTML content. Use this to update a webview's content without closing and reopening it. If no entity is specified, navigates the most recently opened webview."
+    )]
+    async fn navigate_webview(&self, params: Parameters<NavigateWebviewParams>) -> String {
+        let args = params.0;
+
+        let target_entity_id = if let Some(id) = args.entity {
+            id
+        } else {
+            let last = self
+                .open_webviews
+                .lock()
+                .ok()
+                .and_then(|v| v.last().copied());
+            match last {
+                Some(id) => id,
+                None => {
+                    return "No webviews tracked. Open a webview first with open_webview."
+                        .to_string();
+                }
+            }
+        };
+
+        let entity = Entity::from_bits(target_entity_id);
+        let source = WebviewSource::Html { content: args.html };
+
+        match self.webview_api.navigate(entity, source).await {
+            Ok(()) => format!("Navigated webview (entity {target_entity_id}) to new content."),
+            Err(e) => format!("Error navigating webview: {e}"),
+        }
+    }
+}
