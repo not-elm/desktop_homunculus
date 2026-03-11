@@ -4501,7 +4501,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_mcp"
-version = "0.1.0-alpha.4.3"
+version = "0.1.0-alpha.4.4"
 dependencies = [
  "bevy",
  "homunculus_api",
