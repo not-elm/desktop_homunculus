@@ -282,7 +282,6 @@ jobs:
 
           declare -A PLATFORMS=(
             ["darwin-arm64"]="darwin arm64 "
-            ["darwin-x64"]="darwin x64 "
             ["win32-x64"]="win32 x64 .exe"
           )
 
@@ -304,7 +303,7 @@ jobs:
                 -e "s/{{VERSION}}/${VERSION}/g" \
                 -e "s/{{OS}}/${OS}/g" \
                 -e "s/{{CPU}}/${CPU}/g" \
-                -e "s/{{EXE_SUFFIX}}/${EXE_SUFFIX}/g" \The build is too slow and times out, so it has been temporarily excluded.
+                -e "s/{{EXE_SUFFIX}}/${EXE_SUFFIX}/g" \
                 packages/cli-platform/package.json.tmpl > "${STAGE_DIR}/package.json"
 
             # Copy binary from artifact
@@ -342,7 +341,6 @@ jobs:
           cd "${STAGE_DIR}"
           npm pkg set version="${VERSION}"
           npm pkg set "optionalDependencies.@hmcs/cli-darwin-arm64"="${VERSION}"
-          npm pkg set "optionalDependencies.@hmcs/cli-darwin-x64"="${VERSION}"
           npm pkg set "optionalDependencies.@hmcs/cli-win32-x64"="${VERSION}"
 
           echo "Contents of package:"
