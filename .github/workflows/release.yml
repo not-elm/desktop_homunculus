@@ -150,6 +150,7 @@ jobs:
       run:
         working-directory: engine
     steps:
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-engine-build
         with:
           shared-key: ${{ matrix.arch }}-engine-dist
@@ -197,6 +198,7 @@ jobs:
         working-directory: engine
         shell: bash
     steps:
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-engine-build
         with:
           shared-key: x64-engine-dist
