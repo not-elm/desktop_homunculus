@@ -24,7 +24,7 @@ runs:
     - uses: Swatinem/rust-cache@v2
       with:
         workspaces: "engine -> target"
-        shared-key: ${{ inputs.shared-key }}
+        shared-key: ${{ inputs.shared-key }}-${{ inputs.cef-cache-key }}
 
     - name: Setup sccache
       uses: mozilla-actions/sccache-action@v0.0.9

@@ -205,6 +205,12 @@ jobs:
           shared-key: x64-engine-dist
           cef-cache-key: cef-windows-x64-144.4.0
 
+      - name: Clean stale CEF files from target cache
+        run: |
+          rm -f target/dist/*.dll target/dist/*.pak target/dist/*.dat target/dist/*.bin
+          rm -rf target/dist/locales/
+          rm -f target/dist/bevy_cef_render_process.exe
+
       - name: Build MSI installer
         run: python scripts/release_windows.py
         env:
