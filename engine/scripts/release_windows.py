@@ -54,6 +54,17 @@ def stage_cef_files() -> None:
             shutil.copytree(item, CEF_STAGING_DIR / "locales")
             count += 1
 
+    # Include the dedicated CEF render process binary.
+    # Without it, CEF re-launches the main executable (~104 MB) for every
+    # renderer / GPU / utility subprocess, which is slow and fragile.
+    render_process = DIST_DIR / "bevy_cef_render_process.exe"
+    if render_process.exists():
+        shutil.copy2(render_process, CEF_STAGING_DIR / render_process.name)
+        count += 1
+        log(f"Included CEF render process: {render_process.name}")
+    else:
+        log("WARNING: bevy_cef_render_process.exe not found in target/dist/")
+
     log(f"Staged {count} CEF items to {CEF_STAGING_DIR}")
 
 

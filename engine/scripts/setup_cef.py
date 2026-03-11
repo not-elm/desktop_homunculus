@@ -12,6 +12,8 @@ from utils import (
     CEF_DIR_WINDOWS,
     CEF_EXPORT_DIR_MACOS,
     CEF_FRAMEWORK_DIR,
+    CEF_RENDER_PROCESS_DST_WINDOWS,
+    CEF_RENDER_PROCESS_SRC_WINDOWS,
     CEF_SENTINEL_MACOS,
     CEF_SENTINEL_WINDOWS,
     Platform,
@@ -57,6 +59,14 @@ def _setup_cef_windows() -> None:
     else:
         log("Downloading CEF framework...")
         run(["export-cef-dir", "--force", str(CEF_DIR_WINDOWS)])
+
+    # Copy render process binary to CEF directory so build.rs can find it
+    if CEF_RENDER_PROCESS_SRC_WINDOWS.exists():
+        log("Copying render process binary...")
+        shutil.copy2(str(CEF_RENDER_PROCESS_SRC_WINDOWS), str(CEF_RENDER_PROCESS_DST_WINDOWS))
+    else:
+        log("WARNING: bevy_cef_render_process.exe not found. "
+            "Run 'cargo install bevy_cef_render_process' first.")
 
 
 if __name__ == "__main__":
