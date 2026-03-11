@@ -3061,7 +3061,6 @@ dependencies = [
  "homunculus_audio",
  "homunculus_core",
  "homunculus_drag",
- "homunculus_effects",
  "homunculus_hit_test",
  "homunculus_http_server",
  "homunculus_mod",
@@ -3076,7 +3075,6 @@ dependencies = [
  "homunculus_windows",
  "reqwest",
  "serde",
- "serde_json",
  "tokio",
  "tracing-appender",
 ]
@@ -4328,7 +4326,6 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror 2.0.18",
- "tracing",
  "utoipa",
 ]
 
@@ -4443,7 +4440,6 @@ dependencies = [
  "homunculus_core",
  "homunculus_utils",
  "libc",
- "serde_json",
 ]
 
 [[package]]
@@ -4505,7 +4501,6 @@ name = "homunculus_sitting"
 version = "0.1.0-alpha.4.2"
 dependencies = [
  "bevy",
- "bevy_vrm1",
  "homunculus_core",
  "homunculus_screen",
 ]
@@ -4529,7 +4524,6 @@ dependencies = [
  "bevy_tray_icon",
  "homunculus_core",
  "homunculus_utils",
- "tokio",
  "tracing",
 ]
 
@@ -4555,9 +4549,7 @@ version = "0.1.0-alpha.4.2"
 dependencies = [
  "bevy",
  "homunculus_core",
- "raw-window-handle",
  "serde",
- "windows 0.60.0",
 ]
 
 [[package]]

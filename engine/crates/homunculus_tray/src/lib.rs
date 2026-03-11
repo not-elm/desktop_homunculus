@@ -101,12 +101,6 @@ fn handle_tray_clicks(
                     execute_command(mods_dir, command).await;
                 })
                 .detach();
-            // tokio::runtime::Builder::new_current_thread()
-            //     .build()
-            //     .unwrap()
-            //     .spawn(async move {
-            //         execute_command(mods_dir, command).await;
-            //     });
         } else {
             tracing::warn!("Unknown tray menu id: {id}");
         }

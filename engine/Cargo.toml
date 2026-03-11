@@ -29,10 +29,8 @@ bevy_vrm1 = { workspace = true }
 base64 = { workspace = true }
 reqwest = { workspace = true }
 serde = { workspace = true }
-serde_json = { workspace = true }
 homunculus_drag = { workspace = true }
 homunculus_core = { workspace = true }
-homunculus_effects = { workspace = true }
 homunculus_windows = { workspace = true }
 homunculus_hit_test = { workspace = true }
 homunculus_screen = { workspace = true }

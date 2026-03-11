@@ -12,7 +12,6 @@ bevy = { workspace = true }
 bevy_tray_icon = { workspace = true }
 homunculus_core = { workspace = true }
 homunculus_utils = { workspace = true }
-tokio = { workspace = true, features = ["process"] }
 tracing = { workspace = true }
 
 [lints]
