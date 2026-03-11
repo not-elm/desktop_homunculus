@@ -373,12 +373,11 @@ jobs:
 
           # Collect installer files
           ARM64_DMG="artifacts/engine-macos-arm64/desktop-homunculus-${VERSION}-arm64.dmg"
-          X86_64_DMG="artifacts/engine-macos-x86_64/desktop-homunculus-${VERSION}-x86_64.dmg"
           X64_MSI="artifacts/engine-windows-x64/desktop-homunculus-${VERSION}-x64.msi"
 
           # Validate all installer artifacts exist
           MISSING=0
-          for FILE in "$ARM64_DMG" "$X86_64_DMG" "$X64_MSI"; do
+          for FILE in "$ARM64_DMG" "$X64_MSI"; do
             if [ ! -f "$FILE" ]; then
               echo "::error::Missing expected artifact: $FILE"
               MISSING=1
@@ -386,7 +385,7 @@ jobs:
           done
           [ "$MISSING" -eq 0 ] || exit 1
 
-          INSTALLERS=("$ARM64_DMG" "$X86_64_DMG" "$X64_MSI")
+          INSTALLERS=("$ARM64_DMG" "$X64_MSI")
 
           # Build gh release create args
           ARGS=(
