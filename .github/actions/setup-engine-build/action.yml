@@ -1,0 +1,54 @@
+name: Setup Engine Build
+description: Shared setup steps for engine builds (Rust toolchain, caches, CEF, tools)
+
+inputs:
+  shared-key:
+    description: "Shared key for Swatinem/rust-cache"
+    required: true
+  cef-cache-key:
+    description: "Cache key for CEF framework"
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Cache cargo-installed binaries
+      uses: actions/cache@v4
+      with:
+        path: ~/.cargo/bin
+        key: cargo-bin-${{ inputs.shared-key }}-setup-v1
+
+    - uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: "engine -> target"
+        shared-key: ${{ inputs.shared-key }}
+
+    - name: Setup sccache
+      uses: mozilla-actions/sccache-action@v0.0.9
+      with:
+        version: "v0.10.0"
+
+    - name: Configure sccache for Rust
+      shell: bash
+      run: |
+        echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
+        echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
+
+    - name: Cache CEF framework
+      uses: actions/cache@v4
+      with:
+        path: ${{ runner.os == 'Windows' && '~/.local/share/cef' || '~/.local/share/Chromium Embedded Framework.framework' }}
+        key: ${{ inputs.cef-cache-key }}
+
+    - name: Install cargo-binstall
+      uses: cargo-bins/cargo-binstall@main
+
+    - name: Setup engine tools and CEF
+      shell: bash
+      working-directory: engine
+      run: ${{ runner.os == 'Windows' && 'python scripts/setup_ci.py' || 'make setup-ci' }}
