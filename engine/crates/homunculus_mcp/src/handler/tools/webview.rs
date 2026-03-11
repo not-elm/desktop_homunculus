@@ -116,57 +116,9 @@ impl HomunculusMcpHandler {
         let close_all = args.all.unwrap_or(false);
 
         if close_all {
-            let webviews = match self.webview_api.list().await {
-                Ok(list) => list,
-                Err(e) => return format!("Error listing webviews: {e}"),
-            };
-
-            if webviews.is_empty() {
-                return "No webviews are open.".to_string();
-            }
-
-            let total = webviews.len();
-            let mut failures = 0;
-            for info in &webviews {
-                if self.webview_api.close(info.entity).await.is_err() {
-                    failures += 1;
-                }
-            }
-
-            if let Ok(mut tracked) = self.open_webviews.lock() {
-                tracked.clear();
-            }
-
-            if failures > 0 {
-                format!("Closed {} webview(s), {failures} failed.", total - failures)
-            } else {
-                format!("Closed {total} webview(s).")
-            }
+            self.close_all().await
         } else {
-            let target_entity_id = if let Some(id) = args.entity {
-                id
-            } else {
-                let last = self
-                    .open_webviews
-                    .lock()
-                    .ok()
-                    .and_then(|v| v.last().copied());
-                match last {
-                    Some(id) => id,
-                    None => return "No webviews tracked.".to_string(),
-                }
-            };
-
-            let entity = Entity::from_bits(target_entity_id);
-            match self.webview_api.close(entity).await {
-                Ok(()) => {
-                    if let Ok(mut tracked) = self.open_webviews.lock() {
-                        tracked.retain(|&id| id != target_entity_id);
-                    }
-                    format!("Closed webview (entity {target_entity_id}).")
-                }
-                Err(e) => format!("Error closing webview: {e}"),
-            }
+            self.close_single(args.entity).await
         }
     }
 
@@ -178,20 +130,10 @@ impl HomunculusMcpHandler {
     async fn navigate_webview(&self, params: Parameters<NavigateWebviewParams>) -> String {
         let args = params.0;
 
-        let target_entity_id = if let Some(id) = args.entity {
-            id
-        } else {
-            let last = self
-                .open_webviews
-                .lock()
-                .ok()
-                .and_then(|v| v.last().copied());
-            match last {
-                Some(id) => id,
-                None => {
-                    return "No webviews tracked. Open a webview first with open_webview."
-                        .to_string();
-                }
+        let target_entity_id = match self.extract_webview(args.entity) {
+            Some(id) => id,
+            None => {
+                return "No webviews tracked. Open a webview first with open_webview.".to_string();
             }
         };
 
@@ -201,6 +143,66 @@ impl HomunculusMcpHandler {
         match self.webview_api.navigate(entity, source).await {
             Ok(()) => format!("Navigated webview (entity {target_entity_id}) to new content."),
             Err(e) => format!("Error navigating webview: {e}"),
+        }
+    }
+
+    async fn close_all(&self) -> String {
+        let webviews = match self.webview_api.list().await {
+            Ok(list) => list,
+            Err(e) => return format!("Error listing webviews: {e}"),
+        };
+
+        if webviews.is_empty() {
+            return "No webviews are open.".to_string();
+        }
+
+        let total = webviews.len();
+        let mut failures = 0;
+        for info in &webviews {
+            if self.webview_api.close(info.entity).await.is_err() {
+                failures += 1;
+            }
+        }
+
+        if let Ok(mut tracked) = self.open_webviews.lock() {
+            tracked.clear();
+        }
+
+        if failures > 0 {
+            format!("Closed {} webview(s), {failures} failed.", total - failures)
+        } else {
+            format!("Closed {total} webview(s).")
+        }
+    }
+
+    async fn close_single(&self, entity: Option<u64>) -> String {
+        let target_entity_id = match self.extract_webview(entity) {
+            Some(id) => id,
+            None => {
+                return "No webviews tracked".to_string();
+            }
+        };
+
+        let entity = Entity::from_bits(target_entity_id);
+        match self.webview_api.close(entity).await {
+            Ok(()) => {
+                if let Ok(mut tracked) = self.open_webviews.lock() {
+                    tracked.retain(|&id| id != target_entity_id);
+                }
+                format!("Closed webview (entity {target_entity_id}).")
+            }
+            Err(e) => format!("Error closing webview: {e}"),
+        }
+    }
+
+    fn extract_webview(&self, entity: Option<u64>) -> Option<u64> {
+        if let Some(id) = entity {
+            Some(id)
+        } else {
+            self.open_webviews
+                .lock()
+                .ok()
+                .and_then(|v| v.last().copied())
         }
     }
 }

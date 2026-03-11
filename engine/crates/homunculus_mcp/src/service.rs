@@ -7,8 +7,7 @@ use std::sync::Arc;
 
 use homunculus_api::prelude::ApiReactor;
 use rmcp::transport::streamable_http_server::{
-    StreamableHttpServerConfig, StreamableHttpService,
-    session::local::LocalSessionManager,
+    StreamableHttpServerConfig, StreamableHttpService, session::local::LocalSessionManager,
 };
 
 use crate::handler::HomunculusMcpHandler;

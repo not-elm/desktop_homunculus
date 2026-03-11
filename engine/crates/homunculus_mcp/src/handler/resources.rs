@@ -6,7 +6,7 @@ use rmcp::model::{
     ResourceContents,
 };
 
-use super::{HomunculusMcpHandler, FEATURES, api_err, to_json_string};
+use super::{FEATURES, HomunculusMcpHandler, api_err, to_json_string};
 
 /// Returns the list of resources exposed by this MCP server.
 pub(super) fn resource_definitions() -> Vec<Resource> {
