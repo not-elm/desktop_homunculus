@@ -1,9 +1,8 @@
 #![allow(clippy::type_complexity, clippy::too_many_arguments)]
-// リリースのワークフローからビルドされるとなぜかCEFが表示できないためいったん外す。
-// #![cfg_attr(
-//     all(target_os = "windows", not(debug_assertions)),
-//     windows_subsystem = "windows"
-// )]
+#![cfg_attr(
+    all(target_os = "windows", not(debug_assertions)),
+    windows_subsystem = "windows"
+)]
 
 mod cef_fetch;
 
