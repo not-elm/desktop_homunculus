@@ -4504,6 +4504,7 @@ name = "homunculus_mcp"
 version = "0.1.0-alpha.4.5"
 dependencies = [
  "bevy",
+ "bevy_vrm1",
  "homunculus_api",
  "homunculus_core",
  "homunculus_utils",

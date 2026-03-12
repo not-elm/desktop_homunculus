@@ -4,8 +4,8 @@
 //! [`ServerHandler`] trait from `rmcp`, exposing Desktop Homunculus capabilities
 //! (tools and resources) to MCP-compatible AI agents.
 
-#[allow(dead_code)]
 mod presets;
+mod prompts;
 mod resources;
 mod tools;
 
@@ -20,8 +20,9 @@ use homunculus_api::prelude::{
 use homunculus_utils::config::HomunculusConfig;
 use rmcp::handler::server::router::tool::ToolRouter;
 use rmcp::model::{
-    Implementation, ListResourcesResult, PaginatedRequestParams, ReadResourceRequestParams,
-    ReadResourceResult, ServerCapabilities, ServerInfo,
+    GetPromptRequestParams, GetPromptResult, Implementation, ListPromptsResult,
+    ListResourcesResult, PaginatedRequestParams, ReadResourceRequestParams, ReadResourceResult,
+    ServerCapabilities, ServerInfo,
 };
 use rmcp::service::RequestContext;
 use rmcp::{RoleServer, ServerHandler, tool_handler};
@@ -60,15 +61,10 @@ pub struct HomunculusMcpHandler {
     pub(crate) vrm_api: VrmApi,
     pub(crate) mods_api: ModsApi,
     pub(crate) assets_api: AssetsApi,
-    #[allow(dead_code)]
     pub(crate) audio_se_api: AudioSeApi,
-    #[allow(dead_code)]
     pub(crate) audio_bgm_api: AudioBgmApi,
-    #[allow(dead_code)]
     pub(crate) entities_api: EntitiesApi,
-    #[allow(dead_code)]
     pub(crate) vrma_api: VrmAnimationApi,
-    #[allow(dead_code)]
     pub(crate) active_character: Arc<Mutex<Option<u64>>>,
     #[allow(dead_code)]
     pub(crate) config: HomunculusConfig,
@@ -132,6 +128,7 @@ impl ServerHandler for HomunculusMcpHandler {
         let capabilities = ServerCapabilities::builder()
             .enable_tools()
             .enable_resources()
+            .enable_prompts()
             .build();
 
         ServerInfo::new(capabilities)
@@ -162,6 +159,29 @@ impl ServerHandler for HomunculusMcpHandler {
     ) -> impl std::future::Future<Output = Result<ReadResourceResult, rmcp::ErrorData>> + Send + '_
     {
         resources::read_resource(self, request)
+    }
+
+    fn list_prompts(
+        &self,
+        _request: Option<PaginatedRequestParams>,
+        _context: RequestContext<RoleServer>,
+    ) -> impl std::future::Future<Output = Result<ListPromptsResult, rmcp::ErrorData>> + Send + '_
+    {
+        std::future::ready(Ok(ListPromptsResult {
+            meta: None,
+            next_cursor: None,
+            prompts: prompts::prompt_definitions(),
+        }))
+    }
+
+    fn get_prompt(
+        &self,
+        request: GetPromptRequestParams,
+        _context: RequestContext<RoleServer>,
+    ) -> impl std::future::Future<Output = Result<GetPromptResult, rmcp::ErrorData>> + Send + '_
+    {
+        let args = request.arguments.unwrap_or_default();
+        std::future::ready(prompts::get_prompt(&request.name, &args))
     }
 }
 
@@ -215,13 +235,14 @@ mod tests {
     }
 
     #[test]
-    fn tool_router_lists_three_tools() {
+    fn tool_router_lists_all_tools() {
         let router = tools::tool_router();
         let tools = router.list_all();
 
-        assert_eq!(tools.len(), 3, "expected 3 tools, got {}", tools.len());
+        assert_eq!(tools.len(), 19, "expected 19 tools, got {}", tools.len());
 
         let names: Vec<&str> = tools.iter().map(|t| t.name.as_ref()).collect();
+        // Webview tools
         assert!(names.contains(&"open_webview"), "missing open_webview tool");
         assert!(
             names.contains(&"close_webview"),
@@ -230,6 +251,61 @@ mod tests {
         assert!(
             names.contains(&"navigate_webview"),
             "missing navigate_webview tool"
+        );
+        // VRM tools
+        assert!(
+            names.contains(&"get_character_snapshot"),
+            "missing get_character_snapshot tool"
+        );
+        assert!(
+            names.contains(&"spawn_character"),
+            "missing spawn_character tool"
+        );
+        assert!(
+            names.contains(&"select_character"),
+            "missing select_character tool"
+        );
+        assert!(
+            names.contains(&"remove_character"),
+            "missing remove_character tool"
+        );
+        assert!(
+            names.contains(&"set_expression"),
+            "missing set_expression tool"
+        );
+        assert!(names.contains(&"set_persona"), "missing set_persona tool");
+        assert!(names.contains(&"set_look_at"), "missing set_look_at tool");
+        // Animation tools
+        assert!(
+            names.contains(&"play_animation"),
+            "missing play_animation tool"
+        );
+        // Audio tools
+        assert!(names.contains(&"play_sound"), "missing play_sound tool");
+        assert!(names.contains(&"control_bgm"), "missing control_bgm tool");
+        // Transform tools
+        assert!(
+            names.contains(&"move_character"),
+            "missing move_character tool"
+        );
+        assert!(
+            names.contains(&"tween_position"),
+            "missing tween_position tool"
+        );
+        assert!(
+            names.contains(&"tween_rotation"),
+            "missing tween_rotation tool"
+        );
+        assert!(names.contains(&"tween_scale"), "missing tween_scale tool");
+        // Reaction tools
+        assert!(
+            names.contains(&"play_reaction"),
+            "missing play_reaction tool"
+        );
+        // System tools
+        assert!(
+            names.contains(&"execute_command"),
+            "missing execute_command tool"
         );
     }
 
@@ -326,6 +402,52 @@ mod tests {
         assert!(
             tracked.is_empty(),
             "new handler should have no tracked webviews"
+        );
+    }
+
+    #[test]
+    fn handler_starts_with_no_active_character() {
+        let handler = test_handler();
+        let active = handler.active_character.lock().unwrap();
+        assert!(
+            active.is_none(),
+            "new handler should have no active character"
+        );
+    }
+
+    #[test]
+    fn get_info_enables_prompts() {
+        let handler = test_handler();
+        let info = ServerHandler::get_info(&handler);
+
+        assert!(
+            info.capabilities.prompts.is_some(),
+            "prompts capability should be enabled"
+        );
+    }
+
+    #[test]
+    fn prompt_definitions_lists_three_prompts() {
+        let prompts = prompts::prompt_definitions();
+        assert_eq!(
+            prompts.len(),
+            3,
+            "expected 3 prompts, got {}",
+            prompts.len()
+        );
+
+        let names: Vec<&str> = prompts.iter().map(|p| p.name.as_ref()).collect();
+        assert!(
+            names.contains(&"developer-assistant"),
+            "missing developer-assistant prompt"
+        );
+        assert!(
+            names.contains(&"character-interaction"),
+            "missing character-interaction prompt"
+        );
+        assert!(
+            names.contains(&"mod-command-helper"),
+            "missing mod-command-helper prompt"
         );
     }
 }
