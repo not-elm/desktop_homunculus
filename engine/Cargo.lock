@@ -3053,6 +3053,7 @@ dependencies = [
  "bevy",
  "bevy-inspector-egui",
  "bevy_cef",
+ "bevy_cef_core",
  "bevy_egui",
  "bevy_flurx",
  "bevy_vrm1",
