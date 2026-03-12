@@ -8,7 +8,7 @@ impl AppApi {
     pub async fn exit(&self) -> ApiResult {
         self.0
             .schedule(|task| async move {
-                task.will(Update, once::run(exit_app)).await;
+                task.will(First, once::run(exit_app)).await;
             })
             .await
     }
