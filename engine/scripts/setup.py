@@ -16,7 +16,7 @@ def setup() -> None:
         error("Unsupported platform. Only macOS and Windows are supported.")
 
     # cargo install (platform-specific packages)
-    cargo_packages = ["export-cef-dir@144.4.0+144.0.13", "cargo-about"]
+    cargo_packages = ["export-cef-dir@145.6.1+145.0.28", "cargo-about"]
     if plat == Platform.MACOS:
         cargo_packages.extend([
             "bevy_cef_debug_render_process@0.4.1",

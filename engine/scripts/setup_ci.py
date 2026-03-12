@@ -10,7 +10,7 @@ from utils import Platform, current_platform, run
 
 
 def setup_ci() -> None:
-    packages = ["export-cef-dir@144.4.0+144.0.13"]
+    packages = ["export-cef-dir@145.6.1+145.0.28"]
 
     plat = current_platform()
     if plat == Platform.MACOS:
