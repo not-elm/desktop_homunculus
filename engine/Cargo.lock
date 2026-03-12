@@ -828,9 +828,9 @@ dependencies = [
 
 [[package]]
 name = "bevy_cef"
-version = "0.4.1"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ec8f469503b507252a8aeb564477ceee1b40ee6f2bcede005d79d04698dd3f4e"
+checksum = "724f74f5a00826cbbb677a2d6108b563c2c7c0582a819d740314b1146942b503"
 dependencies = [
  "async-channel",
  "bevy",
@@ -845,9 +845,9 @@ dependencies = [
 
 [[package]]
 name = "bevy_cef_core"
-version = "0.4.1"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aacebc0fca33d875779c9430fae663452d3243fe57f6315f047dba05326fcbfb"
+checksum = "56941cc422b73a60dad1d80135a3cb5b3d6463a177f94c0a28f0de77b94a1f94"
 dependencies = [
  "async-channel",
  "bevy",
@@ -2393,9 +2393,9 @@ dependencies = [
 
 [[package]]
 name = "cef"
-version = "144.4.0+144.0.13"
+version = "145.6.1+145.0.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "42320c2356f3fe4ed3f875b8fc93cbbabd1be3c59fcc0a8eb1e5b5c25616ac28"
+checksum = "549537e80f5655f48678e6496282cdea6f2b34b66d0e729d3517d7c7ec78954b"
 dependencies = [
  "anyhow",
  "cargo_metadata",
@@ -2413,9 +2413,9 @@ dependencies = [
 
 [[package]]
 name = "cef-dll-sys"
-version = "144.4.0+144.0.13"
+version = "145.6.1+145.0.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6d802abd4ac0b8c12be11b6af24100c6e21543c265867ad53067268048bc7e3a"
+checksum = "687f31c0937d9914d3e5887b94c6194bd8e3e533026cef2cc3ae7b4fe5245b6d"
 dependencies = [
  "anyhow",
  "cmake",
@@ -3046,7 +3046,7 @@ dependencies = [
 
 [[package]]
 name = "desktop_homunculus"
-version = "0.1.0-alpha.4.4"
+version = "0.1.0-alpha.4.5"
 dependencies = [
  "async-channel",
  "base64",
@@ -4306,7 +4306,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_api"
-version = "0.1.0-alpha.4.4"
+version = "0.1.0-alpha.4.5"
 dependencies = [
  "async-broadcast",
  "async-channel",
@@ -4332,7 +4332,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_audio"
-version = "0.1.0-alpha.4.4"
+version = "0.1.0-alpha.4.5"
 dependencies = [
  "bevy",
  "bevy_kira_audio",
@@ -4343,7 +4343,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_cli"
-version = "0.1.0-alpha.4.4"
+version = "0.1.0-alpha.4.5"
 dependencies = [
  "anyhow",
  "clap",
@@ -4357,7 +4357,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_core"
-version = "0.1.0-alpha.4.4"
+version = "0.1.0-alpha.4.5"
 dependencies = [
  "anyhow",
  "async-broadcast",
@@ -4371,7 +4371,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_drag"
-version = "0.1.0-alpha.4.4"
+version = "0.1.0-alpha.4.5"
 dependencies = [
  "bevy",
  "bevy_vrm1",
@@ -4382,7 +4382,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_effects"
-version = "0.1.0-alpha.4.4"
+version = "0.1.0-alpha.4.5"
 dependencies = [
  "bevy",
  "bevy_vrm1",
@@ -4394,7 +4394,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_hit_test"
-version = "0.1.0-alpha.4.4"
+version = "0.1.0-alpha.4.5"
 dependencies = [
  "bevy",
  "bevy_cef",
@@ -4405,7 +4405,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_http_server"
-version = "0.1.0-alpha.4.4"
+version = "0.1.0-alpha.4.5"
 dependencies = [
  "async-channel",
  "axum",
@@ -4434,7 +4434,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_mod"
-version = "0.1.0-alpha.4.4"
+version = "0.1.0-alpha.4.5"
 dependencies = [
  "bevy",
  "futures-lite",
@@ -4445,7 +4445,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_power_saver"
-version = "0.1.0-alpha.4.4"
+version = "0.1.0-alpha.4.5"
 dependencies = [
  "bevy",
  "bevy_framepace",
@@ -4456,7 +4456,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_prefs"
-version = "0.1.0-alpha.4.4"
+version = "0.1.0-alpha.4.5"
 dependencies = [
  "bevy",
  "bevy_vrm1",
@@ -4469,7 +4469,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_screen"
-version = "0.1.0-alpha.4.4"
+version = "0.1.0-alpha.4.5"
 dependencies = [
  "apple-sys",
  "bevy",
@@ -4490,7 +4490,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_shadow_panel"
-version = "0.1.0-alpha.4.4"
+version = "0.1.0-alpha.4.5"
 dependencies = [
  "bevy",
  "bevy_vrm1",
@@ -4499,7 +4499,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_sitting"
-version = "0.1.0-alpha.4.4"
+version = "0.1.0-alpha.4.5"
 dependencies = [
  "bevy",
  "homunculus_core",
@@ -4508,7 +4508,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_speech"
-version = "0.1.0-alpha.4.4"
+version = "0.1.0-alpha.4.5"
 dependencies = [
  "async-channel",
  "bevy",
@@ -4519,7 +4519,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_tray"
-version = "0.1.0-alpha.4.4"
+version = "0.1.0-alpha.4.5"
 dependencies = [
  "bevy",
  "bevy_tray_icon",
@@ -4530,7 +4530,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_utils"
-version = "0.1.0-alpha.4.4"
+version = "0.1.0-alpha.4.5"
 dependencies = [
  "anyhow",
  "bevy",
@@ -4546,7 +4546,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_windows"
-version = "0.1.0-alpha.4.4"
+version = "0.1.0-alpha.4.5"
 dependencies = [
  "bevy",
  "homunculus_core",
