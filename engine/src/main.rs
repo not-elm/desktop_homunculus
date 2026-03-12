@@ -1,8 +1,9 @@
 #![allow(clippy::type_complexity, clippy::too_many_arguments)]
-#![cfg_attr(
-    all(target_os = "windows", not(debug_assertions)),
-    windows_subsystem = "windows"
-)]
+// リリースのワークフローからビルドされるとなぜかCEFが表示できないためいったん外す。
+// #![cfg_attr(
+//     all(target_os = "windows", not(debug_assertions)),
+//     windows_subsystem = "windows"
+// )]
 
 mod cef_fetch;
 
@@ -42,14 +43,6 @@ use tracing_appender::non_blocking::WorkerGuard;
 use tracing_appender::rolling;
 
 fn main() {
-    // When bevy_cef_render_process.exe is missing, CEF re-launches the main
-    // executable as a subprocess. Detect this and exit before Bevy initialization.
-    // If the dedicated render process binary is present, this is a no-op.
-    #[cfg(not(target_os = "macos"))]
-    if !render_process_binary_exists() {
-        bevy_cef::prelude::early_exit_if_subprocess();
-    }
-
     setup_panic_hook();
 
     let config = HomunculusConfig::load().unwrap_or_else(|e| {
@@ -271,10 +264,4 @@ fn close_devtool(mut commands: Commands, webviews: Query<Entity, With<WebviewSou
     for webview in webviews.iter() {
         commands.trigger(RequestCloseDevtool { webview });
     }
-}
-
-/// Returns `true` if the dedicated CEF render process binary exists next to this executable.
-#[cfg(not(target_os = "macos"))]
-fn render_process_binary_exists() -> bool {
-    bevy_cef_core::prelude::render_process_path().is_some()
 }
