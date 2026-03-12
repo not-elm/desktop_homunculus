@@ -22,7 +22,7 @@ def setup_ci() -> None:
     elif plat == Platform.WINDOWS:
         packages.append("bevy_cef_render_process@0.4.1")
 
-    run(["cargo", "binstall", "--no-confirm"] + packages)
+    run(["cargo", "binstall", "--no-confirm", "--force"] + packages)
 
     setup_cef()
 

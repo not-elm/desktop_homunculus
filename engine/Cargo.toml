@@ -25,6 +25,7 @@ members = ["crates/*"]
 bevy = { workspace = true }
 bevy_flurx = { workspace = true }
 bevy_cef = { workspace = true }
+bevy_cef_core = { workspace = true }
 bevy_vrm1 = { workspace = true }
 base64 = { workspace = true }
 reqwest = { workspace = true }
@@ -53,6 +54,7 @@ tokio = { workspace = true }
 
 [workspace.dependencies]
 bevy_cef = { version = "0.4.1" }
+bevy_cef_core = { version = "0.4.1" }
 bevy_flurx = { version = "0.14.1", features = [
     "side-effect",
     "state",
