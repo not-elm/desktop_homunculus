@@ -276,11 +276,5 @@ fn close_devtool(mut commands: Commands, webviews: Query<Entity, With<WebviewSou
 /// Returns `true` if the dedicated CEF render process binary exists next to this executable.
 #[cfg(not(target_os = "macos"))]
 fn render_process_binary_exists() -> bool {
-    std::env::current_exe()
-        .ok()
-        .and_then(|exe| {
-            exe.parent()
-                .map(|dir| dir.join("bevy_cef_render_process.exe"))
-        })
-        .is_some_and(|path| path.exists())
+    bevy_cef_core::prelude::render_process_path().is_some()
 }

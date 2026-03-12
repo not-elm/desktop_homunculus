@@ -19,7 +19,7 @@ runs:
       uses: actions/cache@v4
       with:
         path: ~/.cargo/bin
-        key: cargo-bin-${{ inputs.shared-key }}-${{ hashFiles('engine/scripts/setup_ci.py') }}
+        key: cargo-bin-${{ inputs.shared-key }}-${{ hashFiles('engine/scripts/*.py') }}
 
     - uses: Swatinem/rust-cache@v2
       with:
@@ -41,7 +41,7 @@ runs:
       uses: actions/cache@v4
       with:
         path: ${{ runner.os == 'Windows' && '~/.local/share/cef' || '~/.local/share/Chromium Embedded Framework.framework' }}
-        key: ${{ inputs.cef-cache-key }}-${{ hashFiles('engine/scripts/setup_ci.py') }}
+        key: ${{ inputs.cef-cache-key }}-${{ hashFiles('engine/scripts/*.py') }}
 
     - name: Install cargo-binstall
       uses: cargo-bins/cargo-binstall@main
