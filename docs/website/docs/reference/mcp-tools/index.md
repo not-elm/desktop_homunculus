@@ -6,13 +6,13 @@ slug: /reference/mcp-tools
 
 # MCP Reference
 
-The Desktop Homunculus MCP server exposes 20 tools, 4 resources, and 3 prompts over stdio transport.
+The Desktop Homunculus MCP server exposes 20 tools, 4 resources, and 3 prompts via Streamable HTTP transport.
 
 Use this page as a map, then open the category page you need.
 
 ## MCP Server Overview
 
-The MCP server communicates with Desktop Homunculus over HTTP at `localhost:3100` (configurable via the `HOMUNCULUS_HOST` environment variable).
+The MCP server is built into the Desktop Homunculus engine and accessible at `http://localhost:3100/mcp`. The port can be changed in `~/.homunculus/config.toml`.
 
 ## Category Map
 

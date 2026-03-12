@@ -34,16 +34,16 @@ sidebar_position: 1
 このセクションは技術的なアーキテクチャの説明です。すぐに始めたい場合は、[次のステップ](#next-steps)に進んでください。
 :::
 
-Desktop Homunculus は **Model Context Protocol（MCP）** を通じてキャラクター制御を公開しています。MCP サーバー（`@hmcs/mcp-server`）が AI エージェントとアプリケーションの橋渡しをします：
+Desktop Homunculus は **Model Context Protocol（MCP）** を通じてキャラクター制御を公開しています。MCP サーバーはエンジンに内蔵されており、Streamable HTTP 経由でアクセスできます：
 
 ```
-[AI エージェント] <— MCP (stdio) —> [@hmcs/mcp-server] <— HTTP —> [Desktop Homunculus :3100]
+[AI エージェント] <— MCP (Streamable HTTP) —> [Desktop Homunculus :3100/mcp]
 ```
 
-- MCP サーバーは AI クライアントが起動する Node.js サブプロセスです
-- `localhost:3100` の HTTP 経由で Desktop Homunculus と通信します（ローカルのみ）
+- MCP サーバーは Desktop Homunculus エンジンに内蔵されています — 別プロセスやインストールは不要です
+- `http://localhost:3100/mcp` で Streamable HTTP 経由で通信します（ローカルのみ）
 - ツールが動作するには Desktop Homunculus が起動している必要があります
-- デフォルト以外のホストやポートを使用する場合は `HOMUNCULUS_HOST` 環境変数を設定してください
+- ポートは `~/.homunculus/config.toml` で変更できます
 
 ### MCP プリミティブ
 
