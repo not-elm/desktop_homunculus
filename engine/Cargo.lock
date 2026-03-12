@@ -4501,14 +4501,16 @@ dependencies = [
 
 [[package]]
 name = "homunculus_mcp"
-version = "0.1.0-alpha.4.4"
+version = "0.1.0-alpha.4.5"
 dependencies = [
  "bevy",
  "homunculus_api",
  "homunculus_core",
+ "homunculus_utils",
  "rmcp",
  "serde",
  "serde_json",
+ "tokio",
 ]
 
 [[package]]

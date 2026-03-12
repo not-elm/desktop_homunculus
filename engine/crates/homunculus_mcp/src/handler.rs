@@ -4,14 +4,20 @@
 //! [`ServerHandler`] trait from `rmcp`, exposing Desktop Homunculus capabilities
 //! (tools and resources) to MCP-compatible AI agents.
 
+#[allow(dead_code)]
+mod presets;
 mod resources;
 mod tools;
 
 use std::sync::{Arc, Mutex};
 
+use bevy::prelude::Entity;
 use homunculus_api::assets::AssetsApi;
 use homunculus_api::mods::ModsApi;
-use homunculus_api::prelude::{ApiReactor, VrmApi, WebviewApi};
+use homunculus_api::prelude::{
+    ApiReactor, AudioBgmApi, AudioSeApi, EntitiesApi, VrmAnimationApi, VrmApi, WebviewApi,
+};
+use homunculus_utils::config::HomunculusConfig;
 use rmcp::handler::server::router::tool::ToolRouter;
 use rmcp::model::{
     Implementation, ListResourcesResult, PaginatedRequestParams, ReadResourceRequestParams,
@@ -54,6 +60,18 @@ pub struct HomunculusMcpHandler {
     pub(crate) vrm_api: VrmApi,
     pub(crate) mods_api: ModsApi,
     pub(crate) assets_api: AssetsApi,
+    #[allow(dead_code)]
+    pub(crate) audio_se_api: AudioSeApi,
+    #[allow(dead_code)]
+    pub(crate) audio_bgm_api: AudioBgmApi,
+    #[allow(dead_code)]
+    pub(crate) entities_api: EntitiesApi,
+    #[allow(dead_code)]
+    pub(crate) vrma_api: VrmAnimationApi,
+    #[allow(dead_code)]
+    pub(crate) active_character: Arc<Mutex<Option<u64>>>,
+    #[allow(dead_code)]
+    pub(crate) config: HomunculusConfig,
     /// Tracks open webview IDs so they can be cleaned up when the MCP session ends.
     pub(crate) open_webviews: Arc<Mutex<Vec<u64>>>,
     tool_router: ToolRouter<Self>,
@@ -61,14 +79,45 @@ pub struct HomunculusMcpHandler {
 
 impl HomunculusMcpHandler {
     /// Creates a new handler, constructing all domain APIs from the given reactor.
-    pub fn new(reactor: ApiReactor) -> Self {
+    pub fn new(reactor: ApiReactor, config: HomunculusConfig) -> Self {
         Self {
             webview_api: WebviewApi::from(reactor.clone()),
             vrm_api: VrmApi::from(reactor.clone()),
             mods_api: ModsApi::from(reactor.clone()),
+            audio_se_api: AudioSeApi::from(reactor.clone()),
+            audio_bgm_api: AudioBgmApi::from(reactor.clone()),
+            entities_api: EntitiesApi::from(reactor.clone()),
+            vrma_api: VrmAnimationApi::from(reactor.clone()),
             assets_api: AssetsApi::from(reactor),
+            active_character: Arc::new(Mutex::new(None)),
+            config,
             open_webviews: Arc::new(Mutex::new(Vec::new())),
             tool_router: tools::tool_router(),
+        }
+    }
+
+    /// Resolves the active character entity, falling back to the first character in snapshot.
+    #[allow(dead_code)]
+    pub(crate) async fn resolve_character(&self) -> Result<Entity, String> {
+        if let Some(bits) = self.active_character.lock().ok().and_then(|g| *g) {
+            return Ok(Entity::from_bits(bits));
+        }
+        let snapshots = self.vrm_api.snapshot().await.map_err(|e| e.to_string())?;
+        let first = snapshots
+            .first()
+            .ok_or_else(|| "No characters loaded. Use spawn_character first.".to_string())?;
+        let bits = first.entity.to_bits();
+        if let Ok(mut guard) = self.active_character.lock() {
+            *guard = Some(bits);
+        }
+        Ok(first.entity)
+    }
+
+    /// Sets or clears the active character.
+    #[allow(dead_code)]
+    pub(crate) fn set_active_character(&self, entity: Option<u64>) {
+        if let Ok(mut guard) = self.active_character.lock() {
+            *guard = entity;
         }
     }
 }
@@ -124,7 +173,11 @@ mod tests {
     /// Creates a handler backed by a dummy reactor (no Bevy app).
     fn test_handler() -> HomunculusMcpHandler {
         let reactor = ApiReactor::__test_dummy();
-        HomunculusMcpHandler::new(reactor)
+        let config = HomunculusConfig {
+            mods_dir: std::path::PathBuf::from("/tmp/mods"),
+            port: 3100,
+        };
+        HomunculusMcpHandler::new(reactor, config)
     }
 
     #[test]

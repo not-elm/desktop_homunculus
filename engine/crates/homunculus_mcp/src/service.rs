@@ -6,6 +6,7 @@
 use std::sync::Arc;
 
 use homunculus_api::prelude::ApiReactor;
+use homunculus_utils::config::HomunculusConfig;
 use rmcp::transport::streamable_http_server::{
     StreamableHttpServerConfig, StreamableHttpService, session::local::LocalSessionManager,
 };
@@ -21,15 +22,16 @@ use crate::handler::HomunculusMcpHandler;
 /// factory closure, so sessions are fully isolated.
 pub fn create_mcp_service(
     reactor: ApiReactor,
+    config: HomunculusConfig,
 ) -> StreamableHttpService<HomunculusMcpHandler, LocalSessionManager> {
-    let config = StreamableHttpServerConfig::default();
+    let server_config = StreamableHttpServerConfig::default();
     let session_manager = Arc::new(LocalSessionManager {
         sessions: Default::default(),
         session_config: Default::default(),
     });
     StreamableHttpService::new(
-        move || Ok(HomunculusMcpHandler::new(reactor.clone())),
+        move || Ok(HomunculusMcpHandler::new(reactor.clone(), config.clone())),
         session_manager,
-        config,
+        server_config,
     )
 }

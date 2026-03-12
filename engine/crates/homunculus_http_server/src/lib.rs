@@ -229,8 +229,8 @@ fn build_openapi_router() -> OpenApiRouter<HttpState> {
 fn create_router(reactor: ApiReactor, config: HomunculusConfig) -> Router {
     let (router, _openapi) = build_openapi_router().split_for_parts();
     router
-        .with_state(HttpState::new(reactor.clone(), config))
-        .nest_service("/mcp", homunculus_mcp::create_mcp_service(reactor))
+        .with_state(HttpState::new(reactor.clone(), config.clone()))
+        .nest_service("/mcp", homunculus_mcp::create_mcp_service(reactor, config))
         .layer(
             CorsLayer::new()
                 .allow_origin(Any)
