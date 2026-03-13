@@ -27,8 +27,8 @@
   },
   "keywords": [],
   "scripts": {
-    "dev": "rollup -c --configPlugin typescript --watch",
-    "build": "rollup -c --configPlugin typescript",
+    "dev": "rollup -c --watch",
+    "build": "rollup -c",
     "check-types": "tsc --noEmit",
     "prepare": "pnpm build",
     "lint": "eslint .",
