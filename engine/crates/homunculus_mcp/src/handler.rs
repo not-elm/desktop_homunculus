@@ -237,7 +237,7 @@ mod tests {
         let router = tools::tool_router();
         let tools = router.list_all();
 
-        assert_eq!(tools.len(), 19, "expected 19 tools, got {}", tools.len());
+        assert_eq!(tools.len(), 20, "expected 20 tools, got {}", tools.len());
 
         let names: Vec<&str> = tools.iter().map(|t| t.name.as_ref()).collect();
         // Webview tools
@@ -295,6 +295,10 @@ mod tests {
             "missing tween_rotation tool"
         );
         assert!(names.contains(&"tween_scale"), "missing tween_scale tool");
+        assert!(
+            names.contains(&"spin_character"),
+            "missing spin_character tool"
+        );
         // Reaction tools
         assert!(
             names.contains(&"play_reaction"),

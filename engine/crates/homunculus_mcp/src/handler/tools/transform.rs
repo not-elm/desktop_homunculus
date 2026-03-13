@@ -3,7 +3,8 @@
 use bevy::math::{Quat, Vec2, Vec3};
 use homunculus_api::entities::MoveTarget;
 use homunculus_api::entities::tween::{
-    EasingFunction, TweenPositionViewportArgs, TweenRotationArgs, TweenScaleArgs,
+    EasingFunction, TweenPositionViewportArgs, TweenRotationArgs, TweenRotationAxisArgs,
+    TweenScaleArgs,
 };
 use rmcp::handler::server::wrapper::Parameters;
 use rmcp::schemars;
@@ -77,6 +78,23 @@ pub struct TweenScaleParams {
     /// Easing function name (default: "linear"). See EasingFunction for available options.
     pub easing: Option<String>,
     /// Whether to wait for the tween to finish before returning (default: false).
+    pub wait: Option<bool>,
+}
+
+/// Parameters for the `spin_character` tool.
+#[derive(Debug, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct SpinCharacterParams {
+    /// Rotation axis: "x", "y", or "z" (world-space).
+    pub axis: String,
+    /// Rotation angle in degrees. Supports 360, 720, etc. Positive = counter-clockwise when
+    /// looking along the positive axis direction.
+    pub angle_degrees: f32,
+    /// Duration of the animation in milliseconds.
+    pub duration_ms: u64,
+    /// Easing function name (default: "linear"). See EasingFunction for available options.
+    pub easing: Option<String>,
+    /// Whether to wait for the animation to finish before returning (default: false).
     pub wait: Option<bool>,
 }
 
@@ -206,6 +224,48 @@ impl HomunculusMcpHandler {
         match self.entities_api.tween_scale(entity, tween_args).await {
             Ok(()) => "Tweening scale".to_string(),
             Err(e) => format!("Error tweening scale: {e}"),
+        }
+    }
+
+    /// Spin the active character around a world-space axis by a given angle.
+    #[tool(
+        name = "spin_character",
+        description = "Spin the active character around an axis by a given angle. Supports full rotations (360°+). The rotation is additive, preserving the character's current orientation. Use this instead of tween_rotation when you need full spins."
+    )]
+    async fn spin_character(&self, params: Parameters<SpinCharacterParams>) -> String {
+        let args = params.0;
+
+        let axis = match args.axis.to_lowercase().as_str() {
+            "x" => Vec3::X,
+            "y" => Vec3::Y,
+            "z" => Vec3::Z,
+            other => return format!("Error: invalid axis \"{other}\". Must be \"x\", \"y\", or \"z\"."),
+        };
+
+        let entity = match self.resolve_character().await {
+            Ok(e) => e,
+            Err(e) => return format!("Error: {e}"),
+        };
+
+        let easing = parse_easing(&args.easing);
+        let tween_args = TweenRotationAxisArgs {
+            axis,
+            angle: args.angle_degrees.to_radians(),
+            duration_ms: args.duration_ms,
+            easing,
+            wait: args.wait.unwrap_or(false),
+        };
+
+        match self
+            .entities_api
+            .tween_rotation_axis(entity, tween_args)
+            .await
+        {
+            Ok(()) => format!(
+                "Spinning character {}° around {} axis",
+                args.angle_degrees, args.axis
+            ),
+            Err(e) => format!("Error spinning character: {e}"),
         }
     }
 }

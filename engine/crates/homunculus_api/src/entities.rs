@@ -11,7 +11,7 @@ pub mod tween;
 pub use move_to::MoveTarget;
 pub use tween::{
     EasingFunction, TweenPositionArgs, TweenPositionViewportArgs, TweenRotationArgs,
-    TweenScaleArgs,
+    TweenRotationAxisArgs, TweenScaleArgs,
 };
 
 api!(EntitiesApi);

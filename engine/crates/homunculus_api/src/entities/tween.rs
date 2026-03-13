@@ -106,6 +106,28 @@ pub struct TweenScaleArgs {
     pub wait: bool,
 }
 
+/// Request arguments for tweening an entity's rotation around a world-space axis.
+///
+/// Unlike [`TweenRotationArgs`] which uses quaternion SLERP (shortest path ≤180°),
+/// this supports full rotations (360°+) by additively applying rotation around a
+/// single axis. The rotation is applied in world space, so "Y" always means
+/// screen-up regardless of the character's current tilt.
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct TweenRotationAxisArgs {
+    /// Unit axis vector in world space (e.g. `Vec3::Y` for vertical spin).
+    #[cfg_attr(feature = "openapi", schema(value_type = [f32; 3]))]
+    pub axis: Vec3,
+    /// Total rotation angle in radians. Supports values > 2π for multiple revolutions.
+    pub angle: f32,
+    pub duration_ms: u64,
+    #[serde(default)]
+    pub easing: EasingFunction,
+    #[serde(default)]
+    pub wait: bool,
+}
+
 /// Request arguments for tweening an entity's position using viewport coordinates.
 ///
 /// Viewport coordinates are in pixels relative to the primary monitor (0,0 = top-left).
@@ -276,6 +298,63 @@ fn apply_rotation_tween(
     Ok(())
 }
 
+/// A tweening lens that additively rotates a [`Transform`] around a world-space axis.
+///
+/// Unlike [`TransformRotationLens`] which uses quaternion SLERP (shortest path),
+/// this lens linearly interpolates the angle from `start` to `end` and applies
+/// `Quat::from_axis_angle(axis, angle) * base_rotation`. This preserves the
+/// original rotation and supports angles > 2π for full 360°+ spins.
+///
+/// World-space rotation: the delta quaternion is multiplied on the left so the
+/// axis stays in the world frame even if the character is tilted.
+struct TransformRotateAdditiveAxisLens {
+    base_rotation: Quat,
+    axis: Vec3,
+    start: f32,
+    end: f32,
+}
+
+impl bevy_tweening::Lens<Transform> for TransformRotateAdditiveAxisLens {
+    fn lerp(&mut self, mut target: Mut<Transform>, ratio: f32) {
+        let angle = (self.end - self.start).mul_add(ratio, self.start);
+        // World-space: delta * base (axis stays in world frame even if character is tilted)
+        target.rotation = Quat::from_axis_angle(self.axis, angle) * self.base_rotation;
+    }
+}
+
+fn apply_rotation_axis_tween(
+    In((entity, args)): In<(Entity, TweenRotationAxisArgs)>,
+    transforms: Query<&Transform>,
+    mut commands: Commands,
+) -> ApiResult {
+    if args.duration_ms == 0 {
+        return Err(ApiError::InvalidInput(
+            "duration must be greater than 0".into(),
+        ));
+    }
+
+    let current = transforms
+        .get(entity)
+        .map_err(|_| ApiError::EntityNotFound)?;
+
+    let ease_function: EaseFunction = args.easing.into();
+    let ease_method: EaseMethod = ease_function.into();
+
+    let tween = Tween::new(
+        ease_method,
+        Duration::from_millis(args.duration_ms),
+        TransformRotateAdditiveAxisLens {
+            base_rotation: current.rotation,
+            axis: args.axis.normalize_or_zero(),
+            start: 0.0,
+            end: args.angle,
+        },
+    );
+
+    commands.entity(entity).try_insert(TweenAnim::new(tween));
+    Ok(())
+}
+
 fn apply_scale_tween(
     In((entity, args)): In<(Entity, TweenScaleArgs)>,
     transforms: Query<&Transform>,
@@ -422,6 +501,44 @@ impl EntitiesApi {
             .schedule(move |task| async move {
                 task.will(Update, once::run(apply_rotation_tween).with((entity, args)))
                     .await?;
+
+                if should_wait {
+                    task.will(
+                        Update,
+                        delay::time().with(Duration::from_millis(wait_duration)),
+                    )
+                    .await;
+                }
+
+                Ok(())
+            })
+            .await?
+    }
+
+    /// Tweens the entity's rotation around a world-space axis by a given angle.
+    ///
+    /// Unlike [`tween_rotation`](Self::tween_rotation) which uses quaternion SLERP (limited
+    /// to ≤180° shortest path), this method supports full 360°+ rotations by additively
+    /// applying rotation around a single axis. The rotation is applied in world space.
+    ///
+    /// # Arguments
+    /// * `entity` - The entity to animate
+    /// * `args` - Axis rotation parameters including axis, angle (radians), duration, easing, and wait flag
+    pub async fn tween_rotation_axis(
+        &self,
+        entity: Entity,
+        args: TweenRotationAxisArgs,
+    ) -> ApiResult {
+        let wait_duration = args.duration_ms;
+        let should_wait = args.wait;
+
+        self.0
+            .schedule(move |task| async move {
+                task.will(
+                    Update,
+                    once::run(apply_rotation_axis_tween).with((entity, args)),
+                )
+                .await?;
 
                 if should_wait {
                     task.will(
@@ -630,6 +747,68 @@ mod tests {
             .run_system_once_with(apply_position_tween, (entity, args));
 
         // The system returns ApiResult, which is wrapped by Bevy
+        let api_result = result.unwrap();
+        assert!(api_result.is_err());
+    }
+
+    #[test]
+    fn test_tween_rotation_axis_args_serde() {
+        let json = r#"{
+        "axis": [0.0, 1.0, 0.0],
+        "angle": 6.283185,
+        "durationMs": 3000
+    }"#;
+        let args: TweenRotationAxisArgs = serde_json::from_str(json).unwrap();
+        assert_eq!(args.axis, bevy::prelude::Vec3::Y);
+        assert!((args.angle - std::f32::consts::TAU).abs() < 0.001);
+        assert_eq!(args.duration_ms, 3000);
+        assert!(!args.wait); // default is false
+    }
+
+    #[test]
+    fn test_apply_rotation_axis_tween_system() {
+        use bevy::ecs::system::RunSystemOnce;
+        use bevy::prelude::*;
+
+        let mut app = App::new();
+        let entity = app.world_mut().spawn(Transform::default()).id();
+
+        let args = TweenRotationAxisArgs {
+            axis: Vec3::Y,
+            angle: std::f32::consts::TAU, // 360 degrees
+            duration_ms: 3000,
+            easing: EasingFunction::Linear,
+            wait: false,
+        };
+
+        let result = app
+            .world_mut()
+            .run_system_once_with(apply_rotation_axis_tween, (entity, args));
+
+        let api_result = result.unwrap();
+        assert!(api_result.is_ok());
+    }
+
+    #[test]
+    fn test_apply_rotation_axis_tween_zero_duration() {
+        use bevy::ecs::system::RunSystemOnce;
+        use bevy::prelude::*;
+
+        let mut app = App::new();
+        let entity = app.world_mut().spawn(Transform::default()).id();
+
+        let args = TweenRotationAxisArgs {
+            axis: Vec3::Y,
+            angle: std::f32::consts::PI,
+            duration_ms: 0,
+            easing: EasingFunction::Linear,
+            wait: false,
+        };
+
+        let result = app
+            .world_mut()
+            .run_system_once_with(apply_rotation_axis_tween, (entity, args));
+
         let api_result = result.unwrap();
         assert!(api_result.is_err());
     }
