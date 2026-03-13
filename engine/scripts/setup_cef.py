@@ -42,11 +42,8 @@ def setup_cef() -> None:
 
 
 def _setup_cef_macos() -> None:
-    if CEF_SENTINEL_MACOS.exists():
-        log("CEF framework already installed. Skipping download.")
-    else:
-        log("Downloading CEF framework...")
-        run(["export-cef-dir", "--force", str(CEF_EXPORT_DIR_MACOS)])
+    log("Downloading CEF framework...")
+    run(["export-cef-dir", "--force", str(CEF_EXPORT_DIR_MACOS)])
 
     log("Copying debug render process...")
     CEF_DEBUG_RENDER_DST.parent.mkdir(parents=True, exist_ok=True)
