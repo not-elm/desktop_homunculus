@@ -15,6 +15,16 @@ pub struct TaskReceiver(pub Receiver<BoxedTask>);
 pub struct ApiReactor(Sender<BoxedTask>);
 
 impl ApiReactor {
+    /// Creates a dummy reactor for testing purposes.
+    ///
+    /// The returned reactor is backed by a disconnected channel — scheduling
+    /// tasks will succeed but they will never be executed by a Bevy app.
+    #[doc(hidden)]
+    pub fn __test_dummy() -> Self {
+        let (tx, _rx) = async_channel::unbounded::<BoxedTask>();
+        Self(tx)
+    }
+
     pub async fn schedule<F, Fut, O>(&self, f: F) -> ApiResult<O>
     where
         F: FnOnce(ReactorTask) -> Fut + Send + Sync + 'static,

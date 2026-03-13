@@ -5,28 +5,24 @@ sidebar_position: 4
 
 # Other MCP Clients
 
-Any MCP-compatible client can connect to Desktop Homunculus. The MCP server uses **stdio transport** — the client spawns the server as a subprocess and communicates over stdin/stdout.
+Any MCP-compatible client can connect to Desktop Homunculus. The MCP server uses **Streamable HTTP transport** — the client connects to the engine's HTTP endpoint directly.
 
 ## Prerequisites
 
 - Desktop Homunculus installed and running
-- Node.js >= 22
 
 ## Server Configuration
 
-Configure your MCP client to spawn the server with:
+Configure your MCP client to connect to:
 
-- **Command:** `npx`
-- **Arguments:** `["-y", "@hmcs/mcp-server@latest"]`
-- **Transport:** stdio
+- **URL:** `http://localhost:3100/mcp`
+- **Transport:** Streamable HTTP
 
-## Environment Variables
+No separate server process or installation is needed — the MCP server is built into the Desktop Homunculus engine.
 
-| Variable | Default | Description |
-|---|---|---|
-| `HOMUNCULUS_HOST` | `localhost:3100` | Host and port of the Desktop Homunculus HTTP API |
+## Custom Port
 
-Set `HOMUNCULUS_HOST` if Desktop Homunculus is running on a non-default port.
+The default port is `3100`. You can change it in `~/.homunculus/config.toml`. Update the URL in your client configuration accordingly.
 
 ## Verify
 

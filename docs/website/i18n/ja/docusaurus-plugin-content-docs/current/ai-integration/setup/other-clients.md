@@ -5,28 +5,24 @@ sidebar_position: 4
 
 # その他の MCP クライアント
 
-MCP 対応のクライアントであれば、どれでも Desktop Homunculus に接続できます。MCP サーバーは **stdio トランスポート**を使用します。クライアントがサーバーをサブプロセスとして起動し、stdin/stdout を通じて通信します。
+MCP 対応のクライアントであれば、どれでも Desktop Homunculus に接続できます。MCP サーバーは **Streamable HTTP トランスポート**を使用します。クライアントがエンジンの HTTP エンドポイントに直接接続します。
 
 ## 前提条件
 
 - Desktop Homunculus がインストールされて起動中であること
-- Node.js 22 以上
 
 ## サーバー設定
 
-MCP クライアントを以下の設定でサーバーを起動するように構成してください：
+MCP クライアントを以下の設定で接続してください：
 
-- **コマンド:** `npx`
-- **引数:** `["-y", "@hmcs/mcp-server@latest"]`
-- **トランスポート:** stdio
+- **URL:** `http://localhost:3100/mcp`
+- **トランスポート:** Streamable HTTP
 
-## 環境変数
+別途サーバープロセスのインストールは不要です — MCP サーバーは Desktop Homunculus エンジンに内蔵されています。
 
-| 変数 | デフォルト | 説明 |
-|---|---|---|
-| `HOMUNCULUS_HOST` | `localhost:3100` | Desktop Homunculus HTTP API のホストとポート |
+## カスタムポート
 
-Desktop Homunculus がデフォルト以外のポートで動作している場合は `HOMUNCULUS_HOST` を設定してください。
+デフォルトポートは `3100` です。`~/.homunculus/config.toml` で変更できます。クライアント設定の URL を適宜更新してください。
 
 ## 確認
 

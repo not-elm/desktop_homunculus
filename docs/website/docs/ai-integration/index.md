@@ -34,16 +34,16 @@ Your desktop character can respond to your AI conversations — reacting to even
 This section explains the technical architecture. If you just want to get started, skip to [Next Steps](#next-steps).
 :::
 
-Desktop Homunculus exposes character control through the **Model Context Protocol (MCP)**. An MCP server (`@hmcs/mcp-server`) acts as a bridge between AI agents and the application:
+Desktop Homunculus exposes character control through the **Model Context Protocol (MCP)**. The MCP server is built into the engine and accessible via Streamable HTTP:
 
 ```
-[AI Agent] ←— MCP (stdio) —→ [@hmcs/mcp-server] ←— HTTP —→ [Desktop Homunculus :3100]
+[AI Agent] ←— MCP (Streamable HTTP) —→ [Desktop Homunculus :3100/mcp]
 ```
 
-- The MCP server is a Node.js subprocess spawned by the AI client
-- It communicates with Desktop Homunculus via HTTP on `localhost:3100` (local only)
+- The MCP server is built into the Desktop Homunculus engine — no separate process or installation needed
+- It communicates via Streamable HTTP at `http://localhost:3100/mcp` (local only)
 - Desktop Homunculus must be running for tools to work
-- Set `HOMUNCULUS_HOST` environment variable for a non-default host or port
+- The port can be changed in `~/.homunculus/config.toml`
 
 ### MCP Primitives
 

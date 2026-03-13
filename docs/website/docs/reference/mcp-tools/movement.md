@@ -22,13 +22,12 @@ Teleport the active character to a viewport position instantly. `(0, 0)` is the 
 
 #### `tween_position`
 
-Smoothly animate the active character's position to a target in world space.
+Smoothly animate the active character's position to a viewport position. Coordinates are in viewport pixels (`0,0` = top-left of primary monitor), matching `move_character`.
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `targetX` | `number` | **required** | Target X coordinate (world space) |
-| `targetY` | `number` | **required** | Target Y coordinate (world space) |
-| `targetZ` | `number` | **required** | Target Z coordinate (world space) |
+| `x` | `number` | **required** | Viewport X coordinate (pixels) |
+| `y` | `number` | **required** | Viewport Y coordinate (pixels) |
 | `durationMs` | `number` | **required** | Animation duration in milliseconds |
 | `easing` | `string` | `"linear"` | Easing function (see [Easing Functions](#easing-functions)) |
 | `wait` | `boolean` | `false` | Wait for animation to finish before returning |
@@ -64,6 +63,30 @@ Smoothly animate the active character's rotation to a target quaternion.
 
 ---
 
+#### `spin_character`
+
+Spin the active character around a world-space axis by a given angle. Supports full rotations (360°+). The rotation is additive — it preserves the character's current orientation. Use this instead of `tween_rotation` when you need full spins.
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `axis` | `string` | **required** | Rotation axis: `"x"`, `"y"`, or `"z"` (world-space) |
+| `angleDegrees` | `number` | **required** | Rotation angle in degrees (supports 360, 720, etc.) |
+| `durationMs` | `number` | **required** | Animation duration in milliseconds |
+| `easing` | `string` | `"linear"` | Easing function (see [Easing Functions](#easing-functions)) |
+| `wait` | `boolean` | `false` | Wait for animation to finish before returning |
+
+**Example — full 360° Y-axis spin over 3 seconds:**
+
+```json
+{
+  "axis": "y",
+  "angleDegrees": 360,
+  "durationMs": 3000
+}
+```
+
+---
+
 #### `tween_scale`
 
 Smoothly animate the active character's scale. `1.0` is normal size on each axis.
@@ -81,7 +104,7 @@ Smoothly animate the active character's scale. `1.0` is normal size on each axis
 
 #### Easing Functions
 
-All three tween tools (`tween_position`, `tween_rotation`, `tween_scale`) accept the same easing values:
+All tween tools (`tween_position`, `tween_rotation`, `tween_scale`, `spin_character`) accept the same easing values:
 
 `linear`, `quadraticIn`, `quadraticOut`, `quadraticInOut`, `cubicIn`, `cubicOut`, `cubicInOut`, `quarticIn`, `quarticOut`, `quarticInOut`, `quinticIn`, `quinticOut`, `quinticInOut`, `sineIn`, `sineOut`, `sineInOut`, `circularIn`, `circularOut`, `circularInOut`, `exponentialIn`, `exponentialOut`, `exponentialInOut`, `elasticIn`, `elasticOut`, `elasticInOut`, `backIn`, `backOut`, `backInOut`, `bounceIn`, `bounceOut`, `bounceInOut`, `smoothStepIn`, `smoothStepOut`, `smoothStep`, `smootherStepIn`, `smootherStepOut`, `smootherStep`
 

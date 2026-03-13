@@ -10,7 +10,6 @@ Set up Claude Code to control your Desktop Homunculus characters from the termin
 ## Prerequisites
 
 - Desktop Homunculus installed and running
-- Node.js >= 22
 
 ## Configuration
 
@@ -22,8 +21,8 @@ Add the Homunculus MCP server to your Claude Code configuration.
 {
   "mcpServers": {
     "homunculus": {
-      "command": "npx",
-      "args": ["-y", "@hmcs/mcp-server@latest"]
+      "type": "streamable-http",
+      "url": "http://localhost:3100/mcp"
     }
   }
 }
@@ -35,8 +34,8 @@ Add the Homunculus MCP server to your Claude Code configuration.
 {
   "mcpServers": {
     "homunculus": {
-      "command": "npx",
-      "args": ["-y", "@hmcs/mcp-server@latest"]
+      "type": "streamable-http",
+      "url": "http://localhost:3100/mcp"
     }
   }
 }
@@ -60,23 +59,18 @@ Official skills are available in the [`skills/` directory](https://github.com/no
 
 ## Custom Port
 
-If Desktop Homunculus runs on a non-default port, set the `HOMUNCULUS_HOST` environment variable:
+If Desktop Homunculus runs on a non-default port (changed in `~/.homunculus/config.toml`), update the URL accordingly:
 
 ```json
 {
   "mcpServers": {
     "homunculus": {
-      "command": "npx",
-      "args": ["-y", "@hmcs/mcp-server@latest"],
-      "env": {
-        "HOMUNCULUS_HOST": "localhost:4000"
-      }
+      "type": "streamable-http",
+      "url": "http://localhost:4000/mcp"
     }
   }
 }
 ```
-
-The default value is `localhost:3100`. You can change the port in `~/.homunculus/config.toml`.
 
 ## Next Steps
 

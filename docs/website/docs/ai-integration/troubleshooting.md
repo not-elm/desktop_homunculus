@@ -53,19 +53,20 @@ If you'd like to help build template MODs or improve MCP tools, see the [Contrib
 
 **Symptom:** The AI client can't connect to the MCP server.
 
-**Cause:** The MCP server failed to start or Node.js is missing/outdated.
+**Cause:** Desktop Homunculus is not running, or the client is configured with the wrong URL.
 
 **Solution:**
-1. Verify that `npx -y @hmcs/mcp-server@latest` runs without errors
-2. Ensure Node.js >= 22 is installed (`node --version`)
+1. Ensure Desktop Homunculus is running
+2. Verify the MCP URL is `http://localhost:3100/mcp` (or your custom port)
+3. Test the endpoint: `curl http://localhost:3100/mcp` should return a response (not connection refused)
 
 ### Tools Return Unexpected Errors
 
 **Symptom:** Tools return error responses.
 
-**Cause:** Desktop Homunculus HTTP API is unreachable.
+**Cause:** Desktop Homunculus HTTP API is unreachable or internal error.
 
-**Solution:** Verify the app is running on the expected port (default: 3100). If using a non-default port, set the `HOMUNCULUS_HOST` environment variable.
+**Solution:** Verify the app is running on the expected port (default: 3100). Check the logs at `~/.homunculus/Logs/log.txt` for details.
 
 ## Getting Help
 

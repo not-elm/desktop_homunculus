@@ -18,6 +18,7 @@ use bevy::window::{ExitCondition, WindowLevel, WindowPlugin, WindowResolution};
 use bevy_cef::CefPlugin;
 use bevy_cef::prelude::*;
 use bevy_flurx::FlurxPlugin;
+use bevy_tweening::TweeningPlugin;
 use bevy_vrm1::vrm::VrmPlugin;
 use bevy_vrm1::vrma::VrmaPlugin;
 use homunculus_api::HomunculusApiPlugin;
@@ -90,7 +91,7 @@ fn main() {
             #[cfg(feature = "develop")]
             bevy_inspector_egui::quick::WorldInspectorPlugin::default(),
         ))
-        .add_plugins((FlurxPlugin, VrmPlugin, VrmaPlugin))
+        .add_plugins((FlurxPlugin, TweeningPlugin, VrmPlugin, VrmaPlugin))
         .add_plugins(HomunculusTrayPlugin)
         .add_plugins((
             HomunculusCorePlugin,
