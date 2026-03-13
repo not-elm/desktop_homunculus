@@ -235,7 +235,11 @@ importers:
         specifier: ^3.25.76
         version: 3.25.76
 
-  packages/cli: {}
+  packages/cli:
+    dependencies:
+      update-notifier:
+        specifier: ^6.0.0
+        version: 6.0.2
 
   packages/sdk:
     dependencies:
