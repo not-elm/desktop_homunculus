@@ -37,6 +37,7 @@ pub struct SpawnCharacterParams {
 
 /// Parameters for the `select_character` tool.
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct SelectCharacterParams {
     /// Name of the character to select.
     pub name: String,
@@ -44,6 +45,7 @@ pub struct SelectCharacterParams {
 
 /// Parameters for the `remove_character` tool.
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct RemoveCharacterParams {
     /// Name of the character to remove. If omitted, removes the active character.
     pub name: Option<String>,

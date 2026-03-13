@@ -19,6 +19,8 @@ pub struct PlaySoundParams {
     /// Sound effect asset ID (e.g. "se:open").
     pub sound: String,
     /// Volume level from 0.0 to 1.0 (default: 0.8).
+    ///
+    /// Uses `f64` to match the JSON number representation from MCP clients.
     pub volume: Option<f64>,
 }
 

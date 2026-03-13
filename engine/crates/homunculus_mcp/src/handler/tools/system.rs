@@ -14,6 +14,14 @@ use tokio::process::Command;
 use super::super::HomunculusMcpHandler;
 
 // ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+/// Windows flag to prevent spawning a visible console window for child processes.
+#[cfg(windows)]
+const CREATE_NO_WINDOW: u32 = 0x08000000;
+
+// ---------------------------------------------------------------------------
 // Parameter structs
 // ---------------------------------------------------------------------------
 
@@ -65,7 +73,7 @@ impl HomunculusMcpHandler {
         }
 
         #[cfg(windows)]
-        cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
+        cmd.creation_flags(CREATE_NO_WINDOW);
 
         let mut child = match cmd.spawn() {
             Ok(c) => c,

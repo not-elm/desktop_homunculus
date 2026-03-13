@@ -9,7 +9,7 @@ pub(crate) struct ReactionPreset {
     pub se: Option<&'static str>,
 }
 
-/// All available reaction names.
+/// All available reaction names. Must be kept in sync with [`get_preset`].
 pub(crate) const REACTION_NAMES: &[&str] = &[
     "happy",
     "sad",

@@ -65,8 +65,8 @@ pub struct HomunculusMcpHandler {
     pub(crate) audio_bgm_api: AudioBgmApi,
     pub(crate) entities_api: EntitiesApi,
     pub(crate) vrma_api: VrmAnimationApi,
+    /// Stores `Entity` as `u64` bits because `Entity` is not `Send`/`Sync`.
     pub(crate) active_character: Arc<Mutex<Option<u64>>>,
-    #[allow(dead_code)]
     pub(crate) config: HomunculusConfig,
     /// Tracks open webview IDs so they can be cleaned up when the MCP session ends.
     pub(crate) open_webviews: Arc<Mutex<Vec<u64>>>,
@@ -93,7 +93,6 @@ impl HomunculusMcpHandler {
     }
 
     /// Resolves the active character entity, falling back to the first character in snapshot.
-    #[allow(dead_code)]
     pub(crate) async fn resolve_character(&self) -> Result<Entity, String> {
         if let Some(bits) = self.active_character.lock().ok().and_then(|g| *g) {
             return Ok(Entity::from_bits(bits));
@@ -110,7 +109,6 @@ impl HomunculusMcpHandler {
     }
 
     /// Sets or clears the active character.
-    #[allow(dead_code)]
     pub(crate) fn set_active_character(&self, entity: Option<u64>) {
         if let Ok(mut guard) = self.active_character.lock() {
             *guard = entity;

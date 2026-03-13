@@ -12,6 +12,23 @@ use serde::{Deserialize, Serialize};
 use super::super::HomunculusMcpHandler;
 
 // ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+/// Default webview panel width in world units.
+const DEFAULT_SIZE_X: f32 = 0.7;
+/// Default webview panel height in world units.
+const DEFAULT_SIZE_Y: f32 = 0.5;
+/// Default internal browser width in pixels.
+const DEFAULT_VIEWPORT_WIDTH: u32 = 800;
+/// Default internal browser height in pixels.
+const DEFAULT_VIEWPORT_HEIGHT: u32 = 600;
+/// Default horizontal offset from character center.
+const DEFAULT_OFFSET_X: f32 = 0.0;
+/// Default vertical offset from character center (positive = above).
+const DEFAULT_OFFSET_Y: f32 = 0.5;
+
+// ---------------------------------------------------------------------------
 // Parameter structs
 // ---------------------------------------------------------------------------
 
@@ -79,12 +96,12 @@ impl HomunculusMcpHandler {
             }
         };
 
-        let size_x = args.size_x.unwrap_or(0.7);
-        let size_y = args.size_y.unwrap_or(0.5);
-        let viewport_width = args.viewport_width.unwrap_or(800);
-        let viewport_height = args.viewport_height.unwrap_or(600);
-        let offset_x = args.offset_x.unwrap_or(0.0);
-        let offset_y = args.offset_y.unwrap_or(0.5);
+        let size_x = args.size_x.unwrap_or(DEFAULT_SIZE_X);
+        let size_y = args.size_y.unwrap_or(DEFAULT_SIZE_Y);
+        let viewport_width = args.viewport_width.unwrap_or(DEFAULT_VIEWPORT_WIDTH);
+        let viewport_height = args.viewport_height.unwrap_or(DEFAULT_VIEWPORT_HEIGHT);
+        let offset_x = args.offset_x.unwrap_or(DEFAULT_OFFSET_X);
+        let offset_y = args.offset_y.unwrap_or(DEFAULT_OFFSET_Y);
 
         let options = WebviewOpenOptions {
             source,
