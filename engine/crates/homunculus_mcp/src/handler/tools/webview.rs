@@ -25,6 +25,7 @@ const DEFAULT_OFFSET_Y: f32 = 0.5;
 
 /// Parameters for the `open_webview` tool.
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct OpenWebviewParams {
     /// Inline HTML content to display (mutually exclusive with url and asset_id).
     pub html: Option<String>,
@@ -44,10 +45,15 @@ pub struct OpenWebviewParams {
     pub offset_x: Option<f32>,
     /// Vertical offset from character center (positive = above).
     pub offset_y: Option<f32>,
+    /// Name of the character to link this webview to.
+    /// When linked, the webview follows the character's head position.
+    /// Use get_character_snapshot to see available character names.
+    pub character_name: Option<String>,
 }
 
 /// Parameters for the `close_webview` tool.
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct CloseWebviewParams {
     /// Entity ID of the webview to close. If omitted, closes the most recently opened.
     pub entity: Option<u64>,
@@ -57,6 +63,7 @@ pub struct CloseWebviewParams {
 
 /// Parameters for the `navigate_webview` tool.
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct NavigateWebviewParams {
     /// Entity ID of the webview to navigate. If omitted, navigates the most recently opened.
     pub entity: Option<u64>,
@@ -94,7 +101,7 @@ impl HomunculusMcpHandler {
     /// Open a webview panel displaying HTML content, a URL, or a local mod asset near the active character.
     #[tool(
         name = "open_webview",
-        description = "Open a webview panel near the active character. Provide exactly one of: 'html' (inline HTML), 'url' (a URL to load), or 'asset_id' (a local mod asset, e.g. 'mod-name:asset-id'). Returns the webview entity ID. Use close_webview to close it."
+        description = "Open a webview panel. Provide exactly one of: 'html' (inline HTML), 'url' (a URL to load), or 'asset_id' (a local mod asset, e.g. 'mod-name:asset-id'). Optionally provide 'characterName' to link the webview to a specific character (it will follow the character's head position). Returns the webview entity ID. Use close_webview to close it."
     )]
     async fn open_webview(&self, params: Parameters<OpenWebviewParams>) -> String {
         let args = params.0;
@@ -102,6 +109,15 @@ impl HomunculusMcpHandler {
         let source = match resolve_source(args.html, args.url, args.asset_id) {
             Ok(s) => s,
             Err(e) => return format!("Error: {e}"),
+        };
+
+        let linked_vrm = if let Some(name) = &args.character_name {
+            match self.vrm_api.find_by_name(name.clone()).await {
+                Ok(entity) => Some(entity),
+                Err(e) => return format!("Error finding character '{name}': {e}"),
+            }
+        } else {
+            None
         };
 
         let size_x = args.size_x.unwrap_or(DEFAULT_SIZE_X);
@@ -116,7 +132,7 @@ impl HomunculusMcpHandler {
             size: Some(Vec2::new(size_x, size_y)),
             viewport_size: Some(Vec2::new(viewport_width as f32, viewport_height as f32)),
             offset: Some(WebviewOffset(Vec2::new(offset_x, offset_y))),
-            linked_vrm: None,
+            linked_vrm,
         };
 
         match self.webview_api.open(options).await {
