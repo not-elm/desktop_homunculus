@@ -4,6 +4,17 @@
 
 const { execFileSync } = require("child_process");
 const path = require("path");
+const cliPkg = require("../package.json");
+const distTag = cliPkg.version.includes("alpha")
+  ? "alpha"
+  : cliPkg.version.includes("beta")
+    ? "beta"
+    : cliPkg.version.includes("rc")
+      ? "rc"
+      : "latest";
+import("update-notifier").then(({ default: updateNotifier }) => {
+  updateNotifier({ pkg: cliPkg, distTag }).notify();
+}).catch(() => {});
 
 const PLATFORM_MAP = {
   "darwin-arm64": "@hmcs/cli-darwin-arm64",

@@ -13,5 +13,8 @@
   },
   "files": [
     "bin"
-  ]
+  ],
+  "dependencies": {
+    "update-notifier": "^6.0.0"
+  }
 }
