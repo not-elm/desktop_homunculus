@@ -1,7 +1,6 @@
 //! Animation tool implementations for the MCP handler.
 
-use std::time::Duration;
-
+use super::super::HomunculusMcpHandler;
 use bevy::animation::RepeatAnimation;
 use bevy_vrm1::prelude::PlayVrma;
 use homunculus_utils::schema::asset::AssetId;
@@ -10,12 +9,7 @@ use rmcp::schemars;
 use rmcp::schemars::JsonSchema;
 use rmcp::tool;
 use serde::{Deserialize, Serialize};
-
-use super::super::HomunculusMcpHandler;
-
-// ---------------------------------------------------------------------------
-// Parameter structs
-// ---------------------------------------------------------------------------
+use std::time::Duration;
 
 /// Parameters for the `play_animation` tool.
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
@@ -32,10 +26,6 @@ pub struct PlayAnimationParams {
     /// Whether to reset spring bones when starting the animation (default: false).
     pub reset_spring_bones: Option<bool>,
 }
-
-// ---------------------------------------------------------------------------
-// Tool implementations
-// ---------------------------------------------------------------------------
 
 #[rmcp::tool_router(router = animation_tool_router, vis = "pub(super)")]
 impl HomunculusMcpHandler {

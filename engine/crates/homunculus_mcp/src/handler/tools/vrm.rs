@@ -1,7 +1,6 @@
 //! VRM tool implementations for the MCP handler.
 
-use std::collections::HashMap;
-
+use super::super::HomunculusMcpHandler;
 use bevy::math::Vec2;
 use homunculus_api::entities::MoveTarget;
 use homunculus_api::vrm::VrmSpawnArgs;
@@ -12,12 +11,7 @@ use rmcp::schemars;
 use rmcp::schemars::JsonSchema;
 use rmcp::tool;
 use serde::{Deserialize, Serialize};
-
-use super::super::HomunculusMcpHandler;
-
-// ---------------------------------------------------------------------------
-// Parameter structs
-// ---------------------------------------------------------------------------
+use std::collections::HashMap;
 
 /// Parameters for the `spawn_character` tool.
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
@@ -76,10 +70,6 @@ pub struct SetLookAtParams {
     /// Look-at mode: "cursor" to follow the mouse, or "none" to disable.
     pub mode: String,
 }
-
-// ---------------------------------------------------------------------------
-// Tool implementations
-// ---------------------------------------------------------------------------
 
 #[rmcp::tool_router(router = vrm_tool_router, vis = "pub(super)")]
 impl HomunculusMcpHandler {

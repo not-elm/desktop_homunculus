@@ -1,21 +1,15 @@
 //! System tool implementations for the MCP handler.
 
-use std::process::Stdio;
-use std::time::Duration;
-
+use super::super::HomunculusMcpHandler;
 use rmcp::handler::server::wrapper::Parameters;
 use rmcp::schemars;
 use rmcp::schemars::JsonSchema;
 use rmcp::tool;
 use serde::{Deserialize, Serialize};
+use std::process::Stdio;
+use std::time::Duration;
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWriteExt};
 use tokio::process::Command;
-
-use super::super::HomunculusMcpHandler;
-
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
 
 /// Windows flag to prevent spawning a visible console window for child processes.
 #[cfg(windows)]
@@ -26,10 +20,6 @@ const MAX_TIMEOUT_MS: u64 = 300_000;
 
 /// Maximum bytes to read from stdout or stderr (1 MB).
 const MAX_OUTPUT_BYTES: u64 = 1_048_576;
-
-// ---------------------------------------------------------------------------
-// Parameter structs
-// ---------------------------------------------------------------------------
 
 /// Parameters for the `execute_command` tool.
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
@@ -45,10 +35,6 @@ pub struct ExecuteCommandParams {
     pub timeout_ms: Option<u64>,
 }
 
-// ---------------------------------------------------------------------------
-// Tool implementations
-// ---------------------------------------------------------------------------
-
 #[rmcp::tool_router(router = system_tool_router, vis = "pub(super)")]
 impl HomunculusMcpHandler {
     /// Execute a MOD command.
@@ -60,26 +46,7 @@ impl HomunculusMcpHandler {
         let args = params.0;
         let timeout_ms = args.timeout_ms.unwrap_or(30_000).min(MAX_TIMEOUT_MS);
         let timeout = Duration::from_millis(timeout_ms);
-
-        let mut cmd = Command::new(homunculus_utils::mods::pnpm_program());
-        cmd.arg("exec")
-            .arg(&args.command)
-            .current_dir(&self.config.mods_dir)
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped());
-
-        if let Some(ref extra_args) = args.args {
-            cmd.args(extra_args);
-        }
-
-        if args.stdin.is_some() {
-            cmd.stdin(Stdio::piped());
-        } else {
-            cmd.stdin(Stdio::null());
-        }
-
-        #[cfg(windows)]
-        cmd.creation_flags(CREATE_NO_WINDOW);
+        let mut cmd = self.create_command(&args);
 
         let mut child = match cmd.spawn() {
             Ok(c) => c,
@@ -134,6 +101,29 @@ impl HomunculusMcpHandler {
         }
 
         result
+    }
+
+    fn create_command(&self, args: &ExecuteCommandParams) -> Command {
+        let mut cmd = Command::new(homunculus_utils::mods::pnpm_program());
+        cmd.arg("exec")
+            .arg(&args.command)
+            .current_dir(&self.config.mods_dir)
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped());
+
+        if let Some(ref extra_args) = args.args {
+            cmd.args(extra_args);
+        }
+
+        if args.stdin.is_some() {
+            cmd.stdin(Stdio::piped());
+        } else {
+            cmd.stdin(Stdio::null());
+        }
+
+        #[cfg(windows)]
+        cmd.creation_flags(CREATE_NO_WINDOW);
+        cmd
     }
 }
 

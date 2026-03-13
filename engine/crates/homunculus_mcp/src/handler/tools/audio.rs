@@ -18,10 +18,6 @@ const DEFAULT_SE_PAN: f64 = 0.0;
 const DEFAULT_BGM_LOOPING: bool = true;
 const DEFAULT_BGM_SPEED: f64 = 1.0;
 
-// ---------------------------------------------------------------------------
-// Parameter structs
-// ---------------------------------------------------------------------------
-
 /// Parameters for the `play_sound` tool.
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
 pub struct PlaySoundParams {
@@ -43,10 +39,6 @@ pub struct ControlBgmParams {
     /// Volume level from 0.0 to 1.0 (default: 1.0 for play).
     pub volume: Option<f64>,
 }
-
-// ---------------------------------------------------------------------------
-// Tool implementations
-// ---------------------------------------------------------------------------
 
 #[rmcp::tool_router(router = audio_tool_router, vis = "pub(super)")]
 impl HomunculusMcpHandler {

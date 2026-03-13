@@ -1,5 +1,6 @@
 //! Webview tool implementations for the MCP handler.
 
+use super::super::HomunculusMcpHandler;
 use bevy::math::Vec2;
 use bevy::prelude::Entity;
 use homunculus_core::prelude::{WebviewOffset, WebviewOpenOptions, WebviewSource};
@@ -8,12 +9,6 @@ use rmcp::schemars;
 use rmcp::schemars::JsonSchema;
 use rmcp::tool;
 use serde::{Deserialize, Serialize};
-
-use super::super::HomunculusMcpHandler;
-
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
 
 /// Default webview panel width in world units.
 const DEFAULT_SIZE_X: f32 = 0.7;
@@ -27,10 +22,6 @@ const DEFAULT_VIEWPORT_HEIGHT: u32 = 600;
 const DEFAULT_OFFSET_X: f32 = 0.0;
 /// Default vertical offset from character center (positive = above).
 const DEFAULT_OFFSET_Y: f32 = 0.5;
-
-// ---------------------------------------------------------------------------
-// Parameter structs
-// ---------------------------------------------------------------------------
 
 /// Parameters for the `open_webview` tool.
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
@@ -77,10 +68,6 @@ pub struct NavigateWebviewParams {
     pub asset_id: Option<String>,
 }
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
 /// Resolve exactly one of `html`, `url`, or `asset_id` into a [`WebviewSource`].
 fn resolve_source(
     html: Option<String>,
@@ -101,10 +88,6 @@ fn resolve_source(
         _ => Err("Only one of 'html', 'url', or 'asset_id' may be provided.".into()),
     }
 }
-
-// ---------------------------------------------------------------------------
-// Tool implementations
-// ---------------------------------------------------------------------------
 
 #[rmcp::tool_router(router = webview_tool_router, vis = "pub(super)")]
 impl HomunculusMcpHandler {
