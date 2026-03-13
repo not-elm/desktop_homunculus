@@ -17,7 +17,7 @@ Desktop Homunculus is a cross-platform desktop mascot application built with the
 
 ## How It Works
 
-The engine, built on Bevy, renders a transparent desktop window containing your VRM character. MODs are npm packages that run as Node.js child processes alongside the engine, communicating through an HTTP API on `localhost:3100`. The TypeScript SDK (`@hmcs/sdk`) wraps this API with convenient, typed functions for spawning characters, playing animations, managing preferences, and opening WebViews. AI assistants can control the character through an MCP server that exposes the same capabilities over stdio.
+The engine, built on Bevy, renders a transparent desktop window containing your VRM character. MODs are npm packages that run as Node.js child processes alongside the engine, communicating through an HTTP API on `localhost:3100`. The TypeScript SDK (`@hmcs/sdk`) wraps this API with convenient, typed functions for spawning characters, playing animations, managing preferences, and opening WebViews. AI assistants can control the character through a built-in MCP server at `localhost:3100/mcp` using Streamable HTTP transport.
 
 ## What You Need
 

@@ -10,7 +10,6 @@ Claude Code をセットアップして、ターミナルから Desktop Homuncul
 ## 前提条件
 
 - Desktop Homunculus がインストールされて起動中であること
-- Node.js 22 以上
 
 ## 設定
 
@@ -22,8 +21,8 @@ Homunculus MCP サーバーを Claude Code の設定に追加します。
 {
   "mcpServers": {
     "homunculus": {
-      "command": "npx",
-      "args": ["-y", "@hmcs/mcp-server@latest"]
+      "type": "streamable-http",
+      "url": "http://localhost:3100/mcp"
     }
   }
 }
@@ -35,8 +34,8 @@ Homunculus MCP サーバーを Claude Code の設定に追加します。
 {
   "mcpServers": {
     "homunculus": {
-      "command": "npx",
-      "args": ["-y", "@hmcs/mcp-server@latest"]
+      "type": "streamable-http",
+      "url": "http://localhost:3100/mcp"
     }
   }
 }
@@ -60,23 +59,18 @@ Claude Code の **スキル（Skills）** は MCP ツール呼び出しを連鎖
 
 ## カスタムポート
 
-Desktop Homunculus がデフォルト以外のポートで動作している場合は、`HOMUNCULUS_HOST` 環境変数を設定してください：
+Desktop Homunculus がデフォルト以外のポートで動作している場合（`~/.homunculus/config.toml` で変更）、URL を適宜更新してください：
 
 ```json
 {
   "mcpServers": {
     "homunculus": {
-      "command": "npx",
-      "args": ["-y", "@hmcs/mcp-server@latest"],
-      "env": {
-        "HOMUNCULUS_HOST": "localhost:4000"
-      }
+      "type": "streamable-http",
+      "url": "http://localhost:4000/mcp"
     }
   }
 }
 ```
-
-デフォルト値は `localhost:3100` です。ポートは `~/.homunculus/config.toml` で変更できます。
 
 ## 次のステップ
 

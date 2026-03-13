@@ -6,13 +6,13 @@ slug: /reference/mcp-tools
 
 # MCP リファレンス
 
-Desktop Homunculus の MCP サーバーは、stdio トランスポートを介して 20 のツール、4 つのリソース、3 つのプロンプトを公開しています。
+Desktop Homunculus の MCP サーバーは、Streamable HTTP トランスポートを介して 20 のツール、4 つのリソース、3 つのプロンプトを公開しています。
 
 このページをマップとして使い、必要なカテゴリページを開いてください。
 
 ## MCP サーバー概要
 
-MCP サーバーは `localhost:3100`（`HOMUNCULUS_HOST` 環境変数で設定可能）を通じて Desktop Homunculus と HTTP で通信します。
+MCP サーバーは Desktop Homunculus エンジンに内蔵されており、`http://localhost:3100/mcp` でアクセスできます。ポートは `~/.homunculus/config.toml` で変更できます。
 
 ## カテゴリマップ
 

@@ -32,18 +32,14 @@ jobs:
         id: versions
         run: |
           SDK_VERSION="$(node -e 'const p=require("./packages/sdk/package.json"); process.stdout.write(p.version)')"
-          MCP_VERSION="$(node -e 'const p=require("./packages/mcp-server/package.json"); process.stdout.write(p.version)')"
           UI_VERSION="$(node -e 'const p=require("./packages/ui/package.json"); process.stdout.write(p.version)')"
 
           SDK_TAG="$(.github/scripts/compute-tag.sh "$SDK_VERSION")"
-          MCP_TAG="$(.github/scripts/compute-tag.sh "$MCP_VERSION")"
           UI_TAG="$(.github/scripts/compute-tag.sh "$UI_VERSION")"
 
           {
             echo "sdk_version=$SDK_VERSION"
             echo "sdk_tag=$SDK_TAG"
-            echo "mcp_version=$MCP_VERSION"
-            echo "mcp_tag=$MCP_TAG"
             echo "ui_version=$UI_VERSION"
             echo "ui_tag=$UI_TAG"
           } >> "$GITHUB_OUTPUT"
@@ -54,14 +50,6 @@ jobs:
           package-name: "@hmcs/sdk"
           version: ${{ steps.versions.outputs.sdk_version }}
           tag: ${{ steps.versions.outputs.sdk_tag }}
-          npm-token: ${{ secrets.NPM_TOKEN }}
-
-      # --- Publish @hmcs/mcp-server ---
-      - uses: ./.github/actions/publish-npm-package
-        with:
-          package-name: "@hmcs/mcp-server"
-          version: ${{ steps.versions.outputs.mcp_version }}
-          tag: ${{ steps.versions.outputs.mcp_tag }}
           npm-token: ${{ secrets.NPM_TOKEN }}
 
       # --- Publish @hmcs/ui (must come before MOD packages that depend on it) ---
