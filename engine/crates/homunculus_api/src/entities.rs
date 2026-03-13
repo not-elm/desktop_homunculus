@@ -9,6 +9,9 @@ pub mod transform;
 pub mod tween;
 
 pub use move_to::MoveTarget;
-pub use tween::{EasingFunction, TweenPositionArgs, TweenRotationArgs, TweenScaleArgs};
+pub use tween::{
+    EasingFunction, TweenPositionArgs, TweenPositionViewportArgs, TweenRotationArgs,
+    TweenScaleArgs,
+};
 
 api!(EntitiesApi);

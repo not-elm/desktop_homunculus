@@ -3,7 +3,7 @@
 use bevy::math::{Quat, Vec2, Vec3};
 use homunculus_api::entities::MoveTarget;
 use homunculus_api::entities::tween::{
-    EasingFunction, TweenPositionArgs, TweenRotationArgs, TweenScaleArgs,
+    EasingFunction, TweenPositionViewportArgs, TweenRotationArgs, TweenScaleArgs,
 };
 use rmcp::handler::server::wrapper::Parameters;
 use rmcp::schemars;
@@ -30,12 +30,10 @@ pub struct MoveCharacterParams {
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct TweenPositionParams {
-    /// Target x position.
-    pub target_x: f32,
-    /// Target y position.
-    pub target_y: f32,
-    /// Target z position.
-    pub target_z: f32,
+    /// Viewport x position in pixels (0 = left edge of primary monitor).
+    pub x: f32,
+    /// Viewport y position in pixels (0 = top edge of primary monitor).
+    pub y: f32,
     /// Duration of the tween in milliseconds.
     pub duration_ms: u64,
     /// Easing function name (default: "linear"). See EasingFunction for available options.
@@ -129,7 +127,7 @@ impl HomunculusMcpHandler {
     /// Smoothly animate an entity's position to a target value over time.
     #[tool(
         name = "tween_position",
-        description = "Smoothly animate an entity's position to a target value over time. Use this for smooth character movement and animations."
+        description = "Smoothly animate the active character's position to a screen position over time. Coordinates are in viewport pixels (0,0 = top-left of primary monitor). Use this for smooth character movement and animations."
     )]
     async fn tween_position(&self, params: Parameters<TweenPositionParams>) -> String {
         let args = params.0;
@@ -140,15 +138,19 @@ impl HomunculusMcpHandler {
         };
 
         let easing = parse_easing(&args.easing);
-        let tween_args = TweenPositionArgs {
-            target: Vec3::new(args.target_x, args.target_y, args.target_z),
+        let tween_args = TweenPositionViewportArgs {
+            position: Vec2::new(args.x, args.y),
             duration_ms: args.duration_ms,
             easing,
             wait: args.wait.unwrap_or(false),
         };
 
-        match self.entities_api.tween_position(entity, tween_args).await {
-            Ok(()) => "Tweening position".to_string(),
+        match self
+            .entities_api
+            .tween_position_viewport(entity, tween_args)
+            .await
+        {
+            Ok(()) => format!("Tweening position to ({}, {})", args.x, args.y),
             Err(e) => format!("Error tweening position: {e}"),
         }
     }

@@ -22,13 +22,12 @@ Teleport the active character to a viewport position instantly. `(0, 0)` is the 
 
 #### `tween_position`
 
-Smoothly animate the active character's position to a target in world space.
+Smoothly animate the active character's position to a viewport position. Coordinates are in viewport pixels (`0,0` = top-left of primary monitor), matching `move_character`.
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `targetX` | `number` | **required** | Target X coordinate (world space) |
-| `targetY` | `number` | **required** | Target Y coordinate (world space) |
-| `targetZ` | `number` | **required** | Target Z coordinate (world space) |
+| `x` | `number` | **required** | Viewport X coordinate (pixels) |
+| `y` | `number` | **required** | Viewport Y coordinate (pixels) |
 | `durationMs` | `number` | **required** | Animation duration in milliseconds |
 | `easing` | `string` | `"linear"` | Easing function (see [Easing Functions](#easing-functions)) |
 | `wait` | `boolean` | `false` | Wait for animation to finish before returning |

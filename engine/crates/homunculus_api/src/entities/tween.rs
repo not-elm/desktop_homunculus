@@ -1,5 +1,5 @@
 use bevy::math::curve::easing::EaseFunction;
-use bevy::prelude::{Quat, Vec3};
+use bevy::prelude::{Quat, Vec2, Vec3};
 use serde::{Deserialize, Serialize};
 
 /// Easing functions for tweening animations.
@@ -106,6 +106,23 @@ pub struct TweenScaleArgs {
     pub wait: bool,
 }
 
+/// Request arguments for tweening an entity's position using viewport coordinates.
+///
+/// Viewport coordinates are in pixels relative to the primary monitor (0,0 = top-left).
+/// They are converted to world coordinates internally.
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct TweenPositionViewportArgs {
+    #[cfg_attr(feature = "openapi", schema(value_type = [f32; 2]))]
+    pub position: Vec2,
+    pub duration_ms: u64,
+    #[serde(default)]
+    pub easing: EasingFunction,
+    #[serde(default)]
+    pub wait: bool,
+}
+
 impl From<EasingFunction> for EaseFunction {
     fn from(ef: EasingFunction) -> Self {
         match ef {
@@ -156,6 +173,7 @@ use bevy_tweening::{
     EaseMethod, Tween, TweenAnim,
     lens::{TransformPositionLens, TransformRotationLens, TransformScaleLens},
 };
+use homunculus_core::prelude::{Coordinate, GlobalViewport};
 use std::time::Duration;
 
 fn apply_position_tween(
@@ -182,6 +200,44 @@ fn apply_position_tween(
         TransformPositionLens {
             start: current.translation,
             end: args.target,
+        },
+    );
+
+    commands.entity(entity).try_insert(TweenAnim::new(tween));
+    Ok(())
+}
+
+fn apply_position_tween_viewport(
+    In((entity, args)): In<(Entity, TweenPositionViewportArgs)>,
+    coordinate: Coordinate,
+    transforms: Query<&Transform>,
+    mut commands: Commands,
+) -> ApiResult {
+    if args.duration_ms == 0 {
+        return Err(ApiError::InvalidInput(
+            "duration must be greater than 0".into(),
+        ));
+    }
+
+    let current = transforms
+        .get(entity)
+        .map_err(|_| ApiError::EntityNotFound)?;
+
+    let world_pos = coordinate
+        .to_world_2d_by_global(GlobalViewport(args.position))
+        .ok_or(ApiError::FailedToWorldPosition)?;
+
+    let target = Vec3::new(world_pos.x, world_pos.y, current.translation.z);
+
+    let ease_function: EaseFunction = args.easing.into();
+    let ease_method: EaseMethod = ease_function.into();
+
+    let tween = Tween::new(
+        ease_method,
+        Duration::from_millis(args.duration_ms),
+        TransformPositionLens {
+            start: current.translation,
+            end: target,
         },
     );
 
@@ -287,6 +343,39 @@ impl EntitiesApi {
             .schedule(move |task| async move {
                 task.will(Update, once::run(apply_position_tween).with((entity, args)))
                     .await?;
+
+                if should_wait {
+                    task.will(
+                        Update,
+                        delay::time().with(Duration::from_millis(wait_duration)),
+                    )
+                    .await;
+                }
+
+                Ok(())
+            })
+            .await?
+    }
+
+    /// Tweens the entity's position using viewport coordinates.
+    ///
+    /// Viewport coordinates (pixels, 0,0 = top-left of primary monitor) are converted
+    /// to world coordinates before applying the tween. The entity's z-position is preserved.
+    pub async fn tween_position_viewport(
+        &self,
+        entity: Entity,
+        args: TweenPositionViewportArgs,
+    ) -> ApiResult {
+        let wait_duration = args.duration_ms;
+        let should_wait = args.wait;
+
+        self.0
+            .schedule(move |task| async move {
+                task.will(
+                    Update,
+                    once::run(apply_position_tween_viewport).with((entity, args)),
+                )
+                .await?;
 
                 if should_wait {
                     task.will(

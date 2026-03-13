@@ -3115,6 +3115,7 @@ dependencies = [
  "bevy_cef_core",
  "bevy_egui",
  "bevy_flurx",
+ "bevy_tweening",
  "bevy_vrm1",
  "embed-resource",
  "homunculus_api",
