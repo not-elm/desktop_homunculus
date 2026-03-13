@@ -239,7 +239,9 @@ impl HomunculusMcpHandler {
             "x" => Vec3::X,
             "y" => Vec3::Y,
             "z" => Vec3::Z,
-            other => return format!("Error: invalid axis \"{other}\". Must be \"x\", \"y\", or \"z\"."),
+            other => {
+                return format!("Error: invalid axis \"{other}\". Must be \"x\", \"y\", or \"z\".");
+            }
         };
 
         let entity = match self.resolve_character().await {

@@ -4,12 +4,9 @@
 //! [`ServerHandler`] trait from `rmcp`, exposing Desktop Homunculus capabilities
 //! (tools and resources) to MCP-compatible AI agents.
 
-mod presets;
 mod prompts;
 mod resources;
 mod tools;
-
-use std::sync::{Arc, Mutex};
 
 use bevy::prelude::Entity;
 use homunculus_api::assets::AssetsApi;
@@ -26,6 +23,7 @@ use rmcp::model::{
 };
 use rmcp::service::RequestContext;
 use rmcp::{RoleServer, ServerHandler, tool_handler};
+use std::sync::{Arc, Mutex};
 
 const SERVER_NAME: &str = "homunculus";
 

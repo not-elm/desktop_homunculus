@@ -91,9 +91,7 @@ fn resolve_source(
         (Some(html), None, None) => Ok(WebviewSource::Html { content: html }),
         (None, Some(url), None) => Ok(WebviewSource::Url { url }),
         (None, None, Some(id)) => Ok(WebviewSource::Local { id: id.into() }),
-        (None, None, None) => {
-            Err("One of 'html', 'url', or 'asset_id' must be provided.".into())
-        }
+        (None, None, None) => Err("One of 'html', 'url', or 'asset_id' must be provided.".into()),
         _ => Err("Only one of 'html', 'url', or 'asset_id' may be provided.".into()),
     }
 }
