@@ -31,6 +31,14 @@ pub enum ModsSubcommand {
         /// New mods directory path (omit to display current)
         mods_dir_path: Option<String>,
     },
+    /// Update installation MODs version.
+    Update {
+        ///  If no specific target, all MODs will be update.
+        mod_patterns: Vec<String>,
+        /// If this value is true, it updates mods to their latest versions
+        #[arg(long, short = 'L')]
+        latest: bool,
+    },
 }
 
 impl ModsArgs {
@@ -42,6 +50,10 @@ impl ModsArgs {
                 homunculus_utils::mods::uninstall(&mod_names)
             }
             ModsSubcommand::Path { mods_dir_path } => path::cmd_path(mods_dir_path.as_deref()),
+            ModsSubcommand::Update {
+                mod_patterns,
+                latest,
+            } => homunculus_utils::mods::update(&mod_patterns, latest),
         }
     }
 }

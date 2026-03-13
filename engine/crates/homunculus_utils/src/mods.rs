@@ -1,5 +1,5 @@
 pub mod list;
-use std::process::Command;
+use std::process::{Command, Stdio};
 
 use crate::{
     config::HomunculusConfig,
@@ -63,7 +63,8 @@ const TSX_PACKAGE: &str = "tsx@4.21.0";
 /// quickly without network access.
 /// The installed tsx is used by mod services via `node --import tsx`.
 pub fn ensure_tsx() -> UtilResult {
-    let status = create_pnpm_command_base()?
+    let status = create_pnpm_command()?
+        .no_window()
         .arg("add")
         .arg("--save-dev")
         .arg("--save-exact")
@@ -86,7 +87,7 @@ pub fn install<S: AsRef<str>>(pkg: &[S]) -> UtilResult {
         validate_package_name(p.as_ref())?;
     }
 
-    let status = create_pnpm_command_base()?
+    let status = create_pnpm_command()?
         .arg("add")
         .args(pkg.iter().map(|s| s.as_ref()))
         .status()
@@ -106,7 +107,7 @@ pub fn uninstall<S: AsRef<str>>(mod_names: &[S]) -> UtilResult {
         validate_package_name(name.as_ref())?;
     }
 
-    let status = create_pnpm_command_base()?
+    let status = create_pnpm_command()?
         .arg("remove")
         .args(mod_names.iter().map(|s| s.as_ref()))
         .status()
@@ -120,6 +121,23 @@ pub fn uninstall<S: AsRef<str>>(mod_names: &[S]) -> UtilResult {
     Ok(())
 }
 
+pub fn update<S: AsRef<str>>(mod_patterns: &[S], install_latest: bool) -> UtilResult {
+    let mut cmd = create_pnpm_command()?;
+    cmd.arg("update");
+    if !mod_patterns.is_empty() {
+        cmd.args(mod_patterns.iter().map(|s| s.as_ref()));
+    }
+    if install_latest {
+        cmd.arg("--latest");
+    }
+    cmd.stdout(Stdio::inherit())
+        .stderr(Stdio::inherit())
+        .status()
+        .map_err(|e| UtilError::Mods(ModsError::Update(e.to_string())))?;
+
+    Ok(())
+}
+
 /// Returns the correct program name for pnpm on the current platform.
 ///
 /// On Windows, pnpm is installed as `pnpm.cmd` (a batch script),
@@ -128,12 +146,10 @@ pub fn pnpm_program() -> &'static str {
     if cfg!(windows) { "pnpm.cmd" } else { "pnpm" }
 }
 
-fn create_pnpm_command_base() -> UtilResult<Command> {
+fn create_pnpm_command() -> UtilResult<Command> {
     let config = HomunculusConfig::load()?;
     let mut command = Command::new(pnpm_program());
-    command
-        .no_window()
-        .args(["-C", &format!("{}", &config.mods_dir.display())]);
+    command.args(["-C", &format!("{}", &config.mods_dir.display())]);
     Ok(command)
 }
 

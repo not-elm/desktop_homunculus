@@ -1,6 +1,6 @@
 use crate::{
     error::{ModsError, UtilError, UtilResult},
-    mods::create_pnpm_command_base,
+    mods::create_pnpm_command,
     prelude::{ModInfo, ModPackageJson},
 };
 use std::{
@@ -45,7 +45,7 @@ fn list_mods<P: AsRef<Path>>(mod_paths: &[P]) -> Vec<ModInfo> {
 /// Returns a list of paths that may be MODs.
 /// It is not guaranteed that they are actually MODs, so you need to filter them appropriately.
 fn list_candidate_paths() -> UtilResult<Vec<PathBuf>> {
-    let output = create_pnpm_command_base()?
+    let output = create_pnpm_command()?
         .args(["ls", "--parseable", "-P", "--depth", "0"])
         .output()
         .map_err(|e| UtilError::Mods(ModsError::List(e.to_string())))?;
