@@ -31,10 +31,6 @@ const FEATURES: &[&str] = &[
     "vrm", "audio", "webviews", "effects", "speech", "signals", "mods",
 ];
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
 /// Converts any `Display` error into an `rmcp::ErrorData`.
 pub(crate) fn api_err(e: impl std::fmt::Display) -> rmcp::ErrorData {
     rmcp::ErrorData::internal_error(e.to_string(), None)
@@ -44,10 +40,6 @@ pub(crate) fn api_err(e: impl std::fmt::Display) -> rmcp::ErrorData {
 pub(crate) fn to_json_string(value: &impl serde::Serialize) -> Result<String, rmcp::ErrorData> {
     serde_json::to_string_pretty(value).map_err(api_err)
 }
-
-// ---------------------------------------------------------------------------
-// Handler
-// ---------------------------------------------------------------------------
 
 /// MCP handler that bridges AI agent requests to the Homunculus engine.
 ///
@@ -125,10 +117,6 @@ impl HomunculusMcpHandler {
         }) = entity;
     }
 }
-
-// ---------------------------------------------------------------------------
-// ServerHandler impl (resources are handled here; tools via tool_handler macro)
-// ---------------------------------------------------------------------------
 
 #[tool_handler(router = self.tool_router)]
 impl ServerHandler for HomunculusMcpHandler {
