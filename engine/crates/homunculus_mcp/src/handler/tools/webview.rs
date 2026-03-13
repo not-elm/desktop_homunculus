@@ -35,10 +35,12 @@ const DEFAULT_OFFSET_Y: f32 = 0.5;
 /// Parameters for the `open_webview` tool.
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
 pub struct OpenWebviewParams {
-    /// Inline HTML content to display (mutually exclusive with url).
+    /// Inline HTML content to display (mutually exclusive with url and asset_id).
     pub html: Option<String>,
-    /// URL or mod asset path to load (mutually exclusive with html).
+    /// URL to load (mutually exclusive with html and asset_id).
     pub url: Option<String>,
+    /// Local mod asset ID to load, e.g. "mod-name:asset-id" (mutually exclusive with html and url).
+    pub asset_id: Option<String>,
     /// Panel width in world units.
     pub size_x: Option<f32>,
     /// Panel height in world units.
@@ -67,8 +69,33 @@ pub struct CloseWebviewParams {
 pub struct NavigateWebviewParams {
     /// Entity ID of the webview to navigate. If omitted, navigates the most recently opened.
     pub entity: Option<u64>,
-    /// New inline HTML content to display.
-    pub html: String,
+    /// New inline HTML content to display (mutually exclusive with url and asset_id).
+    pub html: Option<String>,
+    /// URL to navigate to (mutually exclusive with html and asset_id).
+    pub url: Option<String>,
+    /// Local mod asset ID to navigate to, e.g. "mod-name:asset-id" (mutually exclusive with html and url).
+    pub asset_id: Option<String>,
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/// Resolve exactly one of `html`, `url`, or `asset_id` into a [`WebviewSource`].
+fn resolve_source(
+    html: Option<String>,
+    url: Option<String>,
+    asset_id: Option<String>,
+) -> Result<WebviewSource, String> {
+    match (html, url, asset_id) {
+        (Some(html), None, None) => Ok(WebviewSource::Html { content: html }),
+        (None, Some(url), None) => Ok(WebviewSource::Url { url }),
+        (None, None, Some(id)) => Ok(WebviewSource::Local { id: id.into() }),
+        (None, None, None) => {
+            Err("One of 'html', 'url', or 'asset_id' must be provided.".into())
+        }
+        _ => Err("Only one of 'html', 'url', or 'asset_id' may be provided.".into()),
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -77,23 +104,17 @@ pub struct NavigateWebviewParams {
 
 #[rmcp::tool_router(router = webview_tool_router, vis = "pub(super)")]
 impl HomunculusMcpHandler {
-    /// Open a webview panel displaying HTML content or a URL near the active character.
+    /// Open a webview panel displaying HTML content, a URL, or a local mod asset near the active character.
     #[tool(
         name = "open_webview",
-        description = "Open a webview panel displaying HTML content or a URL near the active character. Returns the webview entity ID. Use close_webview to close it."
+        description = "Open a webview panel near the active character. Provide exactly one of: 'html' (inline HTML), 'url' (a URL to load), or 'asset_id' (a local mod asset, e.g. 'mod-name:asset-id'). Returns the webview entity ID. Use close_webview to close it."
     )]
     async fn open_webview(&self, params: Parameters<OpenWebviewParams>) -> String {
         let args = params.0;
 
-        let source = match (args.html, args.url) {
-            (Some(html), None) => WebviewSource::Html { content: html },
-            (None, Some(url)) => WebviewSource::Url { url },
-            (Some(_), Some(_)) => {
-                return "Error: 'html' and 'url' are mutually exclusive.".to_string();
-            }
-            (None, None) => {
-                return "Error: Either 'html' or 'url' must be provided.".to_string();
-            }
+        let source = match resolve_source(args.html, args.url, args.asset_id) {
+            Ok(s) => s,
+            Err(e) => return format!("Error: {e}"),
         };
 
         let size_x = args.size_x.unwrap_or(DEFAULT_SIZE_X);
@@ -139,13 +160,18 @@ impl HomunculusMcpHandler {
         }
     }
 
-    /// Navigate an existing webview to new HTML content.
+    /// Navigate an existing webview to new content.
     #[tool(
         name = "navigate_webview",
-        description = "Navigate an existing webview to new HTML content. Use this to update a webview's content without closing and reopening it. If no entity is specified, navigates the most recently opened webview."
+        description = "Navigate an existing webview to new content without closing and reopening it. Provide exactly one of: 'html' (inline HTML), 'url' (a URL to load), or 'asset_id' (a local mod asset, e.g. 'mod-name:asset-id'). If no entity is specified, navigates the most recently opened webview."
     )]
     async fn navigate_webview(&self, params: Parameters<NavigateWebviewParams>) -> String {
         let args = params.0;
+
+        let source = match resolve_source(args.html, args.url, args.asset_id) {
+            Ok(s) => s,
+            Err(e) => return format!("Error: {e}"),
+        };
 
         let target_entity_id = match self.extract_webview(args.entity) {
             Some(id) => id,
@@ -155,7 +181,6 @@ impl HomunculusMcpHandler {
         };
 
         let entity = Entity::from_bits(target_entity_id);
-        let source = WebviewSource::Html { content: args.html };
 
         match self.webview_api.navigate(entity, source).await {
             Ok(()) => format!("Navigated webview (entity {target_entity_id}) to new content."),
