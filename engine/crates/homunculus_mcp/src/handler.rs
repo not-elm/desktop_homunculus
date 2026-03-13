@@ -92,25 +92,37 @@ impl HomunculusMcpHandler {
 
     /// Resolves the active character entity, falling back to the first character in snapshot.
     pub(crate) async fn resolve_character(&self) -> Result<Entity, String> {
-        if let Some(bits) = self.active_character.lock().ok().and_then(|g| *g) {
+        let current = self
+            .active_character
+            .lock()
+            .unwrap_or_else(|e| {
+                bevy::log::warn!("Mutex poisoned: {e}");
+                e.into_inner()
+            })
+            .to_owned();
+
+        if let Some(bits) = current {
             return Ok(Entity::from_bits(bits));
         }
+
         let snapshots = self.vrm_api.snapshot().await.map_err(|e| e.to_string())?;
         let first = snapshots
             .first()
             .ok_or_else(|| "No characters loaded. Use spawn_character first.".to_string())?;
         let bits = first.entity.to_bits();
-        if let Ok(mut guard) = self.active_character.lock() {
-            *guard = Some(bits);
-        }
+        *self.active_character.lock().unwrap_or_else(|e| {
+            bevy::log::warn!("Mutex poisoned: {e}");
+            e.into_inner()
+        }) = Some(bits);
         Ok(first.entity)
     }
 
     /// Sets or clears the active character.
     pub(crate) fn set_active_character(&self, entity: Option<u64>) {
-        if let Ok(mut guard) = self.active_character.lock() {
-            *guard = entity;
-        }
+        *self.active_character.lock().unwrap_or_else(|e| {
+            bevy::log::warn!("Mutex poisoned: {e}");
+            e.into_inner()
+        }) = entity;
     }
 }
 

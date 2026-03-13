@@ -104,6 +104,8 @@ pub struct SpinCharacterParams {
 
 /// Parses an easing function name string into an [`EasingFunction`].
 ///
+/// Uses serde JSON deserialization to reuse the rename mappings defined on
+/// [`EasingFunction`] (e.g. `"ease-in-out"` → `EaseInOut`).
 /// Falls back to [`EasingFunction::Linear`] if the string is not recognised.
 fn parse_easing(easing: &Option<String>) -> EasingFunction {
     match easing {
@@ -186,9 +188,16 @@ impl HomunculusMcpHandler {
             Err(e) => return format!("Error: {e}"),
         };
 
+        let q = Quat::from_xyzw(args.target_x, args.target_y, args.target_z, args.target_w);
+        if !q.is_finite() || q.length_squared() < f32::EPSILON {
+            return "Error: Invalid quaternion — components must be finite and not all zero."
+                .to_string();
+        }
+        let target = q.normalize();
+
         let easing = parse_easing(&args.easing);
         let tween_args = TweenRotationArgs {
-            target: Quat::from_xyzw(args.target_x, args.target_y, args.target_z, args.target_w),
+            target,
             duration_ms: args.duration_ms,
             easing,
             wait: args.wait.unwrap_or(false),

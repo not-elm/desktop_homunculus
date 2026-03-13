@@ -8,7 +8,7 @@ use rmcp::schemars;
 use rmcp::schemars::JsonSchema;
 use rmcp::tool;
 use serde::{Deserialize, Serialize};
-use tokio::io::AsyncWriteExt;
+use tokio::io::{AsyncRead, AsyncReadExt, AsyncWriteExt};
 use tokio::process::Command;
 
 use super::super::HomunculusMcpHandler;
@@ -20,6 +20,12 @@ use super::super::HomunculusMcpHandler;
 /// Windows flag to prevent spawning a visible console window for child processes.
 #[cfg(windows)]
 const CREATE_NO_WINDOW: u32 = 0x08000000;
+
+/// Maximum allowed timeout for command execution (5 minutes).
+const MAX_TIMEOUT_MS: u64 = 300_000;
+
+/// Maximum bytes to read from stdout or stderr (1 MB).
+const MAX_OUTPUT_BYTES: u64 = 1_048_576;
 
 // ---------------------------------------------------------------------------
 // Parameter structs
@@ -52,7 +58,7 @@ impl HomunculusMcpHandler {
     )]
     async fn execute_command(&self, params: Parameters<ExecuteCommandParams>) -> String {
         let args = params.0;
-        let timeout_ms = args.timeout_ms.unwrap_or(30000);
+        let timeout_ms = args.timeout_ms.unwrap_or(30_000).min(MAX_TIMEOUT_MS);
         let timeout = Duration::from_millis(timeout_ms);
 
         let mut cmd = Command::new(homunculus_utils::mods::pnpm_program());
@@ -88,43 +94,26 @@ impl HomunculusMcpHandler {
             drop(stdin);
         }
 
-        // Read stdout/stderr concurrently while waiting for exit.
+        // Read stdout/stderr concurrently, capped at MAX_OUTPUT_BYTES each.
         let stdout_handle = child.stdout.take();
         let stderr_handle = child.stderr.take();
 
-        let read_all = async {
-            let stdout_task = async {
-                if let Some(mut r) = stdout_handle {
-                    let mut buf = Vec::new();
-                    tokio::io::AsyncReadExt::read_to_end(&mut r, &mut buf)
-                        .await
-                        .ok();
-                    buf
-                } else {
-                    Vec::new()
-                }
-            };
-            let stderr_task = async {
-                if let Some(mut r) = stderr_handle {
-                    let mut buf = Vec::new();
-                    tokio::io::AsyncReadExt::read_to_end(&mut r, &mut buf)
-                        .await
-                        .ok();
-                    buf
-                } else {
-                    Vec::new()
-                }
-            };
-            let (stdout_buf, stderr_buf) = tokio::join!(stdout_task, stderr_task);
+        let result = tokio::time::timeout(timeout, async {
+            let (stdout_buf, stderr_buf) =
+                tokio::join!(read_pipe(stdout_handle), read_pipe(stderr_handle));
             let status = child.wait().await;
             (stdout_buf, stderr_buf, status)
-        };
+        })
+        .await;
 
-        let (stdout_buf, stderr_buf, status) = tokio::select! {
-            result = read_all => result,
-            _ = tokio::time::sleep(timeout) => {
-                // `child` is moved into `read_all`, but select drops the losing future.
-                return format!("Error: Command '{}' timed out after {}ms", args.command, timeout_ms);
+        let (stdout_buf, stderr_buf, status) = match result {
+            Ok(r) => r,
+            Err(_) => {
+                let _ = child.kill().await;
+                return format!(
+                    "Error: Command '{}' timed out after {timeout_ms}ms",
+                    args.command
+                );
             }
         };
 
@@ -145,5 +134,17 @@ impl HomunculusMcpHandler {
         }
 
         result
+    }
+}
+
+/// Reads up to [`MAX_OUTPUT_BYTES`] from an optional async reader.
+async fn read_pipe(handle: Option<impl AsyncRead + Unpin>) -> Vec<u8> {
+    match handle {
+        Some(r) => {
+            let mut buf = Vec::new();
+            let _ = r.take(MAX_OUTPUT_BYTES).read_to_end(&mut buf).await;
+            buf
+        }
+        None => Vec::new(),
     }
 }

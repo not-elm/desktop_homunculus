@@ -66,7 +66,10 @@ impl HomunculusMcpHandler {
             },
         };
 
-        let transition_secs = args.transition_secs.unwrap_or(0.3);
+        let transition_secs = args.transition_secs.unwrap_or(0.3).max(0.0);
+        if !transition_secs.is_finite() {
+            return "Error: transition_secs must be a finite number.".to_string();
+        }
         let wait = args.wait.unwrap_or(false);
         let reset_spring_bones = args.reset_spring_bones.unwrap_or(false);
 

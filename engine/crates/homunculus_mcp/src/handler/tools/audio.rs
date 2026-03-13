@@ -10,6 +10,15 @@ use serde::{Deserialize, Serialize};
 use super::super::HomunculusMcpHandler;
 
 // ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+const DEFAULT_SE_SPEED: f64 = 1.0;
+const DEFAULT_SE_PAN: f64 = 0.0;
+const DEFAULT_BGM_LOOPING: bool = true;
+const DEFAULT_BGM_SPEED: f64 = 1.0;
+
+// ---------------------------------------------------------------------------
 // Parameter structs
 // ---------------------------------------------------------------------------
 
@@ -53,7 +62,12 @@ impl HomunculusMcpHandler {
 
         match self
             .audio_se_api
-            .play(AssetId::new(sound), volume, 1.0, 0.0)
+            .play(
+                AssetId::new(sound),
+                volume,
+                DEFAULT_SE_SPEED,
+                DEFAULT_SE_PAN,
+            )
             .await
         {
             Ok(()) => format!("Playing sound '{sound}'"),
@@ -77,7 +91,13 @@ impl HomunculusMcpHandler {
                 let volume = args.volume.unwrap_or(1.0);
                 match self
                     .audio_bgm_api
-                    .play(AssetId::new(asset), true, volume, 1.0, None)
+                    .play(
+                        AssetId::new(asset),
+                        DEFAULT_BGM_LOOPING,
+                        volume,
+                        DEFAULT_BGM_SPEED,
+                        None,
+                    )
                     .await
                 {
                     Ok(()) => format!("Playing BGM '{asset}'"),

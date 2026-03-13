@@ -89,7 +89,13 @@ fn resolve_source(
 ) -> Result<WebviewSource, String> {
     match (html, url, asset_id) {
         (Some(html), None, None) => Ok(WebviewSource::Html { content: html }),
-        (None, Some(url), None) => Ok(WebviewSource::Url { url }),
+        (None, Some(url), None) => {
+            let lower = url.to_lowercase();
+            if !lower.starts_with("http://") && !lower.starts_with("https://") {
+                return Err("Only http:// and https:// URLs are allowed.".to_string());
+            }
+            Ok(WebviewSource::Url { url })
+        }
         (None, None, Some(id)) => Ok(WebviewSource::Local { id: id.into() }),
         (None, None, None) => Err("One of 'html', 'url', or 'asset_id' must be provided.".into()),
         _ => Err("Only one of 'html', 'url', or 'asset_id' may be provided.".into()),
@@ -133,9 +139,13 @@ impl HomunculusMcpHandler {
         match self.webview_api.open(options).await {
             Ok(entity) => {
                 let entity_id = entity.to_bits();
-                if let Ok(mut webviews) = self.open_webviews.lock() {
-                    webviews.push(entity_id);
-                }
+                self.open_webviews
+                    .lock()
+                    .unwrap_or_else(|e| {
+                        bevy::log::warn!("Mutex poisoned: {e}");
+                        e.into_inner()
+                    })
+                    .push(entity_id);
                 format!("Opened webview (entity {entity_id})")
             }
             Err(e) => format!("Error opening webview: {e}"),
@@ -171,7 +181,7 @@ impl HomunculusMcpHandler {
             Err(e) => return format!("Error: {e}"),
         };
 
-        let target_entity_id = match self.extract_webview(args.entity) {
+        let target_entity_id = match self.resolve_webview_entity(args.entity) {
             Some(id) => id,
             None => {
                 return "No webviews tracked. Open a webview first with open_webview.".to_string();
@@ -204,9 +214,13 @@ impl HomunculusMcpHandler {
             }
         }
 
-        if let Ok(mut tracked) = self.open_webviews.lock() {
-            tracked.clear();
-        }
+        self.open_webviews
+            .lock()
+            .unwrap_or_else(|e| {
+                bevy::log::warn!("Mutex poisoned: {e}");
+                e.into_inner()
+            })
+            .clear();
 
         if failures > 0 {
             format!("Closed {} webview(s), {failures} failed.", total - failures)
@@ -216,7 +230,7 @@ impl HomunculusMcpHandler {
     }
 
     async fn close_single(&self, entity: Option<u64>) -> String {
-        let target_entity_id = match self.extract_webview(entity) {
+        let target_entity_id = match self.resolve_webview_entity(entity) {
             Some(id) => id,
             None => {
                 return "No webviews tracked".to_string();
@@ -226,23 +240,31 @@ impl HomunculusMcpHandler {
         let entity = Entity::from_bits(target_entity_id);
         match self.webview_api.close(entity).await {
             Ok(()) => {
-                if let Ok(mut tracked) = self.open_webviews.lock() {
-                    tracked.retain(|&id| id != target_entity_id);
-                }
+                self.open_webviews
+                    .lock()
+                    .unwrap_or_else(|e| {
+                        bevy::log::warn!("Mutex poisoned: {e}");
+                        e.into_inner()
+                    })
+                    .retain(|&id| id != target_entity_id);
                 format!("Closed webview (entity {target_entity_id}).")
             }
             Err(e) => format!("Error closing webview: {e}"),
         }
     }
 
-    fn extract_webview(&self, entity: Option<u64>) -> Option<u64> {
+    fn resolve_webview_entity(&self, entity: Option<u64>) -> Option<u64> {
         if let Some(id) = entity {
             Some(id)
         } else {
             self.open_webviews
                 .lock()
-                .ok()
-                .and_then(|v| v.last().copied())
+                .unwrap_or_else(|e| {
+                    bevy::log::warn!("Mutex poisoned: {e}");
+                    e.into_inner()
+                })
+                .last()
+                .copied()
         }
     }
 }

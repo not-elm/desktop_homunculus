@@ -96,8 +96,11 @@ impl HomunculusMcpHandler {
                     let should_set = self
                         .active_character
                         .lock()
-                        .ok()
-                        .is_some_and(|g| g.is_none());
+                        .unwrap_or_else(|e| {
+                            bevy::log::warn!("Mutex poisoned: {e}");
+                            e.into_inner()
+                        })
+                        .is_none();
                     if should_set {
                         let bits = snapshots[0].entity.to_bits();
                         self.set_active_character(Some(bits));
@@ -204,11 +207,10 @@ impl HomunculusMcpHandler {
         match self.vrm_api.despawn(entity).await {
             Ok(()) => {
                 // Clear active character if it was the removed one.
-                let is_active = self
-                    .active_character
-                    .lock()
-                    .ok()
-                    .is_some_and(|g| *g == Some(entity_id));
+                let is_active = *self.active_character.lock().unwrap_or_else(|e| {
+                    bevy::log::warn!("Mutex poisoned: {e}");
+                    e.into_inner()
+                }) == Some(entity_id);
                 if is_active {
                     self.set_active_character(None);
                 }
@@ -221,7 +223,7 @@ impl HomunculusMcpHandler {
     /// Set facial expression weights on the active character.
     #[tool(
         name = "set_expression",
-        description = "Set facial expression weights on the active character. Common expressions: happy, sad, angry, surprised, relaxed, neutral, aa, ih, ou, ee, oh, blink. Weights are 0.0-1.0. Modes: \"modify\" (default, partial update), \"set\" (replace all), \"clear\" (reset to animation control). For preset reactions, use play_reaction instead."
+        description = "Set facial expression weights on the active character. Common expressions: happy, sad, angry, surprised, relaxed, neutral, aa, ih, ou, ee, oh, blink. Weights are 0.0-1.0. Modes: \"modify\" (default, partial update), \"set\" (replace all), \"clear\" (reset to animation control)."
     )]
     async fn set_expression(&self, params: Parameters<SetExpressionParams>) -> String {
         let entity = match self.resolve_character().await {

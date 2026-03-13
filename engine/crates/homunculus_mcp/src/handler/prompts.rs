@@ -56,12 +56,11 @@ pub(super) fn get_prompt(
             let event = get_string_arg(args, "event").unwrap_or_default();
             format!(
                 "A development event occurred: \"{event}\". \
-                 Use the play_reaction tool to make the desktop character react appropriately. \
-                 Choose the best reaction from: happy, sad, confused, error, success, thinking, \
-                 surprised, neutral. \
-                 For success events use \"success\" or \"happy\". \
-                 For failures use \"error\" or \"sad\". \
-                 For uncertain outcomes use \"thinking\" or \"confused\"."
+                 Use the set_expression tool to make the desktop character react appropriately. \
+                 Choose the best expression from: happy, sad, angry, surprised, relaxed, neutral. \
+                 For success events use \"happy\" or \"relaxed\". \
+                 For failures use \"sad\" or \"angry\". \
+                 For uncertain outcomes use \"surprised\" or \"neutral\"."
             )
         }
         "character-interaction" => {
@@ -72,8 +71,7 @@ pub(super) fn get_prompt(
             format!(
                 "Interact with the desktop character. Message: \"{message}\".{mood_part} \
                  First use get_character_snapshot to check the current state, \
-                 then use play_reaction for the appropriate expression, \
-                 and optionally speak_message if the character should say something aloud."
+                 then use set_expression for the appropriate expression."
             )
         }
         "mod-command-helper" => {
