@@ -22,6 +22,8 @@ pub enum ModsError {
     Uninstall(#[source] std::io::Error),
     #[error("failed to retrive installation mod path: {0}")]
     List(String),
+    #[error("failed to update mod: {0}")]
+    Update(String),
 }
 
 /// Errors that can occur when loading or saving config.
