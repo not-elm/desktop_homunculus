@@ -3,6 +3,7 @@
 ## Formatting & Linting
 
 - Use `cargo fmt` (default rustfmt settings, no rustfmt.toml).
+- Do NOT use region-divider comments (e.g. `// ----------- Section Name -----------`). Use the file's natural structure (modules, impl blocks, doc comments) for organization instead.
 - Use `cargo clippy -- -D warnings`. The `type_complexity` lint is allowed workspace-wide.
 - Run `make fix` to apply both: `cargo clippy --workspace --fix --allow-dirty && cargo fmt --all`.
 
