@@ -73,7 +73,6 @@ impl VadStateMachine {
         }
 
         self.silence_samples += frame.len();
-        self.speech_buffer.extend_from_slice(frame);
 
         if self.silence_samples >= self.silence_threshold {
             return self.finalize_chunk();

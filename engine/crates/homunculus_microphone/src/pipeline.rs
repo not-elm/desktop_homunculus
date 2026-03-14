@@ -25,7 +25,7 @@ pub fn spawn_pipeline(
         audio_rx,
         sample_rate,
         needs_resample,
-    } = capture::spawn_capture_thread(device, cancel.clone(), session)
+    } = capture::spawn_capture_thread(device, cancel.clone(), session.clone())
         .map_err(|e| PipelineError::Capture(e.to_string()))?;
 
     let chunk_rx = vad::spawn_vad_thread(
@@ -36,7 +36,7 @@ pub fn spawn_pipeline(
         vad_config,
     )?;
 
-    inference::spawn_inference_thread(ctx, chunk_rx, language, cancel, event_tx, started_at);
+    inference::spawn_inference_thread(ctx, chunk_rx, language, cancel, event_tx, session, started_at);
 
     Ok(())
 }

@@ -7,20 +7,36 @@ use tokio_util::sync::CancellationToken;
 use whisper_rs::{FullParams, SamplingStrategy, WhisperContext, WhisperState};
 
 use crate::error::InferenceError;
-use crate::session::SttEvent;
+use crate::session::{SharedSttSession, SttEvent};
 
 /// Thread 3: spawn the Whisper inference thread via `tokio::task::spawn_blocking`.
+///
+/// A monitoring task awaits the blocking handle so that if the thread panics
+/// beyond `catch_unwind`, the session transitions to `Error` state instead of
+/// remaining stuck in `Listening`.
 pub fn spawn_inference_thread(
     ctx: Arc<WhisperContext>,
     chunk_rx: crossbeam_channel::Receiver<Vec<f32>>,
     language: String,
     cancel: CancellationToken,
     event_tx: Sender<SttEvent>,
+    session: SharedSttSession,
     started_at: Instant,
 ) {
-    tokio::task::spawn_blocking(move || {
+    let handle = tokio::task::spawn_blocking(move || {
         inference_loop(&ctx, &chunk_rx, &language, &cancel, &event_tx, started_at);
         event_tx.try_broadcast(SttEvent::Stopped).ok();
+    });
+
+    tokio::spawn(async move {
+        if let Err(join_err) = handle.await {
+            tracing::error!("inference thread panicked: {join_err}");
+            let mut session = session.0.lock().await;
+            session.fail(
+                "inference_panic".into(),
+                format!("Inference thread panicked: {join_err}"),
+            );
+        }
     });
 }
 
