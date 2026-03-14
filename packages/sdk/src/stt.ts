@@ -192,4 +192,126 @@ export namespace stt {
             return await response.json() as SttState;
         }
     }
+
+    /** Callbacks for SSE stream events. All callbacks are optional. */
+    export interface StreamCallbacks {
+        /** Called when a transcription result is received. */
+        onResult?: (result: SttResult) => void | Promise<void>;
+        /** Called when the session state changes. */
+        onStatus?: (state: SttState) => void | Promise<void>;
+        /** Called when a session error occurs. */
+        onSessionError?: (error: SttSessionError) => void | Promise<void>;
+        /** Called when the session is stopped. */
+        onStopped?: () => void | Promise<void>;
+    }
+
+    /**
+     * Wrapper around an SSE connection to the STT event stream.
+     *
+     * The server sends an initial `status` event on connect (late-join sync),
+     * so there is no need to separately query the current state.
+     */
+    export class SttStream {
+        private readonly es: EventSource;
+
+        constructor(callbacks: StreamCallbacks) {
+            const url = host.createUrl("stt/stream");
+            this.es = new EventSource(url.toString());
+
+            if (callbacks.onStatus) {
+                const cb = callbacks.onStatus;
+                this.es.addEventListener("status", async (event: MessageEvent) => {
+                    try {
+                        const state: SttState = JSON.parse(event.data);
+                        await cb(state);
+                    } catch (error) {
+                        console.error("Error processing STT status event:", error);
+                    }
+                });
+            }
+
+            if (callbacks.onResult) {
+                const cb = callbacks.onResult;
+                this.es.addEventListener("result", async (event: MessageEvent) => {
+                    try {
+                        const result: SttResult = JSON.parse(event.data);
+                        await cb(result);
+                    } catch (error) {
+                        console.error("Error processing STT result event:", error);
+                    }
+                });
+            }
+
+            if (callbacks.onSessionError) {
+                const cb = callbacks.onSessionError;
+                this.es.addEventListener("session_error", async (event: MessageEvent) => {
+                    try {
+                        const err: SttSessionError = JSON.parse(event.data);
+                        await cb(err);
+                    } catch (error) {
+                        console.error("Error processing STT session_error event:", error);
+                    }
+                });
+            }
+
+            if (callbacks.onStopped) {
+                const cb = callbacks.onStopped;
+                this.es.addEventListener("stopped", async () => {
+                    try {
+                        await cb();
+                    } catch (error) {
+                        console.error("Error processing STT stopped event:", error);
+                    }
+                });
+            }
+        }
+
+        /**
+         * Closes the SSE connection.
+         *
+         * @example
+         * ```typescript
+         * const stream = stt.stream({ onResult: (r) => console.log(r.text) });
+         * // ... later
+         * stream.close();
+         * ```
+         */
+        close(): void {
+            this.es.close();
+        }
+    }
+
+    /**
+     * Creates a persistent SSE connection to receive real-time STT events.
+     *
+     * The server sends the current session state immediately on connect
+     * (late-join sync), so the `onStatus` callback will fire right away.
+     *
+     * @param callbacks - Event handlers for different STT event types
+     * @returns An `SttStream` instance for managing the connection
+     *
+     * @example
+     * ```typescript
+     * // Listen for transcription results only
+     * const stream = stt.stream({
+     *   onResult: (result) => {
+     *     console.log(`[${result.language}] ${result.text}`);
+     *   },
+     * });
+     *
+     * // Listen for all events
+     * const stream = stt.stream({
+     *   onResult: (result) => console.log(result.text),
+     *   onStatus: (state) => console.log("State:", state.state),
+     *   onSessionError: (err) => console.error(err.message),
+     *   onStopped: () => console.log("Session ended"),
+     * });
+     *
+     * // Close the stream when done
+     * stream.close();
+     * ```
+     */
+    export function stream(callbacks: StreamCallbacks): SttStream {
+        return new SttStream(callbacks);
+    }
 }
