@@ -900,9 +900,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SttState'
+                $ref: '#/components/schemas/SttStartResponse'
         '409':
-          description: Session already active
+          description: Session already active or loading
         '412':
           description: Model not available
         '422':
@@ -2762,6 +2762,17 @@ components:
           type: string
         modelSize:
           $ref: '#/components/schemas/SttModelSize'
+    SttStartResponse:
+      allOf:
+      - $ref: '#/components/schemas/SttState'
+      - type: object
+        required:
+        - restarted
+        properties:
+          restarted:
+            type: boolean
+            description: True if an existing Listening session was implicitly stopped.
+      description: Response from the start endpoint, includes restart indicator.
     SttState:
       oneOf:
       - type: object
