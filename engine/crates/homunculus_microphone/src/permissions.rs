@@ -19,8 +19,7 @@ mod platform {
     pub async fn check() -> Result<(), PermissionError> {
         use objc2_av_foundation::{AVAuthorizationStatus, AVCaptureDevice, AVMediaTypeAudio};
 
-        let status =
-            unsafe { AVCaptureDevice::authorizationStatusForMediaType(AVMediaTypeAudio) };
+        let status = unsafe { AVCaptureDevice::authorizationStatusForMediaType(AVMediaTypeAudio) };
 
         match status {
             AVAuthorizationStatus::Authorized => Ok(()),

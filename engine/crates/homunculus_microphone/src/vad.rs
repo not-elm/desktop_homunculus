@@ -105,7 +105,14 @@ pub fn spawn_vad_thread(
     std::thread::Builder::new()
         .name("stt-vad".into())
         .spawn(move || {
-            vad_thread_main(audio_rx, sample_rate, needs_resample, cancel, config, chunk_tx);
+            vad_thread_main(
+                audio_rx,
+                sample_rate,
+                needs_resample,
+                cancel,
+                config,
+                chunk_tx,
+            );
         })
         .expect("failed to spawn stt-vad thread");
 

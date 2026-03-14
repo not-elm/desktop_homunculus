@@ -28,7 +28,8 @@ pub enum CaptureError {
 /// Retrieve the default input device.
 pub fn get_input_device() -> Result<cpal::Device, CaptureError> {
     let host = cpal::default_host();
-    host.default_input_device().ok_or(CaptureError::NoMicrophone)
+    host.default_input_device()
+        .ok_or(CaptureError::NoMicrophone)
 }
 
 /// Thread 1: spawn the cpal audio capture thread.
@@ -47,33 +48,32 @@ pub fn spawn_capture_thread(
         .name("stt-capture".into())
         .spawn(move || {
             let error_session = session_clone.clone();
-            let stream = match build_input_stream_adaptive(
-                &device,
-                &config,
-                tx,
-                channels,
-                move |err| {
+            let stream =
+                match build_input_stream_adaptive(&device, &config, tx, channels, move |err| {
                     tracing::error!("cpal error: {err}");
                     if let Ok(mut session) = error_session.0.try_lock() {
                         session.fail("device_lost".into(), format!("Audio device error: {err}"));
                     }
-                },
-            ) {
-                Ok(s) => s,
-                Err(e) => {
-                    tracing::error!("Failed to build input stream: {e}");
-                    if let Ok(mut session) = session_clone.0.try_lock() {
-                        session
-                            .fail("device_lost".into(), format!("Failed to build input stream: {e}"));
+                }) {
+                    Ok(s) => s,
+                    Err(e) => {
+                        tracing::error!("Failed to build input stream: {e}");
+                        if let Ok(mut session) = session_clone.0.try_lock() {
+                            session.fail(
+                                "device_lost".into(),
+                                format!("Failed to build input stream: {e}"),
+                            );
+                        }
+                        return;
                     }
-                    return;
-                }
-            };
+                };
             if let Err(e) = stream.play() {
                 tracing::error!("Failed to start input stream: {e}");
                 if let Ok(mut session) = session_clone.0.try_lock() {
-                    session
-                        .fail("device_lost".into(), format!("Failed to start input stream: {e}"));
+                    session.fail(
+                        "device_lost".into(),
+                        format!("Failed to start input stream: {e}"),
+                    );
                 }
                 return;
             }
@@ -91,9 +91,7 @@ pub fn spawn_capture_thread(
     })
 }
 
-fn select_input_config(
-    device: &cpal::Device,
-) -> Result<(cpal::StreamConfig, bool), CaptureError> {
+fn select_input_config(device: &cpal::Device) -> Result<(cpal::StreamConfig, bool), CaptureError> {
     let target = cpal::StreamConfig {
         channels: 1,
         sample_rate: cpal::SampleRate(16000),
