@@ -111,9 +111,7 @@ impl SttApi {
             return Err(SttError::InvalidLanguage(language));
         }
 
-        self.ensure_no_active_session().await?;
-        self.ensure_model_available(size)?;
-        self.transition_to_loading(size, &language).await;
+        self.try_begin_loading(size, &language).await?;
 
         let ctx = self.load_or_get_context(size).await?;
 
@@ -187,35 +185,29 @@ impl SttApi {
             .collect()
     }
 
-    async fn ensure_no_active_session(&self) -> Result<(), SttError> {
-        let session = self.session.0.lock().await;
+    /// Atomically check no active session, verify model availability, and transition to Loading.
+    /// Holds a single lock across all three steps to prevent TOCTOU races.
+    async fn try_begin_loading(&self, size: SttModelSize, language: &str) -> Result<(), SttError> {
+        let mut session = self.session.0.lock().await;
         match &session.state {
             SttState::Loading { .. } | SttState::Listening { .. } => {
-                Err(SttError::SessionAlreadyActive)
+                return Err(SttError::SessionAlreadyActive);
             }
-            _ => Ok(()),
+            _ => {}
         }
-    }
-
-    fn ensure_model_available(&self, size: SttModelSize) -> Result<(), SttError> {
-        if is_model_available(size) {
-            Ok(())
-        } else {
-            Err(SttError::ModelNotAvailable(format!(
+        if !is_model_available(size) {
+            return Err(SttError::ModelNotAvailable(format!(
                 "Model '{}' is not downloaded. Use POST /stt/models/download first.",
                 size.as_str()
-            )))
+            )));
         }
-    }
-
-    async fn transition_to_loading(&self, size: SttModelSize, language: &str) {
-        let mut session = self.session.0.lock().await;
         session.language = language.to_string();
         session.model_size = size;
         session.transition(SttState::Loading {
             language: language.to_string(),
             model_size: size,
         });
+        Ok(())
     }
 
     async fn launch_pipeline(
