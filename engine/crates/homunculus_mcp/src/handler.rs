@@ -201,6 +201,7 @@ mod tests {
         let config = HomunculusConfig {
             mods_dir: std::path::PathBuf::from("/tmp/mods"),
             port: 3100,
+            ..Default::default()
         };
         let rpc_registry = Arc::new(RwLock::new(RpcRegistry::default()));
         HomunculusMcpHandler::new(reactor, config, rpc_registry)
