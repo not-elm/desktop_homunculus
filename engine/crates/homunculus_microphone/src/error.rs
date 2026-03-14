@@ -1,3 +1,5 @@
+pub type MicrophoneResult<T = ()> = Result<T, MicrophoneError>;
+
 /// Top-level error type for the homunculus_microphone crate.
 #[derive(Debug, thiserror::Error)]
 pub enum MicrophoneError {
@@ -62,4 +64,6 @@ pub enum PermissionError {
 pub enum PipelineError {
     #[error("Capture error: {0}")]
     Capture(String),
+    #[error("VAD thread error: {0}")]
+    Vad(String),
 }

@@ -34,7 +34,7 @@ pub fn spawn_pipeline(
         needs_resample,
         cancel.clone(),
         vad_config,
-    );
+    )?;
 
     inference::spawn_inference_thread(ctx, chunk_rx, language, cancel, event_tx, started_at);
 

@@ -130,7 +130,7 @@ pub fn spawn_vad_thread(
     needs_resample: bool,
     cancel: CancellationToken,
     config: VadConfig,
-) -> crossbeam_channel::Receiver<Vec<f32>> {
+) -> Result<crossbeam_channel::Receiver<Vec<f32>>, crate::error::PipelineError> {
     let (chunk_tx, chunk_rx) = crossbeam_channel::bounded::<Vec<f32>>(1);
 
     std::thread::Builder::new()
@@ -145,9 +145,9 @@ pub fn spawn_vad_thread(
                 chunk_tx,
             );
         })
-        .expect("failed to spawn stt-vad thread");
+        .map_err(|e| crate::error::PipelineError::Vad(e.to_string()))?;
 
-    chunk_rx
+    Ok(chunk_rx)
 }
 
 fn vad_thread_main(
@@ -204,6 +204,8 @@ fn vad_thread_main(
 }
 
 fn create_resampler(source_rate: u32) -> rubato::SincFixedIn<f32> {
+    const CHUNK_SIZE: usize = 1024;
+    const NUM_CHANNELS: usize = 1;
     rubato::SincFixedIn::<f32>::new(
         16000.0 / source_rate as f64,
         2.0,
@@ -214,8 +216,8 @@ fn create_resampler(source_rate: u32) -> rubato::SincFixedIn<f32> {
             interpolation: rubato::SincInterpolationType::Linear,
             window: rubato::WindowFunction::BlackmanHarris2,
         },
-        1024,
-        1,
+        CHUNK_SIZE,
+        NUM_CHANNELS,
     )
     .expect("failed to create resampler")
 }
