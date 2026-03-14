@@ -11,12 +11,14 @@ use homunculus_microphone::{
     SharedSttModelCache, SharedSttSession, SttModelSize, WhisperContext, get_input_device,
     load_whisper_context,
     model::{
-        download_model as mic_download_model, is_model_available, list_available_models, model_path,
+        DownloadProgress, download_model as mic_download_model, is_model_available,
+        list_available_models, model_path,
     },
     permissions::ensure_microphone_permission,
     pipeline::spawn_pipeline,
 };
 use serde::{Deserialize, Serialize};
+use tokio::sync::watch;
 use tokio_util::sync::CancellationToken;
 
 #[cfg(feature = "openapi")]
@@ -50,12 +52,12 @@ pub enum SttError {
 /// Whisper-supported language codes (ISO 639-1) plus "auto" for auto-detection.
 const WHISPER_SUPPORTED_LANGUAGES: &[&str] = &[
     "auto", "en", "zh", "de", "es", "ru", "ko", "fr", "ja", "pt", "tr", "pl", "ca", "nl", "ar",
-    "sv", "it", "id", "hi", "fi", "vi", "he", "uk", "el", "ms", "cs", "ro", "da", "hu", "ta",
-    "no", "th", "ur", "hr", "bg", "lt", "la", "mi", "ml", "cy", "sk", "te", "fa", "lv", "bn",
-    "sr", "az", "sl", "kn", "et", "mk", "br", "eu", "is", "hy", "ne", "mn", "bs", "kk", "sq",
-    "sw", "gl", "mr", "pa", "si", "km", "sn", "yo", "so", "af", "oc", "ka", "be", "tg", "sd",
-    "gu", "am", "yi", "lo", "uz", "fo", "ht", "ps", "tk", "nn", "mt", "sa", "lb", "my", "bo",
-    "tl", "mg", "as", "tt", "haw", "ln", "ha", "ba", "jw", "su", "yue",
+    "sv", "it", "id", "hi", "fi", "vi", "he", "uk", "el", "ms", "cs", "ro", "da", "hu", "ta", "no",
+    "th", "ur", "hr", "bg", "lt", "la", "mi", "ml", "cy", "sk", "te", "fa", "lv", "bn", "sr", "az",
+    "sl", "kn", "et", "mk", "br", "eu", "is", "hy", "ne", "mn", "bs", "kk", "sq", "sw", "gl", "mr",
+    "pa", "si", "km", "sn", "yo", "so", "af", "oc", "ka", "be", "tg", "sd", "gu", "am", "yi", "lo",
+    "uz", "fo", "ht", "ps", "tk", "nn", "mt", "sa", "lb", "my", "bo", "tl", "mg", "as", "tt",
+    "haw", "ln", "ha", "ba", "jw", "su", "yue",
 ];
 
 /// Response for model download endpoint.
@@ -136,7 +138,9 @@ impl SttApi {
             });
         }
 
-        let state = self.launch_pipeline(&mut session, ctx, size, language).await?;
+        let state = self
+            .launch_pipeline(&mut session, ctx, size, language)
+            .await?;
         Ok(SttStartResponse { state, restarted })
     }
 
@@ -201,9 +205,44 @@ impl SttApi {
             .collect()
     }
 
+    /// Start a streaming model download.
+    ///
+    /// Returns the progress watch receiver and the download join handle.
+    /// The caller is responsible for streaming progress and calling
+    /// `finish_download()` when the handle completes.
+    pub async fn start_download_stream(
+        &self,
+        size: SttModelSize,
+    ) -> (
+        watch::Receiver<DownloadProgress>,
+        tokio::task::JoinHandle<Result<(), homunculus_microphone::error::DownloadError>>,
+    ) {
+        self.mark_downloading(size).await;
+        mic_download_model(size, &CancellationToken::new())
+    }
+
+    /// Mark a model download as no longer in progress.
+    pub async fn finish_download(&self, size: SttModelSize) {
+        self.unmark_downloading(size).await;
+    }
+
+    /// Check if a model is already downloaded.
+    pub fn is_model_available(&self, size: SttModelSize) -> bool {
+        is_model_available(size)
+    }
+
+    /// Check if a download is currently in progress for the given model size.
+    pub async fn is_downloading(&self, size: SttModelSize) -> bool {
+        self.is_download_in_progress(size).await
+    }
+
     /// Returns `Ok(true)` if an existing session was stopped (implicit restart),
     /// `Ok(false)` if no session was active.
-    async fn ensure_session_ready(&self, size: SttModelSize, language: &str) -> Result<bool, SttError> {
+    async fn ensure_session_ready(
+        &self,
+        size: SttModelSize,
+        language: &str,
+    ) -> Result<bool, SttError> {
         let mut session = self.session.0.lock().await;
         let restarted = match &session.state {
             SttState::Loading { .. } => {

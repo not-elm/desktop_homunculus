@@ -2,6 +2,7 @@ use std::convert::Infallible;
 use std::time::Duration;
 
 use axum::Json;
+use axum::body::Body;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::sse::{Event, KeepAlive};
@@ -11,9 +12,11 @@ use futures::stream::unfold;
 use homunculus_api::stt::{ModelDownloadResponse, ModelInfo, SttApi, SttError, SttStartResponse};
 use homunculus_microphone::{
     SttModelSize,
+    model::model_path,
     session::{SttEvent, SttStartOptions, SttState},
 };
 use serde::{Deserialize, Serialize};
+use tokio_stream::wrappers::ReceiverStream;
 use utoipa::ToSchema;
 
 /// SSE keepalive interval in seconds.
@@ -110,18 +113,18 @@ pub async fn stream(
 ) -> Sse<impl Stream<Item = Result<Event, Infallible>> + Send> {
     let (current_state, rx) = api.subscribe().await;
 
-    let initial = futures::stream::once(async move {
-        Ok(stt_event_to_sse(&SttEvent::Status(current_state)))
-    });
+    let initial =
+        futures::stream::once(
+            async move { Ok(stt_event_to_sse(&SttEvent::Status(current_state))) },
+        );
 
     let ongoing = unfold(rx, |mut rx| async move {
         let event = rx.recv().await.ok()?;
         Some((Ok(stt_event_to_sse(&event)), rx))
     });
 
-    let disconnected = futures::stream::once(async {
-        Ok(Event::default().event("disconnected").data("{}"))
-    });
+    let disconnected =
+        futures::stream::once(async { Ok(Event::default().event("disconnected").data("{}")) });
 
     Sse::new(initial.chain(ongoing).chain(disconnected))
         .keep_alive(KeepAlive::new().interval(Duration::from_secs(SSE_KEEPALIVE_SECS)))
@@ -160,15 +163,152 @@ pub async fn list_models(State(api): State<SttApi>) -> Json<Vec<ModelInfo>> {
     Json(api.list_models())
 }
 
+/// NDJSON event for download progress streaming.
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase", tag = "type")]
+enum DownloadStreamEvent {
+    #[serde(rename_all = "camelCase")]
+    Progress {
+        downloaded_bytes: u64,
+        total_bytes: u64,
+        percentage: f64,
+    },
+    #[serde(rename_all = "camelCase")]
+    Complete {
+        model_size: SttModelSize,
+        path: String,
+    },
+    #[serde(rename_all = "camelCase")]
+    Error { message: String },
+}
+
+fn serialize_download_event(event: &DownloadStreamEvent) -> Vec<u8> {
+    let mut buf = serde_json::to_vec(event).unwrap_or_default();
+    buf.push(b'\n');
+    buf
+}
+
+fn relative_model_path(size: SttModelSize) -> String {
+    let path = model_path(size);
+    format!(
+        "models/{}",
+        path.file_name()
+            .map(|f| f.to_string_lossy())
+            .unwrap_or_default()
+    )
+}
+
+/// Download an STT model with NDJSON progress streaming.
+///
+/// Streams progress events as NDJSON lines. If the model already exists,
+/// returns a single `complete` event. Returns 409 if a download is already in progress.
+#[utoipa::path(
+    post,
+    path = "/models/download/stream",
+    tag = "stt",
+    request_body = ModelDownloadRequest,
+    responses(
+        (status = 200, description = "NDJSON stream of download progress", content_type = "application/x-ndjson"),
+        (status = 409, description = "Download already in progress"),
+        (status = 422, description = "Invalid model size"),
+    ),
+)]
+pub async fn download_model_stream(
+    State(api): State<SttApi>,
+    Json(body): Json<ModelDownloadRequest>,
+) -> Response {
+    let size = body.model_size;
+
+    if api.is_model_available(size) {
+        let event = DownloadStreamEvent::Complete {
+            model_size: size,
+            path: relative_model_path(size),
+        };
+        let body = Body::from(serialize_download_event(&event));
+        return Response::builder()
+            .header("Content-Type", "application/x-ndjson")
+            .header("Cache-Control", "no-store")
+            .header("X-Content-Type-Options", "nosniff")
+            .body(body)
+            .unwrap()
+            .into_response();
+    }
+
+    if api.is_downloading(size).await {
+        let body = serde_json::json!({
+            "error": "download_in_progress",
+            "message": "A download is already in progress for this model size",
+        });
+        return (StatusCode::CONFLICT, Json(body)).into_response();
+    }
+
+    let (mut rx, mut handle) = api.start_download_stream(size).await;
+
+    let (tx, mpsc_rx) = tokio::sync::mpsc::channel::<Vec<u8>>(64);
+
+    tokio::spawn(async move {
+        let mut interval = tokio::time::interval(Duration::from_millis(250));
+        // Skip the immediate first tick
+        interval.tick().await;
+
+        let result = loop {
+            tokio::select! {
+                join_result = &mut handle => {
+                    break match join_result {
+                        Ok(Ok(())) => Ok(()),
+                        Ok(Err(e)) => Err(e.to_string()),
+                        Err(e) => Err(e.to_string()),
+                    };
+                }
+                _ = interval.tick() => {
+                    let progress = rx.borrow_and_update().clone();
+                    let event = DownloadStreamEvent::Progress {
+                        downloaded_bytes: progress.downloaded_bytes,
+                        total_bytes: progress.total_bytes,
+                        percentage: progress.percentage,
+                    };
+                    if tx.send(serialize_download_event(&event)).await.is_err() {
+                        break Err("Client disconnected".to_string());
+                    }
+                }
+            }
+        };
+
+        api.finish_download(size).await;
+
+        let final_event = match result {
+            Ok(()) => DownloadStreamEvent::Complete {
+                model_size: size,
+                path: relative_model_path(size),
+            },
+            Err(message) => DownloadStreamEvent::Error { message },
+        };
+        let _ = tx.send(serialize_download_event(&final_event)).await;
+    });
+
+    let stream = ReceiverStream::new(mpsc_rx);
+    let body = Body::from_stream(stream.map(Ok::<_, Infallible>));
+
+    Response::builder()
+        .header("Content-Type", "application/x-ndjson")
+        .header("Cache-Control", "no-store")
+        .header("X-Content-Type-Options", "nosniff")
+        .body(body)
+        .unwrap()
+        .into_response()
+}
+
 /// Convert an `SttEvent` into an SSE `Event`.
 fn stt_event_to_sse(event: &SttEvent) -> Event {
     match event {
-        SttEvent::Status(state) => Event::default()
-            .event("status")
-            .data(serde_json::to_string(state).unwrap_or_else(|e| {
-                bevy::log::error!("SSE serialization failed: {e}");
-                "{}".to_string()
-            })),
+        SttEvent::Status(state) => {
+            Event::default()
+                .event("status")
+                .data(serde_json::to_string(state).unwrap_or_else(|e| {
+                    bevy::log::error!("SSE serialization failed: {e}");
+                    "{}".to_string()
+                }))
+        }
         SttEvent::Result {
             text,
             timestamp,
@@ -185,12 +325,10 @@ fn stt_event_to_sse(event: &SttEvent) -> Event {
             }),
         ),
         SttEvent::SessionError { error, message } => Event::default().event("session_error").data(
-            serde_json::to_string(&SttSessionErrorPayload { error, message }).unwrap_or_else(
-                |e| {
-                    bevy::log::error!("SSE serialization failed: {e}");
-                    "{}".to_string()
-                },
-            ),
+            serde_json::to_string(&SttSessionErrorPayload { error, message }).unwrap_or_else(|e| {
+                bevy::log::error!("SSE serialization failed: {e}");
+                "{}".to_string()
+            }),
         ),
         SttEvent::Stopped => Event::default().event("stopped").data("{}"),
     }

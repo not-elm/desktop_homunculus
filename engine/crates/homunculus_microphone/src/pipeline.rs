@@ -36,7 +36,9 @@ pub fn spawn_pipeline(
         vad_config,
     )?;
 
-    inference::spawn_inference_thread(ctx, chunk_rx, language, cancel, event_tx, session, started_at);
+    inference::spawn_inference_thread(
+        ctx, chunk_rx, language, cancel, event_tx, session, started_at,
+    );
 
     Ok(())
 }
