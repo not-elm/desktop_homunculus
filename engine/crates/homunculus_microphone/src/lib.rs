@@ -6,6 +6,7 @@
 //! without Bevy's ApiReactor pattern.
 
 pub mod capture;
+pub mod error;
 pub mod inference;
 pub mod model;
 pub mod permissions;
@@ -14,6 +15,7 @@ pub mod session;
 pub mod vad;
 
 pub use capture::get_input_device;
+pub use error::MicrophoneError;
 pub use model::{SharedSttModelCache, SttModelCache, SttModelSize};
 pub use permissions::ensure_microphone_permission;
 pub use pipeline::spawn_pipeline;

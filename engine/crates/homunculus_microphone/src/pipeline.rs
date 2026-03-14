@@ -4,16 +4,10 @@ use tokio_util::sync::CancellationToken;
 use whisper_rs::WhisperContext;
 
 use crate::capture::{self, CaptureHandle};
+use crate::error::PipelineError;
 use crate::inference;
 use crate::session::{SharedSttSession, SttEvent};
 use crate::vad::{self, VadConfig};
-
-/// Pipeline-related errors.
-#[derive(Debug, thiserror::Error)]
-pub enum PipelineError {
-    #[error("Capture error: {0}")]
-    Capture(String),
-}
 
 /// Spawn the 3-thread pipeline: capture -> VAD -> inference.
 pub fn spawn_pipeline(

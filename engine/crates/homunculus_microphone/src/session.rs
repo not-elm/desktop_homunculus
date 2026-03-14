@@ -1,12 +1,11 @@
+use crate::model::SttModelSize;
 use async_broadcast::{Receiver, Sender};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use std::time::Instant;
 use tokio_util::sync::CancellationToken;
 
-use crate::model::SttModelSize;
-
-/// HTTP State に持たせる NewType
+/// Shared newtype for HTTP state.
 #[derive(Clone)]
 pub struct SharedSttSession(pub Arc<tokio::sync::Mutex<SttSession>>);
 
@@ -22,18 +21,18 @@ impl SharedSttSession {
     }
 }
 
-/// STTセッション全体を管理する構造体
+/// Manages the entire STT session.
 pub struct SttSession {
     pub state: SttState,
     pub language: String,
     pub model_size: SttModelSize,
-    /// セッション開始時刻 — timestamp の基準
+    /// Session start time — used as the timestamp baseline.
     pub started_at: Option<Instant>,
-    /// セッション停止シグナル
+    /// Session cancellation signal.
     pub cancel: Option<CancellationToken>,
-    /// SSE ブロードキャスト送信側
+    /// SSE broadcast sender.
     pub event_tx: Sender<SttEvent>,
-    /// チャネル維持用 — SSE クライアント0人でもチャネルを閉じない
+    /// Kept to prevent the channel from closing when there are no SSE clients.
     pub _event_rx: Receiver<SttEvent>,
 }
 
@@ -54,12 +53,12 @@ impl Default for SttSession {
 }
 
 impl SttSession {
-    /// SSEクライアント用に新しいレシーバーを作成
+    /// Creates a new receiver for SSE clients.
     pub fn new_event_receiver(&self) -> Receiver<SttEvent> {
         self.event_tx.new_receiver()
     }
 
-    /// 状態を遷移し、SSEに通知
+    /// Transitions the state and notifies SSE clients.
     pub fn transition(&mut self, new_state: SttState) {
         self.state = new_state.clone();
         self.event_tx
@@ -67,27 +66,21 @@ impl SttSession {
             .ok();
     }
 
-    /// セッション停止 — CancellationToken を発火のみ。
-    /// `Stopped` イベントは推論ループ終了時に送信される（二重発火防止）。
+    /// Stops the session by cancelling the token.
+    /// The `Stopped` event is sent when the inference loop exits (to prevent double-firing).
     pub fn stop(&mut self) {
-        if let Some(cancel) = self.cancel.take() {
-            cancel.cancel();
-        }
+        self.cancel_pipeline();
         self.state = SttState::Idle;
-        self.started_at = None;
     }
 
-    /// エラーによるセッション停止。
-    /// `Error` 状態は永続する — `stop()` または `start()` で明示的にクリアする。
+    /// Stops the session due to an error.
+    /// The `Error` state persists until explicitly cleared by `stop()` or `start()`.
     pub fn fail(&mut self, error: String, message: String) {
-        if let Some(cancel) = self.cancel.take() {
-            cancel.cancel();
-        }
+        self.cancel_pipeline();
         self.state = SttState::Error {
             error: error.clone(),
             message: message.clone(),
         };
-        self.started_at = None;
         self.event_tx
             .try_broadcast(SttEvent::Status(self.state.clone()))
             .ok();
@@ -95,9 +88,17 @@ impl SttSession {
             .try_broadcast(SttEvent::SessionError { error, message })
             .ok();
     }
+
+    /// Cancels the running pipeline and clears the start timestamp.
+    fn cancel_pipeline(&mut self) {
+        if let Some(cancel) = self.cancel.take() {
+            cancel.cancel();
+        }
+        self.started_at = None;
+    }
 }
 
-/// STTセッション状態
+/// STT session state.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "state", rename_all = "camelCase")]
 pub enum SttState {
@@ -118,7 +119,7 @@ pub enum SttState {
     },
 }
 
-/// セッションからSSEクライアントへ送信されるイベント
+/// Events sent from the session to SSE clients.
 #[derive(Clone, Debug)]
 pub enum SttEvent {
     Status(SttState),
@@ -134,7 +135,7 @@ pub enum SttEvent {
     Stopped,
 }
 
-/// セッション開始オプション
+/// Session start options.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SttStartOptions {

@@ -71,10 +71,16 @@ impl VadStateMachine {
         self.silence_samples += frame.len();
         self.speech_buffer.extend_from_slice(frame);
 
-        if self.silence_samples < self.silence_threshold {
-            return None;
+        if self.silence_samples >= self.silence_threshold {
+            return self.finalize_chunk();
         }
 
+        None
+    }
+
+    /// Take the buffered speech, reset state, and return the chunk if it meets
+    /// minimum length and energy requirements.
+    pub fn finalize_chunk(&mut self) -> Option<Vec<f32>> {
         let chunk = std::mem::take(&mut self.speech_buffer);
         self.in_speech = false;
         self.silence_samples = 0;
@@ -83,13 +89,25 @@ impl VadStateMachine {
             return None;
         }
 
-        let rms = (chunk.iter().map(|s| s * s).sum::<f32>() / chunk.len() as f32).sqrt();
-        if rms < self.energy_threshold {
+        if rms_energy(&chunk) < self.energy_threshold {
             return None;
         }
 
         Some(chunk)
     }
+}
+
+/// Compute the RMS (root-mean-square) energy of a sample buffer.
+pub fn rms_energy(samples: &[f32]) -> f32 {
+    (samples.iter().map(|s| s * s).sum::<f32>() / samples.len() as f32).sqrt()
+}
+
+/// Convert an `f32` audio frame to `i16`, clamping values to `[-1.0, 1.0]`.
+pub fn convert_f32_to_i16(frame: &[f32]) -> Vec<i16> {
+    frame
+        .iter()
+        .map(|&s| (s.clamp(-1.0, 1.0) * i16::MAX as f32) as i16)
+        .collect()
 }
 
 /// Thread 2: spawn the VAD + chunking thread.
@@ -162,11 +180,7 @@ fn vad_thread_main(
                 continue;
             }
 
-            let frame_i16: Vec<i16> = frame
-                .iter()
-                .map(|&s| (s.clamp(-1.0, 1.0) * i16::MAX as f32) as i16)
-                .collect();
-
+            let frame_i16 = convert_f32_to_i16(frame);
             let is_voice = vad.is_voice_segment(&frame_i16).unwrap_or(false);
 
             if let Some(chunk) = state_machine.process_frame(frame, is_voice) {

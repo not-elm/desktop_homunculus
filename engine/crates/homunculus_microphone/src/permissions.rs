@@ -1,11 +1,4 @@
-/// Permission-related errors.
-#[derive(Debug, thiserror::Error)]
-pub enum PermissionError {
-    #[error("Microphone permission denied")]
-    Denied,
-    #[error("Microphone permission check failed: {0}")]
-    Unknown(String),
-}
+use crate::error::PermissionError;
 
 /// Ensure microphone permission is granted (platform-specific).
 pub async fn ensure_microphone_permission() -> Result<(), PermissionError> {

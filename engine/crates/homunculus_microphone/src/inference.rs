@@ -1,19 +1,13 @@
-use async_broadcast::Sender;
+use std::any::Any;
 use std::sync::Arc;
 use std::time::Instant;
+
+use async_broadcast::Sender;
 use tokio_util::sync::CancellationToken;
-use whisper_rs::{FullParams, SamplingStrategy, WhisperContext};
+use whisper_rs::{FullParams, SamplingStrategy, WhisperContext, WhisperState};
 
+use crate::error::InferenceError;
 use crate::session::SttEvent;
-
-/// Inference-related errors.
-#[derive(Debug, thiserror::Error)]
-pub enum InferenceError {
-    #[error("Failed to create whisper state: {0}")]
-    CreateState(String),
-    #[error("Whisper inference failed: {0}")]
-    Full(String),
-}
 
 /// Thread 3: spawn the Whisper inference thread via `tokio::task::spawn_blocking`.
 pub fn spawn_inference_thread(
@@ -53,31 +47,43 @@ fn inference_loop(
             run_inference(ctx, &samples, language)
         }));
 
-        match result {
-            Ok(Ok(Some((text, detected_lang)))) => {
-                let timestamp = started_at.elapsed().as_secs_f64();
-                event_tx
-                    .try_broadcast(SttEvent::Result {
-                        text,
-                        timestamp,
-                        language: detected_lang,
-                    })
-                    .ok();
-            }
-            Ok(Ok(None)) => {}
-            Ok(Err(e)) => {
-                tracing::error!("whisper inference error: {e}");
-            }
-            Err(panic_info) => {
-                let msg = panic_info
-                    .downcast_ref::<String>()
-                    .map(|s| s.as_str())
-                    .or_else(|| panic_info.downcast_ref::<&str>().copied())
-                    .unwrap_or("unknown panic");
-                tracing::error!("whisper inference panic: {msg}");
-            }
+        handle_inference_result(result, started_at, event_tx);
+    }
+}
+
+fn handle_inference_result(
+    result: Result<Result<Option<(String, String)>, InferenceError>, Box<dyn Any + Send>>,
+    started_at: Instant,
+    event_tx: &Sender<SttEvent>,
+) {
+    match result {
+        Ok(Ok(Some((text, detected_lang)))) => {
+            let timestamp = started_at.elapsed().as_secs_f64();
+            event_tx
+                .try_broadcast(SttEvent::Result {
+                    text,
+                    timestamp,
+                    language: detected_lang,
+                })
+                .ok();
+        }
+        Ok(Ok(None)) => {}
+        Ok(Err(e)) => {
+            tracing::error!("whisper inference error: {e}");
+        }
+        Err(ref panic_info) => {
+            let msg = extract_panic_message(panic_info);
+            tracing::error!("whisper inference panic: {msg}");
         }
     }
+}
+
+fn extract_panic_message(panic_info: &Box<dyn Any + Send>) -> &str {
+    panic_info
+        .downcast_ref::<String>()
+        .map(|s| s.as_str())
+        .or_else(|| panic_info.downcast_ref::<&str>().copied())
+        .unwrap_or("unknown panic")
 }
 
 fn run_inference(
@@ -89,6 +95,23 @@ fn run_inference(
         .create_state()
         .map_err(|e| InferenceError::CreateState(e.to_string()))?;
 
+    let params = create_whisper_params(language);
+
+    state
+        .full(params, samples)
+        .map_err(|e| InferenceError::Full(e.to_string()))?;
+
+    let text = collect_segment_text(&state);
+    if text.is_empty() {
+        return Ok(None);
+    }
+
+    let detected_lang = detect_language(&state, language);
+
+    Ok(Some((text, detected_lang)))
+}
+
+fn create_whisper_params<'a>(language: &'a str) -> FullParams<'a, 'a> {
     let mut params = FullParams::new(SamplingStrategy::Greedy { best_of: 1 });
     params.set_suppress_nst(true);
     params.set_single_segment(true);
@@ -99,10 +122,10 @@ fn run_inference(
         params.set_language(Some(language));
     }
 
-    state
-        .full(params, samples)
-        .map_err(|e| InferenceError::Full(e.to_string()))?;
+    params
+}
 
+fn collect_segment_text(state: &WhisperState) -> String {
     let n_segments = state.full_n_segments();
     let mut text = String::new();
     for i in 0..n_segments {
@@ -112,18 +135,12 @@ fn run_inference(
             text.push_str(segment_text);
         }
     }
+    text.trim().to_string()
+}
 
-    let text = text.trim().to_string();
-    if text.is_empty() {
-        return Ok(None);
-    }
-
-    let detected_lang = {
-        let lang_id = state.full_lang_id_from_state();
-        whisper_rs::get_lang_str(lang_id)
-            .map(String::from)
-            .unwrap_or_else(|| language.to_string())
-    };
-
-    Ok(Some((text, detected_lang)))
+fn detect_language(state: &WhisperState, fallback: &str) -> String {
+    let lang_id = state.full_lang_id_from_state();
+    whisper_rs::get_lang_str(lang_id)
+        .map(String::from)
+        .unwrap_or_else(|| fallback.to_string())
 }

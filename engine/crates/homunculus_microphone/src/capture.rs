@@ -2,6 +2,7 @@ use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use std::sync::mpsc;
 use tokio_util::sync::CancellationToken;
 
+use crate::error::CaptureError;
 use crate::session::SharedSttSession;
 
 /// Thread 1 -> Thread 2 PCM frame channel capacity.
@@ -12,17 +13,6 @@ pub struct CaptureHandle {
     pub audio_rx: mpsc::Receiver<Vec<f32>>,
     pub sample_rate: u32,
     pub needs_resample: bool,
-}
-
-/// Capture-related errors.
-#[derive(Debug, thiserror::Error)]
-pub enum CaptureError {
-    #[error("No microphone device found")]
-    NoMicrophone,
-    #[error("No supported audio config: {0}")]
-    NoSupportedConfig(String),
-    #[error("Failed to spawn capture thread: {0}")]
-    ThreadSpawn(String),
 }
 
 /// Retrieve the default input device.
@@ -43,45 +33,9 @@ pub fn spawn_capture_thread(
     let channels = config.channels as usize;
     let (tx, rx) = mpsc::sync_channel::<Vec<f32>>(AUDIO_CHANNEL_CAPACITY);
 
-    let session_clone = session.clone();
     std::thread::Builder::new()
         .name("stt-capture".into())
-        .spawn(move || {
-            let error_session = session_clone.clone();
-            let stream =
-                match build_input_stream_adaptive(&device, &config, tx, channels, move |err| {
-                    tracing::error!("cpal error: {err}");
-                    if let Ok(mut session) = error_session.0.try_lock() {
-                        session.fail("device_lost".into(), format!("Audio device error: {err}"));
-                    }
-                }) {
-                    Ok(s) => s,
-                    Err(e) => {
-                        tracing::error!("Failed to build input stream: {e}");
-                        if let Ok(mut session) = session_clone.0.try_lock() {
-                            session.fail(
-                                "device_lost".into(),
-                                format!("Failed to build input stream: {e}"),
-                            );
-                        }
-                        return;
-                    }
-                };
-            if let Err(e) = stream.play() {
-                tracing::error!("Failed to start input stream: {e}");
-                if let Ok(mut session) = session_clone.0.try_lock() {
-                    session.fail(
-                        "device_lost".into(),
-                        format!("Failed to start input stream: {e}"),
-                    );
-                }
-                return;
-            }
-            // Block until cancellation — poll the token since `cancelled()` is async.
-            while !cancel.is_cancelled() {
-                std::thread::sleep(std::time::Duration::from_millis(50));
-            }
-        })
+        .spawn(move || capture_loop(device, config, tx, channels, session, cancel))
         .map_err(|e| CaptureError::ThreadSpawn(e.to_string()))?;
 
     Ok(CaptureHandle {
@@ -89,6 +43,34 @@ pub fn spawn_capture_thread(
         sample_rate,
         needs_resample,
     })
+}
+
+fn capture_loop(
+    device: cpal::Device,
+    config: cpal::StreamConfig,
+    tx: mpsc::SyncSender<Vec<f32>>,
+    channels: usize,
+    session: SharedSttSession,
+    cancel: CancellationToken,
+) {
+    let error_session = session.clone();
+    let stream = match build_input_stream_adaptive(&device, &config, tx, channels, move |err| {
+        tracing::error!("cpal error: {err}");
+        report_device_error(&error_session, format!("Audio device error: {err}"));
+    }) {
+        Ok(s) => s,
+        Err(e) => {
+            tracing::error!("Failed to build input stream: {e}");
+            report_device_error(&session, format!("Failed to build input stream: {e}"));
+            return;
+        }
+    };
+    if let Err(e) = stream.play() {
+        tracing::error!("Failed to start input stream: {e}");
+        report_device_error(&session, format!("Failed to start input stream: {e}"));
+        return;
+    }
+    wait_for_cancellation(&cancel);
 }
 
 fn select_input_config(device: &cpal::Device) -> Result<(cpal::StreamConfig, bool), CaptureError> {
@@ -140,7 +122,7 @@ where
         cpal::SampleFormat::I16 => device.build_input_stream(
             config,
             move |data: &[i16], _| {
-                let f32_data: Vec<f32> = data.iter().map(|&s| s as f32 / i16::MAX as f32).collect();
+                let f32_data = convert_i16_to_f32(data);
                 let mono = downmix_to_mono(&f32_data, channels);
                 let _ = tx.try_send(mono);
             },
@@ -149,6 +131,23 @@ where
         ),
         _ => Err(cpal::BuildStreamError::StreamConfigNotSupported),
     }
+}
+
+fn report_device_error(session: &SharedSttSession, message: String) {
+    if let Ok(mut session) = session.0.try_lock() {
+        session.fail("device_lost".into(), message);
+    }
+}
+
+fn wait_for_cancellation(cancel: &CancellationToken) {
+    while !cancel.is_cancelled() {
+        std::thread::sleep(std::time::Duration::from_millis(50));
+    }
+}
+
+#[inline]
+fn convert_i16_to_f32(data: &[i16]) -> Vec<f32> {
+    data.iter().map(|&s| s as f32 / i16::MAX as f32).collect()
 }
 
 #[inline]

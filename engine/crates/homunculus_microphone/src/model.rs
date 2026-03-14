@@ -1,10 +1,13 @@
+use crate::error::DownloadError;
+use futures_lite::StreamExt;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
+use tokio::io::AsyncWriteExt;
 use whisper_rs::WhisperContext;
 
-/// HTTP State に持たせる NewType
+/// Shared newtype for HTTP state.
 #[derive(Clone)]
 pub struct SharedSttModelCache(pub Arc<tokio::sync::Mutex<SttModelCache>>);
 
@@ -20,7 +23,7 @@ impl SharedSttModelCache {
     }
 }
 
-/// ロード済み WhisperContext のキャッシュ + ダウンロード中トラッキング
+/// Cache of loaded WhisperContext instances with download-in-progress tracking.
 #[derive(Default)]
 pub struct SttModelCache {
     pub contexts: HashMap<SttModelSize, Arc<WhisperContext>>,
@@ -49,7 +52,7 @@ impl SttModelCache {
     }
 }
 
-/// Whisper モデルサイズ
+/// Whisper model size variants.
 #[derive(Clone, Copy, Debug, Default, Serialize, Deserialize, PartialEq, Eq, Hash)]
 #[serde(rename_all = "lowercase")]
 pub enum SttModelSize {
@@ -80,14 +83,14 @@ impl SttModelSize {
     }
 }
 
-/// モデルファイルのパスを返す
+/// Returns the path to the model file.
 pub fn model_path(size: SttModelSize) -> PathBuf {
     homunculus_utils::path::homunculus_dir()
         .join("models")
         .join(format!("ggml-{}-q5_1.bin", size.as_str()))
 }
 
-/// モデルがダウンロード済みかチェック
+/// Checks whether the model has been downloaded.
 pub fn is_model_available(size: SttModelSize) -> bool {
     let path = model_path(size);
     match std::fs::metadata(&path) {
@@ -96,7 +99,7 @@ pub fn is_model_available(size: SttModelSize) -> bool {
     }
 }
 
-/// ダウンロード済みモデルの一覧を返す
+/// Returns a list of downloaded models.
 pub fn list_available_models() -> Vec<(SttModelSize, u64, PathBuf)> {
     let sizes = [
         SttModelSize::Tiny,
@@ -117,24 +120,50 @@ pub fn list_available_models() -> Vec<(SttModelSize, u64, PathBuf)> {
         .collect()
 }
 
-/// HuggingFace からモデルをダウンロード
+/// Downloads a model from HuggingFace.
 pub async fn download_model(
     size: SttModelSize,
     cancel: &tokio_util::sync::CancellationToken,
 ) -> Result<(), DownloadError> {
-    let url = format!(
+    let url = model_url(size);
+    let path = model_path(size);
+    ensure_model_dir(&path)?;
+
+    let client = reqwest::Client::new();
+    let response = fetch_model(&client, &url).await?;
+
+    let tmp_path = path.with_extension("bin.tmp");
+    stream_to_file(response, &tmp_path, cancel).await?;
+
+    tokio::fs::rename(&tmp_path, &path)
+        .await
+        .map_err(DownloadError::Io)?;
+
+    verify_model_size(&path, size.expected_size()).await?;
+
+    Ok(())
+}
+
+fn model_url(size: SttModelSize) -> String {
+    format!(
         "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-{}-q5_1.bin",
         size.as_str()
-    );
-    let path = model_path(size);
+    )
+}
 
+fn ensure_model_dir(path: &Path) -> Result<(), DownloadError> {
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent)?;
     }
+    Ok(())
+}
 
-    let client = reqwest::Client::new();
+async fn fetch_model(
+    client: &reqwest::Client,
+    url: &str,
+) -> Result<reqwest::Response, DownloadError> {
     let response = client
-        .get(&url)
+        .get(url)
         .send()
         .await
         .map_err(DownloadError::Request)?;
@@ -143,19 +172,23 @@ pub async fn download_model(
         return Err(DownloadError::HttpStatus(response.status().as_u16()));
     }
 
-    let tmp_path = path.with_extension("bin.tmp");
-    let mut file = tokio::fs::File::create(&tmp_path)
+    Ok(response)
+}
+
+async fn stream_to_file(
+    response: reqwest::Response,
+    tmp_path: &Path,
+    cancel: &tokio_util::sync::CancellationToken,
+) -> Result<(), DownloadError> {
+    let mut file = tokio::fs::File::create(tmp_path)
         .await
         .map_err(DownloadError::Io)?;
-
-    use futures_lite::StreamExt;
-    use tokio::io::AsyncWriteExt;
 
     let mut stream = response.bytes_stream();
     while let Some(chunk) = stream.next().await {
         if cancel.is_cancelled() {
             drop(file);
-            let _ = tokio::fs::remove_file(&tmp_path).await;
+            let _ = tokio::fs::remove_file(tmp_path).await;
             return Err(DownloadError::Cancelled);
         }
         let chunk = chunk.map_err(DownloadError::Request)?;
@@ -163,40 +196,19 @@ pub async fn download_model(
     }
 
     file.flush().await.map_err(DownloadError::Io)?;
-    drop(file);
-
-    tokio::fs::rename(&tmp_path, &path)
-        .await
-        .map_err(DownloadError::Io)?;
-
-    let actual = tokio::fs::metadata(&path)
-        .await
-        .map_err(DownloadError::Io)?
-        .len();
-    if actual != size.expected_size() {
-        let _ = tokio::fs::remove_file(&path).await;
-        return Err(DownloadError::SizeMismatch {
-            expected: size.expected_size(),
-            actual,
-        });
-    }
-
     Ok(())
 }
 
-/// モデルダウンロード時のエラー
-#[derive(Debug, thiserror::Error)]
-pub enum DownloadError {
-    #[error("HTTP request failed: {0}")]
-    Request(reqwest::Error),
-    #[error("HTTP status {0}")]
-    HttpStatus(u16),
-    #[error("IO error: {0}")]
-    Io(#[from] std::io::Error),
-    #[error("Download cancelled")]
-    Cancelled,
-    #[error("Size mismatch: expected {expected}, got {actual}")]
-    SizeMismatch { expected: u64, actual: u64 },
+async fn verify_model_size(path: &Path, expected: u64) -> Result<(), DownloadError> {
+    let actual = tokio::fs::metadata(path)
+        .await
+        .map_err(DownloadError::Io)?
+        .len();
+    if actual != expected {
+        let _ = tokio::fs::remove_file(path).await;
+        return Err(DownloadError::SizeMismatch { expected, actual });
+    }
+    Ok(())
 }
 
 #[cfg(test)]
