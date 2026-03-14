@@ -4605,6 +4605,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "homunculus_stt"
+version = "0.1.0-alpha.5-dev"
+
+[[package]]
 name = "homunculus_tray"
 version = "0.1.0-alpha.6-dev"
 dependencies = [
