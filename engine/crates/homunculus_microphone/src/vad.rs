@@ -126,6 +126,58 @@ pub fn convert_f32_to_i16(frame: &[f32]) -> Vec<i16> {
         .collect()
 }
 
+/// Accumulates variable-length audio samples and resamples them in fixed-size
+/// chunks via `SincFixedIn`. Returns concatenated resampled output.
+struct ResampleAccumulator {
+    resampler: rubato::SincFixedIn<f32>,
+    buf: Vec<f32>,
+}
+
+impl ResampleAccumulator {
+    fn new(source_rate: u32) -> Self {
+        const CHUNK_SIZE: usize = 1024;
+        const NUM_CHANNELS: usize = 1;
+        let resampler = rubato::SincFixedIn::<f32>::new(
+            16000.0 / source_rate as f64,
+            2.0,
+            rubato::SincInterpolationParameters {
+                sinc_len: 128,
+                f_cutoff: 0.95,
+                oversampling_factor: 128,
+                interpolation: rubato::SincInterpolationType::Linear,
+                window: rubato::WindowFunction::BlackmanHarris2,
+            },
+            CHUNK_SIZE,
+            NUM_CHANNELS,
+        )
+        .expect("failed to create resampler");
+        Self {
+            resampler,
+            buf: Vec::new(),
+        }
+    }
+
+    /// Accumulate samples, drain and resample in fixed-size chunks, return
+    /// all resampled output concatenated into a single buffer.
+    fn push(&mut self, samples: &[f32]) -> Vec<f32> {
+        self.buf.extend_from_slice(samples);
+        let mut output = Vec::new();
+        let n = self.resampler.input_frames_next();
+        while self.buf.len() >= n {
+            let chunk: Vec<f32> = self.buf.drain(..n).collect();
+            match self.resampler.process(&[chunk], None) {
+                Ok(resampled) => {
+                    if let Some(ch) = resampled.into_iter().next() {
+                        output.extend(ch);
+                    }
+                }
+                Err(e) => tracing::error!("resample error: {e}"),
+            }
+        }
+        output
+    }
+}
+
 /// Thread 2: spawn the VAD + chunking thread.
 pub fn spawn_vad_thread(
     audio_rx: mpsc::Receiver<Vec<f32>>,
@@ -161,8 +213,8 @@ fn vad_thread_main(
     config: VadConfig,
     chunk_tx: crossbeam_channel::Sender<Vec<f32>>,
 ) {
-    let mut resampler = if needs_resample {
-        Some(create_resampler(sample_rate))
+    let mut accumulator = if needs_resample {
+        Some(ResampleAccumulator::new(sample_rate))
     } else {
         None
     };
@@ -186,9 +238,15 @@ fn vad_thread_main(
             Err(_) => break,
         };
 
-        let samples_16k = match resample(&mut resampler, raw_audio) {
-            Some(s) => s,
-            None => continue,
+        let samples_16k = match &mut accumulator {
+            Some(acc) => {
+                let out = acc.push(&raw_audio);
+                if out.is_empty() {
+                    continue;
+                }
+                out
+            }
+            None => raw_audio,
         };
 
         for frame in samples_16k.chunks(VAD_FRAME_SIZE) {
@@ -203,38 +261,6 @@ fn vad_thread_main(
                 try_send_chunk(&chunk_tx, chunk);
             }
         }
-    }
-}
-
-fn create_resampler(source_rate: u32) -> rubato::SincFixedIn<f32> {
-    const CHUNK_SIZE: usize = 1024;
-    const NUM_CHANNELS: usize = 1;
-    rubato::SincFixedIn::<f32>::new(
-        16000.0 / source_rate as f64,
-        2.0,
-        rubato::SincInterpolationParameters {
-            sinc_len: 128,
-            f_cutoff: 0.95,
-            oversampling_factor: 128,
-            interpolation: rubato::SincInterpolationType::Linear,
-            window: rubato::WindowFunction::BlackmanHarris2,
-        },
-        CHUNK_SIZE,
-        NUM_CHANNELS,
-    )
-    .expect("failed to create resampler")
-}
-
-fn resample(resampler: &mut Option<rubato::SincFixedIn<f32>>, raw: Vec<f32>) -> Option<Vec<f32>> {
-    match resampler {
-        Some(r) => match r.process(&[raw], None) {
-            Ok(output) => output.into_iter().next(),
-            Err(e) => {
-                tracing::error!("resample error: {e}");
-                None
-            }
-        },
-        None => Some(raw),
     }
 }
 
@@ -323,5 +349,67 @@ mod tests {
         let config = VadConfig::default();
         assert_eq!(config.silence_ms, 700);
         assert!((config.energy_threshold - 0.01).abs() < f32::EPSILON);
+    }
+
+    #[test]
+    fn accumulator_exact_chunk() {
+        let mut acc = ResampleAccumulator::new(48000);
+        let n = acc.resampler.input_frames_next();
+        // Feed exactly one chunk of silence
+        let input = vec![0.0f32; n];
+        let output = acc.push(&input);
+        // 48kHz -> 16kHz = ratio 1/3, so ~n/3 output samples
+        assert!(!output.is_empty(), "exact chunk should produce output");
+        assert!(acc.buf.is_empty(), "no remainder after exact chunk");
+    }
+
+    #[test]
+    fn accumulator_undersized_no_output() {
+        let mut acc = ResampleAccumulator::new(48000);
+        let n = acc.resampler.input_frames_next();
+        // Feed half a chunk — not enough for process()
+        let input = vec![0.0f32; n / 2];
+        let output = acc.push(&input);
+        assert!(
+            output.is_empty(),
+            "undersized input should produce no output"
+        );
+        assert_eq!(acc.buf.len(), n / 2, "remainder should be buffered");
+    }
+
+    #[test]
+    fn accumulator_multi_push() {
+        let mut acc = ResampleAccumulator::new(48000);
+        let n = acc.resampler.input_frames_next();
+        // Push in 3 batches of n/2 each = 1.5 chunks total
+        let half = vec![0.0f32; n / 2];
+        let out1 = acc.push(&half); // 0.5 chunks buffered
+        assert!(out1.is_empty());
+        let out2 = acc.push(&half); // 1.0 chunks → drain, 0 remainder
+        assert!(
+            !out2.is_empty(),
+            "should produce output after accumulating full chunk"
+        );
+        let out3 = acc.push(&half); // 0.5 chunks buffered again
+        assert!(out3.is_empty());
+        assert_eq!(acc.buf.len(), n / 2);
+    }
+
+    #[test]
+    fn accumulator_oversized_concatenates() {
+        let mut acc = ResampleAccumulator::new(48000);
+        let n = acc.resampler.input_frames_next();
+        // Feed 2.5 chunks at once
+        let input = vec![0.0f32; n * 2 + n / 2];
+        let output = acc.push(&input);
+        // Should have drained twice, remainder = n/2
+        assert!(!output.is_empty(), "oversized input should produce output");
+        assert_eq!(acc.buf.len(), n / 2, "remainder after 2 full drains");
+        // Output should be from 2 process() calls concatenated
+        // Each produces ~n/3 samples, so total ~2*n/3
+        assert!(
+            output.len() > n / 3,
+            "output should contain results from multiple process() calls"
+        );
     }
 }

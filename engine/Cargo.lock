@@ -4396,6 +4396,7 @@ dependencies = [
  "homunculus_audio",
  "homunculus_core",
  "homunculus_effects",
+ "homunculus_microphone",
  "homunculus_power_saver",
  "homunculus_prefs",
  "homunculus_shadow_panel",
@@ -4404,6 +4405,8 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror 2.0.18",
+ "tokio",
+ "tokio-util",
  "utoipa",
 ]
 
@@ -4484,6 +4487,7 @@ dependencies = [
 name = "homunculus_http_server"
 version = "0.1.0-alpha.6-dev"
 dependencies = [
+ "async-broadcast",
  "async-channel",
  "axum",
  "base64",
@@ -4496,6 +4500,7 @@ dependencies = [
  "homunculus_core",
  "homunculus_effects",
  "homunculus_mcp",
+ "homunculus_microphone",
  "homunculus_prefs",
  "homunculus_screen",
  "homunculus_utils",
@@ -4546,6 +4551,7 @@ dependencies = [
  "tokio",
  "tokio-util",
  "tracing",
+ "utoipa",
  "webrtc-vad",
  "whisper-rs",
 ]

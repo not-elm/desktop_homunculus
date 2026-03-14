@@ -69,7 +69,8 @@ pub mod prelude {
 }
 
 use crate::route::{
-    assets, audio, coordinates, displays, info, preferences, settings, shadow_panel, vrm, webviews,
+    assets, audio, coordinates, displays, info, preferences, settings, shadow_panel, stt, vrm,
+    webviews,
 };
 use crate::state::HttpState;
 use axum::Router;
@@ -110,6 +111,7 @@ use utoipa_axum::{router::OpenApiRouter, routes};
         (name = "commands", description = "Command execution"),
         (name = "assets", description = "Asset management"),
         (name = "rpc", description = "MOD service RPC registration and proxy"),
+        (name = "stt", description = "Speech-to-text"),
     ),
     servers(
         (url = "http://localhost:3100", description = "Local development"),
@@ -222,6 +224,7 @@ fn build_openapi_router() -> OpenApiRouter<HttpState> {
         .nest("/effects", effects_router())
         .nest("/mods", mods_router())
         .nest("/commands", commands_router())
+        .nest("/stt", stt_router())
         .routes(routes!(assets::list))
         .nest("/rpc", rpc_openapi_router())
 }
@@ -288,6 +291,16 @@ fn mods_router() -> OpenApiRouter<HttpState> {
         .routes(routes!(route::mods::list))
         .routes(routes!(route::mods::list_menus))
         .routes(routes!(route::mods::get_one))
+}
+
+fn stt_router() -> OpenApiRouter<HttpState> {
+    OpenApiRouter::new()
+        .routes(routes!(stt::start))
+        .routes(routes!(stt::stop))
+        .routes(routes!(stt::status))
+        .routes(routes!(stt::stream))
+        .routes(routes!(stt::download_model))
+        .routes(routes!(stt::list_models))
 }
 
 fn commands_router() -> OpenApiRouter<HttpState> {

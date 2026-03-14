@@ -94,6 +94,7 @@ homunculus_api = { path = "crates/homunculus_api" }
 homunculus_audio = { path = "crates/homunculus_audio" }
 homunculus_tray = { path = "crates/homunculus_tray" }
 homunculus_mcp = { path = "crates/homunculus_mcp" }
+homunculus_microphone = { path = "crates/homunculus_microphone" }
 homunculus_utils = { path = "crates/homunculus_utils", default-features = false }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1" }

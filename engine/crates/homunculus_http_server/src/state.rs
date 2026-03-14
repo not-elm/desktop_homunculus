@@ -6,7 +6,9 @@ use homunculus_api::prelude::{
     ApiReactor, AppApi, AudioBgmApi, AudioSeApi, CameraApi, EffectsApi, EntitiesApi, SettingsApi,
     ShadowPanelApi, SignalsApi, SpeechApi, VrmAnimationApi, WebviewApi,
 };
+use homunculus_api::stt::SttApi;
 use homunculus_api::vrm::VrmApi;
+use homunculus_microphone::{SharedSttModelCache, SharedSttSession};
 use homunculus_core::rpc_registry::RpcRegistry;
 use homunculus_utils::config::HomunculusConfig;
 use std::sync::{Arc, RwLock};
@@ -30,6 +32,7 @@ pub struct HttpState {
     pub entities: EntitiesApi,
     pub assets: AssetsApi,
     pub mods: ModsApi,
+    pub stt: SttApi,
     pub config: HomunculusConfig,
     pub rpc_registry: Arc<RwLock<RpcRegistry>>,
 }
@@ -57,6 +60,7 @@ impl HttpState {
             entities: EntitiesApi::from(reactor.clone()),
             assets: AssetsApi::from(reactor.clone()),
             mods: ModsApi::from(reactor.clone()),
+            stt: SttApi::new(SharedSttSession::new(), SharedSttModelCache::new()),
             config,
             rpc_registry,
             reactor,

@@ -19,7 +19,9 @@ homunculus_utils = { workspace = true, features = ["bevy"] }
 homunculus_audio = { workspace = true }
 homunculus_effects = { workspace = true }
 homunculus_mcp = { workspace = true }
+homunculus_microphone = { workspace = true, features = ["openapi"] }
 homunculus_prefs = { workspace = true }
+async-broadcast = { workspace = true }
 homunculus_screen = { workspace = true, features = ["openapi"] }
 reqwest = { workspace = true }
 serde = { workspace = true }
