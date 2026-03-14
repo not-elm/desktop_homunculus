@@ -120,18 +120,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "alsa"
-version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7c88dbbce13b232b26250e1e2e6ac18b6a891a646b8148285036ebce260ac5c3"
-dependencies = [
- "alsa-sys",
- "bitflags 2.11.0",
- "cfg-if",
- "libc",
-]
-
-[[package]]
 name = "alsa-sys"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -818,7 +806,7 @@ dependencies = [
  "bevy_reflect",
  "bevy_transform",
  "coreaudio-sys",
- "cpal 0.15.3",
+ "cpal",
  "rodio",
  "tracing",
 ]
@@ -2164,6 +2152,8 @@ dependencies = [
  "cexpr",
  "clang-sys",
  "itertools 0.13.0",
+ "log",
+ "prettyplease",
  "proc-macro2",
  "quote",
  "regex",
@@ -2866,20 +2856,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "coreaudio-rs"
-version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1aae284fbaf7d27aa0e292f7677dfbe26503b0d555026f702940805a630eac17"
-dependencies = [
- "bitflags 1.3.2",
- "libc",
- "objc2-audio-toolbox",
- "objc2-core-audio",
- "objc2-core-audio-types",
- "objc2-core-foundation",
-]
-
-[[package]]
 name = "coreaudio-sys"
 version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2918,14 +2894,14 @@ version = "0.15.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "873dab07c8f743075e57f524c583985fbaf745602acbe916a01539364369a779"
 dependencies = [
- "alsa 0.9.1",
+ "alsa",
  "core-foundation-sys",
- "coreaudio-rs 0.11.3",
+ "coreaudio-rs",
  "dasp_sample",
  "jni 0.21.1",
  "js-sys",
  "libc",
- "mach2 0.4.3",
+ "mach2",
  "ndk 0.8.0",
  "ndk-context",
  "oboe",
@@ -2933,36 +2909,6 @@ dependencies = [
  "wasm-bindgen-futures",
  "web-sys",
  "windows 0.54.0",
-]
-
-[[package]]
-name = "cpal"
-version = "0.17.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b1f9c7312f19fc2fa12fd7acaf38de54e8320ba10d1a02dcbe21038def51ccb"
-dependencies = [
- "alsa 0.10.0",
- "coreaudio-rs 0.13.0",
- "dasp_sample",
- "jni 0.21.1",
- "js-sys",
- "libc",
- "mach2 0.5.0",
- "ndk 0.9.0",
- "ndk-context",
- "num-derive",
- "num-traits",
- "objc2 0.6.4",
- "objc2-audio-toolbox",
- "objc2-avf-audio",
- "objc2-core-audio",
- "objc2-core-audio-types",
- "objc2-core-foundation",
- "objc2-foundation 0.3.2",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
- "windows 0.62.2",
 ]
 
 [[package]]
@@ -3715,6 +3661,12 @@ checksum = "cb4cb245038516f5f85277875cdaa4f7d2c9a0fa0468de06ed190163b1581fcf"
 dependencies = [
  "percent-encoding",
 ]
+
+[[package]]
+name = "fs_extra"
+version = "1.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "42703706b716c37f96a77aea830392ad231f44c9e9a67872fa5548707e11b11c"
 
 [[package]]
 name = "fsevent-sys"
@@ -4579,9 +4531,23 @@ dependencies = [
 name = "homunculus_microphone"
 version = "0.1.0-alpha.5-dev"
 dependencies = [
- "cpal 0.17.1",
+ "async-broadcast",
+ "cpal",
+ "crossbeam-channel",
+ "futures-lite",
+ "homunculus_utils",
+ "objc2 0.6.4",
+ "objc2-av-foundation",
+ "reqwest",
+ "rubato",
  "serde",
+ "serde_json",
  "thiserror 2.0.18",
+ "tokio",
+ "tokio-util",
+ "tracing",
+ "webrtc-vad",
+ "whisper-rs",
 ]
 
 [[package]]
@@ -5240,7 +5206,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6e7f96b236a2d8b1ecebcd0e4e81462405392699e261f852cf930ea150f15abd"
 dependencies = [
  "atomic-arena",
- "cpal 0.15.3",
+ "cpal",
  "glam 0.30.10",
  "mint",
  "paste",
@@ -5482,15 +5448,6 @@ name = "mach2"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d640282b302c0bb0a2a8e0233ead9035e3bed871f0b7e81fe4a1ec829765db44"
-dependencies = [
- "libc",
-]
-
-[[package]]
-name = "mach2"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6a1b95cd5421ec55b445b5ae102f5ea0e768de1f82bd3001e11f426c269c3aea"
 dependencies = [
  "libc",
 ]
@@ -5866,6 +5823,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "num-complex"
+version = "0.4.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "73f88a1307638156682bada9d7604135552957b7818057dcef22705b4d509495"
+dependencies = [
+ "num-traits",
+]
+
+[[package]]
 name = "num-conv"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5880,6 +5846,15 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.117",
+]
+
+[[package]]
+name = "num-integer"
+version = "0.1.46"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7969661fd2958a5cb096e56c8e1ad0444ac2bbcd0061bd28660485a44879858f"
+dependencies = [
+ "num-traits",
 ]
 
 [[package]]
@@ -5999,18 +5974,25 @@ dependencies = [
 ]
 
 [[package]]
-name = "objc2-audio-toolbox"
+name = "objc2-av-foundation"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6948501a91121d6399b79abaa33a8aa4ea7857fe019f341b8c23ad6e81b79b08"
+checksum = "478ae33fcac9df0a18db8302387c666b8ef08a3e2d62b510ca4fc278a384b6c0"
 dependencies = [
  "bitflags 2.11.0",
- "libc",
+ "block2 0.6.2",
+ "dispatch2",
  "objc2 0.6.4",
- "objc2-core-audio",
+ "objc2-avf-audio",
  "objc2-core-audio-types",
  "objc2-core-foundation",
+ "objc2-core-graphics",
+ "objc2-core-image 0.3.2",
+ "objc2-core-video",
  "objc2-foundation 0.3.2",
+ "objc2-image-io",
+ "objc2-media-toolbox",
+ "objc2-quartz-core 0.3.2",
 ]
 
 [[package]]
@@ -6068,7 +6050,6 @@ dependencies = [
  "objc2 0.6.4",
  "objc2-core-audio-types",
  "objc2-core-foundation",
- "objc2-foundation 0.3.2",
 ]
 
 [[package]]
@@ -6111,9 +6092,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2a180dd8642fa45cdb7dd721cd4c11b1cadd4929ce112ebd8b9f5803cc79d536"
 dependencies = [
  "bitflags 2.11.0",
- "block2 0.6.2",
  "dispatch2",
- "libc",
  "objc2 0.6.4",
 ]
 
@@ -6162,6 +6141,21 @@ dependencies = [
  "objc2 0.5.2",
  "objc2-contacts",
  "objc2-foundation 0.2.2",
+]
+
+[[package]]
+name = "objc2-core-media"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "05ec576860167a15dd9fce7fbee7512beb4e31f532159d3482d1f9c6caedf31d"
+dependencies = [
+ "bitflags 2.11.0",
+ "dispatch2",
+ "objc2 0.6.4",
+ "objc2-core-audio",
+ "objc2-core-audio-types",
+ "objc2-core-foundation",
+ "objc2-core-video",
 ]
 
 [[package]]
@@ -6231,6 +6225,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "objc2-image-io"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "32b0446e98cf4a784cc7a0177715ff317eeaa8463841c616cfc78aa4f953c4ea"
+dependencies = [
+ "objc2 0.6.4",
+ "objc2-core-foundation",
+ "objc2-core-graphics",
+]
+
+[[package]]
 name = "objc2-io-kit"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6262,6 +6267,18 @@ dependencies = [
  "objc2 0.5.2",
  "objc2-app-kit 0.2.2",
  "objc2-foundation 0.2.2",
+]
+
+[[package]]
+name = "objc2-media-toolbox"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "edd9fdde720df3da7046bb9097811000c1e7ab5cd579fa89d96b27d56781fb30"
+dependencies = [
+ "objc2 0.6.4",
+ "objc2-core-audio-types",
+ "objc2-core-foundation",
+ "objc2-core-media",
 ]
 
 [[package]]
@@ -6786,6 +6803,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "primal-check"
+version = "0.3.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dc0d895b311e3af9902528fbb8f928688abbd95872819320517cc24ca6b2bd08"
+dependencies = [
+ "num-integer",
+]
+
+[[package]]
 name = "proc-macro-crate"
 version = "1.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7006,6 +7032,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "realfft"
+version = "3.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f821338fddb99d089116342c46e9f1fbf3828dba077674613e734e01d6ea8677"
+dependencies = [
+ "rustfft",
+]
+
+[[package]]
 name = "rectangle-pack"
 version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7208,7 +7243,7 @@ version = "0.20.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e7ceb6607dd738c99bc8cb28eff249b7cd5c8ec88b9db96c0608c1480d140fb1"
 dependencies = [
- "cpal 0.15.3",
+ "cpal",
  "hound",
  "lewton",
  "symphonia",
@@ -7251,6 +7286,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7204ed6420f698836b76d4d5c2ec5dec7585fd5c3a788fd1cde855d1de598239"
 
 [[package]]
+name = "rubato"
+version = "0.16.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5258099699851cfd0082aeb645feb9c084d9a5e1f1b8d5372086b989fc5e56a1"
+dependencies = [
+ "num-complex",
+ "num-integer",
+ "num-traits",
+ "realfft",
+]
+
+[[package]]
 name = "rusqlite"
 version = "0.38.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7284,6 +7331,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cfcb3a22ef46e85b45de6ee7e79d063319ebb6594faafcf1c225ea92ab6e9b92"
 dependencies = [
  "semver",
+]
+
+[[package]]
+name = "rustfft"
+version = "6.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "21db5f9893e91f41798c88680037dba611ca6674703c1a18601b01a72c8adb89"
+dependencies = [
+ "num-complex",
+ "num-integer",
+ "num-traits",
+ "primal-check",
+ "strength_reduce",
+ "transpose",
 ]
 
 [[package]]
@@ -7850,6 +7911,12 @@ name = "static_assertions"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
+
+[[package]]
+name = "strength_reduce"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fe895eb47f22e2ddd4dabc02bce419d2e643c8e3b585c78158b349195bc24d82"
 
 [[package]]
 name = "strict-num"
@@ -8631,6 +8698,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "transpose"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1ad61aed86bc3faea4300c7aee358b4c6d0c8d6ccc36524c96e4c92ccf26e77e"
+dependencies = [
+ "num-integer",
+ "strength_reduce",
+]
+
+[[package]]
 name = "tray-icon"
 version = "0.21.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -9217,6 +9294,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "webrtc-vad"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "39a1e40fd6ca90be95459152a2537f2ba4286ee1b13073f7ebcaa74fc94e3008"
+dependencies = [
+ "cc",
+]
+
+[[package]]
 name = "weezl"
 version = "0.1.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -9382,6 +9468,28 @@ dependencies = [
  "home",
  "once_cell",
  "rustix 0.38.44",
+]
+
+[[package]]
+name = "whisper-rs"
+version = "0.16.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2088172d00f936c348d6a72f488dc2660ab3f507263a195df308a3c2383229f6"
+dependencies = [
+ "whisper-rs-sys",
+]
+
+[[package]]
+name = "whisper-rs-sys"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6986c0fe081241d391f09b9a071fbcbb59720c3563628c3c829057cf69f2a56f"
+dependencies = [
+ "bindgen 0.72.1",
+ "cfg-if",
+ "cmake",
+ "fs_extra",
+ "semver",
 ]
 
 [[package]]
