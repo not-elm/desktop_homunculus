@@ -32,6 +32,15 @@ fn inference_loop(
     event_tx: &Sender<SttEvent>,
     started_at: Instant,
 ) {
+    let mut state = match ctx.create_state() {
+        Ok(state) => state,
+        Err(e) => {
+            tracing::error!("failed to create whisper state: {e}");
+            event_tx.try_broadcast(SttEvent::Stopped).ok();
+            return;
+        }
+    };
+
     loop {
         if cancel.is_cancelled() {
             break;
@@ -44,7 +53,7 @@ fn inference_loop(
         };
 
         let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-            run_inference(ctx, &samples, language)
+            run_inference(&mut state, &samples, language)
         }));
 
         handle_inference_result(result, started_at, event_tx);
@@ -87,26 +96,22 @@ fn extract_panic_message(panic_info: &Box<dyn Any + Send>) -> &str {
 }
 
 fn run_inference(
-    ctx: &WhisperContext,
+    state: &mut WhisperState,
     samples: &[f32],
     language: &str,
 ) -> Result<Option<(String, String)>, InferenceError> {
-    let mut state = ctx
-        .create_state()
-        .map_err(|e| InferenceError::CreateState(e.to_string()))?;
-
     let params = create_whisper_params(language);
 
     state
         .full(params, samples)
         .map_err(|e| InferenceError::Full(e.to_string()))?;
 
-    let text = collect_segment_text(&state);
+    let text = collect_segment_text(state);
     if text.is_empty() {
         return Ok(None);
     }
 
-    let detected_lang = detect_language(&state, language);
+    let detected_lang = detect_language(state, language);
 
     Ok(Some((text, detected_lang)))
 }

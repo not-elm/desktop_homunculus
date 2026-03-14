@@ -40,18 +40,22 @@ pub struct VadStateMachine {
     silence_threshold: usize,
     min_chunk_samples: usize,
     energy_threshold: f32,
+    frame_i16_buf: Vec<i16>,
 }
 
 impl VadStateMachine {
     /// Create a new state machine with the given configuration.
     pub fn new(config: &VadConfig) -> Self {
+        const VAD_FRAME_SIZE: usize = 320;
         Self {
             speech_buffer: Vec::new(),
             silence_samples: 0,
             in_speech: false,
-            silence_threshold: (16000.0 * config.silence_ms as f64 / 1000.0) as usize,
+            silence_threshold: (16000.0 * config.silence_ms as f64 / 1000.0).min(usize::MAX as f64)
+                as usize,
             min_chunk_samples: 24_000, // 1.5s at 16kHz
             energy_threshold: config.energy_threshold,
+            frame_i16_buf: vec![0i16; VAD_FRAME_SIZE],
         }
     }
 
@@ -76,6 +80,15 @@ impl VadStateMachine {
         }
 
         None
+    }
+
+    /// Convert an `f32` frame to `i16` in-place, reusing the internal buffer.
+    pub fn convert_frame_to_i16(&mut self, frame: &[f32]) -> &[i16] {
+        self.frame_i16_buf.resize(frame.len(), 0);
+        for (dst, &src) in self.frame_i16_buf.iter_mut().zip(frame.iter()) {
+            *dst = (src.clamp(-1.0, 1.0) * i16::MAX as f32) as i16;
+        }
+        &self.frame_i16_buf
     }
 
     /// Take the buffered speech, reset state, and return the chunk if it meets
@@ -180,11 +193,11 @@ fn vad_thread_main(
                 continue;
             }
 
-            let frame_i16 = convert_f32_to_i16(frame);
-            let is_voice = vad.is_voice_segment(&frame_i16).unwrap_or(false);
+            let frame_i16 = state_machine.convert_frame_to_i16(frame);
+            let is_voice = vad.is_voice_segment(frame_i16).unwrap_or(false);
 
             if let Some(chunk) = state_machine.process_frame(frame, is_voice) {
-                send_chunk_discard_oldest(&chunk_tx, chunk);
+                try_send_chunk(&chunk_tx, chunk);
             }
         }
     }
@@ -220,11 +233,11 @@ fn resample(resampler: &mut Option<rubato::SincFixedIn<f32>>, raw: Vec<f32>) -> 
     }
 }
 
-fn send_chunk_discard_oldest(tx: &crossbeam_channel::Sender<Vec<f32>>, chunk: Vec<f32>) {
+fn try_send_chunk(tx: &crossbeam_channel::Sender<Vec<f32>>, chunk: Vec<f32>) {
     match tx.try_send(chunk) {
         Ok(()) => {}
         Err(TrySendError::Full(_)) => {
-            tracing::debug!("VAD chunk channel full, dropping chunk");
+            tracing::warn!("VAD chunk channel full, dropping chunk");
         }
         Err(TrySendError::Disconnected(_)) => {}
     }

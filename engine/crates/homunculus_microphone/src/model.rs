@@ -146,11 +146,14 @@ pub async fn download_model(
     let tmp_path = path.with_extension("bin.tmp");
     stream_to_file(response, &tmp_path, cancel).await?;
 
+    if let Err(e) = verify_model_size(&tmp_path, size.expected_size()).await {
+        let _ = tokio::fs::remove_file(&tmp_path).await;
+        return Err(e);
+    }
+
     tokio::fs::rename(&tmp_path, &path)
         .await
         .map_err(DownloadError::Io)?;
-
-    verify_model_size(&path, size.expected_size()).await?;
 
     Ok(())
 }

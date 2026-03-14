@@ -83,7 +83,7 @@ fn select_input_config(device: &cpal::Device) -> Result<(cpal::StreamConfig, boo
         for range in configs {
             if range.min_sample_rate().0 <= 16000
                 && range.max_sample_rate().0 >= 16000
-                && range.channels() >= 1
+                && range.channels() == 1
             {
                 return Ok((target, false));
             }
@@ -122,8 +122,16 @@ where
         cpal::SampleFormat::I16 => device.build_input_stream(
             config,
             move |data: &[i16], _| {
-                let f32_data = convert_i16_to_f32(data);
-                let mono = downmix_to_mono(&f32_data, channels);
+                let mono: Vec<f32> = if channels == 1 {
+                    data.iter().map(|&s| s as f32 / 32768.0_f32).collect()
+                } else {
+                    data.chunks(channels)
+                        .map(|frame| {
+                            frame.iter().map(|&s| s as f32 / 32768.0_f32).sum::<f32>()
+                                / channels as f32
+                        })
+                        .collect()
+                };
                 let _ = tx.try_send(mono);
             },
             error_callback,
@@ -136,18 +144,15 @@ where
 fn report_device_error(session: &SharedSttSession, message: String) {
     if let Ok(mut session) = session.0.try_lock() {
         session.fail("device_lost".into(), message);
+    } else {
+        tracing::warn!("Could not report device error (lock contended): {message}");
     }
 }
 
 fn wait_for_cancellation(cancel: &CancellationToken) {
     while !cancel.is_cancelled() {
-        std::thread::sleep(std::time::Duration::from_millis(50));
+        std::thread::sleep(std::time::Duration::from_millis(10));
     }
-}
-
-#[inline]
-fn convert_i16_to_f32(data: &[i16]) -> Vec<f32> {
-    data.iter().map(|&s| s as f32 / i16::MAX as f32).collect()
 }
 
 #[inline]
