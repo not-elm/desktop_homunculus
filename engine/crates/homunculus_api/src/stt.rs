@@ -27,6 +27,8 @@ use utoipa::ToSchema;
 pub enum SttError {
     #[error("Session already active")]
     SessionAlreadyActive,
+    #[error("Session is loading a model, please wait")]
+    SessionLoading,
     #[error("Model not available: {0}")]
     ModelNotAvailable(String),
     #[error("Model load failed: {0}")]

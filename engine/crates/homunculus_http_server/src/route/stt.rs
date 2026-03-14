@@ -213,6 +213,7 @@ impl IntoResponse for SttErrorResponse {
     fn into_response(self) -> Response {
         let (status, error_code) = match &self.0 {
             SttError::SessionAlreadyActive => (StatusCode::CONFLICT, "session_already_active"),
+            SttError::SessionLoading => (StatusCode::CONFLICT, "session_loading"),
             SttError::ModelNotAvailable(_) => {
                 (StatusCode::PRECONDITION_FAILED, "model_not_available")
             }
