@@ -16,6 +16,9 @@ use homunculus_microphone::{
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
+/// SSE keepalive interval in seconds.
+const SSE_KEEPALIVE_SECS: u64 = 30;
+
 /// Request body for model download.
 #[derive(Clone, Debug, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
@@ -23,16 +26,34 @@ pub struct ModelDownloadRequest {
     pub model_size: SttModelSize,
 }
 
+/// SSE payload for STT recognition results.
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct SttResultPayload<'a> {
+    text: &'a str,
+    timestamp: f64,
+    language: &'a str,
+}
+
+/// SSE payload for STT session errors.
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct SttSessionErrorPayload<'a> {
+    error: &'a str,
+    message: &'a str,
+}
+
 /// Start an STT session.
 #[utoipa::path(
     post,
     path = "/start",
     tag = "stt",
-    request_body(content = SttStartOptions, content_type = "application/json"),
+    request_body(content = Option<SttStartOptions>, content_type = "application/json"),
     responses(
-        (status = 200, description = "Session started"),
+        (status = 200, description = "Session started", body = SttState),
         (status = 409, description = "Session already active"),
         (status = 412, description = "Model not available"),
+        (status = 422, description = "Invalid language"),
         (status = 500, description = "Internal server error"),
         (status = 503, description = "Microphone unavailable"),
     ),
@@ -52,7 +73,7 @@ pub async fn start(
     path = "/stop",
     tag = "stt",
     responses(
-        (status = 200, description = "Session stopped"),
+        (status = 200, description = "Session stopped", body = SttState),
     ),
 )]
 pub async fn stop(State(api): State<SttApi>) -> Json<SttState> {
@@ -65,7 +86,7 @@ pub async fn stop(State(api): State<SttApi>) -> Json<SttState> {
     path = "/status",
     tag = "stt",
     responses(
-        (status = 200, description = "Current session state"),
+        (status = 200, description = "Current session state", body = SttState),
     ),
 )]
 pub async fn status(State(api): State<SttApi>) -> Json<SttState> {
@@ -87,50 +108,23 @@ pub async fn status(State(api): State<SttApi>) -> Json<SttState> {
 pub async fn stream(
     State(api): State<SttApi>,
 ) -> Sse<impl Stream<Item = Result<Event, Infallible>> + Send> {
-    let current_state = api.current_state().await;
-    let rx = api.new_event_receiver().await;
+    let (current_state, rx) = api.subscribe().await;
 
     let initial = futures::stream::once(async move {
-        Ok(Event::default()
-            .event("status")
-            .data(serde_json::to_string(&current_state).unwrap()))
+        Ok(stt_event_to_sse(&SttEvent::Status(current_state)))
     });
 
     let ongoing = unfold(rx, |mut rx| async move {
         let event = rx.recv().await.ok()?;
-        let sse_event = match &event {
-            SttEvent::Status(state) => Event::default()
-                .event("status")
-                .data(serde_json::to_string(state).unwrap()),
-            SttEvent::Result {
-                text,
-                timestamp,
-                language,
-            } => {
-                let data = serde_json::json!({
-                    "text": text,
-                    "timestamp": timestamp,
-                    "language": language,
-                });
-                Event::default()
-                    .event("result")
-                    .data(serde_json::to_string(&data).unwrap())
-            }
-            SttEvent::SessionError { error, message } => {
-                let data = serde_json::json!({
-                    "error": error,
-                    "message": message,
-                });
-                Event::default()
-                    .event("session_error")
-                    .data(serde_json::to_string(&data).unwrap())
-            }
-            SttEvent::Stopped => Event::default().event("stopped").data("{}"),
-        };
-        Some((Ok(sse_event), rx))
+        Some((Ok(stt_event_to_sse(&event)), rx))
     });
 
-    Sse::new(initial.chain(ongoing)).keep_alive(KeepAlive::new().interval(Duration::from_secs(30)))
+    let disconnected = futures::stream::once(async {
+        Ok(Event::default().event("disconnected").data("{}"))
+    });
+
+    Sse::new(initial.chain(ongoing).chain(disconnected))
+        .keep_alive(KeepAlive::new().interval(Duration::from_secs(SSE_KEEPALIVE_SECS)))
 }
 
 /// Download an STT model.
@@ -166,7 +160,47 @@ pub async fn list_models(State(api): State<SttApi>) -> Json<Vec<ModelInfo>> {
     Json(api.list_models())
 }
 
-/// Wrapper for converting SttError into HTTP responses.
+/// Convert an `SttEvent` into an SSE `Event`.
+fn stt_event_to_sse(event: &SttEvent) -> Event {
+    match event {
+        SttEvent::Status(state) => Event::default()
+            .event("status")
+            .data(serde_json::to_string(state).unwrap_or_else(|e| {
+                bevy::log::error!("SSE serialization failed: {e}");
+                "{}".to_string()
+            })),
+        SttEvent::Result {
+            text,
+            timestamp,
+            language,
+        } => Event::default().event("result").data(
+            serde_json::to_string(&SttResultPayload {
+                text,
+                timestamp: *timestamp,
+                language,
+            })
+            .unwrap_or_else(|e| {
+                bevy::log::error!("SSE serialization failed: {e}");
+                "{}".to_string()
+            }),
+        ),
+        SttEvent::SessionError { error, message } => Event::default().event("session_error").data(
+            serde_json::to_string(&SttSessionErrorPayload { error, message }).unwrap_or_else(
+                |e| {
+                    bevy::log::error!("SSE serialization failed: {e}");
+                    "{}".to_string()
+                },
+            ),
+        ),
+        SttEvent::Stopped => Event::default().event("stopped").data("{}"),
+    }
+}
+
+/// Wrapper for converting `SttError` into HTTP responses.
+///
+/// STT needs domain-specific HTTP status codes (409 conflict, 412 precondition,
+/// 503 unavailable) that don't map to the shared `ApiError` variants.
+/// Long-term, `ApiError` could be extended with a `Domain` variant.
 pub struct SttErrorResponse(SttError);
 
 impl From<SttError> for SttErrorResponse {
@@ -192,6 +226,7 @@ impl IntoResponse for SttErrorResponse {
                 "microphone_permission_denied",
             ),
             SttError::DownloadFailed(_) => (StatusCode::INTERNAL_SERVER_ERROR, "download_failed"),
+            SttError::InvalidLanguage(_) => (StatusCode::UNPROCESSABLE_ENTITY, "invalid_language"),
             SttError::InvalidModelSize => (StatusCode::UNPROCESSABLE_ENTITY, "invalid_model_size"),
         };
 

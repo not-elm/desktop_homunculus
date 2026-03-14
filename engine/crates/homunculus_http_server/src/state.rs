@@ -32,6 +32,9 @@ pub struct HttpState {
     pub entities: EntitiesApi,
     pub assets: AssetsApi,
     pub mods: ModsApi,
+    /// STT API — intentionally bypasses the ApiReactor pattern.
+    /// STT involves long-running audio pipelines with SSE streaming that don't map
+    /// to one-shot ECS systems. State is managed via `Arc<Mutex>` directly.
     pub stt: SttApi,
     pub config: HomunculusConfig,
     pub rpc_registry: Arc<RwLock<RpcRegistry>>,

@@ -39,9 +39,22 @@ pub enum SttError {
     MicrophonePermissionDenied,
     #[error("Download failed: {0}")]
     DownloadFailed(String),
+    #[error("Invalid language: {0}")]
+    InvalidLanguage(String),
     #[error("Invalid model size")]
     InvalidModelSize,
 }
+
+/// Whisper-supported language codes (ISO 639-1) plus "auto" for auto-detection.
+const WHISPER_SUPPORTED_LANGUAGES: &[&str] = &[
+    "auto", "en", "zh", "de", "es", "ru", "ko", "fr", "ja", "pt", "tr", "pl", "ca", "nl", "ar",
+    "sv", "it", "id", "hi", "fi", "vi", "he", "uk", "el", "ms", "cs", "ro", "da", "hu", "ta",
+    "no", "th", "ur", "hr", "bg", "lt", "la", "mi", "ml", "cy", "sk", "te", "fa", "lv", "bn",
+    "sr", "az", "sl", "kn", "et", "mk", "br", "eu", "is", "hy", "ne", "mn", "bs", "kk", "sq",
+    "sw", "gl", "mr", "pa", "si", "km", "sn", "yo", "so", "af", "oc", "ka", "be", "tg", "sd",
+    "gu", "am", "yi", "lo", "uz", "fo", "ht", "ps", "tk", "nn", "mt", "sa", "lb", "my", "bo",
+    "tl", "mg", "as", "tt", "haw", "ln", "ha", "ba", "jw", "su", "yue",
+];
 
 /// Response for model download endpoint.
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -94,6 +107,10 @@ impl SttApi {
         let size = options.model_size;
         let language = options.language.clone();
 
+        if !WHISPER_SUPPORTED_LANGUAGES.contains(&language.as_str()) {
+            return Err(SttError::InvalidLanguage(language));
+        }
+
         self.ensure_no_active_session().await?;
         self.ensure_model_available(size)?;
         self.transition_to_loading(size, &language).await;
@@ -134,6 +151,15 @@ impl SttApi {
         session.state.clone()
     }
 
+    /// Atomically get current state and event receiver under one lock.
+    /// Eliminates TOCTOU race between separate `current_state()` + `new_event_receiver()` calls.
+    pub async fn subscribe(&self) -> (SttState, Receiver<SttEvent>) {
+        let session = self.session.0.lock().await;
+        let state = session.state.clone();
+        let rx = session.new_event_receiver();
+        (state, rx)
+    }
+
     /// Download a model. Returns the download status.
     pub async fn download_model(
         &self,
@@ -153,10 +179,10 @@ impl SttApi {
     pub fn list_models(&self) -> Vec<ModelInfo> {
         list_available_models()
             .into_iter()
-            .map(|(size, bytes, path)| ModelInfo {
+            .map(|(size, bytes, _path)| ModelInfo {
                 model_size: size,
                 size_bytes: bytes,
-                path: path.to_string_lossy().to_string(),
+                path: relative_model_path(size),
             })
             .collect()
     }
@@ -289,15 +315,21 @@ async fn load_context_blocking(size: SttModelSize) -> Result<Arc<WhisperContext>
     .map_err(|e| SttError::ModelLoadFailed(e.to_string()))?
 }
 
-fn model_path_string(size: SttModelSize) -> String {
-    model_path(size).to_string_lossy().to_string()
+fn relative_model_path(size: SttModelSize) -> String {
+    let path = model_path(size);
+    format!(
+        "models/{}",
+        path.file_name()
+            .map(|f| f.to_string_lossy())
+            .unwrap_or_default()
+    )
 }
 
 fn already_exists_response(size: SttModelSize) -> ModelDownloadResponse {
     ModelDownloadResponse {
         model_size: size,
         status: DownloadStatus::AlreadyExists,
-        path: Some(model_path_string(size)),
+        path: Some(relative_model_path(size)),
     }
 }
 
@@ -313,6 +345,6 @@ fn downloaded_response(size: SttModelSize) -> ModelDownloadResponse {
     ModelDownloadResponse {
         model_size: size,
         status: DownloadStatus::Downloaded,
-        path: Some(model_path_string(size)),
+        path: Some(relative_model_path(size)),
     }
 }

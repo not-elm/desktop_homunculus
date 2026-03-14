@@ -99,6 +99,7 @@ impl SttSession {
 
 /// STT session state.
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[serde(tag = "state", rename_all = "camelCase")]
 pub enum SttState {
     Idle,

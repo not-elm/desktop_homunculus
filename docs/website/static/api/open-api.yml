@@ -613,6 +613,34 @@ paths:
       responses:
         '200':
           description: Preference saved
+  /settings/fps:
+    get:
+      tags:
+      - settings
+      summary: Get the current frame rate (FPS).
+      operationId: get
+      responses:
+        '200':
+          description: Current FPS
+          content:
+            text/plain:
+              schema:
+                type: number
+                format: double
+    put:
+      tags:
+      - settings
+      summary: Set the frame rate (FPS). Persists and applies immediately.
+      operationId: put
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetFpsBody'
+        required: true
+      responses:
+        '200':
+          description: FPS updated
   /rpc/call:
     post:
       tags:
@@ -819,6 +847,110 @@ paths:
       responses:
         '200':
           description: Signal sent
+  /stt/models:
+    get:
+      tags:
+      - stt
+      summary: List downloaded STT models.
+      operationId: list_models
+      responses:
+        '200':
+          description: List of available models
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ModelInfo'
+  /stt/models/download:
+    post:
+      tags:
+      - stt
+      summary: Download an STT model.
+      operationId: download_model
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ModelDownloadRequest'
+        required: true
+      responses:
+        '200':
+          description: Download result
+        '422':
+          description: Invalid model size
+        '500':
+          description: Download failed
+  /stt/start:
+    post:
+      tags:
+      - stt
+      summary: Start an STT session.
+      operationId: start
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - type: 'null'
+              - $ref: '#/components/schemas/SttStartOptions'
+      responses:
+        '200':
+          description: Session started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SttState'
+        '409':
+          description: Session already active
+        '412':
+          description: Model not available
+        '422':
+          description: Invalid language
+        '500':
+          description: Internal server error
+        '503':
+          description: Microphone unavailable
+  /stt/status:
+    get:
+      tags:
+      - stt
+      summary: Get the current STT session status.
+      operationId: status
+      responses:
+        '200':
+          description: Current session state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SttState'
+  /stt/stop:
+    post:
+      tags:
+      - stt
+      summary: Stop the current STT session. Idempotent.
+      operationId: stop
+      responses:
+        '200':
+          description: Session stopped
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SttState'
+  /stt/stream:
+    get:
+      tags:
+      - stt
+      summary: Stream STT events via SSE.
+      description: |-
+        Events: `status`, `result`, `session_error`, `stopped`.
+        Sends current status on connect (late-join sync).
+      operationId: stream
+      responses:
+        '200':
+          description: SSE event stream
+          content:
+            text/event-stream: {}
   /vrm:
     get:
       tags:
@@ -2166,6 +2298,30 @@ components:
           type: string
         text:
           type: string
+    ModelDownloadRequest:
+      type: object
+      description: Request body for model download.
+      required:
+      - modelSize
+      properties:
+        modelSize:
+          $ref: '#/components/schemas/SttModelSize'
+    ModelInfo:
+      type: object
+      description: Model info for the list endpoint.
+      required:
+      - modelSize
+      - sizeBytes
+      - path
+      properties:
+        modelSize:
+          $ref: '#/components/schemas/SttModelSize'
+        path:
+          type: string
+        sizeBytes:
+          type: integer
+          format: int64
+          minimum: 0
     MoveTarget:
       oneOf:
       - type: object
@@ -2590,6 +2746,75 @@ components:
         properties:
           asset:
             $ref: '#/components/schemas/AssetId'
+    SttModelSize:
+      type: string
+      description: Whisper model size variants.
+      enum:
+      - tiny
+      - base
+      - small
+      - medium
+    SttStartOptions:
+      type: object
+      description: Session start options.
+      properties:
+        language:
+          type: string
+        modelSize:
+          $ref: '#/components/schemas/SttModelSize'
+    SttState:
+      oneOf:
+      - type: object
+        required:
+        - state
+        properties:
+          state:
+            type: string
+            enum:
+            - idle
+      - type: object
+        required:
+        - language
+        - modelSize
+        - state
+        properties:
+          language:
+            type: string
+          modelSize:
+            $ref: '#/components/schemas/SttModelSize'
+          state:
+            type: string
+            enum:
+            - loading
+      - type: object
+        required:
+        - language
+        - modelSize
+        - state
+        properties:
+          language:
+            type: string
+          modelSize:
+            $ref: '#/components/schemas/SttModelSize'
+          state:
+            type: string
+            enum:
+            - listening
+      - type: object
+        required:
+        - error
+        - message
+        - state
+        properties:
+          error:
+            type: string
+          message:
+            type: string
+          state:
+            type: string
+            enum:
+            - error
+      description: STT session state.
     TimelineBody:
       allOf:
       - type:
@@ -3047,5 +3272,3 @@ tags:
   description: Command execution
 - name: assets
   description: Asset management
-- name: rpc
-  description: MOD service RPC registration and proxy

@@ -794,6 +794,30 @@ mod tests {
     }
 
     #[test]
+    fn test_stt_status() {
+        let (mut app, router) = test_app();
+        let req = Request::get("/stt/status").body(Body::empty()).unwrap();
+        block_on(assert_response(
+            &mut app,
+            router,
+            req,
+            serde_json::json!({"state": "idle"}),
+        ));
+    }
+
+    #[test]
+    fn test_stt_stop_idempotent() {
+        let (mut app, router) = test_app();
+        let req = Request::post("/stt/stop").body(Body::empty()).unwrap();
+        block_on(assert_response(
+            &mut app,
+            router,
+            req,
+            serde_json::json!({"state": "idle"}),
+        ));
+    }
+
+    #[test]
     fn test_list_signals_with_channels() {
         let (mut app, router) = test_app();
 
