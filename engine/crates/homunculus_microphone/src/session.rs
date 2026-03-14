@@ -10,9 +10,15 @@ use crate::model::SttModelSize;
 #[derive(Clone)]
 pub struct SharedSttSession(pub Arc<tokio::sync::Mutex<SttSession>>);
 
+impl Default for SharedSttSession {
+    fn default() -> Self {
+        Self(Arc::new(tokio::sync::Mutex::new(SttSession::default())))
+    }
+}
+
 impl SharedSttSession {
     pub fn new() -> Self {
-        Self(Arc::new(tokio::sync::Mutex::new(SttSession::default())))
+        Self::default()
     }
 }
 

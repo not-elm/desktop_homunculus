@@ -8,9 +8,15 @@ use whisper_rs::WhisperContext;
 #[derive(Clone)]
 pub struct SharedSttModelCache(pub Arc<tokio::sync::Mutex<SttModelCache>>);
 
+impl Default for SharedSttModelCache {
+    fn default() -> Self {
+        Self(Arc::new(tokio::sync::Mutex::new(SttModelCache::default())))
+    }
+}
+
 impl SharedSttModelCache {
     pub fn new() -> Self {
-        Self(Arc::new(tokio::sync::Mutex::new(SttModelCache::default())))
+        Self::default()
     }
 }
 
