@@ -193,6 +193,122 @@ export namespace stt {
         }
     }
 
+    /** Information about a downloaded STT model. */
+    export interface ModelInfo {
+        /** The model size. */
+        modelSize: SttModelSize;
+        /** File size in bytes. */
+        sizeBytes: number;
+        /** Relative file path. */
+        path: string;
+    }
+
+    /** Response from the non-streaming model download endpoint. */
+    export interface ModelDownloadResponse {
+        /** The model size. */
+        modelSize: SttModelSize;
+        /** Download status. */
+        status: "downloaded" | "alreadyExists" | "downloading";
+        /** File path (present when downloaded or already exists). */
+        path?: string;
+    }
+
+    /** A progress or completion event from the streaming download endpoint. */
+    export type DownloadEvent =
+        | { type: "progress"; downloadedBytes: number; totalBytes: number; percentage: number }
+        | { type: "complete"; modelSize: SttModelSize; path: string }
+        | { type: "error"; message: string };
+
+    /**
+     * Model management sub-namespace for downloading and listing STT models.
+     */
+    export namespace models {
+        /**
+         * Lists all downloaded STT models.
+         *
+         * @returns Array of downloaded model information
+         *
+         * @example
+         * ```typescript
+         * const models = await stt.models.list();
+         * for (const m of models) {
+         *   console.log(`${m.modelSize}: ${m.sizeBytes} bytes`);
+         * }
+         * ```
+         */
+        export async function list(): Promise<ModelInfo[]> {
+            const response = await host.get(host.createUrl("stt/models"));
+            return await response.json() as ModelInfo[];
+        }
+
+        /**
+         * Downloads an STT model with optional progress streaming.
+         *
+         * When called with `await`, returns the final download response.
+         * When iterated with `for await...of`, yields progress events.
+         *
+         * @param options - Download options including model size
+         * @returns An async iterable of download events (also awaitable for final result)
+         *
+         * @example
+         * ```typescript
+         * // Simple download (no progress)
+         * const result = await stt.models.download({ modelSize: "small" });
+         * console.log(result.status); // "downloaded" | "alreadyExists"
+         *
+         * // Download with progress
+         * for await (const event of stt.models.download({ modelSize: "medium" })) {
+         *   if (event.type === "progress") {
+         *     console.log(`${event.percentage.toFixed(1)}%`);
+         *   } else if (event.type === "complete") {
+         *     console.log(`Done: ${event.path}`);
+         *   }
+         * }
+         * ```
+         */
+        export function download(options: {
+            modelSize: SttModelSize;
+            signal?: AbortSignal;
+        }): DownloadStream {
+            return new DownloadStream(options);
+        }
+    }
+
+    /**
+     * A download stream that is both an async iterable (for progress)
+     * and a thenable (for simple await).
+     */
+    export class DownloadStream implements AsyncIterable<DownloadEvent>, PromiseLike<ModelDownloadResponse> {
+        private readonly options: { modelSize: SttModelSize; signal?: AbortSignal };
+
+        constructor(options: { modelSize: SttModelSize; signal?: AbortSignal }) {
+            this.options = options;
+        }
+
+        async *[Symbol.asyncIterator](): AsyncIterator<DownloadEvent> {
+            const stream = host.postStream<DownloadEvent>(
+                host.createUrl("stt/models/download/stream"),
+                { modelSize: this.options.modelSize },
+                this.options.signal,
+            );
+            yield* stream;
+        }
+
+        then<TResult1 = ModelDownloadResponse, TResult2 = never>(
+            onfulfilled?: ((value: ModelDownloadResponse) => TResult1 | PromiseLike<TResult1>) | null,
+            onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
+        ): Promise<TResult1 | TResult2> {
+            const promise = (async (): Promise<ModelDownloadResponse> => {
+                const response = await host.post(
+                    host.createUrl("stt/models/download"),
+                    { modelSize: this.options.modelSize },
+                );
+                return await response.json() as ModelDownloadResponse;
+            })();
+            return promise.then(onfulfilled, onrejected);
+        }
+    }
+
     /** Callbacks for SSE stream events. All callbacks are optional. */
     export interface StreamCallbacks {
         /** Called when a transcription result is received. */
