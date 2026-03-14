@@ -1,5 +1,5 @@
 [package]
-name = "homunculus_stt"
+name = "homunculus_microphone"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
@@ -8,6 +8,9 @@ license.workspace = true
 publish.workspace = true
 
 [dependencies]
+serde = { workspace = true }
+cpal = { version = "0.17" }
+thiserror = { workspace = true }
 
 
 [lints]
