@@ -66,11 +66,10 @@ impl SttSession {
             .ok();
     }
 
-    /// Stops the session by cancelling the token.
-    /// The `Stopped` event is sent when the inference loop exits (to prevent double-firing).
+    /// Stops the session by cancelling the pipeline and broadcasting `Idle` status to SSE clients.
     pub fn stop(&mut self) {
         self.cancel_pipeline();
-        self.state = SttState::Idle;
+        self.transition(SttState::Idle);
     }
 
     /// Stops the session due to an error.
