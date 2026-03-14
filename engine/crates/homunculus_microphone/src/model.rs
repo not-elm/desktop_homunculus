@@ -23,6 +23,15 @@ impl SharedSttModelCache {
     }
 }
 
+/// Progress state for model downloads, sent via watch channel.
+#[derive(Clone, Debug, Default, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DownloadProgress {
+    pub downloaded_bytes: u64,
+    pub total_bytes: u64,
+    pub percentage: f64,
+}
+
 /// Cache of loaded WhisperContext instances with download-in-progress tracking.
 #[derive(Default)]
 pub struct SttModelCache {
@@ -132,30 +141,41 @@ pub fn list_available_models() -> Vec<(SttModelSize, u64, PathBuf)> {
 }
 
 /// Downloads a model from HuggingFace.
-pub async fn download_model(
+///
+/// Returns a watch receiver for progress tracking and a join handle for the spawned task.
+pub fn download_model(
     size: SttModelSize,
     cancel: &tokio_util::sync::CancellationToken,
-) -> Result<(), DownloadError> {
-    let url = model_url(size);
-    let path = model_path(size);
-    ensure_model_dir(&path)?;
+) -> (
+    tokio::sync::watch::Receiver<DownloadProgress>,
+    tokio::task::JoinHandle<Result<(), DownloadError>>,
+) {
+    let (progress_tx, progress_rx) = tokio::sync::watch::channel(DownloadProgress::default());
+    let cancel = cancel.clone();
+    let handle = tokio::spawn(async move {
+        let url = model_url(size);
+        let path = model_path(size);
+        ensure_model_dir(&path)?;
 
-    let client = reqwest::Client::new();
-    let response = fetch_model(&client, &url).await?;
+        let client = reqwest::Client::new();
+        let response = fetch_model(&client, &url).await?;
 
-    let tmp_path = path.with_extension("bin.tmp");
-    stream_to_file(response, &tmp_path, cancel).await?;
+        let total_bytes = size.expected_size();
+        let tmp_path = path.with_extension("bin.tmp");
+        stream_to_file(response, &tmp_path, &cancel, total_bytes, &progress_tx).await?;
 
-    if let Err(e) = verify_model_size(&tmp_path, size.expected_size()).await {
-        let _ = tokio::fs::remove_file(&tmp_path).await;
-        return Err(e);
-    }
+        if let Err(e) = verify_model_size(&tmp_path, total_bytes).await {
+            let _ = tokio::fs::remove_file(&tmp_path).await;
+            return Err(e);
+        }
 
-    tokio::fs::rename(&tmp_path, &path)
-        .await
-        .map_err(DownloadError::Io)?;
+        tokio::fs::rename(&tmp_path, &path)
+            .await
+            .map_err(DownloadError::Io)?;
 
-    Ok(())
+        Ok(())
+    });
+    (progress_rx, handle)
 }
 
 fn model_url(size: SttModelSize) -> String {
@@ -193,11 +213,14 @@ async fn stream_to_file(
     response: reqwest::Response,
     tmp_path: &Path,
     cancel: &tokio_util::sync::CancellationToken,
+    total_bytes: u64,
+    progress_tx: &tokio::sync::watch::Sender<DownloadProgress>,
 ) -> Result<(), DownloadError> {
     let mut file = tokio::fs::File::create(tmp_path)
         .await
         .map_err(DownloadError::Io)?;
 
+    let mut downloaded_bytes: u64 = 0;
     let mut stream = response.bytes_stream();
     while let Some(chunk) = stream.next().await {
         if cancel.is_cancelled() {
@@ -206,7 +229,18 @@ async fn stream_to_file(
             return Err(DownloadError::Cancelled);
         }
         let chunk = chunk.map_err(DownloadError::Request)?;
+        downloaded_bytes += chunk.len() as u64;
         file.write_all(&chunk).await.map_err(DownloadError::Io)?;
+        let percentage = if total_bytes > 0 {
+            (downloaded_bytes as f64 / total_bytes as f64 * 100.0).min(100.0)
+        } else {
+            0.0
+        };
+        let _ = progress_tx.send(DownloadProgress {
+            downloaded_bytes,
+            total_bytes,
+            percentage,
+        });
     }
 
     file.flush().await.map_err(DownloadError::Io)?;

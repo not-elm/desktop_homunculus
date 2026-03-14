@@ -16,7 +16,7 @@ pub mod vad;
 
 pub use capture::get_input_device;
 pub use error::MicrophoneError;
-pub use model::{SharedSttModelCache, SttModelCache, SttModelSize, load_whisper_context};
+pub use model::{DownloadProgress, SharedSttModelCache, SttModelCache, SttModelSize, load_whisper_context};
 pub use permissions::ensure_microphone_permission;
 pub use pipeline::spawn_pipeline;
 pub use session::{SharedSttSession, SttEvent, SttSession, SttStartOptions, SttState};

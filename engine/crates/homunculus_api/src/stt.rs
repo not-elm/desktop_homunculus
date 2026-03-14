@@ -300,7 +300,10 @@ impl SttApi {
         size: SttModelSize,
     ) -> Result<ModelDownloadResponse, SttError> {
         self.mark_downloading(size).await;
-        let result = mic_download_model(size, &CancellationToken::new()).await;
+        let (_rx, handle) = mic_download_model(size, &CancellationToken::new());
+        let result = handle
+            .await
+            .map_err(|e| SttError::DownloadFailed(e.to_string()))?;
         self.unmark_downloading(size).await;
 
         result
