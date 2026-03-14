@@ -8,7 +8,7 @@ use axum::response::sse::{Event, KeepAlive};
 use axum::response::{IntoResponse, Response, Sse};
 use bevy::tasks::futures_lite::{Stream, StreamExt};
 use futures::stream::unfold;
-use homunculus_api::stt::{ModelDownloadResponse, ModelInfo, SttApi, SttError};
+use homunculus_api::stt::{ModelDownloadResponse, ModelInfo, SttApi, SttError, SttStartResponse};
 use homunculus_microphone::{
     SttModelSize,
     session::{SttEvent, SttStartOptions, SttState},
@@ -50,8 +50,8 @@ struct SttSessionErrorPayload<'a> {
     tag = "stt",
     request_body(content = Option<SttStartOptions>, content_type = "application/json"),
     responses(
-        (status = 200, description = "Session started", body = SttState),
-        (status = 409, description = "Session already active"),
+        (status = 200, description = "Session started", body = SttStartResponse),
+        (status = 409, description = "Session already active or loading"),
         (status = 412, description = "Model not available"),
         (status = 422, description = "Invalid language"),
         (status = 500, description = "Internal server error"),
@@ -61,10 +61,10 @@ struct SttSessionErrorPayload<'a> {
 pub async fn start(
     State(api): State<SttApi>,
     body: Option<Json<SttStartOptions>>,
-) -> Result<Json<SttState>, SttErrorResponse> {
+) -> Result<Json<SttStartResponse>, SttErrorResponse> {
     let options = body.map(|b| b.0).unwrap_or_default();
-    let state = api.start(options).await?;
-    Ok(Json(state))
+    let response = api.start(options).await?;
+    Ok(Json(response))
 }
 
 /// Stop the current STT session. Idempotent.

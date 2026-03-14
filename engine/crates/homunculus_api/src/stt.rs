@@ -89,6 +89,17 @@ pub struct ModelInfo {
     pub path: String,
 }
 
+/// Response from the start endpoint, includes restart indicator.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct SttStartResponse {
+    #[serde(flatten)]
+    pub state: SttState,
+    /// True if an existing Listening session was implicitly stopped.
+    pub restarted: bool,
+}
+
 /// STT API resource — manages STT sessions and model downloads.
 #[derive(Clone)]
 pub struct SttApi {
@@ -105,7 +116,7 @@ impl SttApi {
     }
 
     /// Start an STT session.
-    pub async fn start(&self, options: SttStartOptions) -> Result<SttState, SttError> {
+    pub async fn start(&self, options: SttStartOptions) -> Result<SttStartResponse, SttError> {
         let size = options.model_size;
         let language = options.language.clone();
 
@@ -113,17 +124,20 @@ impl SttApi {
             return Err(SttError::InvalidLanguage(language));
         }
 
-        self.try_begin_loading(size, &language).await?;
+        let restarted = self.ensure_session_ready(size, &language).await?;
 
         let ctx = self.load_or_get_context(size).await?;
 
         let mut session = self.session.0.lock().await;
         if !matches!(session.state, SttState::Loading { .. }) {
-            return Ok(session.state.clone());
+            return Ok(SttStartResponse {
+                state: session.state.clone(),
+                restarted,
+            });
         }
 
-        self.launch_pipeline(&mut session, ctx, size, language)
-            .await
+        let state = self.launch_pipeline(&mut session, ctx, size, language).await?;
+        Ok(SttStartResponse { state, restarted })
     }
 
     /// Stop the current STT session. Idempotent.
@@ -187,16 +201,20 @@ impl SttApi {
             .collect()
     }
 
-    /// Atomically check no active session, verify model availability, and transition to Loading.
-    /// Holds a single lock across all three steps to prevent TOCTOU races.
-    async fn try_begin_loading(&self, size: SttModelSize, language: &str) -> Result<(), SttError> {
+    /// Returns `Ok(true)` if an existing session was stopped (implicit restart),
+    /// `Ok(false)` if no session was active.
+    async fn ensure_session_ready(&self, size: SttModelSize, language: &str) -> Result<bool, SttError> {
         let mut session = self.session.0.lock().await;
-        match &session.state {
-            SttState::Loading { .. } | SttState::Listening { .. } => {
-                return Err(SttError::SessionAlreadyActive);
+        let restarted = match &session.state {
+            SttState::Loading { .. } => {
+                return Err(SttError::SessionLoading);
             }
-            _ => {}
-        }
+            SttState::Listening { .. } => {
+                session.stop();
+                true
+            }
+            _ => false,
+        };
         if !is_model_available(size) {
             return Err(SttError::ModelNotAvailable(format!(
                 "Model '{}' is not downloaded. Use POST /stt/models/download first.",
@@ -209,7 +227,7 @@ impl SttApi {
             language: language.to_string(),
             model_size: size,
         });
-        Ok(())
+        Ok(restarted)
     }
 
     async fn launch_pipeline(
