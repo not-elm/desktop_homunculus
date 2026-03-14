@@ -8,11 +8,10 @@ use std::time::Instant;
 use async_broadcast::Receiver;
 use homunculus_microphone::session::{SttEvent, SttSession, SttStartOptions, SttState};
 use homunculus_microphone::{
-    SharedSttModelCache, SharedSttSession, SttModelSize, WhisperContext, get_input_device,
-    load_whisper_context,
+    DownloadProgress, SharedSttModelCache, SharedSttSession, SttModelSize, WhisperContext,
+    get_input_device, load_whisper_context,
     model::{
-        DownloadProgress, download_model as mic_download_model, is_model_available,
-        list_available_models, model_path,
+        download_model as mic_download_model, is_model_available, list_available_models, model_path,
     },
     permissions::ensure_microphone_permission,
     pipeline::spawn_pipeline,
