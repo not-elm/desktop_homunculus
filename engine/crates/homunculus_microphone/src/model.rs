@@ -54,6 +54,7 @@ impl SttModelCache {
 
 /// Whisper model size variants.
 #[derive(Clone, Copy, Debug, Default, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[serde(rename_all = "lowercase")]
 pub enum SttModelSize {
     Tiny,
@@ -81,6 +82,16 @@ impl SttModelSize {
             Self::Medium => 491_766_272,
         }
     }
+}
+
+/// Load a `WhisperContext` from the model file on disk.
+///
+/// This is a blocking operation and should be called from a blocking task.
+pub fn load_whisper_context(size: SttModelSize) -> Result<Arc<WhisperContext>, String> {
+    let path = model_path(size);
+    WhisperContext::new_with_params(&path, whisper_rs::WhisperContextParameters::default())
+        .map(Arc::new)
+        .map_err(|e| e.to_string())
 }
 
 /// Returns the path to the model file.

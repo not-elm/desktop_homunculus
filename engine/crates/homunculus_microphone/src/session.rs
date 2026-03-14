@@ -137,6 +137,7 @@ pub enum SttEvent {
 
 /// Session start options.
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct SttStartOptions {
     #[serde(default = "default_language")]
