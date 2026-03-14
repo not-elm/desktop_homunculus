@@ -32,12 +32,43 @@ export class HomunculusApiError extends Error {
     /** The response body text */
     readonly body: string;
 
+    private _code: string | undefined | null = null;
+
     constructor(statusCode: number, endpoint: string, body: string) {
         super(`${endpoint}: ${statusCode} ${body}`);
         this.name = "HomunculusApiError";
         this.statusCode = statusCode;
         this.endpoint = endpoint;
         this.body = body;
+    }
+
+    /**
+     * The structured error code extracted from the JSON response body.
+     *
+     * Lazily parses the `body` field on first access. Returns `undefined`
+     * if the body is not valid JSON or does not contain an `error` field.
+     *
+     * @example
+     * ```typescript
+     * try {
+     *   await stt.session.start();
+     * } catch (e) {
+     *   if (e instanceof HomunculusApiError && e.code === "no_microphone") {
+     *     // Handle missing microphone
+     *   }
+     * }
+     * ```
+     */
+    get code(): string | undefined {
+        if (this._code === null) {
+            try {
+                const parsed = JSON.parse(this.body);
+                this._code = parsed?.error ?? undefined;
+            } catch {
+                this._code = undefined;
+            }
+        }
+        return this._code ?? undefined;
     }
 }
 
