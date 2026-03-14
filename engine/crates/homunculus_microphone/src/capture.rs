@@ -114,7 +114,9 @@ where
             config,
             move |data: &[f32], _| {
                 let mono = downmix_to_mono(data, channels);
-                let _ = tx.try_send(mono);
+                if let Err(mpsc::TrySendError::Full(_)) = tx.try_send(mono) {
+                    tracing::warn!("capture→VAD channel full, dropping audio frame");
+                }
             },
             error_callback,
             None,
@@ -132,7 +134,9 @@ where
                         })
                         .collect()
                 };
-                let _ = tx.try_send(mono);
+                if let Err(mpsc::TrySendError::Full(_)) = tx.try_send(mono) {
+                    tracing::warn!("capture→VAD channel full, dropping audio frame");
+                }
             },
             error_callback,
             None,
