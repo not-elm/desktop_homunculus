@@ -16,6 +16,9 @@ pub struct SttConfig {
     pub energy_threshold: Option<f32>,
     /// Default Whisper model size.
     pub default_model: Option<String>,
+    /// Maximum speech chunk duration in milliseconds before forced emission.
+    /// Prevents O(L²) inference cost from unbounded continuous speech.
+    pub max_chunk_ms: Option<u32>,
 }
 
 fn default_mods_dir() -> PathBuf {

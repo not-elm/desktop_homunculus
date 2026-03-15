@@ -54,6 +54,9 @@ impl PipelineMetrics {
 pub struct VadConfig {
     pub silence_ms: u32,
     pub energy_threshold: f32,
+    /// Maximum chunk duration in ms. Chunks exceeding this are force-emitted.
+    /// Default: 8000ms (8 seconds).
+    pub max_chunk_ms: Option<u32>,
 }
 
 impl Default for VadConfig {
@@ -61,6 +64,7 @@ impl Default for VadConfig {
         Self {
             silence_ms: 400,
             energy_threshold: 0.01,
+            max_chunk_ms: Some(8000),
         }
     }
 }
@@ -72,6 +76,7 @@ impl VadConfig {
             Ok(config) => Self {
                 silence_ms: config.stt.silence_ms.unwrap_or(400),
                 energy_threshold: config.stt.energy_threshold.unwrap_or(0.01),
+                max_chunk_ms: config.stt.max_chunk_ms.or(Some(8000)),
             },
             Err(_) => Self::default(),
         }
@@ -87,6 +92,7 @@ pub struct VadStateMachine {
     min_chunk_samples: usize,
     energy_threshold: f32,
     frame_i16_buf: Vec<i16>,
+    max_chunk_samples: Option<usize>,
 }
 
 impl VadStateMachine {
@@ -102,15 +108,28 @@ impl VadStateMachine {
             min_chunk_samples: 4_800, // 0.3s at 16kHz
             energy_threshold: config.energy_threshold,
             frame_i16_buf: vec![0i16; VAD_FRAME_SIZE],
+            max_chunk_samples: config
+                .max_chunk_ms
+                .map(|ms| (16000.0 * ms as f64 / 1000.0) as usize),
         }
     }
 
     /// Process a single VAD frame. Returns a completed speech chunk when silence is detected.
+    ///
+    /// Forces emission when the buffer exceeds `max_chunk_samples` to prevent
+    /// O(L²) Whisper inference cost from unbounded continuous speech.
     pub fn process_frame(&mut self, frame: &[f32], is_voice: bool) -> Option<Vec<f32>> {
         if is_voice {
             self.in_speech = true;
             self.silence_samples = 0;
             self.speech_buffer.extend_from_slice(frame);
+
+            if let Some(max) = self.max_chunk_samples
+                && self.speech_buffer.len() >= max
+            {
+                return self.finalize_chunk();
+            }
+
             return None;
         }
 
@@ -370,6 +389,7 @@ mod tests {
         let config = VadConfig {
             silence_ms: 700,
             energy_threshold: 0.01,
+            max_chunk_ms: None,
         };
         let mut sm = VadStateMachine::new(&config);
         let speech_frame = vec![0.5; 320];
@@ -392,6 +412,7 @@ mod tests {
         let config = VadConfig {
             silence_ms: 700,
             energy_threshold: 0.001,
+            max_chunk_ms: None,
         };
         let mut sm = VadStateMachine::new(&config);
         let speech_frame = vec![0.1; 320];
@@ -414,6 +435,7 @@ mod tests {
         let config = VadConfig {
             silence_ms: 700,
             energy_threshold: 0.5,
+            max_chunk_ms: None,
         };
         let mut sm = VadStateMachine::new(&config);
         let quiet_frame = vec![0.001; 320];
@@ -436,6 +458,47 @@ mod tests {
         let config = VadConfig::default();
         assert_eq!(config.silence_ms, 400);
         assert!((config.energy_threshold - 0.01).abs() < f32::EPSILON);
+        assert_eq!(config.max_chunk_ms, Some(8000));
+    }
+
+    #[test]
+    fn max_chunk_ms_forces_emission() {
+        // 400ms = 6400 samples at 16kHz, exceeds min_chunk_samples (4800)
+        let config = VadConfig {
+            silence_ms: 2000,
+            energy_threshold: 0.001,
+            max_chunk_ms: Some(400),
+        };
+        let mut sm = VadStateMachine::new(&config);
+
+        let frame: Vec<f32> = vec![0.5; 320]; // 20ms frame
+
+        // 6400 samples / 320 per frame = 20 frames to reach the limit
+        for i in 0..25 {
+            let result = sm.process_frame(&frame, true);
+            if i >= 19 {
+                if let Some(chunk) = result {
+                    assert!(chunk.len() >= 6400);
+                    return;
+                }
+            }
+        }
+        panic!("Expected forced emission but none occurred");
+    }
+
+    #[test]
+    fn max_chunk_ms_none_allows_unbounded() {
+        let config = VadConfig {
+            silence_ms: 400,
+            energy_threshold: 0.001,
+            max_chunk_ms: None,
+        };
+        let mut sm = VadStateMachine::new(&config);
+
+        let frame: Vec<f32> = vec![0.5; 320];
+        for _ in 0..100 {
+            assert!(sm.process_frame(&frame, true).is_none());
+        }
     }
 
     #[test]
