@@ -127,6 +127,11 @@ pub struct SttApi {
 }
 
 impl SttApi {
+    /// Returns the list of supported language codes.
+    pub fn supported_languages() -> &'static [&'static str] {
+        WHISPER_SUPPORTED_LANGUAGES
+    }
+
     pub fn new(session: SharedSttSession) -> Self {
         let parent = CancellationToken::new();
         let shutdown_token = SttShutdownToken(parent.clone());

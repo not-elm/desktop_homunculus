@@ -228,6 +228,19 @@ pub async fn list_models(State(api): State<SttApi>) -> Json<Vec<ModelInfo>> {
     Json(api.list_models())
 }
 
+/// List supported STT languages.
+#[utoipa::path(
+    get,
+    path = "/languages",
+    tag = "stt",
+    responses(
+        (status = 200, description = "List of supported language codes", body = Vec<String>),
+    ),
+)]
+pub async fn list_languages() -> Json<Vec<&'static str>> {
+    Json(SttApi::supported_languages().to_vec())
+}
+
 /// NDJSON event for download progress streaming.
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase", tag = "type")]

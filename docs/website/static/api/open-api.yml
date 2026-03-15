@@ -847,6 +847,21 @@ paths:
       responses:
         '200':
           description: Signal sent
+  /stt/languages:
+    get:
+      tags:
+      - stt
+      summary: List supported STT languages.
+      operationId: list_languages
+      responses:
+        '200':
+          description: List of supported language codes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
   /stt/models:
     get:
       tags:
