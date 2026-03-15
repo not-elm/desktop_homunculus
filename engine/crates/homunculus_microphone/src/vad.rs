@@ -413,7 +413,6 @@ fn vad_thread_main(
                 tracing::info!("VAD: first voice detected");
             }
             if let Some(chunk) = state_machine.process_frame(&frame, is_voice) {
-                println!("1===========");
                 let len = chunk.len();
                 let secs = len as f64 / 16000.0;
                 let seq = metrics.next_seq();

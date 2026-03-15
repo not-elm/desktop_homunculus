@@ -132,6 +132,7 @@ where
         .unwrap_or(cpal::SampleFormat::F32);
     tracing::info!("Capture: stream built, sample_format = {supported:?}");
     let first_callback = Arc::new(AtomicBool::new(false));
+    let config_rate = config.sample_rate.0;
     match supported {
         cpal::SampleFormat::F32 => {
             let first_callback = Arc::clone(&first_callback);
@@ -140,7 +141,8 @@ where
                 move |data: &[f32], _| {
                     if !first_callback.swap(true, Ordering::Relaxed) {
                         tracing::info!(
-                            "Capture: first audio callback fired, {} samples",
+                            "Capture: first audio callback fired, {} samples, \
+                             config_rate={config_rate}Hz, format=F32",
                             data.len()
                         );
                     }
@@ -166,7 +168,8 @@ where
                 move |data: &[i16], _| {
                     if !first_callback.swap(true, Ordering::Relaxed) {
                         tracing::info!(
-                            "Capture: first audio callback fired, {} samples",
+                            "Capture: first audio callback fired, {} samples, \
+                             config_rate={config_rate}Hz, format=I16",
                             data.len()
                         );
                     }
