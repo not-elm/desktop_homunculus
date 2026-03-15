@@ -62,7 +62,7 @@ pub struct VadConfig {
 impl Default for VadConfig {
     fn default() -> Self {
         Self {
-            silence_ms: 400,
+            silence_ms: 300,
             energy_threshold: 0.01,
             max_chunk_ms: Some(8000),
         }
@@ -74,7 +74,7 @@ impl VadConfig {
     pub fn from_config() -> Self {
         match homunculus_utils::config::HomunculusConfig::load() {
             Ok(config) => Self {
-                silence_ms: config.stt.silence_ms.unwrap_or(400),
+                silence_ms: config.stt.silence_ms.unwrap_or(300),
                 energy_threshold: config.stt.energy_threshold.unwrap_or(0.01),
                 max_chunk_ms: config.stt.max_chunk_ms.or(Some(8000)),
             },
@@ -84,6 +84,9 @@ impl VadConfig {
 }
 
 /// VAD state machine that buffers speech and emits chunks on silence boundaries.
+///
+/// Operates at the VAD sample rate (which may be the capture device's native rate).
+/// When `needs_post_resample` is true, `finalize_chunk` resamples output to 16kHz.
 pub struct VadStateMachine {
     speech_buffer: Vec<f32>,
     silence_samples: usize,
@@ -93,28 +96,36 @@ pub struct VadStateMachine {
     energy_threshold: f32,
     frame_i16_buf: Vec<i16>,
     max_chunk_samples: Option<usize>,
+    vad_rate: u32,
+    needs_post_resample: bool,
 }
 
 impl VadStateMachine {
     /// Create a new state machine with the given configuration.
-    pub fn new(config: &VadConfig) -> Self {
-        const VAD_FRAME_SIZE: usize = 320;
+    ///
+    /// `vad_rate` is the sample rate at which VAD operates (e.g. 16000 or 48000).
+    /// If `needs_post_resample` is true, finalized chunks are resampled to 16kHz.
+    pub fn new(config: &VadConfig, vad_rate: u32, needs_post_resample: bool) -> Self {
+        let vad_frame_size = (vad_rate / 100) as usize; // 10ms at vad_rate
         Self {
             speech_buffer: Vec::new(),
             silence_samples: 0,
             in_speech: false,
-            silence_threshold: (16000.0 * config.silence_ms as f64 / 1000.0).min(usize::MAX as f64)
-                as usize,
-            min_chunk_samples: 4_800, // 0.3s at 16kHz
+            silence_threshold: (vad_rate as f64 * config.silence_ms as f64 / 1000.0)
+                .min(usize::MAX as f64) as usize,
+            min_chunk_samples: (vad_rate as f64 * 0.3) as usize, // 0.3s at vad_rate
             energy_threshold: config.energy_threshold,
-            frame_i16_buf: vec![0i16; VAD_FRAME_SIZE],
+            frame_i16_buf: vec![0i16; vad_frame_size],
             max_chunk_samples: config
                 .max_chunk_ms
-                .map(|ms| (16000.0 * ms as f64 / 1000.0) as usize),
+                .map(|ms| (vad_rate as f64 * ms as f64 / 1000.0) as usize),
+            vad_rate,
+            needs_post_resample,
         }
     }
 
-    /// Process a single VAD frame. Returns a completed speech chunk when silence is detected.
+    /// Process a single VAD frame. Returns a completed speech chunk (16kHz) when
+    /// silence is detected.
     ///
     /// Forces emission when the buffer exceeds `max_chunk_samples` to prevent
     /// O(L²) Whisper inference cost from unbounded continuous speech.
@@ -155,8 +166,8 @@ impl VadStateMachine {
         &self.frame_i16_buf
     }
 
-    /// Take the buffered speech, reset state, and return the chunk if it meets
-    /// minimum length and energy requirements.
+    /// Take the buffered speech, reset state, and return the chunk (resampled to
+    /// 16kHz if needed) if it meets minimum length and energy requirements.
     pub fn finalize_chunk(&mut self) -> Option<Vec<f32>> {
         let chunk = std::mem::take(&mut self.speech_buffer);
         self.in_speech = false;
@@ -170,7 +181,11 @@ impl VadStateMachine {
             return None;
         }
 
-        Some(chunk)
+        if self.needs_post_resample {
+            Some(resample_batch(self.vad_rate, &chunk))
+        } else {
+            Some(chunk)
+        }
     }
 }
 
@@ -207,7 +222,7 @@ impl ResampleAccumulator {
             rubato::SincInterpolationParameters {
                 sinc_len: 64,
                 f_cutoff: 0.95,
-                oversampling_factor: 128,
+                oversampling_factor: 64,
                 interpolation: rubato::SincInterpolationType::Linear,
                 window: rubato::WindowFunction::BlackmanHarris2,
             },
@@ -239,6 +254,49 @@ impl ResampleAccumulator {
             }
         }
         output
+    }
+
+    /// Flush any remaining buffered samples using partial processing.
+    fn flush(&mut self) -> Vec<f32> {
+        if self.buf.is_empty() {
+            return Vec::new();
+        }
+        let partial = std::mem::take(&mut self.buf);
+        match self.resampler.process_partial(Some(&[partial]), None) {
+            Ok(resampled) => resampled.into_iter().next().unwrap_or_default(),
+            Err(e) => {
+                tracing::error!("resample flush error: {e}");
+                Vec::new()
+            }
+        }
+    }
+}
+
+/// Resample a complete audio buffer from `source_rate` to 16kHz in one batch.
+fn resample_batch(source_rate: u32, samples: &[f32]) -> Vec<f32> {
+    let mut acc = ResampleAccumulator::new(source_rate);
+    let mut output = acc.push(samples);
+    output.extend(acc.flush());
+    output
+}
+
+/// Map a capture sample rate to the best webrtc-vad rate.
+///
+/// Returns `(vad_enum, vad_hz, needs_pre_resample)`. When `needs_pre_resample` is
+/// true the caller must resample to 16kHz *before* VAD (the rate is unsupported by
+/// webrtc-vad, e.g. 44.1kHz).
+fn select_vad_rate(
+    sample_rate: u32,
+    needs_resample: bool,
+) -> (webrtc_vad::SampleRate, u32, bool) {
+    if !needs_resample {
+        return (webrtc_vad::SampleRate::Rate16kHz, 16000, false);
+    }
+    match sample_rate {
+        8000 => (webrtc_vad::SampleRate::Rate8kHz, 8000, false),
+        32000 => (webrtc_vad::SampleRate::Rate32kHz, 32000, false),
+        48000 => (webrtc_vad::SampleRate::Rate48kHz, 48000, false),
+        _ => (webrtc_vad::SampleRate::Rate16kHz, 16000, true),
     }
 }
 
@@ -280,24 +338,35 @@ fn vad_thread_main(
     chunk_tx: crossbeam_channel::Sender<ChunkEnvelope>,
     metrics: Arc<PipelineMetrics>,
 ) {
-    let mut accumulator = if needs_resample {
+    let (vad_rate_enum, vad_rate, needs_pre_resample) =
+        select_vad_rate(sample_rate, needs_resample);
+    let needs_post_resample = needs_resample && !needs_pre_resample;
+
+    // Pre-resample only when the capture rate isn't directly supported by webrtc-vad
+    let mut pre_accumulator = if needs_pre_resample {
         Some(ResampleAccumulator::new(sample_rate))
     } else {
         None
     };
 
     let mut vad = webrtc_vad::Vad::new_with_rate_and_mode(
-        webrtc_vad::SampleRate::Rate16kHz,
+        vad_rate_enum,
         webrtc_vad::VadMode::VeryAggressive,
     );
 
-    let mut state_machine = VadStateMachine::new(&config);
+    let mut state_machine = VadStateMachine::new(&config, vad_rate, needs_post_resample);
 
-    const VAD_FRAME_SIZE: usize = 320; // 20ms at 16kHz
+    let vad_frame_size = (vad_rate / 100) as usize; // 10ms at vad_rate
 
     let mut first_voice_logged = false;
     let mut first_audio_logged = false;
     let mut sample_buf: Vec<f32> = Vec::new();
+
+    tracing::info!(
+        "VAD: initialized (capture={sample_rate}Hz, vad={vad_rate}Hz, \
+         pre_resample={needs_pre_resample}, post_resample={needs_post_resample}, \
+         frame={vad_frame_size})"
+    );
 
     loop {
         if cancel.is_cancelled() {
@@ -319,7 +388,8 @@ fn vad_thread_main(
             }
         };
 
-        let samples_16k = match &mut accumulator {
+        // If pre-resampling is needed (unsupported native rate), resample to 16kHz first
+        let vad_samples = match &mut pre_accumulator {
             Some(acc) => {
                 let out = acc.push(&raw_audio);
                 if out.is_empty() {
@@ -330,10 +400,10 @@ fn vad_thread_main(
             None => raw_audio,
         };
 
-        sample_buf.extend_from_slice(&samples_16k);
+        sample_buf.extend_from_slice(&vad_samples);
 
-        while sample_buf.len() >= VAD_FRAME_SIZE {
-            let frame: Vec<f32> = sample_buf.drain(..VAD_FRAME_SIZE).collect();
+        while sample_buf.len() >= vad_frame_size {
+            let frame: Vec<f32> = sample_buf.drain(..vad_frame_size).collect();
 
             let frame_i16 = state_machine.convert_frame_to_i16(&frame);
             let is_voice = vad.is_voice_segment(frame_i16).unwrap_or(false);
@@ -342,8 +412,8 @@ fn vad_thread_main(
                 first_voice_logged = true;
                 tracing::info!("VAD: first voice detected");
             }
-
             if let Some(chunk) = state_machine.process_frame(&frame, is_voice) {
+                println!("1===========");
                 let len = chunk.len();
                 let secs = len as f64 / 16000.0;
                 let seq = metrics.next_seq();
@@ -391,7 +461,7 @@ mod tests {
             energy_threshold: 0.01,
             max_chunk_ms: None,
         };
-        let mut sm = VadStateMachine::new(&config);
+        let mut sm = VadStateMachine::new(&config, 16000, false);
         let speech_frame = vec![0.5; 320];
         for _ in 0..10 {
             sm.process_frame(&speech_frame, true);
@@ -414,7 +484,7 @@ mod tests {
             energy_threshold: 0.001,
             max_chunk_ms: None,
         };
-        let mut sm = VadStateMachine::new(&config);
+        let mut sm = VadStateMachine::new(&config, 16000, false);
         let speech_frame = vec![0.1; 320];
         for _ in 0..100 {
             sm.process_frame(&speech_frame, true);
@@ -437,7 +507,7 @@ mod tests {
             energy_threshold: 0.5,
             max_chunk_ms: None,
         };
-        let mut sm = VadStateMachine::new(&config);
+        let mut sm = VadStateMachine::new(&config, 16000, false);
         let quiet_frame = vec![0.001; 320];
         for _ in 0..100 {
             sm.process_frame(&quiet_frame, true);
@@ -456,7 +526,7 @@ mod tests {
     #[test]
     fn vad_config_defaults() {
         let config = VadConfig::default();
-        assert_eq!(config.silence_ms, 400);
+        assert_eq!(config.silence_ms, 300);
         assert!((config.energy_threshold - 0.01).abs() < f32::EPSILON);
         assert_eq!(config.max_chunk_ms, Some(8000));
     }
@@ -469,7 +539,7 @@ mod tests {
             energy_threshold: 0.001,
             max_chunk_ms: Some(400),
         };
-        let mut sm = VadStateMachine::new(&config);
+        let mut sm = VadStateMachine::new(&config, 16000, false);
 
         let frame: Vec<f32> = vec![0.5; 320]; // 20ms frame
 
@@ -493,7 +563,7 @@ mod tests {
             energy_threshold: 0.001,
             max_chunk_ms: None,
         };
-        let mut sm = VadStateMachine::new(&config);
+        let mut sm = VadStateMachine::new(&config, 16000, false);
 
         let frame: Vec<f32> = vec![0.5; 320];
         for _ in 0..100 {
@@ -505,10 +575,8 @@ mod tests {
     fn accumulator_exact_chunk() {
         let mut acc = ResampleAccumulator::new(48000);
         let n = acc.resampler.input_frames_next();
-        // Feed exactly one chunk of silence
         let input = vec![0.0f32; n];
         let output = acc.push(&input);
-        // 48kHz -> 16kHz = ratio 1/3, so ~n/3 output samples
         assert!(!output.is_empty(), "exact chunk should produce output");
         assert!(acc.buf.is_empty(), "no remainder after exact chunk");
     }
@@ -517,7 +585,6 @@ mod tests {
     fn accumulator_undersized_no_output() {
         let mut acc = ResampleAccumulator::new(48000);
         let n = acc.resampler.input_frames_next();
-        // Feed half a chunk — not enough for process()
         let input = vec![0.0f32; n / 2];
         let output = acc.push(&input);
         assert!(
@@ -531,16 +598,15 @@ mod tests {
     fn accumulator_multi_push() {
         let mut acc = ResampleAccumulator::new(48000);
         let n = acc.resampler.input_frames_next();
-        // Push in 3 batches of n/2 each = 1.5 chunks total
         let half = vec![0.0f32; n / 2];
-        let out1 = acc.push(&half); // 0.5 chunks buffered
+        let out1 = acc.push(&half);
         assert!(out1.is_empty());
-        let out2 = acc.push(&half); // 1.0 chunks → drain, 0 remainder
+        let out2 = acc.push(&half);
         assert!(
             !out2.is_empty(),
             "should produce output after accumulating full chunk"
         );
-        let out3 = acc.push(&half); // 0.5 chunks buffered again
+        let out3 = acc.push(&half);
         assert!(out3.is_empty());
         assert_eq!(acc.buf.len(), n / 2);
     }
@@ -578,17 +644,101 @@ mod tests {
     fn accumulator_oversized_concatenates() {
         let mut acc = ResampleAccumulator::new(48000);
         let n = acc.resampler.input_frames_next();
-        // Feed 2.5 chunks at once
         let input = vec![0.0f32; n * 2 + n / 2];
         let output = acc.push(&input);
-        // Should have drained twice, remainder = n/2
         assert!(!output.is_empty(), "oversized input should produce output");
         assert_eq!(acc.buf.len(), n / 2, "remainder after 2 full drains");
-        // Output should be from 2 process() calls concatenated
-        // Each produces ~n/3 samples, so total ~2*n/3
         assert!(
             output.len() > n / 3,
             "output should contain results from multiple process() calls"
         );
+    }
+
+    #[test]
+    fn resample_batch_produces_16k_output() {
+        let input = vec![0.0f32; 48000]; // 1s at 48kHz
+        let output = resample_batch(48000, &input);
+        let tolerance = 200;
+        assert!(
+            (output.len() as i64 - 16000).unsigned_abs() < tolerance,
+            "expected ~16000 samples, got {}",
+            output.len()
+        );
+    }
+
+    #[test]
+    fn select_vad_rate_16k_no_resample() {
+        let (rate, hz, pre) = select_vad_rate(16000, false);
+        assert!(matches!(rate, webrtc_vad::SampleRate::Rate16kHz));
+        assert_eq!(hz, 16000);
+        assert!(!pre);
+    }
+
+    #[test]
+    fn select_vad_rate_48k_native() {
+        let (rate, hz, pre) = select_vad_rate(48000, true);
+        assert!(matches!(rate, webrtc_vad::SampleRate::Rate48kHz));
+        assert_eq!(hz, 48000);
+        assert!(!pre);
+    }
+
+    #[test]
+    fn select_vad_rate_44100_pre_resample() {
+        let (rate, hz, pre) = select_vad_rate(44100, true);
+        assert!(matches!(rate, webrtc_vad::SampleRate::Rate16kHz));
+        assert_eq!(hz, 16000);
+        assert!(pre);
+    }
+
+    #[test]
+    fn post_resample_finalize_chunk() {
+        let config = VadConfig {
+            silence_ms: 300,
+            energy_threshold: 0.001,
+            max_chunk_ms: None,
+        };
+        // Simulate 48kHz VAD with post-resampling
+        let mut sm = VadStateMachine::new(&config, 48000, true);
+
+        // Feed 1s of speech at 48kHz in 480-sample frames (10ms)
+        let frame = vec![0.1f32; 480];
+        for _ in 0..100 {
+            sm.process_frame(&frame, true);
+        }
+
+        // Feed silence to trigger emission: 300ms at 48kHz = 14400 samples
+        let silent_frame = vec![0.0f32; 480];
+        let silence_frames = (48000.0 * 0.3 / 480.0) as usize + 1;
+        let mut result = None;
+        for _ in 0..silence_frames {
+            if let Some(chunk) = sm.process_frame(&silent_frame, false) {
+                result = Some(chunk);
+            }
+        }
+
+        let chunk = result.expect("should emit a resampled chunk");
+        // Input was 48000 samples at 48kHz (1s), output should be ~16000 at 16kHz
+        let tolerance = 200;
+        assert!(
+            (chunk.len() as i64 - 16000).unsigned_abs() < tolerance,
+            "expected ~16000 samples, got {}",
+            chunk.len()
+        );
+    }
+
+    #[test]
+    fn accumulator_flush_remaining() {
+        let mut acc = ResampleAccumulator::new(48000);
+        let n = acc.resampler.input_frames_next();
+        let input = vec![0.0f32; n + n / 2];
+        let output = acc.push(&input);
+        assert!(!output.is_empty());
+        assert_eq!(acc.buf.len(), n / 2);
+        let flushed = acc.flush();
+        assert!(
+            !flushed.is_empty(),
+            "flush should produce output from remaining samples"
+        );
+        assert!(acc.buf.is_empty(), "buffer should be empty after flush");
     }
 }

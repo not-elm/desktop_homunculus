@@ -80,19 +80,34 @@ fn capture_loop(
 }
 
 fn select_input_config(device: &cpal::Device) -> Result<(cpal::StreamConfig, bool), CaptureError> {
-    let target = cpal::StreamConfig {
-        channels: 1,
-        sample_rate: cpal::SampleRate(16000),
-        buffer_size: cpal::BufferSize::Default,
-    };
     if let Ok(configs) = device.supported_input_configs() {
+        let mut stereo_fallback = None;
         for range in configs {
-            if range.min_sample_rate().0 <= 16000
-                && range.max_sample_rate().0 >= 16000
-                && range.channels() == 1
-            {
-                return Ok((target, false));
+            if range.min_sample_rate().0 <= 16000 && range.max_sample_rate().0 >= 16000 {
+                if range.channels() == 1 {
+                    return Ok((
+                        cpal::StreamConfig {
+                            channels: 1,
+                            sample_rate: cpal::SampleRate(16000),
+                            buffer_size: cpal::BufferSize::Default,
+                        },
+                        false,
+                    ));
+                }
+                if stereo_fallback.is_none() {
+                    stereo_fallback = Some(range.channels());
+                }
             }
+        }
+        if let Some(channels) = stereo_fallback {
+            return Ok((
+                cpal::StreamConfig {
+                    channels,
+                    sample_rate: cpal::SampleRate(16000),
+                    buffer_size: cpal::BufferSize::Default,
+                },
+                false,
+            ));
         }
     }
     let default = device
