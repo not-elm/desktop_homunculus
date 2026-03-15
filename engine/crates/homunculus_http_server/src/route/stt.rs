@@ -3,6 +3,7 @@ use std::time::Duration;
 
 use axum::Json;
 use axum::body::Body;
+use axum::extract::Query;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::sse::{Event, KeepAlive};
@@ -15,7 +16,6 @@ use homunculus_microphone::{
     model::model_path,
     session::{SttEvent, SttStartOptions, SttState},
 };
-use axum::extract::Query;
 use serde::{Deserialize, Serialize};
 use tokio_stream::wrappers::ReceiverStream;
 use utoipa::ToSchema;
@@ -402,6 +402,21 @@ fn stt_event_to_sse(event: &SttEvent) -> Event {
                 "{}".to_string()
             }),
         ),
+        SttEvent::Interim {
+            text,
+            timestamp,
+            language,
+        } => Event::default().event("interim").data(
+            serde_json::to_string(&SttResultPayload {
+                text,
+                timestamp: *timestamp,
+                language,
+            })
+            .unwrap_or_else(|e| {
+                bevy::log::error!("SSE serialization failed: {e}");
+                "{}".to_string()
+            }),
+        ),
         SttEvent::SessionError { error, message } => Event::default().event("session_error").data(
             serde_json::to_string(&SttSessionErrorPayload { error, message }).unwrap_or_else(|e| {
                 bevy::log::error!("SSE serialization failed: {e}");
@@ -409,6 +424,7 @@ fn stt_event_to_sse(event: &SttEvent) -> Event {
             }),
         ),
         SttEvent::Stopped => Event::default().event("stopped").data("{}"),
+        _ => Event::default().event("unknown").data("{}"),
     }
 }
 

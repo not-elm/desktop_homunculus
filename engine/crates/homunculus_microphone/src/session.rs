@@ -121,17 +121,26 @@ pub enum SttState {
 
 /// Events sent from the session to SSE clients.
 #[derive(Clone, Debug)]
+#[non_exhaustive]
 pub enum SttEvent {
+    /// Session state changed.
     Status(SttState),
+    /// Final recognition result for a completed utterance.
     Result {
         text: String,
         timestamp: f64,
         language: String,
     },
-    SessionError {
-        error: String,
-        message: String,
+    /// Interim (partial) recognition result. Sent before the final `Result`.
+    /// The text may change as more audio is processed.
+    Interim {
+        text: String,
+        timestamp: f64,
+        language: String,
     },
+    /// A session-level error occurred.
+    SessionError { error: String, message: String },
+    /// The session was stopped.
     Stopped,
 }
 
