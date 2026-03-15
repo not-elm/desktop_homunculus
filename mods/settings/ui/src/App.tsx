@@ -1,4 +1,5 @@
 import { GeneralTab } from "./components/GeneralTab";
+import { SpeechTab } from "./components/SpeechTab";
 import { useSettings, type SettingsTab } from "./hooks/useSettings";
 
 export function App() {
@@ -64,11 +65,7 @@ export function App() {
             setAlpha={setAlpha}
           />
         )}
-        {tab === "speech" && (
-          <div className="settings-section">
-            <span className="settings-description">Speech tab — coming soon</span>
-          </div>
-        )}
+        {tab === "speech" && <SpeechTab />}
       </div>
 
       <div className="settings-footer">
