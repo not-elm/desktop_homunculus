@@ -92,6 +92,31 @@ def cleanup_cef_staging() -> None:
         log(f"Cleaned up {CEF_STAGING_DIR}")
 
 
+ICON_PNG = Path("assets/icons/icon.png")
+ICON_ICO = Path("build/windows/icon.ico")
+
+
+def generate_icon_for_installer() -> None:
+    """Generate ICO from source PNG for the WiX installer.
+
+    The WiX Package.wxs references build/windows/icon.ico.
+    This generates it from assets/icons/icon.png using Pillow.
+    """
+    try:
+        from PIL import Image
+    except ImportError:
+        error("Pillow not found. Install it with: pip install Pillow")
+
+    if not ICON_PNG.exists():
+        error(f"Source icon not found: {ICON_PNG}")
+
+    img = Image.open(ICON_PNG)
+    sizes = [(256, 256), (48, 48), (32, 32), (16, 16)]
+    ICON_ICO.parent.mkdir(parents=True, exist_ok=True)
+    img.save(str(ICON_ICO), format="ICO", sizes=sizes)
+    log(f"Generated {ICON_ICO} from {ICON_PNG}")
+
+
 def release_windows() -> None:
     # 1. Validate prerequisites
     if not command_exists("dotnet"):
@@ -105,7 +130,10 @@ def release_windows() -> None:
     # 2. Build
     run(["cargo", "build", "--profile", "dist", "--locked"])
 
-    # 3. Generate credits (skip in CI where committed credits are used)
+    # 3. Generate ICO from source PNG for WiX installer
+    generate_icon_for_installer()
+
+    # 4. Generate credits (skip in CI where committed credits are used)
     if skip_credits:
         if not RUST_LICENSES_OUTPUT.exists():
             error(f"SKIP_GEN_CREDITS set but {RUST_LICENSES_OUTPUT} not found. Commit credits first.")
@@ -120,15 +148,15 @@ def release_windows() -> None:
             "about.hbs",
         ])
 
-    # 4. Stage CEF runtime files for installer
+    # 5. Stage CEF runtime files for installer
     stage_cef_files()
     verify_cef_staging()
 
-    # 5. Get versions
+    # 6. Get versions
     full_version, msi_version = get_versions()
     log(f"Full version: {full_version}, MSI version: {msi_version}")
 
-    # 6. Build MSI (pass 3-part numeric version via MSBuild property)
+    # 7. Build MSI (pass 3-part numeric version via MSBuild property)
     run([
         "dotnet",
         "build",
@@ -138,14 +166,14 @@ def release_windows() -> None:
         f"-p:Version={msi_version}",
     ])
 
-    # 7. Copy MSI to target/bundle/ with unified naming
+    # 8. Copy MSI to target/bundle/ with unified naming
     BUNDLE_DIR.mkdir(parents=True, exist_ok=True)
     msi_source = INSTALLER_PROJECT.parent / "bin" / "Release" / "en-US" / "installer.msi"
     msi_dest = BUNDLE_DIR / f"desktop-homunculus-{full_version}-x64.msi"
     shutil.copy2(msi_source, msi_dest)
     log(f"Done: {msi_dest}")
 
-    # 8. Clean up CEF staging directory
+    # 9. Clean up CEF staging directory
     cleanup_cef_staging()
 
 
