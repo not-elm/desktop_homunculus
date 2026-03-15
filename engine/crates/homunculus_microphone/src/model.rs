@@ -114,14 +114,6 @@ impl SttModelSize {
         }
     }
 
-    pub fn expected_size(&self) -> u64 {
-        match self {
-            Self::Tiny => 32_506_944,
-            Self::Base => 59_846_080,
-            Self::Small => 189_804_736,
-            Self::Medium => 491_766_272,
-        }
-    }
 }
 
 /// Load a `WhisperContext` from the model file on disk.
@@ -143,11 +135,7 @@ pub fn model_path(size: SttModelSize) -> PathBuf {
 
 /// Checks whether the model has been downloaded.
 pub fn is_model_available(size: SttModelSize) -> bool {
-    let path = model_path(size);
-    match std::fs::metadata(&path) {
-        Ok(meta) => meta.len() == size.expected_size(),
-        Err(_) => false,
-    }
+    model_path(size).exists()
 }
 
 /// Returns a list of downloaded models.
@@ -161,12 +149,9 @@ pub fn list_available_models() -> Vec<(SttModelSize, u64, PathBuf)> {
     sizes
         .iter()
         .filter_map(|&size| {
-            if is_model_available(size) {
-                let path = model_path(size);
-                Some((size, size.expected_size(), path))
-            } else {
-                None
-            }
+            let path = model_path(size);
+            let file_size = std::fs::metadata(&path).ok()?.len();
+            Some((size, file_size, path))
         })
         .collect()
 }
@@ -191,14 +176,9 @@ pub fn download_model(
         let client = reqwest::Client::new();
         let response = fetch_model(&client, &url).await?;
 
-        let total_bytes = size.expected_size();
+        let total_bytes = response.content_length().unwrap_or(0);
         let tmp_path = path.with_extension("bin.tmp");
         stream_to_file(response, &tmp_path, &cancel, total_bytes, &progress_tx).await?;
-
-        if let Err(e) = verify_model_size(&tmp_path, total_bytes).await {
-            let _ = tokio::fs::remove_file(&tmp_path).await;
-            return Err(e);
-        }
 
         tokio::fs::rename(&tmp_path, &path)
             .await
@@ -275,18 +255,6 @@ async fn stream_to_file(
     }
 
     file.flush().await.map_err(DownloadError::Io)?;
-    Ok(())
-}
-
-async fn verify_model_size(path: &Path, expected: u64) -> Result<(), DownloadError> {
-    let actual = tokio::fs::metadata(path)
-        .await
-        .map_err(DownloadError::Io)?
-        .len();
-    if actual != expected {
-        let _ = tokio::fs::remove_file(path).await;
-        return Err(DownloadError::SizeMismatch { expected, actual });
-    }
     Ok(())
 }
 

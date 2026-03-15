@@ -46,8 +46,6 @@ pub enum DownloadError {
     Io(#[from] std::io::Error),
     #[error("Download cancelled")]
     Cancelled,
-    #[error("Size mismatch: expected {expected}, got {actual}")]
-    SizeMismatch { expected: u64, actual: u64 },
 }
 
 /// Microphone permission errors.
