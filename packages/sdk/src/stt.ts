@@ -26,7 +26,7 @@ import {EventSource} from "eventsource";
  */
 export namespace stt {
     /** Whisper model sizes available for STT. */
-    export type SttModelSize = "tiny" | "base" | "small" | "medium";
+    export type SttModelSize = "tiny" | "base" | "small";
 
     /**
      * Session state as a tagged union. Matches the engine's `SttState` enum.
@@ -145,7 +145,7 @@ export namespace stt {
          * // Start with specific options
          * const state = await stt.session.start({
          *   language: "ja",
-         *   modelSize: "medium",
+         *   modelSize: "small",
          * });
          * ```
          */
@@ -257,7 +257,7 @@ export namespace stt {
          * console.log(result.status); // "downloaded" | "alreadyExists"
          *
          * // Download with progress
-         * for await (const event of stt.models.download({ modelSize: "medium" })) {
+         * for await (const event of stt.models.download({ modelSize: "small" })) {
          *   if (event.type === "progress") {
          *     console.log(`${event.percentage.toFixed(1)}%`);
          *   } else if (event.type === "complete") {
