@@ -144,10 +144,17 @@ fn run_inference(
     Ok(Some((text, detected_lang)))
 }
 
+fn optimal_n_threads() -> i32 {
+    let physical = num_cpus::get_physical();
+    let n = (physical / 2).clamp(1, 4);
+    n as i32
+}
+
 fn create_whisper_params<'a>(language: &'a str) -> FullParams<'a, 'a> {
     let mut params = FullParams::new(SamplingStrategy::Greedy { best_of: 1 });
     params.set_suppress_nst(true);
     params.set_single_segment(true);
+    params.set_n_threads(optimal_n_threads());
 
     if language == "auto" {
         params.set_language(None);
@@ -176,4 +183,16 @@ fn detect_language(state: &WhisperState, fallback: &str) -> String {
     whisper_rs::get_lang_str(lang_id)
         .map(String::from)
         .unwrap_or_else(|| fallback.to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn optimal_n_threads_respects_bounds() {
+        let n = optimal_n_threads();
+        assert!(n >= 1, "n_threads must be at least 1, got {n}");
+        assert!(n <= 4, "n_threads must be at most 4, got {n}");
+    }
 }

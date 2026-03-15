@@ -19,6 +19,7 @@ tokio-util = { workspace = true }
 crossbeam-channel = { workspace = true }
 futures-lite = { workspace = true }
 
+num_cpus = { workspace = true }
 whisper-rs = "0.16"
 cpal = "0.15"
 rubato = "0.16"

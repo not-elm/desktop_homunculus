@@ -62,7 +62,7 @@ bevy_flurx = { version = "0.14.1", features = [
     "state",
     "tokio",
 ] }
-bevy_vrm1 = { version = "0.6.2", features = ["serde", "log"] }
+bevy_vrm1 = { version = "0.6.3", features = ["serde", "log"] }
 bevy_tray_icon = { version = "0.3" }
 url = { version = "2", features = ["serde"] }
 bevy = { version = "0.18", features = [
@@ -118,6 +118,7 @@ utoipa-axum = { version = "0.2" }
 libc = "0.2"
 windows = "0.60"
 raw-window-handle = "0.6"
+num_cpus = "1"
 
 [build-dependencies]
 embed-resource = "3"
