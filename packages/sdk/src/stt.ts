@@ -272,6 +272,31 @@ export namespace stt {
         }): DownloadStream {
             return new DownloadStream(options);
         }
+
+        /**
+         * Cancels an in-progress model download.
+         *
+         * @param modelSize - The model size to cancel
+         * @returns `true` if a download was cancelled, `false` if no active download
+         *
+         * @example
+         * ```typescript
+         * const cancelled = await stt.models.cancelDownload("small");
+         * ```
+         */
+        export async function cancelDownload(modelSize: SttModelSize): Promise<boolean> {
+            try {
+                await host.deleteMethod(
+                    host.createUrl("stt/models/download", { modelSize }),
+                );
+                return true;
+            } catch (e) {
+                if (e instanceof HomunculusApiError && e.statusCode === 404) {
+                    return false;
+                }
+                throw e;
+            }
+        }
     }
 
     /**
@@ -429,5 +454,53 @@ export namespace stt {
      */
     export function stream(callbacks: StreamCallbacks): SttStream {
         return new SttStream(callbacks);
+    }
+
+    /** A supported language entry. */
+    export interface LanguageEntry {
+        /** ISO 639-1 (or similar) language code. */
+        code: string;
+        /** Human-readable display name. */
+        label: string;
+    }
+
+    /**
+     * Fetches the list of supported STT languages from the engine.
+     *
+     * Returns language codes with human-readable labels generated via
+     * `Intl.DisplayNames`. Codes not recognized by the browser fall back
+     * to the raw code string.
+     *
+     * @returns Array of language entries sorted with "auto" first
+     *
+     * @example
+     * ```typescript
+     * const languages = await stt.languages();
+     * // [{ code: "auto", label: "Auto Detect" }, { code: "en", label: "English" }, ...]
+     * ```
+     */
+    export async function languages(): Promise<LanguageEntry[]> {
+        const response = await host.get(host.createUrl("stt/languages"));
+        const codes = await response.json() as string[];
+
+        let displayNames: Intl.DisplayNames | null = null;
+        try {
+            displayNames = new Intl.DisplayNames(["en"], { type: "language" });
+        } catch {
+            // Fallback: use raw codes
+        }
+
+        return codes.map((code) => {
+            if (code === "auto") return { code, label: "Auto Detect" };
+            let label = code;
+            if (displayNames) {
+                try {
+                    label = displayNames.of(code) ?? code;
+                } catch {
+                    label = code;
+                }
+            }
+            return { code, label };
+        });
     }
 }
