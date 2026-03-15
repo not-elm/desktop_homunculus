@@ -1,7 +1,53 @@
 use crossbeam_channel::TrySendError;
 use rubato::Resampler;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::mpsc;
+use std::time::Instant;
 use tokio_util::sync::CancellationToken;
+
+/// Wrapper around audio samples with timing metadata for pipeline observability.
+pub struct ChunkEnvelope {
+    /// The audio samples (16kHz, mono, f32).
+    pub samples: Vec<f32>,
+    /// When this chunk was enqueued to the inference channel.
+    pub enqueued_at: Instant,
+    /// When VAD detected silence that triggered this chunk emission.
+    pub silence_detected_at: Instant,
+    /// Monotonically increasing sequence number for gap detection.
+    pub seq: u64,
+}
+
+/// Atomic counters for pipeline health monitoring.
+pub struct PipelineMetrics {
+    drops: AtomicU64,
+    seq: AtomicU64,
+}
+
+impl PipelineMetrics {
+    /// Create a new `PipelineMetrics` with all counters initialized to zero.
+    pub fn new() -> Arc<Self> {
+        Arc::new(Self {
+            drops: AtomicU64::new(0),
+            seq: AtomicU64::new(0),
+        })
+    }
+
+    /// Increment the drop counter by one.
+    pub fn increment_drops(&self) {
+        self.drops.fetch_add(1, Ordering::Relaxed);
+    }
+
+    /// Return the current drop count.
+    pub fn drop_count(&self) -> u64 {
+        self.drops.load(Ordering::Relaxed)
+    }
+
+    /// Return the next sequence number, incrementing the internal counter.
+    pub fn next_seq(&self) -> u64 {
+        self.seq.fetch_add(1, Ordering::Relaxed)
+    }
+}
 
 /// VAD configuration.
 #[derive(Clone, Debug)]
@@ -53,7 +99,7 @@ impl VadStateMachine {
             in_speech: false,
             silence_threshold: (16000.0 * config.silence_ms as f64 / 1000.0).min(usize::MAX as f64)
                 as usize,
-            min_chunk_samples: 24_000, // 1.5s at 16kHz
+            min_chunk_samples: 4_800, // 0.3s at 16kHz
             energy_threshold: config.energy_threshold,
             frame_i16_buf: vec![0i16; VAD_FRAME_SIZE],
         }
@@ -227,14 +273,27 @@ fn vad_thread_main(
 
     const VAD_FRAME_SIZE: usize = 320; // 20ms at 16kHz
 
+    let mut first_voice_logged = false;
+    let mut first_audio_logged = false;
+    let mut sample_buf: Vec<f32> = Vec::new();
+
     loop {
         if cancel.is_cancelled() {
             break;
         }
 
         let raw_audio = match audio_rx.recv() {
-            Ok(data) => data,
-            Err(_) => break,
+            Ok(data) => {
+                if !first_audio_logged {
+                    first_audio_logged = true;
+                    tracing::info!("VAD: first audio received, {} samples", data.len());
+                }
+                data
+            }
+            Err(_) => {
+                tracing::info!("VAD: audio channel closed, exiting");
+                break;
+            }
         };
 
         let samples_16k = match &mut accumulator {
@@ -248,15 +307,23 @@ fn vad_thread_main(
             None => raw_audio,
         };
 
-        for frame in samples_16k.chunks(VAD_FRAME_SIZE) {
-            if frame.len() < VAD_FRAME_SIZE {
-                continue;
-            }
+        sample_buf.extend_from_slice(&samples_16k);
 
-            let frame_i16 = state_machine.convert_frame_to_i16(frame);
+        while sample_buf.len() >= VAD_FRAME_SIZE {
+            let frame: Vec<f32> = sample_buf.drain(..VAD_FRAME_SIZE).collect();
+
+            let frame_i16 = state_machine.convert_frame_to_i16(&frame);
             let is_voice = vad.is_voice_segment(frame_i16).unwrap_or(false);
 
-            if let Some(chunk) = state_machine.process_frame(frame, is_voice) {
+            if is_voice && !first_voice_logged {
+                first_voice_logged = true;
+                tracing::info!("VAD: first voice detected");
+            }
+
+            if let Some(chunk) = state_machine.process_frame(&frame, is_voice) {
+                let len = chunk.len();
+                let secs = len as f64 / 16000.0;
+                tracing::info!("VAD: emitting chunk, {len} samples ({secs:.1}s)");
                 try_send_chunk(&chunk_tx, chunk);
             }
         }
@@ -285,7 +352,7 @@ mod tests {
         };
         let mut sm = VadStateMachine::new(&config);
         let speech_frame = vec![0.5; 320];
-        for _ in 0..25 {
+        for _ in 0..10 {
             sm.process_frame(&speech_frame, true);
         }
         let silent_frame = vec![0.0; 320];
@@ -392,6 +459,35 @@ mod tests {
         let out3 = acc.push(&half); // 0.5 chunks buffered again
         assert!(out3.is_empty());
         assert_eq!(acc.buf.len(), n / 2);
+    }
+
+    #[test]
+    fn chunk_envelope_fields() {
+        let envelope = ChunkEnvelope {
+            samples: vec![0.1, 0.2, 0.3],
+            enqueued_at: Instant::now(),
+            silence_detected_at: Instant::now(),
+            seq: 42,
+        };
+        assert_eq!(envelope.samples.len(), 3);
+        assert_eq!(envelope.seq, 42);
+    }
+
+    #[test]
+    fn pipeline_metrics_drop_count() {
+        let metrics = PipelineMetrics::new();
+        assert_eq!(metrics.drop_count(), 0);
+        metrics.increment_drops();
+        metrics.increment_drops();
+        assert_eq!(metrics.drop_count(), 2);
+    }
+
+    #[test]
+    fn pipeline_metrics_next_seq() {
+        let metrics = PipelineMetrics::new();
+        assert_eq!(metrics.next_seq(), 0);
+        assert_eq!(metrics.next_seq(), 1);
+        assert_eq!(metrics.next_seq(), 2);
     }
 
     #[test]
