@@ -14,9 +14,12 @@ export interface ModelCardState {
 }
 
 const MODEL_DEFINITIONS: Omit<ModelCardState, "status" | "downloadProgress">[] = [
-  { size: "tiny", label: "Tiny", fileSize: "32.5 MB" },
-  { size: "base", label: "Base", fileSize: "59.8 MB" },
-  { size: "small", label: "Small", fileSize: "189.8 MB" },
+  { size: "tiny", label: "Tiny", fileSize: "32.2 MB" },
+  { size: "base", label: "Base", fileSize: "59.7 MB" },
+  { size: "small", label: "Small", fileSize: "190 MB" },
+  { size: "medium", label: "Medium", fileSize: "539 MB" },
+  { size: "large-v3-turbo", label: "Large v3 Turbo", fileSize: "574 MB" },
+  { size: "large-v3", label: "Large v3", fileSize: "1.08 GB" },
 ];
 
 export function useStt() {
@@ -54,7 +57,7 @@ export function useStt() {
         })),
       );
 
-      const sizes: SttModelSize[] = ["small", "base", "tiny"];
+      const sizes: SttModelSize[] = ["small", "medium", "large-v3-turbo", "large-v3", "base", "tiny"];
       const defaultSelected = sizes.find((s) => downloadedSizes.has(s)) ?? null;
       setSelectedModel(defaultSelected);
     })();

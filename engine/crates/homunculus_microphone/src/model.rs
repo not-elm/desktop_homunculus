@@ -101,7 +101,21 @@ pub enum SttModelSize {
     Base,
     #[default]
     Small,
+    Medium,
+    #[serde(rename = "large-v3-turbo")]
+    LargeV3Turbo,
+    #[serde(rename = "large-v3")]
+    LargeV3,
 }
+
+const ALL_SIZES: [SttModelSize; 6] = [
+    SttModelSize::Tiny,
+    SttModelSize::Base,
+    SttModelSize::Small,
+    SttModelSize::Medium,
+    SttModelSize::LargeV3Turbo,
+    SttModelSize::LargeV3,
+];
 
 impl SttModelSize {
     pub fn as_str(&self) -> &'static str {
@@ -109,6 +123,20 @@ impl SttModelSize {
             Self::Tiny => "tiny",
             Self::Base => "base",
             Self::Small => "small",
+            Self::Medium => "medium",
+            Self::LargeV3Turbo => "large-v3-turbo",
+            Self::LargeV3 => "large-v3",
+        }
+    }
+
+    pub fn filename(&self) -> &'static str {
+        match self {
+            Self::Tiny => "ggml-tiny-q5_1.bin",
+            Self::Base => "ggml-base-q5_1.bin",
+            Self::Small => "ggml-small-q5_1.bin",
+            Self::Medium => "ggml-medium-q5_0.bin",
+            Self::LargeV3Turbo => "ggml-large-v3-turbo-q5_0.bin",
+            Self::LargeV3 => "ggml-large-v3-q5_0.bin",
         }
     }
 }
@@ -127,7 +155,7 @@ pub fn load_whisper_context(size: SttModelSize) -> Result<Arc<WhisperContext>, S
 pub fn model_path(size: SttModelSize) -> PathBuf {
     homunculus_utils::path::homunculus_dir()
         .join("models")
-        .join(format!("ggml-{}-q5_1.bin", size.as_str()))
+        .join(size.filename())
 }
 
 /// Checks whether the model has been downloaded.
@@ -137,8 +165,7 @@ pub fn is_model_available(size: SttModelSize) -> bool {
 
 /// Returns a list of downloaded models.
 pub fn list_available_models() -> Vec<(SttModelSize, u64, PathBuf)> {
-    let sizes = [SttModelSize::Tiny, SttModelSize::Base, SttModelSize::Small];
-    sizes
+    ALL_SIZES
         .iter()
         .filter_map(|&size| {
             let path = model_path(size);
@@ -183,8 +210,8 @@ pub fn download_model(
 
 fn model_url(size: SttModelSize) -> String {
     format!(
-        "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-{}-q5_1.bin",
-        size.as_str()
+        "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/{}",
+        size.filename()
     )
 }
 
@@ -259,6 +286,9 @@ mod tests {
         assert_eq!(SttModelSize::Tiny.as_str(), "tiny");
         assert_eq!(SttModelSize::Base.as_str(), "base");
         assert_eq!(SttModelSize::Small.as_str(), "small");
+        assert_eq!(SttModelSize::Medium.as_str(), "medium");
+        assert_eq!(SttModelSize::LargeV3Turbo.as_str(), "large-v3-turbo");
+        assert_eq!(SttModelSize::LargeV3.as_str(), "large-v3");
     }
 
     #[test]
@@ -272,6 +302,21 @@ mod tests {
         assert_eq!(json, r#""small""#);
         let parsed: SttModelSize = serde_json::from_str(r#""tiny""#).unwrap();
         assert_eq!(parsed, SttModelSize::Tiny);
+
+        let json = serde_json::to_string(&SttModelSize::Medium).unwrap();
+        assert_eq!(json, r#""medium""#);
+        let parsed: SttModelSize = serde_json::from_str(r#""medium""#).unwrap();
+        assert_eq!(parsed, SttModelSize::Medium);
+
+        let json = serde_json::to_string(&SttModelSize::LargeV3Turbo).unwrap();
+        assert_eq!(json, r#""large-v3-turbo""#);
+        let parsed: SttModelSize = serde_json::from_str(r#""large-v3-turbo""#).unwrap();
+        assert_eq!(parsed, SttModelSize::LargeV3Turbo);
+
+        let json = serde_json::to_string(&SttModelSize::LargeV3).unwrap();
+        assert_eq!(json, r#""large-v3""#);
+        let parsed: SttModelSize = serde_json::from_str(r#""large-v3""#).unwrap();
+        assert_eq!(parsed, SttModelSize::LargeV3);
     }
 
     #[test]
@@ -280,6 +325,15 @@ mod tests {
         let path_str = path.to_string_lossy();
         assert!(path_str.contains("models"));
         assert!(path_str.ends_with("ggml-small-q5_1.bin"));
+
+        let path = model_path(SttModelSize::Medium);
+        assert!(path.to_string_lossy().ends_with("ggml-medium-q5_0.bin"));
+
+        let path = model_path(SttModelSize::LargeV3Turbo);
+        assert!(path.to_string_lossy().ends_with("ggml-large-v3-turbo-q5_0.bin"));
+
+        let path = model_path(SttModelSize::LargeV3);
+        assert!(path.to_string_lossy().ends_with("ggml-large-v3-q5_0.bin"));
     }
 
     #[test]

@@ -26,7 +26,7 @@ import {EventSource} from "eventsource";
  */
 export namespace stt {
     /** Whisper model sizes available for STT. */
-    export type SttModelSize = "tiny" | "base" | "small";
+    export type SttModelSize = "tiny" | "base" | "small" | "medium" | "large-v3-turbo" | "large-v3";
 
     /**
      * Session state as a tagged union. Matches the engine's `SttState` enum.
