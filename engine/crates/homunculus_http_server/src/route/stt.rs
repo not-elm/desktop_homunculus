@@ -15,6 +15,7 @@ use homunculus_microphone::{
     model::model_path,
     session::{SttEvent, SttStartOptions, SttState},
 };
+use axum::extract::Query;
 use serde::{Deserialize, Serialize};
 use tokio_stream::wrappers::ReceiverStream;
 use utoipa::ToSchema;
@@ -150,6 +151,70 @@ pub async fn download_model(
     Ok(Json(response))
 }
 
+/// Query params for cancel download endpoint.
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CancelDownloadQuery {
+    pub model_size: Option<SttModelSize>,
+}
+
+/// Response for cancel download endpoint.
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct CancelDownloadResponse {
+    status: &'static str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    model_size: Option<SttModelSize>,
+    cancelled_count: usize,
+}
+
+/// Cancel an in-progress model download.
+///
+/// With `modelSize` query param: cancel a specific download.
+/// Without: cancel all in-progress downloads.
+#[utoipa::path(
+    delete,
+    path = "/models/download",
+    tag = "stt",
+    params(
+        ("modelSize" = Option<SttModelSize>, Query, description = "Model size to cancel. Omit to cancel all."),
+    ),
+    responses(
+        (status = 200, description = "Download(s) cancelled"),
+        (status = 404, description = "No active download for the specified model"),
+    ),
+)]
+pub async fn cancel_download(
+    State(api): State<SttApi>,
+    Query(query): Query<CancelDownloadQuery>,
+) -> Response {
+    if let Some(size) = query.model_size {
+        let cancelled = api.cancel_download(size).await;
+        if cancelled {
+            let body = CancelDownloadResponse {
+                status: "cancelled",
+                model_size: Some(size),
+                cancelled_count: 1,
+            };
+            (StatusCode::OK, Json(body)).into_response()
+        } else {
+            let body = serde_json::json!({
+                "error": "no_active_download",
+                "message": format!("No active download for model size '{}'", size.as_str()),
+            });
+            (StatusCode::NOT_FOUND, Json(body)).into_response()
+        }
+    } else {
+        let count = api.cancel_all_downloads().await;
+        let body = CancelDownloadResponse {
+            status: "cancelled",
+            model_size: None,
+            cancelled_count: count,
+        };
+        (StatusCode::OK, Json(body)).into_response()
+    }
+}
+
 /// List downloaded STT models.
 #[utoipa::path(
     get,
@@ -242,7 +307,7 @@ pub async fn download_model_stream(
         return (StatusCode::CONFLICT, Json(body)).into_response();
     }
 
-    let (mut rx, mut handle) = api.start_download_stream(size).await;
+    let (mut rx, mut handle, _cancel) = api.start_download_stream(size).await;
 
     let (tx, mpsc_rx) = tokio::sync::mpsc::channel::<Vec<u8>>(64);
 
@@ -365,6 +430,7 @@ impl IntoResponse for SttErrorResponse {
                 "microphone_permission_denied",
             ),
             SttError::DownloadFailed(_) => (StatusCode::INTERNAL_SERVER_ERROR, "download_failed"),
+            SttError::DownloadCancelled => (StatusCode::CONFLICT, "download_cancelled"),
             SttError::InvalidLanguage(_) => (StatusCode::UNPROCESSABLE_ENTITY, "invalid_language"),
             SttError::InvalidModelSize => (StatusCode::UNPROCESSABLE_ENTITY, "invalid_model_size"),
         };

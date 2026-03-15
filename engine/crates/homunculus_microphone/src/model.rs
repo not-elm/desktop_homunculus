@@ -1,25 +1,28 @@
 use crate::error::DownloadError;
 use futures_lite::StreamExt;
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tokio::io::AsyncWriteExt;
+use tokio_util::sync::CancellationToken;
 use whisper_rs::WhisperContext;
 
 /// Shared newtype for HTTP state.
 #[derive(Clone)]
 pub struct SharedSttModelCache(pub Arc<tokio::sync::Mutex<SttModelCache>>);
 
-impl Default for SharedSttModelCache {
-    fn default() -> Self {
-        Self(Arc::new(tokio::sync::Mutex::new(SttModelCache::default())))
-    }
-}
-
 impl SharedSttModelCache {
-    pub fn new() -> Self {
-        Self::default()
+    /// Creates a new `SharedSttModelCache` with the given parent cancellation token.
+    ///
+    /// The parent token enables bulk cancellation of all in-progress downloads
+    /// (e.g., on app shutdown). Each download derives a child token from this parent.
+    pub fn new(parent: CancellationToken) -> Self {
+        Self(Arc::new(tokio::sync::Mutex::new(SttModelCache {
+            contexts: HashMap::new(),
+            downloading: HashMap::new(),
+            parent,
+        })))
     }
 }
 
@@ -33,10 +36,13 @@ pub struct DownloadProgress {
 }
 
 /// Cache of loaded WhisperContext instances with download-in-progress tracking.
-#[derive(Default)]
 pub struct SttModelCache {
     pub contexts: HashMap<SttModelSize, Arc<WhisperContext>>,
-    pub downloading: HashSet<SttModelSize>,
+    /// In-progress downloads keyed by model size. Each value is a child `CancellationToken`
+    /// derived from `parent`, enabling per-model or bulk cancellation.
+    downloading: HashMap<SttModelSize, CancellationToken>,
+    /// Parent cancellation token. Cancelling this propagates to all child download tokens.
+    parent: CancellationToken,
 }
 
 impl SttModelCache {
@@ -48,8 +54,17 @@ impl SttModelCache {
         self.contexts.insert(size, ctx);
     }
 
-    pub fn mark_downloading(&mut self, size: SttModelSize) -> bool {
-        self.downloading.insert(size)
+    /// Marks a model as downloading. Creates a child cancellation token derived from
+    /// the parent and stores it in the map. Returns a clone for the download task.
+    ///
+    /// Returns `None` if a download for this size is already in progress.
+    pub fn mark_downloading(&mut self, size: SttModelSize) -> Option<CancellationToken> {
+        if self.downloading.contains_key(&size) {
+            return None;
+        }
+        let token = self.parent.child_token();
+        self.downloading.insert(size, token.clone());
+        Some(token)
     }
 
     pub fn unmark_downloading(&mut self, size: SttModelSize) {
@@ -57,7 +72,23 @@ impl SttModelCache {
     }
 
     pub fn is_downloading(&self, size: SttModelSize) -> bool {
-        self.downloading.contains(&size)
+        self.downloading.contains_key(&size)
+    }
+
+    /// Gets a clone of the download cancellation token for the given model size.
+    pub fn get_download_token(&self, size: SttModelSize) -> Option<CancellationToken> {
+        self.downloading.get(&size).cloned()
+    }
+
+    /// Cancels all in-progress downloads by cancelling each child token.
+    /// Returns the number of downloads cancelled.
+    pub fn cancel_all_downloads(&self) -> usize {
+        let mut count = 0;
+        for token in self.downloading.values() {
+            token.cancel();
+            count += 1;
+        }
+        count
     }
 }
 
@@ -299,17 +330,40 @@ mod tests {
 
     #[test]
     fn cache_get_returns_none_for_empty() {
-        let cache = SttModelCache::default();
+        let cache = SttModelCache {
+            contexts: HashMap::new(),
+            downloading: HashMap::new(),
+            parent: CancellationToken::new(),
+        };
         assert!(cache.get_context(SttModelSize::Small).is_none());
     }
 
     #[test]
     fn cache_mark_downloading_singleflight() {
-        let mut cache = SttModelCache::default();
-        assert!(cache.mark_downloading(SttModelSize::Small));
-        assert!(!cache.mark_downloading(SttModelSize::Small));
+        let parent = CancellationToken::new();
+        let mut cache = SttModelCache {
+            contexts: HashMap::new(),
+            downloading: HashMap::new(),
+            parent,
+        };
+        assert!(cache.mark_downloading(SttModelSize::Small).is_some());
+        assert!(cache.mark_downloading(SttModelSize::Small).is_none());
         assert!(cache.is_downloading(SttModelSize::Small));
         cache.unmark_downloading(SttModelSize::Small);
         assert!(!cache.is_downloading(SttModelSize::Small));
+    }
+
+    #[test]
+    fn parent_cancel_propagates_to_child() {
+        let parent = CancellationToken::new();
+        let mut cache = SttModelCache {
+            contexts: HashMap::new(),
+            downloading: HashMap::new(),
+            parent: parent.clone(),
+        };
+        let child = cache.mark_downloading(SttModelSize::Small).unwrap();
+        assert!(!child.is_cancelled());
+        parent.cancel();
+        assert!(child.is_cancelled());
     }
 }

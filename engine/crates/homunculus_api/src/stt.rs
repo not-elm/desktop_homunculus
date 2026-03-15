@@ -42,6 +42,8 @@ pub enum SttError {
     MicrophonePermissionDenied,
     #[error("Download failed: {0}")]
     DownloadFailed(String),
+    #[error("Download cancelled")]
+    DownloadCancelled,
     #[error("Invalid language: {0}")]
     InvalidLanguage(String),
     #[error("Invalid model size")]
@@ -101,19 +103,43 @@ pub struct SttStartResponse {
     pub restarted: bool,
 }
 
+/// Bevy resource wrapping the parent cancellation token for STT downloads.
+///
+/// Cancelling this token propagates to all in-progress download child tokens.
+/// Used by the `AppExit` shutdown system to cancel downloads without acquiring
+/// the `SharedSttModelCache` mutex.
+#[derive(Clone)]
+pub struct SttShutdownToken(CancellationToken);
+
+impl SttShutdownToken {
+    /// Cancel all in-progress downloads by cancelling the parent token.
+    pub fn cancel(&self) {
+        self.0.cancel();
+    }
+}
+
 /// STT API resource — manages STT sessions and model downloads.
 #[derive(Clone)]
 pub struct SttApi {
     session: SharedSttSession,
     model_cache: SharedSttModelCache,
+    shutdown_token: SttShutdownToken,
 }
 
 impl SttApi {
-    pub fn new(session: SharedSttSession, model_cache: SharedSttModelCache) -> Self {
+    pub fn new(session: SharedSttSession) -> Self {
+        let parent = CancellationToken::new();
+        let shutdown_token = SttShutdownToken(parent.clone());
         Self {
             session,
-            model_cache,
+            model_cache: SharedSttModelCache::new(parent),
+            shutdown_token,
         }
+    }
+
+    /// Returns a clone of the shutdown token for use as a Bevy resource.
+    pub fn shutdown_token(&self) -> SttShutdownToken {
+        self.shutdown_token.clone()
     }
 
     /// Start an STT session.
@@ -192,6 +218,25 @@ impl SttApi {
         self.execute_download(size).await
     }
 
+    /// Cancel a specific model download. Returns `true` if a download was cancelled.
+    pub async fn cancel_download(&self, size: SttModelSize) -> bool {
+        let cache = self.model_cache.0.lock().await;
+        if let Some(token) = cache.get_download_token(size) {
+            token.cancel();
+            true
+        } else {
+            false
+        }
+    }
+
+    /// Cancel all in-progress downloads by cancelling individual child tokens.
+    ///
+    /// Does NOT cancel the parent token (which would permanently poison future downloads).
+    pub async fn cancel_all_downloads(&self) -> usize {
+        let cache = self.model_cache.0.lock().await;
+        cache.cancel_all_downloads()
+    }
+
     /// List available (downloaded) models.
     pub fn list_models(&self) -> Vec<ModelInfo> {
         list_available_models()
@@ -206,7 +251,8 @@ impl SttApi {
 
     /// Start a streaming model download.
     ///
-    /// Returns the progress watch receiver and the download join handle.
+    /// Returns the progress watch receiver, the download join handle,
+    /// and the cancellation token for this download.
     /// The caller is responsible for streaming progress and calling
     /// `finish_download()` when the handle completes.
     pub async fn start_download_stream(
@@ -215,9 +261,11 @@ impl SttApi {
     ) -> (
         watch::Receiver<DownloadProgress>,
         tokio::task::JoinHandle<Result<(), homunculus_microphone::error::DownloadError>>,
+        CancellationToken,
     ) {
-        self.mark_downloading(size).await;
-        mic_download_model(size, &CancellationToken::new())
+        let cancel = self.mark_downloading(size).await;
+        let (rx, handle) = mic_download_model(size, &cancel);
+        (rx, handle, cancel)
     }
 
     /// Mark a model download as no longer in progress.
@@ -337,21 +385,39 @@ impl SttApi {
         &self,
         size: SttModelSize,
     ) -> Result<ModelDownloadResponse, SttError> {
-        self.mark_downloading(size).await;
-        let (_rx, handle) = mic_download_model(size, &CancellationToken::new());
-        let result = handle
-            .await
-            .map_err(|e| SttError::DownloadFailed(e.to_string()))?;
-        self.unmark_downloading(size).await;
+        let cancel = self.mark_downloading(size).await;
+        let tmp_path = model_path(size).with_extension("bin.tmp");
+        let (_rx, handle) = mic_download_model(size, &cancel);
 
+        let result = tokio::select! {
+            join_result = handle => {
+                match join_result {
+                    Ok(Ok(())) => Ok(downloaded_response(size)),
+                    Ok(Err(homunculus_microphone::error::DownloadError::Cancelled)) => {
+                        Err(SttError::DownloadCancelled)
+                    }
+                    Ok(Err(e)) => Err(SttError::DownloadFailed(e.to_string())),
+                    Err(e) => Err(SttError::DownloadFailed(e.to_string())),
+                }
+            }
+            _ = cancel.cancelled() => {
+                // Dropped future's in-band cleanup may not run; explicitly remove temp file.
+                let _ = tokio::fs::remove_file(&tmp_path).await;
+                Err(SttError::DownloadCancelled)
+            }
+        };
+
+        self.unmark_downloading(size).await;
         result
-            .map(|()| downloaded_response(size))
-            .map_err(|e| SttError::DownloadFailed(e.to_string()))
     }
 
-    async fn mark_downloading(&self, size: SttModelSize) {
+    async fn mark_downloading(&self, size: SttModelSize) -> CancellationToken {
         let mut cache = self.model_cache.0.lock().await;
-        cache.mark_downloading(size);
+        // If a download is already in progress, return its existing token.
+        // Callers should check is_download_in_progress first.
+        cache
+            .mark_downloading(size)
+            .unwrap_or_else(|| cache.get_download_token(size).unwrap())
     }
 
     async fn unmark_downloading(&self, size: SttModelSize) {
