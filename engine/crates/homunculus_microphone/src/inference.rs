@@ -49,15 +49,6 @@ fn inference_loop(
     event_tx: &Sender<SttEvent>,
     started_at: Instant,
 ) {
-    let mut state = match ctx.create_state() {
-        Ok(state) => state,
-        Err(e) => {
-            tracing::error!("failed to create whisper state: {e}");
-            event_tx.try_broadcast(SttEvent::Stopped).ok();
-            return;
-        }
-    };
-
     loop {
         if cancel.is_cancelled() {
             break;
@@ -76,6 +67,14 @@ fn inference_loop(
             }
             Err(crossbeam_channel::RecvTimeoutError::Timeout) => continue,
             Err(crossbeam_channel::RecvTimeoutError::Disconnected) => break,
+        };
+
+        let mut state = match ctx.create_state() {
+            Ok(state) => state,
+            Err(e) => {
+                tracing::error!("failed to create whisper state: {e}");
+                continue;
+            }
         };
 
         let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
