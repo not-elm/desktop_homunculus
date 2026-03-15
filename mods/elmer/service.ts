@@ -1,7 +1,16 @@
-import { type TransformArgs, Vrm, preferences, repeat, sleep } from "@hmcs/sdk";
- 
+import {
+    type TransformArgs,
+    Vrm,
+    preferences,
+    repeat,
+    sleep,
+    stt,
+} from "@hmcs/sdk";
+
 const elmerId = "vrm:elmer";
-const transform = await preferences.load<TransformArgs>(`transform::${elmerId}`);
+const transform = await preferences.load<TransformArgs>(
+    `transform::${elmerId}`,
+);
 const elmer = await Vrm.spawn(elmerId, {
     transform,
 });
@@ -11,7 +20,7 @@ const option = {
 } as const;
 await elmer.playVrma({
     asset: "vrma:idle-maid",
-    ...option
+    ...option,
 });
 elmer.events().on("state-change", async (e) => {
     if (e.state === "idle") {
@@ -38,3 +47,11 @@ elmer.events().on("state-change", async (e) => {
     }
 });
 
+stt.stream({
+    onStatus: (s) => {
+        console.log(s);
+    },
+    onResult: (r) => {
+        console.log(r);
+    },
+});
