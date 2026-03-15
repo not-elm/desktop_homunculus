@@ -2,6 +2,7 @@ use crate::{
     error::{ModsError, UtilError, UtilResult},
     mods::create_pnpm_command,
     prelude::{ModInfo, ModPackageJson},
+    process::CommandNoWindow,
 };
 use std::{
     path::{Path, PathBuf},
