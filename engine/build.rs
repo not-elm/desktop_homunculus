@@ -16,8 +16,7 @@ fn generate_icon_and_embed() {
     println!("cargo:rerun-if-changed=assets/icons/icon.png");
 
     // Load source PNG (1024x1024)
-    let img = image::open(&png_path)
-        .unwrap_or_else(|e| panic!("Failed to open {png_path}: {e}"));
+    let img = image::open(&png_path).unwrap_or_else(|e| panic!("Failed to open {png_path}: {e}"));
 
     // Generate ICO with standard Windows icon sizes
     let ico_path = format!("{out_dir}/icon.ico");
@@ -26,12 +25,8 @@ fn generate_icon_and_embed() {
     let mut icon_dir = ico::IconDir::new(ico::ResourceType::Icon);
 
     for size in [256, 48, 32, 16] {
-        let resized = image::imageops::resize(
-            &img,
-            size,
-            size,
-            image::imageops::FilterType::Lanczos3,
-        );
+        let resized =
+            image::imageops::resize(&img, size, size, image::imageops::FilterType::Lanczos3);
         let rgba = resized.into_raw();
         let entry = ico::IconImage::from_rgba_data(size, size, rgba);
         icon_dir.add_entry(ico::IconDirEntry::encode(&entry).expect("Failed to encode ICO entry"));
