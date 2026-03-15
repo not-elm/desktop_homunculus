@@ -41,5 +41,5 @@ fn generate_icon_and_embed() {
     let rc_content = format!("app_icon ICON \"{}\"", ico_path.replace('\\', "\\\\"));
     std::fs::write(&rc_path, rc_content).expect("Failed to write icon.rc");
 
-    embed_resource::compile(&rc_path, embed_resource::NONE);
+    embed_resource::compile(&rc_path, embed_resource::NONE).expect("Failed to compile resource");
 }
