@@ -22,4 +22,5 @@ pub use model::{
 pub use permissions::ensure_microphone_permission;
 pub use pipeline::spawn_pipeline;
 pub use session::{SharedSttSession, SttEvent, SttSession, SttStartOptions, SttState};
+pub use vad::{ChunkEnvelope, PipelineMetrics};
 pub use whisper_rs::WhisperContext;

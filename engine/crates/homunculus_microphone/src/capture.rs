@@ -1,5 +1,6 @@
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
-use std::sync::mpsc;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, mpsc};
 use tokio_util::sync::CancellationToken;
 
 use crate::error::CaptureError;
@@ -53,6 +54,11 @@ fn capture_loop(
     session: SharedSttSession,
     cancel: CancellationToken,
 ) {
+    tracing::info!(
+        "Capture: device config = {:?}, channels = {channels}",
+        config
+    );
+
     let error_session = session.clone();
     let stream = match build_input_stream_adaptive(&device, &config, tx, channels, move |err| {
         tracing::error!("cpal error: {err}");
@@ -109,38 +115,70 @@ where
         .default_input_config()
         .map(|c| c.sample_format())
         .unwrap_or(cpal::SampleFormat::F32);
+    tracing::info!("Capture: stream built, sample_format = {supported:?}");
+    let first_callback = Arc::new(AtomicBool::new(false));
     match supported {
-        cpal::SampleFormat::F32 => device.build_input_stream(
-            config,
-            move |data: &[f32], _| {
-                let mono = downmix_to_mono(data, channels);
-                if let Err(mpsc::TrySendError::Full(_)) = tx.try_send(mono) {
-                    tracing::warn!("capture→VAD channel full, dropping audio frame");
-                }
-            },
-            error_callback,
-            None,
-        ),
-        cpal::SampleFormat::I16 => device.build_input_stream(
-            config,
-            move |data: &[i16], _| {
-                let mono: Vec<f32> = if channels == 1 {
-                    data.iter().map(|&s| s as f32 / 32768.0_f32).collect()
-                } else {
-                    data.chunks(channels)
-                        .map(|frame| {
-                            frame.iter().map(|&s| s as f32 / 32768.0_f32).sum::<f32>()
-                                / channels as f32
-                        })
-                        .collect()
-                };
-                if let Err(mpsc::TrySendError::Full(_)) = tx.try_send(mono) {
-                    tracing::warn!("capture→VAD channel full, dropping audio frame");
-                }
-            },
-            error_callback,
-            None,
-        ),
+        cpal::SampleFormat::F32 => {
+            let first_callback = Arc::clone(&first_callback);
+            device.build_input_stream(
+                config,
+                move |data: &[f32], _| {
+                    if !first_callback.swap(true, Ordering::Relaxed) {
+                        tracing::info!(
+                            "Capture: first audio callback fired, {} samples",
+                            data.len()
+                        );
+                    }
+                    let mono = downmix_to_mono(data, channels);
+                    match tx.try_send(mono) {
+                        Ok(()) => {}
+                        Err(mpsc::TrySendError::Full(_)) => {
+                            tracing::warn!("capture→VAD channel full, dropping audio frame");
+                        }
+                        Err(mpsc::TrySendError::Disconnected(_)) => {
+                            tracing::warn!("capture→VAD channel disconnected");
+                        }
+                    }
+                },
+                error_callback,
+                None,
+            )
+        }
+        cpal::SampleFormat::I16 => {
+            let first_callback = Arc::clone(&first_callback);
+            device.build_input_stream(
+                config,
+                move |data: &[i16], _| {
+                    if !first_callback.swap(true, Ordering::Relaxed) {
+                        tracing::info!(
+                            "Capture: first audio callback fired, {} samples",
+                            data.len()
+                        );
+                    }
+                    let mono: Vec<f32> = if channels == 1 {
+                        data.iter().map(|&s| s as f32 / 32768.0_f32).collect()
+                    } else {
+                        data.chunks(channels)
+                            .map(|frame| {
+                                frame.iter().map(|&s| s as f32 / 32768.0_f32).sum::<f32>()
+                                    / channels as f32
+                            })
+                            .collect()
+                    };
+                    match tx.try_send(mono) {
+                        Ok(()) => {}
+                        Err(mpsc::TrySendError::Full(_)) => {
+                            tracing::warn!("capture→VAD channel full, dropping audio frame");
+                        }
+                        Err(mpsc::TrySendError::Disconnected(_)) => {
+                            tracing::warn!("capture→VAD channel disconnected");
+                        }
+                    }
+                },
+                error_callback,
+                None,
+            )
+        }
         _ => Err(cpal::BuildStreamError::StreamConfigNotSupported),
     }
 }

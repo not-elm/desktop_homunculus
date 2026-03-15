@@ -230,8 +230,9 @@ pub fn spawn_vad_thread(
     needs_resample: bool,
     cancel: CancellationToken,
     config: VadConfig,
-) -> Result<crossbeam_channel::Receiver<Vec<f32>>, crate::error::PipelineError> {
-    let (chunk_tx, chunk_rx) = crossbeam_channel::bounded::<Vec<f32>>(1);
+    metrics: Arc<PipelineMetrics>,
+) -> Result<crossbeam_channel::Receiver<ChunkEnvelope>, crate::error::PipelineError> {
+    let (chunk_tx, chunk_rx) = crossbeam_channel::bounded::<ChunkEnvelope>(1);
 
     std::thread::Builder::new()
         .name("stt-vad".into())
@@ -243,6 +244,7 @@ pub fn spawn_vad_thread(
                 cancel,
                 config,
                 chunk_tx,
+                metrics,
             );
         })
         .map_err(|e| crate::error::PipelineError::Vad(e.to_string()))?;
@@ -256,7 +258,8 @@ fn vad_thread_main(
     needs_resample: bool,
     cancel: CancellationToken,
     config: VadConfig,
-    chunk_tx: crossbeam_channel::Sender<Vec<f32>>,
+    chunk_tx: crossbeam_channel::Sender<ChunkEnvelope>,
+    metrics: Arc<PipelineMetrics>,
 ) {
     let mut accumulator = if needs_resample {
         Some(ResampleAccumulator::new(sample_rate))
@@ -323,18 +326,35 @@ fn vad_thread_main(
             if let Some(chunk) = state_machine.process_frame(&frame, is_voice) {
                 let len = chunk.len();
                 let secs = len as f64 / 16000.0;
-                tracing::info!("VAD: emitting chunk, {len} samples ({secs:.1}s)");
-                try_send_chunk(&chunk_tx, chunk);
+                let seq = metrics.next_seq();
+                tracing::info!("VAD: emitting chunk seq={seq}, {len} samples ({secs:.1}s)");
+                let now = Instant::now();
+                try_send_chunk(
+                    &chunk_tx,
+                    ChunkEnvelope {
+                        samples: chunk,
+                        enqueued_at: now,
+                        silence_detected_at: now,
+                        seq,
+                    },
+                    &metrics,
+                );
             }
         }
     }
 }
 
-fn try_send_chunk(tx: &crossbeam_channel::Sender<Vec<f32>>, chunk: Vec<f32>) {
-    match tx.try_send(chunk) {
+fn try_send_chunk(
+    tx: &crossbeam_channel::Sender<ChunkEnvelope>,
+    envelope: ChunkEnvelope,
+    metrics: &PipelineMetrics,
+) {
+    match tx.try_send(envelope) {
         Ok(()) => {}
         Err(TrySendError::Full(_)) => {
-            tracing::warn!("VAD chunk channel full, dropping chunk");
+            metrics.increment_drops();
+            let drops = metrics.drop_count();
+            tracing::warn!("VAD chunk channel full, dropping chunk (total drops: {drops})");
         }
         Err(TrySendError::Disconnected(_)) => {}
     }

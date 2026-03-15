@@ -101,7 +101,6 @@ pub enum SttModelSize {
     Base,
     #[default]
     Small,
-    Medium,
 }
 
 impl SttModelSize {
@@ -110,10 +109,8 @@ impl SttModelSize {
             Self::Tiny => "tiny",
             Self::Base => "base",
             Self::Small => "small",
-            Self::Medium => "medium",
         }
     }
-
 }
 
 /// Load a `WhisperContext` from the model file on disk.
@@ -140,12 +137,7 @@ pub fn is_model_available(size: SttModelSize) -> bool {
 
 /// Returns a list of downloaded models.
 pub fn list_available_models() -> Vec<(SttModelSize, u64, PathBuf)> {
-    let sizes = [
-        SttModelSize::Tiny,
-        SttModelSize::Base,
-        SttModelSize::Small,
-        SttModelSize::Medium,
-    ];
+    let sizes = [SttModelSize::Tiny, SttModelSize::Base, SttModelSize::Small];
     sizes
         .iter()
         .filter_map(|&size| {
@@ -267,7 +259,6 @@ mod tests {
         assert_eq!(SttModelSize::Tiny.as_str(), "tiny");
         assert_eq!(SttModelSize::Base.as_str(), "base");
         assert_eq!(SttModelSize::Small.as_str(), "small");
-        assert_eq!(SttModelSize::Medium.as_str(), "medium");
     }
 
     #[test]
@@ -289,11 +280,6 @@ mod tests {
         let path_str = path.to_string_lossy();
         assert!(path_str.contains("models"));
         assert!(path_str.ends_with("ggml-small-q5_1.bin"));
-    }
-
-    #[test]
-    fn model_not_available_when_missing() {
-        assert!(!is_model_available(SttModelSize::Medium));
     }
 
     #[test]

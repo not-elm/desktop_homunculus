@@ -8,6 +8,7 @@ use whisper_rs::{FullParams, SamplingStrategy, WhisperContext, WhisperState};
 
 use crate::error::InferenceError;
 use crate::session::{SharedSttSession, SttEvent};
+use crate::vad::ChunkEnvelope;
 
 /// Thread 3: spawn the Whisper inference thread via `tokio::task::spawn_blocking`.
 ///
@@ -16,7 +17,7 @@ use crate::session::{SharedSttSession, SttEvent};
 /// remaining stuck in `Listening`.
 pub fn spawn_inference_thread(
     ctx: Arc<WhisperContext>,
-    chunk_rx: crossbeam_channel::Receiver<Vec<f32>>,
+    chunk_rx: crossbeam_channel::Receiver<ChunkEnvelope>,
     language: String,
     cancel: CancellationToken,
     event_tx: Sender<SttEvent>,
@@ -42,7 +43,7 @@ pub fn spawn_inference_thread(
 
 fn inference_loop(
     ctx: &WhisperContext,
-    chunk_rx: &crossbeam_channel::Receiver<Vec<f32>>,
+    chunk_rx: &crossbeam_channel::Receiver<ChunkEnvelope>,
     language: &str,
     cancel: &CancellationToken,
     event_tx: &Sender<SttEvent>,
@@ -62,14 +63,23 @@ fn inference_loop(
             break;
         }
 
-        let samples = match chunk_rx.recv_timeout(std::time::Duration::from_millis(100)) {
-            Ok(samples) => samples,
+        let envelope = match chunk_rx.recv_timeout(std::time::Duration::from_millis(100)) {
+            Ok(envelope) => {
+                let latency_ms = envelope.enqueued_at.elapsed().as_millis();
+                let len = envelope.samples.len();
+                let secs = len as f64 / 16000.0;
+                tracing::info!(
+                    "Inference: received chunk seq={}, {len} samples ({secs:.1}s), queue_latency={latency_ms}ms",
+                    envelope.seq
+                );
+                envelope
+            }
             Err(crossbeam_channel::RecvTimeoutError::Timeout) => continue,
             Err(crossbeam_channel::RecvTimeoutError::Disconnected) => break,
         };
 
         let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-            run_inference(&mut state, &samples, language)
+            run_inference(&mut state, &envelope.samples, language)
         }));
 
         handle_inference_result(result, started_at, event_tx);
@@ -83,6 +93,7 @@ fn handle_inference_result(
 ) {
     match result {
         Ok(Ok(Some((text, detected_lang)))) => {
+            tracing::info!("Inference: result text={text:?}, lang={detected_lang}");
             let timestamp = started_at.elapsed().as_secs_f64();
             event_tx
                 .try_broadcast(SttEvent::Result {
@@ -92,7 +103,9 @@ fn handle_inference_result(
                 })
                 .ok();
         }
-        Ok(Ok(None)) => {}
+        Ok(Ok(None)) => {
+            tracing::debug!("Inference: empty result (no segments)");
+        }
         Ok(Err(e)) => {
             tracing::error!("whisper inference error: {e}");
         }

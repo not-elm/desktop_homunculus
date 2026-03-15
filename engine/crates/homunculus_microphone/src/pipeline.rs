@@ -7,7 +7,7 @@ use crate::capture::{self, CaptureHandle};
 use crate::error::PipelineError;
 use crate::inference;
 use crate::session::{SharedSttSession, SttEvent};
-use crate::vad::{self, VadConfig};
+use crate::vad::{self, PipelineMetrics, VadConfig};
 
 /// Spawn the 3-thread pipeline: capture -> VAD -> inference.
 pub fn spawn_pipeline(
@@ -28,12 +28,15 @@ pub fn spawn_pipeline(
     } = capture::spawn_capture_thread(device, cancel.clone(), session.clone())
         .map_err(|e| PipelineError::Capture(e.to_string()))?;
 
+    let metrics = PipelineMetrics::new();
+
     let chunk_rx = vad::spawn_vad_thread(
         audio_rx,
         sample_rate,
         needs_resample,
         cancel.clone(),
         vad_config,
+        metrics,
     )?;
 
     inference::spawn_inference_thread(
