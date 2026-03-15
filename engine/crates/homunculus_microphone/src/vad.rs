@@ -59,7 +59,7 @@ pub struct VadConfig {
 impl Default for VadConfig {
     fn default() -> Self {
         Self {
-            silence_ms: 700,
+            silence_ms: 400,
             energy_threshold: 0.01,
         }
     }
@@ -70,7 +70,7 @@ impl VadConfig {
     pub fn from_config() -> Self {
         match homunculus_utils::config::HomunculusConfig::load() {
             Ok(config) => Self {
-                silence_ms: config.stt.silence_ms.unwrap_or(700),
+                silence_ms: config.stt.silence_ms.unwrap_or(400),
                 energy_threshold: config.stt.energy_threshold.unwrap_or(0.01),
             },
             Err(_) => Self::default(),
@@ -269,7 +269,7 @@ fn vad_thread_main(
 
     let mut vad = webrtc_vad::Vad::new_with_rate_and_mode(
         webrtc_vad::SampleRate::Rate16kHz,
-        webrtc_vad::VadMode::Quality,
+        webrtc_vad::VadMode::VeryAggressive,
     );
 
     let mut state_machine = VadStateMachine::new(&config);
@@ -434,7 +434,7 @@ mod tests {
     #[test]
     fn vad_config_defaults() {
         let config = VadConfig::default();
-        assert_eq!(config.silence_ms, 700);
+        assert_eq!(config.silence_ms, 400);
         assert!((config.energy_threshold - 0.01).abs() < f32::EPSILON);
     }
 
