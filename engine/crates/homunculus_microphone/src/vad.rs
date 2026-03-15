@@ -285,7 +285,7 @@ fn vad_thread_main(
             break;
         }
 
-        let raw_audio = match audio_rx.recv() {
+        let raw_audio = match audio_rx.recv_timeout(std::time::Duration::from_millis(20)) {
             Ok(data) => {
                 if !first_audio_logged {
                     first_audio_logged = true;
@@ -293,7 +293,8 @@ fn vad_thread_main(
                 }
                 data
             }
-            Err(_) => {
+            Err(mpsc::RecvTimeoutError::Timeout) => continue,
+            Err(mpsc::RecvTimeoutError::Disconnected) => {
                 tracing::info!("VAD: audio channel closed, exiting");
                 break;
             }

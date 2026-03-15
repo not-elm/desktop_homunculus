@@ -192,8 +192,12 @@ fn report_device_error(session: &SharedSttSession, message: String) {
 }
 
 fn wait_for_cancellation(cancel: &CancellationToken) {
-    while !cancel.is_cancelled() {
-        std::thread::sleep(std::time::Duration::from_millis(10));
+    if let Ok(handle) = tokio::runtime::Handle::try_current() {
+        handle.block_on(cancel.cancelled());
+    } else {
+        while !cancel.is_cancelled() {
+            std::thread::sleep(std::time::Duration::from_millis(10));
+        }
     }
 }
 
