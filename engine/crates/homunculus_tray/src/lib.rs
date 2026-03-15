@@ -112,14 +112,18 @@ fn handle_tray_clicks(
 /// Stdout is discarded; stderr is piped and logged on failure.
 async fn execute_command(mods_dir: PathBuf, command: String) {
     use homunculus_utils::process::CommandNoWindow;
-    let result = std::process::Command::new(homunculus_utils::mods::pnpm_program())
-        .no_window()
+    let mut cmd = std::process::Command::new(homunculus_utils::mods::pnpm_program());
+    cmd.no_window()
         .arg("exec")
         .arg(&command)
         .current_dir(&mods_dir)
         .stdout(std::process::Stdio::piped())
-        .stderr(std::process::Stdio::piped())
-        .output();
+        .stderr(std::process::Stdio::piped());
+    #[cfg(windows)]
+    if let Some(path) = homunculus_utils::process::path_with_node_prepended() {
+        cmd.env("PATH", path);
+    }
+    let result = cmd.output();
 
     match result {
         Ok(output) if !output.status.success() => {

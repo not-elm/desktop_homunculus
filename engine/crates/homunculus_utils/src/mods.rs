@@ -157,6 +157,10 @@ fn create_pnpm_command() -> UtilResult<Command> {
     let config = HomunculusConfig::load()?;
     let mut command = Command::new(pnpm_program());
     command.args(["-C", &format!("{}", &config.mods_dir.display())]);
+    #[cfg(windows)]
+    if let Some(path) = crate::process::path_with_node_prepended() {
+        command.env("PATH", path);
+    }
     Ok(command)
 }
 
