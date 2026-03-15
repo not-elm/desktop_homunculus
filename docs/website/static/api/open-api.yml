@@ -881,6 +881,26 @@ paths:
           description: Invalid model size
         '500':
           description: Download failed
+    delete:
+      tags:
+      - stt
+      summary: Cancel an in-progress model download.
+      description: |-
+        With `modelSize` query param: cancel a specific download.
+        Without: cancel all in-progress downloads.
+      operationId: cancel_download
+      parameters:
+      - name: modelSize
+        in: query
+        description: Model size to cancel. Omit to cancel all.
+        required: false
+        schema:
+          $ref: '#/components/schemas/SttModelSize'
+      responses:
+        '200':
+          description: Download(s) cancelled
+        '404':
+          description: No active download for the specified model
   /stt/models/download/stream:
     post:
       tags:
