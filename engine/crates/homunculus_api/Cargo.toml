@@ -36,6 +36,8 @@ utoipa = { workspace = true, optional = true }
 default = []
 develop = []
 axum = ["dep:axum"]
+cuda = ["homunculus_microphone/cuda"]
+metal = ["homunculus_microphone/metal"]
 openapi = ["dep:utoipa", "dep:homunculus_utils", "homunculus_utils/openapi", "homunculus_core/openapi", "homunculus_audio/openapi", "homunculus_microphone/openapi"]
 
 [lints]

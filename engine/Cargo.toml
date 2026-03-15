@@ -133,6 +133,8 @@ develop = [
     "homunculus_hit_test/develop",
     "bevy_cef/debug",
 ]
+stt-cuda = ["homunculus_api/cuda"]
+stt-metal = ["homunculus_api/metal"]
 
 [profile.dev.package."*"]
 opt-level = 3

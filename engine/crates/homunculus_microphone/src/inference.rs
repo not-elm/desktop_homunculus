@@ -49,6 +49,13 @@ fn inference_loop(
     event_tx: &Sender<SttEvent>,
     started_at: Instant,
 ) {
+    #[cfg(feature = "cuda")]
+    tracing::info!("Inference: CUDA GPU acceleration enabled");
+    #[cfg(feature = "metal")]
+    tracing::info!("Inference: Metal GPU acceleration enabled");
+    #[cfg(not(any(feature = "cuda", feature = "metal")))]
+    tracing::info!("Inference: CPU-only mode (no GPU features enabled)");
+
     loop {
         if cancel.is_cancelled() {
             break;

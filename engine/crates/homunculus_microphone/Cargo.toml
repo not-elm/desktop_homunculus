@@ -30,6 +30,8 @@ utoipa = { workspace = true, optional = true }
 
 [features]
 default = []
+cuda = ["whisper-rs/cuda"]
+metal = ["whisper-rs/metal"]
 openapi = ["dep:utoipa"]
 
 [target.'cfg(target_os = "macos")'.dependencies]
