@@ -583,31 +583,6 @@ body {
   background: oklch(0.7 0.18 25 / 0.5);
 }
 
-/* ━━ STT Select ━━ */
-
-.stt-select {
-  width: 100%;
-  background: oklch(0.15 0.01 250 / 0.6);
-  border: 1px solid oklch(0.72 0.14 192 / 0.2);
-  border-radius: 6px;
-  padding: 8px 12px;
-  color: oklch(0.92 0.01 250);
-  font-size: 0.8rem;
-  letter-spacing: 0.04em;
-  cursor: pointer;
-  transition: border-color 180ms ease, box-shadow 180ms ease;
-}
-
-.stt-select:hover {
-  border-color: oklch(0.72 0.14 192 / 0.4);
-}
-
-.stt-select:focus {
-  border-color: oklch(0.72 0.14 192 / 0.6);
-  box-shadow: 0 0 8px oklch(0.72 0.14 192 / 0.15);
-  outline: none;
-}
-
 /* ━━ STT Toggle Button ━━ */
 
 .stt-toggle {

@@ -1,3 +1,10 @@
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@hmcs/ui";
 import { useStt, type ModelCardState } from "../hooks/useStt";
 import type { stt as sttTypes } from "@hmcs/sdk";
 
@@ -30,6 +37,34 @@ function dotClass(state: SttState): string {
 }
 
 const DOTS = Array.from({ length: 15 }, (_, i) => i);
+
+function LanguageSelector({
+  language,
+  setLanguage,
+  languages,
+}: {
+  language: string;
+  setLanguage: (lang: string) => void;
+  languages: sttTypes.LanguageEntry[];
+}) {
+  return (
+    <div className="settings-label">
+      Language
+      <Select value={language} onValueChange={setLanguage}>
+        <SelectTrigger className="w-full">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {languages.map((lang) => (
+            <SelectItem key={lang.code} value={lang.code}>
+              {lang.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
 
 export function SpeechTab() {
   const {
@@ -85,20 +120,11 @@ export function SpeechTab() {
       </div>
 
       {/* Language Selector */}
-      <label className="settings-label">
-        Language
-        <select
-          className="stt-select"
-          value={language}
-          onChange={(e) => setLanguage(e.target.value)}
-        >
-          {languages.map((lang) => (
-            <option key={lang.code} value={lang.code}>
-              {lang.label}
-            </option>
-          ))}
-        </select>
-      </label>
+      <LanguageSelector
+        language={language}
+        setLanguage={setLanguage}
+        languages={languages}
+      />
 
       {/* Start/Stop Button */}
       <button
