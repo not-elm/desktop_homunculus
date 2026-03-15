@@ -22,7 +22,7 @@ for (const m of models) {
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `modelSize` | `SttModelSize` | Model size (`"tiny"`, `"base"`, `"small"`, or `"medium"`) |
+| `modelSize` | `SttModelSize` | Model size (`"tiny"`, `"base"`, `"small"`, `"medium"`, `"large-v3-turbo"`, or `"large-v3"`) |
 | `sizeBytes` | `number` | File size in bytes |
 | `path` | `string` | Relative file path |
 
@@ -101,10 +101,12 @@ Yielded during streaming download.
 
 | Size | Download Size | Use Case |
 |------|--------------|----------|
-| `"tiny"` | 32.5 MB | Quick prototyping, low-resource devices |
-| `"base"` | 59.8 MB | Simple tasks, moderate accuracy |
-| `"small"` | 189.8 MB | **Recommended.** Good accuracy for most languages |
-| `"medium"` | 491.8 MB | Best accuracy, higher memory and CPU usage |
+| `"tiny"` | 32.2 MB | Quick prototyping, low-resource devices |
+| `"base"` | 59.7 MB | Simple tasks, moderate accuracy |
+| `"small"` | 190 MB | **Recommended.** Good accuracy for most languages |
+| `"medium"` | 539 MB | Higher accuracy, more resource usage |
+| `"large-v3-turbo"` | 574 MB | Near Large v3 accuracy with faster inference |
+| `"large-v3"` | 1.08 GB | Best accuracy, highest memory and CPU usage |
 
 ## Example: Download with Progress
 

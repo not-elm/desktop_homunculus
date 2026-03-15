@@ -35,7 +35,7 @@ const state = await stt.session.start({
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `language` | `string` | `"auto"` | Language code (ISO 639-1) or `"auto"` for detection |
-| `modelSize` | `SttModelSize` | `"small"` | Whisper model size: `"tiny"`, `"base"`, `"small"`, or `"medium"` |
+| `modelSize` | `SttModelSize` | `"small"` | Whisper model size: `"tiny"`, `"base"`, `"small"`, `"medium"`, `"large-v3-turbo"`, or `"large-v3"` |
 
 ### Stop
 

@@ -51,10 +51,12 @@ Sessions are managed via `stt.session` and results are streamed in real time via
 
 | Size | Download | Speed | Accuracy | Notes |
 |------|----------|-------|----------|-------|
-| `"tiny"` | 32.5 MB | Fastest | Lower | Good for quick prototyping |
-| `"base"` | 59.8 MB | Fast | Moderate | Balanced for simple tasks |
-| `"small"` | 189.8 MB | Moderate | Good | **Default.** Recommended for most use cases |
-| `"medium"` | 491.8 MB | Slower | Best | Best accuracy, higher resource usage |
+| `"tiny"` | 32.2 MB | Fastest | Lower | Good for quick prototyping |
+| `"base"` | 59.7 MB | Fast | Moderate | Balanced for simple tasks |
+| `"small"` | 190 MB | Moderate | Good | **Default.** Recommended for most use cases |
+| `"medium"` | 539 MB | Slower | High | Higher accuracy, more resource usage |
+| `"large-v3-turbo"` | 574 MB | Slower | Higher | Near Large v3 accuracy with faster inference |
+| `"large-v3"` | 1.08 GB | Slowest | Best | Best accuracy, highest resource usage |
 
 ## Prerequisites
 
