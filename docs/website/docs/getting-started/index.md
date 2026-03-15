@@ -12,6 +12,7 @@ Desktop Homunculus is a cross-platform desktop mascot application built with the
 - **VRM 3D character rendering** — Characters render on your desktop, blending seamlessly with your workspace
 - **MOD system** — Install and create MODs to add characters, animations, sound effects, UI panels, and custom behaviors. MODs are npm packages managed with pnpm
 - **AI integration via MCP** — Connect AI assistants (such as Claude) to control your character through the Model Context Protocol (MCP) server
+- **Speech-to-text (STT)** — Real-time voice transcription using local Whisper models. MODs can listen to microphone input and react to spoken words with no cloud dependency
 - **WebView-based UI overlays** — Settings panels, context menus, and custom UIs are React apps rendered inside the engine via Chromium Embedded Framework (CEF)
 - **Extensible TypeScript SDK** — The `@hmcs/sdk` package gives MOD developers control over characters, WebView UI, audio, and settings
 
