@@ -8,8 +8,8 @@ import { output } from "@hmcs/sdk/commands";
 try {
   await Webview.open({
     source: webviewSource.local("settings:ui"),
-    size: [0.6, 0.6],
-    viewportSize: [500, 520],
+    size: [0.8, 1],
+    viewportSize: [600, 800],
     offset: [1.1, 0],
   });
   await audio.se.play("se:open");
