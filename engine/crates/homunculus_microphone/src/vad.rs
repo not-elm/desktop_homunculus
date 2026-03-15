@@ -205,7 +205,7 @@ impl ResampleAccumulator {
             16000.0 / source_rate as f64,
             2.0,
             rubato::SincInterpolationParameters {
-                sinc_len: 128,
+                sinc_len: 64,
                 f_cutoff: 0.95,
                 oversampling_factor: 128,
                 interpolation: rubato::SincInterpolationType::Linear,
