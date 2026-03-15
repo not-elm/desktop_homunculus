@@ -251,7 +251,7 @@ pub fn spawn_vad_thread(
     config: VadConfig,
     metrics: Arc<PipelineMetrics>,
 ) -> Result<crossbeam_channel::Receiver<ChunkEnvelope>, crate::error::PipelineError> {
-    let (chunk_tx, chunk_rx) = crossbeam_channel::bounded::<ChunkEnvelope>(1);
+    let (chunk_tx, chunk_rx) = crossbeam_channel::bounded::<ChunkEnvelope>(3);
 
     std::thread::Builder::new()
         .name("stt-vad".into())
