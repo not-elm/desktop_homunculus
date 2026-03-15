@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { stt } from "@hmcs/sdk";
+import { preferences, stt } from "@hmcs/sdk";
 import type { stt as sttTypes } from "@hmcs/sdk";
 
 type SttModelSize = sttTypes.SttModelSize;
@@ -17,7 +17,6 @@ const MODEL_DEFINITIONS: Omit<ModelCardState, "status" | "downloadProgress">[] =
   { size: "tiny", label: "Tiny", fileSize: "32.5 MB" },
   { size: "base", label: "Base", fileSize: "59.8 MB" },
   { size: "small", label: "Small", fileSize: "189.8 MB" },
-  { size: "medium", label: "Medium", fileSize: "491.8 MB" },
 ];
 
 export function useStt() {
@@ -44,6 +43,9 @@ export function useStt() {
 
       setLanguages(langList);
 
+      const savedLang = await preferences.load<string>("stt::language");
+      if (savedLang) setLanguage(savedLang);
+
       const downloadedSizes = new Set(downloadedModels.map((m) => m.modelSize));
       setModels(
         MODEL_DEFINITIONS.map((d) => ({
@@ -52,7 +54,7 @@ export function useStt() {
         })),
       );
 
-      const sizes: SttModelSize[] = ["medium", "small", "base", "tiny"];
+      const sizes: SttModelSize[] = ["small", "base", "tiny"];
       const defaultSelected = sizes.find((s) => downloadedSizes.has(s)) ?? null;
       setSelectedModel(defaultSelected);
     })();
@@ -72,6 +74,11 @@ export function useStt() {
       cancelled = true;
       stream.close();
     };
+  }, []);
+
+  const changeLanguage = useCallback((lang: string) => {
+    setLanguage(lang);
+    preferences.save("stt::language", lang);
   }, []);
 
   const selectModel = useCallback((size: SttModelSize) => {
@@ -183,7 +190,7 @@ export function useStt() {
     downloadModel,
     cancelDownload,
     language,
-    setLanguage,
+    setLanguage: changeLanguage,
     languages,
     startSession,
     stopSession,
