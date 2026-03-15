@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { Webview, audio, settings, shadowPanel } from "@hmcs/sdk";
 
+export type SettingsTab = "general" | "speech";
+
 export function useSettings() {
+  const [tab, setTab] = useState<SettingsTab>("general");
   const [fps, setFps] = useState(60);
   const [alpha, setAlpha] = useState(0.5);
   const [loading, setLoading] = useState(true);
@@ -51,6 +54,8 @@ export function useSettings() {
 
   return {
     loading,
+    tab,
+    setTab,
     fps,
     setFps,
     alpha,

@@ -242,6 +242,42 @@ body {
   margin: 0;
 }
 
+/* ━━ Tabs ━━ */
+
+.settings-tabs {
+  display: flex;
+  flex-direction: row;
+  gap: 4px;
+  position: relative;
+  z-index: 7;
+  border-bottom: 1px solid oklch(0.72 0.14 192 / 0.1);
+  padding-bottom: 0;
+}
+
+.settings-tab {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: oklch(0.75 0.02 250 / 0.6);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: color 180ms ease, border-color 180ms ease, text-shadow 180ms ease;
+  font-family: inherit;
+}
+
+.settings-tab:hover {
+  color: oklch(0.85 0.06 192 / 0.8);
+}
+
+.settings-tab--active {
+  color: oklch(0.72 0.14 192);
+  border-bottom-color: oklch(0.72 0.14 192 / 0.8);
+  text-shadow: 0 0 12px oklch(0.72 0.14 192 / 0.3);
+}
+
 /* ━━ Content Area ━━ */
 
 .settings-content {
