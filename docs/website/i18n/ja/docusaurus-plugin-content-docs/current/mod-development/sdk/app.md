@@ -69,7 +69,7 @@ await app.exit();
 
 ```typescript
 interface AppInfo {
-  /** エンジンのバージョン文字列（例: "0.1.0-alpha.4"）。 */
+  /** エンジンのバージョン文字列（例: "0.1.0-alpha.3.2"）。 */
   version: string;
   /** プラットフォーム情報。 */
   platform: PlatformInfo;

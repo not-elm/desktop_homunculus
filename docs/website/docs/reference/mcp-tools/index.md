@@ -6,7 +6,7 @@ slug: /reference/mcp-tools
 
 # MCP Reference
 
-The Desktop Homunculus MCP server exposes 20 tools, 4 resources, and 3 prompts via Streamable HTTP transport.
+The Desktop Homunculus MCP server exposes 20 tools, 4 resources, and 3 prompts via Streamable HTTP.
 
 Use this page as a map, then open the category page you need.
 

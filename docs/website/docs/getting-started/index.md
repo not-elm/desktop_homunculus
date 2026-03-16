@@ -17,7 +17,7 @@ Desktop Homunculus is a cross-platform desktop mascot application built with the
 
 ## How It Works
 
-The engine, built on Bevy, renders a transparent desktop window containing your VRM character. MODs are npm packages that run as Node.js child processes alongside the engine, communicating through an HTTP API on `localhost:3100`. The TypeScript SDK (`@hmcs/sdk`) wraps this API with convenient, typed functions for spawning characters, playing animations, managing preferences, and opening WebViews. AI assistants can control the character through a built-in MCP server at `localhost:3100/mcp` using Streamable HTTP transport.
+The engine, built on Bevy, renders a transparent desktop window containing your VRM character. MODs are npm packages that run as Node.js child processes alongside the engine, communicating through an HTTP API on `localhost:3100`. The TypeScript SDK (`@hmcs/sdk`) wraps this API with convenient, typed functions for spawning characters, playing animations, managing preferences, and opening WebViews. AI assistants can control the character through a built-in MCP server at `localhost:3100/mcp` using Streamable HTTP.
 
 ## What You Need
 
@@ -34,6 +34,6 @@ Desktop Homunculus is currently in **alpha** (v0.1.0-alpha.4). APIs and MOD spec
 ## Next Steps
 
 - **[Installation](/getting-started/installation)** — Download the app and set up your MOD environment
-- **[Quick Start](/getting-started/quick-start)** — Get up and running in minutes: configure settings, interact with your character, and explore official MODs
+- **[Quick Start](/getting-started/quick-start)** — Get up and running in minutes: configure settings, interact with your character, and explore [official MODs](/mods/)
 - **[MOD Development](/mod-development)** — Build your own MODs with the TypeScript SDK
 - **[AI Integration](/ai-integration)** — Connect AI assistants to your character via MCP

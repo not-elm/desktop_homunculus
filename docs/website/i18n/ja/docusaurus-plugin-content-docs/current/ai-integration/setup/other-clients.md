@@ -5,7 +5,7 @@ sidebar_position: 4
 
 # その他の MCP クライアント
 
-MCP 対応のクライアントであれば、どれでも Desktop Homunculus に接続できます。MCP サーバーは **Streamable HTTP トランスポート**を使用します。クライアントがエンジンの HTTP エンドポイントに直接接続します。
+MCP 対応のクライアントであれば、どれでも Desktop Homunculus に接続できます。MCP サーバーは **Streamable HTTP**を使用します。クライアントがエンジンの HTTP エンドポイントに直接接続します。
 
 ## 前提条件
 

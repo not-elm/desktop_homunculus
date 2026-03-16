@@ -36,7 +36,7 @@ SDK をインストールします：
 pnpm add @hmcs/sdk
 ```
 
-`@hmcs/sdk` はキャラクターの制御、サウンドの再生などの TypeScript API を提供します。MOD が組み込みアニメーション（`vrma:idle-maid` など）を使用する場合、`@hmcs/assets` を別途インストールしてください：`hmcs mod install @hmcs/assets`。
+`@hmcs/sdk` はキャラクターの制御、サウンドの再生などの TypeScript API を提供します。MOD が組み込みアニメーション（`vrma:idle-maid` など）を使用する場合、`@hmcs/assets` も併せてインストールする必要があります：`hmcs mod install @hmcs/assets`。
 
 ## Step 2: package.json の設定
 

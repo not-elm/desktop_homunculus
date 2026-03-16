@@ -42,7 +42,7 @@ Desktop Homunculus は **Model Context Protocol（MCP）** を通じてキャラ
 
 - MCP サーバーは Desktop Homunculus エンジンに内蔵されています — 別プロセスやインストールは不要です
 - `http://localhost:3100/mcp` で Streamable HTTP 経由で通信します（ローカルのみ）
-- ツールが動作するには Desktop Homunculus が起動している必要があります
+- Desktop Homunculus が起動していないと、ツールは動作しません
 - ポートは `~/.homunculus/config.toml` で変更できます
 
 ### MCP プリミティブ

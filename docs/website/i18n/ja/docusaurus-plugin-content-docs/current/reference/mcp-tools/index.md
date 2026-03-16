@@ -6,7 +6,7 @@ slug: /reference/mcp-tools
 
 # MCP リファレンス
 
-Desktop Homunculus の MCP サーバーは、Streamable HTTP トランスポートを介して 20 のツール、4 つのリソース、3 つのプロンプトを公開しています。
+Desktop Homunculus の MCP サーバーは、Streamable HTTP を介して 20 のツール、4 つのリソース、3 つのプロンプトを公開しています。
 
 このページをマップとして使い、必要なカテゴリページを開いてください。
 

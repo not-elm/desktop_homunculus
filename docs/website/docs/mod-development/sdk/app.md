@@ -69,7 +69,7 @@ await app.exit();
 
 ```typescript
 interface AppInfo {
-  /** Engine version string (e.g., "0.1.0-alpha.4"). */
+  /** Engine version string (e.g., "0.1.0-alpha.3.2"). */
   version: string;
   /** Platform information. */
   platform: PlatformInfo;
