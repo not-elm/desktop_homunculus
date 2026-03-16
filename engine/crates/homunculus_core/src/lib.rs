@@ -76,11 +76,13 @@ mod resources;
 mod schema;
 mod system_param;
 mod system_set;
+pub mod rpc_registry;
 
 pub mod prelude {
     pub use crate::{
         HomunculusCorePlugin, components::*, error::*, events::prelude::*, resources::prelude::*,
-        schema::prelude::*, system_param::prelude::*, system_set::HomunculusSystemSet,
+        rpc_registry::*, schema::prelude::*, system_param::prelude::*,
+        system_set::HomunculusSystemSet,
     };
     pub use homunculus_utils::prelude::*;
 }
