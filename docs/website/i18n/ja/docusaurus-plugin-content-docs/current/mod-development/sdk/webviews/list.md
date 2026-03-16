@@ -13,7 +13,7 @@ static async list(): Promise<WebviewInfo[]>
 
 ## 戻り値
 
-[`WebviewInfo`](./types) オブジェクトの配列に解決される `Promise`。
+[`WebviewInfo`](./types#webviewinfo) オブジェクトの配列に解決される `Promise`。
 
 ## 例
 

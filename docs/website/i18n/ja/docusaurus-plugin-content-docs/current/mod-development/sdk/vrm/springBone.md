@@ -18,4 +18,4 @@ console.log(`Stiffness: ${chain.props.stiffness}`);
 console.log(`Drag: ${chain.props.dragForce}`);
 ```
 
-[`SpringBoneChain`](./types) オブジェクトを返します。すべてのチェーンを一覧表示してチェーン ID を取得するには [`springBones`](./springBones) を使用してください。
+[`SpringBoneChain`](./types#springbonechain) オブジェクトを返します。すべてのチェーンを一覧表示してチェーン ID を取得するには [`springBones`](./springBones) を使用してください。

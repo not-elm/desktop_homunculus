@@ -57,4 +57,4 @@ eventSource.on("persona-change", (e) => {
 });
 ```
 
-型定義については [`Persona`](./types) と [`Ocean`](./types) を参照してください。
+型定義については [`Persona`](./types#persona) と [`Ocean`](./types#ocean) を参照してください。

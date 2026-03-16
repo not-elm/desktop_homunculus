@@ -57,4 +57,4 @@ eventSource.on("persona-change", (e) => {
 });
 ```
 
-See [`Persona`](./types) and [`Ocean`](./types) for the full type definitions.
+See [`Persona`](./types#persona) and [`Ocean`](./types#ocean) for the full type definitions.

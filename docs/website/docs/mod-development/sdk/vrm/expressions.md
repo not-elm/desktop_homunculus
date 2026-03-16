@@ -20,7 +20,7 @@ for (const expr of expressions) {
 }
 ```
 
-Each [`ExpressionInfo`](./types) includes:
+Each [`ExpressionInfo`](./types#expressioninfo) includes:
 - `name` -- Expression name (e.g., `"happy"`, `"aa"`)
 - `weight` -- Current weight value (0.0--1.0)
 - `isBinary` -- Whether the expression snaps to 0 or 1 (no in-between)

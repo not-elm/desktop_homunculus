@@ -13,6 +13,8 @@ import { Vrm, repeat, VrmEventSource } from "@hmcs/sdk";
 
 ## コア
 
+### `Bones`
+
 ```typescript
 type Bones =
   | "hips" | "spine" | "chest" | "neck" | "head"
@@ -20,19 +22,31 @@ type Bones =
   | "rightShoulder" | "rightArm" | "rightForeArm" | "rightHand"
   | "leftUpLeg" | "leftLeg" | "leftFoot"
   | "rightUpLeg" | "rightLeg" | "rightFoot";
+```
 
+### `PositionResponse`
+
+```typescript
 interface PositionResponse {
   /** グローバル画面座標（最も左のスクリーンを原点とするマルチモニター）。表示されていない場合は null。 */
   globalViewport: [number, number] | null;
   /** Bevy ワールド座標。 */
   world: Vec3;
 }
+```
 
+### `SpawnVrmOptions`
+
+```typescript
 interface SpawnVrmOptions {
   transform?: TransformArgs;
   persona?: Persona;
 }
+```
 
+### `VrmSnapshot`
+
+```typescript
 interface VrmSnapshot {
   entity: number;
   name: string;
@@ -45,23 +59,37 @@ interface VrmSnapshot {
   linkedWebviews: number[];
   persona: Persona;
 }
+```
 
+### `VrmMetadata`
+
+```typescript
 interface VrmMetadata {
   name: string;
   entity: number;
 }
+```
 
+### `MoveToArgs`
+
+```typescript
 /** VRM をビューポート位置に移動するための引数。 */
 interface MoveToArgs {
   globalViewport: GlobalViewport;
 }
+```
 
+### `LookAtState`
+
+```typescript
 type LookAtState =
   | { type: "cursor" }
   | { type: "target"; entity: number };
 ```
 
 ## ペルソナ
+
+### `Persona`
 
 ```typescript
 interface Persona {
@@ -74,7 +102,11 @@ interface Persona {
   /** MOD 用の拡張メタデータ。 */
   metadata: Record<string, unknown>;
 }
+```
 
+### `Ocean`
+
+```typescript
 interface Ocean {
   openness?: number;
   conscientiousness?: number;
@@ -86,11 +118,17 @@ interface Ocean {
 
 ## 表情
 
+### `ExpressionsResponse`
+
 ```typescript
 interface ExpressionsResponse {
   expressions: ExpressionInfo[];
 }
+```
 
+### `ExpressionInfo`
+
+```typescript
 interface ExpressionInfo {
   name: string;
   weight: number;
@@ -99,11 +137,17 @@ interface ExpressionInfo {
   overrideLookAt: OverrideType;
   overrideMouth: OverrideType;
 }
+```
 
+### `OverrideType`
+
+```typescript
 type OverrideType = "none" | "blend" | "block";
 ```
 
 ## アニメーション
+
+### `VrmaInfo`
 
 ```typescript
 interface VrmaInfo {
@@ -111,7 +155,11 @@ interface VrmaInfo {
   name: string;
   playing: boolean;
 }
+```
 
+### `VrmaPlayRequest`
+
+```typescript
 interface VrmaPlayRequest {
   asset: string;
   transitionSecs?: number;
@@ -119,19 +167,31 @@ interface VrmaPlayRequest {
   waitForCompletion?: boolean;
   resetSpringBones?: boolean;
 }
+```
 
+### `VrmaRepeat`
+
+```typescript
 interface VrmaRepeat {
   type: "forever" | "never" | "count";
   count?: number;
 }
+```
 
+### `VrmaState`
+
+```typescript
 interface VrmaState {
   playing: boolean;
   repeat: string;
   speed: number;
   elapsedSecs: number;
 }
+```
 
+### `VrmaSpeedBody`
+
+```typescript
 interface VrmaSpeedBody {
   asset: string;
   speed: number;
@@ -140,17 +200,27 @@ interface VrmaSpeedBody {
 
 ## スプリングボーン
 
+### `SpringBoneChainsResponse`
+
 ```typescript
 interface SpringBoneChainsResponse {
   chains: SpringBoneChain[];
 }
+```
 
+### `SpringBoneChain`
+
+```typescript
 interface SpringBoneChain {
   entity: number;
   joints: string[];
   props: SpringBoneProps;
 }
+```
 
+### `SpringBoneProps`
+
+```typescript
 interface SpringBoneProps {
   stiffness: number;
   dragForce: number;
@@ -162,6 +232,8 @@ interface SpringBoneProps {
 
 ## スピーチ
 
+### `TimelineKeyframe`
+
 ```typescript
 interface TimelineKeyframe {
   /** このキーフレームの持続時間（秒）。 */
@@ -169,7 +241,11 @@ interface TimelineKeyframe {
   /** 設定する表情ウェイト。キーは表情名、値は 0.0-1.0。 */
   targets?: Record<string, number>;
 }
+```
 
+### `SpeakTimelineOptions`
+
+```typescript
 interface SpeakTimelineOptions {
   /** true の場合、スピーチ完了を待ちます。デフォルトは true。 */
   waitForCompletion?: boolean;
@@ -180,6 +256,8 @@ interface SpeakTimelineOptions {
 
 ## イベント
 
+### `VrmEventSource`
+
 ```typescript
 class VrmEventSource implements Disposable {
   on<K extends keyof EventMap>(
@@ -189,7 +267,11 @@ class VrmEventSource implements Disposable {
   close(): void;
   [Symbol.dispose](): void;
 }
+```
 
+### `EventMap`
+
+```typescript
 type EventMap = {
   "drag-start": VrmPointerEvent;
   "drag": VrmDragEvent;
@@ -207,25 +289,49 @@ type EventMap = {
   "vrma-finish": VrmStateChangeEvent;
   "persona-change": PersonaChangeEvent;
 };
+```
 
+### `VrmPointerEvent`
+
+```typescript
 interface VrmPointerEvent {
   globalViewport: [number, number];
 }
+```
 
+### `VrmDragEvent`
+
+```typescript
 interface VrmDragEvent extends VrmPointerEvent {
   delta: [number, number];
 }
+```
 
+### `Button`
+
+```typescript
 type Button = "Primary" | "Secondary" | "Middle";
+```
 
+### `VrmMouseEvent`
+
+```typescript
 interface VrmMouseEvent extends VrmPointerEvent {
   button: Button;
 }
+```
 
+### `VrmStateChangeEvent`
+
+```typescript
 interface VrmStateChangeEvent {
   state: string;
 }
+```
 
+### `PersonaChangeEvent`
+
+```typescript
 interface PersonaChangeEvent {
   persona: Persona;
 }

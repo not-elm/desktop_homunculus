@@ -24,4 +24,4 @@ if (pos.globalViewport) {
 console.log(`World: (${pos.world[0]}, ${pos.world[1]}, ${pos.world[2]})`);
 ```
 
-[`PositionResponse`](./types) を返します。キャラクターが現在画面に表示されていない場合、`globalViewport` フィールドは `null` になります。
+[`PositionResponse`](./types#positionresponse) を返します。キャラクターが現在画面に表示されていない場合、`globalViewport` フィールドは `null` になります。

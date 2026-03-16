@@ -18,4 +18,4 @@ for (const anim of animations) {
 }
 ```
 
-Returns an array of [`VrmaInfo`](./types) objects, each containing the animation's entity ID, name, and playing status.
+Returns an array of [`VrmaInfo`](./types#vrmainfo) objects, each containing the animation's entity ID, name, and playing status.

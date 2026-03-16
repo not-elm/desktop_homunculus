@@ -20,4 +20,4 @@ for (const chain of chains) {
 }
 ```
 
-[`SpringBoneChain`](./types) オブジェクトの配列を含む [`SpringBoneChainsResponse`](./types) を返します。各チェーンの `entity` ID を使用して、[`springBone`](./springBone) と [`setSpringBone`](./setSpringBone) で個々のチェーンを照会・変更できます。
+[`SpringBoneChain`](./types#springbonechain) オブジェクトの配列を含む [`SpringBoneChainsResponse`](./types#springbonechainsresponse) を返します。各チェーンの `entity` ID を使用して、[`springBone`](./springBone) と [`setSpringBone`](./setSpringBone) で個々のチェーンを照会・変更できます。

@@ -24,4 +24,4 @@ if (pos.globalViewport) {
 console.log(`World: (${pos.world[0]}, ${pos.world[1]}, ${pos.world[2]})`);
 ```
 
-Returns a [`PositionResponse`](./types). The `globalViewport` field is `null` if the character is not currently visible on screen.
+Returns a [`PositionResponse`](./types#positionresponse). The `globalViewport` field is `null` if the character is not currently visible on screen.

@@ -21,4 +21,4 @@ console.log("Openness:", persona.ocean.openness);
 console.log("Metadata:", persona.metadata);
 ```
 
-Returns a [`Persona`](./types) object containing the profile description, personality string, OCEAN trait values, and extension metadata. Use [`setPersona`](./setPersona) to update it.
+Returns a [`Persona`](./types#persona) object containing the profile description, personality string, OCEAN trait values, and extension metadata. Use [`setPersona`](./setPersona) to update it.

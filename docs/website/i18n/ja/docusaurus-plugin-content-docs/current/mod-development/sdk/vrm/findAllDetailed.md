@@ -21,4 +21,4 @@ for (const s of snapshots) {
 }
 ```
 
-[`VrmSnapshot`](./types) オブジェクトの配列を返します。詳細な状態なしに `Vrm` インスタンスのみが必要な場合は [`Vrm.findAll`](./findAll) を使用してください。
+[`VrmSnapshot`](./types#vrmsnapshot) オブジェクトの配列を返します。詳細な状態なしに `Vrm` インスタンスのみが必要な場合は [`Vrm.findAll`](./findAll) を使用してください。

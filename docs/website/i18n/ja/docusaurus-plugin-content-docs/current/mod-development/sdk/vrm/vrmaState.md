@@ -19,4 +19,4 @@ console.log(`Elapsed: ${state.elapsedSecs}s`);
 console.log(`Repeat: ${state.repeat}`);
 ```
 
-`playing`、`speed`、`elapsedSecs`、`repeat` フィールドを持つ [`VrmaState`](./types) オブジェクトを返します。
+`playing`、`speed`、`elapsedSecs`、`repeat` フィールドを持つ [`VrmaState`](./types#vrmastate) オブジェクトを返します。

@@ -19,4 +19,4 @@ console.log(`Elapsed: ${state.elapsedSecs}s`);
 console.log(`Repeat: ${state.repeat}`);
 ```
 
-Returns a [`VrmaState`](./types) object with `playing`, `speed`, `elapsedSecs`, and `repeat` fields.
+Returns a [`VrmaState`](./types#vrmastate) object with `playing`, `speed`, `elapsedSecs`, and `repeat` fields.

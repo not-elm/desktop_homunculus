@@ -13,7 +13,7 @@ static async list(): Promise<WebviewInfo[]>
 
 ## Returns
 
-A `Promise` that resolves to an array of [`WebviewInfo`](./types) objects.
+A `Promise` that resolves to an array of [`WebviewInfo`](./types#webviewinfo) objects.
 
 ## Example
 

@@ -11,7 +11,7 @@ Performs three steps internally:
 2. Parses the raw string as JSON
 3. Validates the parsed object against the provided Zod schema
 
-Throws [`StdinParseError`](./types) if any step fails.
+Throws [`StdinParseError`](./types#stdinparseerror) if any step fails.
 
 ## Parameters
 

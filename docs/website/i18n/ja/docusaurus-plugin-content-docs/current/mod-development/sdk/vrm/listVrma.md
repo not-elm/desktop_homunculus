@@ -18,4 +18,4 @@ for (const anim of animations) {
 }
 ```
 
-アニメーションのエンティティ ID、名前、再生状態を含む [`VrmaInfo`](./types) オブジェクトの配列を返します。
+アニメーションのエンティティ ID、名前、再生状態を含む [`VrmaInfo`](./types#vrmainfo) オブジェクトの配列を返します。

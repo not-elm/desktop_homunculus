@@ -21,4 +21,4 @@ for (const s of snapshots) {
 }
 ```
 
-Returns an array of [`VrmSnapshot`](./types) objects. Use [`Vrm.findAll`](./findAll) if you only need `Vrm` instances without the detailed state.
+Returns an array of [`VrmSnapshot`](./types#vrmsnapshot) objects. Use [`Vrm.findAll`](./findAll) if you only need `Vrm` instances without the detailed state.

@@ -20,4 +20,4 @@ for (const chain of chains) {
 }
 ```
 
-Returns a [`SpringBoneChainsResponse`](./types) containing an array of [`SpringBoneChain`](./types) objects. Use the `entity` ID of each chain to query or modify individual chains with [`springBone`](./springBone) and [`setSpringBone`](./setSpringBone).
+Returns a [`SpringBoneChainsResponse`](./types#springbonechainsresponse) containing an array of [`SpringBoneChain`](./types#springbonechain) objects. Use the `entity` ID of each chain to query or modify individual chains with [`springBone`](./springBone) and [`setSpringBone`](./setSpringBone).

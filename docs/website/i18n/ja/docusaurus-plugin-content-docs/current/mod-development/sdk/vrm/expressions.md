@@ -20,7 +20,7 @@ for (const expr of expressions) {
 }
 ```
 
-各 [`ExpressionInfo`](./types) には以下が含まれます：
+各 [`ExpressionInfo`](./types#expressioninfo) には以下が含まれます：
 - `name` -- 表情名（例：`"happy"`、`"aa"`）
 - `weight` -- 現在のウェイト値（0.0--1.0）
 - `isBinary` -- 表情が 0 か 1 にスナップするかどうか（中間値なし）

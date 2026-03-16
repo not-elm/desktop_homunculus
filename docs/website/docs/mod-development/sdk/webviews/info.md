@@ -13,7 +13,7 @@ async info(): Promise<WebviewInfo>
 
 ## Returns
 
-A `Promise` that resolves to a [`WebviewInfo`](./types) object.
+A `Promise` that resolves to a [`WebviewInfo`](./types#webviewinfo) object.
 
 ## Example
 

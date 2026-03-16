@@ -28,4 +28,4 @@ await character.setSpringBone(hairChain.entity, {
 });
 ```
 
-See [`SpringBoneProps`](./types) for all available properties.
+See [`SpringBoneProps`](./types#springboneprops) for all available properties.

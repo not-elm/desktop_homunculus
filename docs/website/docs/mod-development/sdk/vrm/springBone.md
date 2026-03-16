@@ -18,4 +18,4 @@ console.log(`Stiffness: ${chain.props.stiffness}`);
 console.log(`Drag: ${chain.props.dragForce}`);
 ```
 
-Returns a [`SpringBoneChain`](./types) object. Use [`springBones`](./springBones) to list all chains and find the chain ID you want.
+Returns a [`SpringBoneChain`](./types#springbonechain) object. Use [`springBones`](./springBones) to list all chains and find the chain ID you want.

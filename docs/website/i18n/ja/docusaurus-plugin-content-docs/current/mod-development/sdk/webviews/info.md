@@ -13,7 +13,7 @@ async info(): Promise<WebviewInfo>
 
 ## 戻り値
 
-[`WebviewInfo`](./types) オブジェクトに解決される `Promise`。
+[`WebviewInfo`](./types#webviewinfo) オブジェクトに解決される `Promise`。
 
 ## 例
 

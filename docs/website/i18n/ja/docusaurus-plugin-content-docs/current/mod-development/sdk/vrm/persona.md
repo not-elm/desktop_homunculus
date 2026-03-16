@@ -21,4 +21,4 @@ console.log("Openness:", persona.ocean.openness);
 console.log("Metadata:", persona.metadata);
 ```
 
-プロフィール説明、性格文字列、OCEAN 特性値、拡張メタデータを含む [`Persona`](./types) オブジェクトを返します。更新するには [`setPersona`](./setPersona) を使用してください。
+プロフィール説明、性格文字列、OCEAN 特性値、拡張メタデータを含む [`Persona`](./types#persona) オブジェクトを返します。更新するには [`setPersona`](./setPersona) を使用してください。
