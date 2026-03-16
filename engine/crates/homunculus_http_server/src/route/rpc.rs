@@ -12,12 +12,13 @@ use homunculus_core::rpc_registry::{RpcMethodMeta, RpcRegistration, RpcRegistry}
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
+use utoipa::ToSchema;
 
 /// Default per-method proxy timeout (30 s).
 const DEFAULT_TIMEOUT_MS: u64 = 30_000;
 
 /// Body for `POST /rpc/register`.
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct RegisterRequest {
     pub mod_name: String,
@@ -25,21 +26,21 @@ pub struct RegisterRequest {
 }
 
 /// Body for `POST /rpc/deregister`.
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct DeregisterRequest {
     pub mod_name: String,
 }
 
 /// Response for `GET /rpc/registrations`.
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct RegistrationsResponse {
     pub registrations: HashMap<String, RpcRegistration>,
 }
 
 /// Body for `POST /rpc/call`.
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct CallRequest {
     pub mod_name: String,
@@ -53,6 +54,17 @@ pub struct CallRequest {
 /// The MOD service calls this endpoint on startup.  The port must have been
 /// pre-allocated by the engine; this handler updates the methods map for that
 /// port.
+#[utoipa::path(
+    post,
+    path = "/register",
+    tag = "rpc",
+    request_body = RegisterRequest,
+    responses(
+        (status = 200, description = "Methods registered"),
+        (status = 404, description = "MOD has no pre-allocated port"),
+        (status = 500, description = "Registry lock poisoned"),
+    ),
+)]
 pub async fn register(
     State(registry): State<Arc<RwLock<RpcRegistry>>>,
     Json(body): Json<RegisterRequest>,
@@ -77,6 +89,16 @@ pub async fn register(
 }
 
 /// Deregister a MOD service's RPC endpoint.
+#[utoipa::path(
+    post,
+    path = "/deregister",
+    tag = "rpc",
+    request_body = DeregisterRequest,
+    responses(
+        (status = 200, description = "MOD deregistered"),
+        (status = 500, description = "Registry lock poisoned"),
+    ),
+)]
 pub async fn deregister(
     State(registry): State<Arc<RwLock<RpcRegistry>>>,
     Json(body): Json<DeregisterRequest>,
@@ -90,6 +112,15 @@ pub async fn deregister(
 }
 
 /// List all current RPC registrations (for introspection / debugging).
+#[utoipa::path(
+    get,
+    path = "/registrations",
+    tag = "rpc",
+    responses(
+        (status = 200, description = "Current registrations", body = RegistrationsResponse),
+        (status = 500, description = "Registry lock poisoned"),
+    ),
+)]
 pub async fn list_registrations(State(registry): State<Arc<RwLock<RpcRegistry>>>) -> Response {
     let reg = match read_registry(&registry) {
         Ok(r) => r,
@@ -111,6 +142,19 @@ pub async fn list_registrations(State(registry): State<Arc<RwLock<RpcRegistry>>>
 /// - `404` — method unknown for this MOD
 /// - `504` — MOD service timed out
 /// - `502` — MOD service refused the connection
+#[utoipa::path(
+    post,
+    path = "/call",
+    tag = "rpc",
+    request_body = CallRequest,
+    responses(
+        (status = 200, description = "RPC method response (JSON)"),
+        (status = 404, description = "Method not found"),
+        (status = 502, description = "MOD service unreachable"),
+        (status = 503, description = "MOD not registered"),
+        (status = 504, description = "Timeout exceeded"),
+    ),
+)]
 pub async fn call(
     State(registry): State<Arc<RwLock<RpcRegistry>>>,
     Json(req): Json<CallRequest>,

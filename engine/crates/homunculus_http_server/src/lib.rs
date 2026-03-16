@@ -109,6 +109,7 @@ use utoipa_axum::{router::OpenApiRouter, routes};
         (name = "mods", description = "Mod management"),
         (name = "commands", description = "Command execution"),
         (name = "assets", description = "Asset management"),
+        (name = "rpc", description = "MOD service RPC registration and proxy"),
     ),
     servers(
         (url = "http://localhost:3100", description = "Local development"),
@@ -222,6 +223,7 @@ fn build_openapi_router() -> OpenApiRouter<HttpState> {
         .nest("/mods", mods_router())
         .nest("/commands", commands_router())
         .routes(routes!(assets::list))
+        .nest("/rpc", rpc_openapi_router())
 }
 
 fn create_router(
@@ -236,7 +238,6 @@ fn create_router(
             config.clone(),
             rpc_registry.clone(),
         ))
-        .merge(rpc_router(rpc_registry.clone()))
         .nest_service(
             "/mcp",
             homunculus_mcp::create_mcp_service(reactor, config, rpc_registry),
@@ -250,19 +251,12 @@ fn create_router(
         .layer(tower_http::trace::TraceLayer::new_for_http())
 }
 
-fn rpc_router(rpc_registry: Arc<RwLock<RpcRegistry>>) -> Router {
-    Router::new()
-        .route("/rpc/register", axum::routing::post(route::rpc::register))
-        .route(
-            "/rpc/deregister",
-            axum::routing::post(route::rpc::deregister),
-        )
-        .route(
-            "/rpc/registrations",
-            axum::routing::get(route::rpc::list_registrations),
-        )
-        .route("/rpc/call", axum::routing::post(route::rpc::call))
-        .with_state(rpc_registry)
+fn rpc_openapi_router() -> OpenApiRouter<HttpState> {
+    OpenApiRouter::new()
+        .routes(routes!(route::rpc::register))
+        .routes(routes!(route::rpc::deregister))
+        .routes(routes!(route::rpc::list_registrations))
+        .routes(routes!(route::rpc::call))
 }
 
 fn app_router() -> OpenApiRouter<HttpState> {

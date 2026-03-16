@@ -13,7 +13,7 @@ axum = { workspace = true, features = ["tokio", "macros"] }
 tokio = { version = "1", features = ["rt-multi-thread", "process", "io-util"] }
 tokio-stream = "0.1"
 bevy_vrm1 = { workspace = true }
-homunculus_core = { workspace = true }
+homunculus_core = { workspace = true, features = ["openapi"] }
 homunculus_api = { workspace = true, features = ["axum", "openapi"] }
 homunculus_utils = { workspace = true, features = ["bevy"] }
 homunculus_audio = { workspace = true }

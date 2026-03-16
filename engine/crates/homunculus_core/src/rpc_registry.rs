@@ -16,6 +16,7 @@ pub struct RpcRegistry {
 
 /// A single MOD's RPC registration.
 #[derive(Debug, Clone, Serialize)]
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct RpcRegistration {
     pub port: u16,
@@ -24,6 +25,7 @@ pub struct RpcRegistration {
 
 /// Metadata for a single RPC method.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct RpcMethodMeta {
     #[serde(skip_serializing_if = "Option::is_none")]
