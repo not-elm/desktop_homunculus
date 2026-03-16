@@ -19,11 +19,6 @@ Labels (maintainers will add):
      For UI changes, include screenshots: <details><summary>Screenshots</summary>paste here</details>
      If this is a breaking change, add a ### Breaking Changes subsection below. -->
 
-## Test Plan
-
-<!-- Strongly encouraged. How did you verify this works?
-     For trivial changes (typos, docs), you may delete this section. -->
-
 ---
 
 - [ ] If HTTP endpoints changed: I ran `make gen-open-api` and `pnpm build` <!-- interim: remove when CI enforcement is added -->
