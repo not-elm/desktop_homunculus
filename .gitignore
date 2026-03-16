@@ -31,6 +31,7 @@ docs/reviews/
 docs/discussions/
 docs/issues/
 docs/brainstorms/
+docs/superpowers/
 
 # Local agent work artifacts
 **/.claude/settings.local.json
