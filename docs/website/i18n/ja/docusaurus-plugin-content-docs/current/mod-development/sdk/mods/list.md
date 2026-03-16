@@ -12,7 +12,7 @@ sidebar_position: 2
 
 ## 戻り値
 
-`Promise<ModInfo[]>`
+`Promise<`[`ModInfo`](./types#modinfo)`[]>`
 
 ## 使用例
 

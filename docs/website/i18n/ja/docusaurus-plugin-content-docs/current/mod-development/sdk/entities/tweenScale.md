@@ -11,7 +11,7 @@ sidebar_position: 9
 | パラメータ | 型 | 説明 |
 |-----------|------|------|
 | `entityId` | `number` | トゥイーンするエンティティ ID |
-| `request` | `TweenScaleRequest` | トゥイーンパラメータ |
+| `request` | [`TweenScaleRequest`](./types#tweenscalerequest) | トゥイーンパラメータ |
 
 ## 戻り値
 

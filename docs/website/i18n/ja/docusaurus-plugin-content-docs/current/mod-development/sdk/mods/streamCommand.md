@@ -10,12 +10,12 @@ sidebar_position: 5
 
 | パラメータ | 型 | 説明 |
 |-----------|------|------|
-| `request` | `ExecuteCommandRequest` | コマンド実行パラメータ |
+| `request` | [`ExecuteCommandRequest`](./types#executecommandrequest) | コマンド実行パラメータ |
 | `signal` | `AbortSignal`（オプション） | キャンセル用のシグナル |
 
 ## 戻り値
 
-`AsyncGenerator<CommandEvent>`
+`AsyncGenerator<`[`CommandEvent`](./types#commandevent)`>`
 
 ## 使用例
 

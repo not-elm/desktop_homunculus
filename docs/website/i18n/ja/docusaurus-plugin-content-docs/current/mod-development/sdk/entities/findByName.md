@@ -11,7 +11,7 @@ sidebar_position: 2
 | パラメータ | 型 | 説明 |
 |-----------|------|------|
 | `name` | `string` | 検索するエンティティの名前 |
-| `options` | `FindOptions`（オプション） | 検索オプション（例：サブツリー内に制限） |
+| `options` | [`FindOptions`](./types#findoptions)（オプション） | 検索オプション（例：サブツリー内に制限） |
 
 ## 戻り値
 

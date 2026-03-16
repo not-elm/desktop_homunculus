@@ -4,7 +4,7 @@ sidebar_position: 10
 
 # deleteMethod
 
-Performs a DELETE request with automatic error handling. Throws `HomunculusApiError` on non-OK responses.
+Performs a DELETE request with automatic error handling. Throws [`HomunculusApiError`](./types#homunculusapierror) on non-OK responses.
 
 ## Parameters
 

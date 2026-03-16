@@ -19,7 +19,7 @@ function isWebviewSourceInfoUrl(source: WebviewSourceInfo): source is WebviewSou
 
 ## 戻り値
 
-`source.type === "url"` の場合に `true` を返し、型を `WebviewSourceInfoUrl` に絞り込みます。
+`source.type === "url"` の場合に `true` を返し、型を [`WebviewSourceInfoUrl`](./types#webviewsourceinfourl) に絞り込みます。
 
 ## 例
 

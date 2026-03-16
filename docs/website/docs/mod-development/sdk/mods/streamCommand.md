@@ -10,12 +10,12 @@ Returns an async generator that yields events as the command runs. Use this for 
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `request` | `ExecuteCommandRequest` | Command execution parameters |
+| `request` | [`ExecuteCommandRequest`](./types#executecommandrequest) | Command execution parameters |
 | `signal` | `AbortSignal` (optional) | Signal for cancellation |
 
 ## Returns
 
-`AsyncGenerator<CommandEvent>`
+`AsyncGenerator<`[`CommandEvent`](./types#commandevent)`>`
 
 ## Example
 

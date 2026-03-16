@@ -9,7 +9,7 @@ sidebar_position: 33
 import { Vrm } from "@hmcs/sdk";
 ```
 
-`eventSource.on(event, callback)` は `VrmEventSource` にイベントリスナーを登録します。コールバックは同期でも非同期でもかまいません。
+`eventSource.on(event, callback)` は [`VrmEventSource`](./types#vrmeventsource) にイベントリスナーを登録します。コールバックは同期でも非同期でもかまいません。
 
 ```typescript
 const character = await Vrm.findByName("MyAvatar");

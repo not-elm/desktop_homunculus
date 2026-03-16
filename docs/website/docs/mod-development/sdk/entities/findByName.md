@@ -11,7 +11,7 @@ Look up an entity by its human-readable name. Throws if no match is found.
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `name` | `string` | The name of the entity to find |
-| `options` | `FindOptions` (optional) | Search options (e.g., restrict to a subtree) |
+| `options` | [`FindOptions`](./types#findoptions) (optional) | Search options (e.g., restrict to a subtree) |
 
 ## Returns
 

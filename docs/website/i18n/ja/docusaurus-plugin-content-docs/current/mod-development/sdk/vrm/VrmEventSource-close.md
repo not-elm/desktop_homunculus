@@ -19,7 +19,7 @@ const eventSource = character.events();
 eventSource.close();
 ```
 
-`VrmEventSource` は `Disposable` も実装しているため、TypeScript の `using` 宣言を使用して自動的にクリーンアップできます：
+[`VrmEventSource`](./types#vrmeventsource) は `Disposable` も実装しているため、TypeScript の `using` 宣言を使用して自動的にクリーンアップできます：
 
 ```typescript
 {

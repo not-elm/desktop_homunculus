@@ -10,7 +10,7 @@ Change volume or speed while playing. Use the `tween` field to animate the trans
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `options` | `BgmUpdateOptions` | The parameters to update |
+| `options` | [`BgmUpdateOptions`](./types#bgmupdateoptions) | The parameters to update |
 
 ## Returns
 

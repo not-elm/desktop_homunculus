@@ -12,7 +12,7 @@ None.
 
 ## Returns
 
-`Promise<ModMenuMetadata[]>`
+`Promise<`[`ModMenuMetadata`](./types#modmenumetadata)`[]>`
 
 ## Example
 

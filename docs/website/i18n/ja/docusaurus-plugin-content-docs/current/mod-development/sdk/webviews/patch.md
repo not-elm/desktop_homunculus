@@ -15,7 +15,7 @@ async patch(options: WebviewPatchRequest): Promise<void>
 
 | パラメータ | 型 | 説明 |
 |-----------|------|-------------|
-| `options` | `WebviewPatchRequest` | 更新するプロパティ |
+| `options` | [`WebviewPatchRequest`](./types#webviewpatchrequest) | 更新するプロパティ |
 
 ### `WebviewPatchRequest`
 

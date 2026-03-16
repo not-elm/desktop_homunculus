@@ -4,7 +4,7 @@ sidebar_position: 2
 
 # findAll
 
-Returns an array of `GlobalDisplay` objects, one per connected monitor.
+Returns an array of [`GlobalDisplay`](../coordinates/types#globaldisplay) objects, one per connected monitor.
 
 ## Parameters
 
@@ -14,7 +14,7 @@ Returns an array of `GlobalDisplay` objects, one per connected monitor.
 
 ## Returns
 
-`Promise<GlobalDisplay[]>`
+`Promise<`[`GlobalDisplay`](../coordinates/types#globaldisplay)`[]>`
 
 ## Example
 

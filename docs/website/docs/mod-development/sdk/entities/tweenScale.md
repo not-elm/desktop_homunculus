@@ -11,7 +11,7 @@ Smoothly animate an entity's scale to a target `[x, y, z]` value over a given du
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `entityId` | `number` | The entity ID to tween |
-| `request` | `TweenScaleRequest` | Tween parameters |
+| `request` | [`TweenScaleRequest`](./types#tweenscalerequest) | Tween parameters |
 
 ## Returns
 

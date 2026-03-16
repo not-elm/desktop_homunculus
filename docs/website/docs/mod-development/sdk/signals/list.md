@@ -12,7 +12,7 @@ None.
 
 ## Returns
 
-`Promise<SignalChannelInfo[]>`
+`Promise<`[`SignalChannelInfo`](./types#signalchannelinfo)`[]>`
 
 ## Example
 

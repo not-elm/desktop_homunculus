@@ -10,7 +10,7 @@ sidebar_position: 7
 
 | パラメーター | 型 | 説明 |
 |-----------|------|-------------|
-| `options` | `BgmUpdateOptions` | 更新するパラメーター |
+| `options` | [`BgmUpdateOptions`](./types#bgmupdateoptions) | 更新するパラメーター |
 
 ## 戻り値
 

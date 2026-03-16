@@ -12,7 +12,7 @@ sidebar_position: 8
 
 ## 戻り値
 
-`Promise<BgmStatus>`
+`Promise<`[`BgmStatus`](./types#bgmstatus)`>`
 
 ## 例
 

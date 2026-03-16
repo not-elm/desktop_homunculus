@@ -15,7 +15,7 @@ async patch(options: WebviewPatchRequest): Promise<void>
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `options` | `WebviewPatchRequest` | The properties to update |
+| `options` | [`WebviewPatchRequest`](./types#webviewpatchrequest) | The properties to update |
 
 ### `WebviewPatchRequest`
 

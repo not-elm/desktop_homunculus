@@ -19,7 +19,7 @@ function isWebviewSourceInfoUrl(source: WebviewSourceInfo): source is WebviewSou
 
 ## Returns
 
-`true` if `source.type === "url"`, narrowing the type to `WebviewSourceInfoUrl`.
+`true` if `source.type === "url"`, narrowing the type to [`WebviewSourceInfoUrl`](./types#webviewsourceinfourl).
 
 ## Example
 

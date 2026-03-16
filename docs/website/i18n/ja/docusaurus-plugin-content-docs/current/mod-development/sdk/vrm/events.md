@@ -9,7 +9,7 @@ sidebar_position: 32
 import { Vrm } from "@hmcs/sdk";
 ```
 
-`vrm.events()` はキャラクターの Server-Sent Events（SSE）ストリームに接続された `VrmEventSource` を返します。
+`vrm.events()` はキャラクターの Server-Sent Events（SSE）ストリームに接続された [`VrmEventSource`](./types#vrmeventsource) を返します。
 
 ```typescript
 const character = await Vrm.findByName("MyAvatar");
@@ -18,7 +18,7 @@ const eventSource = character.events();
 
 イベントリスナーを登録するには [`VrmEventSource.on`](./VrmEventSource-on) を使用し、接続を閉じるには [`VrmEventSource.close`](./VrmEventSource-close) を使用します。
 
-`VrmEventSource` は TypeScript の `using` 宣言で使用するための `Disposable` プロトコルを実装しています：
+[`VrmEventSource`](./types#vrmeventsource) は TypeScript の `using` 宣言で使用するための `Disposable` プロトコルを実装しています：
 
 ```typescript
 {

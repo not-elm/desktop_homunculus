@@ -19,7 +19,7 @@ function html(content: string): WebviewSourceHtml
 
 ## Returns
 
-A `WebviewSourceHtml` object: `{ type: "html", content }`.
+A [`WebviewSourceHtml`](./types#webviewsourcehtml) object: `{ type: "html", content }`.
 
 ## Example
 

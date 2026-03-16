@@ -19,7 +19,7 @@ function isWebviewSourceLocal(source: WebviewSource): source is WebviewSourceLoc
 
 ## 戻り値
 
-`source.type === "local"` の場合に `true` を返し、型を `WebviewSourceLocal` に絞り込みます。
+`source.type === "local"` の場合に `true` を返し、型を [`WebviewSourceLocal`](./types#webviewsourcelocal) に絞り込みます。
 
 ## 例
 

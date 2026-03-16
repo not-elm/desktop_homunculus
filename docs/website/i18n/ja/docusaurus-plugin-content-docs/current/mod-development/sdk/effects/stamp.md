@@ -11,7 +11,7 @@ sidebar_position: 2
 | パラメータ | 型 | 説明 |
 |-----------|------|-------------|
 | `asset` | `string` | スタンプ画像のアセット ID（例: `"my-mod:heart"`） |
-| `options` | `StampOptions` | オプションの外観設定 |
+| `options` | [`StampOptions`](./types#stampoptions) | オプションの外観設定 |
 
 ## 戻り値
 

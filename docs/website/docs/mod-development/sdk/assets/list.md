@@ -10,11 +10,11 @@ Returns all registered assets, optionally filtered by type and/or MOD name.
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `filter` | `AssetFilter` (optional) | Filter criteria: `type` and/or `mod` |
+| `filter` | [`AssetFilter`](./types#assetfilter) (optional) | Filter criteria: `type` and/or `mod` |
 
 ## Returns
 
-`Promise<AssetInfo[]>`
+`Promise<`[`AssetInfo`](./types#assetinfo)`[]>`
 
 ## Example
 

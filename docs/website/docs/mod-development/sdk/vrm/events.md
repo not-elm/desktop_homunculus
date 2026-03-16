@@ -9,7 +9,7 @@ sidebar_position: 32
 import { Vrm } from "@hmcs/sdk";
 ```
 
-`vrm.events()` returns a `VrmEventSource` connected to the character's Server-Sent Events (SSE) stream.
+`vrm.events()` returns a [`VrmEventSource`](./types#vrmeventsource) connected to the character's Server-Sent Events (SSE) stream.
 
 ```typescript
 const character = await Vrm.findByName("MyAvatar");
@@ -18,7 +18,7 @@ const eventSource = character.events();
 
 Use [`VrmEventSource.on`](./VrmEventSource-on) to register event listeners, and [`VrmEventSource.close`](./VrmEventSource-close) to close the connection.
 
-`VrmEventSource` implements the `Disposable` protocol for use with TypeScript's `using` declaration:
+[`VrmEventSource`](./types#vrmeventsource) implements the `Disposable` protocol for use with TypeScript's `using` declaration:
 
 ```typescript
 {

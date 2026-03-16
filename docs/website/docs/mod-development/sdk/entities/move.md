@@ -11,7 +11,7 @@ Repositions an entity using either **world** or **viewport** (screen-space) coor
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `entity` | `number` | The entity ID to move |
-| `target` | `MoveTarget` | The target position (world or viewport coordinates) |
+| `target` | [`MoveTarget`](./types#movetarget) | The target position (world or viewport coordinates) |
 
 ## Returns
 

@@ -11,7 +11,7 @@ Smoothly animate an entity's rotation to a target quaternion `[x, y, z, w]` over
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `entityId` | `number` | The entity ID to tween |
-| `request` | `TweenRotationRequest` | Tween parameters |
+| `request` | [`TweenRotationRequest`](./types#tweenrotationrequest) | Tween parameters |
 
 ## Returns
 

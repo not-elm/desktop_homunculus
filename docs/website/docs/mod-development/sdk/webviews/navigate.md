@@ -15,7 +15,7 @@ async navigate(source: WebviewSource): Promise<void>
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `source` | `WebviewSource` | The new source (URL, inline HTML, or local asset ID) |
+| `source` | [`WebviewSource`](./types#webviewsource) | The new source (URL, inline HTML, or local asset ID) |
 
 ## Example
 

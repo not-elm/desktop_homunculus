@@ -11,7 +11,7 @@ Plays background music, replacing any currently playing BGM. Only one BGM track 
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `asset` | `string` | The asset ID of the music track (e.g., `"my-mod:battle-theme"`) |
-| `options` | `BgmPlayOptions` | Optional playback configuration |
+| `options` | [`BgmPlayOptions`](./types#bgmplayoptions) | Optional playback configuration |
 
 ## Returns
 

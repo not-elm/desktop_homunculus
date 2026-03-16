@@ -4,7 +4,7 @@ sidebar_position: 11
 
 # postStream
 
-POST リクエストを送信し、パースされた NDJSON オブジェクトが到着するたびに yield する非同期ジェネレータを返します。非 OK レスポンスの場合は `HomunculusApiError` をスロー、NDJSON 行がパースできない場合は `HomunculusStreamError` をスローします。
+POST リクエストを送信し、パースされた NDJSON オブジェクトが到着するたびに yield する非同期ジェネレータを返します。非 OK レスポンスの場合は [`HomunculusApiError`](./types#homunculusapierror) をスロー、NDJSON 行がパースできない場合は [`HomunculusStreamError`](./types#homunculusstreamerror) をスローします。
 
 ## パラメータ
 

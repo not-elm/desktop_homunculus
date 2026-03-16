@@ -12,7 +12,7 @@ sidebar_position: 2
 
 ## 戻り値
 
-`Promise<SignalChannelInfo[]>`
+`Promise<`[`SignalChannelInfo`](./types#signalchannelinfo)`[]>`
 
 ## 例
 

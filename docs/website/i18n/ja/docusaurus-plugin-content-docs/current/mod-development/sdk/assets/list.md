@@ -10,11 +10,11 @@ sidebar_position: 2
 
 | Parameter | Type | 説明 |
 |-----------|------|-------------|
-| `filter` | `AssetFilter`（オプション） | フィルタ条件：`type` や `mod` |
+| `filter` | [`AssetFilter`](./types#assetfilter)（オプション） | フィルタ条件：`type` や `mod` |
 
 ## Returns
 
-`Promise<AssetInfo[]>`
+`Promise<`[`AssetInfo`](./types#assetinfo)`[]>`
 
 ## Example
 

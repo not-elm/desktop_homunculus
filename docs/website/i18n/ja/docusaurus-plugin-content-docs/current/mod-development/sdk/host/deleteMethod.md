@@ -4,7 +4,7 @@ sidebar_position: 10
 
 # deleteMethod
 
-自動エラー処理付きの DELETE リクエストを実行します。非 OK レスポンスの場合は `HomunculusApiError` をスローします。
+自動エラー処理付きの DELETE リクエストを実行します。非 OK レスポンスの場合は [`HomunculusApiError`](./types#homunculusapierror) をスローします。
 
 ## パラメータ
 

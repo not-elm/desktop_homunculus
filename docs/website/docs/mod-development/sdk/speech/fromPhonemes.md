@@ -4,9 +4,9 @@ sidebar_position: 2
 
 # fromPhonemes
 
-`speech.fromPhonemes(phonemes)` converts a list of `[expression_name, duration]` tuples into `TimelineKeyframe[]`. A `null` expression name creates a silent (mouth-closed) keyframe.
+`speech.fromPhonemes(phonemes)` converts a list of `[expression_name, duration]` tuples into [`TimelineKeyframe`](./types#timelinekeyframe)`[]`. A `null` expression name creates a silent (mouth-closed) keyframe.
 
-Each tuple maps to a `TimelineKeyframe`:
+Each tuple maps to a [`TimelineKeyframe`](./types#timelinekeyframe):
 
 - `["aa", 0.1]` becomes `{ duration: 0.1, targets: { aa: 1.0 } }`
 - `[null, 0.05]` becomes `{ duration: 0.05 }` (no mouth expression -- silence)
@@ -19,7 +19,7 @@ Each tuple maps to a `TimelineKeyframe`:
 
 ## Returns
 
-`TimelineKeyframe[]`
+[`TimelineKeyframe`](./types#timelinekeyframe)`[]`
 
 ## Example
 

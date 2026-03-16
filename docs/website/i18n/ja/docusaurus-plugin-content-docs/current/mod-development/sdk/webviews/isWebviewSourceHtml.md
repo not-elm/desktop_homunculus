@@ -19,7 +19,7 @@ function isWebviewSourceHtml(source: WebviewSource): source is WebviewSourceHtml
 
 ## 戻り値
 
-`source.type === "html"` の場合に `true` を返し、型を `WebviewSourceHtml` に絞り込みます。
+`source.type === "html"` の場合に `true` を返し、型を [`WebviewSourceHtml`](./types#webviewsourcehtml) に絞り込みます。
 
 ## 例
 

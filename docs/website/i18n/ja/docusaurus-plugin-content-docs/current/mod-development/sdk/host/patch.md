@@ -4,7 +4,7 @@ sidebar_position: 9
 
 # patch
 
-JSON ペイロードと自動エラー処理付きの PATCH リクエストを実行します。非 OK レスポンスの場合は `HomunculusApiError` をスローします。
+JSON ペイロードと自動エラー処理付きの PATCH リクエストを実行します。非 OK レスポンスの場合は [`HomunculusApiError`](./types#homunculusapierror) をスローします。
 
 ## パラメータ
 

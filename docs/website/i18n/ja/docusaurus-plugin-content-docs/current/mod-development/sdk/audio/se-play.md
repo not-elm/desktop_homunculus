@@ -11,7 +11,7 @@ sidebar_position: 2
 | パラメーター | 型 | 説明 |
 |-----------|------|-------------|
 | `asset` | `string` | 効果音のアセット ID（例：`"my-mod:click"`） |
-| `options` | `SeOptions` | オプションの再生設定 |
+| `options` | [`SeOptions`](./types#seoptions) | オプションの再生設定 |
 
 ## 戻り値
 

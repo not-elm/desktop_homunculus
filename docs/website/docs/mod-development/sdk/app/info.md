@@ -14,7 +14,7 @@ Returns metadata about the running engine instance in a single request -- versio
 
 ## Returns
 
-`Promise<AppInfo>`
+`Promise<`[`AppInfo`](./types#appinfo)`>`
 
 ## Example
 

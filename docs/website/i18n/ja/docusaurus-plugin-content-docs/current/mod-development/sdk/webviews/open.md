@@ -15,13 +15,13 @@ static async open(options: WebviewOpenOptions): Promise<Webview>
 
 | パラメータ | 型 | 説明 |
 |-----------|------|-------------|
-| `options` | `WebviewOpenOptions` | WebView の設定 |
+| `options` | [`WebviewOpenOptions`](./types#webviewopenoptions) | WebView の設定 |
 
 ### `WebviewOpenOptions`
 
 | フィールド | 型 | デフォルト | 説明 |
 |-------|------|---------|-------------|
-| `source` | `WebviewSource` | -- | 表示内容（必須） |
+| `source` | [`WebviewSource`](./types#webviewsource) | -- | 表示内容（必須） |
 | `size` | `Vec2` | -- | 3D ワールド空間での寸法（例：`[0.7, 0.7]`） |
 | `viewportSize` | `Vec2` | -- | HTML ピクセル寸法（例：`[800, 600]`） |
 | `offset` | `Vec2` | -- | リンクされた VRM またはワールド原点からの相対位置 |

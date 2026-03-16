@@ -10,12 +10,12 @@ Runs a bin command and returns the collected result after the process exits. Std
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `request` | `ExecuteCommandRequest` | Command execution parameters |
+| `request` | [`ExecuteCommandRequest`](./types#executecommandrequest) | Command execution parameters |
 | `signal` | `AbortSignal` (optional) | Signal for cancellation |
 
 ## Returns
 
-`Promise<CommandResult>`
+`Promise<`[`CommandResult`](./types#commandresult)`>`
 
 ## Example
 

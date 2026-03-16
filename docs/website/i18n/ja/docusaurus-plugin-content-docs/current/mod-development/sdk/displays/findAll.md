@@ -4,7 +4,7 @@ sidebar_position: 2
 
 # findAll
 
-接続されたモニターごとに 1 つの `GlobalDisplay` オブジェクトの配列を返します。
+接続されたモニターごとに 1 つの [`GlobalDisplay`](../coordinates/types#globaldisplay) オブジェクトの配列を返します。
 
 ## Parameters
 
@@ -14,7 +14,7 @@ sidebar_position: 2
 
 ## Returns
 
-`Promise<GlobalDisplay[]>`
+`Promise<`[`GlobalDisplay`](../coordinates/types#globaldisplay)`[]>`
 
 ## Example
 

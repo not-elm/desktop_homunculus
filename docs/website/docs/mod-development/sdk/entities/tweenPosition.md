@@ -11,7 +11,7 @@ Smoothly animate an entity's position to a target `[x, y, z]` value over a given
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `entityId` | `number` | The entity ID to tween |
-| `request` | `TweenPositionRequest` | Tween parameters |
+| `request` | [`TweenPositionRequest`](./types#tweenpositionrequest) | Tween parameters |
 
 ## Returns
 

@@ -12,7 +12,7 @@ None.
 
 ## Returns
 
-`Promise<ModInfo[]>`
+`Promise<`[`ModInfo`](./types#modinfo)`[]>`
 
 ## Example
 

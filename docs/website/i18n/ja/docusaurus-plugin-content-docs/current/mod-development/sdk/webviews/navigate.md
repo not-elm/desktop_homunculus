@@ -15,7 +15,7 @@ async navigate(source: WebviewSource): Promise<void>
 
 | パラメータ | 型 | 説明 |
 |-----------|------|-------------|
-| `source` | `WebviewSource` | 新しいソース（URL、インライン HTML、またはローカルアセット ID） |
+| `source` | [`WebviewSource`](./types#webviewsource) | 新しいソース（URL、インライン HTML、またはローカルアセット ID） |
 
 ## 例
 

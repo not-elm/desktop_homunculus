@@ -19,7 +19,7 @@ function local(id: string): WebviewSourceLocal
 
 ## Returns
 
-A `WebviewSourceLocal` object: `{ type: "local", id }`.
+A [`WebviewSourceLocal`](./types#webviewsourcelocal) object: `{ type: "local", id }`.
 
 ## Example
 

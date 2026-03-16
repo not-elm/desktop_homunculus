@@ -19,7 +19,7 @@ function url(url: string): WebviewSourceUrl
 
 ## 戻り値
 
-`WebviewSourceUrl` オブジェクト：`{ type: "url", url }`。
+[`WebviewSourceUrl`](./types#webviewsourceurl) オブジェクト：`{ type: "url", url }`。
 
 ## 例
 

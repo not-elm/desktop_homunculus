@@ -14,7 +14,7 @@ sidebar_position: 3
 
 ## Returns
 
-`Promise<AppInfo>`
+`Promise<`[`AppInfo`](./types#appinfo)`>`
 
 ## Example
 

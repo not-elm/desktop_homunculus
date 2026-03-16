@@ -29,8 +29,8 @@ await character.speakWithTimeline(wavData, [
 | パラメータ  | 型                         | 説明                             |
 | ---------- | -------------------------- | --------------------------------------- |
 | `audio`    | `ArrayBuffer \| Uint8Array` | WAV オーディオデータ                          |
-| `keyframes`| `TimelineKeyframe[]`       | タイミング付き表情ターゲットのシーケンス    |
-| `options`  | `SpeakTimelineOptions`     | オプション設定                       |
+| `keyframes`| [`TimelineKeyframe`](./types#timelinekeyframe)`[]`       | タイミング付き表情ターゲットのシーケンス    |
+| `options`  | [`SpeakTimelineOptions`](./types#speaktimelineoptions)     | オプション設定                       |
 
 ## オプション
 

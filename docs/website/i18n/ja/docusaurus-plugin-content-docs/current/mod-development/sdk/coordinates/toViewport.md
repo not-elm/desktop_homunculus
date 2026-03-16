@@ -16,7 +16,7 @@ sidebar_position: 3
 
 ## Returns
 
-`Promise<GlobalViewport>`
+`Promise<`[`GlobalViewport`](./types#globalviewport)`>`
 
 ## Example
 

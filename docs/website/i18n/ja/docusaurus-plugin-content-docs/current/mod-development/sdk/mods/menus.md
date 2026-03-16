@@ -12,7 +12,7 @@ sidebar_position: 6
 
 ## 戻り値
 
-`Promise<ModMenuMetadata[]>`
+`Promise<`[`ModMenuMetadata`](./types#modmenumetadata)`[]>`
 
 ## 使用例
 

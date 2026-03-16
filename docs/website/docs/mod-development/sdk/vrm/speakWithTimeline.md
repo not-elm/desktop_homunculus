@@ -29,8 +29,8 @@ await character.speakWithTimeline(wavData, [
 | Parameter  | Type                       | Description                             |
 | ---------- | -------------------------- | --------------------------------------- |
 | `audio`    | `ArrayBuffer \| Uint8Array` | WAV audio data                          |
-| `keyframes`| `TimelineKeyframe[]`       | Sequence of timed expression targets    |
-| `options`  | `SpeakTimelineOptions`     | Optional settings                       |
+| `keyframes`| [`TimelineKeyframe`](./types#timelinekeyframe)`[]`       | Sequence of timed expression targets    |
+| `options`  | [`SpeakTimelineOptions`](./types#speaktimelineoptions)     | Optional settings                       |
 
 ## Options
 

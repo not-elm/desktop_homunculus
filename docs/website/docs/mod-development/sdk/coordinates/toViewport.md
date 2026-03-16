@@ -16,7 +16,7 @@ All fields are optional -- omit any to default to the world origin on that axis.
 
 ## Returns
 
-`Promise<GlobalViewport>`
+`Promise<`[`GlobalViewport`](./types#globalviewport)`>`
 
 ## Example
 

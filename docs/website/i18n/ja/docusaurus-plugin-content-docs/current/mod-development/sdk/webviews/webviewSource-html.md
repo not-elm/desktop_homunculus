@@ -19,7 +19,7 @@ function html(content: string): WebviewSourceHtml
 
 ## 戻り値
 
-`WebviewSourceHtml` オブジェクト：`{ type: "html", content }`。
+[`WebviewSourceHtml`](./types#webviewsourcehtml) オブジェクト：`{ type: "html", content }`。
 
 ## 例
 

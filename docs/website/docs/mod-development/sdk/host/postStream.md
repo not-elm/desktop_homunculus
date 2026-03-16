@@ -4,7 +4,7 @@ sidebar_position: 11
 
 # postStream
 
-Sends a POST request and returns an async generator that yields parsed NDJSON objects as they arrive. Throws `HomunculusApiError` on non-OK responses, and `HomunculusStreamError` if an NDJSON line cannot be parsed.
+Sends a POST request and returns an async generator that yields parsed NDJSON objects as they arrive. Throws [`HomunculusApiError`](./types#homunculusapierror) on non-OK responses, and [`HomunculusStreamError`](./types#homunculusstreamerror) if an NDJSON line cannot be parsed.
 
 ## Parameters
 

@@ -11,7 +11,7 @@ Plays a one-shot sound effect. The call returns immediately after the sound begi
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `asset` | `string` | The asset ID of the sound effect (e.g., `"my-mod:click"`) |
-| `options` | `SeOptions` | Optional playback configuration |
+| `options` | [`SeOptions`](./types#seoptions) | Optional playback configuration |
 
 ## Returns
 

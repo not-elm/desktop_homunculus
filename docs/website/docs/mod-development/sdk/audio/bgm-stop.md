@@ -10,7 +10,7 @@ Stops the currently playing BGM.
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `options` | `BgmStopOptions` | Optional stop configuration (e.g., fade-out). Omit for immediate stop. |
+| `options` | [`BgmStopOptions`](./types#bgmstopoptions) | Optional stop configuration (e.g., fade-out). Omit for immediate stop. |
 
 ## Returns
 

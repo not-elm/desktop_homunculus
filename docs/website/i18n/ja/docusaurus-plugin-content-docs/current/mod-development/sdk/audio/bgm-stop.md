@@ -10,7 +10,7 @@ sidebar_position: 4
 
 | パラメーター | 型 | 説明 |
 |-----------|------|-------------|
-| `options` | `BgmStopOptions` | オプションの停止設定（例：フェードアウト）。省略すると即座に停止します。 |
+| `options` | [`BgmStopOptions`](./types#bgmstopoptions) | オプションの停止設定（例：フェードアウト）。省略すると即座に停止します。 |
 
 ## 戻り値
 

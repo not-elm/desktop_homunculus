@@ -4,7 +4,7 @@ sidebar_position: 7
 
 # post
 
-JSON ペイロードと自動エラー処理付きの POST リクエストを実行します。非 OK レスポンスの場合は `HomunculusApiError` をスローします。
+JSON ペイロードと自動エラー処理付きの POST リクエストを実行します。非 OK レスポンスの場合は [`HomunculusApiError`](./types#homunculusapierror) をスローします。
 
 ## パラメータ
 

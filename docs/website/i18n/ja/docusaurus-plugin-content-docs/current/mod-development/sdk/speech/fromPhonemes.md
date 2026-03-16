@@ -4,9 +4,9 @@ sidebar_position: 2
 
 # fromPhonemes
 
-`speech.fromPhonemes(phonemes)` は `[expression_name, duration]` タプルのリストを `TimelineKeyframe[]` に変換します。`null` の表情名は無音（口を閉じた）キーフレームを作成します。
+`speech.fromPhonemes(phonemes)` は `[expression_name, duration]` タプルのリストを [`TimelineKeyframe`](./types#timelinekeyframe)`[]` に変換します。`null` の表情名は無音（口を閉じた）キーフレームを作成します。
 
-各タプルは `TimelineKeyframe` にマッピングされます：
+各タプルは [`TimelineKeyframe`](./types#timelinekeyframe) にマッピングされます：
 
 - `["aa", 0.1]` は `{ duration: 0.1, targets: { aa: 1.0 } }` になります
 - `[null, 0.05]` は `{ duration: 0.05 }` になります（口の表情なし -- 無音）
@@ -19,7 +19,7 @@ sidebar_position: 2
 
 ## 戻り値
 
-`TimelineKeyframe[]`
+[`TimelineKeyframe`](./types#timelinekeyframe)`[]`
 
 ## 例
 

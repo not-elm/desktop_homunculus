@@ -4,7 +4,7 @@ sidebar_position: 8
 
 # put
 
-Performs a PUT request with a JSON payload and automatic error handling. Throws `HomunculusApiError` on non-OK responses.
+Performs a PUT request with a JSON payload and automatic error handling. Throws [`HomunculusApiError`](./types#homunculusapierror) on non-OK responses.
 
 ## Parameters
 

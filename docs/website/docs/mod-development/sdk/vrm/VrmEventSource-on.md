@@ -9,7 +9,7 @@ sidebar_position: 33
 import { Vrm } from "@hmcs/sdk";
 ```
 
-`eventSource.on(event, callback)` registers an event listener on a `VrmEventSource`. Callbacks can be synchronous or async.
+`eventSource.on(event, callback)` registers an event listener on a [`VrmEventSource`](./types#vrmeventsource). Callbacks can be synchronous or async.
 
 ```typescript
 const character = await Vrm.findByName("MyAvatar");

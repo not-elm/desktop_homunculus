@@ -15,13 +15,13 @@ static async open(options: WebviewOpenOptions): Promise<Webview>
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `options` | `WebviewOpenOptions` | Configuration for the webview |
+| `options` | [`WebviewOpenOptions`](./types#webviewopenoptions) | Configuration for the webview |
 
 ### `WebviewOpenOptions`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `source` | `WebviewSource` | -- | What to display (required) |
+| `source` | [`WebviewSource`](./types#webviewsource) | -- | What to display (required) |
 | `size` | `Vec2` | -- | Dimensions in 3D world space (e.g., `[0.7, 0.7]`) |
 | `viewportSize` | `Vec2` | -- | HTML pixel dimensions (e.g., `[800, 600]`) |
 | `offset` | `Vec2` | -- | Position relative to linked VRM or world origin |

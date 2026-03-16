@@ -4,7 +4,7 @@ sidebar_position: 6
 
 # get
 
-指定した URL に自動エラー処理付きの GET リクエストを実行します。非 OK レスポンスの場合は `HomunculusApiError` をスローします。
+指定した URL に自動エラー処理付きの GET リクエストを実行します。非 OK レスポンスの場合は [`HomunculusApiError`](./types#homunculusapierror) をスローします。
 
 ## パラメータ
 

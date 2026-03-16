@@ -19,7 +19,7 @@ function url(url: string): WebviewSourceUrl
 
 ## Returns
 
-A `WebviewSourceUrl` object: `{ type: "url", url }`.
+A [`WebviewSourceUrl`](./types#webviewsourceurl) object: `{ type: "url", url }`.
 
 ## Example
 

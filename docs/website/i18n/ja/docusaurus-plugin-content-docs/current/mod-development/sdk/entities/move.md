@@ -11,7 +11,7 @@ sidebar_position: 6
 | パラメータ | 型 | 説明 |
 |-----------|------|------|
 | `entity` | `number` | 移動するエンティティ ID |
-| `target` | `MoveTarget` | ターゲット位置（ワールドまたはビューポート座標） |
+| `target` | [`MoveTarget`](./types#movetarget) | ターゲット位置（ワールドまたはビューポート座標） |
 
 ## 戻り値
 

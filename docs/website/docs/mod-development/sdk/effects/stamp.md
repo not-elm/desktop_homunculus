@@ -11,7 +11,7 @@ Displays a visual stamp effect on the screen.
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `asset` | `string` | Asset ID of the stamp image (e.g., `"my-mod:heart"`) |
-| `options` | `StampOptions` | Optional appearance configuration |
+| `options` | [`StampOptions`](./types#stampoptions) | Optional appearance configuration |
 
 ## Returns
 

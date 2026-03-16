@@ -12,7 +12,7 @@ None.
 
 ## Returns
 
-`Promise<BgmStatus>`
+`Promise<`[`BgmStatus`](./types#bgmstatus)`>`
 
 ## Example
 

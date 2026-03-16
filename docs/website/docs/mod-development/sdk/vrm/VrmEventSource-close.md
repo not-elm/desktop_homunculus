@@ -19,7 +19,7 @@ const eventSource = character.events();
 eventSource.close();
 ```
 
-`VrmEventSource` also implements `Disposable`, so you can use TypeScript's `using` declaration for automatic cleanup:
+[`VrmEventSource`](./types#vrmeventsource) also implements `Disposable`, so you can use TypeScript's `using` declaration for automatic cleanup:
 
 ```typescript
 {

@@ -14,7 +14,7 @@ Retrieves detailed information about a single MOD by name.
 
 ## Returns
 
-`Promise<ModInfo>`
+`Promise<`[`ModInfo`](./types#modinfo)`>`
 
 ## Example
 

@@ -19,7 +19,7 @@ function local(id: string): WebviewSourceLocal
 
 ## 戻り値
 
-`WebviewSourceLocal` オブジェクト：`{ type: "local", id }`。
+[`WebviewSourceLocal`](./types#webviewsourcelocal) オブジェクト：`{ type: "local", id }`。
 
 ## 例
 

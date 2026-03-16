@@ -19,7 +19,7 @@ function isWebviewSourceHtml(source: WebviewSource): source is WebviewSourceHtml
 
 ## Returns
 
-`true` if `source.type === "html"`, narrowing the type to `WebviewSourceHtml`.
+`true` if `source.type === "html"`, narrowing the type to [`WebviewSourceHtml`](./types#webviewsourcehtml).
 
 ## Example
 

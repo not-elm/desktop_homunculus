@@ -4,7 +4,7 @@ sidebar_position: 8
 
 # put
 
-JSON ペイロードと自動エラー処理付きの PUT リクエストを実行します。非 OK レスポンスの場合は `HomunculusApiError` をスローします。
+JSON ペイロードと自動エラー処理付きの PUT リクエストを実行します。非 OK レスポンスの場合は [`HomunculusApiError`](./types#homunculusapierror) をスローします。
 
 ## パラメータ
 

@@ -19,7 +19,7 @@ function isWebviewSourceInfoLocal(source: WebviewSourceInfo): source is WebviewS
 
 ## Returns
 
-`true` if `source.type === "local"`, narrowing the type to `WebviewSourceInfoLocal`.
+`true` if `source.type === "local"`, narrowing the type to [`WebviewSourceInfoLocal`](./types#webviewsourceinfolocal).
 
 ## Example
 
