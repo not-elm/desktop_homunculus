@@ -51,7 +51,7 @@ export interface RpcMethodDef<I = unknown, O = unknown> {
   /** Optional handler timeout in milliseconds. */
   timeout?: number;
   /** Zod schema used to validate incoming request bodies. */
-  input: ZodType<I>;
+  input?: ZodType<I>;
   /** Async function called with the validated input. */
   handler: (params: I) => Promise<O>;
 }
@@ -219,22 +219,33 @@ async function dispatchMethod(
   res: http.ServerResponse,
 ): Promise<void> {
   if (isRpcMethodDef(entry)) {
-    const result = entry.input.safeParse(body);
-    if (!result.success) {
-      jsonResponse(res, 400, {
-        error: "VALIDATION_ERROR",
-        message: "Invalid input",
-        details: result.error.errors,
-      });
-      return;
-    }
-    try {
-      jsonResponse(res, 200, await entry.handler(result.data));
-    } catch (err) {
-      jsonResponse(res, 500, {
-        error: "HANDLER_ERROR",
-        message: (err as Error).message ?? "Unknown error",
-      });
+    if (entry.input) {
+      const result = entry.input.safeParse(body);
+      if (!result.success) {
+        jsonResponse(res, 400, {
+          error: "VALIDATION_ERROR",
+          message: "Invalid input",
+          details: result.error.errors,
+        });
+        return;
+      }
+      try {
+        jsonResponse(res, 200, await entry.handler(result.data));
+      } catch (err) {
+        jsonResponse(res, 500, {
+          error: "HANDLER_ERROR",
+          message: (err as Error).message ?? "Unknown error",
+        });
+      }
+    } else {
+      try {
+        jsonResponse(res, 200, await entry.handler(body));
+      } catch (err) {
+        jsonResponse(res, 500, {
+          error: "HANDLER_ERROR",
+          message: (err as Error).message ?? "Unknown error",
+        });
+      }
     }
   } else {
     try {
@@ -354,7 +365,18 @@ export namespace rpc {
     timeout?: number;
     input: ZodType<I>;
     handler: (params: I) => Promise<O>;
-  }): RpcMethodDef<I, O> {
+  }): RpcMethodDef<I, O>;
+  export function method<O>(def: {
+    description?: string;
+    timeout?: number;
+    handler: () => Promise<O>;
+  }): RpcMethodDef<unknown, O>;
+  export function method(def: {
+    description?: string;
+    timeout?: number;
+    input?: ZodType<unknown>;
+    handler: (params?: unknown) => Promise<unknown>;
+  }): RpcMethodDef {
     return {
       description: def.description,
       timeout: def.timeout,

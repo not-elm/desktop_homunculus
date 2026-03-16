@@ -50,7 +50,7 @@ describe("rpc.method()", () => {
       handler: async (params) => params,
     });
 
-    const result = def.input.safeParse({ name: "alice", count: 3 });
+    const result = def.input!.safeParse({ name: "alice", count: 3 });
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data).toEqual({ name: "alice", count: 3 });
@@ -64,11 +64,24 @@ describe("rpc.method()", () => {
       handler: async (params) => params,
     });
 
-    const result = def.input.safeParse({ name: 123 });
+    const result = def.input!.safeParse({ name: 123 });
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.errors.length).toBeGreaterThan(0);
     }
+  });
+
+  it("supports method without input schema", async () => {
+    const { rpc } = await import("./rpc");
+    const def = rpc.method({
+      description: "Ping",
+      handler: async () => ({ pong: true }),
+    });
+
+    expect(def.input).toBeUndefined();
+    expect(def.description).toBe("Ping");
+    const result = await def.handler(undefined as never);
+    expect(result).toEqual({ pong: true });
   });
 
   it("handler is called and result returned for valid input", async () => {
@@ -82,7 +95,7 @@ describe("rpc.method()", () => {
       handler: handlerFn,
     });
 
-    const parseResult = def.input.safeParse({ value: "hello" });
+    const parseResult = def.input!.safeParse({ value: "hello" });
     expect(parseResult.success).toBe(true);
     if (parseResult.success) {
       const output = await def.handler(parseResult.data);
