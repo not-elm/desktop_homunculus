@@ -39,7 +39,7 @@ Add a `tray` object to the `homunculus` field in your `package.json`. Each entry
 |-------|------|-------------|
 | `id` | `string` | Unique identifier for this tray item within the MOD |
 | `text` | `string` | Label displayed in the tray menu |
-| `command` | `string` | Bin command to execute when selected (must match a key in `bin`) |
+| `command` | `string` | MOD command to execute when selected (must match a key in `bin`) |
 | `items` | `TrayItem[]` | (Optional) Nested child items for creating a submenu |
 
 :::warning
@@ -166,6 +166,6 @@ try {
 ## Related Pages
 
 - **[Context Menus](./menus.md)** -- Right-click character menus
-- **[Bin Commands](./bin-commands.md)** -- Writing and invoking on-demand scripts
+- **[MOD Commands](./commands.md)** -- Writing and invoking MOD commands
 - **[Webviews](./sdk/webviews)** -- Embedding HTML UIs in 3D space
 - **[Package Configuration](./project-setup/package-json.md)** -- Full `package.json` reference
