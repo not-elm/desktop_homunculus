@@ -5,6 +5,7 @@ use utoipa::ToSchema;
 
 pub(crate) mod app;
 pub(crate) mod assets;
+pub(crate) mod rpc;
 pub(crate) mod audio;
 pub(crate) mod coordinates;
 pub(crate) mod displays;

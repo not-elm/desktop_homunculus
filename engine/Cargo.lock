@@ -4492,6 +4492,7 @@ dependencies = [
  "homunculus_screen",
  "homunculus_utils",
  "http-body-util",
+ "reqwest",
  "serde",
  "serde_json",
  "tokio",

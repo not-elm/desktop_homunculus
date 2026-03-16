@@ -7,7 +7,9 @@ use homunculus_api::prelude::{
     ShadowPanelApi, SignalsApi, SpeechApi, VrmAnimationApi, WebviewApi,
 };
 use homunculus_api::vrm::VrmApi;
+use homunculus_core::rpc_registry::RpcRegistry;
 use homunculus_utils::config::HomunculusConfig;
+use std::sync::{Arc, RwLock};
 
 #[derive(Clone, FromRef)]
 pub struct HttpState {
@@ -29,10 +31,15 @@ pub struct HttpState {
     pub assets: AssetsApi,
     pub mods: ModsApi,
     pub config: HomunculusConfig,
+    pub rpc_registry: Arc<RwLock<RpcRegistry>>,
 }
 
 impl HttpState {
-    pub fn new(reactor: ApiReactor, config: HomunculusConfig) -> Self {
+    pub fn new(
+        reactor: ApiReactor,
+        config: HomunculusConfig,
+        rpc_registry: Arc<RwLock<RpcRegistry>>,
+    ) -> Self {
         Self {
             app: AppApi::from(reactor.clone()),
             audio_se: AudioSeApi::from(reactor.clone()),
@@ -51,6 +58,7 @@ impl HttpState {
             assets: AssetsApi::from(reactor.clone()),
             mods: ModsApi::from(reactor.clone()),
             config,
+            rpc_registry,
             reactor,
         }
     }

@@ -14,6 +14,7 @@ use homunculus_api::mods::ModsApi;
 use homunculus_api::prelude::{
     ApiReactor, AudioBgmApi, AudioSeApi, EntitiesApi, VrmAnimationApi, VrmApi, WebviewApi,
 };
+use homunculus_core::rpc_registry::RpcRegistry;
 use homunculus_utils::config::HomunculusConfig;
 use rmcp::handler::server::router::tool::ToolRouter;
 use rmcp::model::{
@@ -23,7 +24,7 @@ use rmcp::model::{
 };
 use rmcp::service::RequestContext;
 use rmcp::{RoleServer, ServerHandler, tool_handler};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, RwLock};
 
 const SERVER_NAME: &str = "homunculus";
 
@@ -60,12 +61,19 @@ pub struct HomunculusMcpHandler {
     pub(crate) config: HomunculusConfig,
     /// Tracks open webview IDs so they can be cleaned up when the MCP session ends.
     pub(crate) open_webviews: Arc<Mutex<Vec<u64>>>,
+    // Will be used in the call_rpc MCP tool (Task 5).
+    #[allow(dead_code)]
+    pub(crate) rpc_registry: Arc<RwLock<RpcRegistry>>,
     tool_router: ToolRouter<Self>,
 }
 
 impl HomunculusMcpHandler {
     /// Creates a new handler, constructing all domain APIs from the given reactor.
-    pub fn new(reactor: ApiReactor, config: HomunculusConfig) -> Self {
+    pub fn new(
+        reactor: ApiReactor,
+        config: HomunculusConfig,
+        rpc_registry: Arc<RwLock<RpcRegistry>>,
+    ) -> Self {
         Self {
             webview_api: WebviewApi::from(reactor.clone()),
             vrm_api: VrmApi::from(reactor.clone()),
@@ -78,6 +86,7 @@ impl HomunculusMcpHandler {
             active_character: Arc::new(Mutex::new(None)),
             config,
             open_webviews: Arc::new(Mutex::new(Vec::new())),
+            rpc_registry,
             tool_router: tools::tool_router(),
         }
     }
@@ -188,12 +197,15 @@ mod tests {
 
     /// Creates a handler backed by a dummy reactor (no Bevy app).
     fn test_handler() -> HomunculusMcpHandler {
+        use homunculus_core::rpc_registry::RpcRegistry;
+        use std::sync::{Arc, RwLock};
         let reactor = ApiReactor::__test_dummy();
         let config = HomunculusConfig {
             mods_dir: std::path::PathBuf::from("/tmp/mods"),
             port: 3100,
         };
-        HomunculusMcpHandler::new(reactor, config)
+        let rpc_registry = Arc::new(RwLock::new(RpcRegistry::default()));
+        HomunculusMcpHandler::new(reactor, config, rpc_registry)
     }
 
     #[test]
