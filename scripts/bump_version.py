@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Unified version management for the desktop_homunculus monorepo."""
+"""Unified version management for the desktop_homunculus monorepo.
+
+Reads version, targets, and excludes from version.toml (Single Source of Truth).
+"""
+
+from __future__ import annotations
 
 import json
 import re
@@ -11,28 +16,59 @@ try:
 except ModuleNotFoundError:
     tomllib = None  # type: ignore[assignment]
 
-REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-
-TARGETS = [
-    "engine/Cargo.toml",
-    "packages/*/package.json",
-    "packages/cli-platform/package.json.tmpl",
-    "mods/*/package.json",
-]
-
-EXCLUDES = [
-    "sandbox/package.json",
-    "docs/website/package.json",
-]
+REPO_ROOT = Path(__file__).resolve().parent.parent
 
 VERSION_RE = re.compile(r"^\d+\.\d+\.\d+(-[a-zA-Z0-9.-]+)?$")
 
+CONFIG_PATH = REPO_ROOT / "version.toml"
 
-def resolve_targets() -> list[Path]:
-    """Expand glob patterns in TARGETS and remove EXCLUDES."""
-    exclude_set = {(REPO_ROOT / e).resolve() for e in EXCLUDES}
+
+def load_config() -> dict[str, object]:
+    """Load version, targets, and excludes from version.toml."""
+    if not CONFIG_PATH.exists():
+        print(f"ERROR: {CONFIG_PATH} not found", file=sys.stderr)
+        sys.exit(1)
+
+    if tomllib is not None:
+        with open(CONFIG_PATH, "rb") as f:
+            return tomllib.load(f)
+
+    # Fallback: regex-based parsing for Python < 3.11
+    text = CONFIG_PATH.read_text(encoding="utf-8")
+
+    version_m = re.search(r'^version\s*=\s*"([^"]*)"', text, re.MULTILINE)
+    version = version_m.group(1) if version_m else ""
+
+    targets: list[str] = re.findall(
+        r'(?<=\n)\s*"([^"]+)"', text[text.find("targets"):text.find("excludes")]
+    )
+    excludes: list[str] = re.findall(
+        r'(?<=\n)\s*"([^"]+)"', text[text.find("excludes"):]
+    )
+
+    return {"version": version, "targets": targets, "excludes": excludes}
+
+
+def write_version_to_config(version: str) -> None:
+    """Update the version field in version.toml."""
+    text = CONFIG_PATH.read_text(encoding="utf-8")
+    new_text = re.sub(
+        r'^(version\s*=\s*)"[^"]*"',
+        rf'\g<1>"{version}"',
+        text,
+        count=1,
+        flags=re.MULTILINE,
+    )
+    CONFIG_PATH.write_text(new_text, encoding="utf-8")
+
+
+def resolve_targets(
+    targets: list[str], excludes: list[str]
+) -> list[Path]:
+    """Expand glob patterns in targets and remove excludes."""
+    exclude_set = {(REPO_ROOT / e).resolve() for e in excludes}
     paths: list[Path] = []
-    for pattern in TARGETS:
+    for pattern in targets:
         matched = sorted(REPO_ROOT.glob(pattern))
         for p in matched:
             if p.resolve() not in exclude_set:
@@ -62,7 +98,6 @@ def update_cargo_toml(path: Path, version: str) -> None:
         sys.exit(1)
 
     # Replace version only within [workspace.package] section
-    # Find the section, then replace the version line within it
     in_section = False
     lines = text.splitlines(keepends=True)
     new_lines: list[str] = []
@@ -141,11 +176,22 @@ def refresh_cargo_lock(version: str) -> None:
         print("WARNING: cargo update --workspace failed", file=sys.stderr)
 
 
-def bump(version: str) -> None:
-    validate_version(version)
-    targets = resolve_targets()
+def bump(version: str | None = None) -> None:
+    config = load_config()
+    targets = config.get("targets", [])
+    excludes = config.get("excludes", [])
 
-    for path in targets:
+    if version is None:
+        version = str(config["version"])
+        print(f"Using version from version.toml: {version}")
+    else:
+        write_version_to_config(version)
+        print(f"Updated version.toml to {version}")
+
+    validate_version(version)
+    resolved = resolve_targets(targets, excludes)  # type: ignore[arg-type]
+
+    for path in resolved:
         rel = path.relative_to(REPO_ROOT)
         if path.name == "Cargo.toml":
             update_cargo_toml(path, version)
@@ -240,27 +286,34 @@ def discover_workspace_packages() -> set[Path]:
 
 def check() -> None:
     """Verify version consistency across the monorepo."""
-    targets = resolve_targets()
+    config = load_config()
+    expected_version = str(config["version"])
+    targets_patterns = config.get("targets", [])
+    excludes_patterns = config.get("excludes", [])
+
+    targets = resolve_targets(targets_patterns, excludes_patterns)  # type: ignore[arg-type]
     errors: list[str] = []
     warnings: list[str] = []
 
-    # 1. Version uniformity
+    # 1. Check each file matches version.toml
     versions: dict[str, str] = {}
     for path in targets:
         rel = str(path.relative_to(REPO_ROOT))
         versions[rel] = read_version(path)
 
-    unique = set(versions.values())
-    # Filter out template placeholders
-    unique_real = {v for v in unique if not v.startswith("{{")}
+    mismatches = {
+        rel: ver
+        for rel, ver in versions.items()
+        if ver != expected_version and not ver.startswith("{{")
+    }
 
-    if len(unique_real) > 1:
-        errors.append("Version mismatch detected:")
-        for rel, ver in sorted(versions.items()):
+    if mismatches:
+        errors.append(f"Version mismatch (expected {expected_version}):")
+        for rel, ver in sorted(mismatches.items()):
             errors.append(f"  {rel}: {ver}")
 
     # 2. Missing package detection
-    exclude_set = {(REPO_ROOT / e).resolve() for e in EXCLUDES}
+    exclude_set = {(REPO_ROOT / e).resolve() for e in excludes_patterns}  # type: ignore[union-attr]
     target_set = {p.resolve() for p in targets}
 
     # Check pnpm workspace packages
@@ -268,7 +321,7 @@ def check() -> None:
     for p in ws_packages:
         if p not in target_set and p not in exclude_set:
             warnings.append(
-                f"Package not covered by TARGETS or EXCLUDES: "
+                f"Package not covered by targets or excludes: "
                 f"{p.relative_to(REPO_ROOT)}"
             )
 
@@ -298,21 +351,14 @@ def check() -> None:
             print(f"  ✗ {e}")
         sys.exit(1)
 
-    print(f"✓ All versions are consistent: {next(iter(unique_real))}")
+    print(f"✓ All versions match version.toml: {expected_version}")
 
 
 def main() -> None:
     if len(sys.argv) < 2:
-        print(
-            "Usage: bump_version.py <VERSION>\n"
-            "       bump_version.py --check\n\n"
-            "Examples:\n"
-            "  bump_version.py 0.2.0\n"
-            "  bump_version.py 0.3.0-dev\n"
-            "  bump_version.py --check",
-            file=sys.stderr,
-        )
-        sys.exit(1)
+        # No arguments: read from version.toml and propagate
+        bump()
+        return
 
     if sys.argv[1] == "--check":
         check()

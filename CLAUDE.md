@@ -201,4 +201,4 @@ Additional conventions:
 - Application settings are stored in `~/.homunculus/config.toml` (TOML, snake_case keys: `port`, `mods_dir`).
 - Logs are written to `~/.homunculus/Logs/log.txt` (daily rolling). Debug builds log at INFO level, release builds at ERROR.
 - Preferences stored in SQLite at `~/.homunculus/preferences.db` (JSON key-value pairs).
-- Workspace version: `0.1.0-alpha.4.1`. License: MIT/Apache-2.0 (Rust), MIT (TypeScript), CC-BY-4.0 (docs/assets).
+- Workspace version: see `version.toml`. License: MIT/Apache-2.0 (Rust), MIT (TypeScript), CC-BY-4.0 (docs/assets).

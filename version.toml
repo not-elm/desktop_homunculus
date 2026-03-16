@@ -1,0 +1,13 @@
+version = "0.1.0-alpha.5-dev"
+
+targets = [
+    "engine/Cargo.toml",
+    "packages/*/package.json",
+    "packages/cli-platform/package.json.tmpl",
+    "mods/*/package.json",
+]
+
+excludes = [
+    "sandbox/package.json",
+    "docs/website/package.json",
+]

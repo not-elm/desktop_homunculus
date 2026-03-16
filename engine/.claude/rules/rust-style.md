@@ -78,7 +78,7 @@
 ## Edition & Workspace
 
 - Rust edition 2024.
-- Workspace version: `0.1.0-alpha.4`.
+- Workspace version: see `version.toml` at repo root.
 - License: MIT OR Apache-2.0.
 - All new crates must be added to the workspace `Cargo.toml`.
 - New crate `[package]` fields must use workspace inheritance:

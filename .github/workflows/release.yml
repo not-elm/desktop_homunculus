@@ -36,10 +36,10 @@ jobs:
             exit 1
           fi
 
-          # Validate tag version matches engine/Cargo.toml
-          CARGO_VERSION=$(sed -n '/\[workspace\.package\]/,/\[/{ s/^version = "\(.*\)"/\1/p; }' engine/Cargo.toml)
-          if [ "$VERSION" != "$CARGO_VERSION" ]; then
-            echo "::error::Tag version ($VERSION) does not match Cargo.toml version ($CARGO_VERSION)"
+          # Validate tag version matches version.toml
+          FILE_VERSION=$(sed -n 's/^version *= *"\(.*\)"/\1/p' version.toml)
+          if [ "$VERSION" != "$FILE_VERSION" ]; then
+            echo "::error::Tag version ($VERSION) does not match version.toml version ($FILE_VERSION)"
             exit 1
           fi
 
