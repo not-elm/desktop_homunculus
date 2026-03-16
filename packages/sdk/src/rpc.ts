@@ -39,10 +39,6 @@
 import * as http from "node:http";
 import { type ZodType } from "zod";
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
 /**
  * A single RPC method definition created by {@link rpc.method}.
  *
@@ -92,10 +88,6 @@ export interface RpcServer {
   /** Gracefully shuts down the server and resolves when closed. */
   close: () => Promise<void>;
 }
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
 
 function isRpcMethodDef(entry: RpcMethodEntry): entry is RpcMethodDef {
   return typeof entry === "object" && entry !== null && "handler" in entry;
@@ -168,10 +160,6 @@ async function registerWithRetry(
     }
   }
 }
-
-// ---------------------------------------------------------------------------
-// Namespace
-// ---------------------------------------------------------------------------
 
 /**
  * RPC server utilities for Desktop Homunculus mod service processes.

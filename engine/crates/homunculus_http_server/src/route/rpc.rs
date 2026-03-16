@@ -4,21 +4,17 @@
 //! available methods.  Callers proxy requests through `POST /rpc/{mod}/{method}`,
 //! which forwards the body to the MOD service's local HTTP server.
 
+use axum::Json;
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use axum::Json;
-use homunculus_core::rpc_registry::{RpcMethodMeta, RpcRegistry, RpcRegistration};
+use homunculus_core::rpc_registry::{RpcMethodMeta, RpcRegistration, RpcRegistry};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 
 /// Default per-method proxy timeout (30 s).
 const DEFAULT_TIMEOUT_MS: u64 = 30_000;
-
-// ---------------------------------------------------------------------------
-// Request / response types
-// ---------------------------------------------------------------------------
 
 /// Body for `POST /rpc/register`.
 #[derive(Deserialize, Debug)]
@@ -41,10 +37,6 @@ pub struct DeregisterRequest {
 pub struct RegistrationsResponse {
     pub registrations: HashMap<String, RpcRegistration>,
 }
-
-// ---------------------------------------------------------------------------
-// Handlers
-// ---------------------------------------------------------------------------
 
 /// Register or update a MOD service's RPC methods.
 ///
@@ -101,9 +93,7 @@ pub async fn deregister(
 }
 
 /// List all current RPC registrations (for introspection / debugging).
-pub async fn list_registrations(
-    State(registry): State<Arc<RwLock<RpcRegistry>>>,
-) -> Response {
+pub async fn list_registrations(State(registry): State<Arc<RwLock<RpcRegistry>>>) -> Response {
     match registry.read() {
         Ok(reg) => {
             let registrations = reg.all().clone();

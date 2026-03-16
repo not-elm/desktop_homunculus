@@ -35,10 +35,7 @@ impl HomunculusMcpHandler {
 
         // Read-lock the registry to look up mod registration.
         let (port, timeout_ms) = {
-            let reg = self
-                .rpc_registry
-                .read()
-                .unwrap_or_else(|e| e.into_inner());
+            let reg = self.rpc_registry.read().unwrap_or_else(|e| e.into_inner());
 
             let registration = match reg.get(&args.mod_name) {
                 Some(r) => r,

@@ -231,7 +231,11 @@ fn create_router(
 ) -> Router {
     let (router, _openapi) = build_openapi_router().split_for_parts();
     router
-        .with_state(HttpState::new(reactor.clone(), config.clone(), rpc_registry.clone()))
+        .with_state(HttpState::new(
+            reactor.clone(),
+            config.clone(),
+            rpc_registry.clone(),
+        ))
         .merge(rpc_router(rpc_registry.clone()))
         .nest_service(
             "/mcp",
@@ -248,10 +252,7 @@ fn create_router(
 
 fn rpc_router(rpc_registry: Arc<RwLock<RpcRegistry>>) -> Router {
     Router::new()
-        .route(
-            "/rpc/register",
-            axum::routing::post(route::rpc::register),
-        )
+        .route("/rpc/register", axum::routing::post(route::rpc::register))
         .route(
             "/rpc/deregister",
             axum::routing::post(route::rpc::deregister),

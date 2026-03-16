@@ -72,7 +72,10 @@ pub(super) async fn read_resource(
             to_json_string(&assets)?
         }
         "homunculus://rpc" => {
-            let reg = handler.rpc_registry.read().unwrap_or_else(|e| e.into_inner());
+            let reg = handler
+                .rpc_registry
+                .read()
+                .unwrap_or_else(|e| e.into_inner());
             to_json_string(reg.all())?
         }
         _ => {
