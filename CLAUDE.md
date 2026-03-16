@@ -197,7 +197,7 @@ Coding style rules are defined in `engine/.claude/rules/`:
 Additional conventions:
 - TypeScript SDK: All public APIs must have JSDoc with `@example` blocks. Each module exports a `namespace` (e.g., `export namespace vrm { ... }`). Never use `fetch` directly in SDK modules — always go through `host.ts` (`host.get/post/put/deleteMethod` with `host.createUrl()`). Prefer function declarations over arrow functions for exported top-level APIs.
 - Commits: Conventional commits (`feat:`, `fix:`, `docs:`). Short prefixes like `update:`, `add:` also used.
-- **Do NOT commit `docs/plans/`**: Files in `docs/plans/` are local design documents and working notes. Never include them in git commits.
+- **Do NOT commit `docs/plans/`, `docs/superpowers/`, or `.superpowers/`**: These are local working files. Never include them in git commits.
 - Application settings are stored in `~/.homunculus/config.toml` (TOML, snake_case keys: `port`, `mods_dir`).
 - Logs are written to `~/.homunculus/Logs/log.txt` (daily rolling). Debug builds log at INFO level, release builds at ERROR.
 - Preferences stored in SQLite at `~/.homunculus/preferences.db` (JSON key-value pairs).
