@@ -39,7 +39,7 @@ Desktop Homunculus が起動すると、インストール済みのすべての 
 |-------|------|-------------|
 | `id` | `string` | MOD 内でのトレイ項目の一意な識別子 |
 | `text` | `string` | トレイメニューに表示されるラベル |
-| `command` | `string` | 選択時に実行する bin コマンド（`bin` のキーと一致する必要あり） |
+| `command` | `string` | 選択時に実行する MOD コマンド（`bin` のキーと一致する必要あり） |
 | `items` | `TrayItem[]` | （オプション）サブメニューを作成するためのネストされた子項目 |
 
 :::warning
@@ -166,6 +166,6 @@ try {
 ## 関連ページ
 
 - **[コンテキストメニュー](./menus.md)** -- キャラクターの右クリックメニュー
-- **[Bin コマンド](./bin-commands.md)** -- オンデマンドスクリプトの作成と呼び出し
+- **[MOD コマンド](./commands.md)** -- MOD コマンドの作成と呼び出し
 - **[Webviews](./sdk/webviews)** -- 3D 空間への HTML UI の埋め込み
 - **[パッケージ設定](./project-setup/package-json.md)** -- 完全な `package.json` リファレンス
