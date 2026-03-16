@@ -114,24 +114,166 @@ async function readBody(req: http.IncomingMessage): Promise<string> {
   return Buffer.concat(chunks).toString("utf-8");
 }
 
+// --- env reading ---
+
+function readRpcPort(): number {
+  const s = process.env["HMCS_RPC_PORT"];
+  if (!s) throw new Error("HMCS_RPC_PORT environment variable is required");
+  const port = parseInt(s, 10);
+  if (isNaN(port))
+    throw new Error(`HMCS_RPC_PORT is not a valid port number: ${s}`);
+  return port;
+}
+
+function readModName(): string {
+  const name = process.env["HMCS_MOD_NAME"];
+  if (!name) throw new Error("HMCS_MOD_NAME environment variable is required");
+  return name;
+}
+
+function readEnginePort(): number {
+  const s = process.env["HMCS_PORT"] ?? "3100";
+  const port = parseInt(s, 10);
+  if (isNaN(port))
+    throw new Error(`HMCS_PORT is not a valid port number: ${s}`);
+  return port;
+}
+
+// --- HTTP server helpers ---
+
+function listenOnPort(server: http.Server, port: number): Promise<void> {
+  return new Promise((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(port, "127.0.0.1", () => {
+      server.off("error", reject);
+      resolve();
+    });
+  });
+}
+
+function buildRpcServer(server: http.Server, port: number): RpcServer {
+  return {
+    port,
+    close: () =>
+      new Promise((resolve, reject) => {
+        server.close((err) => {
+          if (err) reject(err);
+          else resolve();
+        });
+      }),
+  };
+}
+
+// --- request handling ---
+
+async function handleRequest(
+  methods: Record<string, RpcMethodEntry>,
+  req: http.IncomingMessage,
+  res: http.ServerResponse,
+): Promise<void> {
+  if (req.method !== "POST") {
+    jsonResponse(res, 405, {
+      error: "METHOD_NOT_ALLOWED",
+      message: "Only POST is supported",
+    });
+    return;
+  }
+  const methodName = (req.url ?? "/").replace(/^\//, "");
+  if (!methodName || !(methodName in methods)) {
+    jsonResponse(res, 404, {
+      error: "METHOD_NOT_FOUND",
+      message: `Unknown method: ${methodName}`,
+    });
+    return;
+  }
+
+  let rawBody: string;
+  try {
+    rawBody = await readBody(req);
+  } catch (err) {
+    jsonResponse(res, 400, {
+      error: "READ_ERROR",
+      message: (err as Error).message,
+    });
+    return;
+  }
+
+  let parsedBody: unknown;
+  try {
+    parsedBody = rawBody.trim().length > 0 ? JSON.parse(rawBody) : {};
+  } catch {
+    jsonResponse(res, 400, {
+      error: "VALIDATION_ERROR",
+      message: "Invalid input",
+      details: [{ message: "Request body is not valid JSON" }],
+    });
+    return;
+  }
+
+  await dispatchMethod(methods[methodName], parsedBody, res);
+}
+
+async function dispatchMethod(
+  entry: RpcMethodEntry,
+  body: unknown,
+  res: http.ServerResponse,
+): Promise<void> {
+  if (isRpcMethodDef(entry)) {
+    const result = entry.input.safeParse(body);
+    if (!result.success) {
+      jsonResponse(res, 400, {
+        error: "VALIDATION_ERROR",
+        message: "Invalid input",
+        details: result.error.errors,
+      });
+      return;
+    }
+    try {
+      jsonResponse(res, 200, await entry.handler(result.data));
+    } catch (err) {
+      jsonResponse(res, 500, {
+        error: "HANDLER_ERROR",
+        message: (err as Error).message ?? "Unknown error",
+      });
+    }
+  } else {
+    try {
+      jsonResponse(res, 200, await entry(body));
+    } catch (err) {
+      jsonResponse(res, 500, {
+        error: "HANDLER_ERROR",
+        message: (err as Error).message ?? "Unknown error",
+      });
+    }
+  }
+}
+
+// --- registration ---
+
+function buildMethodsMeta(
+  methods: Record<string, RpcMethodEntry>,
+): Record<string, { description?: string; timeout?: number }> {
+  const meta: Record<string, { description?: string; timeout?: number }> = {};
+  for (const [name, entry] of Object.entries(methods)) {
+    meta[name] = isRpcMethodDef(entry)
+      ? {
+          ...(entry.description !== undefined
+            ? { description: entry.description }
+            : {}),
+          ...(entry.timeout !== undefined ? { timeout: entry.timeout } : {}),
+        }
+      : {};
+  }
+  return meta;
+}
+
 async function registerWithRetry(
   enginePort: number,
   modName: string,
   methods: Record<string, RpcMethodEntry>,
 ): Promise<void> {
   const url = `http://127.0.0.1:${enginePort}/rpc/register`;
-  const methodsMeta: Record<string, { description?: string; timeout?: number }> = {};
-  for (const [name, entry] of Object.entries(methods)) {
-    if (isRpcMethodDef(entry)) {
-      methodsMeta[name] = {
-        ...(entry.description !== undefined ? { description: entry.description } : {}),
-        ...(entry.timeout !== undefined ? { timeout: entry.timeout } : {}),
-      };
-    } else {
-      methodsMeta[name] = {};
-    }
-  }
-  const body = JSON.stringify({ modName, methods: methodsMeta });
+  const body = JSON.stringify({ modName, methods: buildMethodsMeta(methods) });
 
   const maxAttempts = 10;
   let delay = 100;
@@ -256,127 +398,24 @@ export namespace rpc {
    * ```
    */
   export async function serve(options: RpcServeOptions): Promise<RpcServer> {
-    const rpcPortStr = process.env["HMCS_RPC_PORT"];
-    if (!rpcPortStr) {
-      throw new Error("HMCS_RPC_PORT environment variable is required");
-    }
-    const rpcPort = parseInt(rpcPortStr, 10);
-    if (isNaN(rpcPort)) {
-      throw new Error(`HMCS_RPC_PORT is not a valid port number: ${rpcPortStr}`);
-    }
-
-    const modName = process.env["HMCS_MOD_NAME"];
-    if (!modName) {
-      throw new Error("HMCS_MOD_NAME environment variable is required");
-    }
-
-    const enginePortStr = process.env["HMCS_PORT"] ?? "3100";
-    const enginePort = parseInt(enginePortStr, 10);
-
+    const rpcPort = readRpcPort();
+    const modName = readModName();
+    const enginePort = readEnginePort();
     const { methods } = options;
 
-    const server = http.createServer(async (req, res) => {
-      const url = req.url ?? "/";
-      // Only handle POST /{methodName}
-      if (req.method !== "POST") {
-        jsonResponse(res, 405, { error: "METHOD_NOT_ALLOWED", message: "Only POST is supported" });
-        return;
-      }
-
-      const methodName = url.replace(/^\//, "");
-      if (!methodName || !(methodName in methods)) {
-        jsonResponse(res, 404, {
-          error: "METHOD_NOT_FOUND",
-          message: `Unknown method: ${methodName}`,
-        });
-        return;
-      }
-
-      const entry = methods[methodName];
-
-      let rawBody: string;
-      try {
-        rawBody = await readBody(req);
-      } catch (err) {
-        jsonResponse(res, 400, { error: "READ_ERROR", message: (err as Error).message });
-        return;
-      }
-
-      let parsedBody: unknown;
-      try {
-        parsedBody = rawBody.trim().length > 0 ? JSON.parse(rawBody) : {};
-      } catch {
-        jsonResponse(res, 400, {
-          error: "VALIDATION_ERROR",
-          message: "Invalid input",
-          details: [{ message: "Request body is not valid JSON" }],
-        });
-        return;
-      }
-
-      if (isRpcMethodDef(entry)) {
-        const result = entry.input.safeParse(parsedBody);
-        if (!result.success) {
-          jsonResponse(res, 400, {
-            error: "VALIDATION_ERROR",
-            message: "Invalid input",
-            details: result.error.errors,
-          });
-          return;
-        }
-        try {
-          const output = await entry.handler(result.data);
-          jsonResponse(res, 200, output);
-        } catch (err) {
-          jsonResponse(res, 500, {
-            error: "HANDLER_ERROR",
-            message: (err as Error).message ?? "Unknown error",
-          });
-        }
-      } else {
-        // Plain async function
-        try {
-          const output = await entry(parsedBody);
-          jsonResponse(res, 200, output);
-        } catch (err) {
-          jsonResponse(res, 500, {
-            error: "HANDLER_ERROR",
-            message: (err as Error).message ?? "Unknown error",
-          });
-        }
-      }
+    const server = http.createServer((req, res) => {
+      handleRequest(methods, req, res);
     });
 
-    // Start listening
-    await new Promise<void>((resolve, reject) => {
-      server.once("error", reject);
-      server.listen(rpcPort, "127.0.0.1", () => {
-        server.off("error", reject);
-        resolve();
-      });
-    });
-
-    // Register with engine (with retry)
+    await listenOnPort(server, rpcPort);
     await registerWithRetry(enginePort, modName, methods);
 
-    const rpcServer: RpcServer = {
-      port: rpcPort,
-      close: () =>
-        new Promise<void>((resolve, reject) => {
-          server.close((err) => {
-            if (err) reject(err);
-            else resolve();
-          });
-        }),
-    };
-
-    // Graceful shutdown on SIGTERM
+    const rpcServer = buildRpcServer(server, rpcPort);
     process.once("SIGTERM", () => {
       rpcServer.close().catch(() => {
         // ignore close errors during shutdown
       });
     });
-
     return rpcServer;
   }
 }

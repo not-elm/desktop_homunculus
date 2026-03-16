@@ -28,20 +28,6 @@ impl Plugin for ModServicePlugin {
     }
 }
 
-/// Append a child PID to `~/.homunculus/mod_pids` so stale processes can be
-/// detected and cleaned up on next launch.
-fn append_pid_file(pid: u32) {
-    use std::io::Write;
-    let path = homunculus_utils::path::homunculus_dir().join("mod_pids");
-    if let Ok(mut f) = std::fs::OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(&path)
-    {
-        let _ = writeln!(f, "{pid}");
-    }
-}
-
 fn run_mod_services(
     mut commands: Commands,
     services: Query<(Entity, &ModService)>,
@@ -62,35 +48,12 @@ fn run_mod_services(
             }
         };
 
-        // Pre-register the port so the HTTP proxy can route requests even before
-        // the MOD service calls back to register its methods.
-        if let Ok(mut reg) = rpc_registry.write() {
-            reg.register(service.mod_name.clone(), rpc_port, Default::default());
-        }
+        pre_register_rpc_port(&rpc_registry, &service.mod_name, rpc_port);
 
-        let mut cmd = Command::new("node");
-        cmd.no_window_process_group()
-            .arg("--import")
-            .arg("tsx")
-            .arg(&service.script_path)
-            .current_dir(&service.mods_dir)
-            .env("HMCS_MOD_NAME", &service.mod_name)
-            .env("HMCS_RPC_PORT", rpc_port.to_string());
-
-        match cmd.spawn() {
+        match launch_mod_service_process(service, rpc_port) {
             Ok(child) => {
                 append_pid_file(child.id());
-
-                // Create a Job Object for the child process tree (Windows only).
-                #[cfg(windows)]
-                let job = homunculus_utils::process::create_job_for_child(&child);
-
-                #[cfg(windows)]
-                let handle = NodeProcessHandle::new(child, job);
-                #[cfg(not(windows))]
-                let handle = NodeProcessHandle::new(child);
-
-                commands.spawn(handle);
+                commands.spawn(build_process_handle(child));
             }
             Err(e) => {
                 error!(
@@ -102,6 +65,52 @@ fn run_mod_services(
         }
         commands.entity(entity).despawn();
     }
+}
+
+/// Append a child PID to `~/.homunculus/mod_pids` so stale processes can be
+/// detected and cleaned up on next launch.
+fn append_pid_file(pid: u32) {
+    use std::io::Write;
+    let path = homunculus_utils::path::homunculus_dir().join("mod_pids");
+    if let Ok(mut f) = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&path)
+    {
+        let _ = writeln!(f, "{pid}");
+    }
+}
+
+/// Pre-registers the port in the RPC registry so the HTTP proxy can route
+/// requests even before the MOD service calls back to register its methods.
+fn pre_register_rpc_port(rpc_registry: &SharedRpcRegistry, mod_name: &str, rpc_port: u16) {
+    if let Ok(mut reg) = rpc_registry.write() {
+        reg.register(mod_name.to_string(), rpc_port, Default::default());
+    }
+}
+
+fn launch_mod_service_process(
+    service: &ModService,
+    rpc_port: u16,
+) -> std::io::Result<std::process::Child> {
+    Command::new("node")
+        .no_window_process_group()
+        .arg("--import")
+        .arg("tsx")
+        .arg(&service.script_path)
+        .current_dir(&service.mods_dir)
+        .env("HMCS_MOD_NAME", &service.mod_name)
+        .env("HMCS_RPC_PORT", rpc_port.to_string())
+        .spawn()
+}
+
+fn build_process_handle(child: std::process::Child) -> NodeProcessHandle {
+    #[cfg(windows)]
+    let job = homunculus_utils::process::create_job_for_child(&child);
+    #[cfg(windows)]
+    return NodeProcessHandle::new(child, job);
+    #[cfg(not(windows))]
+    NodeProcessHandle::new(child)
 }
 
 /// Binds `127.0.0.1:0` to let the OS assign an ephemeral port, then returns

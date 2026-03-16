@@ -1,11 +1,13 @@
 //! RPC tool implementations for the MCP handler.
 
 use super::super::HomunculusMcpHandler;
+use homunculus_core::rpc_registry::RpcRegistry;
 use rmcp::handler::server::wrapper::Parameters;
 use rmcp::schemars;
 use rmcp::schemars::JsonSchema;
 use rmcp::tool;
 use serde::{Deserialize, Serialize};
+use std::sync::{Arc, RwLock};
 use std::time::Duration;
 
 /// Default timeout for RPC calls in milliseconds (10 seconds).
@@ -32,72 +34,73 @@ impl HomunculusMcpHandler {
     )]
     async fn call_rpc(&self, params: Parameters<CallRpcParams>) -> String {
         let args = params.0;
-
-        // Read-lock the registry to look up mod registration.
-        let (port, timeout_ms) = {
-            let reg = self.rpc_registry.read().unwrap_or_else(|e| e.into_inner());
-
-            let registration = match reg.get(&args.mod_name) {
-                Some(r) => r,
-                None => {
-                    return format!(
-                        "Error: MOD '{}' is not registered. Use 'homunculus://rpc' resource to list available mods.",
-                        args.mod_name
-                    );
-                }
+        let (port, timeout_ms) =
+            match resolve_rpc_endpoint(&self.rpc_registry, &args.mod_name, &args.method) {
+                Ok(t) => t,
+                Err(e) => return e,
             };
+        send_rpc_call(
+            port,
+            &args.mod_name,
+            &args.method,
+            timeout_ms,
+            args.body.as_ref(),
+        )
+        .await
+    }
+}
 
-            let method_meta = match registration.methods.get(&args.method) {
-                Some(m) => m,
-                None => {
-                    return format!(
-                        "Error: Method '{}' not found on MOD '{}'. Available methods: {}",
-                        args.method,
-                        args.mod_name,
-                        registration
-                            .methods
-                            .keys()
-                            .cloned()
-                            .collect::<Vec<_>>()
-                            .join(", ")
-                    );
-                }
-            };
+fn resolve_rpc_endpoint(
+    rpc_registry: &Arc<RwLock<RpcRegistry>>,
+    mod_name: &str,
+    method: &str,
+) -> Result<(u16, u64), String> {
+    let reg = rpc_registry.read().unwrap_or_else(|e| e.into_inner());
+    let registration = reg.get(mod_name).ok_or_else(|| {
+        format!(
+            "Error: MOD '{mod_name}' is not registered. Use 'homunculus://rpc' resource to list available mods."
+        )
+    })?;
+    let method_meta = registration.methods.get(method).ok_or_else(|| {
+        let available = registration
+            .methods
+            .keys()
+            .cloned()
+            .collect::<Vec<_>>()
+            .join(", ");
+        format!(
+            "Error: Method '{method}' not found on MOD '{mod_name}'. Available methods: {available}"
+        )
+    })?;
+    Ok((
+        registration.port,
+        method_meta.timeout.unwrap_or(DEFAULT_RPC_TIMEOUT_MS),
+    ))
+}
 
-            let timeout_ms = method_meta.timeout.unwrap_or(DEFAULT_RPC_TIMEOUT_MS);
-            (registration.port, timeout_ms)
-        };
-
-        let url = format!("http://127.0.0.1:{}/{}", port, args.method);
-        let timeout = Duration::from_millis(timeout_ms);
-
-        let client = reqwest::Client::new();
-        let mut request = client.post(&url).timeout(timeout);
-
-        if let Some(body) = &args.body {
-            request = request.json(body);
-        } else {
-            request = request.header("content-length", "0");
+async fn send_rpc_call(
+    port: u16,
+    mod_name: &str,
+    method: &str,
+    timeout_ms: u64,
+    body: Option<&serde_json::Value>,
+) -> String {
+    let url = format!("http://127.0.0.1:{port}/{method}");
+    let client = reqwest::Client::new();
+    let mut request = client.post(&url).timeout(Duration::from_millis(timeout_ms));
+    if let Some(b) = body {
+        request = request.json(b);
+    } else {
+        request = request.header("content-length", "0");
+    }
+    match request.send().await {
+        Ok(response) => response
+            .text()
+            .await
+            .unwrap_or_else(|e| format!("Error: Failed to read response body: {e}")),
+        Err(e) if e.is_timeout() => {
+            format!("Error: RPC call to '{mod_name}/{method}' timed out after {timeout_ms}ms")
         }
-
-        match request.send().await {
-            Ok(response) => match response.text().await {
-                Ok(text) => text,
-                Err(e) => format!("Error: Failed to read response body: {e}"),
-            },
-            Err(e) => {
-                if e.is_timeout() {
-                    format!(
-                        "Error: RPC call to '{}/{}' timed out after {timeout_ms}ms",
-                        args.mod_name, args.method
-                    )
-                } else {
-                    format!(
-                        "Error: RPC call to '{}/{}' failed: {e}",
-                        args.mod_name, args.method
-                    )
-                }
-            }
-        }
+        Err(e) => format!("Error: RPC call to '{mod_name}/{method}' failed: {e}"),
     }
 }
