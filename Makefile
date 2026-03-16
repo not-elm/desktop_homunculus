@@ -1,5 +1,15 @@
+UNAME_S    := $(shell uname -s)
+IS_WINDOWS := $(findstring MINGW,$(UNAME_S))$(findstring MSYS,$(UNAME_S))
+
+ifeq ($(IS_WINDOWS),)
+  PYTHON ?= python3
+else
+  PYTHON ?= python
+endif
+
 .PHONY: setup debug test fix-lint gen-open-api \
-        release-macos release-macos-arm release-macos-x86 release-macos-universal
+        release-macos release-macos-arm release-macos-x86 release-macos-universal \
+        bump-version check-version
 
 setup:
 	pnpm install
@@ -39,3 +49,9 @@ release-macos-x86:
 release-macos-universal:
 	pnpm build
 	$(MAKE) -C engine release-macos-universal
+
+bump-version:
+	$(PYTHON) scripts/bump_version.py $(VERSION)
+
+check-version:
+	$(PYTHON) scripts/bump_version.py --check

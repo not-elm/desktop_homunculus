@@ -5,13 +5,15 @@
 const { execFileSync } = require("child_process");
 const path = require("path");
 const cliPkg = require("../package.json");
-const distTag = cliPkg.version.includes("alpha")
-  ? "alpha"
-  : cliPkg.version.includes("beta")
-    ? "beta"
-    : cliPkg.version.includes("rc")
-      ? "rc"
-      : "latest";
+const distTag = cliPkg.version.includes("dev")
+  ? "dev"
+  : cliPkg.version.includes("alpha")
+    ? "alpha"
+    : cliPkg.version.includes("beta")
+      ? "beta"
+      : cliPkg.version.includes("rc")
+        ? "rc"
+        : "latest";
 import("update-notifier").then(({ default: updateNotifier }) => {
   updateNotifier({ pkg: cliPkg, distTag }).notify();
 }).catch(() => {});
