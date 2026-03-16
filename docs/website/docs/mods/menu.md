@@ -15,7 +15,7 @@ Press **Escape** or click outside the menu to close it.
 
 ## Features
 
-MODs register menu entries in their `package.json` under the `"homunculus"` field. Each entry specifies a label and a bin command to execute when selected. The Context Menu MOD collects all registered entries and displays them.
+MODs register menu entries in their `package.json` under the `"homunculus"` field. Each entry specifies a label and a MOD command to execute when selected. The Context Menu MOD collects all registered entries and displays them.
 
 ## Notes
 
