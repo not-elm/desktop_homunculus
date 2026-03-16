@@ -16,7 +16,7 @@ Every MOD is a **pnpm package** with a special `homunculus` field in its `packag
 When Desktop Homunculus launches, the engine discovers installed MODs by running `pnpm ls` in the mods directory (`~/.homunculus/mods/`) and reading each MOD's `package.json`. MODs are installed with the `hmcs mod install` command. Each MOD can declare:
 
 - A **service** (`homunculus.service` field) -- a long-running Node.js child process that runs automatically when the app starts
-- **On-demand commands** (`bin` field) -- invoked through the HTTP API when needed
+- **MOD commands** (`bin` field) -- invoked through the HTTP API when needed
 - **Assets** (`homunculus.assets` field) -- files bundled with the MOD (VRM models, animations, sounds, UI)
 
 MODs communicate with the engine through a local **HTTP API** running on `localhost:3100`. The TypeScript SDK (`@hmcs/sdk`) wraps this API with a high-level, type-safe interface. Scripts run via `tsx`, so you can write TypeScript directly without a build step.
