@@ -20,6 +20,12 @@
       "import": "./dist/commands.js",
       "require": "./dist/commands.cjs",
       "default": "./dist/commands.js"
+    },
+    "./rpc": {
+      "types": "./dist/rpc.d.ts",
+      "import": "./dist/rpc.js",
+      "require": "./dist/rpc.cjs",
+      "default": "./dist/rpc.js"
     }
   },
   "engines": {
