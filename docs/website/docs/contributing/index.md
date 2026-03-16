@@ -9,15 +9,7 @@ Thank you for your interest in contributing! Desktop Homunculus is in active dev
 
 ## Development Setup
 
-```shell
-# 1. Install all tools (Rust, Node, CEF framework)
-make setup
-
-# 2. Start the app in debug mode (with hot-reload and DevTools)
-make debug
-```
-
-See the root `Makefile` for all available commands.
+See [Development Setup](./development-setup) for prerequisites and environment setup instructions.
 
 ## How to Contribute
 
