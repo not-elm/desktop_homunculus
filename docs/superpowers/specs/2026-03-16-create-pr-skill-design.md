@@ -15,6 +15,17 @@ A Claude Code skill that automates PR creation using the project's PR template (
 
 Single-file skill. No sub-agents or helper files.
 
+### SKILL.md Frontmatter
+
+```yaml
+---
+name: create-pr
+description: >
+  Create or update a GitHub pull request using the project's PR template.
+  Use when the user wants to open a PR for the current branch.
+---
+```
+
 ## Flow
 
 ```
@@ -41,7 +52,7 @@ Run the following checks in order. Abort with a clear message on first failure:
 
 1. **Git repository**: Confirm the working directory is a git repo.
 2. **Not detached HEAD**: `git symbolic-ref HEAD` must succeed.
-3. **Resolve base branch**: Run `git symbolic-ref refs/remotes/origin/HEAD` to determine the default branch (e.g., `origin/main`). Strip the remote prefix to get the local name (e.g., `main`).
+3. **Resolve base branch**: Run `git symbolic-ref refs/remotes/origin/HEAD` to determine the default branch (e.g., `origin/main`). Strip the remote prefix to get the local name (e.g., `main`). If this command fails (e.g., shallow clone or `origin/HEAD` not set), fall back to checking for `origin/main` or `origin/master`. If neither exists, ask the user to specify the base branch.
 4. **Not on base branch**: Current branch (`git branch --show-current`) must differ from the base branch.
 5. **Commits exist**: `git rev-list --count <base>...HEAD` must be > 0.
 6. **Clean working tree**: `git status --porcelain` must be empty. Abort if uncommitted changes exist.
@@ -59,7 +70,7 @@ Accept free-form input in any language that Claude Code can process. Store the r
 
 ### Step 3 — Diff Retrieval + Plausibility Check
 
-1. Retrieve the diff: `git diff <base>...HEAD`
+1. Retrieve the diff: `git diff <base>...HEAD`. If the diff is too large for the context window, use `git diff <base>...HEAD --stat` for an overview and selectively read key changed files. For very large branches, rely more on the commit history.
 2. Retrieve commit history: `git log <base>...HEAD --oneline`
 3. Perform a **plausibility check**: assess whether the diff is consistent with the user's stated Problem. This is NOT a proof of resolution — it checks whether the changes plausibly address what the user described.
    - For `feat`/`fix` type changes: verify the diff touches relevant code areas.
@@ -73,7 +84,7 @@ Accept free-form input in any language that Claude Code can process. Store the r
 
 ### Step 4 — Full PR Draft Generation + Approval
 
-Generate all PR components in English from the diff, commit history, and user's Problem input. Present the complete PR as a single block for review:
+Read `.github/pull_request_template.md` to obtain the current template structure. Then generate all PR components in English from the diff, commit history, and user's Problem input. Present the complete PR as a single block for review:
 
 **Title**: Conventional commit format. Select the prefix (`feat`, `fix`, `docs`, `refactor`, `chore`, `test`, `ci`, `build`) based on the dominant change type. Use imperative mood. Keep it under 70 characters.
 
@@ -91,8 +102,8 @@ Generate all PR components in English from the diff, commit history, and user's 
 
 ---
 
-- [x/​ ] If HTTP endpoints changed: I ran `make gen-open-api` and `pnpm build`
-- [x/​ ] This PR includes breaking changes
+- [x] or [ ] If HTTP endpoints changed: I ran `make gen-open-api` and `pnpm build`
+- [x] or [ ] This PR includes breaking changes
 ```
 
 **Checklist auto-detection**:
@@ -104,9 +115,9 @@ Present the full draft and ask the user to approve or request edits. If edits ar
 
 ### Step 5 — Push + PR Create/Edit
 
-1. Push the branch: `git push -u origin <current-branch>`
+1. Push the branch: `git push -u origin <current-branch>`. If push fails, report the error and abort. Do NOT use `--force` unless the user explicitly requests it.
 2. Based on Preflight result:
-   - **No existing PR**: `gh pr create --title "<title>" --body "<body>"`
+   - **No existing PR**: `gh pr create --base <base-branch> --title "<title>" --body "<body>"`
    - **Existing PR**: `gh pr edit --title "<title>" --body "<body>"`
 3. Report the PR URL to the user.
 
