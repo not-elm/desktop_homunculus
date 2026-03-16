@@ -7,7 +7,7 @@ sidebar_position: 1
 
 Create and control embedded HTML interfaces in 3D space. WebViews can float freely or be linked to a VRM character so they follow as the character moves.
 
-For building a React UI with Vite and `@hmcs/ui`, see [WebView UI Setup](../webview-ui/setup-and-build).
+For building a React UI with Vite and `@hmcs/ui`, see [WebView UI Setup](../../webview-ui/setup-and-build).
 
 ```typescript
 import { Webview, webviewSource } from "@hmcs/sdk";
@@ -61,4 +61,4 @@ import { Webview, webviewSource } from "@hmcs/sdk";
 
 ## Next Steps
 
-- **[Signals](./signals)** -- Cross-process pub/sub messaging between scripts and WebViews
+- **[Signals](../signals/)** -- Cross-process pub/sub messaging between scripts and WebViews
