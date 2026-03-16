@@ -25,6 +25,7 @@ storybook-static
 *.tsbuildinfo
 *.local
 
+.superpowers/
 docs/plans/
 docs/memo.md
 docs/reviews/
