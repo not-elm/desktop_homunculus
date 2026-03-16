@@ -31,13 +31,13 @@ This is all you need for a working MOD. Install it with `hmcs mod install <path-
 
 ## MOD with UI
 
-A MOD that provides a settings panel or other UI adds a React app and on-demand bin commands:
+A MOD that provides a settings panel or other UI adds a React app and MOD commands:
 
 ```text
 my-settings-mod/
-├── package.json           # Declares assets, menus, and bin commands
+├── package.json           # Declares assets, menus, and MOD commands
 ├── commands/
-│   └── open-ui.ts         # Bin command script (invoked via HTTP API)
+│   └── open-ui.ts         # MOD command script (invoked via HTTP API)
 └── ui/
     ├── index.html         # Vite entry point
     ├── vite.config.ts     # Vite build config
@@ -51,7 +51,7 @@ my-settings-mod/
 
 ### `commands/`
 
-On-demand scripts exposed via the `"bin"` field in `package.json`. These run only when explicitly called through the HTTP API (`POST /commands/execute`). The conventional directory name is `commands/` or `bin/`.
+MOD commands exposed via the `"bin"` field in `package.json`. These run only when explicitly called through the HTTP API (`POST /commands/execute`). The conventional directory name is `commands/` or `bin/`.
 
 ### `ui/`
 
@@ -62,7 +62,7 @@ UI apps typically import `@hmcs/ui` for shared components and use Tailwind for s
 Note that `ui/dist/` is a build artifact and is not shown in the tree above. Run `pnpm build` in the `ui/` directory to generate it.
 
 :::info
-This example has no `index.ts` at the root -- it uses only on-demand commands and a UI panel. A MOD can also combine both patterns: a service, a UI app, and bin commands in the same package.
+This example has no `index.ts` at the root -- it uses only MOD commands and a UI panel. A MOD can also combine both patterns: a service, a UI app, and MOD commands in the same package.
 :::
 
 ## File Reference
@@ -80,7 +80,7 @@ This example has no `index.ts` at the root -- it uses only on-demand commands an
 ## Conventions
 
 - **Store binary assets in `assets/`.** The directory name is a convention, not a requirement -- actual file paths are declared in `package.json`.
-- **Place bin command scripts in `commands/` or `bin/`.** Both are common across official MODs.
+- **Place MOD command scripts in `commands/` or `bin/`.** Both are common across official MODs.
 - **UI apps live in `ui/` with build output in `ui/dist/`.**
 - **Shared helper code goes in `lib/`.**
 - **The only required file is `package.json`.** Everything else depends on what your MOD does.
