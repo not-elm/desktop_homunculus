@@ -38,8 +38,8 @@ SDK reference documentation uses inconsistent heading styles. Some pages use des
 | effects | `effects.md` | `effects/` | stamp | StampOptions, StampRequestBody |
 | entities | `entities.md` + `tweening.md` | `entities/` | findByName, name, transform, setTransform, move, tweenPosition, tweenRotation, tweenScale | FindOptions, MoveTarget, MoveTargetWorld, MoveTargetViewport, TweenPositionRequest, TweenRotationRequest, TweenScaleRequest, EasingFunction |
 | host | `direct-http.md` | `host/` | configure, base, baseUrl, createUrl, get, post, put, patch, deleteMethod, postStream | HomunculusApiError, HomunculusStreamError |
-| math | `math.md` | `math/` | (none — types only) | Transform, TransformArgs, Vec2, Vec3, Quaternion, Rect |
-| mods | `mods-api.md` | `mods/` | list, get, executeCommand, streamCommand, menus | ModInfo, ExecuteCommandRequest, CommandEvent, CommandResult, ModMenuMetadata |
+| math | `math.md` | `math/` | (none — types only) | Transform, TransformArgs, Vec2, Vec3, Quat, Rect |
+| mods | `mods-api.md` | `mods/` | list, get, executeCommand, streamCommand, menus | ModInfo, ExecuteCommandRequest, CommandEvent, CommandStdoutEvent, CommandStderrEvent, CommandExitEvent, CommandResult, ModMenuMetadata |
 | preferences | `preferences.md` | `preferences/` | list, load, save | (none — uses generic JSON) |
 | settings | `settings.md` | `settings/` | fps, setFps | SetFpsBody |
 | shadowPanel | `shadow-panel.md` | `shadow-panel/` | alpha, setAlpha | ShadowPanelPutBody |
@@ -47,11 +47,19 @@ SDK reference documentation uses inconsistent heading styles. Some pages use des
 | speech | `speech.md` | `speech/` | fromPhonemes | TimelineKeyframe |
 | utils | (new) | `utils/` | sleep | (none) |
 | vrm | `vrm/` (existing) | `vrm/` (restructure) | See [VRM section](#vrm-module-restructure) | See [VRM section](#vrm-module-restructure) |
-| webviews | `webviews.md` | `webviews/` | See [Webviews section](#webviews-module-detail) | WebviewSource, WebviewSourceLocal, WebviewSourceUrl, WebviewSourceHtml, WebviewInfo, WebviewPatchRequest, WebviewOpenOptions |
+| webviews | `webviews.md` | `webviews/` | See [Webviews section](#webviews-module-detail) | WebviewSource, WebviewSourceLocal, WebviewSourceUrl, WebviewSourceHtml, WebviewSourceInfo, WebviewSourceInfoLocal, WebviewSourceInfoUrl, WebviewSourceInfoHtml, WebviewInfo, WebviewPatchRequest, WebviewOpenOptions, WebviewNavigateRequest, SetLinkedVrmRequest |
 
 ### Special import: commands
 
 The `commands` module uses a separate entry point. Import is `@hmcs/sdk/commands` (not `@hmcs/sdk`). The `commands/index.md` must reflect this.
+
+### Special import: utils
+
+`utils` exports bare functions (not a namespace). Import is `import { sleep } from "@hmcs/sdk"` (not `import { utils } from ...`). The heading is `# sleep` (not `# utils.sleep`).
+
+### Special import: host
+
+The `host` namespace functions use `import { host } from "@hmcs/sdk"`, but the error classes `HomunculusApiError` and `HomunculusStreamError` are top-level exports outside the namespace: `import { host, HomunculusApiError, HomunculusStreamError } from "@hmcs/sdk"`. The `host/index.md` must show this dual import.
 
 ### math module
 
@@ -89,7 +97,14 @@ The `vrm/` directory already exists with sub-pages but needs restructuring to ma
 **VrmEventSource** (heading format: `# VrmEventSource.on`):
 - on, close
 
-**Types**: Bones, PositionResponse, ExpressionsResponse, SpringBoneChainsResponse, SpringBoneChain, SpringBoneProps, VrmaInfo, VrmaPlayRequest, VrmaRepeat, VrmaState, SpawnVrmOptions, VrmSnapshot, VrmMetadata, Persona, SpeakTimelineOptions, TimelineKeyframe, VrmEventSource (EventMap)
+**Types**:
+- Core: Bones, PositionResponse, SpawnVrmOptions, VrmSnapshot, VrmMetadata, MoveToArgs, LookAtState
+- Persona: Persona, Ocean
+- Expressions: ExpressionsResponse, ExpressionInfo, OverrideType
+- Animation: VrmaInfo, VrmaPlayRequest, VrmaRepeat, VrmaState, VrmaSpeedBody
+- Spring Bone: SpringBoneChainsResponse, SpringBoneChain, SpringBoneProps
+- Speech: SpeakTimelineOptions, TimelineKeyframe
+- Events: VrmEventSource, EventMap, VrmPointerEvent, VrmDragEvent, VrmMouseEvent, Button, VrmStateChangeEvent, PersonaChangeEvent
 
 ## Directory Structure Examples
 
