@@ -61,8 +61,6 @@ pub struct HomunculusMcpHandler {
     pub(crate) config: HomunculusConfig,
     /// Tracks open webview IDs so they can be cleaned up when the MCP session ends.
     pub(crate) open_webviews: Arc<Mutex<Vec<u64>>>,
-    // Will be used in the call_rpc MCP tool (Task 5).
-    #[allow(dead_code)]
     pub(crate) rpc_registry: Arc<RwLock<RpcRegistry>>,
     tool_router: ToolRouter<Self>,
 }
@@ -276,12 +274,12 @@ mod tests {
     }
 
     #[test]
-    fn resource_definitions_lists_four_resources() {
+    fn resource_definitions_lists_five_resources() {
         let resources = resources::resource_definitions();
         assert_eq!(
             resources.len(),
-            4,
-            "expected 4 resources, got {}",
+            5,
+            "expected 5 resources, got {}",
             resources.len()
         );
     }
@@ -301,6 +299,7 @@ mod tests {
             uris.contains(&"homunculus://assets"),
             "missing assets resource"
         );
+        assert!(uris.contains(&"homunculus://rpc"), "missing rpc resource");
     }
 
     #[test]

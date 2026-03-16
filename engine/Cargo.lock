@@ -4512,6 +4512,7 @@ dependencies = [
  "homunculus_api",
  "homunculus_core",
  "homunculus_utils",
+ "reqwest",
  "rmcp",
  "serde",
  "serde_json",
