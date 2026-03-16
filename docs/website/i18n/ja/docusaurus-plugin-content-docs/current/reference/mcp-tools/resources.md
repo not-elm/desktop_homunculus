@@ -25,7 +25,7 @@ sidebar_position: 7
 
 ### `homunculus://mods`
 
-インストール済み MOD の一覧と、利用可能な bin コマンドおよび宣言されたアセットです。
+インストール済み MOD の一覧と、利用可能な MOD コマンドおよび宣言されたアセットです。
 
 **MIME タイプ：** `application/json`
 
