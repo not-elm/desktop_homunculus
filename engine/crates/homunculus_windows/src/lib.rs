@@ -246,11 +246,13 @@ fn create_window(layer: usize, size: Vec2) -> Window {
         transparent: true,
         has_shadow: false,
         composite_alpha_mode: if cfg!(target_os = "windows") {
-            CompositeAlphaMode::Auto
+            CompositeAlphaMode::PreMultiplied
         } else {
             CompositeAlphaMode::PostMultiplied
         },
         #[cfg(target_os = "macos")]
+        present_mode: PresentMode::AutoVsync,
+        #[cfg(target_os = "windows")]
         present_mode: PresentMode::AutoVsync,
         resizable: false,
         decorations: false,
