@@ -64,6 +64,30 @@ sidebar_position: 3
 
 ---
 
+#### `spin_character`
+
+アクティブキャラクターをワールド空間の軸を中心に指定した角度だけ回転させます。フル回転（360度以上）に対応しています。回転は加算的で、キャラクターの現在の向きを保持します。フル回転が必要な場合は `tween_rotation` の代わりにこちらを使用してください。
+
+| パラメータ | 型 | デフォルト | 説明 |
+|-----------|------|---------|-------------|
+| `axis` | `string` | **必須** | 回転軸: `"x"`、`"y"`、または `"z"`（ワールド空間） |
+| `angleDegrees` | `number` | **必須** | 回転角度（度数、360、720 なども可能） |
+| `durationMs` | `number` | **必須** | アニメーション時間（ミリ秒） |
+| `easing` | `string` | `"linear"` | イージング関数（[イージング関数](#イージング関数)を参照） |
+| `wait` | `boolean` | `false` | アニメーション完了を待ってから返す |
+
+**例 -- 3秒で Y 軸 360 度フル回転：**
+
+```json
+{
+  "axis": "y",
+  "angleDegrees": 360,
+  "durationMs": 3000
+}
+```
+
+---
+
 #### `tween_scale`
 
 アクティブキャラクターのスケールをスムーズにアニメーションします。各軸で `1.0` が通常サイズです。
@@ -81,6 +105,6 @@ sidebar_position: 3
 
 #### イージング関数
 
-3つのトゥイーンツール（`tween_position`、`tween_rotation`、`tween_scale`）はすべて同じイージング値を受け付けます：
+すべてのトゥイーンツール（`tween_position`、`tween_rotation`、`tween_scale`、`spin_character`）は同じイージング値を受け付けます：
 
 `linear`、`quadraticIn`、`quadraticOut`、`quadraticInOut`、`cubicIn`、`cubicOut`、`cubicInOut`、`quarticIn`、`quarticOut`、`quarticInOut`、`quinticIn`、`quinticOut`、`quinticInOut`、`sineIn`、`sineOut`、`sineInOut`、`circularIn`、`circularOut`、`circularInOut`、`exponentialIn`、`exponentialOut`、`exponentialInOut`、`elasticIn`、`elasticOut`、`elasticInOut`、`backIn`、`backOut`、`backInOut`、`bounceIn`、`bounceOut`、`bounceInOut`、`smoothStepIn`、`smoothStepOut`、`smoothStep`、`smootherStepIn`、`smootherStepOut`、`smootherStep`

@@ -6,7 +6,7 @@ slug: /reference/mcp-tools
 
 # MCP Reference
 
-The Desktop Homunculus MCP server exposes 20 tools, 4 resources, and 3 prompts via Streamable HTTP.
+The Desktop Homunculus MCP server exposes 18 tools, 4 resources, and 3 prompts via Streamable HTTP.
 
 Use this page as a map, then open the category page you need.
 
@@ -18,7 +18,7 @@ The MCP server is built into the Desktop Homunculus engine and accessible at `ht
 
 | Category | Coverage | Link |
 |---|---|---|
-| Character | 5 tools for spawn/select/remove/persona/snapshot | [Character](./mcp-tools/character) |
+| Character | Spawn, select, remove characters; manage persona and snapshot | [Character](./mcp-tools/character) |
 | Expression | 4 tools for expressions, reactions, animation, look-at | [Expression](./mcp-tools/expression) |
 | Movement | 4 tools for move and tween transforms | [Movement](./mcp-tools/movement) |
 | Audio | 3 tools for speech, SFX, and BGM control | [Audio](./mcp-tools/audio) |
@@ -37,14 +37,12 @@ The MCP server is built into the Desktop Homunculus engine and accessible at `ht
 | `select_character` | Character |
 | `set_persona` | Character |
 | `set_expression` | Expression |
-| `play_reaction` | Expression |
 | `play_animation` | Expression |
 | `set_look_at` | Expression |
 | `move_character` | Movement |
 | `tween_position` | Movement |
 | `tween_rotation` | Movement |
 | `tween_scale` | Movement |
-| `speak_message` | Audio |
 | `play_sound` | Audio |
 | `control_bgm` | Audio |
 | `open_webview` | Webview |
