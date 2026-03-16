@@ -19,7 +19,7 @@ Desktop Homunculus MODs require **Node.js 22 or later** to run TypeScript files 
 
 ## Module Map
 
-The SDK is organized into 18 modules, all available from the main `@hmcs/sdk` entry point, plus a separate `@hmcs/sdk/commands` entry point for bin script utilities.
+The SDK is organized into 18 modules, all available from the main `@hmcs/sdk` entry point, plus a separate `@hmcs/sdk/commands` entry point for MOD command utilities.
 
 | Module | Import | Description |
 |---|---|---|
@@ -34,7 +34,7 @@ The SDK is organized into 18 modules, all available from the main `@hmcs/sdk` en
 | **coordinates** | `import { coordinates } from "@hmcs/sdk"` | Convert between screen-space (viewport) and 3D world-space coordinates. |
 | **speech** | `import { speech } from "@hmcs/sdk"` | Utilities for converting phoneme data into timeline keyframes for lip-sync. |
 | **app** | `import { app } from "@hmcs/sdk"` | Application lifecycle -- health checks, platform info, engine version, loaded MODs. |
-| **mods** | `import { mods } from "@hmcs/sdk"` | List installed MODs, execute bin commands, stream command output, query menus. |
+| **mods** | `import { mods } from "@hmcs/sdk"` | List installed MODs, execute MOD commands, stream command output, query menus. |
 | **assets** | `import { assets } from "@hmcs/sdk"` | Query the asset registry -- list assets by type (`vrm`, `vrma`, `sound`, `image`, `html`) or MOD. |
 | **settings** | `import { settings } from "@hmcs/sdk"` | Read and update application settings (frame rate, rendering preferences). |
 | **shadowPanel** | `import { shadowPanel } from "@hmcs/sdk"` | Control the shadow overlay panel transparency for atmospheric effects. |
@@ -44,7 +44,7 @@ The SDK is organized into 18 modules, all available from the main `@hmcs/sdk` en
 
 ### Commands Sub-Entry Point
 
-`@hmcs/sdk/commands` is a **separate entry point** for utilities used in bin command scripts. It is intentionally excluded from the main `@hmcs/sdk` import because it depends on Node.js-specific APIs (`process.stdin`).
+`@hmcs/sdk/commands` is a **separate entry point** for utilities used in MOD command scripts. It is intentionally excluded from the main `@hmcs/sdk` import because it depends on Node.js-specific APIs (`process.stdin`).
 
 | Export | Description |
 |---|---|
@@ -73,7 +73,7 @@ const data = await input.parse(
 ```
 
 :::warning
-Do **not** import `@hmcs/sdk/commands` from within a MOD's main script or from browser-side code. It uses `process.stdin`, which is only available in Node.js bin scripts.
+Do **not** import `@hmcs/sdk/commands` from within a MOD's main script or from browser-side code. It uses `process.stdin`, which is only available in Node.js MOD command scripts.
 :::
 
 ## Quick Example

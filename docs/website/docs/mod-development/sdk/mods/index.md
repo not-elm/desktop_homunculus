@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # mods
 
-Discover installed MODs, execute bin commands with buffered or streaming output, and query registered context menu entries.
+Discover installed MODs, execute MOD commands with buffered or streaming output, and query registered context menu entries.
 
 ## Import
 
@@ -22,6 +22,6 @@ import { mods } from "@hmcs/sdk";
 |----------|-------------|
 | [list](./list) | Return metadata for every MOD discovered at startup |
 | [get](./get) | Retrieve a single MOD by name |
-| [executeCommand](./executeCommand) | Run a bin command and collect the buffered result |
-| [streamCommand](./streamCommand) | Run a bin command and stream real-time output events |
+| [executeCommand](./executeCommand) | Run a MOD command and collect the buffered result |
+| [streamCommand](./streamCommand) | Run a MOD command and stream real-time output events |
 | [menus](./menus) | Return all context menu entries registered across installed MODs |

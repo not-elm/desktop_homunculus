@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # signals
 
-Cross-process pub/sub messaging via Server-Sent Events (SSE). Signals let MOD services, bin commands, and WebViews communicate in real time.
+Cross-process pub/sub messaging via Server-Sent Events (SSE). Signals let MOD services, MOD commands, and WebViews communicate in real time.
 
 ## Import
 
