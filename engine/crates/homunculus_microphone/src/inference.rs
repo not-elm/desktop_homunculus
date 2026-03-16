@@ -57,7 +57,11 @@ fn inference_loop(
     #[cfg(not(any(feature = "cuda", feature = "metal")))]
     tracing::info!("Inference: CPU-only mode (no GPU features enabled)");
 
-    tracing::info!("Inference: n_threads={}", optimal_n_threads());
+    let max_audio_ctx = ctx.model_n_audio_ctx();
+    tracing::info!(
+        "Inference: n_threads={}, model_n_audio_ctx={max_audio_ctx}",
+        optimal_n_threads()
+    );
 
     let mut prev_seq: Option<u64> = None;
     let mut state = match ctx.create_state() {
@@ -89,8 +93,13 @@ fn inference_loop(
                     }
                 }
                 prev_seq = Some(envelope.seq);
+                let audio_ctx = compute_audio_ctx(
+                    len.max(MIN_INFERENCE_SAMPLES),
+                    max_audio_ctx,
+                );
                 tracing::info!(
-                    "Inference: received chunk seq={}, {len} samples ({secs:.1}s), queue_latency={latency_ms}ms",
+                    "Inference: received chunk seq={}, {len} samples ({secs:.1}s), \
+                     queue_latency={latency_ms}ms, audio_ctx={audio_ctx}",
                     envelope.seq
                 );
                 envelope
@@ -101,7 +110,7 @@ fn inference_loop(
 
         let inference_start = Instant::now();
         let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-            run_inference(&mut state, &envelope.samples, language)
+            run_inference(&mut state, &envelope.samples, language, max_audio_ctx)
         }));
         let inference_ms = inference_start.elapsed().as_millis();
         tracing::info!("Inference: completed in {inference_ms}ms");
@@ -184,9 +193,10 @@ fn run_inference(
     state: &mut WhisperState,
     samples: &[f32],
     language: &str,
+    max_audio_ctx: i32,
 ) -> Result<Option<(String, String)>, InferenceError> {
-    let params = create_whisper_params(language);
     let samples = pad_short_chunk(samples);
+    let params = create_whisper_params(language, samples.len(), max_audio_ctx);
 
     state
         .full(params, &samples)
@@ -284,13 +294,18 @@ fn optimal_n_threads() -> i32 {
     n as i32
 }
 
-fn create_whisper_params<'a>(language: &'a str) -> FullParams<'a, 'a> {
+fn create_whisper_params<'a>(
+    language: &'a str,
+    sample_count: usize,
+    max_audio_ctx: i32,
+) -> FullParams<'a, 'a> {
     let mut params = FullParams::new(SamplingStrategy::Greedy { best_of: 1 });
     params.set_suppress_nst(true);
     params.set_single_segment(true);
     params.set_n_threads(optimal_n_threads());
     params.set_no_context(true);
     params.set_temperature_inc(0.2);
+    params.set_audio_ctx(compute_audio_ctx(sample_count, max_audio_ctx));
 
     if language == "auto" {
         params.set_language(None);
@@ -299,6 +314,20 @@ fn create_whisper_params<'a>(language: &'a str) -> FullParams<'a, 'a> {
     }
 
     params
+}
+
+/// Compute the optimal `audio_ctx` value for the given sample count.
+///
+/// Restricts the encoder's attention window to the actual audio length plus
+/// a safety margin, avoiding unnecessary computation on zero-padded silence.
+///
+/// Uses the model's `model_n_audio_ctx` as the upper bound (queried at runtime)
+/// and 768 as the lower bound (upstream-recommended minimum for streaming).
+fn compute_audio_ctx(sample_count: usize, max_audio_ctx: i32) -> i32 {
+    let encoder_tokens = sample_count.div_ceil(320) as i32;
+    let with_margin = encoder_tokens + 128;
+    let aligned = (with_margin + 63) & !63; // ceil to multiple of 64
+    aligned.clamp(768, max_audio_ctx)
 }
 
 fn collect_segment_text(state: &WhisperState) -> String {
@@ -330,5 +359,38 @@ mod tests {
         let n = optimal_n_threads();
         assert!(n >= 1, "n_threads must be at least 1, got {n}");
         assert!(n <= 8, "n_threads must be at most 8, got {n}");
+    }
+
+    #[test]
+    fn compute_audio_ctx_clamps_to_minimum() {
+        // 1s = 16000 samples → 50 tokens + 128 = 178, ceil_64 = 192
+        // clamp(192, 768, 1500) = 768
+        assert_eq!(compute_audio_ctx(16000, 1500), 768);
+    }
+
+    #[test]
+    fn compute_audio_ctx_zero_samples() {
+        // 0 tokens + 128 = 128, ceil_64 = 128 → clamp to 768
+        assert_eq!(compute_audio_ctx(0, 1500), 768);
+    }
+
+    #[test]
+    fn compute_audio_ctx_large_chunk() {
+        // 30s = 480000 samples → 1500 tokens + 128 = 1628, ceil_64 = 1664
+        // clamp(1664, 768, 1500) = 1500
+        assert_eq!(compute_audio_ctx(480000, 1500), 1500);
+    }
+
+    #[test]
+    fn compute_audio_ctx_above_minimum() {
+        // ~15s = 240000 samples → 750 tokens + 128 = 878, ceil_64 = 896
+        // clamp(896, 768, 1500) = 896
+        assert_eq!(compute_audio_ctx(240000, 1500), 896);
+    }
+
+    #[test]
+    fn compute_audio_ctx_alignment() {
+        // 256000 samples → 800 tokens + 128 = 928, ceil_64 = 960
+        assert_eq!(compute_audio_ctx(256000, 1500), 960);
     }
 }
