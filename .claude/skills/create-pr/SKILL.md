@@ -24,6 +24,9 @@ Step 3: Diff retrieval + plausibility check  ──→  mismatch → revise or a
 Step 4: Full PR draft generation + approval
          │
   approved ↓
+Step 4.5: Label selection (AskUserQuestion multiSelect)
+         │
+         ↓
 Step 5: push + gh pr create/edit → report URL
 ```
 
@@ -99,12 +102,29 @@ Read `.github/pull_request_template.md` to obtain the current template structure
 
 Present the complete PR draft (title + body) and ask the user to approve or request edits. If edits are requested, apply them and re-present. Repeat until approved.
 
+### 4.5. Label Selection
+
+After the user approves the PR draft, present available labels for selection:
+
+1. **Fetch available labels**: Run `gh label list --json name,description --limit 100` to get all repo labels dynamically. If the command fails or returns no labels, skip this step entirely and proceed to Step 5.
+
+2. **Auto-add `breaking-change`**: If the breaking changes checklist item was marked `[x]` in Step 4's analysis, automatically include `breaking-change` in the selected labels and exclude it from the options presented to the user.
+
+3. **Split into groups of up to 4**: Partition the remaining labels into groups of 4. Each group becomes one `question` in the `AskUserQuestion` call.
+
+4. **Present via `AskUserQuestion`**: Use `multiSelect: true` on each question. Format each question title as `"Labels (N/M)"` to indicate pagination (e.g., `"Labels (1/3)"`, `"Labels (2/3)"`). Use the label `name` as the option `label` and the label `description` as the option `description` (if description is empty, omit it).
+   - If total labels ≤ 16: use a single `AskUserQuestion` call with up to 4 questions.
+   - If total labels > 16: use multiple `AskUserQuestion` calls sequentially.
+
+5. **Collect results**: Merge all selected labels from all questions/calls, plus any auto-added labels (e.g., `breaking-change`). If the user selects nothing and no labels were auto-added, proceed without labels.
+
 ### 5. Push + PR Create/Edit
 
 1. Push the branch: `git push -u origin <current-branch>`. If push fails, report the error and abort. Do NOT use `--force` unless the user explicitly requests it.
 2. Create or update the PR:
-   - **Create mode**: `gh pr create --base <base-branch> --title "<title>" --body "<body>"`
-   - **Update mode**: `gh pr edit --title "<title>" --body "<body>"`
+   - **Create mode**: `gh pr create --base <base-branch> --title "<title>" --body "<body>"` — append `-l <label>` for each selected label (e.g., `gh pr create ... -l bug -l enhancement`).
+   - **Update mode**: `gh pr edit --title "<title>" --body "<body>"` — append `--add-label <label>` for each selected label (e.g., `gh pr edit ... --add-label bug --add-label enhancement`).
+   - If no labels were selected, omit the label flags entirely.
 3. Report the PR URL to the user.
 
 ## Constraints
