@@ -1,19 +1,19 @@
 ---
-title: "Bin Commands"
+title: "MOD Commands"
 sidebar_position: 7
 ---
 
-# Bin Commands
+# MOD Commands
 
-Bin commands are on-demand scripts that MODs expose through the `bin` field in `package.json`. Unlike services that run automatically at startup, bin commands run only when explicitly invoked through the HTTP API.
+MOD commands are on-demand scripts that MODs expose through the `bin` field in `package.json`. Unlike services that run automatically at startup, MOD commands run only when explicitly invoked through the HTTP API.
 
-See [Package Configuration](./project-setup/package-json.md#bin-commands) for how to declare the `bin` field in your `package.json`.
+See [Package Configuration](./project-setup/package-json.md#mod-commands) for how to declare the `bin` field in your `package.json`.
 
-## Writing a Bin Command Script
+## Writing a MOD Command Script
 
 ### Shebang Line
 
-Every TypeScript bin command must start with a shebang line that enables direct execution without a compile step:
+Every TypeScript MOD command must start with a shebang line that enables direct execution without a compile step:
 
 ```typescript
 #!/usr/bin/env tsx
@@ -29,7 +29,7 @@ Node.js 22 or later is required for tsx. See [Installation](/getting-started/ins
 
 ### Parsing Input with `input.parse`
 
-Bin commands receive input via stdin as JSON. The SDK provides `input.parse` from `@hmcs/sdk/commands` to read, parse, and validate this input using a Zod schema.
+MOD commands receive input via stdin as JSON. The SDK provides `input.parse` from `@hmcs/sdk/commands` to read, parse, and validate this input using a Zod schema.
 
 ```typescript
 import { z } from "zod";
@@ -68,7 +68,7 @@ const raw = await input.read();
 
 ### Output Conventions
 
-Bin commands communicate results through stdout and stderr:
+MOD commands communicate results through stdout and stderr:
 
 | Stream | Purpose | Format |
 |--------|---------|--------|
@@ -174,7 +174,7 @@ try {
 
 ### HTTP API
 
-Bin commands are invoked via the HTTP API:
+MOD commands are invoked via the HTTP API:
 
 ```
 POST http://localhost:3100/commands/execute
@@ -213,7 +213,7 @@ The `exit` event may also include a `signal` field (e.g., `"15"`) if the process
 
 ### SDK Wrappers
 
-The `@hmcs/sdk` provides two convenience functions for calling bin commands from other MOD scripts:
+The `@hmcs/sdk` provides two convenience functions for calling MOD commands from other MOD scripts:
 
 - **`mods.executeCommand(request)`** — Buffers all output and returns a single `CommandResult` with `stdout`, `stderr`, `exitCode`
 - **`mods.streamCommand(request)`** — Returns an `AsyncGenerator<CommandEvent>` for real-time streaming
@@ -222,7 +222,7 @@ See the [Mods API](./sdk/mods/) reference for full details.
 
 ## Complete Example
 
-Here is a complete bin command that builds a greeting message based on input parameters.
+Here is a complete MOD command that builds a greeting message based on input parameters.
 
 **`package.json`** (relevant fields):
 
