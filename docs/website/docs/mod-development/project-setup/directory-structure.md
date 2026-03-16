@@ -72,7 +72,7 @@ This example has no `index.ts` at the root -- it uses only on-demand commands an
 | `package.json` | Package config with `homunculus` field | Yes |
 | `index.ts` | Service (runs on app launch) | No |
 | `assets/` | Binary assets (VRM, VRMA, sounds, images) | No |
-| `commands/` or `bin/` | On-demand bin command scripts | No |
+| `commands/` or `bin/` | MOD command scripts | No |
 | `ui/` | WebView UI app (React + Vite) | No |
 | `ui/dist/` | Built UI output (declared as `html` asset) | Only if `ui/` exists |
 | `lib/` | Shared utility code used by scripts | No |
