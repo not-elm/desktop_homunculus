@@ -231,7 +231,7 @@ Here is a complete MOD command that builds a greeting message based on input par
   "name": "my-mod",
   "type": "module",
   "bin": {
-    "my-mod:greet": "bin/greet.ts"
+    "my-mod:greet": "commands/greet.ts"
   },
   "dependencies": {
     "@hmcs/sdk": "latest",
@@ -240,7 +240,7 @@ Here is a complete MOD command that builds a greeting message based on input par
 }
 ```
 
-**`bin/greet.ts`**:
+**`commands/greet.ts`**:
 
 ```typescript
 #!/usr/bin/env tsx

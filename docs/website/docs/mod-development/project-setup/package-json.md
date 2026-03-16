@@ -181,9 +181,9 @@ MOD commands are invoked via `POST /mods/{mod_name}/bin/{command}` with a JSON b
 ```json
 {
   "bin": {
-    "voicevox:speak": "bin/speak.ts",
-    "voicevox:speakers": "bin/speakers.ts",
-    "voicevox:initialize": "bin/initialize.ts"
+    "voicevox:speak": "commands/speak.ts",
+    "voicevox:speakers": "commands/speakers.ts",
+    "voicevox:initialize": "commands/initialize.ts"
   }
 }
 ```

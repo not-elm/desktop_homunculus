@@ -51,7 +51,7 @@ my-settings-mod/
 
 ### `commands/`
 
-MOD commands exposed via the `"bin"` field in `package.json`. These run only when explicitly called through the HTTP API (`POST /commands/execute`). The conventional directory name is `commands/` or `bin/`.
+MOD commands exposed via the `"bin"` field in `package.json`. These run only when explicitly called through the HTTP API (`POST /commands/execute`). The conventional directory name is `commands/`.
 
 ### `ui/`
 
@@ -72,7 +72,7 @@ This example has no `index.ts` at the root -- it uses only MOD commands and a UI
 | `package.json` | Package config with `homunculus` field | Yes |
 | `index.ts` | Service (runs on app launch) | No |
 | `assets/` | Binary assets (VRM, VRMA, sounds, images) | No |
-| `commands/` or `bin/` | MOD command scripts | No |
+| `commands/` | MOD command scripts | No |
 | `ui/` | WebView UI app (React + Vite) | No |
 | `ui/dist/` | Built UI output (declared as `html` asset) | Only if `ui/` exists |
 | `lib/` | Shared utility code used by scripts | No |
@@ -80,7 +80,7 @@ This example has no `index.ts` at the root -- it uses only MOD commands and a UI
 ## Conventions
 
 - **Store binary assets in `assets/`.** The directory name is a convention, not a requirement -- actual file paths are declared in `package.json`.
-- **Place MOD command scripts in `commands/` or `bin/`.** Both are common across official MODs.
+- **Place MOD command scripts in `commands/`.** This is the standard across official MODs.
 - **UI apps live in `ui/` with build output in `ui/dist/`.**
 - **Shared helper code goes in `lib/`.**
 - **The only required file is `package.json`.** Everything else depends on what your MOD does.
