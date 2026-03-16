@@ -29,7 +29,7 @@ MOD は以下の機能を自由に組み合わせられます。1 つの MOD で
 
 - **サービスの実行** — アプリ起動時に長時間稼働する TypeScript プロセスを実行します（`homunculus.service` フィールドで宣言）。サービスは通常、キャラクターやイベントリスナーのセットアップに使用されます。`@hmcs/menu` MOD はサービスを使って右クリックメニューのオーバーレイを初期化します。
 
-- **オンデマンドコマンドの公開** — 他の MOD や AI エージェントが HTTP API 経由で呼び出せるコマンドを提供します（`bin` フィールドで宣言）。`@hmcs/voicevox` MOD は音声合成用の `voicevox:speak` と `voicevox:speakers` コマンドを公開しています。
+- **オンデマンドコマンドの公開** — 他の MOD や AI エージェントが HTTP API 経由で呼び出せるコマンドを提供します（`bin` フィールドで宣言）。例えば`@hmcs/voicevox` MOD は音声合成用の `voicevox:speak` と `voicevox:speakers` コマンドを公開しています。
 
 - **UI パネルの埋め込み** — WebView ベースのインターフェース（React + Vite）を HTML アセットとしてバンドルします。`@hmcs/character-settings` MOD は HTML アセット、パネルを開く `bin` コマンド、メニューエントリを組み合わせており、機能の連携例を示しています。
 

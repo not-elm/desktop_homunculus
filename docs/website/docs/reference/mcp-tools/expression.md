@@ -5,7 +5,7 @@ sidebar_position: 2
 
 # Expression
 
-Expression tools control facial weights, reaction presets, animation playback, and look-at behavior.
+Expression tools control facial weights, animation playback, and look-at behavior.
 
 #### `set_expression`
 
@@ -26,34 +26,6 @@ Common expression names: `happy`, `sad`, `angry`, `surprised`, `relaxed`, `neutr
   "mode": "modify"
 }
 ```
-
-For preset reactions with bundled sounds and animations, use `play_reaction` instead.
-
----
-
-#### `play_reaction`
-
-Play a named reaction preset on the active character. Each preset combines a facial expression, an optional VRMA animation, and an optional sound effect.
-
-Reactions gracefully degrade — if the animation or sound asset is not installed, the expression still plays.
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `reaction` | `string` | **required** | Reaction name (see table below) |
-| `message` | `string` | — | Optional text message associated with the reaction |
-
-**Available reactions:**
-
-| Name | Expression | Animation | Sound |
-|------|-----------|-----------|-------|
-| `happy` | happy 1.0 | idle-happy | success |
-| `sad` | sad 0.8 | — | — |
-| `confused` | surprised 0.4 | — | — |
-| `error` | angry 0.3, sad 0.4 | — | error |
-| `success` | happy 0.9 | celebrate | success |
-| `thinking` | neutral 0.5 | thinking | — |
-| `surprised` | surprised 0.9 | — | notification |
-| `neutral` | — | — | — |
 
 ---
 
@@ -88,4 +60,3 @@ Control where the active character's eyes look.
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `mode` | `"cursor" \| "none"` | **required** | `"cursor"` follows the mouse pointer; `"none"` disables look-at |
-

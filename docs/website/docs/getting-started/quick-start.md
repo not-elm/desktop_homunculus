@@ -9,7 +9,7 @@ sidebar_position: 3
 Make sure you have completed the [Installation](/getting-started/installation) guide. Desktop Homunculus and the official MODs should be installed and the app should be running.
 :::
 
-## Meet Your Character
+## Meet Elmer
 
 When you launch Desktop Homunculus with the official MODs installed, **Elmer** appears on your desktop. Elmer is the default character -- a VRM 3D model rendered in a transparent window that floats above your other applications.
 
@@ -19,17 +19,17 @@ Elmer comes with built-in animations and behaviors powered by the `@hmcs/elmer` 
 
 ### Drag and Move
 
-Click and drag the character to reposition it anywhere on your desktop. While being dragged, Elmer switches to a "grabbed" animation. Release to drop the character at the new position.
+Click and drag the character to reposition it anywhere on your desktop. While being dragged, Elmer switches to a "drag" state. Release to drop the character at the new position.
 
 ### Character States
 
-The character responds to different states, each with its own animation:
+The character responds to different states, each with its own behavior:
 
-| State | Trigger | Animation |
-|---|---|---|
-| **Idle** | Default state | Standing idle with hands clasped, eyes follow your cursor |
-| **Grabbed** | Click and drag the character | Reactive pose while being moved |
-| **Sitting** | Drop the character on a window edge | Seated idle loop |
+| State | Trigger |
+|---|---|
+| **`idle`** | Default state |
+| **`drag`** | Click and drag the character |
+| **`sitting`** | Drop the character on a window edge |
 
 ### Right-Click Menu
 
@@ -40,8 +40,6 @@ Right-click the character to open the context menu overlay. From here you can ac
 Open the Settings panel through the right-click context menu. The settings UI lets you configure the application and MOD-specific options.
 
 ### Exiting the App
-
-Desktop Homunculus runs as a transparent overlay without a standard window title bar, so there is no close button. To quit the application:
 
 1. Find the **Desktop Homunculus** icon in the **system tray** (notification area)
 2. Click the tray icon to open the tray menu

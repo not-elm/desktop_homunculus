@@ -5,7 +5,7 @@ sidebar_position: 4
 
 # Other MCP Clients
 
-Any MCP-compatible client can connect to Desktop Homunculus. The MCP server uses **Streamable HTTP transport** — the client connects to the engine's HTTP endpoint directly.
+Any MCP-compatible client can connect to Desktop Homunculus. The MCP server uses **Streamable HTTP** — the client connects to the engine's HTTP endpoint directly.
 
 ## Prerequisites
 

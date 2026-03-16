@@ -74,7 +74,7 @@ HMCS アセットとして登録可能な `.vrma` ファイルが準備できた
 
 **公式ドキュメントを参照**
 
-- [SDK: VRM アニメーション](../sdk/vrm/animations.md)
+- [SDK: VRM playVrma](../sdk/vrm/playVrma)
 
 **期待される結果**
 ターゲットキャラクターでアニメーションが正しく再生され、期待されるポーズと表情の動作が確認できた状態。
@@ -84,7 +84,7 @@ HMCS アセットとして登録可能な `.vrma` ファイルが準備できた
 エクスポートした `.vrma` ファイルを MOD の `package.json` に登録し、SDK から再生します。
 
 - [パッケージ設定](../project-setup/package-json.md)
-- [SDK: VRM アニメーション](../sdk/vrm/animations.md)
+- [SDK: VRM playVrma](../sdk/vrm/playVrma)
 
 ## トラブルシューティングと更新
 

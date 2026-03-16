@@ -5,7 +5,7 @@ sidebar_position: 3
 
 # Asset IDs
 
-Asset IDs are unique identifiers that reference files across the entire MOD system. Whenever you spawn a VRM model, play an animation, or open a WebView, you use an asset ID to tell the engine which file to load. The only hard requirement is that every asset ID is **globally unique** — duplicate IDs are logged as warnings and silently skipped.
+Asset IDs are unique identifiers that reference files across the entire MOD system. Whenever you spawn a VRM model, play an animation, or open a WebView, you use an asset ID to tell the engine which file to load. The only hard requirement is that every asset ID is **globally unique** — duplicate IDs are logged as warnings and skipped.
 
 ## Recommended Convention
 
@@ -128,7 +128,7 @@ A MOD can reference assets from any other installed MOD. For example, a MOD that
 ```typescript
 // This MOD uses an animation from @hmcs/assets
 await character.playVrma({
-  asset: "vrma:idle-maid",  // Defined in @hmcs/assets, not in this MOD
+  asset: "vrma:idle-maid", // Defined in @hmcs/assets, not in this MOD
 });
 ```
 
