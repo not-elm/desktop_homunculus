@@ -77,7 +77,6 @@ pub mod rpc_registry;
 mod schema;
 mod system_param;
 mod system_set;
-pub mod rpc_registry;
 
 pub mod prelude {
     pub use crate::{
