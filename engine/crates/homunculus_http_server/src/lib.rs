@@ -261,10 +261,7 @@ fn rpc_router(rpc_registry: Arc<RwLock<RpcRegistry>>) -> Router {
             "/rpc/registrations",
             axum::routing::get(route::rpc::list_registrations),
         )
-        .route(
-            "/rpc/{mod_name}/{method}",
-            axum::routing::post(route::rpc::proxy),
-        )
+        .route("/rpc/call", axum::routing::post(route::rpc::call))
         .with_state(rpc_registry)
 }
 

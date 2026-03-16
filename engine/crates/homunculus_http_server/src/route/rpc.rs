@@ -1,11 +1,11 @@
 //! RPC registration and proxy endpoints for MOD services.
 //!
 //! MOD services call `POST /rpc/register` on startup to publish their
-//! available methods.  Callers proxy requests through `POST /rpc/{mod}/{method}`,
-//! which forwards the body to the MOD service's local HTTP server.
+//! available methods.  Callers invoke `POST /rpc/call` with `modName`,
+//! `method`, and optional `body` in the JSON request body.
 
 use axum::Json;
-use axum::extract::{Path, State};
+use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use homunculus_core::rpc_registry::{RpcMethodMeta, RpcRegistration, RpcRegistry};
@@ -36,6 +36,16 @@ pub struct DeregisterRequest {
 #[serde(rename_all = "camelCase")]
 pub struct RegistrationsResponse {
     pub registrations: HashMap<String, RpcRegistration>,
+}
+
+/// Body for `POST /rpc/call`.
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct CallRequest {
+    pub mod_name: String,
+    pub method: String,
+    #[serde(default)]
+    pub body: Option<serde_json::Value>,
 }
 
 /// Register or update a MOD service's RPC methods.
@@ -91,29 +101,31 @@ pub async fn list_registrations(State(registry): State<Arc<RwLock<RpcRegistry>>>
     .into_response()
 }
 
-/// Proxy `POST /rpc/{mod_name}/{method}` to the MOD service's local HTTP server.
+/// Proxy `POST /rpc/call` to the MOD service's local HTTP server.
+///
+/// The caller specifies `modName` and `method` in the JSON body, along with
+/// an optional `body` field that is forwarded to the MOD service.
 ///
 /// Error codes:
 /// - `503` — MOD not registered (not yet started or crashed)
 /// - `404` — method unknown for this MOD
 /// - `504` — MOD service timed out
 /// - `502` — MOD service refused the connection
-pub async fn proxy(
+pub async fn call(
     State(registry): State<Arc<RwLock<RpcRegistry>>>,
-    Path((mod_name, method)): Path<(String, String)>,
-    body: axum::body::Bytes,
+    Json(req): Json<CallRequest>,
 ) -> Response {
     let (port, timeout_ms) = {
         let reg = match read_registry(&registry) {
             Ok(r) => r,
             Err(e) => return e,
         };
-        match resolve_proxy_target(&reg, &mod_name, &method) {
+        match resolve_proxy_target(&reg, &req.mod_name, &req.method) {
             Ok(t) => t,
             Err(e) => return e,
         }
     };
-    forward_to_mod(port, &method, &mod_name, timeout_ms, body).await
+    forward_to_mod(port, &req.method, &req.mod_name, timeout_ms, req.body).await
 }
 
 /// Returns a 500 registry-lock-poisoned error response.
@@ -175,19 +187,18 @@ async fn forward_to_mod(
     method: &str,
     mod_name: &str,
     timeout_ms: u64,
-    body: axum::body::Bytes,
+    body: Option<serde_json::Value>,
 ) -> Response {
     let url = format!("http://127.0.0.1:{port}/{method}");
     let timeout = std::time::Duration::from_millis(timeout_ms);
-    let result = tokio::time::timeout(
-        timeout,
-        reqwest::Client::new()
-            .post(&url)
+    let mut request = reqwest::Client::new().post(&url);
+    request = match body {
+        Some(value) => request.json(&value),
+        None => request
             .header("content-type", "application/json")
-            .body(body)
-            .send(),
-    )
-    .await;
+            .header("content-length", "0"),
+    };
+    let result = tokio::time::timeout(timeout, request.send()).await;
     match result {
         Err(_) => (
             StatusCode::GATEWAY_TIMEOUT,
