@@ -207,5 +207,5 @@ Restart Desktop Homunculus, right-click a character, and select **Wave** from th
 - **[Tray Menus](./tray-menus.md)** -- Application-wide tray menu items
 - **[Bin Commands](./bin-commands.md)** -- Writing and invoking on-demand scripts
 - **[Webviews](./sdk/webviews)** -- Embedding HTML UIs in 3D space
-- **[Mods API](./sdk/mods-api)** -- Programmatic menu listing and command execution
+- **[Mods API](./sdk/mods/)** -- Programmatic menu listing and command execution
 - **[Package Configuration](./project-setup/package-json.md)** -- Full `package.json` reference
