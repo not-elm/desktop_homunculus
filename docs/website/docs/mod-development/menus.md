@@ -5,7 +5,7 @@ sidebar_position: 8
 
 # Context Menus
 
-MODs can add items to the right-click context menu that appears when a user right-clicks a VRM character. Each menu item maps to a [bin command](./bin-commands.md) that runs when the user selects it. The command receives the entity ID of the right-clicked character via stdin, so it can act on that specific character.
+MODs can add items to the right-click context menu that appears when a user right-clicks a VRM character. Each menu item maps to a [MOD command](./commands.md) that runs when the user selects it. The command receives the entity ID of the right-clicked character via stdin, so it can act on that specific character.
 
 When Desktop Homunculus starts, it reads the `homunculus.menus` array from every installed MOD's `package.json` and registers all menu items. When the user right-clicks a character, all registered items appear in the context menu.
 
@@ -41,7 +41,7 @@ Add a `menus` array to the `homunculus` field in your `package.json`. Each entry
 |-------|------|-------------|
 | `id` | `string` | Unique identifier for this menu item within the MOD |
 | `text` | `string` | Label displayed in the right-click menu |
-| `command` | `string` | Bin command to execute when selected (must match a key in `bin`) |
+| `command` | `string` | MOD command to execute when selected (must match a key in `bin`) |
 
 :::warning
 The `command` value must exactly match a key in the `bin` field of your `package.json`. If the command is not found, the menu item will appear but do nothing when clicked.
@@ -49,7 +49,7 @@ The `command` value must exactly match a key in the `bin` field of your `package
 
 ## Handling Menu Commands
 
-When a user selects a menu item, the corresponding bin command runs with a JSON object on stdin containing the entity ID of the right-clicked character:
+When a user selects a menu item, the corresponding MOD command runs with a JSON object on stdin containing the entity ID of the right-clicked character:
 
 ```json
 { "linkedVrm": 42 }
@@ -75,7 +75,7 @@ try {
 }
 ```
 
-`input.parseMenu()` reads the `{ "linkedVrm": ... }` JSON from stdin and returns a `Vrm` instance for the right-clicked character. See [Bin Commands](./bin-commands.md) for full details on shebangs, `input.parse`, error handling, and output conventions.
+`input.parseMenu()` reads the `{ "linkedVrm": ... }` JSON from stdin and returns a `Vrm` instance for the right-clicked character. See [MOD Commands](./commands.md) for full details on shebangs, `input.parse`, error handling, and output conventions.
 
 ## Opening a Webview
 
@@ -205,7 +205,7 @@ Restart Desktop Homunculus, right-click a character, and select **Wave** from th
 ## Related Pages
 
 - **[Tray Menus](./tray-menus.md)** -- Application-wide tray menu items
-- **[Bin Commands](./bin-commands.md)** -- Writing and invoking on-demand scripts
+- **[MOD Commands](./commands.md)** -- Writing and invoking MOD commands
 - **[Webviews](./sdk/webviews)** -- Embedding HTML UIs in 3D space
 - **[Mods API](./sdk/mods/)** -- Programmatic menu listing and command execution
 - **[Package Configuration](./project-setup/package-json.md)** -- Full `package.json` reference

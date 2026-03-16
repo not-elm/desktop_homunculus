@@ -613,6 +613,34 @@ paths:
       responses:
         '200':
           description: Preference saved
+  /settings/fps:
+    get:
+      tags:
+      - settings
+      summary: Get the current frame rate (FPS).
+      operationId: get
+      responses:
+        '200':
+          description: Current FPS
+          content:
+            text/plain:
+              schema:
+                type: number
+                format: double
+    put:
+      tags:
+      - settings
+      summary: Set the frame rate (FPS). Persists and applies immediately.
+      operationId: put
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetFpsBody'
+        required: true
+      responses:
+        '200':
+          description: FPS updated
   /shadow-panel/alpha:
     get:
       tags:
@@ -1971,7 +1999,7 @@ components:
           type: array
           items:
             type: string
-          description: Available bin command names (paths are not included).
+          description: Available MOD command names (paths are not included).
         description:
           type:
           - string
@@ -1995,6 +2023,11 @@ components:
           - string
           - 'null'
           description: Service script path (long-running process, auto-launched at startup).
+        tray:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/TrayMenuItem'
+            description: Tray menu item contributed by this mod.
         version:
           type: string
     ModMenu:
@@ -2246,6 +2279,15 @@ components:
         volume:
           type: number
           format: double
+    SetFpsBody:
+      type: object
+      required:
+      - fps
+      properties:
+        fps:
+          type: number
+          format: double
+          description: Frame rate in frames per second.
     SetLinkedVrmRequest:
       type: object
       required:
@@ -2443,6 +2485,30 @@ components:
           items:
             type: number
             format: float
+    TrayMenuItem:
+      type: object
+      description: |-
+        A single tray menu entry contributed by a mod.
+
+        Has either `command` (leaf — clickable) or `items` (submenu), never both.
+      required:
+      - id
+      - text
+      properties:
+        command:
+          type:
+          - string
+          - 'null'
+        id:
+          type: string
+        items:
+          type:
+          - array
+          - 'null'
+          items:
+            $ref: '#/components/schemas/TrayMenuItem'
+        text:
+          type: string
     TweenPositionRequest:
       type: object
       required:
@@ -2800,6 +2866,8 @@ tags:
   description: User preferences
 - name: signals
   description: Pub/sub signal system
+- name: settings
+  description: Application settings
 - name: shadow-panel
   description: Shadow panel transparency
 - name: displays

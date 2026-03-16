@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # mods
 
-インストール済み MOD の検出、バッファリングまたはストリーミング出力による bin コマンドの実行、登録済みコンテキストメニューエントリの照会を行います。
+インストール済み MOD の検出、バッファリングまたはストリーミング出力による MOD コマンドの実行、登録済みコンテキストメニューエントリの照会を行います。
 
 ## インポート
 
@@ -22,6 +22,6 @@ import { mods } from "@hmcs/sdk";
 |------|------|
 | [list](./list) | 起動時に検出されたすべての MOD のメタデータを返す |
 | [get](./get) | 名前で単一の MOD を取得する |
-| [executeCommand](./executeCommand) | bin コマンドを実行しバッファリングされた結果を収集する |
-| [streamCommand](./streamCommand) | bin コマンドを実行しリアルタイム出力イベントをストリームする |
+| [executeCommand](./executeCommand) | MOD コマンドを実行しバッファリングされた結果を収集する |
+| [streamCommand](./streamCommand) | MOD コマンドを実行しリアルタイム出力イベントをストリームする |
 | [menus](./menus) | インストール済み MOD 全体のコンテキストメニューエントリをすべて返す |

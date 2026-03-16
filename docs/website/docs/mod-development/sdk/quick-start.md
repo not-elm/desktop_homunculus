@@ -5,7 +5,7 @@ sidebar_position: 2
 
 # SDK Quick Start
 
-Get started with `@hmcs/sdk` -- installation, your first service, and the commands entry point for bin scripts.
+Get started with `@hmcs/sdk` -- installation, your first service, and the commands entry point for MOD command scripts.
 
 :::tip
 This page covers the SDK itself. For a full end-to-end guide to creating a MOD (project setup, `package.json`, assets, installation), see the [MOD Quick Start](../quick-start).
@@ -71,10 +71,10 @@ MODs react to real-time events using two mechanisms:
 
 ## Commands Entry Point
 
-`@hmcs/sdk/commands` is a **separate entry point** for bin scripts (on-demand commands declared in `package.json` under `"bin"`). It provides stdin parsing and structured output helpers. See the [Commands](./commands) page for the full API reference.
+`@hmcs/sdk/commands` is a **separate entry point** for MOD command scripts (declared in `package.json` under `"bin"`). It provides stdin parsing and structured output helpers. See the [Commands](./commands) page for the full API reference.
 
 :::warning
-Do **not** import `@hmcs/sdk/commands` from a MOD's main script or from browser-side code. It uses `process.stdin`, which is only available in Node.js bin scripts.
+Do **not** import `@hmcs/sdk/commands` from a MOD's main script or from browser-side code. It uses `process.stdin`, which is only available in Node.js MOD command scripts.
 :::
 
 ## Next Steps

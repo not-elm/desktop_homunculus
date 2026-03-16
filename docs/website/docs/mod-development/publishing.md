@@ -22,7 +22,7 @@ When publishing your own MOD, use one of these conventions:
 - **Scoped** (recommended) — Use your own npm scope: `@yourname/hmcs-my-mod`
 - **Unscoped** — Use a `hmcs-` prefix: `hmcs-my-mod`
 
-The package `name` in `package.json` is what users pass to `hmcs mod install`. It is also used to derive the mod name for asset IDs, menu entries, and bin commands. See [Asset IDs](./project-setup/asset-ids.md) for details.
+The package `name` in `package.json` is what users pass to `hmcs mod install`. It is also used to derive the mod name for asset IDs, menu entries, and MOD commands. See [Asset IDs](./project-setup/asset-ids.md) for details.
 
 ## Before You Publish
 

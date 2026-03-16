@@ -15,7 +15,7 @@ MOD の `package.json` には以下が含まれます：
 |---|---|---|
 | `name` | パッケージ名（アセット ID の導出に使用） | はい |
 | `type` | ES モジュールサポートのため `"module"` であること | はい |
-| `bin` | オンデマンドコマンド（HTTP API 経由で呼び出し） | いいえ |
+| `bin` | MOD コマンド（HTTP API 経由で呼び出し） | いいえ |
 | `homunculus` | エンジンメタデータ：サービス、アセット、メニュー、トレイ | はい |
 | `dependencies` | SDK 機能使用時は `@hmcs/sdk` を含む必要あり | いいえ |
 
@@ -110,7 +110,7 @@ MOD にバンドルされるファイルを宣言します。各エントリは*
 }
 ```
 
-ユーザーがキャラクターを右クリックして「Character Settings」を選択すると、エンジンは `open-ui` bin コマンドを呼び出します。
+ユーザーがキャラクターを右クリックして「Character Settings」を選択すると、エンジンは `open-ui` MOD コマンドを呼び出します。
 
 ### `tray`
 
@@ -162,9 +162,9 @@ MOD にバンドルされるファイルを宣言します。各エントリは*
 サービススクリプトはアプリが起動するたびに実行されます。エラーを適切に処理してください。未処理の例外が発生するとスクリプトプロセスが終了します。
 :::
 
-## Bin コマンド {#bin-commands}
+## MOD コマンド {#mod-commands}
 
-`bin` フィールドは HTTP API 経由で呼び出せるオンデマンドスクリプトを公開します。サービススクリプトとは異なり、これらのスクリプトは明示的に呼び出された場合にのみ実行されます。
+`bin` フィールドは HTTP API 経由で呼び出せる MOD コマンドを公開します。サービススクリプトとは異なり、これらのスクリプトは明示的に呼び出された場合にのみ実行されます。
 
 ```json
 {
@@ -174,22 +174,22 @@ MOD にバンドルされるファイルを宣言します。各エントリは*
 }
 ```
 
-Bin コマンドは JSON ボディを持つ `POST /mods/{mod_name}/bin/{command}` 経由で呼び出されます。スクリプトは `@hmcs/sdk/commands` の `input.parse` を使って stdin から入力を受け取ります。
+MOD コマンドは JSON ボディを持つ `POST /mods/{mod_name}/bin/{command}` 経由で呼び出されます。スクリプトは `@hmcs/sdk/commands` の `input.parse` を使って stdin から入力を受け取ります。
 
 **例** -- `@hmcs/voicevox` MOD は TTS コマンドを公開します：
 
 ```json
 {
   "bin": {
-    "voicevox:speak": "bin/speak.ts",
-    "voicevox:speakers": "bin/speakers.ts",
-    "voicevox:initialize": "bin/initialize.ts"
+    "voicevox:speak": "commands/speak.ts",
+    "voicevox:speakers": "commands/speakers.ts",
+    "voicevox:initialize": "commands/initialize.ts"
   }
 }
 ```
 
 :::tip
-Bin コマンド名は慣例的に MOD 名のプレフィックスを付けます（例：`voicevox:speak`）。これは他の MOD との衝突を避けるためです。
+MOD コマンド名は慣例的に MOD 名のプレフィックスを付けます（例：`voicevox:speak`）。これは他の MOD との衝突を避けるためです。
 :::
 
 ## 依存関係

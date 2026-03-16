@@ -232,9 +232,9 @@ const vrm = await webview?.linkedVrm();
 
 `Webview.current()` は CEF がすべての WebView コンテキストに注入する `window.WEBVIEW_ENTITY` 値を読み取ります。
 
-### Bin コマンドによるオープン
+### MOD コマンドによるオープン
 
-WebView をオンデマンドで開く bin コマンドを作成します。`commands/open-ui.ts` を追加します：
+WebView をオンデマンドで開く MOD コマンドを作成します。`commands/open-ui.ts` を追加します：
 
 ```typescript
 #!/usr/bin/env tsx
@@ -283,7 +283,7 @@ try {
 ]
 ```
 
-`command` の値は `"bin"` のキーに対応するため、メニューエントリをクリックすると `open-ui` bin コマンドが実行されます。
+`command` の値は `"bin"` のキーに対応するため、メニューエントリをクリックすると `open-ui` MOD コマンドが実行されます。
 
 ### 開発ワークフロー
 

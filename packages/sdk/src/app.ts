@@ -60,7 +60,7 @@ export namespace app {
         license: string | null;
         /** Whether the mod has a running main process. */
         hasMain: boolean;
-        /** Available bin command names. */
+        /** Available MOD command names. */
         binCommands: string[];
         /** Registered asset IDs. */
         assetIds: string[];

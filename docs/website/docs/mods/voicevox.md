@@ -23,7 +23,7 @@ hmcs mod install @hmcs/voicevox
 
 ## Features
 
-The VoiceVox MOD provides three [bin commands](/mod-development/bin-commands) that other MODs and MCP tools can invoke:
+The VoiceVox MOD provides three [MOD commands](/mod-development/commands) that other MODs and MCP tools can invoke:
 
 ### `voicevox:speak`
 
