@@ -4,10 +4,10 @@ sidebar_position: 1
 
 # commands
 
-bin スクリプト用の stdin/stdout ユーティリティです。`@hmcs/sdk/commands` は、MOD の `package.json` の `"bin"` で宣言されるオンデマンドコマンド用の構造化された入力パースと出力ヘルパーを提供する **別エントリーポイント** です。
+MOD コマンドスクリプト用の stdin/stdout ユーティリティです。`@hmcs/sdk/commands` は、MOD の `package.json` の `"bin"` で宣言される MOD コマンド用の構造化された入力パースと出力ヘルパーを提供する **別エントリーポイント** です。
 
 :::warning
-MOD のメインスクリプトやブラウザ側のコードから `@hmcs/sdk/commands` をインポート **しないでください**。`process.stdin` やその他の Node.js API を使用しており、bin スクリプトのコンテキストでのみ利用可能です。
+MOD のメインスクリプトやブラウザ側のコードから `@hmcs/sdk/commands` をインポート **しないでください**。`process.stdin` やその他の Node.js API を使用しており、MOD コマンドスクリプトのコンテキストでのみ利用可能です。
 :::
 
 ## インポート

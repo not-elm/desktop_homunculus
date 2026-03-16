@@ -23,7 +23,7 @@ hmcs mod install @hmcs/voicevox
 
 ## 機能
 
-VoiceVox MOD は、他の MOD や MCP ツールから呼び出せる 3 つの [bin コマンド](/mod-development/bin-commands)を提供します：
+VoiceVox MOD は、他の MOD や MCP ツールから呼び出せる 3 つの [MOD コマンド](/mod-development/commands)を提供します：
 
 ### `voicevox:speak`
 

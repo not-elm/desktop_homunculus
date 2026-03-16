@@ -9,7 +9,7 @@
 //! - Mods are installed via `npm add` into `$MODS_ROOT/node_modules/`
 //! - Discovery reads `$MODS_ROOT/package.json` dependencies
 //! - Services (`main`) run as long-running Node.js child processes
-//! - On-demand scripts (`bin`) are executed via HTTP API
+//! - MOD commands (`bin`) are executed via HTTP API
 //!
 //! ## Mod Structure
 //!

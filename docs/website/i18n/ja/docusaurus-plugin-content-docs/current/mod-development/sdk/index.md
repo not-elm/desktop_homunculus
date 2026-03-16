@@ -19,7 +19,7 @@ Desktop Homunculus MOD は、`tsx` を使用して TypeScript ファイルを直
 
 ## モジュールマップ
 
-SDK は 18 のモジュールで構成されており、すべてメインの `@hmcs/sdk` エントリーポイントから利用できます。また、bin スクリプトユーティリティ用に別途 `@hmcs/sdk/commands` エントリーポイントがあります。
+SDK は 18 のモジュールで構成されており、すべてメインの `@hmcs/sdk` エントリーポイントから利用できます。また、MOD コマンドユーティリティ用に別途 `@hmcs/sdk/commands` エントリーポイントがあります。
 
 | モジュール | インポート | 説明 |
 |---|---|---|
@@ -34,7 +34,7 @@ SDK は 18 のモジュールで構成されており、すべてメインの `@
 | **coordinates** | `import { coordinates } from "@hmcs/sdk"` | スクリーン空間（ビューポート）と 3D ワールド空間の座標変換。 |
 | **speech** | `import { speech } from "@hmcs/sdk"` | 音素データをリップシンク用のタイムラインキーフレームに変換するユーティリティ。 |
 | **app** | `import { app } from "@hmcs/sdk"` | アプリケーションライフサイクル -- ヘルスチェック、プラットフォーム情報、エンジンバージョン、読み込み済み MOD。 |
-| **mods** | `import { mods } from "@hmcs/sdk"` | インストール済み MOD の一覧、bin コマンドの実行、コマンド出力のストリーミング、メニューの取得。 |
+| **mods** | `import { mods } from "@hmcs/sdk"` | インストール済み MOD の一覧、MOD コマンドの実行、コマンド出力のストリーミング、メニューの取得。 |
 | **assets** | `import { assets } from "@hmcs/sdk"` | アセットレジストリの検索 -- タイプ（`vrm`、`vrma`、`sound`、`image`、`html`）または MOD によるアセット一覧。 |
 | **settings** | `import { settings } from "@hmcs/sdk"` | アプリケーション設定の読み取りと更新（フレームレート、レンダリング設定）。 |
 | **shadowPanel** | `import { shadowPanel } from "@hmcs/sdk"` | 雰囲気演出用のシャドウオーバーレイパネルの透明度を制御。 |
@@ -44,7 +44,7 @@ SDK は 18 のモジュールで構成されており、すべてメインの `@
 
 ### Commands サブエントリーポイント
 
-`@hmcs/sdk/commands` は、bin コマンドスクリプトで使用するユーティリティのための **別エントリーポイント** です。Node.js 固有の API（`process.stdin`）に依存するため、メインの `@hmcs/sdk` インポートからは意図的に除外されています。
+`@hmcs/sdk/commands` は、MOD コマンドスクリプトで使用するユーティリティのための **別エントリーポイント** です。Node.js 固有の API（`process.stdin`）に依存するため、メインの `@hmcs/sdk` インポートからは意図的に除外されています。
 
 | エクスポート | 説明 |
 |---|---|
@@ -73,7 +73,7 @@ const data = await input.parse(
 ```
 
 :::warning
-MOD のメインスクリプトやブラウザ側のコードから `@hmcs/sdk/commands` をインポート **しないでください**。`process.stdin` を使用しており、Node.js の bin スクリプトでのみ利用可能です。
+MOD のメインスクリプトやブラウザ側のコードから `@hmcs/sdk/commands` をインポート **しないでください**。`process.stdin` を使用しており、Node.js の MOD コマンドスクリプトでのみ利用可能です。
 :::
 
 ## クイック例

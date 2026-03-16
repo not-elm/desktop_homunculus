@@ -81,7 +81,7 @@ export class StdinParseError extends Error {
 }
 
 /**
- * Input helpers for reading and parsing stdin in bin command scripts.
+ * Input helpers for reading and parsing stdin in MOD command scripts.
  *
  * @example
  * ```typescript
@@ -202,7 +202,7 @@ export namespace input {
 }
 
 /**
- * Output helpers for writing structured results and errors in bin command scripts.
+ * Output helpers for writing structured results and errors in MOD command scripts.
  *
  * @example
  * ```typescript
@@ -289,7 +289,7 @@ export namespace output {
    * Write a structured error to stderr and exit the process.
    *
    * This is a convenience wrapper that calls {@link output.writeError} followed by
-   * `process.exit(exitCode)`. Use this when a bin command encounters a fatal error.
+   * `process.exit(exitCode)`. Use this when a MOD command encounters a fatal error.
    *
    * @param code - A machine-readable error code (e.g., `"NOT_FOUND"`, `"TIMEOUT"`)
    * @param message - A human-readable error description

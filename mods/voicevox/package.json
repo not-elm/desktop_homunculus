@@ -6,9 +6,9 @@
   "description": "VoiceVox TTS integration for Desktop Homunculus",
   "type": "module",
   "bin": {
-    "voicevox:speak": "bin/speak.ts",
-    "voicevox:speakers": "bin/speakers.ts",
-    "voicevox:initialize": "bin/initialize.ts"
+    "voicevox:speak": "commands/speak.ts",
+    "voicevox:speakers": "commands/speakers.ts",
+    "voicevox:initialize": "commands/initialize.ts"
   },
   "homunculus": {
     "assets": {}

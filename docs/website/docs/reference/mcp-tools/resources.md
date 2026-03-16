@@ -25,7 +25,7 @@ Detailed state of all currently loaded VRM characters. Same data structure as `g
 
 ### `homunculus://mods`
 
-List of installed MODs with their available bin commands and declared assets.
+List of installed MODs with their available MOD commands and declared assets.
 
 **MIME type:** `application/json`
 

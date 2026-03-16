@@ -4,7 +4,7 @@ sidebar_position: 4
 
 # executeCommand
 
-bin コマンドを実行し、プロセス終了後に収集された結果を返します。stdout と stderr は文字列に結合されます。全出力をバッファリングする `streamCommand` の便利なラッパーです。
+MOD コマンドを実行し、プロセス終了後に収集された結果を返します。stdout と stderr は文字列に結合されます。全出力をバッファリングする `streamCommand` の便利なラッパーです。
 
 ## パラメータ
 

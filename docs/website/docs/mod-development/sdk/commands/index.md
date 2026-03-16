@@ -4,10 +4,10 @@ sidebar_position: 1
 
 # commands
 
-Stdin/stdout utilities for bin scripts. `@hmcs/sdk/commands` is a **separate entry point** that provides structured input parsing and output helpers for on-demand commands declared in your MOD's `package.json` under `"bin"`.
+Stdin/stdout utilities for MOD command scripts. `@hmcs/sdk/commands` is a **separate entry point** that provides structured input parsing and output helpers for MOD commands declared in your MOD's `package.json` under `"bin"`.
 
 :::warning
-Do **not** import `@hmcs/sdk/commands` from a MOD's main script or from browser-side code. It uses `process.stdin` and other Node.js APIs that are only available in bin script contexts.
+Do **not** import `@hmcs/sdk/commands` from a MOD's main script or from browser-side code. It uses `process.stdin` and other Node.js APIs that are only available in MOD command script contexts.
 :::
 
 ## Import

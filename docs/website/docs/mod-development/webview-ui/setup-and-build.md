@@ -232,9 +232,9 @@ const vrm = await webview?.linkedVrm();
 
 `Webview.current()` reads the `window.WEBVIEW_ENTITY` value that CEF injects into every webview context.
 
-### Opening via a Bin Command
+### Opening via a MOD Command
 
-Create a bin command to open the webview on demand. Add `commands/open-ui.ts`:
+Create a MOD command to open the webview on demand. Add `commands/open-ui.ts`:
 
 ```typescript
 #!/usr/bin/env tsx
@@ -283,7 +283,7 @@ To let users open your UI from the right-click context menu, add a `menus` entry
 ]
 ```
 
-The `command` value matches the key in `"bin"`, so clicking the menu entry runs the `open-ui` bin command.
+The `command` value matches the key in `"bin"`, so clicking the menu entry runs the `open-ui` MOD command.
 
 ### Development Workflow
 

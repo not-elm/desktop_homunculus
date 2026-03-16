@@ -15,7 +15,7 @@ A MOD's `package.json` includes:
 |---|---|---|
 | `name` | Package name (used to derive asset IDs) | Yes |
 | `type` | Must be `"module"` for ES module support | Yes |
-| `bin` | On-demand commands (invoked via HTTP API) | No |
+| `bin` | MOD commands (invoked via HTTP API) | No |
 | `homunculus` | Engine metadata: service, assets, menus, and tray | Yes |
 | `dependencies` | Must include `@hmcs/sdk` when using SDK features | No |
 
@@ -110,7 +110,7 @@ Declares entries for the right-click context menu. Each menu entry triggers a `b
 }
 ```
 
-When the user right-clicks the character and selects "Character Settings", the engine invokes the `open-ui` bin command.
+When the user right-clicks the character and selects "Character Settings", the engine invokes the `open-ui` MOD command.
 
 ### `tray`
 
@@ -162,9 +162,9 @@ Services are typically used to spawn VRM characters and set up behaviors. The se
 The service script runs every time the app starts. Make sure it handles errors gracefully -- an unhandled exception will cause the script process to exit.
 :::
 
-## Bin Commands
+## MOD Commands
 
-The `bin` field exposes on-demand scripts that can be invoked through the HTTP API. Unlike the service script, these scripts run only when explicitly called.
+The `bin` field exposes MOD commands that can be invoked through the HTTP API. Unlike the service script, these scripts run only when explicitly called.
 
 ```json
 {
@@ -174,22 +174,22 @@ The `bin` field exposes on-demand scripts that can be invoked through the HTTP A
 }
 ```
 
-Bin commands are invoked via `POST /mods/{mod_name}/bin/{command}` with a JSON body. The script receives input from stdin using `input.parse` from `@hmcs/sdk/commands`.
+MOD commands are invoked via `POST /mods/{mod_name}/bin/{command}` with a JSON body. The script receives input from stdin using `input.parse` from `@hmcs/sdk/commands`.
 
 **Example** -- the `@hmcs/voicevox` MOD exposes TTS commands:
 
 ```json
 {
   "bin": {
-    "voicevox:speak": "bin/speak.ts",
-    "voicevox:speakers": "bin/speakers.ts",
-    "voicevox:initialize": "bin/initialize.ts"
+    "voicevox:speak": "commands/speak.ts",
+    "voicevox:speakers": "commands/speakers.ts",
+    "voicevox:initialize": "commands/initialize.ts"
   }
 }
 ```
 
 :::tip
-Bin command names are conventionally prefixed with the MOD name (e.g., `voicevox:speak`) to avoid collisions with other MODs.
+MOD command names are conventionally prefixed with the MOD name (e.g., `voicevox:speak`) to avoid collisions with other MODs.
 :::
 
 ## Dependencies

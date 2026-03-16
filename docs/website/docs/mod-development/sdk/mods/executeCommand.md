@@ -4,7 +4,7 @@ sidebar_position: 4
 
 # executeCommand
 
-Runs a bin command and returns the collected result after the process exits. Stdout and stderr are joined into strings. This is a convenience wrapper around `streamCommand` that buffers all output.
+Runs a MOD command and returns the collected result after the process exits. Stdout and stderr are joined into strings. This is a convenience wrapper around `streamCommand` that buffers all output.
 
 ## Parameters
 

@@ -1,7 +1,7 @@
 /**
  * Mod management namespace for executing commands defined in mod packages.
  *
- * Provides functions to run on-demand scripts from installed mods,
+ * Provides functions to run MOD commands from installed mods,
  * with support for passing arguments, stdin data, configuring timeouts,
  * and real-time NDJSON streaming of command output.
  *
@@ -47,7 +47,7 @@ export namespace mods {
         license?: string;
         /** Service script path (auto-launched at startup), or null if no service. */
         serviceScriptPath?: string;
-        /** Available bin command names. */
+        /** Available MOD command names. */
         commands: string[];
         /** Asset declarations keyed by asset ID. */
         assets: Record<string, { path: string; type: string; description: string }>;
@@ -61,7 +61,7 @@ export namespace mods {
      * List all loaded mods and their metadata.
      *
      * Returns summary information for every mod discovered at startup,
-     * including available bin commands and registered asset IDs.
+     * including available MOD commands and registered asset IDs.
      *
      * @returns Array of mod information objects
      *

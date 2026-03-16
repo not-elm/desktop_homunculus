@@ -5,11 +5,11 @@ sidebar_position: 6
 
 # MOD
 
-MOD integration tools execute packaged bin commands.
+MOD integration tools execute packaged MOD commands.
 
 #### `execute_command`
 
-Execute a MOD bin command. Use the `homunculus://mods` resource to discover available commands per MOD.
+Execute a MOD command. Use the `homunculus://mods` resource to discover available commands per MOD.
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|

@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # signals
 
-Server-Sent Events（SSE）によるクロスプロセスの Pub/Sub メッセージングです。シグナルを使うことで、MOD サービス、bin コマンド、WebView 間でリアルタイムに通信できます。
+Server-Sent Events（SSE）によるクロスプロセスの Pub/Sub メッセージングです。シグナルを使うことで、MOD サービス、MOD コマンド、WebView 間でリアルタイムに通信できます。
 
 ## インポート
 

@@ -4,7 +4,7 @@ sidebar_position: 5
 
 # output.succeed
 
-Write a JSON result to stdout and exit the process with code 0. Use this as the final call in a successful bin command.
+Write a JSON result to stdout and exit the process with code 0. Use this as the final call in a successful MOD command.
 
 ## Parameters
 
