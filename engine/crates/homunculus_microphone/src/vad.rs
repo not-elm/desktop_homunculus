@@ -3,7 +3,7 @@ use rubato::Resampler;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::mpsc;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 use tokio_util::sync::CancellationToken;
 
 /// Wrapper around audio samples with timing metadata for pipeline observability.
@@ -187,6 +187,18 @@ impl VadStateMachine {
             Some(chunk)
         }
     }
+
+    /// Force-emit any buffered speech, regardless of silence counter state.
+    ///
+    /// Used for idle finalization (no audio data arriving) and shutdown flushing.
+    /// Returns `None` if not currently in speech or if the chunk fails
+    /// min-length / energy checks.
+    pub fn flush_speech(&mut self) -> Option<Vec<f32>> {
+        if !self.in_speech {
+            return None;
+        }
+        self.finalize_chunk()
+    }
 }
 
 /// Compute the RMS (root-mean-square) energy of a sample buffer.
@@ -362,6 +374,9 @@ fn vad_thread_main(
     let mut first_audio_logged = false;
     let mut sample_buf: Vec<f32> = Vec::new();
 
+    let idle_threshold = Duration::from_millis(config.silence_ms as u64 + 50);
+    let mut last_audio_at = Instant::now();
+
     tracing::info!(
         "VAD: initialized (capture={sample_rate}Hz, vad={vad_rate}Hz, \
          pre_resample={needs_pre_resample}, post_resample={needs_post_resample}, \
@@ -375,13 +390,38 @@ fn vad_thread_main(
 
         let raw_audio = match audio_rx.recv_timeout(std::time::Duration::from_millis(20)) {
             Ok(data) => {
+                last_audio_at = Instant::now();
                 if !first_audio_logged {
                     first_audio_logged = true;
                     tracing::info!("VAD: first audio received, {} samples", data.len());
                 }
                 data
             }
-            Err(mpsc::RecvTimeoutError::Timeout) => continue,
+            Err(mpsc::RecvTimeoutError::Timeout) => {
+                if last_audio_at.elapsed() >= idle_threshold
+                    && let Some(chunk) = state_machine.flush_speech()
+                {
+                    let len = chunk.len();
+                    let secs = len as f64 / 16000.0;
+                    let seq = metrics.next_seq();
+                    tracing::info!(
+                        "VAD: emitting chunk on idle timeout seq={seq}, \
+                         {len} samples ({secs:.1}s)"
+                    );
+                    let now = Instant::now();
+                    try_send_chunk(
+                        &chunk_tx,
+                        ChunkEnvelope {
+                            samples: chunk,
+                            enqueued_at: now,
+                            silence_detected_at: now,
+                            seq,
+                        },
+                        &metrics,
+                    );
+                }
+                continue;
+            }
             Err(mpsc::RecvTimeoutError::Disconnected) => {
                 tracing::info!("VAD: audio channel closed, exiting");
                 break;
@@ -430,6 +470,25 @@ fn vad_thread_main(
                 );
             }
         }
+    }
+
+    // Flush any remaining buffered speech on shutdown
+    if let Some(chunk) = state_machine.flush_speech() {
+        let len = chunk.len();
+        let secs = len as f64 / 16000.0;
+        let seq = metrics.next_seq();
+        tracing::info!("VAD: flushing final chunk seq={seq}, {len} samples ({secs:.1}s)");
+        let now = Instant::now();
+        try_send_chunk(
+            &chunk_tx,
+            ChunkEnvelope {
+                samples: chunk,
+                enqueued_at: now,
+                silence_detected_at: now,
+                seq,
+            },
+            &metrics,
+        );
     }
 }
 
@@ -739,5 +798,51 @@ mod tests {
             "flush should produce output from remaining samples"
         );
         assert!(acc.buf.is_empty(), "buffer should be empty after flush");
+    }
+
+    #[test]
+    fn flush_speech_emits_buffered_chunk() {
+        let config = VadConfig {
+            silence_ms: 300,
+            energy_threshold: 0.001,
+            max_chunk_ms: None,
+        };
+        let mut sm = VadStateMachine::new(&config, 16000, false);
+
+        // Feed 0.5s of speech
+        let frame = vec![0.5f32; 320]; // 20ms
+        for _ in 0..25 {
+            sm.process_frame(&frame, true);
+        }
+
+        // flush_speech should emit the chunk without silence detection
+        let chunk = sm.flush_speech();
+        assert!(chunk.is_some(), "flush_speech should emit buffered speech");
+    }
+
+    #[test]
+    fn flush_speech_noop_when_not_in_speech() {
+        let config = VadConfig::default();
+        let mut sm = VadStateMachine::new(&config, 16000, false);
+        assert!(sm.flush_speech().is_none());
+    }
+
+    #[test]
+    fn flush_speech_respects_min_length() {
+        let config = VadConfig {
+            silence_ms: 300,
+            energy_threshold: 0.001,
+            max_chunk_ms: None,
+        };
+        let mut sm = VadStateMachine::new(&config, 16000, false);
+
+        // Feed only 0.1s of speech (below min_chunk_samples of 0.3s)
+        let frame = vec![0.5f32; 320];
+        for _ in 0..5 {
+            sm.process_frame(&frame, true);
+        }
+
+        let chunk = sm.flush_speech();
+        assert!(chunk.is_none(), "flush_speech should respect min_chunk_samples");
     }
 }

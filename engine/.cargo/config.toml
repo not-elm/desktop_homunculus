@@ -4,5 +4,9 @@ rustflags = [
   "--check-cfg=cfg(feature,values(\"cargo-clippy\"))",
 ]
 
+[env]
+CMAKE_MSVC_RUNTIME_LIBRARY = "MultiThreaded"
+CMAKE_POLICY_DEFAULT_CMP0091 = "NEW"
+
 [target.x86_64-pc-windows-msvc]
 linker = "rust-lld.exe"
