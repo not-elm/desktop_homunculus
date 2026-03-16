@@ -1,6 +1,6 @@
 {
   "name": "@hmcs/elmer",
-  "version": "1.0.0",
+  "version": "0.1.0-alpha.5-dev",
   "description": "Default character mod that spawns Elmer and manages idle, grab, and sitting animations with cursor look-at",
   "license": "MIT",
   "author": "notelm",
