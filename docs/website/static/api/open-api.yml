@@ -2747,6 +2747,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/VrmaInfo'
+        assetId:
+          type:
+          - string
+          - 'null'
         entity:
           type: string
         expressions:
