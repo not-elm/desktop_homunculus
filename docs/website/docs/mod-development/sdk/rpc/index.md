@@ -18,7 +18,7 @@ import { rpc } from "@hmcs/sdk/rpc";
 
 ## Functions
 
-| Function | Description |
-|----------|-------------|
-| [method](./method) | Define an RPC method with optional Zod validation |
-| [serve](./serve) | Start the RPC server and register methods with the engine |
+| Function           | Description                                               |
+| ------------------ | --------------------------------------------------------- |
+| [serve](./serve)   | Start the RPC server and register methods with the engine |
+| [method](./method) | Define an RPC method with optional Zod validation         |
