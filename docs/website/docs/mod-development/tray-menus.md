@@ -167,5 +167,5 @@ try {
 
 - **[Context Menus](./menus.md)** -- Right-click character menus
 - **[MOD Commands](./commands.md)** -- Writing and invoking MOD commands
-- **[Webviews](./sdk/webviews)** -- Embedding HTML UIs in 3D space
+- **[Webviews](/reference/sdk/webviews)** -- Embedding HTML UIs in 3D space
 - **[Package Configuration](./project-setup/package-json.md)** -- Full `package.json` reference

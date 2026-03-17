@@ -45,7 +45,7 @@ const currentFps = await settings.fps();
 await settings.setFps(30);
 ```
 
-API の完全なドキュメントは [Settings SDK リファレンス](../mod-development/sdk/settings)をご覧ください。
+API の完全なドキュメントは [Settings SDK リファレンス](/reference/sdk/settings)をご覧ください。
 
 ## 備考
 

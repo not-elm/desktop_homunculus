@@ -74,7 +74,7 @@ const webview = await Webview.open({
 ```
 
 :::tip[API リファレンス]
-`Webview` API の完全な詳細（メソッド、オプション、型）については、[SDK WebViews](../sdk/webviews) を参照してください。
+`Webview` API の完全な詳細（メソッド、オプション、型）については、[SDK WebViews](/reference/sdk/webviews) を参照してください。
 :::
 
 ## WebView を使うべき場面
