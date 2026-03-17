@@ -168,15 +168,14 @@ describe("rpc.serve() — env var validation", () => {
 // ---------------------------------------------------------------------------
 
 describe("rpc.call()", () => {
-  let hostModule: typeof import("./host");
   let postMock: Mock;
 
   beforeEach(async () => {
     vi.resetModules();
-    hostModule = await import("./host");
+    const { host } = await import("./host");
     postMock = vi.fn();
-    vi.spyOn(hostModule.host, "post").mockImplementation(postMock);
-    vi.spyOn(hostModule.host, "createUrl").mockImplementation(
+    vi.spyOn(host, "post").mockImplementation(postMock);
+    vi.spyOn(host, "createUrl").mockImplementation(
       (path: string) => new URL(`http://localhost:3100/${path}`),
     );
   });
