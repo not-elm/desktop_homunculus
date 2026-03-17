@@ -24,7 +24,7 @@ desktop-homunculus/
 └── sandbox/             # Dev sandbox — aggregates all mods for workspace linking validation
 ```
 
-Sub-directories have their own CLAUDE.md with detailed architecture: `engine/`, `packages/sdk/`, `packages/ui/`, `packages/mcp-server/`.
+Sub-directories have their own CLAUDE.md with detailed architecture: `engine/`, `packages/sdk/`, `packages/ui/`.
 
 ## Development Commands
 
@@ -190,9 +190,10 @@ The `hmcs` binary is a Rust CLI built with `clap`. Current subcommands:
 
 ## Conventions
 
-Coding style rules are defined in `engine/.claude/rules/`:
-- `rust-style.md` — Rust naming, formatting, serde (`camelCase` for all HTTP structs), error handling, imports, workspace inheritance for new crates
+Coding style rules are defined in `.claude/rules/`:
+- `rust-style.md` — Rust naming, formatting, serde (`camelCase` for all HTTP structs), error handling, imports, item ordering, workspace inheritance for new crates
 - `bevy-patterns.md` — Plugin architecture, ApiReactor pattern, ECS patterns (prefer `try_insert` over `insert`)
+- `ts-style.md` — TypeScript function granularity and extraction rules
 
 Additional conventions:
 - TypeScript SDK: All public APIs must have JSDoc with `@example` blocks. Each module exports a `namespace` (e.g., `export namespace vrm { ... }`). Never use `fetch` directly in SDK modules — always go through `host.ts` (`host.get/post/put/deleteMethod` with `host.createUrl()`). Prefer function declarations over arrow functions for exported top-level APIs.

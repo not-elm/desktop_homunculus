@@ -91,6 +91,11 @@ export default defineConfig([
     {
         input: 'dist/types/rpc.d.ts',
         output: {file: 'dist/rpc.d.ts', format: 'es'},
+        plugins: [dts()]
+    },
+    {
+        input: 'dist/types/rpc-client.d.ts',
+        output: {file: 'dist/rpc-client.d.ts', format: 'es'},
         plugins: [dts(), cleanDistTypes]
     },
 ]);

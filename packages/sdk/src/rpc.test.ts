@@ -1,5 +1,6 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi, type Mock } from "vitest";
 import { z } from "zod";
+import { HomunculusApiError } from "./host";
 
 // ---------------------------------------------------------------------------
 // rpc.method() — validation logic (no server needed)
@@ -159,5 +160,82 @@ describe("rpc.serve() — env var validation", () => {
     await expect(rpc.serve({ methods: {} })).rejects.toThrow(
       "HMCS_RPC_PORT environment variable is required",
     );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// rpc.call() — browser-safe RPC client (via rpc-client.ts)
+// ---------------------------------------------------------------------------
+
+describe("rpc.call()", () => {
+  let postMock: Mock;
+
+  beforeEach(async () => {
+    vi.resetModules();
+    const { host } = await import("./host");
+    postMock = vi.fn();
+    vi.spyOn(host, "post").mockImplementation(postMock);
+    vi.spyOn(host, "createUrl").mockImplementation(
+      (path: string) => new URL(`http://localhost:3100/${path}`),
+    );
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("sends POST to rpc/call with modName, method, and body", async () => {
+    postMock.mockResolvedValue({
+      json: () => Promise.resolve({ greeting: "Hello!" }),
+    });
+
+    const { rpc } = await import("./rpc-client");
+    const result = await rpc.call<{ greeting: string }>({
+      modName: "voicevox",
+      method: "speak",
+      body: { text: "Hello!" },
+    });
+
+    expect(result).toEqual({ greeting: "Hello!" });
+    expect(postMock).toHaveBeenCalledWith(
+      new URL("http://localhost:3100/rpc/call"),
+      { modName: "voicevox", method: "speak", body: { text: "Hello!" } },
+    );
+  });
+
+  it("omits body field when body is undefined", async () => {
+    postMock.mockResolvedValue({
+      json: () => Promise.resolve({ running: true }),
+    });
+
+    const { rpc } = await import("./rpc-client");
+    await rpc.call({ modName: "voicevox", method: "status" });
+
+    expect(postMock).toHaveBeenCalledWith(
+      new URL("http://localhost:3100/rpc/call"),
+      { modName: "voicevox", method: "status" },
+    );
+  });
+
+  it("propagates HomunculusApiError from host.post", async () => {
+    postMock.mockRejectedValue(
+      new HomunculusApiError(503, "/rpc/call", "MOD not registered"),
+    );
+
+    const { rpc } = await import("./rpc-client");
+    await expect(
+      rpc.call({ modName: "unknown", method: "foo" }),
+    ).rejects.toThrow(HomunculusApiError);
+  });
+
+  it("is re-exported from rpc.ts (Node.js entry)", async () => {
+    postMock.mockResolvedValue({
+      json: () => Promise.resolve({ ok: true }),
+    });
+
+    const { rpc } = await import("./rpc");
+    const result = await rpc.call({ modName: "test", method: "ping" });
+
+    expect(result).toEqual({ ok: true });
   });
 });
