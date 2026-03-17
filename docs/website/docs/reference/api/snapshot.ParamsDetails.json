@@ -1,0 +1,1 @@
+{"parameters":[{"name":"name","in":"query","description":"Optional name filter","required":false,"schema":{"type":"string"}}]}

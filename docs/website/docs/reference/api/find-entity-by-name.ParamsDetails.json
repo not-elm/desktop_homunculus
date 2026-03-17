@@ -1,1 +1,0 @@
-{"parameters":[{"name":"name","in":"query","required":true,"description":"The name of the entity to find","schema":{"type":"string"}},{"name":"root","in":"query","required":false,"description":"Optional root entity to search within","schema":{"type":"integer","format":"uint64","description":"The unique identifier for an entity.","title":"Entity"}}]}

@@ -1,0 +1,1 @@
+{"responses":{"200":{"description":"List of all displays","content":{"application/json":{"schema":{"type":"array","items":{"type":"object","required":["id","title","frame"],"properties":{"frame":{"type":"object"},"id":{"type":"integer","format":"int32","minimum":0,"title":"DisplayId"},"title":{"type":"string"}},"title":"GlobalDisplay"},"title":"GlobalDisplays"}}}}}}

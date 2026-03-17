@@ -1,1 +1,0 @@
-{"parameters":[{"name":"entity_id","in":"path","required":true,"description":"The unique identifier of the webview entity","schema":{"type":"integer","format":"uint64","description":"The unique identifier for an entity.","title":"Entity"}}]}

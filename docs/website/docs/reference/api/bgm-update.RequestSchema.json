@@ -1,0 +1,1 @@
+{"title":"Body","body":{"content":{"application/json":{"schema":{"type":"object","properties":{"speed":{"type":["number","null"],"format":"double"},"tween":{"type":["object","null"]},"volume":{"type":["number","null"],"format":"double"}},"title":"BgmUpdateRequest"}}},"required":true}}

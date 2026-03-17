@@ -1,1 +1,0 @@
-{"responses":{"200":{"description":"Successfully retrieved the VRM model state.","content":{"application/json":{"schema":{"type":"object","required":["state"],"properties":{"state":{"type":"string","description":"The current state/mode of the VRM model","example":"idle"}},"title":"VrmStateResponse"}}}},"404":{"description":"Entity not found."}}}

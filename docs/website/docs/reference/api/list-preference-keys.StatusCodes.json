@@ -1,1 +1,0 @@
-{"responses":{"200":{"description":"Successfully retrieved preference keys.","content":{"application/json":{"schema":{"type":"array","items":{"type":"string"}}}}}}}

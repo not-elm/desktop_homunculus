@@ -1,0 +1,1 @@
+{"title":"Body","body":{"content":{"application/json":{"schema":{"type":"object","description":"Body for `POST /rpc/call`.","required":["modName","method"],"properties":{"body":{},"method":{"type":"string"},"modName":{"type":"string"}},"title":"CallRequest"}}},"required":true}}

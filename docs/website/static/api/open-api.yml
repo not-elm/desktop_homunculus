@@ -613,6 +613,93 @@ paths:
       responses:
         '200':
           description: Preference saved
+  /rpc/call:
+    post:
+      tags:
+      - rpc
+      summary: Proxy `POST /rpc/call` to the MOD service's local HTTP server.
+      description: |-
+        The caller specifies `modName` and `method` in the JSON body, along with
+        an optional `body` field that is forwarded to the MOD service.
+
+        Error codes:
+        - `503` — MOD not registered (not yet started or crashed)
+        - `404` — method unknown for this MOD
+        - `504` — MOD service timed out
+        - `502` — MOD service refused the connection
+      operationId: call
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CallRequest'
+        required: true
+      responses:
+        '200':
+          description: RPC method response (JSON)
+        '404':
+          description: Method not found
+        '502':
+          description: MOD service unreachable
+        '503':
+          description: MOD not registered
+        '504':
+          description: Timeout exceeded
+  /rpc/deregister:
+    post:
+      tags:
+      - rpc
+      summary: Deregister a MOD service's RPC endpoint.
+      operationId: deregister
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeregisterRequest'
+        required: true
+      responses:
+        '200':
+          description: MOD deregistered
+        '500':
+          description: Registry lock poisoned
+  /rpc/register:
+    post:
+      tags:
+      - rpc
+      summary: Register or update a MOD service's RPC methods.
+      description: |-
+        The MOD service calls this endpoint on startup.  The port must have been
+        pre-allocated by the engine; this handler updates the methods map for that
+        port.
+      operationId: register
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+        required: true
+      responses:
+        '200':
+          description: Methods registered
+        '404':
+          description: MOD has no pre-allocated port
+        '500':
+          description: Registry lock poisoned
+  /rpc/registrations:
+    get:
+      tags:
+      - rpc
+      summary: List all current RPC registrations (for introspection / debugging).
+      operationId: list_registrations
+      responses:
+        '200':
+          description: Current registrations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationsResponse'
+        '500':
+          description: Registry lock poisoned
   /settings/fps:
     get:
       tags:
@@ -1804,6 +1891,26 @@ components:
           - number
           - 'null'
           format: double
+    CallRequest:
+      type: object
+      description: Body for `POST /rpc/call`.
+      required:
+      - modName
+      - method
+      properties:
+        body: {}
+        method:
+          type: string
+        modName:
+          type: string
+    DeregisterRequest:
+      type: object
+      description: Body for `POST /rpc/deregister`.
+      required:
+      - modName
+      properties:
+        modName:
+          type: string
     DisplayId:
       type: integer
       format: int32
@@ -2232,6 +2339,33 @@ components:
       properties:
         state:
           type: object
+    RegisterRequest:
+      type: object
+      description: Body for `POST /rpc/register`.
+      required:
+      - modName
+      - methods
+      properties:
+        methods:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/RpcMethodMeta'
+          propertyNames:
+            type: string
+        modName:
+          type: string
+    RegistrationsResponse:
+      type: object
+      description: Response for `GET /rpc/registrations`.
+      required:
+      - registrations
+      properties:
+        registrations:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/RpcRegistration'
+          propertyNames:
+            type: string
     Repeat:
       oneOf:
       - type: object
@@ -2263,6 +2397,37 @@ components:
             type: string
             enum:
             - count
+    RpcMethodMeta:
+      type: object
+      description: Metadata for a single RPC method.
+      properties:
+        description:
+          type:
+          - string
+          - 'null'
+        timeout:
+          type:
+          - integer
+          - 'null'
+          format: int64
+          minimum: 0
+    RpcRegistration:
+      type: object
+      description: A single MOD's RPC registration.
+      required:
+      - port
+      - methods
+      properties:
+        methods:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/RpcMethodMeta'
+          propertyNames:
+            type: string
+        port:
+          type: integer
+          format: int32
+          minimum: 0
     SePlayRequest:
       type: object
       required:
@@ -2878,3 +3043,5 @@ tags:
   description: Command execution
 - name: assets
   description: Asset management
+- name: rpc
+  description: MOD service RPC registration and proxy

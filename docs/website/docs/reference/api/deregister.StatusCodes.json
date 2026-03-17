@@ -1,0 +1,1 @@
+{"responses":{"200":{"description":"MOD deregistered"},"500":{"description":"Registry lock poisoned"}}}

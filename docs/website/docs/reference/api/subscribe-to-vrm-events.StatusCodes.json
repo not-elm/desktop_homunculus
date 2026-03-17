@@ -1,1 +1,0 @@
-{"responses":{"200":{"description":"Successfully established event stream.","content":{"text/event-stream":{"schema":{"type":"string","description":"Server-Sent Events stream with VRM interaction events"}}}},"404":{"description":"Entity not found."}}}
