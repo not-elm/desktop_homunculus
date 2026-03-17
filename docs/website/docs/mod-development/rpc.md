@@ -36,31 +36,30 @@ The engine allocates an ephemeral port and pre-registers it in the RPC registry 
 
 The engine sets these environment variables when spawning a MOD service:
 
-| Variable | Description |
-|----------|-------------|
-| `HMCS_RPC_PORT` | Port the MOD service must listen on (allocated by the engine) |
-| `HMCS_MOD_NAME` | MOD package name |
-| `HMCS_PORT` | Engine HTTP API port. Not explicitly set by the engine — the SDK falls back to `3100` if unset. Only needed if the engine runs on a non-standard port. |
+| Variable        | Description                                                                                                                                            |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `HMCS_RPC_PORT` | Port the MOD service must listen on (allocated by the engine)                                                                                          |
+| `HMCS_MOD_NAME` | MOD package name                                                                                                                                       |
+| `HMCS_PORT`     | Engine HTTP API port. Not explicitly set by the engine — the SDK falls back to `3100` if unset. Only needed if the engine runs on a non-standard port. |
 
 ## Error Handling
 
 Error codes returned by `POST /rpc/call`:
 
-| Status | Meaning |
-|--------|---------|
-| 503 | MOD not registered (not yet started or crashed) |
-| 404 | Unknown method. During the pre-registration phase (before the MOD calls `/rpc/register`), all method names are forwarded. |
-| 504 | Timeout exceeded (default 30 s, or per-method `timeout` if set) |
-| 502 | Connection refused (MOD service unreachable) |
-| 500 | Internal error |
+| Status | Meaning                                                                                                                   |
+| ------ | ------------------------------------------------------------------------------------------------------------------------- |
+| 503    | MOD not registered (not yet started or crashed)                                                                           |
+| 404    | Unknown method. During the pre-registration phase (before the MOD calls `/rpc/register`), all method names are forwarded. |
+| 504    | Timeout exceeded (default 30 s, or per-method `timeout` if set)                                                           |
+| 502    | Connection refused (MOD service unreachable)                                                                              |
+| 500    | Internal error                                                                                                            |
 
 ## Calling RPC Methods
 
-| Method | Description | Reference |
-|--------|-------------|-----------|
-| HTTP API | `POST /rpc/call` endpoint | [REST API Reference](../reference/api/homunculus-api) |
-| MCP Tool | `call_rpc` for AI agents | [MCP Reference](../reference/mcp-tools/rpc) |
-| SDK (from another MOD) | `host.post()` to `/rpc/call` | [host module](./sdk/host) |
+| Method   | Description               | Reference                                             |
+| -------- | ------------------------- | ----------------------------------------------------- |
+| MCP Tool | `call_rpc` for AI agents  | [MCP Reference](../reference/mcp-tools/rpc)           |
+| HTTP API | `POST /rpc/call` endpoint | [REST API Reference](../reference/api/call) |
 
 ## See Also
 
