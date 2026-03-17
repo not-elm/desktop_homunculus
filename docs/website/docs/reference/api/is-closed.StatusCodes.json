@@ -1,0 +1,1 @@
+{"responses":{"200":{"description":"Webview closed status","content":{"text/plain":{"schema":{"type":"boolean"}}}}}}

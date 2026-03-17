@@ -1,1 +1,0 @@
-{"responses":{"200":{"description":"Successfully converted to global viewport.","content":{"application/json":{"schema":{"type":"object","required":["x","y"],"properties":{"x":{"type":"number","format":"float"},"y":{"type":"number","format":"float"}},"title":"GlobalViewport"}}}},"500":{"description":"Failed to convert."}}}

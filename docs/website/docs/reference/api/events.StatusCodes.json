@@ -1,0 +1,1 @@
+{"responses":{"200":{"description":"SSE stream of VRM events","content":{"text/event-stream":{}}}}}

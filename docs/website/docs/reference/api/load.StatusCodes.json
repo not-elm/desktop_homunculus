@@ -1,0 +1,1 @@
+{"responses":{"200":{"description":"Preference value","content":{"application/json":{"schema":{"type":"object"}}}},"404":{"description":"Preference not found"}}}

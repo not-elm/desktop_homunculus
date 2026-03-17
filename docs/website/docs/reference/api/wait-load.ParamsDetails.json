@@ -1,0 +1,1 @@
+{"parameters":[{"name":"name","in":"query","description":"Name of the VRM model to wait for","required":true,"schema":{"type":"string"}}]}

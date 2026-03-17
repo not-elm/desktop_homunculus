@@ -1,1 +1,0 @@
-{"parameters":[{"name":"key","in":"path","required":true,"description":"The unique key identifier for the preference","schema":{"type":"string"}}]}

@@ -1,1 +1,0 @@
-{"responses":{"200":{"description":"Successfully retrieved the linked VRM.","content":{"application/json":{"schema":{"type":"integer","format":"uint64","description":"The unique identifier for an entity.","title":"Entity","nullable":true}}}},"404":{"description":"Webview not found."}}}

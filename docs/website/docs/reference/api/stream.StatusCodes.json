@@ -1,0 +1,1 @@
+{"responses":{"200":{"description":"SSE event stream","content":{"text/event-stream":{}}}}}

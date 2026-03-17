@@ -1,0 +1,1 @@
+{"title":"Body","body":{"content":{"application/json":{"schema":{"type":"object","required":["vrm"],"properties":{"vrm":{"type":"string"}},"title":"SetLinkedVrmRequest"}}},"required":true}}

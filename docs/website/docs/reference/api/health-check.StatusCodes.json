@@ -1,1 +1,0 @@
-{"responses":{"200":{"description":"Application is healthy.","content":{"application/json":{"schema":{"type":"object","required":["status"],"properties":{"status":{"type":"string","description":"Health status indicator","example":"ok"}},"title":"HealthResponse"}}}}}}

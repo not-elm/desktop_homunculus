@@ -1,0 +1,1 @@
+{"responses":{"200":{"description":"RPC method response (JSON)"},"404":{"description":"Method not found"},"502":{"description":"MOD service unreachable"},"503":{"description":"MOD not registered"},"504":{"description":"Timeout exceeded"}}}

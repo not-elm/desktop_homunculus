@@ -1,1 +1,0 @@
-{"parameters":[{"name":"mod_name","in":"path","required":true,"description":"The name of the mod","schema":{"type":"string"}}]}

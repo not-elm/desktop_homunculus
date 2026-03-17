@@ -1,0 +1,1 @@
+{"responses":{"200":{"description":"Entity moved"},"404":{"description":"Entity not found"},"422":{"description":"Invalid move target"}}}

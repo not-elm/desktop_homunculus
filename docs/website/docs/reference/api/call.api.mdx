@@ -1,0 +1,76 @@
+---
+id: call
+title: "Proxy `POST /rpc/call` to the MOD service's local HTTP server."
+description: "The caller specifies `modName` and `method` in the JSON body, along with"
+sidebar_label: "Proxy `POST /rpc/call` to the MOD service's local HTTP server."
+hide_title: true
+hide_table_of_contents: true
+api: eJztVcFy2zYQ/ZWdvTSZoSXGVi48tU0yTTp2rHHUXmzNEAJWJGIQQADQskajmX5Ev7Bf0lmQtpVI196qi8jF292HfbvLHSbRRKxuMXiJywIVRRm0T9pZrHDREkhhDAWInqRea4pQd059Fh3VIKyCuqPUOlWDtpBagt+/XH+GlVPbAoRxtoGNTu2dFRZcjioM1Hxcw1qTUZBakUBHWLuwEUGRguRyoKvr9xApPGhJkzt7Zz+E4AJIpyhWd/YM6rflRQ3//PV3RlqXIFCjY6JACl7x+5YSxCRCIgXsGkRsSb3OzrNyNjgP9KG399ZtLNOA1OrIQccss5csIx9IuuOYfRoh58eQQOs+8m24hM5akrmmBTpPQfDzJ4UVcnWxwEDfeorpV6e2WO1QOpvIJn4U3hsts8P0a2RVdhhlS53gp7T1hBW61VeSCX+Uj8PlG9Xz6y8LmAYvp5ywnowpdSDF4o+KYoFDObgTfGCmSVPkRKuB2f4Z8ZI8pqBtg3w0hjk+2xeYdDJseieMuRmui3s+eCGSQk/ZEL2zcUh8Xpb89/3FbubvnoR7AsMr7rzXTGNWzo5drgY498Xa9VYx8G15fgJ4IGJvAwnZipWhAX9xGv999w3QExwWuiPXJ6BHSaQYeFBP9C6yhF6kFit8FgsLZDoUeEx32AeDFbYp+Wo6NU4K07qYqos3ZXmk/yUfg6IHMs533FD7ZYHcRTcv/fbhUXTe0GmRnwQ80PZAb23XLos9SvvRdb2Vvekj/DL/dETnPcX75DwcwD4uFnPG5i7lrg/OGG0b+PPmCmQrgpCJQixgQ6sHTZtYgOiVdkXePZ0LxK3MjkLmcbEDR+sSmQ4LpE5oLhiZzgfXBNEx6Z8bNk+k6/gaRkuykQ7cL3+bX55dTMozZ82WIVz+4RJvJuWkZBPL1Ql74DUP7nF7NGsn9tlPEbJyw/UHdSc/lutgC/y/h/+DPTxuqESPaeqN0JZFzdO1G2dw+CgWw45eFsiDxtbdbiUi/RHMfs/mbz2FLVa3ywIfRNB5WVS3y32BLQlFIY/tPW159w2Kni04N8NNzxyOdjyP6fMIcj9h8TScPIjsE8SGl7jYYIX5q8LeeWNm2w6NsE0vGsYOMfn3L5frvEg=
+sidebar_class_name: "post api-method"
+info_path: reference/api/homunculus-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Proxy `POST /rpc/call` to the MOD service's local HTTP server."}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/rpc/call"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+The caller specifies `modName` and `method` in the JSON body, along with
+an optional `body` field that is forwarded to the MOD service.
+
+Error codes:
+- `503` — MOD not registered (not yet started or crashed)
+- `404` — method unknown for this MOD
+- `504` — MOD service timed out
+- `502` — MOD service refused the connection
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  parameters={undefined}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./call.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./call.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

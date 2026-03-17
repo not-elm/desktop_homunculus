@@ -1,0 +1,1 @@
+{"responses":{"200":{"description":"2D world position","content":{"application/json":{"schema":{"type":"array","items":{"type":"number","format":"float"}}}}},"500":{"description":"Conversion failed"}}}

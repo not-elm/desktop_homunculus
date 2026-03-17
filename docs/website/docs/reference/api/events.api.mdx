@@ -1,0 +1,71 @@
+---
+id: events
+title: "Subscribe to VRM events via SSE."
+description: "Events include: drag-start, drag, drag-end, pointer-press, pointer-click,"
+sidebar_label: "Subscribe to VRM events via SSE."
+hide_title: true
+hide_table_of_contents: true
+api: eJzdVMlu2zAQ/RViTi1AL2luOrVAjCRACgRx2kviw5gaS0S4haSUGIL+vRhZsdW66Af0InEWjua9macOMlYJiidoo4WNhJKSijpk7R0UsGrJ5SS0U6YpqRBlxGqWMsYsh/PhOSNXShG8dpniLERK6WQqo9WLfHYftvUtnaKRDGGaOHxLcWI1eVIJnSIjn13KmGmmanQVSUHvwxe1d0dXGy3OgsH9eNxpp1M9Bwk+UEQGd1tCATTAAwkBI1rKFJmKDhxa4rDLOu9BgmYuAuYazggaUsTtFUiI9NroSCUUOTYkIamaLELRQd4Hrpdy1K6Cvt9wcgreJUoc/7Jc8uv30uv1SqQcCa3wO/Hz4bs4tqu8y+TyUJre82IIzA7JUHR93/cSLOXaM8qK8gAx11DAoo120R2Q9YtjxUSx/UDfRAMF1DmHYrEwXqGpfcrF5cVyeYb/jsOipJaMD5Z7YnDa7fzQnM6Ggd942zjVmCaJb/e3Z0WuKL1kH8Qk7ebx8Z5zxc5HwXCjN0a7auBB1RhR8bSkeKNtq+ktSYFNqb0U6EphfaT5yBOqgadxpM5nMhYkkEXNMMnYEH0V0XLTXyt2z5W30EswWpFLNLl+d31/N7ucL2femT2nMGkHEBfz5XzJruBTtugmt9bNluFuSWQ/GaRoNYr1ejX/k5DuNOD/T4GjFoa9DQa1Y86GlevGHT38iyQUR/2Na7qRwJvIGV23xUQ/oul7dr82FPdQPG0ktBg1bnntnjoodeJzCcUOTaJ/8PzpYVTvZzHV9F+7HZ3ouLcWTcMWSHih/emv0W96CTVhSXFo5RD8phSFPLl2rl8W0FG716tH6PtfUXv1kA==
+sidebar_class_name: "get api-method"
+info_path: reference/api/homunculus-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Subscribe to VRM events via SSE."}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/vrm/{entity}/events"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Events include: drag-start, drag, drag-end, pointer-press, pointer-click,
+pointer-move, pointer-release, pointer-over, pointer-out, pointer-cancel,
+state-change, expression-change, vrma-play, vrma-finish.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./events.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./events.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./events.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

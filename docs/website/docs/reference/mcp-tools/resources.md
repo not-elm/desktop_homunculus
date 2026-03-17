@@ -41,3 +41,13 @@ List of all available assets (VRM models, VRMA animations, sounds, images, HTML)
 
 Use this to discover asset IDs for `spawn_character`, `play_animation`, `play_sound`, and `control_bgm`.
 
+---
+
+### `homunculus://rpc`
+
+Registered RPC methods across all MOD services, including port, method names, descriptions, and timeouts.
+
+**MIME type:** `application/json`
+
+Use this to discover available RPC methods before calling `call_rpc`.
+

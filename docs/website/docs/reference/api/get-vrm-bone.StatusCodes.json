@@ -1,1 +1,0 @@
-{"responses":{"200":{"description":"Successfully retrieved the bone entity.","content":{"application/json":{"schema":{"type":"integer","format":"uint64","description":"The unique identifier for an entity.","title":"Entity"}}}},"404":{"description":"VRM or bone not found."}}}
