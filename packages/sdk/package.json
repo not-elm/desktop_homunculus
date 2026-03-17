@@ -22,10 +22,16 @@
       "default": "./dist/commands.js"
     },
     "./rpc": {
-      "types": "./dist/rpc.d.ts",
-      "import": "./dist/rpc.js",
-      "require": "./dist/rpc.cjs",
-      "default": "./dist/rpc.js"
+      "node": {
+        "types": "./dist/rpc.d.ts",
+        "import": "./dist/rpc.js",
+        "require": "./dist/rpc.cjs"
+      },
+      "default": {
+        "types": "./dist/rpc-client.d.ts",
+        "import": "./dist/rpc-client.js",
+        "require": "./dist/rpc-client.cjs"
+      }
     }
   },
   "engines": {
