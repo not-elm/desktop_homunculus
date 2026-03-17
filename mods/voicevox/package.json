@@ -5,16 +5,48 @@
   "license": "MIT",
   "description": "VoiceVox TTS integration for Desktop Homunculus",
   "type": "module",
+  "scripts": {
+    "build": "vite build ui",
+    "dev": "vite dev ui"
+  },
   "bin": {
     "voicevox:speak": "commands/speak.ts",
     "voicevox:speakers": "commands/speakers.ts",
-    "voicevox:initialize": "commands/initialize.ts"
+    "voicevox:initialize": "commands/initialize.ts",
+    "open-settings": "commands/open-settings.ts"
   },
   "homunculus": {
-    "assets": {}
+    "menus": [
+      {
+        "id": "open-voicevox-settings",
+        "text": "VOICEVOX Settings",
+        "command": "open-settings"
+      }
+    ],
+    "assets": {
+      "voicevox:ui": {
+        "path": "ui/dist/index.html",
+        "type": "html",
+        "description": "VOICEVOX character voice settings UI"
+      }
+    }
   },
   "dependencies": {
     "@hmcs/sdk": "workspace:*",
+    "@hmcs/ui": "workspace:*",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
     "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.2.1",
+    "@types/node": "^25.3.3",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react-swc": "^4.2.3",
+    "tailwindcss": "^4.2.1",
+    "typescript": "^5.9.3",
+    "vite": "^6.4.1",
+    "vite-plugin-singlefile": "^2.3.0"
   }
 }
