@@ -74,9 +74,9 @@ Confirm the exported VRMA behaves as expected in the runtime environment.
 
 **Use official docs**
 
-- [SDK: VRM playVrma](../sdk/vrm/playVrma)
+- [SDK: VRM playVrma](/reference/sdk/vrm/playVrma)
 
-**Expected outcome**  
+**Expected outcome**
 The animation plays correctly on your target character, including expected pose and expression behavior.
 
 ## Use VRMA in Your MOD
@@ -84,7 +84,7 @@ The animation plays correctly on your target character, including expected pose 
 Register the exported `.vrma` file in your MOD's `package.json` and play it from the SDK.
 
 - [Package Configuration](../project-setup/package-json.md)
-- [SDK: VRM playVrma](../sdk/vrm/playVrma)
+- [SDK: VRM playVrma](/reference/sdk/vrm/playVrma)
 
 ## Troubleshooting and Updates
 

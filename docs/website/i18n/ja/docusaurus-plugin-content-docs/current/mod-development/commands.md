@@ -213,7 +213,7 @@ Content-Type: application/json
 - **`mods.executeCommand(request)`** — すべての出力をバッファリングし、`stdout`、`stderr`、`exitCode` を持つ単一の `CommandResult` を返す
 - **`mods.streamCommand(request)`** — リアルタイムストリーミング用の `AsyncGenerator<CommandEvent>` を返す
 
-詳細は [Mods API](./sdk/mods/) リファレンスを参照してください。
+詳細は [Mods API](/reference/sdk/mods/) リファレンスを参照してください。
 
 ## 完全な例
 

@@ -26,7 +26,7 @@ These assets are referenced by their asset ID in other MODs and SDK calls. For e
 const elmer = await Vrm.spawn("vrm:elmer");
 ```
 
-MOD developers can reference these assets in their own MODs using the same IDs. See the [SDK documentation](/mod-development/sdk) for details.
+MOD developers can reference these assets in their own MODs using the same IDs. See the [SDK documentation](/reference/sdk) for details.
 
 ## Notes
 

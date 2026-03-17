@@ -167,5 +167,5 @@ try {
 
 - **[コンテキストメニュー](./menus.md)** -- キャラクターの右クリックメニュー
 - **[MOD コマンド](./commands.md)** -- MOD コマンドの作成と呼び出し
-- **[Webviews](./sdk/webviews)** -- 3D 空間への HTML UI の埋め込み
+- **[Webviews](/reference/sdk/webviews)** -- 3D 空間への HTML UI の埋め込み
 - **[パッケージ設定](./project-setup/package-json.md)** -- 完全な `package.json` リファレンス

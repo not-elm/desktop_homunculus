@@ -75,7 +75,7 @@ const webview = await Webview.open({
 
 :::tip API Reference
 For complete `Webview` API details (methods, options, and types), see
-[SDK WebViews](../sdk/webviews).
+[SDK WebViews](/reference/sdk/webviews).
 :::
 
 ## When to Use WebViews

@@ -218,7 +218,7 @@ The `@hmcs/sdk` provides two convenience functions for calling MOD commands from
 - **`mods.executeCommand(request)`** — Buffers all output and returns a single `CommandResult` with `stdout`, `stderr`, `exitCode`
 - **`mods.streamCommand(request)`** — Returns an `AsyncGenerator<CommandEvent>` for real-time streaming
 
-See the [Mods API](./sdk/mods/) reference for full details.
+See the [Mods API](/reference/sdk/mods/) reference for full details.
 
 ## Complete Example
 
