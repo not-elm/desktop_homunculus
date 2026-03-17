@@ -6,6 +6,7 @@
 
 # Git worktrees
 .worktrees/
+.claude/worktrees/
 
 # Logs logs
 *.log

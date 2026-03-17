@@ -37,6 +37,7 @@ export default defineConfig([
         input: [
             path.join(srcDir, 'src', 'index.ts'),
             path.join(srcDir, 'src', 'commands.ts'),
+            path.join(srcDir, 'src', 'rpc.ts'),
         ],
         output: [
             {
@@ -85,6 +86,11 @@ export default defineConfig([
     {
         input: 'dist/types/commands.d.ts',
         output: {file: 'dist/commands.d.ts', format: 'es'},
+        plugins: [dts()]
+    },
+    {
+        input: 'dist/types/rpc.d.ts',
+        output: {file: 'dist/rpc.d.ts', format: 'es'},
         plugins: [dts(), cleanDistTypes]
     },
 ]);

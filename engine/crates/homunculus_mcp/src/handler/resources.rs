@@ -27,6 +27,10 @@ pub(super) fn resource_definitions() -> Vec<Resource> {
             .with_description("List of available assets across all mods")
             .with_mime_type("application/json")
             .no_annotation(),
+        RawResource::new("homunculus://rpc", "homunculus-rpc")
+            .with_description("Registered RPC methods by MOD service. Use with call_rpc tool.")
+            .with_mime_type("application/json")
+            .no_annotation(),
     ]
 }
 
@@ -66,6 +70,13 @@ pub(super) async fn read_resource(
                 .await
                 .map_err(api_err)?;
             to_json_string(&assets)?
+        }
+        "homunculus://rpc" => {
+            let reg = handler
+                .rpc_registry
+                .read()
+                .unwrap_or_else(|e| e.into_inner());
+            to_json_string(reg.all())?
         }
         _ => {
             return Err(rmcp::ErrorData::resource_not_found(

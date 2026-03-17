@@ -40,7 +40,7 @@ impl HomunculusMcpHandler {
     /// Execute a MOD command.
     #[tool(
         name = "execute_command",
-        description = "Execute a MOD command (e.g., VoiceVox speak, initialize). Returns stdout, stderr, and exit code. Use 'mods' resource to discover available commands."
+        description = "Execute a short-lived MOD bin command (spawns a new process). Returns stdout, stderr, and exit code. For stateful service RPC, use call_rpc instead. Use 'mods' resource to discover available commands."
     )]
     async fn execute_command(&self, params: Parameters<ExecuteCommandParams>) -> String {
         let args = params.0;

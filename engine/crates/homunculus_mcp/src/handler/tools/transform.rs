@@ -14,10 +14,6 @@ use serde::{Deserialize, Serialize};
 
 use super::super::HomunculusMcpHandler;
 
-// ---------------------------------------------------------------------------
-// Parameter structs
-// ---------------------------------------------------------------------------
-
 /// Parameters for the `move_character` tool.
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
 pub struct MoveCharacterParams {
@@ -98,10 +94,6 @@ pub struct SpinCharacterParams {
     pub wait: Option<bool>,
 }
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
 /// Parses an easing function name string into an [`EasingFunction`].
 ///
 /// Uses serde JSON deserialization to reuse the rename mappings defined on
@@ -114,10 +106,6 @@ fn parse_easing(easing: &Option<String>) -> EasingFunction {
         None => EasingFunction::default(),
     }
 }
-
-// ---------------------------------------------------------------------------
-// Tool implementations
-// ---------------------------------------------------------------------------
 
 #[rmcp::tool_router(router = transform_tool_router, vis = "pub(super)")]
 impl HomunculusMcpHandler {

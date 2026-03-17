@@ -13,6 +13,7 @@ bevy_vrm1 = { workspace = true }
 homunculus_api = { workspace = true }
 homunculus_core = { workspace = true }
 homunculus_utils = { workspace = true }
+reqwest = { workspace = true }
 rmcp = { version = "1.1.0", features = ["server", "transport-streamable-http-server"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
