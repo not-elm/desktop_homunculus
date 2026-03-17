@@ -1,19 +1,22 @@
 /**
- * RPC server utilities for Desktop Homunculus mods.
+ * RPC utilities for Desktop Homunculus mods (Node.js entry point).
  *
- * This module provides helpers for exposing typed RPC methods from a mod's
- * service process. The engine proxies incoming calls to `POST /{method}` on
- * the local HTTP server started by {@link rpc.serve}.
+ * This module provides:
+ * - **Client:** {@link rpc.call} — invoke an RPC method on another MOD
+ *   (browser-safe, also available via the `default` conditional export)
+ * - **Server:** {@link rpc.serve} — start a local RPC HTTP server (Node.js only)
+ * - **Method definition:** {@link rpc.method} — create typed RPC method
+ *   definitions with Zod validation (Node.js only)
  *
- * **Server:** {@link rpc.serve}
- * **Method definition:** {@link rpc.method}
+ * Import from `@hmcs/sdk/rpc`. In Node.js, all three APIs are available.
+ * In browser/bundler environments, only {@link rpc.call} is available
+ * (resolved via conditional exports to `rpc-client`).
  *
  * @remarks
- * This module uses Node.js APIs (`node:http`, `process`) and is not
- * browser-compatible. Import from `@hmcs/sdk/rpc` — it is intentionally
- * not re-exported from the main `@hmcs/sdk` entry point.
+ * The server APIs (`serve`, `method`) use Node.js APIs (`node:http`, `process`)
+ * and are not browser-compatible.
  *
- * Required environment variables:
+ * Required environment variables (for `serve` only):
  * - `HMCS_RPC_PORT` — port the local RPC HTTP server will listen on
  * - `HMCS_MOD_NAME` — name of the mod (used for registration with the engine)
  * - `HMCS_PORT` — engine HTTP API port (default: `3100`)
@@ -23,6 +26,14 @@
  * import { z } from "zod";
  * import { rpc } from "@hmcs/sdk/rpc";
  *
+ * // Client: call an RPC method on another MOD (works in browser + Node.js)
+ * const result = await rpc.call<{ greeting: string }>({
+ *   modName: "voicevox",
+ *   method: "speak",
+ *   body: { text: "Hello!" },
+ * });
+ *
+ * // Server: expose RPC methods (Node.js only)
  * const greet = rpc.method({
  *   description: "Greet a user by name",
  *   input: z.object({ name: z.string() }),
@@ -38,6 +49,9 @@
 
 import * as http from "node:http";
 import { type ZodType } from "zod";
+import { rpc as rpcClient } from "./rpc-client";
+
+export type { RpcCallOptions } from "./rpc-client";
 
 /**
  * A single RPC method definition created by {@link rpc.method}.
@@ -315,13 +329,24 @@ async function registerWithRetry(
 }
 
 /**
- * RPC server utilities for Desktop Homunculus mod service processes.
+ * RPC utilities for Desktop Homunculus mod service processes.
+ *
+ * In Node.js: `call`, `method`, and `serve` are all available.
+ * In browser/bundler: only `call` is available (via conditional exports).
  *
  * @example
  * ```typescript
  * import { z } from "zod";
  * import { rpc } from "@hmcs/sdk/rpc";
  *
+ * // Client — call another MOD's RPC method
+ * const result = await rpc.call<{ sum: number }>({
+ *   modName: "calculator",
+ *   method: "add",
+ *   body: { a: 1, b: 2 },
+ * });
+ *
+ * // Server — expose RPC methods (Node.js only)
  * const add = rpc.method({
  *   description: "Add two numbers",
  *   timeout: 5000,
@@ -335,6 +360,25 @@ async function registerWithRetry(
  * ```
  */
 export namespace rpc {
+  /**
+   * Call an RPC method on a MOD service.
+   *
+   * Delegates to the browser-safe `rpc-client` implementation. See
+   * {@link rpcClient.call} for full documentation.
+   *
+   * @example
+   * ```typescript
+   * import { rpc } from "@hmcs/sdk/rpc";
+   *
+   * const result = await rpc.call<{ greeting: string }>({
+   *   modName: "voicevox",
+   *   method: "speak",
+   *   body: { text: "Hello!" },
+   * });
+   * ```
+   */
+  export const call = rpcClient.call;
+
   /**
    * Create a typed RPC method definition with Zod input validation.
    *
