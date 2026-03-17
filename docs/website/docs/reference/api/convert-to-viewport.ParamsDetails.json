@@ -1,1 +1,0 @@
-{"parameters":[{"name":"x","in":"query","description":"X coordinate in world space","schema":{"type":"number","format":"float"}},{"name":"y","in":"query","description":"Y coordinate in world space","schema":{"type":"number","format":"float"}},{"name":"z","in":"query","description":"Z coordinate in world space","schema":{"type":"number","format":"float"}}]}

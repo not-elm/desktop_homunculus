@@ -1,0 +1,1 @@
+{"responses":{"200":{"description":"List of mod menus","content":{"application/json":{"schema":{"type":"array","items":{"type":"object","required":["id","modName","text","command"],"properties":{"command":{"type":"string"},"id":{"type":"string"},"modName":{"type":"string"},"text":{"type":"string"}},"title":"ModMenuMetadata"}}}}}}}

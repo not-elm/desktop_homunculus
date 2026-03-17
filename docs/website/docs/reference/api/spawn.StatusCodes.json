@@ -1,0 +1,1 @@
+{"responses":{"200":{"description":"VRM model spawned, returns entity ID","content":{"text/plain":{"schema":{"type":"string"}}}},"400":{"description":"Invalid request"}}}

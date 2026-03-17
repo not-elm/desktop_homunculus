@@ -1,1 +1,0 @@
-{"parameters":[{"name":"key","in":"path","required":true,"schema":{"type":"string"}}]}

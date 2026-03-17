@@ -1,0 +1,1 @@
+{"parameters":[{"name":"entity","in":"path","description":"Entity ID","required":true,"schema":{"type":"string"}},{"name":"asset","in":"query","description":"Asset ID of the VRMA animation","required":true,"schema":{"type":"string"}}]}

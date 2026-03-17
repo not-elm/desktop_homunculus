@@ -1,1 +1,0 @@
-{"title":"Body","body":{"required":true,"content":{"application/json":{"schema":{"type":"object","required":["vrm"],"properties":{"vrm":{"type":"integer","format":"uint64","description":"The unique identifier for an entity.","title":"Entity"}},"title":"SetLinkedVrmRequest"}}}}}

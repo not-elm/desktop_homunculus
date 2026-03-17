@@ -28,6 +28,7 @@ fix-lint:
 
 gen-open-api:
 	$(MAKE) -C engine gen-open-api
+	cd docs/website && npx docusaurus gen-api-docs homunculus
 	pnpm build
 
 release-windows:

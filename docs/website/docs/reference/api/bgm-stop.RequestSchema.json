@@ -1,0 +1,1 @@
+{"title":"Body","body":{"description":"Optional fade-out settings","content":{"application/json":{"schema":{"oneOf":[{"type":"null"},{"type":"object","properties":{"fadeOut":{"type":["object","null"]}},"title":"BgmStopRequest"}]}}}}}
