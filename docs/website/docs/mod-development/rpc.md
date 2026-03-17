@@ -6,6 +6,8 @@ sidebar_position: 6
 
 The RPC system lets MOD services expose stateful HTTP methods that the engine, other MODs, and AI agents can call through a central proxy. Unlike MOD commands (one-shot `bin` scripts), RPC methods run inside the MOD's long-running service process, giving them access to in-memory state.
 
+To define and serve RPC methods from a MOD service, see the [rpc SDK module](./sdk/rpc).
+
 ## How It Works
 
 ```mermaid
