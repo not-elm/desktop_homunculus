@@ -73,6 +73,7 @@ mod error;
 mod events;
 mod render_layers;
 mod resources;
+pub mod rpc_registry;
 mod schema;
 mod system_param;
 mod system_set;
@@ -80,7 +81,8 @@ mod system_set;
 pub mod prelude {
     pub use crate::{
         HomunculusCorePlugin, components::*, error::*, events::prelude::*, resources::prelude::*,
-        schema::prelude::*, system_param::prelude::*, system_set::HomunculusSystemSet,
+        rpc_registry::*, schema::prelude::*, system_param::prelude::*,
+        system_set::HomunculusSystemSet,
     };
     pub use homunculus_utils::prelude::*;
 }

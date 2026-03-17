@@ -48,6 +48,7 @@ fn schedule_service(info: &ModInfo, commands: &mut Commands, mods_dir: &Path) {
     if let Some(service_script_path) = &info.service_script_path {
         if service_script_path.exists() {
             commands.spawn(ModService {
+                mod_name: info.name.clone(),
                 script_path: service_script_path.clone(),
                 mods_dir: mods_dir.to_path_buf(),
             });

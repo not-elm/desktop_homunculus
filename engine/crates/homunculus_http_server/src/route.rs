@@ -13,6 +13,7 @@ pub(crate) mod entities;
 pub(crate) mod info;
 pub(crate) mod mods;
 pub(crate) mod preferences;
+pub(crate) mod rpc;
 pub(crate) mod settings;
 pub(crate) mod shadow_panel;
 pub(crate) mod signals;

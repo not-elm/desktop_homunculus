@@ -9,10 +9,6 @@ use serde::{Deserialize, Serialize};
 
 use super::super::HomunculusMcpHandler;
 
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
 const DEFAULT_SE_SPEED: f64 = 1.0;
 const DEFAULT_SE_PAN: f64 = 0.0;
 const DEFAULT_BGM_LOOPING: bool = true;

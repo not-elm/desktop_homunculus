@@ -1,3 +1,4 @@
+use crate::rpc_registry::SharedRpcRegistry;
 use bevy::prelude::*;
 
 pub mod prelude {
@@ -22,5 +23,6 @@ pub(crate) struct CoreResourcesPlugin;
 impl Plugin for CoreResourcesPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<ModMenuMetadataList>();
+        app.init_resource::<SharedRpcRegistry>();
     }
 }
