@@ -135,7 +135,7 @@ try {
 
 The `linkedVrm` option in `Webview.open()` associates the webview with the right-clicked character. Inside the webview, you can retrieve this association using `Webview.current()` and then `linkedVrm()` to get the VRM instance.
 
-See the [Webviews SDK reference](./sdk/webviews) for all available options and methods.
+See the [Webviews SDK reference](/reference/sdk/webviews) for all available options and methods.
 
 ## Complete Example
 
@@ -206,6 +206,6 @@ Restart Desktop Homunculus, right-click a character, and select **Wave** from th
 
 - **[Tray Menus](./tray-menus.md)** -- Application-wide tray menu items
 - **[MOD Commands](./commands.md)** -- Writing and invoking MOD commands
-- **[Webviews](./sdk/webviews)** -- Embedding HTML UIs in 3D space
-- **[Mods API](./sdk/mods/)** -- Programmatic menu listing and command execution
+- **[Webviews](/reference/sdk/webviews)** -- Embedding HTML UIs in 3D space
+- **[Mods API](/reference/sdk/mods/)** -- Programmatic menu listing and command execution
 - **[Package Configuration](./project-setup/package-json.md)** -- Full `package.json` reference

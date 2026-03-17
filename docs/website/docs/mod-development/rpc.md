@@ -6,7 +6,7 @@ sidebar_position: 6
 
 The RPC system lets MOD services expose stateful HTTP methods that the engine, other MODs, and AI agents can call through a central proxy. Unlike MOD commands (one-shot `bin` scripts), RPC methods run inside the MOD's long-running service process, giving them access to in-memory state.
 
-To define and serve RPC methods from a MOD service, see the [rpc SDK module](./sdk/rpc).
+To define and serve RPC methods from a MOD service, see the [rpc SDK module](/reference/sdk/rpc).
 
 ## How It Works
 
@@ -30,7 +30,7 @@ sequenceDiagram
     Engine-->>Caller: JSON response
 ```
 
-The engine allocates an ephemeral port and pre-registers it in the RPC registry before spawning the MOD process. The MOD service reads the port from `HMCS_RPC_PORT`, starts an HTTP server with [`rpc.serve()`](./sdk/rpc/serve), and calls `POST /rpc/register` to publish its methods. Registration returns 404 if no pre-allocated port exists for the MOD.
+The engine allocates an ephemeral port and pre-registers it in the RPC registry before spawning the MOD process. The MOD service reads the port from `HMCS_RPC_PORT`, starts an HTTP server with [`rpc.serve()`](/reference/sdk/rpc/serve), and calls `POST /rpc/register` to publish its methods. Registration returns 404 if no pre-allocated port exists for the MOD.
 
 ## Environment Variables
 
@@ -63,4 +63,4 @@ Error codes returned by `POST /rpc/call`:
 
 ## See Also
 
-- [rpc SDK module](./sdk/rpc) — Server-side API for defining and serving RPC methods
+- [rpc SDK module](/reference/sdk/rpc) — Server-side API for defining and serving RPC methods

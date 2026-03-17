@@ -45,7 +45,7 @@ const currentFps = await settings.fps();
 await settings.setFps(30);
 ```
 
-See the [Settings SDK reference](../mod-development/sdk/settings) for full API documentation.
+See the [Settings SDK reference](/reference/sdk/settings) for full API documentation.
 
 ## Notes
 

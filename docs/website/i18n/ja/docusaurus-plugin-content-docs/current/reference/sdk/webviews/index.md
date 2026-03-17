@@ -7,7 +7,7 @@ sidebar_position: 1
 
 3D 空間内に埋め込み HTML インターフェースを作成・制御します。WebView は自由に浮遊させることも、VRM キャラクターにリンクしてキャラクターの移動に追従させることもできます。
 
-React UI を Vite と `@hmcs/ui` で構築する方法については、[WebView UI セットアップ](../../webview-ui/setup-and-build)を参照してください。
+React UI を Vite と `@hmcs/ui` で構築する方法については、[WebView UI セットアップ](/mod-development/webview-ui/setup-and-build)を参照してください。
 
 ```typescript
 import { Webview, webviewSource } from "@hmcs/sdk";
