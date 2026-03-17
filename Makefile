@@ -52,7 +52,7 @@ release-macos-universal:
 	$(MAKE) -C engine release-macos-universal
 
 bump-version:
-	$(PYTHON) scripts/bump_version.py $(VERSION)
+	$(PYTHON) scripts/bump_version.py
 
 check-version:
 	$(PYTHON) scripts/bump_version.py --check
