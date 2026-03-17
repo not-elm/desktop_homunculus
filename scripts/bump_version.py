@@ -49,18 +49,6 @@ def load_config() -> dict[str, object]:
     return {"version": version, "targets": targets, "excludes": excludes}
 
 
-def write_version_to_config(version: str) -> None:
-    """Update the version field in version.toml."""
-    text = CONFIG_PATH.read_text(encoding="utf-8")
-    new_text = re.sub(
-        r'^(version\s*=\s*)"[^"]*"',
-        rf'\g<1>"{version}"',
-        text,
-        count=1,
-        flags=re.MULTILINE,
-    )
-    CONFIG_PATH.write_text(new_text, encoding="utf-8")
-
 
 def resolve_targets(
     targets: list[str], excludes: list[str]
@@ -176,17 +164,14 @@ def refresh_cargo_lock(version: str) -> None:
         print("WARNING: cargo update --workspace failed", file=sys.stderr)
 
 
-def bump(version: str | None = None) -> None:
+def bump() -> None:
+    """Read version from version.toml and propagate to all target files."""
     config = load_config()
     targets = config.get("targets", [])
     excludes = config.get("excludes", [])
 
-    if version is None:
-        version = str(config["version"])
-        print(f"Using version from version.toml: {version}")
-    else:
-        write_version_to_config(version)
-        print(f"Updated version.toml to {version}")
+    version = str(config["version"])
+    print(f"Using version from version.toml: {version}")
 
     validate_version(version)
     resolved = resolve_targets(targets, excludes)  # type: ignore[arg-type]
@@ -356,14 +341,18 @@ def check() -> None:
 
 def main() -> None:
     if len(sys.argv) < 2:
-        # No arguments: read from version.toml and propagate
         bump()
         return
 
     if sys.argv[1] == "--check":
         check()
     else:
-        bump(sys.argv[1])
+        print(
+            f"ERROR: Unknown argument '{sys.argv[1]}'. "
+            "Usage: bump_version.py [--check]",
+            file=sys.stderr,
+        )
+        sys.exit(1)
 
 
 if __name__ == "__main__":
