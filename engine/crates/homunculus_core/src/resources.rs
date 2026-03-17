@@ -1,8 +1,5 @@
 use crate::rpc_registry::SharedRpcRegistry;
 use bevy::prelude::*;
-use crate::rpc_registry::SharedRpcRegistry;
-use bevy::prelude::*;
-
 pub mod prelude {
     pub use crate::resources::{ModMenuMetadata, ModMenuMetadataList};
 }
