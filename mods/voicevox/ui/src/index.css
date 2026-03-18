@@ -677,34 +677,6 @@ body {
   box-shadow: 0 0 6px oklch(0.7 0.16 350 / 0.5);
 }
 
-.voicevox-select {
-  width: 100%;
-  padding: 10px 36px 10px 14px;
-  font-size: 14px;
-  color: oklch(0.92 0.01 250);
-  background: oklch(0.12 0.01 250 / 0.8);
-  border: 1px solid oklch(0.72 0.14 192 / 0.15);
-  border-radius: 8px;
-  outline: none;
-  appearance: none;
-  -webkit-appearance: none;
-  cursor: pointer;
-  transition: border-color 180ms ease;
-  position: relative;
-  z-index: 7;
-}
-
-.voicevox-select:hover,
-.voicevox-select:focus {
-  border-color: oklch(0.72 0.14 192 / 0.4);
-}
-
-.voicevox-select option,
-.voicevox-select optgroup {
-  background: oklch(0.15 0.01 250);
-  color: oklch(0.92 0.01 250);
-}
-
 .voicevox-param-desc {
   font-size: 11px;
   color: oklch(0.72 0.14 192 / 0.4);

@@ -1,3 +1,12 @@
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@hmcs/ui";
 import { useVoicevoxSettings } from "./hooks/useVoicevoxSettings";
 import type { VoicevoxSettings } from "./hooks/useVoicevoxSettings";
 
@@ -171,31 +180,30 @@ function SettingsForm({
 
       <label className="settings-label">
         Speaker
-        <select
-          className="voicevox-select"
-          value={settings.speakerId}
-          onChange={(e) =>
-            onSettingsChange({
-              ...settings,
-              speakerId: Number(e.target.value),
-            })
+        <Select
+          value={
+            settings.speakerId === -1 ? undefined : String(settings.speakerId)
+          }
+          onValueChange={(value) =>
+            onSettingsChange({ ...settings, speakerId: Number(value) })
           }
         >
-          {invalidSpeaker && (
-            <option value={-1} disabled>
-              — 話者を選択 —
-            </option>
-          )}
-          {speakers.map((speaker) => (
-            <optgroup key={speaker.name} label={speaker.name}>
-              {speaker.styles.map((style) => (
-                <option key={style.id} value={style.id}>
-                  {style.name}
-                </option>
-              ))}
-            </optgroup>
-          ))}
-        </select>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="— 話者を選択 —" />
+          </SelectTrigger>
+          <SelectContent>
+            {speakers.map((speaker) => (
+              <SelectGroup key={speaker.name}>
+                <SelectLabel>{speaker.name}</SelectLabel>
+                {speaker.styles.map((style) => (
+                  <SelectItem key={style.id} value={String(style.id)}>
+                    {style.name}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            ))}
+          </SelectContent>
+        </Select>
       </label>
 
       <div className="voicevox-divider" />
