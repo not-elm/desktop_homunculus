@@ -6,8 +6,8 @@
   "type": "module",
   "author": "notelm",
   "scripts": {
-    "build": "vite build ui",
-    "dev": "vite dev ui"
+    "build": "pnpm exec vite build ui",
+    "dev": "pnpm exec vite dev ui"
   },
   "homunculus": {
     "tray": {
