@@ -21,7 +21,7 @@ const PARAMS: {
   {
     key: "speedScale",
     label: "Speed",
-    desc: "読み上げの速さ",
+    desc: "Speech speed",
     min: 0.5,
     max: 2.0,
     step: 0.05,
@@ -29,7 +29,7 @@ const PARAMS: {
   {
     key: "pitchScale",
     label: "Pitch",
-    desc: "声の高さ（0が基準）",
+    desc: "Voice pitch (0 = baseline)",
     min: -0.15,
     max: 0.15,
     step: 0.01,
@@ -37,7 +37,7 @@ const PARAMS: {
   {
     key: "intonationScale",
     label: "Intonation",
-    desc: "抑揚の強さ",
+    desc: "Intonation strength",
     min: 0.0,
     max: 2.0,
     step: 0.05,
@@ -45,7 +45,7 @@ const PARAMS: {
   {
     key: "volumeScale",
     label: "Volume",
-    desc: "音量",
+    desc: "Volume level",
     min: 0.0,
     max: 2.0,
     step: 0.05,
@@ -87,7 +87,7 @@ export function App() {
           <DisconnectedView onRetry={handleRetry} />
         ) : speakers.length === 0 ? (
           <div className="voicevox-error">
-            <div className="voicevox-error-text">話者が見つかりません</div>
+            <div className="voicevox-error-text">No speakers found</div>
           </div>
         ) : (
           <SettingsForm
@@ -150,7 +150,7 @@ function DisconnectedView({ onRetry }: { onRetry: () => void }) {
   return (
     <div className="voicevox-error">
       <div className="voicevox-error-text">
-        VOICEVOX に接続できません
+        Cannot connect to VOICEVOX
       </div>
       <button className="voicevox-error-retry" onClick={onRetry}>
         Retry
@@ -174,7 +174,7 @@ function SettingsForm({
     <>
       {invalidSpeaker && (
         <div className="voicevox-warning">
-          以前の話者は利用できません。新しい話者を選択してください。
+          Previous speaker is unavailable. Please select a new one.
         </div>
       )}
 
@@ -189,7 +189,7 @@ function SettingsForm({
           }
         >
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="— 話者を選択 —" />
+            <SelectValue placeholder="— Select a speaker —" />
           </SelectTrigger>
           <SelectContent>
             {speakers.map((speaker) => (
