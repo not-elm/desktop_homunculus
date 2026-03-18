@@ -105,7 +105,10 @@ pub struct HomunculusSpeechPlugin;
 impl Plugin for HomunculusSpeechPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Mora>()
-            .add_systems(Update, (advance_mora, insert_speak_queue, pop_speak_queue));
+            .add_systems(
+                Update,
+                (insert_speak_queue, (pop_speak_queue, advance_mora).chain()),
+            );
     }
 }
 
