@@ -11,7 +11,7 @@ Verify that source code and documentation describe the same APIs, commands, and 
 | Source Code | Documentation |
 |-------------|--------------|
 | `packages/sdk/src/` | `docs/website/docs/mod-development/sdk/` |
-| `packages/mcp-server/src/` | `docs/website/docs/reference/mcp-tools/` |
+| `engine/crates/homunculus_mcp/src/` | `docs/website/docs/reference/mcp-tools/` |
 | `engine/crates/homunculus_cli/` | `docs/website/docs/reference/cli/` |
 | `mods/*/package.json` `homunculus` field | `docs/website/docs/mods/` |
 

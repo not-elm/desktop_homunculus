@@ -15,26 +15,32 @@ Set up Claude Code to control your Desktop Homunculus characters from the termin
 
 Add the Homunculus MCP server to your Claude Code configuration.
 
+**Recommended — CLI** (registers globally for all projects):
+
+```bash
+claude mcp add --transport http --scope user homunculus http://localhost:3100/mcp
+```
+
 **Project-level** (`.mcp.json` in your project root):
 
 ```json
 {
   "mcpServers": {
     "homunculus": {
-      "type": "streamable-http",
+      "type": "http",
       "url": "http://localhost:3100/mcp"
     }
   }
 }
 ```
 
-**Global** (`~/.claude/settings.json`):
+**Global** (`~/.claude.json` `mcpServers` section, or use the CLI command above):
 
 ```json
 {
   "mcpServers": {
     "homunculus": {
-      "type": "streamable-http",
+      "type": "http",
       "url": "http://localhost:3100/mcp"
     }
   }
@@ -65,7 +71,7 @@ If Desktop Homunculus runs on a non-default port (changed in `~/.homunculus/conf
 {
   "mcpServers": {
     "homunculus": {
-      "type": "streamable-http",
+      "type": "http",
       "url": "http://localhost:4000/mcp"
     }
   }

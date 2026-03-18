@@ -16,7 +16,6 @@ desktop-homunculus/
 ├── packages/
 │   ├── sdk/             # @hmcs/sdk — TypeScript SDK for mods/extensions
 │   ├── ui/              # @hmcs/ui — Shared React component library (Radix + Tailwind)
-│   ├── mcp-server/      # MCP server — exposes character control to AI agents via stdio
 │   ├── cli/             # @hmcs/cli — Node CLI wrapper (distributes platform-specific Rust binary)
 │   └── cli-platform/    # Platform-specific binary packages for hmcs CLI
 ├── mods/                # Mods (NPM packages): elmer/, settings/, menu/, assets/, voicevox/, character-settings/
@@ -98,13 +97,6 @@ pnpm dev                 # Vite dev server
 pnpm build               # Vite build → dist/
 ```
 
-### MCP Server — run from `packages/mcp-server/`
-
-```bash
-pnpm build               # TypeScript → dist/
-pnpm test                # vitest
-```
-
 ### Documentation Site — run from `docs/website/`
 
 ```bash
@@ -146,9 +138,9 @@ UI apps live in `mods/` as mod packages — **settings** (`mods/settings/ui/`), 
 
 **Design language**: Glassmorphism — semi-transparent backgrounds (`bg-primary/30`), `backdrop-blur-sm`, subtle borders (`border-white/20`), white text. This is the canonical style for all WebView UI overlays on the transparent Bevy window. The `@hmcs/ui` library is built on **shadcn/ui (new-york style)** with Radix UI primitives and **lucide-react** icons. Use the `cn()` utility from `@hmcs/ui` (clsx + tailwind-merge) for conditional class names.
 
-### MCP Server (`packages/mcp-server/`)
+### MCP Server (`engine/crates/homunculus_mcp/`)
 
-Exposes ~20 tools (e.g. `play_reaction`, `speak_message`, `move_character`, `open_webview`) and 4 resources (`homunculus://info`, `homunculus://characters`, `homunculus://mods`, `homunculus://assets`) for AI agent control. Connects to the engine's HTTP API at `HOMUNCULUS_HOST` (default: `localhost:3100`).
+Embedded Rust MCP server using Streamable HTTP transport, mounted at `/mcp` on the engine's Axum router (`localhost:3100/mcp`). Exposes 19 tools (character control, audio, webview, mod commands), 5 resources (`homunculus://info`, `homunculus://characters`, `homunculus://mods`, `homunculus://assets`, `homunculus://rpc`), and 3 prompts. Uses the `rmcp` crate with `LocalSessionManager` for session isolation.
 
 ### Rust CLI (`engine/crates/homunculus_cli/`)
 

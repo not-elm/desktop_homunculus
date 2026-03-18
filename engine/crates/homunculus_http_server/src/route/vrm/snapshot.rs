@@ -37,7 +37,7 @@ mod tests {
     use bevy::prelude::*;
     use bevy_vrm1::vrm::{Initialized, Vrm};
     use homunculus_api::vrm::VrmSnapshot;
-    use homunculus_core::prelude::VrmState;
+    use homunculus_core::prelude::{AssetId, AssetIdComponent, VrmState};
 
     #[tokio::test]
     async fn test_snapshot() {
@@ -49,6 +49,7 @@ mod tests {
             Initialized,
             VrmState::default(),
             Transform::default(),
+            AssetIdComponent(AssetId::new("test-mod:test-vrm")),
         ));
         app.update();
 
@@ -64,6 +65,7 @@ mod tests {
         assert_eq!(snapshots.len(), 1);
         assert_eq!(snapshots[0].name, "Test1");
         assert_eq!(snapshots[0].state, "idle");
+        assert_eq!(snapshots[0].asset_id, Some("test-mod:test-vrm".to_string()));
     }
 
     #[tokio::test]

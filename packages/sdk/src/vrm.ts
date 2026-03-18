@@ -225,6 +225,8 @@ export type LookAtState =
  * ```
  */
 export interface VrmSnapshot {
+    /** The asset ID of the VRM model (e.g. "elmer:model"). Null if not tracked. */
+    assetId: string | null;
     entity: number;
     name: string;
     state: string;

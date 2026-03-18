@@ -33,11 +33,11 @@ export function voicevoxToTimeline(query: VoiceVoxAudioQuery): TimelineKeyframe[
   const keyframes: TimelineKeyframe[] = [];
 
   // Pre-phoneme silence
-  keyframes.push({ duration: query.prePhonemeLength * query.speedScale });
+  keyframes.push({ duration: query.prePhonemeLength / query.speedScale });
 
   for (const phrase of query.accent_phrases) {
     for (const mora of phrase.moras) {
-      const duration = (mora.vowel_length + (mora.consonant_length ?? 0)) * query.speedScale;
+      const duration = (mora.vowel_length + (mora.consonant_length ?? 0)) / query.speedScale;
       const expression = VOWEL_MAP[mora.vowel];
       if (expression) {
         keyframes.push({ duration, targets: { [expression]: 1.0 } });
@@ -47,7 +47,7 @@ export function voicevoxToTimeline(query: VoiceVoxAudioQuery): TimelineKeyframe[
     }
     if (phrase.pause_mora) {
       const pm = phrase.pause_mora;
-      const duration = pm.vowel_length * query.speedScale;
+      const duration = pm.vowel_length / query.speedScale;
       const expression = VOWEL_MAP[pm.vowel];
       if (expression) {
         keyframes.push({ duration, targets: { [expression]: 1.0 } });
@@ -58,7 +58,7 @@ export function voicevoxToTimeline(query: VoiceVoxAudioQuery): TimelineKeyframe[
   }
 
   // Post-phoneme silence
-  keyframes.push({ duration: query.postPhonemeLength * query.speedScale });
+  keyframes.push({ duration: query.postPhonemeLength / query.speedScale });
 
   return keyframes;
 }
