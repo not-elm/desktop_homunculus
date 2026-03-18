@@ -10,8 +10,6 @@ ICNS_FILE      := build/macos/AppIcon.icns
 RUST_LICENSES_OUTPUT := credits/licenses/RUST_THIRD_PARTY.md
 OPENAPI_OUTPUT ?= ../docs/website/static/api/open-api.yml
 
-# CUDA architecture for whisper-rs-sys (exported to env for CMake)
-export CMAKE_CUDA_ARCHITECTURES
 
 VERSION = $(shell cargo metadata --format-version 1 --no-deps 2>/dev/null \
 	| jq -r '.packages[] | select(.name=="$(BIN_NAME)") | .version')
@@ -46,10 +44,9 @@ setup-cef:
 debug:
 	cargo run --features develop
 
-# debug-cuda: CMAKE_CUDA_ARCHITECTURES = native
-# debug-cuda:
-# 	$(PYTHON) scripts/patch_whisper_cuda.py
-# 	cargo run --features develop,stt-cuda
+debug-cuda:
+	$(PYTHON) scripts/patch_whisper_cuda.py
+	cargo run --features develop,stt-cuda
 
 gen-open-api:
 	cargo run -p homunculus_http_server --bin gen_openapi -- --output $(OPENAPI_OUTPUT)
