@@ -68,5 +68,3 @@ STT requires microphone access. On macOS, the system will prompt for permission 
 
 - **[Session & Streaming](./session-and-streaming)** -- Session lifecycle, real-time transcription events, and error handling
 - **[Models](./models)** -- Download and manage Whisper models
-- **[speech](../speech)** -- Convert phoneme data into lip-sync keyframes (complementary output feature)
-- **[audio](../audio)** -- Play sound effects and background music
