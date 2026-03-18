@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Unified version management for the desktop_homunculus monorepo.
+"""Unified version management for the desktop-homunculus monorepo.
 
 Reads version, targets, and excludes from version.toml (Single Source of Truth).
 """

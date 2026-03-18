@@ -21,11 +21,11 @@
   },
   "link.item.label.GitHub Issues": {
     "message": "GitHub Issues",
-    "description": "The label of footer link with label=GitHub Issues linking to https://github.com/not-elm/desktop_homunculus/issues"
+    "description": "The label of footer link with label=GitHub Issues linking to https://github.com/not-elm/desktop-homunculus/issues"
   },
   "link.item.label.GitHub Discussions": {
     "message": "GitHub Discussions",
-    "description": "The label of footer link with label=GitHub Discussions linking to https://github.com/not-elm/desktop_homunculus/discussions"
+    "description": "The label of footer link with label=GitHub Discussions linking to https://github.com/not-elm/desktop-homunculus/discussions"
   },
   "copyright": {
     "message": "Copyright © 2026 not-elm. コンポーネントごとのライセンス（Rust: MIT/Apache-2.0、TypeScript: MIT、ドキュメント/アセット: CC-BY-4.0）",

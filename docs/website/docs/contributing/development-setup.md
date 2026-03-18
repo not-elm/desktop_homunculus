@@ -35,8 +35,8 @@ All of the above, plus:
 ## Clone & Setup
 
 ```shell
-git clone https://github.com/not-elm/desktop_homunculus.git
-cd desktop_homunculus
+git clone https://github.com/not-elm/desktop-homunculus.git
+cd desktop-homunculus
 
 # Install all dependencies (Node packages, Rust tooling, global npm tools, CEF framework)
 make setup
