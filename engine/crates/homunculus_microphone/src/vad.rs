@@ -297,10 +297,7 @@ fn resample_batch(source_rate: u32, samples: &[f32]) -> Vec<f32> {
 /// Returns `(vad_enum, vad_hz, needs_pre_resample)`. When `needs_pre_resample` is
 /// true the caller must resample to 16kHz *before* VAD (the rate is unsupported by
 /// webrtc-vad, e.g. 44.1kHz).
-fn select_vad_rate(
-    sample_rate: u32,
-    needs_resample: bool,
-) -> (webrtc_vad::SampleRate, u32, bool) {
+fn select_vad_rate(sample_rate: u32, needs_resample: bool) -> (webrtc_vad::SampleRate, u32, bool) {
     if !needs_resample {
         return (webrtc_vad::SampleRate::Rate16kHz, 16000, false);
     }
@@ -361,10 +358,8 @@ fn vad_thread_main(
         None
     };
 
-    let mut vad = webrtc_vad::Vad::new_with_rate_and_mode(
-        vad_rate_enum,
-        webrtc_vad::VadMode::VeryAggressive,
-    );
+    let mut vad =
+        webrtc_vad::Vad::new_with_rate_and_mode(vad_rate_enum, webrtc_vad::VadMode::VeryAggressive);
 
     let mut state_machine = VadStateMachine::new(&config, vad_rate, needs_post_resample);
 
@@ -843,6 +838,9 @@ mod tests {
         }
 
         let chunk = sm.flush_speech();
-        assert!(chunk.is_none(), "flush_speech should respect min_chunk_samples");
+        assert!(
+            chunk.is_none(),
+            "flush_speech should respect min_chunk_samples"
+        );
     }
 }

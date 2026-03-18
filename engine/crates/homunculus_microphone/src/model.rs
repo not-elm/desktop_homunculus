@@ -330,7 +330,10 @@ mod tests {
         assert!(path.to_string_lossy().ends_with("ggml-medium-q5_0.bin"));
 
         let path = model_path(SttModelSize::LargeV3Turbo);
-        assert!(path.to_string_lossy().ends_with("ggml-large-v3-turbo-q5_0.bin"));
+        assert!(
+            path.to_string_lossy()
+                .ends_with("ggml-large-v3-turbo-q5_0.bin")
+        );
 
         let path = model_path(SttModelSize::LargeV3);
         assert!(path.to_string_lossy().ends_with("ggml-large-v3-q5_0.bin"));

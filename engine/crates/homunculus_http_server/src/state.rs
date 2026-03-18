@@ -8,8 +8,8 @@ use homunculus_api::prelude::{
 };
 use homunculus_api::stt::SttApi;
 use homunculus_api::vrm::VrmApi;
-use homunculus_microphone::{SharedSttModelCache, SharedSttSession};
 use homunculus_core::rpc_registry::RpcRegistry;
+use homunculus_microphone::SharedSttSession;
 use homunculus_utils::config::HomunculusConfig;
 use std::sync::{Arc, RwLock};
 

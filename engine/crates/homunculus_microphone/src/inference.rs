@@ -93,10 +93,7 @@ fn inference_loop(
                     }
                 }
                 prev_seq = Some(envelope.seq);
-                let audio_ctx = compute_audio_ctx(
-                    len.max(MIN_INFERENCE_SAMPLES),
-                    max_audio_ctx,
-                );
+                let audio_ctx = compute_audio_ctx(len.max(MIN_INFERENCE_SAMPLES), max_audio_ctx);
                 tracing::info!(
                     "Inference: received chunk seq={}, {len} samples ({secs:.1}s), \
                      queue_latency={latency_ms}ms, audio_ctx={audio_ctx}",
@@ -273,9 +270,7 @@ fn should_discard_low_confidence(state: &WhisperState) -> bool {
              no_speech_prob={no_speech_prob:.3}, content_tokens={content_token_count}"
         );
 
-        if avg_logprobs < AVG_LOGPROBS_THRESHOLD
-            && no_speech_prob > NO_SPEECH_PROB_THRESHOLD
-        {
+        if avg_logprobs < AVG_LOGPROBS_THRESHOLD && no_speech_prob > NO_SPEECH_PROB_THRESHOLD {
             tracing::info!(
                 "Inference: discarding low-confidence result \
                  (avg_logprobs={avg_logprobs:.3} < {AVG_LOGPROBS_THRESHOLD} \
