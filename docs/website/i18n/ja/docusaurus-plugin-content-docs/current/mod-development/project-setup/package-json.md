@@ -151,7 +151,7 @@ MOD にバンドルされるファイルを宣言します。各エントリは*
 ```json
 {
   "homunculus": {
-    "service": "index.ts"
+    "service": "service.ts"
   }
 }
 ```

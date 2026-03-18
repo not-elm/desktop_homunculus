@@ -10,6 +10,6 @@
     "@hmcs/sdk": "workspace:*"
   },
   "homunculus": {
-    "service": "index.ts"
+    "service": "service.ts"
   }
 }

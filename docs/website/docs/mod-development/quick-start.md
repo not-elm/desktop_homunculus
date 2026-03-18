@@ -51,7 +51,7 @@ Open `package.json` and add the `homunculus` field along with the `type` field. 
     "@hmcs/sdk": "..."
   },
   "homunculus": {
-    "service": "index.ts",
+    "service": "service.ts",
     "assets": {
       "my-character:vrm": {
         "path": "assets/MyModel.vrm",
@@ -65,7 +65,7 @@ Open `package.json` and add the `homunculus` field along with the `type` field. 
 
 ## Step 3: Write the Service
 
-Create `index.ts` in the project root. This script runs automatically when Desktop Homunculus starts.
+Create `service.ts` in the project root. This script runs automatically when Desktop Homunculus starts.
 
 ```typescript
 import { Vrm, repeat } from "@hmcs/sdk";
