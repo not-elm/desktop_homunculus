@@ -164,7 +164,9 @@ async function resolveLinkedVrm(): Promise<{
 
 async function fetchSpeakers(): Promise<VoicevoxSpeaker[] | null> {
   try {
-    const response = await fetch(`${VOICEVOX_HOST}/speakers`, {
+    const cefFetch = (globalThis as any).cef?.fetch;
+    const fetchFn = cefFetch ?? fetch;
+    const response = await fetchFn(`${VOICEVOX_HOST}/speakers`, {
       signal: AbortSignal.timeout(10000),
     });
     if (!response.ok) return null;
