@@ -14,6 +14,8 @@ hmcs config list
 hmcs config get port
 hmcs config set port 3200
 hmcs config set mods_dir /Users/me/.homunculus/mods
+hmcs config reset port
+hmcs config reset --all
 ```
 
 ## list
@@ -55,6 +57,7 @@ port     3100
 
 - [`hmcs config get`](#get)
 - [`hmcs config set`](#set)
+- [`hmcs config reset`](#reset)
 
 ## get
 
@@ -102,6 +105,7 @@ error: unknown config key 'foo'. ...valid keys: mods_dir, port
 
 - [`hmcs config list`](#list)
 - [`hmcs config set`](#set)
+- [`hmcs config reset`](#reset)
 
 ## set
 
@@ -160,4 +164,67 @@ error: invalid value for 'port': ...
 ### 関連
 
 - [`hmcs config get`](#get)
+- [`hmcs config reset`](#reset)
 - [`hmcs mod`](./mod)
+
+## reset
+
+### 構文
+
+```shell
+hmcs config reset <key>
+hmcs config reset --all
+```
+
+### 引数
+
+| 名前    | 必須   | 説明                                   |
+| ------- | ------ | -------------------------------------- |
+| `key`   | いいえ | デフォルト値にリセットする設定キー。   |
+| `--all` | いいえ | すべてのキーをデフォルト値にリセット。 |
+
+`key` または `--all` のいずれかを指定する必要があります。
+
+### 例
+
+単一のキーをリセット：
+
+```shell
+hmcs config reset port
+```
+
+```text
+port = 3100
+```
+
+すべてのキーをリセット：
+
+```shell
+hmcs config reset --all
+```
+
+```text
+all config reset to defaults
+```
+
+失敗例（引数なし）：
+
+```shell
+hmcs config reset
+```
+
+```text
+[stderr]
+error: specify a key to reset, or use --all to reset all config
+```
+
+### 動作
+
+- キー指定時：そのキーの値をデフォルトに置き換えて保存します。`{key} = {デフォルト値}` を出力します。
+- `--all` 指定時：デフォルト設定（`port = 3100`、`mods_dir = ~/.homunculus/mods/`）を保存します。
+- 不明なキーの場合はゼロ以外で終了します。
+
+### 関連
+
+- [`hmcs config get`](#get)
+- [`hmcs config set`](#set)

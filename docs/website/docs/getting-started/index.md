@@ -15,6 +15,10 @@ Desktop Homunculus is a cross-platform desktop mascot application built with the
 - **WebView-based UI overlays** — Settings panels, context menus, and custom UIs are React apps rendered inside the engine via Chromium Embedded Framework (CEF)
 - **Extensible TypeScript SDK** — The `@hmcs/sdk` package gives MOD developers control over characters, WebView UI, audio, and settings
 
+:::info[What is VRM?]
+[VRM](https://vrm.dev/en/) is an open file format for 3D humanoid avatars. Desktop Homunculus uses VRM 1.0 models as its character format. You can create VRM models with tools like [VRoid Studio](https://vroid.com/en/studio) or find them on platforms like [VRoid Hub](https://hub.vroid.com/en/).
+:::
+
 ## What You Need
 
 | Requirement | Version |

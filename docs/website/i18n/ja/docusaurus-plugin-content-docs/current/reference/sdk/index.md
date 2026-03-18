@@ -42,6 +42,18 @@ SDK は 18 のモジュールで構成されており、すべてメインの `@
 | **Math types**  | `import { type Transform, type Vec3 } from "@hmcs/sdk"` | Transform、Vec2、Vec3、Quat、Rect の型定義。                                                                   |
 | **utils**       | `import { sleep } from "@hmcs/sdk"`                     | ユーティリティヘルパー — ノンブロッキング遅延のための `sleep(ms)`。                                            |
 
+### RPC サブエントリーポイント
+
+`@hmcs/sdk/rpc` は、エンジンと MOD プロセス間で RPC（Remote Procedure Call）サービスを構築・呼び出すための **別エントリーポイント** です。Node.js 環境ではサーバー（`serve`、`method`）とクライアント（`call`）の両方の関数を提供します。ブラウザ環境では `call` のみ利用可能です。
+
+| エクスポート | 説明 |
+|---|---|
+| `rpc.serve(options)` | エンジンにメソッドを公開する RPC サーバーを起動します。Node.js のみ。 |
+| `rpc.method(name, schema, handler)` | Zod バリデーション付きの単一 RPC メソッドを定義します。Node.js のみ。 |
+| `rpc.call(method, params)` | エンジンの HTTP API 経由で MOD サービスの RPC メソッドを呼び出します。 |
+
+詳細な API ドキュメントは [RPC リファレンス](./rpc/) を参照してください。
+
 ### Commands サブエントリーポイント
 
 `@hmcs/sdk/commands` は、MOD コマンドスクリプトで使用するユーティリティのための **別エントリーポイント** です。Node.js 固有の API（`process.stdin`）に依存するため、メインの `@hmcs/sdk` インポートからは意図的に除外されています。

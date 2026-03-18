@@ -16,11 +16,11 @@ rpc.serve(options: RpcServeOptions): Promise<RpcServer>
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `options.methods` | `Record<string, `[`RpcMethodEntry`](./types#rpcmethodentry)`>` | Map of method names to definitions or handler functions |
+| `options.methods` | `Record<string, `[`RpcMethodEntry`](/reference/sdk/rpc/types#rpcmethodentry)`>` | Map of method names to definitions or handler functions |
 
 ## Returns
 
-[`RpcServer`](./types#rpcserver)
+[`RpcServer`](/reference/sdk/rpc/types#rpcserver)
 
 ## Behavior
 

@@ -1,6 +1,6 @@
 ---
 title: "Publishing & Distribution"
-sidebar_position: 12
+sidebar_position: 11
 ---
 
 # Publishing & Distribution
