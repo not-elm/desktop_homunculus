@@ -23,3 +23,11 @@ import { rpc } from "@hmcs/sdk/rpc";
 | [serve](./serve)   | RPC サーバーを起動し、メソッドをエンジンに登録            |
 | [method](./method) | オプションの Zod バリデーション付きで RPC メソッドを定義   |
 | [call](./call)     | 別の MOD サービスの RPC メソッドを呼び出す                 |
+
+## 型定義
+
+| 型 | 説明 |
+|------|-------------|
+| [RpcServer](./types#rpcserver) | `serve()` が返すサーバーインスタンス |
+| [RpcMethodEntry](./types#rpcmethodentry) | `serve({ methods })` で使用するメソッド定義 |
+| [RpcCallOptions](./types#rpccalloptions) | `call()` のオプション |

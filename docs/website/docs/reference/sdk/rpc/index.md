@@ -23,3 +23,11 @@ import { rpc } from "@hmcs/sdk/rpc";
 | [serve](./serve)   | Start the RPC server and register methods with the engine |
 | [method](./method) | Define an RPC method with optional Zod validation         |
 | [call](./call)     | Call an RPC method on another MOD's service               |
+
+## Type Definitions
+
+| Type | Description |
+|------|-------------|
+| [RpcServer](./types#rpcserver) | Server instance returned by `serve()` |
+| [RpcMethodEntry](./types#rpcmethodentry) | Method definition used in `serve({ methods })` |
+| [RpcCallOptions](./types#rpccalloptions) | Options for `call()` |

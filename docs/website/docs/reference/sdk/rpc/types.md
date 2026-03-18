@@ -41,3 +41,13 @@ The return value of [`rpc.serve()`](./serve).
 |-------|------|-------------|
 | `port` | `number` | Port the server is listening on |
 | `close` | `() => Promise<void>` | Gracefully shuts down the server |
+
+## RpcCallOptions
+
+Options for [`rpc.call()`](./call).
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `modName` | `string` | Yes | Name of the target MOD |
+| `method` | `string` | Yes | RPC method name to invoke |
+| `body` | `unknown` | No | Optional request body passed to the method handler |
