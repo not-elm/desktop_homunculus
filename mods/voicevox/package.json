@@ -10,12 +10,10 @@
     "dev": "vite dev ui"
   },
   "bin": {
-    "voicevox:speak": "commands/speak.ts",
-    "voicevox:speakers": "commands/speakers.ts",
-    "voicevox:initialize": "commands/initialize.ts",
     "open-settings": "commands/open-settings.ts"
   },
   "homunculus": {
+    "service": "service.ts",
     "menus": [
       {
         "id": "open-voicevox-settings",
