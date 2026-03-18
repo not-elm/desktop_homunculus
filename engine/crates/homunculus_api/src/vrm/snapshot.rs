@@ -5,7 +5,9 @@ use crate::vrma::VrmaInfo;
 use bevy::prelude::*;
 use bevy_flurx::prelude::*;
 use bevy_vrm1::prelude::*;
-use homunculus_core::prelude::{AssetIdComponent, Coordinate, GlobalViewport, LinkedVrm, Persona, VrmState};
+use homunculus_core::prelude::{
+    AssetIdComponent, Coordinate, GlobalViewport, LinkedVrm, Persona, VrmState,
+};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
