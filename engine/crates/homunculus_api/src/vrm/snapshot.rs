@@ -5,7 +5,9 @@ use crate::vrma::VrmaInfo;
 use bevy::prelude::*;
 use bevy_flurx::prelude::*;
 use bevy_vrm1::prelude::*;
-use homunculus_core::prelude::{Coordinate, GlobalViewport, LinkedVrm, Persona, VrmState};
+use homunculus_core::prelude::{
+    AssetIdComponent, Coordinate, GlobalViewport, LinkedVrm, Persona, VrmState,
+};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -27,6 +29,7 @@ pub struct VrmSnapshot {
     pub linked_webviews: Vec<Entity>,
     #[cfg_attr(feature = "openapi", schema(value_type = Object))]
     pub persona: Persona,
+    pub asset_id: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -61,6 +64,7 @@ fn snapshot_all_vrms(
             Option<&LookAt>,
             Option<&Persona>,
             Option<&ExpressionEntityMap>,
+            Option<&AssetIdComponent>,
         ),
         With<Vrm>,
     >,
@@ -78,7 +82,7 @@ fn snapshot_all_vrms(
 ) -> Vec<VrmSnapshot> {
     vrms.iter()
         .map(
-            |(entity, name, state, transform, look_at, persona, expr_map)| {
+            |(entity, name, state, transform, look_at, persona, expr_map, asset_id_comp)| {
                 let expressions = collect_expressions(expr_map, &expr_components);
                 let animations =
                     collect_playing_animations(entity, &children_query, &vrma_query, &players);
@@ -106,6 +110,7 @@ fn snapshot_all_vrms(
                     look_at: look_at_state,
                     linked_webviews,
                     persona: persona.cloned().unwrap_or_default(),
+                    asset_id: asset_id_comp.map(|c| c.0.to_string()),
                 }
             },
         )
