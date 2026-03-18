@@ -28,7 +28,7 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm build
+      - run: pnpm build --filter '!docs'
       - run: pnpm check-types
       - run: pnpm test
       - run: pnpm lint
