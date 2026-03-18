@@ -87,6 +87,12 @@ import { output } from "@hmcs/sdk/commands";
 output.succeed({ speakers: [...], count: 5 });
 ```
 
+**成功終了（出力なし）** — stdout に書き込まずにコード 0 で終了。UI を開くなどの副作用を実行するコマンドに便利です：
+
+```typescript
+output.succeed();
+```
+
 **エラー出力** — 構造化されたエラーを stderr に書き込み、非ゼロコードで終了：
 
 ```typescript
@@ -130,16 +136,15 @@ output.writeError("WARN", "retrying");  // stderr に書き込み、終了しな
 
 ```typescript
 import { z } from "zod";
-import { input } from "@hmcs/sdk/commands";
+import { input, output } from "@hmcs/sdk/commands";
 
 try {
   const data = await input.parse(
     z.object({ linkedVrm: z.number() })
   );
-  // ... data を使用 ...
+  // ... use data ...
 } catch (e) {
-  console.error(e);
-  process.exit(1);
+  output.fail("INVALID_INPUT", (e as Error).message);
 }
 ```
 
@@ -243,7 +248,7 @@ Content-Type: application/json
 /// <reference types="node" />
 
 import { z } from "zod";
-import { input, StdinParseError } from "@hmcs/sdk/commands";
+import { input, output, StdinParseError } from "@hmcs/sdk/commands";
 
 // デフォルト付きの入力スキーマを定義
 const schema = z.object({
@@ -265,8 +270,8 @@ const greetings = { en: "Hello", ja: "こんにちは" };
 const greeting = greetings[parsed.language];
 const message = `${greeting}, ${parsed.name}!`;
 
-// JSON として出力
-console.log(JSON.stringify({ message }));
+// Output result and exit
+output.succeed({ message });
 ```
 
 **`curl` での呼び出し：**
