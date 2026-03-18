@@ -12,7 +12,7 @@
     "build-storybook": "storybook build"
   },
   "homunculus": {
-    "service": "index.ts",
+    "service": "service.ts",
     "assets": {
       "menu:ui": {
         "path": "ui/dist/index.html",

@@ -51,7 +51,7 @@ pnpm add @hmcs/sdk
     "@hmcs/sdk": "..."
   },
   "homunculus": {
-    "service": "index.ts",
+    "service": "service.ts",
     "assets": {
       "my-character:vrm": {
         "path": "assets/MyModel.vrm",
@@ -65,7 +65,7 @@ pnpm add @hmcs/sdk
 
 ## Step 3: サービスの作成
 
-プロジェクトルートに `index.ts` を作成します。このスクリプトは Desktop Homunculus の起動時に自動実行されます。
+プロジェクトルートに `service.ts` を作成します。このスクリプトは Desktop Homunculus の起動時に自動実行されます。
 
 ```typescript
 import { Vrm, repeat } from "@hmcs/sdk";

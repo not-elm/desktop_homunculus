@@ -151,7 +151,7 @@ The `homunculus.service` field specifies a **service** — a long-running Node.j
 ```json
 {
   "homunculus": {
-    "service": "index.ts"
+    "service": "service.ts"
   }
 }
 ```
