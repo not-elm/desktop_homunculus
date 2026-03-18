@@ -15,12 +15,10 @@ try {
   const release = await preferences.load<ReleaseInfo>("update-notify:release");
   if (!release?.url) {
     output.fail("NO_RELEASE_URL", "No release URL found in preferences");
-    process.exit(1);
   }
 
   if (!release.url.startsWith("https://github.com/")) {
     output.fail("INVALID_URL", "Release URL is not a GitHub URL");
-    process.exit(1);
   }
 
   const cmd = buildOpenCommand(release.url);

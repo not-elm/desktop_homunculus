@@ -1,5 +1,4 @@
-import { app, preferences } from "@hmcs/sdk";
-import { mods } from "@hmcs/sdk";
+import { app, mods, preferences } from "@hmcs/sdk";
 
 const GITHUB_API_URL =
   "https://api.github.com/repos/not-elm/desktop_homunculus/releases/latest";
