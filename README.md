@@ -13,12 +13,12 @@ Bring your desktop to life with interactive 3D VRM characters. Desktop Homunculu
 
 [![Read the Docs](https://img.shields.io/badge/Read%20the%20Docs-Desktop%20Homunculus-0A7EA4?style=for-the-badge)](https://not-elm.github.io/desktop_homunculus/)
 
-| I want to... | Go here |
-| ------------ | ------- |
-| Install and run quickly | [Getting Started](https://not-elm.github.io/desktop_homunculus/getting-started/) |
-| Build MODs (SDK, WebView UI, assets) | [MOD Development](https://not-elm.github.io/desktop_homunculus/mod-development/) |
-| Integrate AI agents (MCP, Claude Code, Codex) | [AI Integration](https://not-elm.github.io/desktop_homunculus/ai-integration/) |
-| Look up CLI and MCP tools | [Reference](https://not-elm.github.io/desktop_homunculus/reference/) |
+| I want to...                                  | Go here                                                                          |
+| --------------------------------------------- | -------------------------------------------------------------------------------- |
+| Install and run quickly                       | [Getting Started](https://not-elm.github.io/desktop_homunculus/getting-started/) |
+| Build MODs (SDK, WebView UI, assets)          | [MOD Development](https://not-elm.github.io/desktop_homunculus/mod-development/) |
+| Integrate AI agents (MCP, Claude Code, Codex) | [AI Integration](https://not-elm.github.io/desktop_homunculus/ai-integration/)   |
+| Look up CLI and MCP tools                     | [Reference](https://not-elm.github.io/desktop_homunculus/reference/)             |
 
 ## Features
 
@@ -30,19 +30,17 @@ Bring your desktop to life with interactive 3D VRM characters. Desktop Homunculu
 ## Download
 
 - [Github Releases](https://github.com/not-elm/desktop_homunculus/releases)
-- [itch.io](https://notelm.itch.io/desktop-homunculus)
-- [BOOTH](https://notelm.booth.pm/items/6904924)
 
 > [!WARNING]
 > **Windows with NVIDIA GPU:** You must configure the NVIDIA Control Panel **before first launch**, or the window will have a black background instead of being transparent. See the [Installation Guide](https://not-elm.github.io/desktop_homunculus/getting-started/installation) for step-by-step instructions.
 
 ## Platform Support
 
-| Platform | Status                                             |
-| -------- | -------------------------------------------------- |
-| macOS    | Fully supported                                    |
+| Platform | Status                                        |
+| -------- | --------------------------------------------- |
+| macOS    | Fully supported                               |
 | Windows  | Supported (NVIDIA GPU configuration required) |
-| Linux    | Planned                                            |
+| Linux    | Planned                                       |
 
 ## Contributing
 
