@@ -1,6 +1,6 @@
 {
   "name": "@hmcs/app-exit",
-  "version": "0.1.0-alpha.5-dev",
+  "version": "0.1.0-alpha.5",
   "description": "Provide tray menu that exits the desktop-homunculus",
   "license": "MIT",
   "type": "module",

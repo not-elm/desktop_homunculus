@@ -1,6 +1,6 @@
 {
   "name": "@hmcs/cli",
-  "version": "0.1.0-alpha.5-dev",
+  "version": "0.1.0-alpha.5",
   "description": "CLI for Desktop Homunculus — manage mods, preferences, and configuration",
   "license": "MIT",
   "repository": {
