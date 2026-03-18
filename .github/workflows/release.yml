@@ -383,7 +383,7 @@ jobs:
           ARGS=(
             "$TAG"
             --generate-notes
-            --title "Desktop Homunculus ${VERSION}"
+            --title "desktop-homunculus ${VERSION}"
           )
 
           if [ "$IS_PRERELEASE" = "true" ]; then
