@@ -6,8 +6,8 @@
   "description": "VoiceVox TTS integration for Desktop Homunculus",
   "type": "module",
   "scripts": {
-    "build": "vite build ui",
-    "dev": "vite dev ui"
+    "build": "pnpm exec vite build ui",
+    "dev": "pnpm exec vite dev ui"
   },
   "bin": {
     "open-settings": "commands/open-settings.ts"
