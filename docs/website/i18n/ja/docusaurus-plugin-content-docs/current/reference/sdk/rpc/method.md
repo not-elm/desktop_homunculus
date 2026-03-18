@@ -40,7 +40,7 @@ rpc.method<O>(def: {
 
 ## 戻り値
 
-[`RpcMethodDef<I, O>`](./types#rpcmethoddefi-o)
+[`RpcMethodDef<I, O>`](/reference/sdk/rpc/types#rpcmethoddefi-o)
 
 ## 使用例
 

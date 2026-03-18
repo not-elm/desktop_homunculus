@@ -16,11 +16,11 @@ rpc.serve(options: RpcServeOptions): Promise<RpcServer>
 
 | パラメータ | 型 | 説明 |
 |-----------|------|-------------|
-| `options.methods` | `Record<string, `[`RpcMethodEntry`](./types#rpcmethodentry)`>` | メソッド名から定義またはハンドラー関数へのマップ |
+| `options.methods` | `Record<string, `[`RpcMethodEntry`](/reference/sdk/rpc/types#rpcmethodentry)`>` | メソッド名から定義またはハンドラー関数へのマップ |
 
 ## 戻り値
 
-[`RpcServer`](./types#rpcserver)
+[`RpcServer`](/reference/sdk/rpc/types#rpcserver)
 
 ## 動作
 

@@ -6,7 +6,7 @@ sidebar_position: 100
 
 ## RpcMethodDef\<I, O\>
 
-A typed RPC method definition created by [`rpc.method()`](./method).
+A typed RPC method definition created by [`rpc.method()`](/reference/sdk/rpc/method).
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
@@ -25,7 +25,7 @@ A plain async function that can be used as an RPC method handler. The raw parsed
 
 `RpcMethodDef | RpcHandlerFn`
 
-Union type accepted by [`rpc.serve()`](./serve). You can mix `rpc.method()` definitions and plain functions in the same `methods` map.
+Union type accepted by [`rpc.serve()`](/reference/sdk/rpc/serve). You can mix `rpc.method()` definitions and plain functions in the same `methods` map.
 
 ## RpcServeOptions
 
@@ -35,7 +35,7 @@ Union type accepted by [`rpc.serve()`](./serve). You can mix `rpc.method()` defi
 
 ## RpcServer
 
-The return value of [`rpc.serve()`](./serve).
+The return value of [`rpc.serve()`](/reference/sdk/rpc/serve).
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -44,7 +44,7 @@ The return value of [`rpc.serve()`](./serve).
 
 ## RpcCallOptions
 
-Options for [`rpc.call()`](./call).
+Options for [`rpc.call()`](/reference/sdk/rpc/call).
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
