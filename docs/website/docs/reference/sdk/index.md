@@ -42,6 +42,18 @@ The SDK is organized into 18 modules, all available from the main `@hmcs/sdk` en
 | **Math types** | `import { type Transform, type Vec3 } from "@hmcs/sdk"` | Transform, Vec2, Vec3, Quat, and Rect type definitions. |
 | **utils** | `import { sleep } from "@hmcs/sdk"` | Utility helpers — `sleep(ms)` for non-blocking delays. |
 
+### RPC Sub-Entry Point
+
+`@hmcs/sdk/rpc` is a **separate entry point** for building and calling RPC (Remote Procedure Call) services between the engine and MOD processes. In Node.js environments, it provides both server (`serve`, `method`) and client (`call`) functions. In browser environments, only `call` is available.
+
+| Export | Description |
+|---|---|
+| `rpc.serve(options)` | Start an RPC server that exposes methods to the engine. Node.js only. |
+| `rpc.method(name, schema, handler)` | Define a single RPC method with Zod validation. Node.js only. |
+| `rpc.call(method, params)` | Call an RPC method on a MOD service via the engine's HTTP API. |
+
+See the [RPC Reference](./rpc/) for detailed API documentation.
+
 ### Commands Sub-Entry Point
 
 `@hmcs/sdk/commands` is a **separate entry point** for utilities used in MOD command scripts. It is intentionally excluded from the main `@hmcs/sdk` import because it depends on Node.js-specific APIs (`process.stdin`).

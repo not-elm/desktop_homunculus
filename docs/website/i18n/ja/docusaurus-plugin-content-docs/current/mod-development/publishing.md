@@ -1,6 +1,6 @@
 ---
 title: "公開と配布"
-sidebar_position: 12
+sidebar_position: 11
 ---
 
 # 公開と配布
