@@ -63,9 +63,12 @@ fn main() {
                     level: bevy::log::Level::ERROR,
                     custom_layer,
                     #[cfg(target_os = "windows")]
-                    filter: "wgpu_hal=off".to_string(),
+                    filter: "wgpu_hal=off,naga::back::spv::writer=off".to_string(),
                     #[cfg(not(target_os = "windows"))]
-                    filter: LogPlugin::default().filter,
+                    filter: format!(
+                        "{},naga::back::spv::writer=off",
+                        LogPlugin::default().filter
+                    ),
                     ..default()
                 })
                 .set(WindowPlugin {
