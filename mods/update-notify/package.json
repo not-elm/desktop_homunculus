@@ -1,0 +1,29 @@
+{
+  "name": "@hmcs/update-notify",
+  "version": "0.1.0-alpha.5-dev",
+  "description": "Notifies users when a new stable release is available",
+  "license": "MIT",
+  "type": "module",
+  "author": "notelm",
+  "homunculus": {
+    "service": "service.ts",
+    "assets": {
+      "update-notify:ui": {
+        "path": "ui/index.html",
+        "type": "html",
+        "description": "Update notification webview UI"
+      }
+    }
+  },
+  "bin": {
+    "display-notify": "commands/display-notify.ts",
+    "open-release": "commands/open-release.ts"
+  },
+  "dependencies": {
+    "@hmcs/sdk": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.3",
+    "typescript": "^5.9.3"
+  }
+}

@@ -9,7 +9,8 @@
     "@hmcs/menu": "workspace:*",
     "@hmcs/settings": "workspace:*",
     "@hmcs/voicevox": "workspace:*",
-    "@hmcs/app-exit": "workspace:*"
+    "@hmcs/app-exit": "workspace:*",
+    "@hmcs/update-notify": "workspace:*"
   },
   "devDependencies": {
     "tsx": "4.21.0"
