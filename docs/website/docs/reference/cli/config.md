@@ -14,6 +14,8 @@ hmcs config list
 hmcs config get port
 hmcs config set port 3200
 hmcs config set mods_dir /Users/me/.homunculus/mods
+hmcs config reset port
+hmcs config reset --all
 ```
 
 ## list
@@ -55,6 +57,7 @@ Failure example:
 
 - [`hmcs config get`](#get)
 - [`hmcs config set`](#set)
+- [`hmcs config reset`](#reset)
 
 ## get
 
@@ -102,6 +105,7 @@ error: unknown config key 'foo'. ...valid keys: mods_dir, port
 
 - [`hmcs config list`](#list)
 - [`hmcs config set`](#set)
+- [`hmcs config reset`](#reset)
 
 ## set
 
@@ -160,4 +164,67 @@ error: invalid value for 'port': ...
 ### Related
 
 - [`hmcs config get`](#get)
+- [`hmcs config reset`](#reset)
 - [`hmcs mod`](./mod)
+
+## reset
+
+### Syntax
+
+```shell
+hmcs config reset <key>
+hmcs config reset --all
+```
+
+### Arguments
+
+| Name | Required | Description |
+|---|---|---|
+| `key` | No | Config key to reset to its default value. |
+| `--all` | No | Reset all keys to their default values. |
+
+Either `key` or `--all` must be specified.
+
+### Examples
+
+Reset a single key:
+
+```shell
+hmcs config reset port
+```
+
+```text
+port = 3100
+```
+
+Reset all keys:
+
+```shell
+hmcs config reset --all
+```
+
+```text
+all config reset to defaults
+```
+
+Failure example (no argument):
+
+```shell
+hmcs config reset
+```
+
+```text
+[stderr]
+error: specify a key to reset, or use --all to reset all config
+```
+
+### Behavior
+
+- With a key: replaces that key's value with its default and saves. Prints `{key} = {default_value}`.
+- With `--all`: saves default config (`port = 3100`, `mods_dir = ~/.homunculus/mods/`).
+- Exits non-zero for unknown keys.
+
+### Related
+
+- [`hmcs config get`](#get)
+- [`hmcs config set`](#set)

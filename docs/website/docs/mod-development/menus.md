@@ -1,6 +1,6 @@
 ---
 title: "Context Menus"
-sidebar_position: 8
+sidebar_position: 7
 ---
 
 # Context Menus
