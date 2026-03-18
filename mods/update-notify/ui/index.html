@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Update Available</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      color: #fff;
+    }
+
+    .card {
+      background: rgba(20, 20, 30, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      padding: 16px 20px;
+      width: 280px;
+      position: relative;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 16px;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .close-btn:hover { color: #fff; }
+
+    .title {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .version {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .view-btn {
+      width: 100%;
+      padding: 8px 0;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .view-btn:hover { background: rgba(255, 255, 255, 0.2); }
+
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="card hidden" id="card">
+    <button class="close-btn" id="close-btn">&times;</button>
+    <div class="title">New version available</div>
+    <div class="version" id="version-tag"></div>
+    <button class="view-btn" id="view-btn">View Release</button>
+  </div>
+
+  <script>
+    const BASE = "http://localhost:3100";
+
+    async function init() {
+      try {
+        const res = await fetch(`${BASE}/preferences/update-notify:release`);
+        if (!res.ok) return;
+        const release = await res.json();
+        if (!release?.tag) return;
+
+        document.getElementById("version-tag").textContent = `v${release.tag}`;
+        document.getElementById("card").classList.remove("hidden");
+      } catch {
+        // silently ignore
+      }
+    }
+
+    document.getElementById("view-btn").addEventListener("click", async () => {
+      try {
+        await fetch(`${BASE}/commands/execute`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ command: "open-release" }),
+        });
+      } catch {
+        // silently ignore
+      }
+    });
+
+    document.getElementById("close-btn").addEventListener("click", async () => {
+      try {
+        const entity = window.WEBVIEW_ENTITY;
+        if (entity !== undefined) {
+          await fetch(`${BASE}/webviews/${entity}`, { method: "DELETE" });
+        }
+      } catch {
+        document.getElementById("card").classList.add("hidden");
+      }
+    });
+
+    init();
+  </script>
+</body>
+</html>
