@@ -21,7 +21,7 @@ Follow these steps to install Desktop Homunculus and set up your MOD environment
 
 ## Step 1: Install Desktop Homunculus
 
-Download the latest release from the [GitHub Releases page](https://github.com/not-elm/desktop_homunculus/releases).
+Download the latest release from the [GitHub Releases page](https://github.com/not-elm/desktop-homunculus/releases).
 
 <Tabs>
 <TabItem value="macos" label="macOS" default>

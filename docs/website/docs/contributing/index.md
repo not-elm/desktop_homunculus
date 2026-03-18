@@ -13,10 +13,10 @@ See [Development Setup](./development-setup) for prerequisites and environment s
 
 ## How to Contribute
 
-- **Report bugs**: Open an issue on [GitHub Issues](https://github.com/not-elm/desktop_homunculus/issues)
-- **Suggest features**: Start a thread in [GitHub Discussions](https://github.com/not-elm/desktop_homunculus/discussions)
+- **Report bugs**: Open an issue on [GitHub Issues](https://github.com/not-elm/desktop-homunculus/issues)
+- **Suggest features**: Start a thread in [GitHub Discussions](https://github.com/not-elm/desktop-homunculus/discussions)
 - **Submit code**: Fork the repo, create a branch, and open a Pull Request
-- **Ask questions**: Use [GitHub Discussions](https://github.com/not-elm/desktop_homunculus/discussions)
+- **Ask questions**: Use [GitHub Discussions](https://github.com/not-elm/desktop-homunculus/discussions)
 
 ### Pull Request Guidelines
 
@@ -55,7 +55,7 @@ See the [MOD Development Guide](/mod-development/quick-start) for how to create 
 
 We welcome contributions of Claude Code Skills that enhance the end-user experience with Desktop Homunculus characters. Skills chain MCP tool calls into workflows — for example, a skill might have a character deliver a lecture with slides and narration.
 
-See the [Skills catalog and contribution guide](https://github.com/not-elm/desktop_homunculus/tree/main/skills) for available skills, installation instructions, and how to create your own.
+See the [Skills catalog and contribution guide](https://github.com/not-elm/desktop-homunculus/tree/main/skills) for available skills, installation instructions, and how to create your own.
 
 ### `@hmcs/ui` Improvements
 
@@ -78,4 +78,4 @@ By contributing, you agree that your contributions will be licensed under the sa
 
 ## Questions?
 
-Open a [GitHub Discussion](https://github.com/not-elm/desktop_homunculus/discussions) — we're happy to help you get started.
+Open a [GitHub Discussion](https://github.com/not-elm/desktop-homunculus/discussions) — we're happy to help you get started.

@@ -16,7 +16,7 @@ setup:
 	$(MAKE) -C engine setup
 
 debug:
-	pnpm build
+	pnpm build --filter '!docs'
 	$(MAKE) -C engine debug
 
 test:

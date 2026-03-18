@@ -35,8 +35,8 @@ sidebar_position: 2
 ## Clone & セットアップ
 
 ```shell
-git clone https://github.com/not-elm/desktop_homunculus.git
-cd desktop_homunculus
+git clone https://github.com/not-elm/desktop-homunculus.git
+cd desktop-homunculus
 
 # すべての依存関係をインストール（Node パッケージ、Rust ツール、グローバル npm ツール、CEF フレームワーク）
 make setup
