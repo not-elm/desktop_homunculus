@@ -1,7 +1,7 @@
-# Desktop Homunculus
+# desktop-homunculus
 
 > [!NOTE]
-> This project is in **early alpha** (`v0.1.0-alpha.4`). APIs, features, and MOD interfaces may change without notice.
+> This project is in **early alpha**. APIs, features, and MOD interfaces may change without notice.
 
 <img src="./docs/images/icon.png" width="200" alt="Desktop Homunculus">
 
