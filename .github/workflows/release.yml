@@ -269,6 +269,23 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
+          publish_with_retry() {
+            local max_attempts=5
+            local delay=10
+            for attempt in $(seq 1 $max_attempts); do
+              if "$@"; then
+                return 0
+              fi
+              if [ "$attempt" -lt "$max_attempts" ]; then
+                echo "Publish failed (attempt $attempt/$max_attempts). Retrying in ${delay}s..."
+                sleep "$delay"
+                delay=$((delay * 2))
+              fi
+            done
+            echo "::error::Publish failed after $max_attempts attempts"
+            return 1
+          }
+
           VERSION="${{ needs.validate.outputs.version }}"
           TAG="${{ needs.validate.outputs.cli_tag }}"
 
@@ -307,7 +324,7 @@ jobs:
             echo "Contents of package:"
             (cd "${STAGE_DIR}" && npm pack --dry-run)
 
-            (cd "${STAGE_DIR}" && npm publish --provenance --access public --tag "${TAG}")
+            (cd "${STAGE_DIR}" && publish_with_retry npm publish --provenance --access public --tag "${TAG}")
           done
 
       # --- Publish @hmcs/cli main package ---
@@ -315,6 +332,23 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
+          publish_with_retry() {
+            local max_attempts=5
+            local delay=10
+            for attempt in $(seq 1 $max_attempts); do
+              if "$@"; then
+                return 0
+              fi
+              if [ "$attempt" -lt "$max_attempts" ]; then
+                echo "Publish failed (attempt $attempt/$max_attempts). Retrying in ${delay}s..."
+                sleep "$delay"
+                delay=$((delay * 2))
+              fi
+            done
+            echo "::error::Publish failed after $max_attempts attempts"
+            return 1
+          }
+
           VERSION="${{ needs.validate.outputs.version }}"
           TAG="${{ needs.validate.outputs.cli_tag }}"
           PKG_NAME="@hmcs/cli"
@@ -338,7 +372,7 @@ jobs:
           echo "Contents of package:"
           npm pack --dry-run
 
-          npm publish --provenance --access public --tag "${TAG}"
+          publish_with_retry npm publish --provenance --access public --tag "${TAG}"
 
   create-release:
     needs: [validate, publish-npm]
