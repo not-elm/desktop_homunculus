@@ -31,44 +31,6 @@ Changes take effect after clicking **Save**. All settings are persisted to `~/.h
 |---------|-------------|-------|
 | Shadow Opacity | Controls the transparency of the shadow panel overlay behind the character. | 0 – 100% |
 
-### Speech (STT)
-
-The **Speech** tab controls real-time speech-to-text transcription powered by local [Whisper](https://github.com/openai/whisper) models. All processing runs on-device.
-
-#### Language
-
-| Setting | Description | Default |
-|---------|-------------|---------|
-| Language | The language for speech recognition. Choose a specific language (ISO 639-1 code) for better accuracy, or leave as **Auto** to let the model detect the language automatically. | Auto |
-
-#### Model
-
-Select a Whisper model to use for transcription. Larger models are more accurate but require more memory and CPU.
-
-| Model | Download Size | Notes |
-|-------|--------------|-------|
-| Tiny | 32.2 MB | Fastest, lower accuracy |
-| Base | 59.7 MB | Fast, moderate accuracy |
-| Small | 190 MB | **Default.** Good accuracy for most languages |
-| Medium | 539 MB | Higher accuracy, more resource usage |
-| Large v3 Turbo | 574 MB | Near Large v3 accuracy with faster inference |
-| Large v3 | 1.08 GB | Best accuracy, highest resource usage |
-
-Models are downloaded on demand — click a model card to start the download. A progress indicator is shown during download.
-
-#### Session Control
-
-| Action | Description |
-|--------|-------------|
-| Start | Begin capturing microphone audio and transcribing speech |
-| Stop | End the current transcription session |
-
-A status indicator shows the current session state: **Idle**, **Loading**, **Listening**, or **Error**.
-
-:::info[Microphone Access]
-STT requires microphone access. On macOS, the system will prompt for permission on first use.
-:::
-
 ## SDK
 
 The `settings` namespace in `@hmcs/sdk` provides programmatic access to application settings:

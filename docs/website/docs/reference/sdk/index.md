@@ -19,14 +19,13 @@ Desktop Homunculus MODs require **Node.js 22 or later** to run TypeScript files 
 
 ## Module Map
 
-The SDK is organized into 19 modules, all available from the main `@hmcs/sdk` entry point, plus a separate `@hmcs/sdk/commands` entry point for MOD command utilities.
+The SDK is organized into 18 modules, all available from the main `@hmcs/sdk` entry point, plus a separate `@hmcs/sdk/commands` entry point for MOD command utilities.
 
 | Module | Import | Description |
 |---|---|---|
 | **Vrm** | `import { Vrm } from "@hmcs/sdk"` | Spawn, find, animate, and control VRM 3D characters. The core SDK module. |
 | **entities** | `import { entities } from "@hmcs/sdk"` | Query and manipulate ECS entities -- find by name, get/set transforms, tween animations. |
 | **audio** | `import { audio } from "@hmcs/sdk"` | Play sound effects (`audio.se`) and background music (`audio.bgm`) with fade/volume controls. |
-| **stt** | `import { stt } from "@hmcs/sdk"` | Real-time speech-to-text transcription with local Whisper models. Session control, SSE streaming, and model management. |
 | **Webview** | `import { Webview } from "@hmcs/sdk"` | Open and manage embedded HTML interfaces in 3D space, linked to characters or free-floating. |
 | **signals** | `import { signals } from "@hmcs/sdk"` | Cross-process pub/sub communication via Server-Sent Events (SSE). |
 | **preferences** | `import { preferences } from "@hmcs/sdk"` | Persistent key-value storage with JSON serialization for user settings and MOD data. |

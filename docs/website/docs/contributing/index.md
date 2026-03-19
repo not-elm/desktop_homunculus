@@ -11,41 +11,6 @@ Thank you for your interest in contributing! Desktop Homunculus is in active dev
 
 See [Development Setup](./development-setup) for prerequisites and environment setup instructions.
 
-### GPU-Accelerated STT (Optional)
-
-To enable GPU-accelerated speech-to-text (STT), install the CUDA Toolkit and build with the `stt-cuda` feature flag.
-
-#### 1. Install CUDA Toolkit
-
-Download and install from [NVIDIA CUDA Toolkit](https://developer.nvidia.com/cuda-downloads). Select your OS and follow the installer prompts (the default options are fine).
-
-After installation, verify that the `CUDA_PATH` environment variable is set:
-
-```shell
-# Windows (PowerShell)
-echo $env:CUDA_PATH
-# Expected: C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.x
-
-# macOS / Linux
-echo $CUDA_PATH
-```
-
-If `CUDA_PATH` is not set, restart your terminal or set it manually to the CUDA Toolkit installation directory.
-
-#### 2. Build with CUDA
-
-```shell
-# Debug build (stt-cuda is included by default)
-make debug
-
-# Or directly from the engine directory:
-cargo run --features develop,stt-cuda
-```
-
-:::note
-CUDA acceleration requires an NVIDIA GPU with compatible drivers. End users do **not** need to install the CUDA Toolkit — the required runtime DLLs are bundled with the release installer.
-:::
-
 ## How to Contribute
 
 - **Report bugs**: Open an issue on [GitHub Issues](https://github.com/not-elm/desktop-homunculus/issues)
