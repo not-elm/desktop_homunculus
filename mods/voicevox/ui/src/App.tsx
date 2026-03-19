@@ -18,39 +18,39 @@ const PARAMS: {
   max: number;
   step: number;
 }[] = [
-  {
-    key: "speedScale",
-    label: "Speed",
-    desc: "Speech speed",
-    min: 0.5,
-    max: 2.0,
-    step: 0.05,
-  },
-  {
-    key: "pitchScale",
-    label: "Pitch",
-    desc: "Voice pitch (0 = baseline)",
-    min: -0.15,
-    max: 0.15,
-    step: 0.01,
-  },
-  {
-    key: "intonationScale",
-    label: "Intonation",
-    desc: "Intonation strength",
-    min: 0.0,
-    max: 2.0,
-    step: 0.05,
-  },
-  {
-    key: "volumeScale",
-    label: "Volume",
-    desc: "Volume level",
-    min: 0.0,
-    max: 2.0,
-    step: 0.05,
-  },
-];
+    {
+      key: "speedScale",
+      label: "Speed",
+      desc: "Speech speed",
+      min: 0.5,
+      max: 2.0,
+      step: 0.05,
+    },
+    {
+      key: "pitchScale",
+      label: "Pitch",
+      desc: "Voice pitch (0 = baseline)",
+      min: -0.15,
+      max: 0.15,
+      step: 0.01,
+    },
+    {
+      key: "intonationScale",
+      label: "Intonation",
+      desc: "Intonation strength",
+      min: 0.0,
+      max: 2.0,
+      step: 0.05,
+    },
+    {
+      key: "volumeScale",
+      label: "Volume",
+      desc: "Volume level",
+      min: 0.0,
+      max: 2.0,
+      step: 0.05,
+    },
+  ];
 
 export function App() {
   const {
@@ -125,13 +125,7 @@ function Decorations() {
   );
 }
 
-function Header({
-  name,
-  connected,
-}: {
-  name: string;
-  connected: boolean;
-}) {
+function Header({ name, connected }: { name: string; connected: boolean }) {
   return (
     <div className="settings-header">
       <h1 className="settings-title">VOICEVOX</h1>
@@ -149,9 +143,7 @@ function Header({
 function DisconnectedView({ onRetry }: { onRetry: () => void }) {
   return (
     <div className="voicevox-error">
-      <div className="voicevox-error-text">
-        Cannot connect to VOICEVOX
-      </div>
+      <div className="voicevox-error-text">Cannot connect to VOICEVOX</div>
       <button className="voicevox-error-retry" onClick={onRetry}>
         Retry
       </button>
@@ -197,7 +189,7 @@ function SettingsForm({
                 <SelectLabel>{speaker.name}</SelectLabel>
                 {speaker.styles.map((style) => (
                   <SelectItem key={style.id} value={String(style.id)}>
-                    {style.name}
+                    {speaker.name}-{style.name}
                   </SelectItem>
                 ))}
               </SelectGroup>
