@@ -1,11 +1,4 @@
-import {
-    type TransformArgs,
-    Vrm,
-    preferences,
-    repeat,
-    sleep,
-    stt,
-} from "@hmcs/sdk";
+import { type TransformArgs, Vrm, preferences, repeat, sleep } from "@hmcs/sdk";
 
 const elmerId = "vrm:elmer";
 const transform = await preferences.load<TransformArgs>(
@@ -45,13 +38,4 @@ elmer.events().on("state-change", async (e) => {
         await sleep(500);
         await elmer.lookAtCursor();
     }
-});
-
-stt.stream({
-    onStatus: (s) => {
-        console.log(s);
-    },
-    onResult: (r) => {
-        console.log(r);
-    },
 });
