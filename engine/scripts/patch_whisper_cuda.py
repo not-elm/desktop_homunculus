@@ -17,7 +17,7 @@ from pathlib import Path
 
 from utils import error, log
 
-MARKER = "// [patched:blackwell-shmem]"
+MARKER = "/* [patched:blackwell-shmem] */"
 
 # Cargo registry location (platform-independent)
 CARGO_REGISTRY = Path.home() / ".cargo" / "registry" / "src"
