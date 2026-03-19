@@ -1,6 +1,6 @@
 {
   "name": "@hmcs/menu",
-  "version": "0.1.0-alpha.5",
+  "version": "0.1.0-alpha.6-dev",
   "description": "Right-click context menu mod that provides a WebView-based HUD overlay for quick in-app actions",
   "license": "MIT",
   "type": "module",
