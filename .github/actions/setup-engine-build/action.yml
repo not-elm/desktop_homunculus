@@ -46,6 +46,11 @@ runs:
     - name: Install cargo-binstall
       uses: cargo-bins/cargo-binstall@main
 
+    - name: Install Pillow (Windows ICO generation)
+      if: runner.os == 'Windows'
+      shell: bash
+      run: pip install Pillow
+
     - name: Setup engine tools and CEF
       shell: bash
       working-directory: engine
