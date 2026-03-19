@@ -3105,7 +3105,7 @@ dependencies = [
 
 [[package]]
 name = "desktop_homunculus"
-version = "0.1.0-alpha.5"
+version = "0.1.0-alpha.6-dev"
 dependencies = [
  "async-channel",
  "base64",
@@ -4375,7 +4375,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_api"
-version = "0.1.0-alpha.5"
+version = "0.1.0-alpha.6-dev"
 dependencies = [
  "async-broadcast",
  "async-channel",
@@ -4401,7 +4401,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_audio"
-version = "0.1.0-alpha.5"
+version = "0.1.0-alpha.6-dev"
 dependencies = [
  "bevy",
  "bevy_kira_audio",
@@ -4412,7 +4412,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_cli"
-version = "0.1.0-alpha.5"
+version = "0.1.0-alpha.6-dev"
 dependencies = [
  "anyhow",
  "clap",
@@ -4426,7 +4426,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_core"
-version = "0.1.0-alpha.5"
+version = "0.1.0-alpha.6-dev"
 dependencies = [
  "anyhow",
  "async-broadcast",
@@ -4440,7 +4440,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_drag"
-version = "0.1.0-alpha.5"
+version = "0.1.0-alpha.6-dev"
 dependencies = [
  "bevy",
  "bevy_vrm1",
@@ -4451,7 +4451,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_effects"
-version = "0.1.0-alpha.5"
+version = "0.1.0-alpha.6-dev"
 dependencies = [
  "bevy",
  "bevy_vrm1",
@@ -4463,7 +4463,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_hit_test"
-version = "0.1.0-alpha.5"
+version = "0.1.0-alpha.6-dev"
 dependencies = [
  "bevy",
  "bevy_cef",
@@ -4474,7 +4474,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_http_server"
-version = "0.1.0-alpha.5"
+version = "0.1.0-alpha.6-dev"
 dependencies = [
  "async-channel",
  "axum",
@@ -4505,7 +4505,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_mcp"
-version = "0.1.0-alpha.5"
+version = "0.1.0-alpha.6-dev"
 dependencies = [
  "bevy",
  "bevy_vrm1",
@@ -4521,7 +4521,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_mod"
-version = "0.1.0-alpha.5"
+version = "0.1.0-alpha.6-dev"
 dependencies = [
  "bevy",
  "futures-lite",
@@ -4532,7 +4532,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_power_saver"
-version = "0.1.0-alpha.5"
+version = "0.1.0-alpha.6-dev"
 dependencies = [
  "bevy",
  "bevy_framepace",
@@ -4543,7 +4543,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_prefs"
-version = "0.1.0-alpha.5"
+version = "0.1.0-alpha.6-dev"
 dependencies = [
  "bevy",
  "bevy_vrm1",
@@ -4556,7 +4556,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_screen"
-version = "0.1.0-alpha.5"
+version = "0.1.0-alpha.6-dev"
 dependencies = [
  "apple-sys",
  "bevy",
@@ -4577,7 +4577,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_shadow_panel"
-version = "0.1.0-alpha.5"
+version = "0.1.0-alpha.6-dev"
 dependencies = [
  "bevy",
  "bevy_vrm1",
@@ -4586,7 +4586,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_sitting"
-version = "0.1.0-alpha.5"
+version = "0.1.0-alpha.6-dev"
 dependencies = [
  "bevy",
  "homunculus_core",
@@ -4595,7 +4595,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_speech"
-version = "0.1.0-alpha.5"
+version = "0.1.0-alpha.6-dev"
 dependencies = [
  "async-channel",
  "bevy",
@@ -4606,7 +4606,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_tray"
-version = "0.1.0-alpha.5"
+version = "0.1.0-alpha.6-dev"
 dependencies = [
  "bevy",
  "bevy_tray_icon",
@@ -4617,7 +4617,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_utils"
-version = "0.1.0-alpha.5"
+version = "0.1.0-alpha.6-dev"
 dependencies = [
  "anyhow",
  "bevy",
@@ -4633,7 +4633,7 @@ dependencies = [
 
 [[package]]
 name = "homunculus_windows"
-version = "0.1.0-alpha.5"
+version = "0.1.0-alpha.6-dev"
 dependencies = [
  "bevy",
  "homunculus_core",
