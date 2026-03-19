@@ -27,8 +27,25 @@ runs:
       env:
         NODE_AUTH_TOKEN: ${{ inputs.npm-token }}
       run: |
+        publish_with_retry() {
+          local max_attempts=5
+          local delay=10
+          for attempt in $(seq 1 $max_attempts); do
+            if "$@"; then
+              return 0
+            fi
+            if [ "$attempt" -lt "$max_attempts" ]; then
+              echo "Publish failed (attempt $attempt/$max_attempts). Retrying in ${delay}s..."
+              sleep "$delay"
+              delay=$((delay * 2))
+            fi
+          done
+          echo "::error::Publish failed after $max_attempts attempts"
+          return 1
+        }
+
         if npm view "${{ inputs.package-name }}@${{ inputs.version }}" version 2>/dev/null; then
           echo "${{ inputs.package-name }}@${{ inputs.version }} already published, skipping."
         else
-          pnpm --filter ${{ inputs.package-name }} publish --provenance --access public --tag "${{ inputs.tag }}" --no-git-checks
+          publish_with_retry pnpm --filter ${{ inputs.package-name }} publish --provenance --access public --tag "${{ inputs.tag }}" --no-git-checks
         fi
