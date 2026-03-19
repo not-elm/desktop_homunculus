@@ -14,7 +14,7 @@ See [Development Setup](./development-setup) for prerequisites and environment s
 ## How to Contribute
 
 - **Report bugs**: Open an issue on [GitHub Issues](https://github.com/not-elm/desktop-homunculus/issues)
-- **Suggest features**: Start a thread in [GitHub Discussions](https://github.com/not-elm/desktop-homunculus/discussions)
+- **Suggest features or improvements**: Open a [Proposal issue](https://github.com/not-elm/desktop-homunculus/issues/new?template=proposal.md) or start a thread in [GitHub Discussions](https://github.com/not-elm/desktop-homunculus/discussions)
 - **Submit code**: Fork the repo, create a branch, and open a Pull Request
 - **Ask questions**: Use [GitHub Discussions](https://github.com/not-elm/desktop-homunculus/discussions)
 

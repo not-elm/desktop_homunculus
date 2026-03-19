@@ -14,7 +14,7 @@ sidebar_position: 1
 ## コントリビューションの方法
 
 - **バグ報告**: [GitHub Issues](https://github.com/not-elm/desktop-homunculus/issues) で Issue を作成
-- **機能の提案**: [GitHub Discussions](https://github.com/not-elm/desktop-homunculus/discussions) でスレッドを開始
+- **機能の提案・改善**: [Proposal Issue](https://github.com/not-elm/desktop-homunculus/issues/new?template=proposal.md) を作成、または [GitHub Discussions](https://github.com/not-elm/desktop-homunculus/discussions) でスレッドを開始
 - **コードの提出**: リポジトリをフォークしてブランチを作成し、プルリクエストを開く
 - **質問**: [GitHub Discussions](https://github.com/not-elm/desktop-homunculus/discussions) を利用
 
