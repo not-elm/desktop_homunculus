@@ -6,7 +6,6 @@ labels: [bug]
 
 - [ ] I searched existing issues and found no duplicate
 - [ ] I can reproduce this on the latest release
-- [ ] I tested with no mods installed (or noted which mods are required below)
 
 ## Actual Behavior
 
