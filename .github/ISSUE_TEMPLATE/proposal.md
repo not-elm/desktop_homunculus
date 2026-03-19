@@ -10,6 +10,8 @@ labels: [enhancement]
 
 Is this a new feature or an improvement to an existing one?
 
+<!-- new feature / improvement to existing feature -->
+
 ## Problem / Current Behavior
 
 What problem does this solve, or what existing behavior would you like to change?

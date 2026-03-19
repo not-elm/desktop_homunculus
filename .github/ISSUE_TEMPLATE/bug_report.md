@@ -26,12 +26,17 @@ Minimal steps to reproduce the issue.
 
 ## Environment
 
+- OS:
+- App version:
+- Build method:
+- GPU (Windows):
+- Mods installed:
+
 <!--
-- OS and version (e.g., macOS 15.3, Windows 11 24H2)
-- App version or commit hash
-- Build method: local build / MSI installer / DMG / GitHub Actions artifact
-- GPU and driver version (Windows — e.g., NVIDIA RTX 3080 Ti, driver 560.xx)
-- Mods installed (if any)
+  Examples:
+  - OS: macOS 15.3 / Windows 11 24H2
+  - Build method: local build / MSI installer / DMG / GitHub Actions artifact
+  - GPU: NVIDIA RTX 3080 Ti, driver 560.xx
 -->
 
 ## Logs / Crash Output
