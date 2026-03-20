@@ -351,7 +351,6 @@ fn vad_thread_main(
         select_vad_rate(sample_rate, needs_resample);
     let needs_post_resample = needs_resample && !needs_pre_resample;
 
-    // Pre-resample only when the capture rate isn't directly supported by webrtc-vad
     let mut pre_accumulator = if needs_pre_resample {
         Some(ResampleAccumulator::new(sample_rate))
     } else {
@@ -360,15 +359,12 @@ fn vad_thread_main(
 
     let mut vad =
         webrtc_vad::Vad::new_with_rate_and_mode(vad_rate_enum, webrtc_vad::VadMode::VeryAggressive);
-
     let mut state_machine = VadStateMachine::new(&config, vad_rate, needs_post_resample);
-
-    let vad_frame_size = (vad_rate / 100) as usize; // 10ms at vad_rate
+    let vad_frame_size = (vad_rate / 100) as usize;
 
     let mut first_voice_logged = false;
     let mut first_audio_logged = false;
     let mut sample_buf: Vec<f32> = Vec::new();
-
     let idle_threshold = Duration::from_millis(config.silence_ms as u64 + 50);
     let mut last_audio_at = Instant::now();
 
@@ -383,108 +379,158 @@ fn vad_thread_main(
             break;
         }
 
-        let raw_audio = match audio_rx.recv_timeout(std::time::Duration::from_millis(20)) {
-            Ok(data) => {
-                last_audio_at = Instant::now();
-                if !first_audio_logged {
-                    first_audio_logged = true;
-                    tracing::info!("VAD: first audio received, {} samples", data.len());
-                }
-                data
-            }
-            Err(mpsc::RecvTimeoutError::Timeout) => {
-                if last_audio_at.elapsed() >= idle_threshold
-                    && let Some(chunk) = state_machine.flush_speech()
-                {
-                    let len = chunk.len();
-                    let secs = len as f64 / 16000.0;
-                    let seq = metrics.next_seq();
-                    tracing::info!(
-                        "VAD: emitting chunk on idle timeout seq={seq}, \
-                         {len} samples ({secs:.1}s)"
-                    );
-                    let now = Instant::now();
-                    try_send_chunk(
-                        &chunk_tx,
-                        ChunkEnvelope {
-                            samples: chunk,
-                            enqueued_at: now,
-                            silence_detected_at: now,
-                            seq,
-                        },
-                        &metrics,
-                    );
-                }
-                continue;
-            }
-            Err(mpsc::RecvTimeoutError::Disconnected) => {
-                tracing::info!("VAD: audio channel closed, exiting");
-                break;
-            }
+        let raw_audio = match receive_audio(
+            &audio_rx,
+            &mut last_audio_at,
+            &mut first_audio_logged,
+            idle_threshold,
+            &mut state_machine,
+            &metrics,
+            &chunk_tx,
+        ) {
+            Some(data) => data,
+            None => continue,
         };
 
-        // If pre-resampling is needed (unsupported native rate), resample to 16kHz first
-        let vad_samples = match &mut pre_accumulator {
-            Some(acc) => {
-                let out = acc.push(&raw_audio);
-                if out.is_empty() {
-                    continue;
-                }
-                out
-            }
-            None => raw_audio,
+        let vad_samples = match pre_resample_if_needed(&mut pre_accumulator, raw_audio) {
+            Some(samples) => samples,
+            None => continue,
         };
 
         sample_buf.extend_from_slice(&vad_samples);
 
-        while sample_buf.len() >= vad_frame_size {
-            let frame: Vec<f32> = sample_buf.drain(..vad_frame_size).collect();
-
-            let frame_i16 = state_machine.convert_frame_to_i16(&frame);
-            let is_voice = vad.is_voice_segment(frame_i16).unwrap_or(false);
-
-            if is_voice && !first_voice_logged {
-                first_voice_logged = true;
-                tracing::info!("VAD: first voice detected");
-            }
-            if let Some(chunk) = state_machine.process_frame(&frame, is_voice) {
-                let len = chunk.len();
-                let secs = len as f64 / 16000.0;
-                let seq = metrics.next_seq();
-                tracing::info!("VAD: emitting chunk seq={seq}, {len} samples ({secs:.1}s)");
-                let now = Instant::now();
-                try_send_chunk(
-                    &chunk_tx,
-                    ChunkEnvelope {
-                        samples: chunk,
-                        enqueued_at: now,
-                        silence_detected_at: now,
-                        seq,
-                    },
-                    &metrics,
-                );
-            }
-        }
-    }
-
-    // Flush any remaining buffered speech on shutdown
-    if let Some(chunk) = state_machine.flush_speech() {
-        let len = chunk.len();
-        let secs = len as f64 / 16000.0;
-        let seq = metrics.next_seq();
-        tracing::info!("VAD: flushing final chunk seq={seq}, {len} samples ({secs:.1}s)");
-        let now = Instant::now();
-        try_send_chunk(
-            &chunk_tx,
-            ChunkEnvelope {
-                samples: chunk,
-                enqueued_at: now,
-                silence_detected_at: now,
-                seq,
-            },
+        process_vad_frames(
+            &mut sample_buf,
+            vad_frame_size,
+            &mut state_machine,
+            &mut vad,
             &metrics,
+            &chunk_tx,
+            &mut first_voice_logged,
         );
     }
+
+    if let Some(chunk) = state_machine.flush_speech() {
+        emit_chunk(chunk, "flushing final chunk", &metrics, &chunk_tx);
+    }
+}
+
+/// Receive audio from the capture thread, handling timeouts and idle flushing.
+///
+/// Returns `Some(data)` when audio is received, `None` on timeout (caller should
+/// `continue`). Breaks the caller's loop by returning `None` when disconnected
+/// — but the caller also checks `cancel.is_cancelled()`.
+fn receive_audio(
+    audio_rx: &mpsc::Receiver<Vec<f32>>,
+    last_audio_at: &mut Instant,
+    first_audio_logged: &mut bool,
+    idle_threshold: Duration,
+    state_machine: &mut VadStateMachine,
+    metrics: &Arc<PipelineMetrics>,
+    chunk_tx: &crossbeam_channel::Sender<ChunkEnvelope>,
+) -> Option<Vec<f32>> {
+    match audio_rx.recv_timeout(std::time::Duration::from_millis(20)) {
+        Ok(data) => {
+            *last_audio_at = Instant::now();
+            if !*first_audio_logged {
+                *first_audio_logged = true;
+                tracing::info!("VAD: first audio received, {} samples", data.len());
+            }
+            Some(data)
+        }
+        Err(mpsc::RecvTimeoutError::Timeout) => {
+            handle_idle_timeout(
+                last_audio_at,
+                idle_threshold,
+                state_machine,
+                metrics,
+                chunk_tx,
+            );
+            None
+        }
+        Err(mpsc::RecvTimeoutError::Disconnected) => {
+            tracing::info!("VAD: audio channel closed, exiting");
+            None
+        }
+    }
+}
+
+/// Flush buffered speech when no audio has arrived for longer than the idle threshold.
+fn handle_idle_timeout(
+    last_audio_at: &Instant,
+    idle_threshold: Duration,
+    state_machine: &mut VadStateMachine,
+    metrics: &Arc<PipelineMetrics>,
+    chunk_tx: &crossbeam_channel::Sender<ChunkEnvelope>,
+) {
+    if last_audio_at.elapsed() >= idle_threshold
+        && let Some(chunk) = state_machine.flush_speech()
+    {
+        emit_chunk(chunk, "emitting chunk on idle timeout", metrics, chunk_tx);
+    }
+}
+
+/// Apply pre-resampling when the capture rate is unsupported by webrtc-vad.
+fn pre_resample_if_needed(
+    accumulator: &mut Option<ResampleAccumulator>,
+    raw_audio: Vec<f32>,
+) -> Option<Vec<f32>> {
+    match accumulator {
+        Some(acc) => {
+            let out = acc.push(&raw_audio);
+            if out.is_empty() { None } else { Some(out) }
+        }
+        None => Some(raw_audio),
+    }
+}
+
+/// Drain complete VAD frames from the sample buffer and emit speech chunks.
+fn process_vad_frames(
+    sample_buf: &mut Vec<f32>,
+    vad_frame_size: usize,
+    state_machine: &mut VadStateMachine,
+    vad: &mut webrtc_vad::Vad,
+    metrics: &Arc<PipelineMetrics>,
+    chunk_tx: &crossbeam_channel::Sender<ChunkEnvelope>,
+    first_voice_logged: &mut bool,
+) {
+    while sample_buf.len() >= vad_frame_size {
+        let frame: Vec<f32> = sample_buf.drain(..vad_frame_size).collect();
+        let frame_i16 = state_machine.convert_frame_to_i16(&frame);
+        let is_voice = vad.is_voice_segment(frame_i16).unwrap_or(false);
+
+        if is_voice && !*first_voice_logged {
+            *first_voice_logged = true;
+            tracing::info!("VAD: first voice detected");
+        }
+        if let Some(chunk) = state_machine.process_frame(&frame, is_voice) {
+            emit_chunk(chunk, "emitting chunk", metrics, chunk_tx);
+        }
+    }
+}
+
+/// Log and send a completed speech chunk to the inference channel.
+fn emit_chunk(
+    chunk: Vec<f32>,
+    label: &str,
+    metrics: &Arc<PipelineMetrics>,
+    chunk_tx: &crossbeam_channel::Sender<ChunkEnvelope>,
+) {
+    let len = chunk.len();
+    let secs = len as f64 / 16000.0;
+    let seq = metrics.next_seq();
+    tracing::info!("VAD: {label} seq={seq}, {len} samples ({secs:.1}s)");
+    let now = Instant::now();
+    try_send_chunk(
+        chunk_tx,
+        ChunkEnvelope {
+            samples: chunk,
+            enqueued_at: now,
+            silence_detected_at: now,
+            seq,
+        },
+        metrics,
+    );
 }
 
 fn try_send_chunk(

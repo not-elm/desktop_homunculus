@@ -22,6 +22,36 @@ const MODEL_DEFINITIONS: Omit<ModelCardState, "status" | "downloadProgress">[] =
   { size: "large-v3", label: "Large v3", fileSize: "1.08 GB" },
 ];
 
+/** Priority order for selecting a default model when none is saved. */
+const MODEL_PRIORITY: SttModelSize[] = [
+  "small", "medium", "large-v3-turbo", "large-v3", "base", "tiny",
+];
+
+/** Returns an updater that patches the model matching `size` with the given fields. */
+function updateModelBySize(
+  size: SttModelSize,
+  patch: Partial<Pick<ModelCardState, "status" | "downloadProgress">>,
+): (prev: ModelCardState[]) => ModelCardState[] {
+  return (prev) => prev.map((m) => (m.size === size ? { ...m, ...patch } : m));
+}
+
+/** Builds initial model card states from definitions and a set of downloaded sizes. */
+function buildModelCards(downloadedSizes: Set<SttModelSize>): ModelCardState[] {
+  return MODEL_DEFINITIONS.map((d) => ({
+    ...d,
+    status: downloadedSizes.has(d.size) ? ("downloaded" as const) : ("not_downloaded" as const),
+  }));
+}
+
+/** Picks the best default model: saved preference if still downloaded, otherwise highest-priority downloaded. */
+function pickDefaultModel(
+  savedModel: SttModelSize | null,
+  downloadedSizes: Set<SttModelSize>,
+): SttModelSize | null {
+  if (savedModel && downloadedSizes.has(savedModel)) return savedModel;
+  return MODEL_PRIORITY.find((s) => downloadedSizes.has(s)) ?? null;
+}
+
 export function useStt() {
   const [sttState, setSttState] = useState<SttState>({ state: "idle" });
   const [models, setModels] = useState<ModelCardState[]>(
@@ -37,7 +67,7 @@ export function useStt() {
   useEffect(() => {
     let cancelled = false;
 
-    (async () => {
+    async function loadInitialState() {
       const [downloadedModels, langList] = await Promise.all([
         stt.models.list(),
         stt.languages(),
@@ -53,19 +83,11 @@ export function useStt() {
       if (savedLang) setLanguage(savedLang);
 
       const downloadedSizes = new Set(downloadedModels.map((m) => m.modelSize));
-      setModels(
-        MODEL_DEFINITIONS.map((d) => ({
-          ...d,
-          status: downloadedSizes.has(d.size) ? ("downloaded" as const) : ("not_downloaded" as const),
-        })),
-      );
+      setModels(buildModelCards(downloadedSizes));
+      setSelectedModel(pickDefaultModel(savedModel, downloadedSizes));
+    }
 
-      const sizes: SttModelSize[] = ["small", "medium", "large-v3-turbo", "large-v3", "base", "tiny"];
-      const defaultSelected =
-        (savedModel && downloadedSizes.has(savedModel) ? savedModel : null) ??
-        sizes.find((s) => downloadedSizes.has(s)) ?? null;
-      setSelectedModel(defaultSelected);
-    })();
+    loadInitialState();
 
     const stream = stt.stream({
       onStatus: (state) => {
@@ -103,47 +125,39 @@ export function useStt() {
     const controller = new AbortController();
     abortControllers.current.set(size, controller);
 
-    setModels((prev) =>
-      prev.map((m) =>
-        m.size === size ? { ...m, status: "downloading" as const, downloadProgress: 0 } : m,
-      ),
-    );
+    setModels(updateModelBySize(size, { status: "downloading", downloadProgress: 0 }));
+
+    function handleDownloadEvent(event: sttTypes.DownloadEvent) {
+      if (event.type === "progress") {
+        setModels(updateModelBySize(size, { downloadProgress: event.percentage }));
+      } else if (event.type === "complete") {
+        markModelDownloaded(size);
+      } else if (event.type === "error") {
+        markModelFailed(size, event.message);
+      }
+    }
+
+    function markModelDownloaded(modelSize: SttModelSize) {
+      setModels(updateModelBySize(modelSize, { status: "downloaded", downloadProgress: undefined }));
+      setSelectedModel((prev) => {
+        const next = prev ?? modelSize;
+        preferences.save("stt::model", next);
+        return next;
+      });
+    }
+
+    function markModelFailed(modelSize: SttModelSize, message: string) {
+      setModels(updateModelBySize(modelSize, { status: "not_downloaded", downloadProgress: undefined }));
+      setErrorMessage(message);
+      setTimeout(() => setErrorMessage(null), 3000);
+    }
 
     try {
       for await (const event of stt.models.download({
         modelSize: size,
         signal: controller.signal,
       })) {
-        if (event.type === "progress") {
-          setModels((prev) =>
-            prev.map((m) =>
-              m.size === size ? { ...m, downloadProgress: event.percentage } : m,
-            ),
-          );
-        } else if (event.type === "complete") {
-          setModels((prev) =>
-            prev.map((m) =>
-              m.size === size
-                ? { ...m, status: "downloaded" as const, downloadProgress: undefined }
-                : m,
-            ),
-          );
-          setSelectedModel((prev) => {
-            const next = prev ?? size;
-            preferences.save("stt::model", next);
-            return next;
-          });
-        } else if (event.type === "error") {
-          setModels((prev) =>
-            prev.map((m) =>
-              m.size === size
-                ? { ...m, status: "not_downloaded" as const, downloadProgress: undefined }
-                : m,
-            ),
-          );
-          setErrorMessage(event.message);
-          setTimeout(() => setErrorMessage(null), 3000);
-        }
+        handleDownloadEvent(event);
       }
     } catch {
       setModels((prev) =>
@@ -162,13 +176,7 @@ export function useStt() {
     const controller = abortControllers.current.get(size);
     controller?.abort();
     await stt.models.cancelDownload(size);
-    setModels((prev) =>
-      prev.map((m) =>
-        m.size === size
-          ? { ...m, status: "not_downloaded" as const, downloadProgress: undefined }
-          : m,
-      ),
-    );
+    setModels(updateModelBySize(size, { status: "not_downloaded", downloadProgress: undefined }));
   }, []);
 
   const startSession = useCallback(async () => {

@@ -50,12 +50,7 @@ fn inference_loop(
     event_tx: &Sender<SttEvent>,
     started_at: Instant,
 ) {
-    #[cfg(feature = "cuda")]
-    tracing::info!("Inference: CUDA GPU acceleration enabled");
-    #[cfg(feature = "metal")]
-    tracing::info!("Inference: Metal GPU acceleration enabled");
-    #[cfg(not(any(feature = "cuda", feature = "metal")))]
-    tracing::info!("Inference: CPU-only mode (no GPU features enabled)");
+    log_gpu_backend();
 
     let max_audio_ctx = ctx.model_n_audio_ctx();
     tracing::info!(
@@ -77,58 +72,111 @@ fn inference_loop(
             break;
         }
 
-        let envelope = match chunk_rx.recv_timeout(std::time::Duration::from_millis(100)) {
-            Ok(envelope) => {
-                let latency_ms = envelope.enqueued_at.elapsed().as_millis();
-                let len = envelope.samples.len();
-                let secs = len as f64 / 16000.0;
-                if let Some(prev) = prev_seq {
-                    let gap = envelope.seq.saturating_sub(prev);
-                    if gap > 1 {
-                        tracing::warn!(
-                            "Inference: seq gap detected: prev={prev}, current={}, dropped={}",
-                            envelope.seq,
-                            gap - 1
-                        );
-                    }
-                }
-                prev_seq = Some(envelope.seq);
-                let audio_ctx = compute_audio_ctx(len.max(MIN_INFERENCE_SAMPLES), max_audio_ctx);
-                tracing::info!(
-                    "Inference: received chunk seq={}, {len} samples ({secs:.1}s), \
-                     queue_latency={latency_ms}ms, audio_ctx={audio_ctx}",
-                    envelope.seq
-                );
-                envelope
-            }
-            Err(crossbeam_channel::RecvTimeoutError::Timeout) => continue,
-            Err(crossbeam_channel::RecvTimeoutError::Disconnected) => break,
+        let envelope = match receive_chunk(chunk_rx, &mut prev_seq, max_audio_ctx) {
+            ReceiveResult::Chunk(envelope) => envelope,
+            ReceiveResult::Timeout => continue,
+            ReceiveResult::Disconnected => break,
         };
 
-        let inference_start = Instant::now();
-        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-            run_inference(&mut state, &envelope.samples, language, max_audio_ctx)
-        }));
-        let inference_ms = inference_start.elapsed().as_millis();
-        tracing::info!("Inference: completed in {inference_ms}ms");
+        let result = execute_inference(&mut state, &envelope, language, max_audio_ctx);
 
         if result.is_err() {
-            tracing::warn!("Inference: panic detected, recreating whisper state");
-            let recreate_start = Instant::now();
-            state = match ctx.create_state() {
-                Ok(s) => {
-                    let recreate_ms = recreate_start.elapsed().as_millis();
-                    tracing::info!("Inference: state recreated in {recreate_ms}ms");
-                    s
-                }
-                Err(e) => {
-                    tracing::error!("failed to recreate whisper state after panic: {e}");
-                    break;
-                }
-            };
+            match recover_whisper_state(ctx) {
+                Some(new_state) => state = new_state,
+                None => break,
+            }
         }
 
         handle_inference_result(result, started_at, event_tx);
+    }
+}
+
+fn log_gpu_backend() {
+    #[cfg(feature = "cuda")]
+    tracing::info!("Inference: CUDA GPU acceleration enabled");
+    #[cfg(feature = "metal")]
+    tracing::info!("Inference: Metal GPU acceleration enabled");
+    #[cfg(not(any(feature = "cuda", feature = "metal")))]
+    tracing::info!("Inference: CPU-only mode (no GPU features enabled)");
+}
+
+enum ReceiveResult {
+    Chunk(ChunkEnvelope),
+    Timeout,
+    Disconnected,
+}
+
+/// Wait for the next chunk, log sequence gaps and queue latency.
+fn receive_chunk(
+    chunk_rx: &crossbeam_channel::Receiver<ChunkEnvelope>,
+    prev_seq: &mut Option<u64>,
+    max_audio_ctx: i32,
+) -> ReceiveResult {
+    match chunk_rx.recv_timeout(std::time::Duration::from_millis(100)) {
+        Ok(envelope) => {
+            log_chunk_reception(&envelope, prev_seq, max_audio_ctx);
+            *prev_seq = Some(envelope.seq);
+            ReceiveResult::Chunk(envelope)
+        }
+        Err(crossbeam_channel::RecvTimeoutError::Timeout) => ReceiveResult::Timeout,
+        Err(crossbeam_channel::RecvTimeoutError::Disconnected) => ReceiveResult::Disconnected,
+    }
+}
+
+fn log_chunk_reception(envelope: &ChunkEnvelope, prev_seq: &Option<u64>, max_audio_ctx: i32) {
+    let latency_ms = envelope.enqueued_at.elapsed().as_millis();
+    let len = envelope.samples.len();
+    let secs = len as f64 / 16000.0;
+
+    if let Some(prev) = prev_seq {
+        let gap = envelope.seq.saturating_sub(*prev);
+        if gap > 1 {
+            tracing::warn!(
+                "Inference: seq gap detected: prev={prev}, current={}, dropped={}",
+                envelope.seq,
+                gap - 1
+            );
+        }
+    }
+
+    let audio_ctx = compute_audio_ctx(len.max(MIN_INFERENCE_SAMPLES), max_audio_ctx);
+    tracing::info!(
+        "Inference: received chunk seq={}, {len} samples ({secs:.1}s), \
+         queue_latency={latency_ms}ms, audio_ctx={audio_ctx}",
+        envelope.seq
+    );
+}
+
+/// Run inference with panic recovery, returning the raw catch_unwind result.
+fn execute_inference(
+    state: &mut WhisperState,
+    envelope: &ChunkEnvelope,
+    language: &str,
+    max_audio_ctx: i32,
+) -> Result<Result<Option<(String, String)>, InferenceError>, Box<dyn Any + Send>> {
+    let inference_start = Instant::now();
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        run_inference(state, &envelope.samples, language, max_audio_ctx)
+    }));
+    let inference_ms = inference_start.elapsed().as_millis();
+    tracing::info!("Inference: completed in {inference_ms}ms");
+    result
+}
+
+/// Recreate the whisper state after a panic, returning `None` on fatal failure.
+fn recover_whisper_state(ctx: &WhisperContext) -> Option<WhisperState> {
+    tracing::warn!("Inference: panic detected, recreating whisper state");
+    let recreate_start = Instant::now();
+    match ctx.create_state() {
+        Ok(s) => {
+            let recreate_ms = recreate_start.elapsed().as_millis();
+            tracing::info!("Inference: state recreated in {recreate_ms}ms");
+            Some(s)
+        }
+        Err(e) => {
+            tracing::error!("failed to recreate whisper state after panic: {e}");
+            None
+        }
     }
 }
 

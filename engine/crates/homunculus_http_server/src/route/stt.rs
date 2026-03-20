@@ -298,18 +298,10 @@ pub async fn download_model_stream(
     let size = body.model_size;
 
     if api.is_model_available(size) {
-        let event = DownloadStreamEvent::Complete {
+        return ndjson_single_event(&DownloadStreamEvent::Complete {
             model_size: size,
             path: relative_model_path(size),
-        };
-        let body = Body::from(serialize_download_event(&event));
-        return Response::builder()
-            .header("Content-Type", "application/x-ndjson")
-            .header("Cache-Control", "no-store")
-            .header("X-Content-Type-Options", "nosniff")
-            .body(body)
-            .unwrap()
-            .into_response();
+        });
     }
 
     if api.is_downloading(size).await {
@@ -320,53 +312,76 @@ pub async fn download_model_stream(
         return (StatusCode::CONFLICT, Json(body)).into_response();
     }
 
-    let (mut rx, mut handle, _cancel) = api.start_download_stream(size).await;
-
+    let (rx, handle, _cancel) = api.start_download_stream(size).await;
     let (tx, mpsc_rx) = tokio::sync::mpsc::channel::<Vec<u8>>(64);
 
-    tokio::spawn(async move {
-        let mut interval = tokio::time::interval(Duration::from_millis(250));
-        // Skip the immediate first tick
-        interval.tick().await;
+    tokio::spawn(stream_download_progress(api, size, rx, handle, tx));
 
-        let result = loop {
-            tokio::select! {
-                join_result = &mut handle => {
-                    break match join_result {
-                        Ok(Ok(())) => Ok(()),
-                        Ok(Err(e)) => Err(e.to_string()),
-                        Err(e) => Err(e.to_string()),
-                    };
-                }
-                _ = interval.tick() => {
-                    let progress = rx.borrow_and_update().clone();
-                    let event = DownloadStreamEvent::Progress {
-                        downloaded_bytes: progress.downloaded_bytes,
-                        total_bytes: progress.total_bytes,
-                        percentage: progress.percentage,
-                    };
-                    if tx.send(serialize_download_event(&event)).await.is_err() {
-                        break Err("Client disconnected".to_string());
-                    }
+    ndjson_streaming_response(mpsc_rx)
+}
+
+/// Drive the download to completion, forwarding periodic progress events to `tx`.
+async fn stream_download_progress(
+    api: SttApi,
+    size: SttModelSize,
+    mut rx: tokio::sync::watch::Receiver<homunculus_microphone::DownloadProgress>,
+    mut handle: tokio::task::JoinHandle<Result<(), homunculus_microphone::error::DownloadError>>,
+    tx: tokio::sync::mpsc::Sender<Vec<u8>>,
+) {
+    let mut interval = tokio::time::interval(Duration::from_millis(250));
+    interval.tick().await;
+
+    let result = loop {
+        tokio::select! {
+            join_result = &mut handle => {
+                break match join_result {
+                    Ok(Ok(())) => Ok(()),
+                    Ok(Err(e)) => Err(e.to_string()),
+                    Err(e) => Err(e.to_string()),
+                };
+            }
+            _ = interval.tick() => {
+                let progress = rx.borrow_and_update().clone();
+                let event = DownloadStreamEvent::Progress {
+                    downloaded_bytes: progress.downloaded_bytes,
+                    total_bytes: progress.total_bytes,
+                    percentage: progress.percentage,
+                };
+                if tx.send(serialize_download_event(&event)).await.is_err() {
+                    break Err("Client disconnected".to_string());
                 }
             }
-        };
+        }
+    };
 
-        api.finish_download(size).await;
+    api.finish_download(size).await;
 
-        let final_event = match result {
-            Ok(()) => DownloadStreamEvent::Complete {
-                model_size: size,
-                path: relative_model_path(size),
-            },
-            Err(message) => DownloadStreamEvent::Error { message },
-        };
-        let _ = tx.send(serialize_download_event(&final_event)).await;
-    });
+    let final_event = match result {
+        Ok(()) => DownloadStreamEvent::Complete {
+            model_size: size,
+            path: relative_model_path(size),
+        },
+        Err(message) => DownloadStreamEvent::Error { message },
+    };
+    let _ = tx.send(serialize_download_event(&final_event)).await;
+}
 
+/// Build a single-event NDJSON response (used when the model already exists).
+fn ndjson_single_event(event: &DownloadStreamEvent) -> Response {
+    let body = Body::from(serialize_download_event(event));
+    Response::builder()
+        .header("Content-Type", "application/x-ndjson")
+        .header("Cache-Control", "no-store")
+        .header("X-Content-Type-Options", "nosniff")
+        .body(body)
+        .unwrap()
+        .into_response()
+}
+
+/// Build a streaming NDJSON response from an mpsc channel.
+fn ndjson_streaming_response(mpsc_rx: tokio::sync::mpsc::Receiver<Vec<u8>>) -> Response {
     let stream = ReceiverStream::new(mpsc_rx);
     let body = Body::from_stream(stream.map(Ok::<_, Infallible>));
-
     Response::builder()
         .header("Content-Type", "application/x-ndjson")
         .header("Cache-Control", "no-store")

@@ -139,23 +139,9 @@ where
             device.build_input_stream(
                 config,
                 move |data: &[f32], _| {
-                    if !first_callback.swap(true, Ordering::Relaxed) {
-                        tracing::info!(
-                            "Capture: first audio callback fired, {} samples, \
-                             config_rate={config_rate}Hz, format=F32",
-                            data.len()
-                        );
-                    }
+                    log_first_callback(&first_callback, data.len(), config_rate, "F32");
                     let mono = downmix_to_mono(data, channels);
-                    match tx.try_send(mono) {
-                        Ok(()) => {}
-                        Err(mpsc::TrySendError::Full(_)) => {
-                            tracing::warn!("capture→VAD channel full, dropping audio frame");
-                        }
-                        Err(mpsc::TrySendError::Disconnected(_)) => {
-                            tracing::warn!("capture→VAD channel disconnected");
-                        }
-                    }
+                    try_send_audio(&tx, mono);
                 },
                 error_callback,
                 None,
@@ -166,38 +152,51 @@ where
             device.build_input_stream(
                 config,
                 move |data: &[i16], _| {
-                    if !first_callback.swap(true, Ordering::Relaxed) {
-                        tracing::info!(
-                            "Capture: first audio callback fired, {} samples, \
-                             config_rate={config_rate}Hz, format=I16",
-                            data.len()
-                        );
-                    }
-                    let mono: Vec<f32> = if channels == 1 {
-                        data.iter().map(|&s| s as f32 / 32768.0_f32).collect()
-                    } else {
-                        data.chunks(channels)
-                            .map(|frame| {
-                                frame.iter().map(|&s| s as f32 / 32768.0_f32).sum::<f32>()
-                                    / channels as f32
-                            })
-                            .collect()
-                    };
-                    match tx.try_send(mono) {
-                        Ok(()) => {}
-                        Err(mpsc::TrySendError::Full(_)) => {
-                            tracing::warn!("capture→VAD channel full, dropping audio frame");
-                        }
-                        Err(mpsc::TrySendError::Disconnected(_)) => {
-                            tracing::warn!("capture→VAD channel disconnected");
-                        }
-                    }
+                    log_first_callback(&first_callback, data.len(), config_rate, "I16");
+                    let mono = convert_i16_to_mono_f32(data, channels);
+                    try_send_audio(&tx, mono);
                 },
                 error_callback,
                 None,
             )
         }
         _ => Err(cpal::BuildStreamError::StreamConfigNotSupported),
+    }
+}
+
+/// Log the first audio callback for diagnostics, exactly once.
+fn log_first_callback(flag: &AtomicBool, sample_count: usize, config_rate: u32, format: &str) {
+    if !flag.swap(true, Ordering::Relaxed) {
+        tracing::info!(
+            "Capture: first audio callback fired, {sample_count} samples, \
+             config_rate={config_rate}Hz, format={format}",
+        );
+    }
+}
+
+/// Convert I16 interleaved audio to mono F32.
+fn convert_i16_to_mono_f32(data: &[i16], channels: usize) -> Vec<f32> {
+    if channels == 1 {
+        data.iter().map(|&s| s as f32 / 32768.0_f32).collect()
+    } else {
+        data.chunks(channels)
+            .map(|frame| {
+                frame.iter().map(|&s| s as f32 / 32768.0_f32).sum::<f32>() / channels as f32
+            })
+            .collect()
+    }
+}
+
+/// Try to send mono audio to the VAD channel, logging on failure.
+fn try_send_audio(tx: &mpsc::SyncSender<Vec<f32>>, mono: Vec<f32>) {
+    match tx.try_send(mono) {
+        Ok(()) => {}
+        Err(mpsc::TrySendError::Full(_)) => {
+            tracing::warn!("capture→VAD channel full, dropping audio frame");
+        }
+        Err(mpsc::TrySendError::Disconnected(_)) => {
+            tracing::warn!("capture→VAD channel disconnected");
+        }
     }
 }
 
