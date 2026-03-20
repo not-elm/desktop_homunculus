@@ -28,6 +28,9 @@
 //! If the file-based database cannot be opened, the system automatically falls
 //! back to an in-memory database to ensure the application continues functioning.
 
+pub mod avatar_repo;
+mod migration;
+
 #[cfg(feature = "bevy")]
 mod vrm_transform;
 
@@ -116,7 +119,11 @@ impl PrefsDatabase {
                     ));
                     return Self::open_in_memory();
                 }
-                PrefsDatabase(c)
+                let db = PrefsDatabase(c);
+                if let Err(e) = migration::run_if_needed(&db) {
+                    Self::log_error(&format!("Migration failed: {e}"));
+                }
+                db
             }
             Err(e) => {
                 Self::log_error(&format!(
@@ -258,12 +265,38 @@ impl Default for PrefsDatabase {
 }
 
 fn create_tables(db: &rusqlite::Connection) -> Result<(), rusqlite::Error> {
+    db.execute_batch("PRAGMA foreign_keys = ON")?;
     db.execute(
         "CREATE TABLE IF NOT EXISTS preferences (
             key TEXT PRIMARY KEY,
             value,
             value_type TEXT NOT NULL DEFAULT 'json'
               CHECK (value_type IN ('null', 'bool', 'number', 'string', 'json'))
+        ) WITHOUT ROWID",
+        [],
+    )?;
+    db.execute(
+        "CREATE TABLE IF NOT EXISTS schema_version (version INTEGER NOT NULL)",
+        [],
+    )?;
+    db.execute(
+        "CREATE TABLE IF NOT EXISTS avatars (
+            id TEXT PRIMARY KEY NOT NULL,
+            asset_id TEXT NOT NULL,
+            name TEXT NOT NULL DEFAULT '',
+            persona TEXT NOT NULL DEFAULT '{}',
+            transform TEXT NOT NULL DEFAULT '{}',
+            state TEXT NOT NULL DEFAULT 'idle',
+            created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        ) WITHOUT ROWID",
+        [],
+    )?;
+    db.execute(
+        "CREATE TABLE IF NOT EXISTS avatar_extensions (
+            avatar_id TEXT NOT NULL REFERENCES avatars(id) ON DELETE CASCADE,
+            mod_name TEXT NOT NULL,
+            data TEXT NOT NULL DEFAULT '{}',
+            PRIMARY KEY (avatar_id, mod_name)
         ) WITHOUT ROWID",
         [],
     )?;
