@@ -407,7 +407,10 @@ mod tests {
     use bevy::tasks::{block_on, poll_once};
     use homunculus_api::HomunculusApiPlugin;
     use homunculus_api::prelude::{ApiReactor, ShadowPanelApiPlugin, WebviewApiPlugin};
-    use homunculus_core::prelude::{ModInfo, ModMenuMetadata, ModMenuMetadataList, ModRegistry};
+    use homunculus_api::vrm::VrmNames;
+    use homunculus_core::prelude::{
+        AssetId, AssetIdComponent, ModInfo, ModMenuMetadata, ModMenuMetadataList, ModRegistry,
+    };
     use homunculus_core::rpc_registry::RpcRegistry;
     use homunculus_prefs::PrefsDatabase;
     use homunculus_utils::config::HomunculusConfig;
@@ -809,5 +812,186 @@ mod tests {
             // subscribers should be 0 (no active SSE listeners)
             assert_eq!(signals[0].subscribers, 0);
         });
+    }
+
+    fn spawn_vrm_entity(app: &mut App) -> Entity {
+        let entity = app
+            .world_mut()
+            .spawn((
+                Name::new("MetadataName"),
+                bevy_vrm1::prelude::Vrm,
+                AssetIdComponent(AssetId::new("test::model.vrm")),
+            ))
+            .id();
+        app.update();
+        entity
+    }
+
+    #[test]
+    fn test_vrm_name_get_fallback_to_metadata() {
+        let (mut app, router) = test_app();
+        let entity = spawn_vrm_entity(&mut app);
+
+        let request = Request::get(format!("/vrm/{}/name?lang=en", entity.to_bits()))
+            .body(Body::empty())
+            .unwrap();
+        block_on(assert_response(
+            &mut app,
+            router,
+            request,
+            "MetadataName".to_string(),
+        ));
+    }
+
+    #[test]
+    fn test_vrm_name_set_and_get() {
+        let (mut app, router) = test_app();
+        let entity = spawn_vrm_entity(&mut app);
+
+        let put_request = Request::put(format!("/vrm/{}/name", entity.to_bits()))
+            .header("Content-Type", "application/json")
+            .body(Body::from(
+                r#"{"name":"エルマー","language":"ja"}"#,
+            ))
+            .unwrap();
+        block_on(async {
+            let response = call(&mut app, router.clone(), put_request).await;
+            assert_eq!(response.status(), StatusCode::OK);
+        });
+
+        let get_request = Request::get(format!("/vrm/{}/name?lang=ja", entity.to_bits()))
+            .body(Body::empty())
+            .unwrap();
+        block_on(assert_response(
+            &mut app,
+            router,
+            get_request,
+            "エルマー".to_string(),
+        ));
+    }
+
+    #[test]
+    fn test_vrm_name_list() {
+        let (mut app, router) = test_app();
+        let entity = spawn_vrm_entity(&mut app);
+
+        let put_en = Request::put(format!("/vrm/{}/name", entity.to_bits()))
+            .header("Content-Type", "application/json")
+            .body(Body::from(r#"{"name":"Elmer","language":"en"}"#))
+            .unwrap();
+        block_on(async {
+            call(&mut app, router.clone(), put_en).await;
+        });
+
+        let put_ja = Request::put(format!("/vrm/{}/name", entity.to_bits()))
+            .header("Content-Type", "application/json")
+            .body(Body::from(
+                r#"{"name":"エルマー","language":"ja"}"#,
+            ))
+            .unwrap();
+        block_on(async {
+            call(&mut app, router.clone(), put_ja).await;
+        });
+
+        let list_request = Request::get(format!("/vrm/{}/names", entity.to_bits()))
+            .body(Body::empty())
+            .unwrap();
+        block_on(async {
+            let response = call(&mut app, router, list_request).await;
+            let body = response.into_body().collect().await.unwrap().to_bytes();
+            let vrm_names: VrmNames = serde_json::from_slice(&body).unwrap();
+            assert_eq!(vrm_names.metadata, "MetadataName");
+            assert_eq!(vrm_names.names.get("en").unwrap(), "Elmer");
+            assert_eq!(vrm_names.names.get("ja").unwrap(), "エルマー");
+            assert_eq!(vrm_names.names.len(), 2);
+        });
+    }
+
+    #[test]
+    fn test_vrm_name_delete() {
+        let (mut app, router) = test_app();
+        let entity = spawn_vrm_entity(&mut app);
+
+        let put_request = Request::put(format!("/vrm/{}/name", entity.to_bits()))
+            .header("Content-Type", "application/json")
+            .body(Body::from(r#"{"name":"Elmer","language":"en"}"#))
+            .unwrap();
+        block_on(async {
+            call(&mut app, router.clone(), put_request).await;
+        });
+
+        let delete_request =
+            Request::delete(format!("/vrm/{}/name?lang=en", entity.to_bits()))
+                .body(Body::empty())
+                .unwrap();
+        block_on(async {
+            call(&mut app, router.clone(), delete_request).await;
+        });
+
+        let get_request = Request::get(format!("/vrm/{}/name?lang=en", entity.to_bits()))
+            .body(Body::empty())
+            .unwrap();
+        block_on(assert_response(
+            &mut app,
+            router,
+            get_request,
+            "MetadataName".to_string(),
+        ));
+    }
+
+    #[test]
+    fn test_vrm_name_empty_string_deletes() {
+        let (mut app, router) = test_app();
+        let entity = spawn_vrm_entity(&mut app);
+
+        let put_request = Request::put(format!("/vrm/{}/name", entity.to_bits()))
+            .header("Content-Type", "application/json")
+            .body(Body::from(r#"{"name":"Elmer","language":"en"}"#))
+            .unwrap();
+        block_on(async {
+            call(&mut app, router.clone(), put_request).await;
+        });
+
+        let put_empty = Request::put(format!("/vrm/{}/name", entity.to_bits()))
+            .header("Content-Type", "application/json")
+            .body(Body::from(r#"{"name":"","language":"en"}"#))
+            .unwrap();
+        block_on(async {
+            call(&mut app, router.clone(), put_empty).await;
+        });
+
+        let get_request = Request::get(format!("/vrm/{}/name?lang=en", entity.to_bits()))
+            .body(Body::empty())
+            .unwrap();
+        block_on(assert_response(
+            &mut app,
+            router,
+            get_request,
+            "MetadataName".to_string(),
+        ));
+    }
+
+    #[test]
+    fn test_vrm_name_language_normalized_to_lowercase() {
+        let (mut app, router) = test_app();
+        let entity = spawn_vrm_entity(&mut app);
+
+        let put_request = Request::put(format!("/vrm/{}/name", entity.to_bits()))
+            .header("Content-Type", "application/json")
+            .body(Body::from(r#"{"name":"Elmer","language":"EN"}"#))
+            .unwrap();
+        block_on(async {
+            call(&mut app, router.clone(), put_request).await;
+        });
+
+        let get_request = Request::get(format!("/vrm/{}/name?lang=en", entity.to_bits()))
+            .body(Body::empty())
+            .unwrap();
+        block_on(assert_response(
+            &mut app,
+            router,
+            get_request,
+            "Elmer".to_string(),
+        ));
     }
 }
