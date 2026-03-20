@@ -37,8 +37,8 @@ impl HomunculusMcpHandler {
     async fn play_animation(&self, params: Parameters<PlayAnimationParams>) -> String {
         let args = params.0;
 
-        let character = match self.resolve_character().await {
-            Ok(e) => e,
+        let (_id, character) = match self.resolve_avatar_with_vrm().await {
+            Ok(v) => v,
             Err(e) => return format!("Error: {e}"),
         };
 

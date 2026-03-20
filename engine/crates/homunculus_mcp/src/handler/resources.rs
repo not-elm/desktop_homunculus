@@ -15,8 +15,15 @@ pub(super) fn resource_definitions() -> Vec<Resource> {
             .with_description("Application info including version, platform, features, and mods")
             .with_mime_type("application/json")
             .no_annotation(),
+        RawResource::new("homunculus://avatars", "homunculus-avatars")
+            .with_description(
+                "List of all registered avatars with IDs, names, asset IDs, states, \
+                 and VRM attachment status",
+            )
+            .with_mime_type("application/json")
+            .no_annotation(),
         RawResource::new("homunculus://characters", "homunculus-characters")
-            .with_description("Detailed snapshot of all loaded VRM characters")
+            .with_description("Detailed snapshot of all loaded VRM characters (legacy)")
             .with_mime_type("application/json")
             .no_annotation(),
         RawResource::new("homunculus://mods", "homunculus-mods")
@@ -54,6 +61,10 @@ pub(super) async fn read_resource(
                 "mods": mod_list,
             });
             to_json_string(&info)?
+        }
+        "homunculus://avatars" => {
+            let avatars = handler.avatar_api.list().await.map_err(api_err)?;
+            to_json_string(&avatars)?
         }
         "homunculus://characters" => {
             let snapshots = handler.vrm_api.snapshot().await.map_err(api_err)?;
