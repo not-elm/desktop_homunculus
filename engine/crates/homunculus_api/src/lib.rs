@@ -36,6 +36,7 @@
 mod app;
 pub mod assets;
 mod audio;
+pub mod avatar;
 mod cameras;
 mod display;
 mod effects;
@@ -53,6 +54,7 @@ pub mod vrm;
 mod vrma;
 mod webview;
 
+use crate::avatar::AvatarApiPlugin;
 use crate::prelude::{ShadowPanelApiPlugin, WebviewApiPlugin};
 use crate::reactor::ApiReactorPlugin;
 use crate::signals::SignalsApiPlugin;
@@ -64,6 +66,7 @@ pub mod prelude {
         app::*,
         assets::AssetsApi,
         audio::*,
+        avatar::{AvatarApi, AvatarInfo},
         cameras::*,
         display::*,
         effects::*,
@@ -103,6 +106,7 @@ impl PluginGroup for HomunculusApiPlugin {
         let builder = PluginGroupBuilder::start::<Self>();
         builder
             .add(ApiReactorPlugin)
+            .add(AvatarApiPlugin)
             .add(WebviewApiPlugin)
             .add(SignalsApiPlugin)
             .add(ShadowPanelApiPlugin)

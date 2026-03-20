@@ -1,0 +1,113 @@
+use crate::avatar::AvatarApi;
+use crate::error::{ApiError, ApiResult};
+use bevy::prelude::*;
+use bevy_flurx::prelude::*;
+use bevy_vrm1::prelude::{BodyTracking, Cameras, Initialized, LookAt, RequestDetachVrm, VrmHandle};
+use bevy_vrm1::vrm::Vrm;
+use homunculus_core::prelude::{
+    AssetId, AssetIdComponent, AssetResolver, AvatarId, AvatarRegistry,
+};
+use homunculus_prefs::avatar_repo::AvatarRepo;
+use homunculus_prefs::prelude::PrefsDatabase;
+
+/// Arguments for attaching a VRM to an avatar.
+#[derive(Debug, Clone)]
+struct AttachVrmArgs {
+    id: AvatarId,
+    asset_id: AssetId,
+}
+
+impl AvatarApi {
+    /// Loads a VRM model and attaches it to an existing avatar entity.
+    ///
+    /// Waits for the VRM to finish initialization before returning. After
+    /// initialization, the avatar's display name is restored (since VRM
+    /// loading overwrites the Bevy `Name` component).
+    pub async fn attach_vrm(&self, id: AvatarId, asset_id: AssetId) -> ApiResult<Entity> {
+        let args = AttachVrmArgs {
+            id: id.clone(),
+            asset_id,
+        };
+        self.0
+            .schedule(move |task| async move {
+                let entity = task
+                    .will(Update, once::run(begin_attach).with(args))
+                    .await?;
+                task.will(Update, wait::until(is_initialized).with(entity))
+                    .await;
+                Ok(entity)
+            })
+            .await?
+    }
+
+    /// Detaches the VRM model from an avatar entity.
+    ///
+    /// The avatar entity itself remains alive; only the VRM hierarchy and
+    /// related components are removed.
+    pub async fn detach_vrm(&self, id: AvatarId) -> ApiResult {
+        self.0
+            .schedule(move |task| async move {
+                task.will(Update, once::run(begin_detach).with(id)).await
+            })
+            .await?
+    }
+}
+
+fn begin_attach(
+    In(args): In<AttachVrmArgs>,
+    mut commands: Commands,
+    registry: Res<AvatarRegistry>,
+    asset_resolver: AssetResolver,
+    cameras: Cameras,
+    db: NonSend<PrefsDatabase>,
+) -> ApiResult<Entity> {
+    let entity = registry
+        .get(&args.id)
+        .ok_or_else(|| ApiError::AvatarNotFound(args.id.to_string()))?;
+
+    let handle = asset_resolver
+        .load(&args.asset_id)
+        .map_err(|_| ApiError::AssetNotFound(args.asset_id.clone()))?;
+
+    commands.entity(entity).try_insert((
+        VrmHandle(handle),
+        AssetIdComponent(args.asset_id.clone()),
+        LookAt::Cursor,
+        BodyTracking::default(),
+        cameras.all_layers(),
+    ));
+
+    AvatarRepo::new(&db)
+        .update_asset_id(&args.id, args.asset_id.as_ref())
+        .map_err(|e| ApiError::Sql(e.to_string()))?;
+
+    Ok(entity)
+}
+
+/// Returns `true` once the entity has the `Initialized` component.
+fn is_initialized(In(entity): In<Entity>, query: Query<&Initialized>) -> bool {
+    query.get(entity).is_ok()
+}
+
+fn begin_detach(
+    In(id): In<AvatarId>,
+    mut commands: Commands,
+    registry: Res<AvatarRegistry>,
+    vrm_check: Query<(), With<Vrm>>,
+) -> ApiResult {
+    let entity = registry
+        .get(&id)
+        .ok_or_else(|| ApiError::AvatarNotFound(id.to_string()))?;
+
+    if vrm_check.get(entity).is_err() {
+        return Err(ApiError::VrmNotAttached(id.to_string()));
+    }
+
+    commands.entity(entity).trigger(RequestDetachVrm);
+    commands
+        .entity(entity)
+        .remove::<LookAt>()
+        .remove::<BodyTracking>();
+
+    Ok(())
+}

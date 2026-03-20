@@ -39,6 +39,11 @@ pub struct ExtensionRow {
 pub struct AvatarRepo<'a>(pub(crate) &'a PrefsDatabase);
 
 impl<'a> AvatarRepo<'a> {
+    /// Creates a new `AvatarRepo` from a database reference.
+    pub fn new(db: &'a PrefsDatabase) -> Self {
+        Self(db)
+    }
+
     /// Inserts a new avatar row.
     pub fn create(
         &self,
@@ -101,6 +106,15 @@ impl<'a> AvatarRepo<'a> {
         self.0.0.execute(
             "UPDATE avatars SET persona = ?1 WHERE id = ?2",
             rusqlite::params![persona_json, id],
+        )?;
+        Ok(())
+    }
+
+    /// Updates the asset ID for an avatar.
+    pub fn update_asset_id(&self, id: &str, asset_id: &str) -> Result<(), rusqlite::Error> {
+        self.0.0.execute(
+            "UPDATE avatars SET asset_id = ?1 WHERE id = ?2",
+            rusqlite::params![asset_id, id],
         )?;
         Ok(())
     }
