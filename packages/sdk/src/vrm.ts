@@ -407,8 +407,15 @@ export class VrmEventSource implements Disposable {
 }
 
 export class Vrm {
-    constructor(readonly entity: number) {
+    /** The Bevy entity ID of the VRM instance. */
+    readonly entity: number;
 
+    /** The avatar ID, if this Vrm was created from an Avatar. */
+    readonly avatarId?: string;
+
+    constructor(entity: number, avatarId?: string) {
+        this.entity = entity;
+        this.avatarId = avatarId;
     }
 
     /**
@@ -727,6 +734,8 @@ export class Vrm {
 
     /**
      * Spawns a new VRM instance from the given mod asset ID.
+     *
+     * @deprecated Use {@link Avatar.spawn} instead for avatar-based lifecycle management.
      */
     static async spawn(asset: string, options?: SpawnVrmOptions): Promise<Vrm> {
         const response = await host.post(host.createUrl("vrm"), {
@@ -740,6 +749,7 @@ export class Vrm {
     /**
      * Finds a VRM instance by its name.
      *
+     * @deprecated Use {@link Avatar.find} instead for avatar-based lifecycle management.
      * @param vrmName VRM avatar name
      */
     static async findByName(vrmName: string): Promise<Vrm> {
@@ -779,6 +789,8 @@ export class Vrm {
 
     /**
      * Returns detailed snapshot of all VRM instances.
+     *
+     * @deprecated Use {@link Avatar.findAll} instead for avatar-based lifecycle management.
      *
      * @example
      * ```typescript

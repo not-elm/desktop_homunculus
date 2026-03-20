@@ -38,6 +38,7 @@
  * @packageDocumentation
  */
 
+export * from "./avatar";
 export * from "./coordinates";
 export * from "./displays";
 export * from "./audio";
@@ -55,5 +56,6 @@ export * from "./entities";
 export * from "./app";
 export * from "./mods";
 export * from "./assets";
+export * from "./avatar-extensions";
 export * from "./utils";
 export * from "./stt";

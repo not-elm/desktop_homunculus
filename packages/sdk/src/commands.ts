@@ -33,6 +33,7 @@
 
 import { writeFileSync } from "node:fs";
 import { z, type ZodType } from "zod";
+import { Avatar } from "./avatar";
 import { Vrm } from "./vrm";
 
 /**
@@ -182,6 +183,7 @@ export namespace input {
    * menu UI. This helper validates the input and returns a ready-to-use
    * {@link Vrm} instance.
    *
+   * @deprecated Use {@link input.parseMenuAvatar} instead for avatar-based lifecycle management.
    * @returns A {@link Vrm} instance for the linked entity
    * @throws {StdinParseError} With `code: "EMPTY_STDIN"` if stdin is empty
    * @throws {StdinParseError} With `code: "INVALID_JSON"` if stdin is not valid JSON
@@ -198,6 +200,46 @@ export namespace input {
   export async function parseMenu(): Promise<Vrm> {
     const parsed = await parse(z.object({ linkedVrm: z.number() }));
     return new Vrm(parsed.linkedVrm);
+  }
+
+  /**
+   * Parse menu command stdin and return the linked Avatar instance.
+   *
+   * Menu commands receive `{ "linkedAvatar": "<avatarId>" }` on stdin from the
+   * menu UI. This helper validates the input and returns a ready-to-use
+   * {@link Avatar} instance. Falls back to `linkedVrm` for backward compatibility.
+   *
+   * @returns An {@link Avatar} instance for the linked avatar
+   * @throws {StdinParseError} With `code: "EMPTY_STDIN"` if stdin is empty
+   * @throws {StdinParseError} With `code: "INVALID_JSON"` if stdin is not valid JSON
+   * @throws {StdinParseError} With `code: "VALIDATION_ERROR"` if neither `linkedAvatar` nor `linkedVrm` is present
+   *
+   * @example
+   * ```typescript
+   * import { input } from "@hmcs/sdk/commands";
+   *
+   * const avatar = await input.parseMenuAvatar();
+   * const vrm = avatar.vrm();
+   * await vrm.setExpressions({ happy: 1.0 });
+   * ```
+   */
+  export async function parseMenuAvatar(): Promise<Avatar> {
+    const schema = z.object({
+      linkedAvatar: z.string().optional(),
+      linkedVrm: z.number().optional(),
+    });
+    const parsed = await parse(schema);
+
+    if (parsed.linkedAvatar) {
+      return Avatar.find(parsed.linkedAvatar);
+    }
+    if (parsed.linkedVrm !== undefined) {
+      return new Avatar("", parsed.linkedVrm);
+    }
+    throw new StdinParseError(
+      "VALIDATION_ERROR",
+      "Expected linkedAvatar or linkedVrm in stdin",
+    );
   }
 }
 

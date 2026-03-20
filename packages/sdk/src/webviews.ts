@@ -179,7 +179,10 @@ export interface WebviewInfo {
     size: Vec2;
     viewportSize: Vec2;
     offset: Vec2;
+    /** @deprecated Use {@link linkedAvatar} instead. */
     linkedVrm?: number | null;
+    /** The avatar ID linked to this webview, if any. */
+    linkedAvatar?: string | null;
 }
 
 /**
@@ -200,7 +203,10 @@ export interface WebviewOpenOptions {
     size?: Vec2;
     viewportSize?: Vec2;
     offset?: Vec2;
+    /** @deprecated Use {@link linkedAvatar} instead. */
     linkedVrm?: number;
+    /** The avatar ID to link to this webview. */
+    linkedAvatar?: string;
 }
 
 /** Request body for patching webview properties. */
