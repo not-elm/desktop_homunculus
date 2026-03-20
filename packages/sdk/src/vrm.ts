@@ -6,7 +6,6 @@ import {
 import {type GlobalViewport} from "./coordinates";
 import {host} from "./host";
 import {EventSource} from "eventsource";
-import {entities} from "./entities";
 
 // --- Persona types ---
 
@@ -472,10 +471,62 @@ export class Vrm {
     }
 
     /**
-     * Returns the name of the VRM avatar.
+     * Get the character's display name.
+     *
+     * Returns the localized name for the specified language. If no name has been
+     * set for that language, falls back to the VRM metadata name.
+     *
+     * @param language - ISO 639-1 language code. Defaults to `"en"`.
+     * @returns The character's name
+     *
+     * @example
+     * ```typescript
+     * const name = await elmer.name();       // English name (or metadata fallback)
+     * const jaName = await elmer.name("ja"); // Japanese name (or metadata fallback)
+     * ```
      */
-    async name(): Promise<string> {
-        return await entities.name(this.entity);
+    async name(language?: string): Promise<string> {
+        const url = host.createUrl(`vrm/${this.entity}/name`, { lang: language ?? "en" });
+        const response = await host.get(url);
+        return await response.json();
+    }
+
+    /**
+     * Set the character's display name for a specific language.
+     *
+     * Names are persisted per asset — setting a name affects all instances
+     * of the same VRM model. Passing an empty string deletes the name
+     * for that language.
+     *
+     * @param name - The name to set (empty string to delete)
+     * @param language - ISO 639-1 language code. Defaults to `"en"`.
+     *
+     * @example
+     * ```typescript
+     * await elmer.setName("Elmer");           // Set English name
+     * await elmer.setName("エルマー", "ja");   // Set Japanese name
+     * ```
+     */
+    async setName(name: string, language?: string): Promise<void> {
+        await this.put("name", { name, language: language ?? "en" });
+    }
+
+    /**
+     * Delete the character's display name for a specific language.
+     *
+     * After deletion, {@link name} for that language will fall back to the
+     * VRM metadata name.
+     *
+     * @param language - ISO 639-1 language code. Defaults to `"en"`.
+     *
+     * @example
+     * ```typescript
+     * await elmer.deleteName("ja");  // Remove Japanese name
+     * ```
+     */
+    async deleteName(language?: string): Promise<void> {
+        const url = host.createUrl(`vrm/${this.entity}/name`, { lang: language ?? "en" });
+        await host.deleteMethod(url);
     }
 
     /**
