@@ -15,6 +15,7 @@ serde_json = { workspace = true }
 bevy_vrm1 = { workspace = true }
 anyhow = { workspace = true }
 async-broadcast = { workspace = true }
+thiserror = { workspace = true }
 utoipa = { workspace = true, optional = true }
 
 [features]

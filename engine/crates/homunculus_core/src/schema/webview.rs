@@ -1,6 +1,6 @@
 use super::asset::AssetId;
 use bevy::math::Vec2;
-use bevy::prelude::{Component, Entity, Reflect};
+use bevy::prelude::{Component, Reflect};
 use serde::{Deserialize, Serialize};
 
 /// Webview source specification (request).
@@ -53,10 +53,13 @@ pub struct WebviewOpenOptions {
     pub viewport_size: Option<Vec2>,
     #[serde(default)]
     pub offset: Option<WebviewOffset>,
-    /// VRM entity to link to this webview (optional).
+    /// Avatar ID to link to this webview (optional).
+    #[serde(default)]
+    pub linked_avatar: Option<String>,
+    /// VRM entity to link to this webview (deprecated, use `linked_avatar`).
     #[serde(default)]
     #[cfg_attr(feature = "openapi", schema(value_type = Option<String>))]
-    pub linked_vrm: Option<Entity>,
+    pub linked_vrm: Option<u64>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Component, Default, Copy)]
@@ -81,16 +84,19 @@ impl Default for WebviewMeshSize {
 #[serde(rename_all = "camelCase")]
 pub struct WebviewInfo {
     #[cfg_attr(feature = "openapi", schema(value_type = String))]
-    pub entity: Entity,
+    pub entity: bevy::prelude::Entity,
     pub source: WebviewSourceInfo,
     #[cfg_attr(feature = "openapi", schema(value_type = [f32; 2]))]
     pub size: Vec2,
     #[cfg_attr(feature = "openapi", schema(value_type = [f32; 2]))]
     pub viewport_size: Vec2,
     pub offset: WebviewOffset,
-    #[serde(default)]
-    #[cfg_attr(feature = "openapi", schema(value_type = Option<String>))]
-    pub linked_vrm: Option<Entity>,
+    /// The avatar ID linked to this webview.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub linked_avatar: Option<String>,
+    /// Deprecated: VRM entity as bits, kept for backward compatibility.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub linked_vrm: Option<u64>,
 }
 
 /// Request for PATCH /webviews/{entity}

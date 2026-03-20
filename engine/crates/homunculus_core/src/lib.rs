@@ -14,7 +14,7 @@
 //! ## Key Features
 //!
 //! - **Core Components**: Essential Bevy components like `Loading`, `ShadowPanel`,
-//!   `GlobalViewport`, `PrimaryCamera`, and `VrmState`
+//!   `GlobalViewport`, `PrimaryCamera`, and `AvatarState`
 //! - **Event System**: Comprehensive event handling for VRM models, pointer
 //!   interactions, and state changes
 //! - **System Parameters**: Custom Bevy system parameters for common operations
@@ -41,7 +41,7 @@
 //! ## Core Components
 //!
 //! ### VRM Management
-//! - `VrmState`: Tracks the current state of VRM models (idle, sitting, etc.)
+//! - `AvatarState`: Tracks the current state of avatars (idle, sitting, etc.)
 //! - `Loading`: Indicates when VRM models are being loaded
 //! - Various bone and animation-related components
 //!
@@ -62,12 +62,15 @@
 //! - [`MascotTracker`](prelude::MascotTracker): Track mascot positions and movements
 //! - [`Monitors`](prelude::Monitors): Access monitor and display information
 
+use crate::avatar_registry::AvatarRegistryPlugin;
 use crate::events::HomunculusEventsPlugin;
 use crate::prelude::CoreComponentsPlugin;
 use crate::render_layers::VrmRenderLayersPlugin;
 use crate::resources::CoreResourcesPlugin;
 use bevy::app::{App, Plugin};
 
+pub mod avatar;
+mod avatar_registry;
 mod components;
 mod error;
 mod events;
@@ -80,9 +83,9 @@ mod system_set;
 
 pub mod prelude {
     pub use crate::{
-        HomunculusCorePlugin, components::*, error::*, events::prelude::*, resources::prelude::*,
-        rpc_registry::*, schema::prelude::*, system_param::prelude::*,
-        system_set::HomunculusSystemSet,
+        HomunculusCorePlugin, avatar::*, avatar_registry::AvatarRegistry, components::*, error::*,
+        events::prelude::*, resources::prelude::*, rpc_registry::*, schema::prelude::*,
+        system_param::prelude::*, system_set::HomunculusSystemSet,
     };
     pub use homunculus_utils::prelude::*;
 }
@@ -126,6 +129,7 @@ impl Plugin for HomunculusCorePlugin {
             HomunculusEventsPlugin,
             CoreResourcesPlugin,
             VrmRenderLayersPlugin,
+            AvatarRegistryPlugin,
         ));
     }
 }

@@ -8,9 +8,9 @@ use bevy_flurx::action::once;
 use futures::stream::select_all;
 use homunculus_api::prelude::{ApiError, ApiReactor};
 use homunculus_core::prelude::{
-    ExpressionChangeEvent, OnClickEvent, OnDragEndEvent, OnDragEvent, OnDragStartEvent,
-    OnPointerCancelEvent, OnPointerMoveEvent, OnPointerOutEvent, OnPointerOverEvent,
-    OnPointerPressedEvent, OnPointerReleasedEvent, VrmEventReceiver, VrmStateChangeEvent,
+    AvatarStateChangeEvent, ExpressionChangeEvent, OnClickEvent, OnDragEndEvent, OnDragEvent,
+    OnDragStartEvent, OnPointerCancelEvent, OnPointerMoveEvent, OnPointerOutEvent,
+    OnPointerOverEvent, OnPointerPressedEvent, OnPointerReleasedEvent, VrmEventReceiver,
     VrmaFinishEvent, VrmaPlayEvent,
 };
 use serde::Serialize;
@@ -104,7 +104,8 @@ pub async fn events(
             let state_change = task
                 .will(
                     Update,
-                    once::run(observe_stream::<VrmStateChangeEvent>).with(("state-change", entity)),
+                    once::run(observe_stream::<AvatarStateChangeEvent>)
+                        .with(("state-change", entity)),
                 )
                 .await;
             let expression_change = task

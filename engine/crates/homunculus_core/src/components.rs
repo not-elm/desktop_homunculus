@@ -1,6 +1,10 @@
+use crate::avatar::{AvatarName, AvatarState};
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
+#[deprecated(note = "Use AvatarState instead")]
+pub type VrmState = AvatarState;
 
 #[derive(Component, Reflect, Serialize, Deserialize, Debug, Default, Clone, Copy)]
 #[reflect(Component, Serialize, Deserialize)]
@@ -31,34 +35,16 @@ pub struct GlobalViewport(pub Vec2);
 #[reflect(Component, Serialize, Deserialize)]
 pub struct PrimaryCamera;
 
-/// Represents the state of the VRM model.
-#[repr(transparent)]
-#[derive(Debug, Component, Eq, PartialEq, Clone, Reflect, Serialize, Deserialize, Deref)]
-#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
+/// Links a webview to an avatar by its string identifier.
+///
+/// The tracking system resolves the avatar ID to an ECS entity via
+/// [`AvatarRegistry`](crate::avatar_registry::AvatarRegistry) each frame.
+#[derive(Component, Reflect, Serialize, Deserialize, Debug, Clone)]
 #[reflect(Component, Serialize, Deserialize)]
-pub struct VrmState(pub String);
+pub struct LinkedAvatar(pub String);
 
-impl VrmState {
-    pub const SITTING: &'static str = "sitting";
-}
-
-impl From<&str> for VrmState {
-    fn from(state: &str) -> Self {
-        Self(state.to_string())
-    }
-}
-
-impl Default for VrmState {
-    fn default() -> Self {
-        Self("idle".to_string())
-    }
-}
-
-/// Links a webview to a VRM entity.
-/// This is pure metadata - does not affect positioning or parenting.
-#[derive(Component, Reflect, Serialize, Deserialize, Debug, Clone, Copy)]
-#[reflect(Component, Serialize, Deserialize)]
-pub struct LinkedVrm(pub Entity);
+#[deprecated(note = "Use LinkedAvatar instead")]
+pub type LinkedVrm = LinkedAvatar;
 
 /// Big Five personality traits (OCEAN model).
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
@@ -100,8 +86,9 @@ impl Plugin for CoreComponentsPlugin {
             .register_type::<ShadowPanel>()
             .register_type::<GlobalViewport>()
             .register_type::<PrimaryCamera>()
-            .register_type::<VrmState>()
-            .register_type::<LinkedVrm>()
+            .register_type::<AvatarState>()
+            .register_type::<AvatarName>()
+            .register_type::<LinkedAvatar>()
             .register_type::<AppWindow>();
     }
 }

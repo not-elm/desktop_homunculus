@@ -158,6 +158,20 @@ impl HomunculusMcpHandler {
         }
     }
 
+    /// Resolves a character display name to its avatar ID.
+    pub(crate) async fn resolve_avatar_id_by_name(&self, name: &str) -> Result<String, String> {
+        let avatars = self
+            .avatar_api
+            .list()
+            .await
+            .map_err(|e| e.to_string())?;
+        avatars
+            .iter()
+            .find(|a| a.name == name)
+            .map(|a| a.id.clone())
+            .ok_or_else(|| format!("No avatar found with name '{name}'"))
+    }
+
     /// Finds the avatar ID string for an entity by searching the avatar list.
     pub(crate) async fn find_avatar_id_for_entity(&self, target: Entity) -> Option<String> {
         let avatars = self.avatar_api.list().await.ok()?;

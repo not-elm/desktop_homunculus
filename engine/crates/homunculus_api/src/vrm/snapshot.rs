@@ -6,7 +6,7 @@ use bevy::prelude::*;
 use bevy_flurx::prelude::*;
 use bevy_vrm1::prelude::*;
 use homunculus_core::prelude::{
-    AssetIdComponent, Coordinate, GlobalViewport, LinkedVrm, Persona, VrmState,
+    AssetIdComponent, AvatarState, Coordinate, GlobalViewport, LinkedAvatar, Persona,
 };
 use serde::{Deserialize, Serialize};
 
@@ -59,7 +59,7 @@ fn snapshot_all_vrms(
         (
             Entity,
             &Name,
-            Option<&VrmState>,
+            Option<&AvatarState>,
             &Transform,
             Option<&LookAt>,
             Option<&Persona>,
@@ -78,7 +78,8 @@ fn snapshot_all_vrms(
     vrma_query: Query<(Entity, &Name, &VrmaAnimationPlayers), With<Vrma>>,
     players: Query<&AnimationPlayer>,
     coordinate: Coordinate,
-    linked_vrms: Query<(Entity, &LinkedVrm)>,
+    registry: Res<homunculus_core::prelude::AvatarRegistry>,
+    linked_avatars: Query<(Entity, &LinkedAvatar)>,
 ) -> Vec<VrmSnapshot> {
     vrms.iter()
         .map(
@@ -91,11 +92,11 @@ fn snapshot_all_vrms(
                     LookAt::Cursor => LookAtState::Cursor,
                     LookAt::Target(target) => LookAtState::Target { entity: *target },
                 });
-                let linked_webviews = linked_vrms
-                    .iter()
-                    .filter(|(_, linked)| linked.0 == entity)
-                    .map(|(webview_entity, _)| webview_entity)
-                    .collect();
+                let linked_webviews = collect_linked_webviews(
+                    entity,
+                    &linked_avatars,
+                    &registry,
+                );
 
                 VrmSnapshot {
                     entity,
@@ -166,6 +167,24 @@ fn collect_expressions(
     expressions.sort_by(|a, b| a.name.cmp(&b.name));
 
     ExpressionsResponse { expressions }
+}
+
+/// Collects webview entities linked to a given VRM entity via LinkedAvatar.
+fn collect_linked_webviews(
+    vrm_entity: Entity,
+    linked_avatars: &Query<(Entity, &LinkedAvatar)>,
+    registry: &homunculus_core::prelude::AvatarRegistry,
+) -> Vec<Entity> {
+    linked_avatars
+        .iter()
+        .filter(|(_, linked)| {
+            homunculus_core::avatar::AvatarId::new(&linked.0)
+                .ok()
+                .and_then(|id| registry.get(&id))
+                == Some(vrm_entity)
+        })
+        .map(|(webview_entity, _)| webview_entity)
+        .collect()
 }
 
 fn collect_playing_animations(

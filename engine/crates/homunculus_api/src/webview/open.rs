@@ -6,8 +6,8 @@ use bevy_cef::prelude::{PreloadScripts, WebviewExtendStandardMaterial, WebviewSi
 use bevy_flurx::action::once;
 use bevy_vrm1::prelude::{Cameras, HeadBoneEntity};
 use homunculus_core::prelude::{
-    AssetResolver, AssetType, LinkedVrm, WebviewMeshSize, WebviewOffset, WebviewOpenOptions,
-    WebviewSource, WebviewSourceInfo,
+    AssetResolver, AssetType, AvatarRegistry, LinkedAvatar, WebviewMeshSize, WebviewOffset,
+    WebviewOpenOptions, WebviewSource, WebviewSourceInfo,
 };
 use homunculus_effects::{Entity, Update};
 
@@ -31,7 +31,7 @@ pub(crate) struct WebviewOpenPlugin;
 
 impl Plugin for WebviewOpenPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (visible, track_for_linked_vrm));
+        app.add_systems(Update, (visible, track_for_linked_avatar));
     }
 }
 
@@ -77,8 +77,10 @@ fn create_global_webview(
         .try_insert(OriginalWebviewSource(options.source.clone()));
     insert_preload_scripts(&mut commands, webview);
 
-    if let Some(vrm) = options.linked_vrm {
-        commands.entity(webview).try_insert(LinkedVrm(vrm));
+    if let Some(avatar_id) = options.linked_avatar {
+        commands
+            .entity(webview)
+            .try_insert(LinkedAvatar(avatar_id));
     }
     Ok(webview)
 }
@@ -169,16 +171,25 @@ fn spawn_webview_entity(
     entity_commands.id()
 }
 
-fn track_for_linked_vrm(
+fn track_for_linked_avatar(
     par_commands: ParallelCommands,
     head_bones: Query<&HeadBoneEntity>,
     global_transforms: Query<&GlobalTransform>,
-    webviews: Query<(Entity, &LinkedVrm, &WebviewOffset, &Transform)>,
+    webviews: Query<(Entity, &LinkedAvatar, &WebviewOffset, &Transform)>,
+    registry: Res<AvatarRegistry>,
 ) {
     webviews
         .par_iter()
-        .for_each(|(entity, linked_vrm, offset, tf)| {
-            let Ok(head_bone) = head_bones.get(linked_vrm.0) else {
+        .for_each(|(entity, linked_avatar, offset, tf)| {
+            let Some(avatar_id) =
+                homunculus_core::avatar::AvatarId::new(&linked_avatar.0).ok()
+            else {
+                return;
+            };
+            let Some(avatar_entity) = registry.get(&avatar_id) else {
+                return;
+            };
+            let Ok(head_bone) = head_bones.get(avatar_entity) else {
                 return;
             };
             let Ok(p) = global_transforms.get(head_bone.0) else {

@@ -42,30 +42,96 @@ pub async fn is_closed(
     api.is_closed(entity).await.into_http_result()
 }
 
+/// Request body for setting a linked avatar.
+#[derive(Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct SetLinkedAvatarRequest {
+    /// The avatar ID to link.
+    pub avatar_id: String,
+}
+
+/// Get the linked avatar for a webview.
+#[utoipa::path(
+    get,
+    path = "/{entity}/linked-avatar",
+    tag = "webviews",
+    params(("entity" = String, Path, description = "Entity ID")),
+    responses(
+        (status = 200, description = "Linked avatar ID", body = Option<String>),
+    ),
+)]
+pub async fn get_linked_avatar(
+    State(api): State<WebviewApi>,
+    EntityId(entity): EntityId,
+) -> HttpResult<Option<String>> {
+    api.linked_avatar(entity).await.into_http_result()
+}
+
+/// Set the linked avatar for a webview.
+#[utoipa::path(
+    put,
+    path = "/{entity}/linked-avatar",
+    tag = "webviews",
+    params(("entity" = String, Path, description = "Entity ID")),
+    request_body = SetLinkedAvatarRequest,
+    responses(
+        (status = 200, description = "Avatar linked to webview"),
+    ),
+)]
+pub async fn set_linked_avatar(
+    State(api): State<WebviewApi>,
+    EntityId(entity): EntityId,
+    Json(body): Json<SetLinkedAvatarRequest>,
+) -> HttpResult {
+    api.set_linked_avatar(entity, body.avatar_id)
+        .await
+        .into_http_result()
+}
+
+/// Remove the linked avatar from a webview.
+#[utoipa::path(
+    delete,
+    path = "/{entity}/linked-avatar",
+    tag = "webviews",
+    params(("entity" = String, Path, description = "Entity ID")),
+    responses(
+        (status = 200, description = "Avatar unlinked from webview"),
+    ),
+)]
+pub async fn unlink_avatar(
+    State(api): State<WebviewApi>,
+    EntityId(entity): EntityId,
+) -> HttpResult {
+    api.unlink_avatar(entity).await.into_http_result()
+}
+
+// --- Deprecated linked-vrm routes (backward compatibility) ---
+
+/// Deprecated request body for setting a linked VRM.
 #[derive(Deserialize, ToSchema)]
 pub struct SetLinkedVrmRequest {
     #[schema(value_type = String)]
     pub vrm: Entity,
 }
 
-/// Get the linked VRM for a webview.
+/// Get the linked VRM entity for a webview (deprecated).
 #[utoipa::path(
     get,
     path = "/{entity}/linked-vrm",
     tag = "webviews",
     params(("entity" = String, Path, description = "Entity ID")),
     responses(
-        (status = 200, description = "Linked VRM entity ID", body = Option<String>),
+        (status = 200, description = "Linked VRM entity ID (deprecated)", body = Option<String>),
     ),
 )]
 pub async fn get_linked_vrm(
     State(api): State<WebviewApi>,
     EntityId(entity): EntityId,
 ) -> HttpResult<Option<Entity>> {
-    api.linked_vrm(entity).await.into_http_result()
+    api.linked_avatar_entity(entity).await.into_http_result()
 }
 
-/// Set the linked VRM for a webview.
+/// Set the linked VRM for a webview (deprecated, prefer linked-avatar).
 #[utoipa::path(
     put,
     path = "/{entity}/linked-vrm",
@@ -73,7 +139,7 @@ pub async fn get_linked_vrm(
     params(("entity" = String, Path, description = "Entity ID")),
     request_body = SetLinkedVrmRequest,
     responses(
-        (status = 200, description = "VRM linked to webview"),
+        (status = 200, description = "VRM linked to webview (deprecated)"),
     ),
 )]
 pub async fn set_linked_vrm(
@@ -81,23 +147,24 @@ pub async fn set_linked_vrm(
     EntityId(entity): EntityId,
     Json(body): Json<SetLinkedVrmRequest>,
 ) -> HttpResult {
-    api.set_linked_vrm(entity, body.vrm)
+    // Resolve the Entity to an avatar ID via AvatarRegistry, then store the avatar ID
+    api.set_linked_avatar_by_entity(entity, body.vrm)
         .await
         .into_http_result()
 }
 
-/// Remove the linked VRM from a webview.
+/// Remove the linked VRM from a webview (deprecated).
 #[utoipa::path(
     delete,
     path = "/{entity}/linked-vrm",
     tag = "webviews",
     params(("entity" = String, Path, description = "Entity ID")),
     responses(
-        (status = 200, description = "VRM unlinked from webview"),
+        (status = 200, description = "VRM unlinked from webview (deprecated)"),
     ),
 )]
 pub async fn unlink_vrm(State(api): State<WebviewApi>, EntityId(entity): EntityId) -> HttpResult {
-    api.unlink_vrm(entity).await.into_http_result()
+    api.unlink_avatar(entity).await.into_http_result()
 }
 
 /// List all open webviews.

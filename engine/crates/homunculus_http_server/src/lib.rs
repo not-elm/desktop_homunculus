@@ -415,6 +415,11 @@ fn webviews_router() -> OpenApiRouter<HttpState> {
         .routes(routes!(webviews::navigate_forward))
         .routes(routes!(webviews::reload))
         .routes(routes!(
+            webviews::get_linked_avatar,
+            webviews::set_linked_avatar,
+            webviews::unlink_avatar
+        ))
+        .routes(routes!(
             webviews::get_linked_vrm,
             webviews::set_linked_vrm,
             webviews::unlink_vrm

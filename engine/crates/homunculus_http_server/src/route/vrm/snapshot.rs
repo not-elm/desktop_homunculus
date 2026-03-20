@@ -37,7 +37,7 @@ mod tests {
     use bevy::prelude::*;
     use bevy_vrm1::vrm::{Initialized, Vrm};
     use homunculus_api::vrm::VrmSnapshot;
-    use homunculus_core::prelude::{AssetId, AssetIdComponent, VrmState};
+    use homunculus_core::prelude::{AssetId, AssetIdComponent, AvatarState};
 
     #[tokio::test]
     async fn test_snapshot() {
@@ -47,7 +47,7 @@ mod tests {
             Name::new("Test1"),
             Vrm,
             Initialized,
-            VrmState::default(),
+            AvatarState::default(),
             Transform::default(),
             AssetIdComponent(AssetId::new("test-mod:test-vrm")),
         ));
@@ -76,14 +76,14 @@ mod tests {
             Name::new("Test1"),
             Vrm,
             Initialized,
-            VrmState::default(),
+            AvatarState::default(),
             Transform::default(),
         ));
         app.world_mut().spawn((
             Name::new("Test2"),
             Vrm,
             Initialized,
-            VrmState::default(),
+            AvatarState::default(),
             Transform::default(),
         ));
         app.update();

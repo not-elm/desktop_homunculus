@@ -1,7 +1,7 @@
 use crate::extract::EntityId;
 use homunculus_api::prelude::axum::{HttpResult, IntoHttpResult};
 use homunculus_api::vrm::VrmApi;
-use homunculus_core::prelude::VrmState;
+use homunculus_core::prelude::AvatarState;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
@@ -53,7 +53,7 @@ pub async fn put(
 #[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
 pub struct PutBody {
     #[schema(value_type = Object)]
-    state: VrmState,
+    state: AvatarState,
 }
 
 #[cfg(test)]
@@ -62,12 +62,12 @@ mod tests {
     use crate::tests::{assert_response, call, test_app};
     use axum::http::StatusCode;
     use bevy::prelude::*;
-    use homunculus_core::prelude::VrmState;
+    use homunculus_core::prelude::AvatarState;
 
     #[tokio::test]
     async fn test_get_vrm_state() {
         let (mut app, router) = test_app();
-        let entity = app.world_mut().spawn(VrmState::default()).id();
+        let entity = app.world_mut().spawn(AvatarState::default()).id();
         app.update();
 
         let request = axum::http::Request::get(format!("/vrm/{}/state", entity.to_bits()))
@@ -87,14 +87,14 @@ mod tests {
     #[tokio::test]
     async fn test_put_vrm_state() {
         let (mut app, router) = test_app();
-        let entity = app.world_mut().spawn(VrmState::default()).id();
+        let entity = app.world_mut().spawn(AvatarState::default()).id();
         app.update();
 
         let request = axum::http::Request::put(format!("/vrm/{}/state", entity.to_bits()))
             .header("Content-Type", "application/json")
             .body(axum::body::Body::from(
                 serde_json::to_string(&PutBody {
-                    state: VrmState("dancing".to_string()),
+                    state: AvatarState("dancing".to_string()),
                 })
                 .unwrap(),
             ))

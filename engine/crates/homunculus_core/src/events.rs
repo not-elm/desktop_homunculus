@@ -10,9 +10,10 @@ use std::fmt::Debug;
 mod vrm;
 
 pub mod prelude {
+    #[allow(deprecated)]
     pub use crate::events::{
-        PersonaChangeEvent, VrmEvent, VrmEventReceiver, VrmEventSender, VrmMetadata,
-        VrmStateChangeEvent, vrm::*,
+        AvatarStateChangeEvent, PersonaChangeEvent, VrmEvent, VrmEventReceiver, VrmEventSender,
+        VrmMetadata, VrmStateChangeEvent, vrm::*,
     };
 }
 
@@ -30,9 +31,12 @@ pub struct VrmEvent<E> {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub struct VrmStateChangeEvent {
+pub struct AvatarStateChangeEvent {
     pub state: String,
 }
+
+#[deprecated(note = "Use AvatarStateChangeEvent instead")]
+pub type VrmStateChangeEvent = AvatarStateChangeEvent;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct PersonaChangeEvent {
@@ -59,7 +63,7 @@ impl Plugin for HomunculusEventsPlugin {
         setup_channel::<OnPointerOverEvent>(app);
         setup_channel::<OnPointerOutEvent>(app);
         setup_channel::<OnPointerCancelEvent>(app);
-        setup_channel::<VrmStateChangeEvent>(app);
+        setup_channel::<AvatarStateChangeEvent>(app);
         setup_channel::<VrmMetadata>(app);
         setup_channel::<ExpressionChangeEvent>(app);
         setup_channel::<VrmaPlayEvent>(app);
@@ -117,17 +121,17 @@ fn pointer<E1, E2>(
 }
 
 fn state_change(
-    tx: Res<VrmEventSender<VrmStateChangeEvent>>,
-    vrms: Query<(Entity, &VrmState), Changed<VrmState>>,
+    tx: Res<VrmEventSender<AvatarStateChangeEvent>>,
+    vrms: Query<(Entity, &AvatarState), Changed<AvatarState>>,
 ) {
     for (vrm, state) in vrms.iter() {
         tx.try_broadcast(VrmEvent {
             vrm,
-            payload: VrmStateChangeEvent {
+            payload: AvatarStateChangeEvent {
                 state: state.to_string(),
             },
         })
-        .output_log_if_error("Failed to broadcast VrmStateChangeEvent");
+        .output_log_if_error("Failed to broadcast AvatarStateChangeEvent");
     }
 }
 

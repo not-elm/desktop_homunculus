@@ -5,7 +5,7 @@ use bevy::math::{Quat, Vec3};
 use bevy::prelude::{Commands, Entity, In, NonSend, Transform, Update, warn};
 use bevy_flurx::prelude::*;
 use bevy_vrm1::prelude::{BodyTracking, Cameras, LookAt, VrmHandle};
-use homunculus_core::prelude::{AssetId, AssetIdComponent, AssetResolver, Persona, VrmState};
+use homunculus_core::prelude::{AssetId, AssetIdComponent, AssetResolver, AvatarState, Persona};
 use homunculus_prefs::prelude::{PrefsDatabase, PrefsKeys};
 use serde::{Deserialize, Serialize};
 
@@ -85,7 +85,7 @@ fn spawn(
                 .transform
                 .map(|t| t.into_transform())
                 .unwrap_or_default(),
-            VrmState::default(),
+            AvatarState::default(),
             cameras.all_layers(),
             LookAt::Cursor,
             BodyTracking::default(),
