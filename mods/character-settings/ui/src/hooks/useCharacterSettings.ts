@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Webview, Vrm, entities, type Ocean, audio } from "@hmcs/sdk";
+import { Webview, Vrm, entities, type Ocean, audio, host } from "@hmcs/sdk";
 
 export type Tab = "basic" | "persona" | "ocean";
 
@@ -7,8 +7,11 @@ export function useCharacterSettings() {
   const [vrm, setVrm] = useState<Vrm | null>(null);
   const [entity, setEntity] = useState<number | null>(null);
   const [tab, setTab] = useState<Tab>("basic");
-  const [name, setName] = useState("");
   const [scale, setScale] = useState(1);
+  const [vrmNames, setVrmNames] = useState<{ metadata: string; names: Record<string, string> }>({
+    metadata: "",
+    names: {},
+  });
   const [profile, setProfile] = useState("");
   const [personality, setPersonality] = useState("");
   const [ocean, setOcean] = useState<Ocean>({});
@@ -27,14 +30,15 @@ export function useCharacterSettings() {
       setVrm(linked);
       setEntity(linked.entity);
 
-      const [persona, vrmName, transform] = await Promise.all([
+      const [persona, namesResponse, transform] = await Promise.all([
         linked.persona(),
-        linked.name(),
+        host.get(host.createUrl(`vrm/${linked.entity}/names`)),
         entities.transform(linked.entity),
       ]);
       if (cancelled) return;
 
-      setName(vrmName);
+      const namesData = await namesResponse.json();
+      setVrmNames(namesData);
       setScale(transform.scale[0]);
       setProfile(persona.profile);
       setPersonality(persona.personality ?? "");
@@ -77,9 +81,26 @@ export function useCharacterSettings() {
     }
   }, [vrm, entity, profile, personality, ocean, scale, saving]);
 
+  const handleNameSave = useCallback(async (lang: string, newName: string) => {
+    if (!vrm) return;
+    await vrm.setName(newName, lang);
+  }, [vrm]);
+
+  const handleNameDelete = useCallback(async (lang: string) => {
+    if (!vrm) return;
+    await vrm.deleteName(lang);
+    setVrmNames(prev => {
+      const { [lang]: _, ...rest } = prev.names;
+      return { ...prev, names: rest };
+    });
+  }, [vrm]);
+
   return {
     loading,
-    name,
+    vrmNames,
+    setVrmNames,
+    handleNameSave,
+    handleNameDelete,
     tab,
     setTab,
     scale,

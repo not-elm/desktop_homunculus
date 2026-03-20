@@ -6,7 +6,10 @@ import { OceanTab } from "./components/OceanTab";
 export function App() {
   const {
     loading,
-    name,
+    vrmNames,
+    setVrmNames,
+    handleNameSave,
+    handleNameDelete,
     tab,
     setTab,
     scale,
@@ -51,7 +54,7 @@ export function App() {
       {/* Header */}
       <div className="settings-header">
         <h1 className="settings-title">Settings</h1>
-        <span className="settings-entity-name">{name}</span>
+        <span className="settings-entity-name">{vrmNames.metadata}</span>
       </div>
 
       {/* Tabs */}
@@ -70,7 +73,15 @@ export function App() {
       {/* Content */}
       <div className={`settings-content${tab === "basic" ? " settings-content--visible" : ""}`}>
         {tab === "basic" && (
-          <BasicTab name={name} scale={scale} onScaleChange={setScale} />
+          <BasicTab
+            metadata={vrmNames.metadata}
+            names={vrmNames.names}
+            scale={scale}
+            onNameSave={handleNameSave}
+            onNameDelete={handleNameDelete}
+            onNamesChange={(names) => setVrmNames(prev => ({ ...prev, names }))}
+            onScaleChange={setScale}
+          />
         )}
         {tab === "persona" && (
           <PersonaTab
