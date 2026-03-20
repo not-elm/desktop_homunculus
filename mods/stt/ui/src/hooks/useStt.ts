@@ -46,7 +46,10 @@ export function useStt() {
 
       setLanguages(langList);
 
-      const savedLang = await preferences.load<string>("stt::language");
+      const [savedLang, savedModel] = await Promise.all([
+        preferences.load<string>("stt::language"),
+        preferences.load<SttModelSize>("stt::model"),
+      ]);
       if (savedLang) setLanguage(savedLang);
 
       const downloadedSizes = new Set(downloadedModels.map((m) => m.modelSize));
@@ -58,7 +61,9 @@ export function useStt() {
       );
 
       const sizes: SttModelSize[] = ["small", "medium", "large-v3-turbo", "large-v3", "base", "tiny"];
-      const defaultSelected = sizes.find((s) => downloadedSizes.has(s)) ?? null;
+      const defaultSelected =
+        (savedModel && downloadedSizes.has(savedModel) ? savedModel : null) ??
+        sizes.find((s) => downloadedSizes.has(s)) ?? null;
       setSelectedModel(defaultSelected);
     })();
 
@@ -91,6 +96,7 @@ export function useStt() {
       return prev;
     });
     setSelectedModel(size);
+    preferences.save("stt::model", size);
   }, []);
 
   const downloadModel = useCallback(async (size: SttModelSize) => {
@@ -122,7 +128,11 @@ export function useStt() {
                 : m,
             ),
           );
-          setSelectedModel((prev) => prev ?? size);
+          setSelectedModel((prev) => {
+            const next = prev ?? size;
+            preferences.save("stt::model", next);
+            return next;
+          });
         } else if (event.type === "error") {
           setModels((prev) =>
             prev.map((m) =>
