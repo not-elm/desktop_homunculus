@@ -1,8 +1,9 @@
 use crate::avatar::AvatarApi;
 use crate::error::{ApiError, ApiResult};
+use crate::vrm::initialized;
 use bevy::prelude::*;
 use bevy_flurx::prelude::*;
-use bevy_vrm1::prelude::{BodyTracking, Cameras, Initialized, LookAt, RequestDetachVrm, VrmHandle};
+use bevy_vrm1::prelude::{BodyTracking, Cameras, LookAt, RequestDetachVrm, VrmHandle};
 use bevy_vrm1::vrm::Vrm;
 use homunculus_core::prelude::{
     AssetId, AssetIdComponent, AssetResolver, AvatarId, AvatarRegistry,
@@ -24,16 +25,13 @@ impl AvatarApi {
     /// initialization, the avatar's display name is restored (since VRM
     /// loading overwrites the Bevy `Name` component).
     pub async fn attach_vrm(&self, id: AvatarId, asset_id: AssetId) -> ApiResult<Entity> {
-        let args = AttachVrmArgs {
-            id: id.clone(),
-            asset_id,
-        };
+        let args = AttachVrmArgs { id, asset_id };
         self.0
             .schedule(move |task| async move {
                 let entity = task
                     .will(Update, once::run(begin_attach).with(args))
                     .await?;
-                task.will(Update, wait::until(is_initialized).with(entity))
+                task.will(Update, wait::until(initialized).with(entity))
                     .await;
                 Ok(entity)
             })
@@ -84,11 +82,6 @@ fn begin_attach(
     Ok(entity)
 }
 
-/// Returns `true` once the entity has the `Initialized` component.
-fn is_initialized(In(entity): In<Entity>, query: Query<&Initialized>) -> bool {
-    query.get(entity).is_ok()
-}
-
 fn begin_detach(
     In(id): In<AvatarId>,
     mut commands: Commands,
@@ -104,6 +97,8 @@ fn begin_detach(
     }
 
     commands.entity(entity).trigger(RequestDetachVrm);
+    // LookAt and BodyTracking are app-level components inserted by attach_vrm,
+    // so homunculus is responsible for their removal (Design Decision #2).
     commands
         .entity(entity)
         .remove::<LookAt>()
