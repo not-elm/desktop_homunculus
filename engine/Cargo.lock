@@ -4537,6 +4537,7 @@ name = "homunculus_microphone"
 version = "0.1.0-alpha.6-dev"
 dependencies = [
  "async-broadcast",
+ "block2 0.6.2",
  "cpal",
  "crossbeam-channel",
  "futures-lite",

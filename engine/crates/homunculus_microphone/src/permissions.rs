@@ -10,9 +10,13 @@ mod platform {
     use super::PermissionError;
 
     pub async fn check() -> Result<(), PermissionError> {
+        use block2::StackBlock;
+        use objc2::runtime::Bool;
         use objc2_av_foundation::{AVAuthorizationStatus, AVCaptureDevice, AVMediaTypeAudio};
 
-        let status = unsafe { AVCaptureDevice::authorizationStatusForMediaType(AVMediaTypeAudio) };
+        let media_type =
+            unsafe { AVMediaTypeAudio }.expect("AVMediaTypeAudio unavailable");
+        let status = unsafe { AVCaptureDevice::authorizationStatusForMediaType(media_type) };
 
         match status {
             AVAuthorizationStatus::Authorized => Ok(()),
@@ -21,13 +25,16 @@ mod platform {
             }
             AVAuthorizationStatus::NotDetermined => {
                 let granted = tokio::task::spawn_blocking(|| {
+                    let media_type =
+                        unsafe { AVMediaTypeAudio }.expect("AVMediaTypeAudio unavailable");
                     let (tx, rx) = std::sync::mpsc::channel();
+                    let block = StackBlock::new(move |granted: Bool| {
+                        let _ = tx.send(granted.as_bool());
+                    });
                     unsafe {
                         AVCaptureDevice::requestAccessForMediaType_completionHandler(
-                            AVMediaTypeAudio,
-                            &|granted| {
-                                let _ = tx.send(granted);
-                            },
+                            media_type,
+                            &block,
                         );
                     }
                     rx.recv().unwrap_or(false)
