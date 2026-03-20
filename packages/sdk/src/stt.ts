@@ -1,5 +1,12 @@
 import {host, HomunculusApiError} from "./host";
 import {EventSource} from "eventsource";
+import {
+    matchWakeWord,
+    normalizePhrase,
+    type NormalizedPhrase,
+    type WakeWordMatch,
+    type WakeWordThreshold,
+} from "./wake-word-matcher";
 
 /**
  * Speech-to-Text (STT) API namespace for controlling real-time speech recognition.
@@ -479,6 +486,159 @@ export namespace stt {
      * // [{ code: "auto", label: "Auto Detect" }, { code: "en", label: "English" }, ...]
      * ```
      */
+    // -----------------------------------------------------------------------
+    // Wake word detection
+    // -----------------------------------------------------------------------
+
+    /** Options for wake word detection. */
+    export interface WakeWordOptions {
+        /**
+         * Wake-word phrases to listen for (e.g., `["エルマー", "Hey Elmer"]`).
+         * Must contain at least one phrase.
+         */
+        phrases: string[];
+        /**
+         * Matching threshold — a preset name or a raw number (0.0–1.0).
+         * @defaultValue `"strict"` (0.80)
+         */
+        threshold?: WakeWordThreshold;
+        /** Abort signal to cancel the wake word listener. */
+        signal?: AbortSignal;
+    }
+
+    /** Subscription handle returned by {@link onWakeWord}. */
+    export interface WakeWordSubscription {
+        /** Stop listening for wake words and close the underlying SSE stream. */
+        close(): void;
+    }
+
+    /** Result of a successful wake-word match. */
+    export type WakeWordMatch = import("./wake-word-matcher").WakeWordMatch;
+
+    /** Threshold preset name or a raw numeric value (0.0–1.0). */
+    export type WakeWordThreshold = import("./wake-word-matcher").WakeWordThreshold;
+
+    /**
+     * Waits for a single wake-word match from the STT stream.
+     *
+     * Resolves with the first match and automatically closes the stream.
+     * The STT session must already be started via {@link session.start}.
+     *
+     * @param options - Wake word detection options
+     * @returns The first wake-word match
+     * @throws {RangeError} If `phrases` is empty
+     * @throws {DOMException} `AbortError` if the signal is aborted
+     *
+     * @example
+     * ```typescript
+     * await stt.session.start({ language: "ja" });
+     *
+     * const match = await stt.waitWakeWord({
+     *   phrases: ["エルマー", "Hey Elmer"],
+     * });
+     *
+     * console.log(match.matchedPhrase);   // "エルマー"
+     * console.log(match.remainingText);   // "テスト直して"
+     * console.log(match.confidence);      // 1.0
+     * ```
+     */
+    export function waitWakeWord(options: WakeWordOptions): Promise<WakeWordMatch> {
+        validatePhrases(options.phrases);
+        const phrases = options.phrases.map(normalizePhrase);
+
+        return new Promise<WakeWordMatch>((resolve, reject) => {
+            const sttStream = createWakeWordStream(phrases, options.threshold, (match) => {
+                sttStream.close();
+                resolve(match);
+            });
+
+            if (options.signal) {
+                handleAbortSignal(options.signal, sttStream, reject);
+            }
+        });
+    }
+
+    /**
+     * Listens continuously for wake-word matches from the STT stream.
+     *
+     * Fires the callback on every match. The STT session must already be
+     * started via {@link session.start}. Call `.close()` on the returned
+     * subscription to stop listening.
+     *
+     * @param options - Wake word detection options
+     * @param callback - Called on each wake-word match
+     * @returns A subscription handle with a `close()` method
+     * @throws {RangeError} If `phrases` is empty
+     *
+     * @example
+     * ```typescript
+     * await stt.session.start({ language: "ja" });
+     *
+     * const sub = stt.onWakeWord(
+     *   { phrases: ["エルマー"] },
+     *   (match) => {
+     *     console.log(`Wake word detected: ${match.matchedPhrase}`);
+     *     console.log(`Instruction: ${match.remainingText}`);
+     *   },
+     * );
+     *
+     * // Later, stop listening
+     * sub.close();
+     * ```
+     */
+    export function onWakeWord(
+        options: WakeWordOptions,
+        callback: (match: WakeWordMatch) => void | Promise<void>,
+    ): WakeWordSubscription {
+        validatePhrases(options.phrases);
+        const phrases = options.phrases.map(normalizePhrase);
+
+        const sttStream = createWakeWordStream(phrases, options.threshold, callback);
+
+        if (options.signal) {
+            handleAbortSignal(options.signal, sttStream, () => {});
+        }
+
+        return {close: () => sttStream.close()};
+    }
+
+    function validatePhrases(phrases: string[]): void {
+        if (phrases.length === 0) {
+            throw new RangeError("phrases must contain at least one wake-word phrase");
+        }
+    }
+
+    function createWakeWordStream(
+        phrases: NormalizedPhrase[],
+        threshold: WakeWordThreshold | undefined,
+        onMatch: (match: WakeWordMatch) => void | Promise<void>,
+    ): SttStream {
+        return stream({
+            onResult: (result) => {
+                const match = matchWakeWord(result.text, phrases, threshold);
+                if (match) {
+                    void onMatch(match);
+                }
+            },
+        });
+    }
+
+    function handleAbortSignal(
+        signal: AbortSignal,
+        sttStream: SttStream,
+        reject: (reason: unknown) => void,
+    ): void {
+        if (signal.aborted) {
+            sttStream.close();
+            reject(new DOMException("The operation was aborted.", "AbortError"));
+            return;
+        }
+        signal.addEventListener("abort", () => {
+            sttStream.close();
+            reject(new DOMException("The operation was aborted.", "AbortError"));
+        }, {once: true});
+    }
+
     export async function languages(): Promise<LanguageEntry[]> {
         const response = await host.get(host.createUrl("stt/languages"));
         const codes = await response.json() as string[];
