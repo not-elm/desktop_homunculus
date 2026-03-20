@@ -6,6 +6,7 @@
 mod attach;
 mod create;
 mod destroy;
+mod extensions;
 mod list;
 mod name;
 mod persona;

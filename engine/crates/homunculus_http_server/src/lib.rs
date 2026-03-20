@@ -278,6 +278,15 @@ fn avatar_entity_router() -> OpenApiRouter<HttpState> {
         .routes(routes!(avatars::get_name, avatars::put_name))
         .routes(routes!(avatars::attach_vrm))
         .routes(routes!(avatars::detach_vrm))
+        .nest("/extensions/{mod_name}", extension_router())
+}
+
+fn extension_router() -> OpenApiRouter<HttpState> {
+    OpenApiRouter::new().routes(routes!(
+        avatars::extensions::get_extension,
+        avatars::extensions::set_extension,
+        avatars::extensions::delete_extension
+    ))
 }
 
 fn app_router() -> OpenApiRouter<HttpState> {

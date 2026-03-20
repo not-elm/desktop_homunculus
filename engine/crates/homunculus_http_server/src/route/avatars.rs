@@ -1,3 +1,5 @@
+pub mod extensions;
+
 use crate::extract::avatar::AvatarIdExtractor;
 use axum::Json;
 use axum::extract::{Query, State};
@@ -516,5 +518,94 @@ mod tests {
             .unwrap();
         let response = call_any_status(&mut app, router, request).await;
         assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    }
+
+    /// Spawns an avatar entity AND creates the corresponding database row
+    /// so that extension operations (which need the FK) succeed.
+    fn spawn_avatar_with_db(app: &mut App, id: &str, name: &str, asset_id: &str) -> Entity {
+        use homunculus_prefs::avatar_repo::AvatarRepo;
+        use homunculus_prefs::PrefsDatabase;
+
+        let db = app.world().get_non_send_resource::<PrefsDatabase>().unwrap();
+        AvatarRepo::new(db)
+            .create(id, asset_id, name, "{}", "{}")
+            .unwrap();
+
+        spawn_avatar(app, id, name, asset_id)
+    }
+
+    #[tokio::test]
+    async fn test_set_and_get_extension() {
+        let (mut app, router) = test_app();
+        spawn_avatar_with_db(&mut app, "elmer", "Elmer", "test:model.vrm");
+
+        let set_req = Request::put("/avatars/elmer/extensions/voicevox")
+            .header("Content-Type", "application/json")
+            .body(Body::from(r#"{"speakerId":1}"#))
+            .unwrap();
+        let response = call(&mut app, router.clone(), set_req).await;
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let get_req = Request::get("/avatars/elmer/extensions/voicevox")
+            .body(Body::empty())
+            .unwrap();
+        assert_response(
+            &mut app,
+            router,
+            get_req,
+            serde_json::json!({"speakerId": 1}),
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    async fn test_delete_extension() {
+        let (mut app, router) = test_app();
+        spawn_avatar_with_db(&mut app, "elmer", "Elmer", "test:model.vrm");
+
+        // Set first
+        let set_req = Request::put("/avatars/elmer/extensions/voicevox")
+            .header("Content-Type", "application/json")
+            .body(Body::from(r#"{"v":1}"#))
+            .unwrap();
+        let response = call(&mut app, router.clone(), set_req).await;
+        assert_eq!(response.status(), StatusCode::OK);
+
+        // Delete
+        let del_req = Request::delete("/avatars/elmer/extensions/voicevox")
+            .body(Body::empty())
+            .unwrap();
+        let response = call(&mut app, router.clone(), del_req).await;
+        assert_eq!(response.status(), StatusCode::OK);
+
+        // Get should 404
+        let get_req = Request::get("/avatars/elmer/extensions/voicevox")
+            .body(Body::empty())
+            .unwrap();
+        let response = call_any_status(&mut app, router, get_req).await;
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    }
+
+    #[tokio::test]
+    async fn test_get_extension_not_found() {
+        let (mut app, router) = test_app();
+        spawn_avatar_with_db(&mut app, "elmer", "Elmer", "test:model.vrm");
+
+        let request = Request::get("/avatars/elmer/extensions/nonexistent")
+            .body(Body::empty())
+            .unwrap();
+        let response = call_any_status(&mut app, router, request).await;
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    }
+
+    #[tokio::test]
+    async fn test_extension_avatar_not_found() {
+        let (mut app, router) = test_app();
+
+        let request = Request::get("/avatars/nonexistent/extensions/voicevox")
+            .body(Body::empty())
+            .unwrap();
+        let response = call_any_status(&mut app, router, request).await;
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
     }
 }
