@@ -36,7 +36,7 @@ pub struct ExtensionRow {
 ///
 /// Wraps a shared reference to [`PrefsDatabase`] and exposes typed
 /// query/mutation helpers.
-pub struct AvatarRepo<'a>(pub &'a PrefsDatabase);
+pub struct AvatarRepo<'a>(pub(crate) &'a PrefsDatabase);
 
 impl<'a> AvatarRepo<'a> {
     /// Inserts a new avatar row.
@@ -180,13 +180,7 @@ impl<'a> AvatarRepo<'a> {
              WHERE avatar_id = ?1 ORDER BY mod_name ASC",
         )?;
         let rows = stmt
-            .query_map(rusqlite::params![avatar_id], |row| {
-                Ok(ExtensionRow {
-                    avatar_id: row.get(0)?,
-                    mod_name: row.get(1)?,
-                    data: row.get(2)?,
-                })
-            })?
+            .query_map(rusqlite::params![avatar_id], read_extension_row)?
             .collect::<Result<Vec<_>, _>>()?;
         Ok(rows)
     }
@@ -233,6 +227,15 @@ fn read_avatar_row(row: &rusqlite::Row<'_>) -> Result<AvatarRow, rusqlite::Error
         transform: row.get(4)?,
         state: row.get(5)?,
         created_at: row.get(6)?,
+    })
+}
+
+/// Reads a single `ExtensionRow` from the current result row.
+fn read_extension_row(row: &rusqlite::Row<'_>) -> Result<ExtensionRow, rusqlite::Error> {
+    Ok(ExtensionRow {
+        avatar_id: row.get(0)?,
+        mod_name: row.get(1)?,
+        data: row.get(2)?,
     })
 }
 

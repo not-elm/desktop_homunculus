@@ -19,6 +19,18 @@ pub(crate) fn run_if_needed(db: &PrefsDatabase) -> Result<(), rusqlite::Error> {
     if current >= TARGET_VERSION {
         return Ok(());
     }
+    db.0.execute_batch("BEGIN")?;
+    let result = migrate_and_set_version(db);
+    match result {
+        Ok(()) => db.0.execute_batch("COMMIT").map(|_| ()),
+        Err(e) => {
+            let _ = db.0.execute_batch("ROLLBACK");
+            Err(e)
+        }
+    }
+}
+
+fn migrate_and_set_version(db: &PrefsDatabase) -> Result<(), rusqlite::Error> {
     migrate_v0_to_v1(db)?;
     set_version(db, TARGET_VERSION)
 }
