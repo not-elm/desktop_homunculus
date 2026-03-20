@@ -6,6 +6,7 @@ pub(crate) mod events;
 pub mod expressions;
 pub(crate) mod get;
 pub mod look;
+pub mod name;
 pub mod persona;
 pub mod position;
 pub mod snapshot;

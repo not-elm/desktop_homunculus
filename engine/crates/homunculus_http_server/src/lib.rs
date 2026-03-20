@@ -323,6 +323,8 @@ fn vrm_entity_router() -> OpenApiRouter<HttpState> {
     OpenApiRouter::new()
         .routes(routes!(vrm::state::get, vrm::state::put))
         .routes(routes!(vrm::persona::get, vrm::persona::put))
+        .routes(routes!(vrm::name::get, vrm::name::put, vrm::name::delete))
+        .routes(routes!(vrm::name::list))
         .routes(routes!(route::vrm::events::events))
         .routes(routes!(vrm::vrma::get))
         .routes(routes!(vrm::vrma::play))
