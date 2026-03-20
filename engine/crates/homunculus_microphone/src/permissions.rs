@@ -14,8 +14,7 @@ mod platform {
         use objc2::runtime::Bool;
         use objc2_av_foundation::{AVAuthorizationStatus, AVCaptureDevice, AVMediaTypeAudio};
 
-        let media_type =
-            unsafe { AVMediaTypeAudio }.expect("AVMediaTypeAudio unavailable");
+        let media_type = unsafe { AVMediaTypeAudio }.expect("AVMediaTypeAudio unavailable");
         let status = unsafe { AVCaptureDevice::authorizationStatusForMediaType(media_type) };
 
         match status {
@@ -33,8 +32,7 @@ mod platform {
                     });
                     unsafe {
                         AVCaptureDevice::requestAccessForMediaType_completionHandler(
-                            media_type,
-                            &block,
+                            media_type, &block,
                         );
                     }
                     rx.recv().unwrap_or(false)
