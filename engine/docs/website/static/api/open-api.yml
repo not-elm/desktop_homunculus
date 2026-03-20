@@ -1,0 +1,3176 @@
+openapi: 3.1.0
+info:
+  title: Homunculus API
+  description: Desktop Homunculus HTTP API for controlling VRM characters, webviews, audio, and more.
+  contact:
+    name: notelm
+    email: elmprograminfo@gmail.com
+  license:
+    name: LGPL-3.0-only
+  version: 1.0.0
+servers:
+- url: http://localhost:3100
+  description: Local development
+paths:
+  /app/exit:
+    post:
+      tags:
+      - app
+      summary: Exit the application gracefully.
+      operationId: exit
+      responses:
+        '200':
+          description: Application exit initiated
+        '500':
+          description: Internal server error
+  /app/health:
+    get:
+      tags:
+      - app
+      summary: Returns a simple health check response.
+      operationId: health
+      responses:
+        '200':
+          description: Health check passed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+  /app/info:
+    get:
+      tags:
+      - app
+      summary: Returns application metadata including version, platform, features, and loaded mods.
+      operationId: get
+      responses:
+        '200':
+          description: Application info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppInfo'
+  /assets:
+    get:
+      tags:
+      - assets
+      summary: List available assets, optionally filtered by type or mod name.
+      operationId: list
+      parameters:
+      - name: type
+        in: query
+        description: Filter by asset type
+        required: false
+        schema:
+          type: string
+      - name: mod
+        in: query
+        description: Filter by mod name
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: List of assets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AssetInfo'
+  /audio/bgm:
+    get:
+      tags:
+      - audio
+      summary: Get current BGM status.
+      operationId: bgm_status
+      responses:
+        '200':
+          description: Current BGM status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BgmStatus'
+    post:
+      tags:
+      - audio
+      summary: Play background music (replaces current BGM).
+      operationId: bgm_play
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BgmPlayRequest'
+        required: true
+      responses:
+        '204':
+          description: BGM playback started
+        '400':
+          description: Invalid request
+    patch:
+      tags:
+      - audio
+      summary: Update BGM settings (volume, speed).
+      operationId: bgm_update
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BgmUpdateRequest'
+        required: true
+      responses:
+        '204':
+          description: BGM settings updated
+        '409':
+          description: BGM not playing
+  /audio/bgm/pause:
+    post:
+      tags:
+      - audio
+      summary: Pause background music.
+      operationId: bgm_pause
+      responses:
+        '204':
+          description: BGM paused
+        '409':
+          description: BGM not playing
+  /audio/bgm/resume:
+    post:
+      tags:
+      - audio
+      summary: Resume background music.
+      operationId: bgm_resume
+      responses:
+        '204':
+          description: BGM resumed
+        '409':
+          description: BGM not paused
+  /audio/bgm/stop:
+    post:
+      tags:
+      - audio
+      summary: Stop background music.
+      operationId: bgm_stop
+      requestBody:
+        description: Optional fade-out settings
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - type: 'null'
+              - $ref: '#/components/schemas/BgmStopRequest'
+      responses:
+        '204':
+          description: BGM stopped
+        '409':
+          description: BGM not playing
+  /audio/se:
+    post:
+      tags:
+      - audio
+      summary: Play a one-shot sound effect.
+      operationId: se_play
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SePlayRequest'
+        required: true
+      responses:
+        '204':
+          description: Sound effect played
+        '400':
+          description: Invalid request
+  /commands/execute:
+    post:
+      tags:
+      - commands
+      summary: Execute a mod command with NDJSON streaming output.
+      operationId: execute_command
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExecuteCommandRequest'
+        required: true
+      responses:
+        '200':
+          description: NDJSON stream of command events
+          content:
+            application/x-ndjson: {}
+        '400':
+          description: Invalid request
+  /coordinates/to-viewport:
+    get:
+      tags:
+      - coordinates
+      summary: Convert world coordinates to global viewport coordinates.
+      operationId: global_viewport
+      parameters:
+      - name: x
+        in: query
+        description: X-coordinate in world space
+        required: false
+        schema:
+          type: number
+          format: float
+      - name: y
+        in: query
+        description: Y-coordinate in world space
+        required: false
+        schema:
+          type: number
+          format: float
+      - name: z
+        in: query
+        description: Z-coordinate in world space
+        required: false
+        schema:
+          type: number
+          format: float
+      responses:
+        '200':
+          description: Global viewport coordinates
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GlobalViewport'
+        '500':
+          description: Conversion failed
+  /coordinates/to-world:
+    get:
+      tags:
+      - coordinates
+      summary: Convert a global viewport position to a 2D world position.
+      operationId: world_2d
+      parameters:
+      - name: x
+        in: query
+        description: X-coordinate in global viewport
+        required: false
+        schema:
+          type: number
+          format: float
+      - name: y
+        in: query
+        description: Y-coordinate in global viewport
+        required: false
+        schema:
+          type: number
+          format: float
+      responses:
+        '200':
+          description: 2D world position
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: number
+                  format: float
+        '500':
+          description: Conversion failed
+  /displays:
+    get:
+      tags:
+      - displays
+      summary: Get all display information.
+      operationId: all
+      responses:
+        '200':
+          description: List of all displays
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GlobalDisplays'
+  /effects/stamps:
+    post:
+      tags:
+      - effects
+      summary: Show a stamp effect.
+      operationId: stamp
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StampRequestBody'
+        required: true
+      responses:
+        '200':
+          description: Stamp effect displayed
+        '400':
+          description: Invalid request
+  /entities:
+    get:
+      tags:
+      - entities
+      summary: Find an entity by its name.
+      description: If `root` entity is specified, it will search recursively from that entity's children.
+      operationId: get
+      parameters:
+      - name: name
+        in: query
+        description: Entity name to search for
+        required: true
+        schema:
+          type: string
+      - name: root
+        in: query
+        description: Root entity to search from recursively
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Found entity ID
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: Entity not found
+  /entities/{entity}/move:
+    post:
+      tags:
+      - entities
+      summary: Move an entity to a target position.
+      operationId: move_to
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MoveTarget'
+        required: true
+      responses:
+        '200':
+          description: Entity moved
+        '404':
+          description: Entity not found
+        '422':
+          description: Invalid move target
+  /entities/{entity}/name:
+    get:
+      tags:
+      - entities
+      summary: Get the entity name.
+      operationId: get
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Entity name
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: Entity not found
+  /entities/{entity}/transform:
+    get:
+      tags:
+      - entities
+      summary: Get the transform of an entity.
+      operationId: get
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Entity transform
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OptionalTransform'
+        '404':
+          description: Entity not found
+    put:
+      tags:
+      - entities
+      summary: Set the transform of an entity.
+      operationId: put
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OptionalTransform'
+        required: true
+      responses:
+        '200':
+          description: Updated transform
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OptionalTransform'
+        '404':
+          description: Entity not found
+  /entities/{entity}/tween/position:
+    post:
+      tags:
+      - entities
+      summary: Tween an entity's position to a target value.
+      operationId: tween_position
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TweenPositionRequest'
+        required: true
+      responses:
+        '200':
+          description: Position tween started
+        '400':
+          description: Invalid duration
+        '404':
+          description: Entity not found
+  /entities/{entity}/tween/rotation:
+    post:
+      tags:
+      - entities
+      summary: Tween an entity's rotation to a target value.
+      operationId: tween_rotation
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TweenRotationRequest'
+        required: true
+      responses:
+        '200':
+          description: Rotation tween started
+        '400':
+          description: Invalid duration
+        '404':
+          description: Entity not found
+  /entities/{entity}/tween/scale:
+    post:
+      tags:
+      - entities
+      summary: Tween an entity's scale to a target value.
+      operationId: tween_scale
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TweenScaleRequest'
+        required: true
+      responses:
+        '200':
+          description: Scale tween started
+        '400':
+          description: Invalid duration
+        '404':
+          description: Entity not found
+  /mods:
+    get:
+      tags:
+      - mods
+      summary: List all loaded mods.
+      operationId: list
+      responses:
+        '200':
+          description: List of loaded mods
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ModInfo'
+  /mods/menus:
+    get:
+      tags:
+      - mods
+      summary: List all registered mod menus.
+      operationId: list_menus
+      responses:
+        '200':
+          description: List of mod menus
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ModMenuMetadata'
+  /mods/{mod_name}:
+    get:
+      tags:
+      - mods
+      summary: Get a single mod by name.
+      operationId: get_one
+      parameters:
+      - name: mod_name
+        in: path
+        description: Mod package name
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Mod information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModInfo'
+        '404':
+          description: Mod not found
+  /preferences:
+    get:
+      tags:
+      - preferences
+      summary: List all saved preference keys.
+      operationId: list
+      responses:
+        '200':
+          description: List of preference keys
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+  /preferences/{key}:
+    get:
+      tags:
+      - preferences
+      summary: Load a preference value by key.
+      operationId: load
+      parameters:
+      - name: key
+        in: path
+        description: Preference key
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Preference value
+          content:
+            application/json:
+              schema:
+                type: object
+        '404':
+          description: Preference not found
+    put:
+      tags:
+      - preferences
+      summary: Save a preference value by key.
+      operationId: save
+      parameters:
+      - name: key
+        in: path
+        description: Preference key
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        '200':
+          description: Preference saved
+  /rpc/call:
+    post:
+      tags:
+      - rpc
+      summary: Proxy `POST /rpc/call` to the MOD service's local HTTP server.
+      description: |-
+        The caller specifies `modName` and `method` in the JSON body, along with
+        an optional `body` field that is forwarded to the MOD service.
+
+        Error codes:
+        - `503` — MOD not registered (not yet started or crashed)
+        - `404` — method unknown for this MOD
+        - `504` — MOD service timed out
+        - `502` — MOD service refused the connection
+      operationId: call
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CallRequest'
+        required: true
+      responses:
+        '200':
+          description: RPC method response (JSON)
+        '404':
+          description: Method not found
+        '502':
+          description: MOD service unreachable
+        '503':
+          description: MOD not registered
+        '504':
+          description: Timeout exceeded
+  /rpc/deregister:
+    post:
+      tags:
+      - rpc
+      summary: Deregister a MOD service's RPC endpoint.
+      operationId: deregister
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeregisterRequest'
+        required: true
+      responses:
+        '200':
+          description: MOD deregistered
+        '500':
+          description: Registry lock poisoned
+  /rpc/register:
+    post:
+      tags:
+      - rpc
+      summary: Register or update a MOD service's RPC methods.
+      description: |-
+        The MOD service calls this endpoint on startup.  The port must have been
+        pre-allocated by the engine; this handler updates the methods map for that
+        port.
+      operationId: register
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+        required: true
+      responses:
+        '200':
+          description: Methods registered
+        '404':
+          description: MOD has no pre-allocated port
+        '500':
+          description: Registry lock poisoned
+  /rpc/registrations:
+    get:
+      tags:
+      - rpc
+      summary: List all current RPC registrations (for introspection / debugging).
+      operationId: list_registrations
+      responses:
+        '200':
+          description: Current registrations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationsResponse'
+        '500':
+          description: Registry lock poisoned
+  /settings/fps:
+    get:
+      tags:
+      - settings
+      summary: Get the current frame rate (FPS).
+      operationId: get
+      responses:
+        '200':
+          description: Current FPS
+          content:
+            text/plain:
+              schema:
+                type: number
+                format: double
+    put:
+      tags:
+      - settings
+      summary: Set the frame rate (FPS). Persists and applies immediately.
+      operationId: put
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetFpsBody'
+        required: true
+      responses:
+        '200':
+          description: FPS updated
+  /shadow-panel/alpha:
+    get:
+      tags:
+      - shadow-panel
+      summary: Get the current alpha value of the shadow panel.
+      operationId: get
+      responses:
+        '200':
+          description: Current alpha value
+          content:
+            text/plain:
+              schema:
+                type: number
+                format: float
+        '400':
+          description: Shadow panel not available
+    put:
+      tags:
+      - shadow-panel
+      summary: Set the alpha value of the shadow panel.
+      description: |-
+        The value set here is saved in the internal database under the key `shadow_panel::alpha`.
+        When the application starts, the alpha value is read from this key and applied to the shadow panel's material.
+      operationId: put
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShadowPanelPutBody'
+        required: true
+      responses:
+        '200':
+          description: Alpha value updated
+        '400':
+          description: Shadow panel not available
+  /signals:
+    get:
+      tags:
+      - signals
+      summary: List all active signal channels.
+      operationId: list
+      responses:
+        '200':
+          description: List of active signal channels
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SignalInfo'
+  /signals/{signal}:
+    get:
+      tags:
+      - signals
+      summary: Stream events for a specific signal via SSE.
+      description: The signals are sent via `POST /signals/{signal}` API.
+      operationId: stream
+      parameters:
+      - name: signal
+        in: path
+        description: Signal channel name
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: SSE event stream
+          content:
+            text/event-stream: {}
+    post:
+      tags:
+      - signals
+      summary: Send a signal to all subscribers.
+      description: The signal is sent to all processes that are streaming the signal at `GET /signals/{signal}`.
+      operationId: send
+      parameters:
+      - name: signal
+        in: path
+        description: Signal channel name
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
+      responses:
+        '200':
+          description: Signal sent
+  /vrm:
+    get:
+      tags:
+      - vrm
+      summary: List VRM model entities, optionally filtered by name.
+      operationId: get
+      parameters:
+      - name: name
+        in: query
+        description: Optional name filter
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: List of VRM entity IDs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+  /vrm/snapshot:
+    get:
+      tags:
+      - vrm
+      summary: Get detailed snapshot of all VRM instances.
+      operationId: snapshot
+      parameters:
+      - name: name
+        in: query
+        description: Optional name filter
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: VRM snapshots
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VrmSnapshot'
+  /vrm/spawn:
+    post:
+      tags:
+      - vrm
+      summary: Spawn a VRM model.
+      operationId: spawn
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VrmSpawnArgs'
+        required: true
+      responses:
+        '200':
+          description: VRM model spawned, returns entity ID
+          content:
+            text/plain:
+              schema:
+                type: string
+        '400':
+          description: Invalid request
+  /vrm/stream:
+    get:
+      tags:
+      - vrm
+      summary: Stream VRM model load events via SSE.
+      description: Returns an SSE stream that emits an event each time a VRM model is loaded.
+      operationId: stream
+      responses:
+        '200':
+          description: SSE stream of VRM load events
+          content:
+            text/event-stream: {}
+  /vrm/wait-load:
+    get:
+      tags:
+      - vrm
+      summary: Wait for a VRM model to load.
+      operationId: wait_load
+      parameters:
+      - name: name
+        in: query
+        description: Name of the VRM model to wait for
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: VRM loaded, returns entity ID
+          content:
+            text/plain:
+              schema:
+                type: string
+  /vrm/{entity}:
+    delete:
+      tags:
+      - vrm
+      summary: Despawn a VRM model.
+      operationId: despawn
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: VRM model despawned
+        '404':
+          description: Entity not found
+  /vrm/{entity}/events:
+    get:
+      tags:
+      - vrm
+      summary: Subscribe to VRM events via SSE.
+      description: |-
+        Events include: drag-start, drag, drag-end, pointer-press, pointer-click,
+        pointer-move, pointer-release, pointer-over, pointer-out, pointer-cancel,
+        state-change, expression-change, vrma-play, vrma-finish.
+      operationId: events
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: SSE stream of VRM events
+          content:
+            text/event-stream: {}
+  /vrm/{entity}/expressions:
+    get:
+      tags:
+      - vrm
+      summary: List all expressions and their current weights for a VRM model.
+      operationId: list
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Expression weights
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExpressionsResponse'
+        '404':
+          description: Entity not found
+    put:
+      tags:
+      - vrm
+      summary: Set all expression weights for a VRM model (replaces all current weights).
+      operationId: set
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WeightsBody'
+        required: true
+      responses:
+        '200':
+          description: Expressions set
+        '404':
+          description: Entity not found
+    delete:
+      tags:
+      - vrm
+      summary: Clear all expression weights for a VRM model.
+      operationId: clear
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Expressions cleared
+        '404':
+          description: Entity not found
+    patch:
+      tags:
+      - vrm
+      summary: Modify specific expression weights for a VRM model (merges with current weights).
+      operationId: modify
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WeightsBody'
+        required: true
+      responses:
+        '200':
+          description: Expressions modified
+        '404':
+          description: Entity not found
+  /vrm/{entity}/expressions/mouth:
+    patch:
+      tags:
+      - vrm
+      summary: Modify mouth expression weights for a VRM model.
+      operationId: modify_mouth
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WeightsBody'
+        required: true
+      responses:
+        '200':
+          description: Mouth expressions modified
+        '404':
+          description: Entity not found
+  /vrm/{entity}/look:
+    delete:
+      tags:
+      - vrm
+      summary: Disable look-at control for the specified VRM entity.
+      operationId: unlook
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Look-at disabled
+        '404':
+          description: Entity not found
+  /vrm/{entity}/look/cursor:
+    put:
+      tags:
+      - vrm
+      summary: Set look-at to follow the cursor.
+      operationId: cursor
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Look-at cursor mode set
+        '404':
+          description: Entity not found
+  /vrm/{entity}/look/target/{target}:
+    put:
+      tags:
+      - vrm
+      summary: Set look-at target to another entity.
+      operationId: target
+      parameters:
+      - name: entity
+        in: path
+        description: VRM entity ID
+        required: true
+        schema:
+          type: string
+      - name: target
+        in: path
+        description: Target entity ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Look-at target set
+        '404':
+          description: Entity not found
+  /vrm/{entity}/name:
+    get:
+      tags:
+      - vrm
+      summary: Get the display name of a VRM entity for a given language.
+      operationId: get
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      - name: lang
+        in: path
+        description: BCP-47 language code (e.g. "en", "ja"). Defaults to "en".
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: VRM display name
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: Entity not found
+    put:
+      tags:
+      - vrm
+      summary: Set the display name of a VRM entity for a given language.
+      operationId: put
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetNameRequest'
+        required: true
+      responses:
+        '200':
+          description: Name updated
+        '404':
+          description: Entity not found
+    delete:
+      tags:
+      - vrm
+      summary: Delete the display name of a VRM entity for a given language.
+      operationId: delete
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      - name: lang
+        in: path
+        description: BCP-47 language code (e.g. "en", "ja"). Defaults to "en".
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Name deleted
+        '404':
+          description: Entity not found
+  /vrm/{entity}/names:
+    get:
+      tags:
+      - vrm
+      summary: List all multilingual display names of a VRM entity.
+      operationId: list
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: All VRM names
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VrmNames'
+        '404':
+          description: Entity not found
+  /vrm/{entity}/persona:
+    get:
+      tags:
+      - vrm
+      summary: Get the persona of a VRM model.
+      operationId: get
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: VRM persona
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Persona'
+        '404':
+          description: Entity not found
+    put:
+      tags:
+      - vrm
+      summary: Set the persona of a VRM model.
+      operationId: put
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Persona'
+        required: true
+      responses:
+        '200':
+          description: Persona updated
+        '404':
+          description: Entity not found
+  /vrm/{entity}/position:
+    get:
+      tags:
+      - vrm
+      summary: Get the position of a VRM model.
+      operationId: get
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: VRM position data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PositionResponse'
+        '404':
+          description: Entity not found
+  /vrm/{entity}/speech/timeline:
+    post:
+      tags:
+      - vrm
+      summary: Speak with a timeline of expression keyframes and audio data.
+      operationId: timeline
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TimelineBody'
+        required: true
+      responses:
+        '200':
+          description: Speech timeline started
+        '400':
+          description: Invalid audio data
+        '404':
+          description: Entity not found
+  /vrm/{entity}/spring-bones:
+    get:
+      tags:
+      - vrm
+      summary: List all spring bone chains for a VRM model.
+      operationId: list
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Spring bone chains
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpringBoneChainsResponse'
+        '404':
+          description: Entity not found
+  /vrm/{entity}/spring-bones/{chain_id}:
+    get:
+      tags:
+      - vrm
+      summary: Get a specific spring bone chain by ID.
+      operationId: get
+      parameters:
+      - name: entity
+        in: path
+        description: VRM entity ID
+        required: true
+        schema:
+          type: string
+      - name: chain_id
+        in: path
+        description: Spring bone chain entity ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Spring bone chain details
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: 'null'
+                - $ref: '#/components/schemas/SpringBoneChain'
+        '404':
+          description: Entity or chain not found
+    put:
+      tags:
+      - vrm
+      summary: Update properties of a spring bone chain.
+      operationId: put
+      parameters:
+      - name: entity
+        in: path
+        description: VRM entity ID
+        required: true
+        schema:
+          type: string
+      - name: chain_id
+        in: path
+        description: Spring bone chain entity ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SpringBonePropsUpdate'
+        required: true
+      responses:
+        '200':
+          description: Spring bone properties updated
+        '404':
+          description: Entity or chain not found
+  /vrm/{entity}/state:
+    get:
+      tags:
+      - vrm
+      summary: Get the state of a VRM model.
+      operationId: get
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: VRM state
+          content:
+            application/json:
+              schema:
+                type: object
+        '404':
+          description: Entity not found
+    put:
+      tags:
+      - vrm
+      summary: Set the state of a VRM model.
+      operationId: put
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PutBody'
+        required: true
+      responses:
+        '200':
+          description: VRM state updated
+        '404':
+          description: Entity not found
+  /vrm/{entity}/vrma:
+    get:
+      tags:
+      - vrm
+      summary: List all VRMA animations under a VRM entity.
+      operationId: get
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: List of VRMA animations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VrmaInfo'
+        '404':
+          description: Entity not found
+  /vrm/{entity}/vrma/play:
+    post:
+      tags:
+      - vrm
+      summary: Play a VRM animation.
+      operationId: play
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlayBody'
+        required: true
+      responses:
+        '200':
+          description: Animation started
+        '404':
+          description: Entity or animation not found
+  /vrm/{entity}/vrma/speed:
+    put:
+      tags:
+      - vrm
+      summary: Set the playback speed for a VRM animation.
+      operationId: speed
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SpeedBody'
+        required: true
+      responses:
+        '200':
+          description: Playback speed updated
+        '404':
+          description: Entity or animation not found
+  /vrm/{entity}/vrma/state:
+    get:
+      tags:
+      - vrm
+      summary: Get the state of a VRM animation.
+      operationId: state
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      - name: asset
+        in: query
+        description: Asset ID of the VRMA animation
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Animation state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VrmaState'
+        '404':
+          description: Entity or animation not found
+  /vrm/{entity}/vrma/stop:
+    post:
+      tags:
+      - vrm
+      summary: Stop a VRM animation.
+      operationId: stop
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssetRequest'
+        required: true
+      responses:
+        '200':
+          description: Animation stopped
+        '404':
+          description: Entity or animation not found
+  /vrm/{entity}/{bone_name}:
+    get:
+      tags:
+      - vrm
+      summary: Get the entity ID of a specific bone in a VRM model.
+      operationId: get
+      parameters:
+      - name: vrm
+        in: path
+        description: VRM entity ID
+        required: true
+        schema:
+          type: string
+      - name: bone_name
+        in: path
+        description: Bone name
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Bone entity ID
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: VRM or bone not found
+  /webviews:
+    get:
+      tags:
+      - webviews
+      summary: List all open webviews.
+      operationId: list
+      responses:
+        '200':
+          description: List of open webviews
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WebviewInfo'
+    post:
+      tags:
+      - webviews
+      summary: Open a global webview in world space.
+      operationId: open
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebviewOpenOptions'
+        required: true
+      responses:
+        '200':
+          description: Webview opened, returns entity ID
+          content:
+            text/plain:
+              schema:
+                type: string
+  /webviews/{entity}:
+    get:
+      tags:
+      - webviews
+      summary: Get detailed info for a specific webview.
+      operationId: get
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Webview info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebviewInfo'
+        '404':
+          description: Webview not found
+    delete:
+      tags:
+      - webviews
+      summary: Delete (close) a webview.
+      operationId: delete
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Webview closed
+        '404':
+          description: Webview not found
+    patch:
+      tags:
+      - webviews
+      summary: Partial update of a webview.
+      operationId: patch
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebviewPatchRequest'
+        required: true
+      responses:
+        '200':
+          description: Webview updated
+        '404':
+          description: Webview not found
+  /webviews/{entity}/is-closed:
+    get:
+      tags:
+      - webviews
+      summary: Check if a webview is closed.
+      operationId: is_closed
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Webview closed status
+          content:
+            text/plain:
+              schema:
+                type: boolean
+  /webviews/{entity}/linked-vrm:
+    get:
+      tags:
+      - webviews
+      summary: Get the linked VRM for a webview.
+      operationId: get_linked_vrm
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Linked VRM entity ID
+          content:
+            application/json:
+              schema:
+                type:
+                - string
+                - 'null'
+    put:
+      tags:
+      - webviews
+      summary: Set the linked VRM for a webview.
+      operationId: set_linked_vrm
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetLinkedVrmRequest'
+        required: true
+      responses:
+        '200':
+          description: VRM linked to webview
+    delete:
+      tags:
+      - webviews
+      summary: Remove the linked VRM from a webview.
+      operationId: unlink_vrm
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: VRM unlinked from webview
+  /webviews/{entity}/navigate:
+    post:
+      tags:
+      - webviews
+      summary: Navigate to a new URL.
+      operationId: navigate
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebviewNavigateRequest'
+        required: true
+      responses:
+        '200':
+          description: Navigation initiated
+  /webviews/{entity}/navigate/back:
+    post:
+      tags:
+      - webviews
+      summary: Navigate back in history.
+      operationId: navigate_back
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Navigated back
+  /webviews/{entity}/navigate/forward:
+    post:
+      tags:
+      - webviews
+      summary: Navigate forward in history.
+      operationId: navigate_forward
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Navigated forward
+  /webviews/{entity}/reload:
+    post:
+      tags:
+      - webviews
+      summary: Reload the current page.
+      operationId: reload
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Page reloaded
+components:
+  schemas:
+    AppInfo:
+      type: object
+      required:
+      - version
+      - platform
+      - features
+      - mods
+      properties:
+        features:
+          type: array
+          items:
+            type: string
+        mods:
+          type: array
+          items:
+            $ref: '#/components/schemas/ModInfo'
+        platform:
+          $ref: '#/components/schemas/PlatformInfo'
+        version:
+          type: string
+    AssetDeclaration:
+      type: object
+      description: A single declared asset entry from a MOD's package.json.
+      required:
+      - path
+      - type
+      properties:
+        description:
+          type:
+          - string
+          - 'null'
+          description: Human-readable description (used by LLM agents for asset selection).
+        path:
+          type: string
+          description: File path relative to the MOD root directory.
+        type:
+          $ref: '#/components/schemas/AssetType'
+          description: Asset type.
+    AssetId:
+      type: string
+      description: |-
+        A strongly-typed asset identifier.
+
+        Wraps a `String` but provides type safety so arbitrary strings cannot be
+        passed where an asset ID is expected. Serializes transparently as a plain
+        JSON string so the HTTP/JSON API schema is unchanged.
+    AssetInfo:
+      type: object
+      required:
+      - id
+      - type
+      - mod
+      properties:
+        description:
+          type:
+          - string
+          - 'null'
+        id:
+          $ref: '#/components/schemas/AssetId'
+        mod:
+          type: string
+        type:
+          $ref: '#/components/schemas/AssetType'
+    AssetRequest:
+      type: object
+      required:
+      - asset
+      properties:
+        asset:
+          $ref: '#/components/schemas/AssetId'
+    AssetType:
+      type: string
+      description: Type of mod asset.
+      enum:
+      - vrm
+      - vrma
+      - sound
+      - image
+      - html
+    BgmPlayRequest:
+      type: object
+      required:
+      - asset
+      properties:
+        asset:
+          $ref: '#/components/schemas/AssetId'
+        fadeIn:
+          type:
+          - object
+          - 'null'
+        loop:
+          type: boolean
+        speed:
+          type: number
+          format: double
+        volume:
+          type: number
+          format: double
+    BgmPlaybackState:
+      type: string
+      enum:
+      - playing
+      - paused
+      - stopped
+    BgmStatus:
+      type: object
+      required:
+      - state
+      - loop
+      - volume
+      - speed
+      properties:
+        asset:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/AssetId'
+        loop:
+          type: boolean
+        speed:
+          type: number
+          format: double
+        state:
+          $ref: '#/components/schemas/BgmPlaybackState'
+        volume:
+          type: number
+          format: double
+    BgmStopRequest:
+      type: object
+      properties:
+        fadeOut:
+          type:
+          - object
+          - 'null'
+    BgmUpdateRequest:
+      type: object
+      properties:
+        speed:
+          type:
+          - number
+          - 'null'
+          format: double
+        tween:
+          type:
+          - object
+          - 'null'
+        volume:
+          type:
+          - number
+          - 'null'
+          format: double
+    CallRequest:
+      type: object
+      description: Body for `POST /rpc/call`.
+      required:
+      - modName
+      - method
+      properties:
+        body: {}
+        method:
+          type: string
+        modName:
+          type: string
+    DeregisterRequest:
+      type: object
+      description: Body for `POST /rpc/deregister`.
+      required:
+      - modName
+      properties:
+        modName:
+          type: string
+    DisplayId:
+      type: integer
+      format: int32
+      minimum: 0
+    EasingFunction:
+      type: string
+      description: |-
+        Easing functions for tweening animations.
+
+        Defines the rate of change of a parameter over time, allowing smooth transitions
+        between values. Each variant represents a different mathematical curve that controls
+        how the interpolation progresses from start to end.
+
+        The naming convention follows: `{CurveName}{Direction}` where:
+        - `In`: Slow start, fast end
+        - `Out`: Fast start, slow end
+        - `InOut`: Slow start and end, fast middle
+
+        # Example
+        ```
+        use homunculus_api::entities::tween::EasingFunction;
+
+        let easing = EasingFunction::QuadraticInOut;
+        ```
+      enum:
+      - linear
+      - quadraticIn
+      - quadraticOut
+      - quadraticInOut
+      - cubicIn
+      - cubicOut
+      - cubicInOut
+      - quarticIn
+      - quarticOut
+      - quarticInOut
+      - quinticIn
+      - quinticOut
+      - quinticInOut
+      - smoothStepIn
+      - smoothStepOut
+      - smoothStep
+      - smootherStepIn
+      - smootherStepOut
+      - smootherStep
+      - sineIn
+      - sineOut
+      - sineInOut
+      - circularIn
+      - circularOut
+      - circularInOut
+      - exponentialIn
+      - exponentialOut
+      - exponentialInOut
+      - elasticIn
+      - elasticOut
+      - elasticInOut
+      - backIn
+      - backOut
+      - backInOut
+      - bounceIn
+      - bounceOut
+      - bounceInOut
+    ExecuteCommandRequest:
+      type: object
+      description: Request body for `POST /commands/execute`.
+      required:
+      - command
+      properties:
+        args:
+          type: array
+          items:
+            type: string
+        command:
+          type: string
+        stdin:
+          type:
+          - string
+          - 'null'
+        timeoutMs:
+          type:
+          - integer
+          - 'null'
+          format: int64
+          minimum: 0
+    ExpressionInfo:
+      type: object
+      required:
+      - name
+      - weight
+      - isBinary
+      - overrideBlink
+      - overrideLookAt
+      - overrideMouth
+      properties:
+        isBinary:
+          type: boolean
+        name:
+          type: string
+        overrideBlink:
+          type: string
+        overrideLookAt:
+          type: string
+        overrideMouth:
+          type: string
+        weight:
+          type: number
+          format: float
+    ExpressionsResponse:
+      type: object
+      required:
+      - expressions
+      properties:
+        expressions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExpressionInfo'
+    GlobalDisplay:
+      type: object
+      required:
+      - id
+      - title
+      - frame
+      properties:
+        frame:
+          type: object
+        id:
+          $ref: '#/components/schemas/DisplayId'
+        title:
+          type: string
+    GlobalDisplays:
+      type: array
+      items:
+        $ref: '#/components/schemas/GlobalDisplay'
+    GlobalViewport:
+      type: array
+      items:
+        type: number
+        format: float
+      description: |-
+        Represents the global screen coordinates.
+        If there are multiple screens, the coordinates of the leftmost screen are used as the origin.
+    HealthResponse:
+      type: object
+      required:
+      - status
+      properties:
+        status:
+          type: string
+    LookAtState:
+      oneOf:
+      - type: object
+        required:
+        - type
+        properties:
+          type:
+            type: string
+            enum:
+            - cursor
+      - type: object
+        required:
+        - entity
+        - type
+        properties:
+          entity:
+            type: string
+          type:
+            type: string
+            enum:
+            - target
+    ModInfo:
+      type: object
+      description: Summary of a loaded mod, persisted after discovery.
+      required:
+      - name
+      - version
+      - commands
+      - assets
+      - menus
+      - modDir
+      properties:
+        assets:
+          type: object
+          description: Assets registered by this mod.
+          additionalProperties:
+            $ref: '#/components/schemas/AssetDeclaration'
+          propertyNames:
+            type: string
+        author:
+          type:
+          - string
+          - 'null'
+        commands:
+          type: array
+          items:
+            type: string
+          description: Available MOD command names (paths are not included).
+        description:
+          type:
+          - string
+          - 'null'
+        license:
+          type:
+          - string
+          - 'null'
+        menus:
+          type: array
+          items:
+            $ref: '#/components/schemas/ModMenu'
+          description: Menus registered by this mod.
+        modDir:
+          type: string
+          description: Absolute path to the mod's root directory on disk.
+        name:
+          type: string
+        serviceScriptPath:
+          type:
+          - string
+          - 'null'
+          description: Service script path (long-running process, auto-launched at startup).
+        tray:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/TrayMenuItem'
+            description: Tray menu item contributed by this mod.
+        version:
+          type: string
+    ModMenu:
+      type: object
+      required:
+      - id
+      - text
+      - command
+      properties:
+        command:
+          type: string
+        id:
+          type: string
+        text:
+          type: string
+    ModMenuMetadata:
+      type: object
+      required:
+      - id
+      - modName
+      - text
+      - command
+      properties:
+        command:
+          type: string
+        id:
+          type: string
+        modName:
+          type: string
+        text:
+          type: string
+    MoveTarget:
+      oneOf:
+      - type: object
+        required:
+        - position
+        - type
+        properties:
+          position:
+            type: array
+            items:
+              type: number
+              format: float
+          type:
+            type: string
+            enum:
+            - world
+          z:
+            type:
+            - number
+            - 'null'
+            format: float
+      - type: object
+        required:
+        - position
+        - type
+        properties:
+          position:
+            type: array
+            items:
+              type: number
+              format: float
+          type:
+            type: string
+            enum:
+            - viewport
+      description: |-
+        Target position for an entity move operation.
+
+        - `World`: Set position in Bevy world coordinates. The `z` field is optional;
+          when omitted, the entity's current z-position is preserved.
+        - `Viewport`: Set position using global viewport (screen) coordinates,
+          which are converted to world coordinates using the active camera.
+    Ocean:
+      type: object
+      description: Big Five personality traits (OCEAN model).
+      properties:
+        agreeableness:
+          type:
+          - number
+          - 'null'
+          format: double
+        conscientiousness:
+          type:
+          - number
+          - 'null'
+          format: double
+        extraversion:
+          type:
+          - number
+          - 'null'
+          format: double
+        neuroticism:
+          type:
+          - number
+          - 'null'
+          format: double
+        openness:
+          type:
+          - number
+          - 'null'
+          format: double
+    OptionalTransform:
+      type: object
+      properties:
+        rotation:
+          type:
+          - array
+          - 'null'
+          items:
+            type: number
+            format: float
+        scale:
+          type:
+          - array
+          - 'null'
+          items:
+            type: number
+            format: float
+        translation:
+          type:
+          - array
+          - 'null'
+          items:
+            type: number
+            format: float
+    Persona:
+      type: object
+      description: Persona data for a VRM character.
+      properties:
+        metadata:
+          type: object
+          additionalProperties:
+            type: object
+          propertyNames:
+            type: string
+        ocean:
+          $ref: '#/components/schemas/Ocean'
+        personality:
+          type:
+          - string
+          - 'null'
+        profile:
+          type: string
+    PlatformInfo:
+      type: object
+      required:
+      - os
+      - arch
+      properties:
+        arch:
+          type: string
+        os:
+          type: string
+    PlayBody:
+      type: object
+      required:
+      - asset
+      properties:
+        asset:
+          $ref: '#/components/schemas/AssetId'
+          description: Asset ID for the VRMA animation to play.
+        repeat:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/Repeat'
+            description: Repetition behavior of an animation.
+        resetSpringBones:
+          type:
+          - boolean
+          - 'null'
+          description: If true, resets SpringBone velocities to prevent bouncing during animation transitions.
+        transitionSecs:
+          type:
+          - number
+          - 'null'
+          format: double
+          description: Duration in seconds for the transition of the animation.
+        waitForCompletion:
+          type:
+          - boolean
+          - 'null'
+          description: If true, the API will wait until the animation finishes.
+    PositionResponse:
+      type: object
+      required:
+      - world
+      properties:
+        globalViewport:
+          type:
+          - object
+          - 'null'
+        world:
+          type: array
+          items:
+            type: number
+            format: float
+    PutBody:
+      type: object
+      required:
+      - state
+      properties:
+        state:
+          type: object
+    RegisterRequest:
+      type: object
+      description: Body for `POST /rpc/register`.
+      required:
+      - modName
+      - methods
+      properties:
+        methods:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/RpcMethodMeta'
+          propertyNames:
+            type: string
+        modName:
+          type: string
+    RegistrationsResponse:
+      type: object
+      description: Response for `GET /rpc/registrations`.
+      required:
+      - registrations
+      properties:
+        registrations:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/RpcRegistration'
+          propertyNames:
+            type: string
+    Repeat:
+      oneOf:
+      - type: object
+        required:
+        - type
+        properties:
+          type:
+            type: string
+            enum:
+            - forever
+      - type: object
+        required:
+        - type
+        properties:
+          type:
+            type: string
+            enum:
+            - never
+      - type: object
+        required:
+        - count
+        - type
+        properties:
+          count:
+            type: integer
+            format: int32
+            minimum: 0
+          type:
+            type: string
+            enum:
+            - count
+    RpcMethodMeta:
+      type: object
+      description: Metadata for a single RPC method.
+      properties:
+        description:
+          type:
+          - string
+          - 'null'
+        timeout:
+          type:
+          - integer
+          - 'null'
+          format: int64
+          minimum: 0
+    RpcRegistration:
+      type: object
+      description: A single MOD's RPC registration.
+      required:
+      - port
+      - methods
+      properties:
+        methods:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/RpcMethodMeta'
+          propertyNames:
+            type: string
+        port:
+          type: integer
+          format: int32
+          minimum: 0
+    SePlayRequest:
+      type: object
+      required:
+      - asset
+      properties:
+        asset:
+          $ref: '#/components/schemas/AssetId'
+        panning:
+          type: number
+          format: double
+        speed:
+          type: number
+          format: double
+        volume:
+          type: number
+          format: double
+    SetFpsBody:
+      type: object
+      required:
+      - fps
+      properties:
+        fps:
+          type: number
+          format: double
+          description: Frame rate in frames per second.
+    SetLinkedVrmRequest:
+      type: object
+      required:
+      - vrm
+      properties:
+        vrm:
+          type: string
+    SetNameRequest:
+      type: object
+      description: Request body for setting a VRM display name.
+      required:
+      - name
+      properties:
+        language:
+          type: string
+          description: BCP-47 language code (e.g. "en", "ja"). Defaults to "en".
+        name:
+          type: string
+          description: The display name to set. If empty/whitespace-only, the name is deleted.
+    ShadowPanelPutBody:
+      type: object
+      required:
+      - alpha
+      properties:
+        alpha:
+          type: number
+          format: float
+          description: |-
+            The alpha value for the shadow panel.
+
+            Range: `0.0` (fully transparent) to `1.0` (fully opaque).
+    SignalInfo:
+      type: object
+      description: Information about an active signal channel.
+      required:
+      - signal
+      - subscribers
+      properties:
+        signal:
+          type: string
+          description: The signal channel name.
+        subscribers:
+          type: integer
+          description: The number of active subscribers.
+          minimum: 0
+    SpeedBody:
+      type: object
+      required:
+      - asset
+      - speed
+      properties:
+        asset:
+          $ref: '#/components/schemas/AssetId'
+          description: Asset ID for the VRMA animation.
+        speed:
+          type: number
+          format: float
+          description: Playback speed multiplier.
+    SpringBoneChain:
+      type: object
+      required:
+      - entity
+      - joints
+      - props
+      properties:
+        entity:
+          type: string
+        joints:
+          type: array
+          items:
+            type: string
+        props:
+          $ref: '#/components/schemas/SpringBoneProps'
+    SpringBoneChainsResponse:
+      type: object
+      required:
+      - chains
+      properties:
+        chains:
+          type: array
+          items:
+            $ref: '#/components/schemas/SpringBoneChain'
+    SpringBoneProps:
+      type: object
+      required:
+      - stiffness
+      - dragForce
+      - gravityPower
+      - gravityDir
+      - hitRadius
+      properties:
+        dragForce:
+          type: number
+          format: float
+        gravityDir:
+          type: array
+          items:
+            type: number
+            format: float
+        gravityPower:
+          type: number
+          format: float
+        hitRadius:
+          type: number
+          format: float
+        stiffness:
+          type: number
+          format: float
+    SpringBonePropsUpdate:
+      type: object
+      properties:
+        dragForce:
+          type:
+          - number
+          - 'null'
+          format: float
+        gravityDir:
+          type:
+          - array
+          - 'null'
+          items:
+            type: number
+            format: float
+        gravityPower:
+          type:
+          - number
+          - 'null'
+          format: float
+        hitRadius:
+          type:
+          - number
+          - 'null'
+          format: float
+        stiffness:
+          type:
+          - number
+          - 'null'
+          format: float
+    StampRequestBody:
+      allOf:
+      - type:
+        - object
+        - 'null'
+      - type: object
+        required:
+        - asset
+        properties:
+          asset:
+            $ref: '#/components/schemas/AssetId'
+    TimelineBody:
+      allOf:
+      - type:
+        - object
+        - 'null'
+      - type: object
+        required:
+        - audio
+        - keyframes
+        properties:
+          audio:
+            type: string
+          keyframes:
+            type: array
+            items:
+              $ref: '#/components/schemas/TimelineKeyframe'
+    TimelineKeyframe:
+      type: object
+      description: A single keyframe in a speech timeline.
+      required:
+      - duration
+      properties:
+        duration:
+          type: number
+          format: float
+          description: Duration of this keyframe in seconds.
+        targets:
+          type: object
+          description: |-
+            Expression targets to set during this keyframe.
+            Keys are expression names (e.g. "aa", "ih", "happy"), values are weights (0.0-1.0).
+          additionalProperties:
+            type: number
+            format: float
+          propertyNames:
+            type: string
+    TransformArgs:
+      type: object
+      properties:
+        rotation:
+          type:
+          - array
+          - 'null'
+          items:
+            type: number
+            format: float
+        scale:
+          type:
+          - array
+          - 'null'
+          items:
+            type: number
+            format: float
+        translation:
+          type:
+          - array
+          - 'null'
+          items:
+            type: number
+            format: float
+    TrayMenuItem:
+      type: object
+      description: |-
+        A single tray menu entry contributed by a mod.
+
+        Has either `command` (leaf — clickable) or `items` (submenu), never both.
+      required:
+      - id
+      - text
+      properties:
+        command:
+          type:
+          - string
+          - 'null'
+        id:
+          type: string
+        items:
+          type:
+          - array
+          - 'null'
+          items:
+            $ref: '#/components/schemas/TrayMenuItem'
+        text:
+          type: string
+    TweenPositionRequest:
+      type: object
+      required:
+      - target
+      - durationMs
+      properties:
+        durationMs:
+          type: integer
+          format: int64
+          minimum: 0
+        easing:
+          $ref: '#/components/schemas/EasingFunction'
+        target:
+          type: array
+          items:
+            type: number
+            format: float
+        wait:
+          type: boolean
+    TweenRotationRequest:
+      type: object
+      required:
+      - target
+      - durationMs
+      properties:
+        durationMs:
+          type: integer
+          format: int64
+          minimum: 0
+        easing:
+          $ref: '#/components/schemas/EasingFunction'
+        target:
+          type: array
+          items:
+            type: number
+            format: float
+        wait:
+          type: boolean
+    TweenScaleRequest:
+      type: object
+      required:
+      - target
+      - durationMs
+      properties:
+        durationMs:
+          type: integer
+          format: int64
+          minimum: 0
+        easing:
+          $ref: '#/components/schemas/EasingFunction'
+        target:
+          type: array
+          items:
+            type: number
+            format: float
+        wait:
+          type: boolean
+    VrmNames:
+      type: object
+      description: All multilingual display names for a VRM entity.
+      required:
+      - metadata
+      - names
+      properties:
+        metadata:
+          type: string
+          description: The original name from VRM metadata (the Bevy `Name` component).
+        names:
+          type: object
+          description: Language code → display name mappings stored in preferences.
+          additionalProperties:
+            type: string
+          propertyNames:
+            type: string
+    VrmSnapshot:
+      type: object
+      required:
+      - entity
+      - name
+      - state
+      - transform
+      - expressions
+      - animations
+      - linkedWebviews
+      - persona
+      properties:
+        animations:
+          type: array
+          items:
+            $ref: '#/components/schemas/VrmaInfo'
+        assetId:
+          type:
+          - string
+          - 'null'
+        entity:
+          type: string
+        expressions:
+          $ref: '#/components/schemas/ExpressionsResponse'
+        globalViewport:
+          type:
+          - object
+          - 'null'
+        linkedWebviews:
+          type: array
+          items:
+            type: string
+        lookAt:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/LookAtState'
+        name:
+          type: string
+        persona:
+          type: object
+        state:
+          type: string
+        transform:
+          type: object
+    VrmSpawnArgs:
+      type: object
+      required:
+      - asset
+      properties:
+        asset:
+          $ref: '#/components/schemas/AssetId'
+        persona:
+          type:
+          - object
+          - 'null'
+        transform:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/TransformArgs'
+    VrmaInfo:
+      type: object
+      required:
+      - entity
+      - name
+      - playing
+      properties:
+        entity:
+          type: string
+        name:
+          type: string
+        playing:
+          type: boolean
+    VrmaState:
+      type: object
+      required:
+      - playing
+      - repeat
+      - speed
+      - elapsedSecs
+      properties:
+        elapsedSecs:
+          type: number
+          format: float
+        playing:
+          type: boolean
+        repeat:
+          type: string
+        speed:
+          type: number
+          format: float
+    WebviewInfo:
+      type: object
+      description: Response for GET /webviews and GET /webviews/{entity}
+      required:
+      - entity
+      - source
+      - size
+      - viewportSize
+      - offset
+      properties:
+        entity:
+          type: string
+        linkedVrm:
+          type:
+          - string
+          - 'null'
+        offset:
+          $ref: '#/components/schemas/WebviewOffset'
+        size:
+          type: array
+          items:
+            type: number
+            format: float
+        source:
+          $ref: '#/components/schemas/WebviewSourceInfo'
+        viewportSize:
+          type: array
+          items:
+            type: number
+            format: float
+    WebviewNavigateRequest:
+      type: object
+      description: Request for POST /webviews/{entity}/navigate
+      required:
+      - source
+      properties:
+        source:
+          $ref: '#/components/schemas/WebviewSource'
+    WebviewOffset:
+      type: array
+      items:
+        type: number
+        format: float
+    WebviewOpenOptions:
+      type: object
+      description: Request body for POST /webviews
+      required:
+      - source
+      properties:
+        linkedVrm:
+          type:
+          - string
+          - 'null'
+          description: VRM entity to link to this webview (optional).
+        offset:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/WebviewOffset'
+        size:
+          type:
+          - array
+          - 'null'
+          items:
+            type: number
+            format: float
+          description: 'Mesh size in world units. Default: [0.7, 0.7].'
+        source:
+          $ref: '#/components/schemas/WebviewSource'
+          description: The source of the webview (URL, local path, or inline HTML).
+        viewportSize:
+          type:
+          - array
+          - 'null'
+          items:
+            type: number
+            format: float
+          description: 'Viewport resolution in pixels. Default: [800, 800].'
+    WebviewPatchRequest:
+      type: object
+      description: Request for PATCH /webviews/{entity}
+      properties:
+        offset:
+          type:
+          - array
+          - 'null'
+          items:
+            type: number
+            format: float
+        size:
+          type:
+          - array
+          - 'null'
+          items:
+            type: number
+            format: float
+        viewportSize:
+          type:
+          - array
+          - 'null'
+          items:
+            type: number
+            format: float
+    WebviewSource:
+      oneOf:
+      - type: object
+        description: URL or module path (mods://, asset://, https://, etc.)
+        required:
+        - url
+        - type
+        properties:
+          type:
+            type: string
+            enum:
+            - url
+          url:
+            type: string
+      - type: object
+        description: Raw HTML content
+        required:
+        - content
+        - type
+        properties:
+          content:
+            type: string
+          type:
+            type: string
+            enum:
+            - html
+      - type: object
+        description: Local HTML asset by registry ID
+        required:
+        - id
+        - type
+        properties:
+          id:
+            $ref: '#/components/schemas/AssetId'
+          type:
+            type: string
+            enum:
+            - local
+      description: |-
+        Webview source specification (request).
+        Either a URL/module path or inline HTML content.
+    WebviewSourceInfo:
+      oneOf:
+      - type: object
+        required:
+        - url
+        - type
+        properties:
+          type:
+            type: string
+            enum:
+            - url
+          url:
+            type: string
+      - type: object
+        required:
+        - type
+        properties:
+          content:
+            type:
+            - string
+            - 'null'
+          type:
+            type: string
+            enum:
+            - html
+      - type: object
+        required:
+        - id
+        - type
+        properties:
+          id:
+            $ref: '#/components/schemas/AssetId'
+          type:
+            type: string
+            enum:
+            - local
+      description: |-
+        Webview source information (response).
+        In list responses (GET /webviews), Html content is omitted (None).
+        In detail responses (GET /webviews/{id}), Html content is included.
+    WeightsBody:
+      type: object
+      required:
+      - weights
+      properties:
+        weights:
+          type: object
+          additionalProperties:
+            type: number
+            format: float
+          propertyNames:
+            type: string
+tags:
+- name: app
+  description: Application lifecycle
+- name: audio
+  description: Sound effects and background music
+- name: vrm
+  description: VRM model management
+- name: entities
+  description: Entity transform and tween control
+- name: webviews
+  description: WebView management
+- name: coordinates
+  description: Coordinate system conversion
+- name: effects
+  description: Visual effects
+- name: preferences
+  description: User preferences
+- name: signals
+  description: Pub/sub signal system
+- name: settings
+  description: Application settings
+- name: shadow-panel
+  description: Shadow panel transparency
+- name: displays
+  description: Display information
+- name: mods
+  description: Mod management
+- name: commands
+  description: Command execution
+- name: assets
+  description: Asset management
+- name: rpc
+  description: MOD service RPC registration and proxy
