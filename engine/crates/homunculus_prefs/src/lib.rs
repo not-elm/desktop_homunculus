@@ -95,6 +95,18 @@ impl PrefsKeys {
         format!("transform::{asset_id}")
     }
 
+    /// Preferences key for a VRM's display name, keyed by asset ID and language.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use homunculus_prefs::PrefsKeys;
+    /// assert_eq!(PrefsKeys::name("vrm:elmer", "en"), "name::vrm:elmer::en");
+    /// ```
+    pub fn name(asset_id: &str, lang: &str) -> String {
+        format!("name::{asset_id}::{lang}")
+    }
+
     /// Preferences key for the shadow panel's alpha (opacity) value.
     pub const SHADOW_PANEL_ALPHA: &'static str = "shadow_panel::alpha";
 }
