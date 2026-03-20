@@ -5,6 +5,7 @@ mod fetch_all;
 mod find_by_name;
 mod look;
 mod observer;
+mod name;
 mod persona;
 mod position;
 mod snapshot;
@@ -16,6 +17,7 @@ mod wait_load_by_name;
 
 pub use crate::entities::transform::*;
 pub use expressions::{ExpressionInfo, ExpressionsResponse};
+pub use name::{SetNameRequest, VrmNames};
 pub use position::PositionResponse;
 pub use snapshot::{LookAtState, VrmSnapshot};
 pub use spawn::*;
