@@ -3,10 +3,8 @@ import {EventSource} from "eventsource";
 import {
     matchWakeWord,
     normalizePhrase,
-    type NormalizedPhrase,
-    type WakeWordMatch,
-    type WakeWordThreshold,
 } from "./wake-word-matcher";
+import type {NormalizedPhrase} from "./wake-word-matcher";
 
 /**
  * Speech-to-Text (STT) API namespace for controlling real-time speech recognition.
@@ -513,10 +511,19 @@ export namespace stt {
     }
 
     /** Result of a successful wake-word match. */
-    export type WakeWordMatch = import("./wake-word-matcher").WakeWordMatch;
+    export interface WakeWordMatch {
+        /** The registered phrase that matched. */
+        matchedPhrase: string;
+        /** Full raw STT transcript. */
+        transcript: string;
+        /** Similarity score (0.0–1.0). */
+        confidence: number;
+        /** Text after the wake word (the user's instruction). */
+        remainingText: string;
+    }
 
     /** Threshold preset name or a raw numeric value (0.0–1.0). */
-    export type WakeWordThreshold = import("./wake-word-matcher").WakeWordThreshold;
+    export type WakeWordThreshold = number | "strict" | "normal" | "loose";
 
     /**
      * Waits for a single wake-word match from the STT stream.
