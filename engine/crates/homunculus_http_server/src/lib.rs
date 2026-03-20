@@ -69,8 +69,8 @@ pub mod prelude {
 }
 
 use crate::route::{
-    assets, audio, coordinates, displays, info, preferences, settings, shadow_panel, stt, vrm,
-    webviews,
+    assets, audio, avatars, coordinates, displays, info, preferences, settings, shadow_panel, stt,
+    vrm, webviews,
 };
 use crate::state::HttpState;
 use axum::Router;
@@ -112,6 +112,7 @@ use utoipa_axum::{router::OpenApiRouter, routes};
         (name = "assets", description = "Asset management"),
         (name = "rpc", description = "MOD service RPC registration and proxy"),
         (name = "stt", description = "Speech-to-text"),
+        (name = "avatars", description = "Avatar lifecycle and configuration"),
     ),
     servers(
         (url = "http://localhost:3100", description = "Local development"),
@@ -211,6 +212,7 @@ async fn start_http_server(
 fn build_openapi_router() -> OpenApiRouter<HttpState> {
     OpenApiRouter::with_openapi(ApiDoc::openapi())
         .nest("/app", app_router())
+        .nest("/avatars", avatars_router())
         .nest("/settings", settings_router())
         .nest("/shadow-panel", shadow_panel_router())
         .nest("/entities", entities_router())
@@ -260,6 +262,22 @@ fn rpc_openapi_router() -> OpenApiRouter<HttpState> {
         .routes(routes!(route::rpc::deregister))
         .routes(routes!(route::rpc::list_registrations))
         .routes(routes!(route::rpc::call))
+}
+
+fn avatars_router() -> OpenApiRouter<HttpState> {
+    OpenApiRouter::new()
+        .routes(routes!(avatars::create, avatars::list))
+        .nest("/{id}", avatar_entity_router())
+}
+
+fn avatar_entity_router() -> OpenApiRouter<HttpState> {
+    OpenApiRouter::new()
+        .routes(routes!(avatars::get, avatars::destroy))
+        .routes(routes!(avatars::get_state, avatars::put_state))
+        .routes(routes!(avatars::get_persona, avatars::put_persona))
+        .routes(routes!(avatars::get_name, avatars::put_name))
+        .routes(routes!(avatars::attach_vrm))
+        .routes(routes!(avatars::detach_vrm))
 }
 
 fn app_router() -> OpenApiRouter<HttpState> {
@@ -421,6 +439,7 @@ mod tests {
     use bevy::tasks::{block_on, poll_once};
     use homunculus_api::HomunculusApiPlugin;
     use homunculus_api::prelude::{ApiReactor, ShadowPanelApiPlugin, WebviewApiPlugin};
+    use homunculus_core::HomunculusCorePlugin;
     use homunculus_core::prelude::{ModInfo, ModMenuMetadata, ModMenuMetadataList, ModRegistry};
     use homunculus_core::rpc_registry::RpcRegistry;
     use homunculus_prefs::PrefsDatabase;
@@ -445,6 +464,7 @@ mod tests {
             WindowPlugin::default(),
             AssetPlugin::default(),
             ImagePlugin::default_linear(),
+            HomunculusCorePlugin,
             HomunculusApiPlugin
                 .build()
                 .disable::<ShadowPanelApiPlugin>()

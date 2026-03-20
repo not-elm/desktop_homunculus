@@ -1,3 +1,5 @@
+pub mod avatar;
+
 use axum::RequestPartsExt;
 use axum::extract::{FromRequestParts, Path};
 use axum::http::StatusCode;
@@ -5,6 +7,7 @@ use axum::http::request::Parts;
 use bevy::log::error;
 use bevy::prelude::{Deref, Entity};
 
+/// Extracts a Bevy [`Entity`] from a URL path parameter.
 #[derive(Deref)]
 pub struct EntityId(pub Entity);
 

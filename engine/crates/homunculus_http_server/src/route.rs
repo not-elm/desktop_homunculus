@@ -6,6 +6,7 @@ use utoipa::ToSchema;
 pub(crate) mod app;
 pub(crate) mod assets;
 pub(crate) mod audio;
+pub(crate) mod avatars;
 pub(crate) mod coordinates;
 pub(crate) mod displays;
 pub(crate) mod effects;
