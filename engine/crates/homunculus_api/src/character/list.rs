@@ -57,7 +57,7 @@ fn list_characters(
 ) -> ApiResult<Vec<CharacterInfo>> {
     let infos = characters
         .iter()
-        .map(|(entity, id, name, asset_id, state, has_vrm)| {
+        .map(|(entity, id, name, _asset_id, state, has_vrm)| {
             to_character_info(id, name, state, has_vrm, entity)
         })
         .collect();
@@ -78,7 +78,7 @@ fn get_character_info(
     let entity = registry
         .get(&id)
         .ok_or_else(|| ApiError::CharacterNotFound(id.to_string()))?;
-    let (id, name, asset_id, state, has_vrm) = characters
+    let (id, name, _asset_id, state, has_vrm) = characters
         .get(entity)
         .map_err(|_| ApiError::CharacterNotFound(id.to_string()))?;
     Ok(to_character_info(id, name, state, has_vrm, entity))

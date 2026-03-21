@@ -86,7 +86,7 @@ fn build_info_from_entity(
         &CharacterState,
     )>,
 ) -> ApiResult<CharacterInfo> {
-    let (id, name, asset_id, state) = characters
+    let (id, name, _asset_id, state) = characters
         .get(entity)
         .map_err(|_| ApiError::CharacterNotFound(entity.to_string()))?;
     Ok(CharacterInfo {

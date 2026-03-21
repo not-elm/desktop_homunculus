@@ -2,15 +2,12 @@ use crate::character::CharacterApi;
 use crate::error::{ApiError, ApiResult};
 use crate::vrm::initialized;
 use bevy::prelude::*;
-use bevy_flurx::action::delay;
 use bevy_flurx::prelude::*;
 use bevy_vrm1::prelude::{BodyTracking, Cameras, LookAt, RequestDetachVrm, VrmHandle};
 use bevy_vrm1::vrm::Vrm;
 use homunculus_core::prelude::{
     AssetId, AssetIdComponent, AssetResolver, CharacterId, CharacterRegistry,
 };
-use homunculus_prefs::characters::CharactersTable;
-use homunculus_prefs::prelude::PrefsDatabase;
 
 /// Arguments for attaching a VRM to a character.
 #[derive(Debug, Clone)]
