@@ -27,7 +27,7 @@ mod tests {
     #[tokio::test]
     async fn test_despawn_vrm() {
         let (mut app, router) = test_app();
-        let entity = spawn_character_with_vrm(&mut app, "test-char");
+        spawn_character_with_vrm(&mut app, "test-char");
 
         let request = axum::http::Request::delete("/characters/test-char/vrm/despawn")
             .body(axum::body::Body::empty())

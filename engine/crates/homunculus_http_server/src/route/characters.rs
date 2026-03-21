@@ -304,7 +304,7 @@ mod tests {
     #[tokio::test]
     async fn test_list_characters_with_entry() {
         let (mut app, router) = test_app();
-        spawn_character(&mut app, "elmer", "Elmer", "test:model.vrm");
+        let entity = spawn_character(&mut app, "elmer", "Elmer", "test:model.vrm");
 
         let request = Request::get("/characters").body(Body::empty()).unwrap();
         assert_response(
@@ -314,9 +314,9 @@ mod tests {
             vec![CharacterInfo {
                 id: "elmer".to_string(),
                 name: "Elmer".to_string(),
-                asset_id: "test:model.vrm".to_string(),
                 state: "idle".to_string(),
                 has_vrm: false,
+                entity: entity.to_bits(),
             }],
         )
         .await;
@@ -337,7 +337,6 @@ mod tests {
             super::CharacterDetail {
                 id: "elmer".to_string(),
                 name: "Elmer".to_string(),
-                asset_id: "test:model.vrm".to_string(),
                 state: "idle".to_string(),
                 has_vrm: false,
                 persona: Persona::default(),
@@ -478,7 +477,7 @@ mod tests {
             .get_non_send_resource::<PrefsDatabase>()
             .unwrap();
         CharactersTable::new(db)
-            .create(id, asset_id, name, "{}", "{}")
+            .create(id, name, "{}", "{}")
             .unwrap();
 
         spawn_character(app, id, name, asset_id)

@@ -49,8 +49,7 @@ pub async fn get(
     State(char_api): State<CharacterApi>,
     Path((id_str, chain_id)): Path<(String, Entity)>,
 ) -> HttpResult<serde_json::Value> {
-    let id = CharacterId::new(&id_str)
-        .map_err(|e| ApiError::InvalidCharacterId(e.to_string()))?;
+    let id = CharacterId::new(&id_str).map_err(|e| ApiError::InvalidCharacterId(e.to_string()))?;
     let entity = char_api.resolve_with_vrm(id).await?;
     let result = vrm_api.get_spring_bone(entity, chain_id).await?;
     Ok(Json(serde_json::to_value(result).unwrap()))
@@ -78,8 +77,7 @@ pub async fn put(
     Path((id_str, chain_id)): Path<(String, Entity)>,
     Json(body): Json<SpringBonePropsUpdate>,
 ) -> HttpResult {
-    let id = CharacterId::new(&id_str)
-        .map_err(|e| ApiError::InvalidCharacterId(e.to_string()))?;
+    let id = CharacterId::new(&id_str).map_err(|e| ApiError::InvalidCharacterId(e.to_string()))?;
     let entity = char_api.resolve_with_vrm(id).await?;
     vrm_api
         .set_spring_bone_props(entity, chain_id, body)
@@ -129,10 +127,9 @@ mod tests {
         let vrm = spawn_character_with_vrm(&mut app, "test-char");
         app.world_mut().entity_mut(vrm).insert(Initialized);
 
-        let request =
-            axum::http::Request::get("/characters/test-char/vrm/spring-bones")
-                .body(axum::body::Body::empty())
-                .unwrap();
+        let request = axum::http::Request::get("/characters/test-char/vrm/spring-bones")
+            .body(axum::body::Body::empty())
+            .unwrap();
         assert_response(
             &mut app,
             router,

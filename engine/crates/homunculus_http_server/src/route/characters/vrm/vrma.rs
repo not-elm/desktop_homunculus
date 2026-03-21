@@ -202,10 +202,9 @@ mod tests {
             .entity(vrm_entity)
             .add_child(vrma_entity);
 
-        let request =
-            axum::http::Request::get("/characters/test-char/vrm/vrma")
-                .body(axum::body::Body::empty())
-                .unwrap();
+        let request = axum::http::Request::get("/characters/test-char/vrm/vrma")
+            .body(axum::body::Body::empty())
+            .unwrap();
         let response = call(&mut app, router, request).await;
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let infos: Vec<VrmaInfo> = serde_json::from_slice(&body).unwrap();

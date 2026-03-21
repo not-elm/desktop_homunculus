@@ -2,8 +2,8 @@ use crate::extract::character::VrmGuard;
 use axum::extract::{Path, State};
 use bevy::prelude::Entity;
 use homunculus_api::character::CharacterApi;
-use homunculus_api::prelude::axum::{HttpResult, IntoHttpResult};
 use homunculus_api::prelude::ApiError;
+use homunculus_api::prelude::axum::{HttpResult, IntoHttpResult};
 use homunculus_api::vrm::VrmApi;
 use homunculus_core::prelude::CharacterId;
 
@@ -43,10 +43,12 @@ pub async fn target(
     State(char_api): State<CharacterApi>,
     Path((id_str, target)): Path<(String, Entity)>,
 ) -> HttpResult {
-    let id = CharacterId::new(&id_str)
-        .map_err(|e| ApiError::InvalidCharacterId(e.to_string()))?;
+    let id = CharacterId::new(&id_str).map_err(|e| ApiError::InvalidCharacterId(e.to_string()))?;
     let entity = char_api.resolve_with_vrm(id).await?;
-    vrm_api.look_at_target(entity, target).await.into_http_result()
+    vrm_api
+        .look_at_target(entity, target)
+        .await
+        .into_http_result()
 }
 
 /// Set look-at to follow the cursor.
@@ -77,10 +79,9 @@ mod tests {
         let entity = spawn_character_with_vrm(&mut app, "test-char");
         app.world_mut().entity_mut(entity).insert(LookAt::Cursor);
 
-        let request =
-            axum::http::Request::delete("/characters/test-char/vrm/look")
-                .body(axum::body::Body::empty())
-                .unwrap();
+        let request = axum::http::Request::delete("/characters/test-char/vrm/look")
+            .body(axum::body::Body::empty())
+            .unwrap();
         call(&mut app, router, request).await;
         assert!(
             !app.world().entity(entity).contains::<LookAt>(),
@@ -114,10 +115,9 @@ mod tests {
         let entity = spawn_character_with_vrm(&mut app, "test-char");
         app.world_mut().entity_mut(entity).insert(LookAt::Cursor);
 
-        let request =
-            axum::http::Request::put("/characters/test-char/vrm/look/cursor")
-                .body(axum::body::Body::empty())
-                .unwrap();
+        let request = axum::http::Request::put("/characters/test-char/vrm/look/cursor")
+            .body(axum::body::Body::empty())
+            .unwrap();
         call(&mut app, router, request).await;
         assert_eq!(
             app.world().entity(entity).get::<LookAt>().unwrap(),

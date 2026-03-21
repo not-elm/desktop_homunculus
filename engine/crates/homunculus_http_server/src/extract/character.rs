@@ -49,6 +49,7 @@ where
 /// Will be used when existing `/vrm/{entity}/...` sub-routes are migrated
 /// to `/characters/{id}/vrm/...`.
 pub struct VrmGuard {
+    #[allow(dead_code)]
     pub id: CharacterId,
     pub entity: Entity,
 }

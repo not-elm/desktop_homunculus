@@ -39,9 +39,14 @@ pub async fn timeline(
         )));
     }
 
-    api.speak_with_timeline(entity, wav, body.keyframes, body.options.unwrap_or_default())
-        .await
-        .into_http_result()
+    api.speak_with_timeline(
+        entity,
+        wav,
+        body.keyframes,
+        body.options.unwrap_or_default(),
+    )
+    .await
+    .into_http_result()
 }
 
 #[derive(Deserialize, ToSchema)]
