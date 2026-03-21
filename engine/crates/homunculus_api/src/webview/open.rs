@@ -6,8 +6,8 @@ use bevy_cef::prelude::{PreloadScripts, WebviewExtendStandardMaterial, WebviewSi
 use bevy_flurx::action::once;
 use bevy_vrm1::prelude::{Cameras, HeadBoneEntity};
 use homunculus_core::prelude::{
-    AssetResolver, AssetType, CharacterRegistry, LinkedCharacter, WebviewMeshSize, WebviewOffset,
-    WebviewOpenOptions, WebviewSource, WebviewSourceInfo,
+    AssetResolver, AssetType, CharacterId, CharacterRegistry, LinkedCharacter, WebviewMeshSize,
+    WebviewOffset, WebviewOpenOptions, WebviewSource, WebviewSourceInfo,
 };
 use homunculus_effects::{Entity, Update};
 
@@ -77,7 +77,9 @@ fn create_global_webview(
         .try_insert(OriginalWebviewSource(options.source.clone()));
     insert_preload_scripts(&mut commands, webview);
 
-    if let Some(character_id) = options.linked_character {
+    if let Some(raw_id) = options.linked_character {
+        let character_id =
+            CharacterId::new(&raw_id).map_err(|e| ApiError::InvalidCharacterId(e.to_string()))?;
         commands
             .entity(webview)
             .try_insert(LinkedCharacter(character_id));
@@ -181,12 +183,7 @@ fn track_for_linked_character(
     webviews
         .par_iter()
         .for_each(|(entity, linked_character, offset, tf)| {
-            let Some(character_id) =
-                homunculus_core::character::CharacterId::new(&linked_character.0).ok()
-            else {
-                return;
-            };
-            let Some(character_entity) = registry.get(&character_id) else {
+            let Some(character_entity) = registry.get(&linked_character.0) else {
                 return;
             };
             let Ok(head_bone) = head_bones.get(character_entity) else {

@@ -111,29 +111,39 @@ impl HomunculusMcpHandler {
             .unwrap_or_else(|| character_id_str.clone());
         let asset_id = AssetId::new(&args.asset);
 
-        let entity = match self
+        if let Err(e) = self
             .character_api
             .create(id.clone(), asset_id.clone(), name, true)
             .await
         {
-            Ok(e) => e,
-            Err(e) => return format!("Error creating character: {e}"),
-        };
+            return format!("Error creating character: {e}");
+        }
 
         if let Err(e) = self.character_api.attach_vrm(id.clone(), asset_id).await {
             return format!("Created character '{character_id_str}' but failed to attach VRM: {e}");
         }
 
         if let Some(persona) = build_persona(&args) {
-            let _ = self.character_api.set_persona(id, persona).await;
+            let _ = self.character_api.set_persona(id.clone(), persona).await;
         }
 
         if let (Some(x), Some(y)) = (args.x, args.y) {
             let target = MoveTarget::Viewport {
                 position: Vec2::new(x, y),
             };
-            if let Err(e) = self.entities_api.move_to(entity, target).await {
-                return format!("Spawned character '{character_id_str}' but failed to move: {e}");
+            match self.character_api.resolve(id).await {
+                Ok(entity) => {
+                    if let Err(e) = self.entities_api.move_to(entity, target).await {
+                        return format!(
+                            "Spawned character '{character_id_str}' but failed to move: {e}"
+                        );
+                    }
+                }
+                Err(e) => {
+                    return format!(
+                        "Spawned character '{character_id_str}' but failed to resolve entity: {e}"
+                    );
+                }
             }
         }
 
@@ -234,7 +244,7 @@ impl HomunculusMcpHandler {
         description = "Set the active character's personality profile. This affects how the character is perceived in AI conversations."
     )]
     async fn set_persona(&self, params: Parameters<SetPersonaParams>) -> String {
-        let (_id, entity) = match self.resolve_character_with_vrm().await {
+        let (id, _entity) = match self.resolve_character_with_vrm().await {
             Ok(v) => v,
             Err(e) => return format!("Error: {e}"),
         };
@@ -246,7 +256,7 @@ impl HomunculusMcpHandler {
             ..Default::default()
         };
 
-        match self.vrm_api.set_persona(entity, persona).await {
+        match self.character_api.set_persona(id, persona).await {
             Ok(()) => "Updated persona.".to_string(),
             Err(e) => format!("Error setting persona: {e}"),
         }

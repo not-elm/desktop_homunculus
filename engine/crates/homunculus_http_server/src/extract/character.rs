@@ -4,6 +4,7 @@ use axum::http::StatusCode;
 use axum::http::request::Parts;
 use bevy::prelude::Entity;
 use homunculus_api::character::CharacterApi;
+use homunculus_api::prelude::ApiError;
 use homunculus_core::prelude::CharacterId;
 
 /// Extracts and resolves a character ID from the URL path.
@@ -68,7 +69,10 @@ where
         let id = CharacterId::new(&id_str).map_err(bad_character_id)?;
 
         let api = CharacterApi::from_ref(state);
-        let entity = api.resolve_with_vrm(id.clone()).await.map_err(not_found)?;
+        let entity = api
+            .resolve_with_vrm(id.clone())
+            .await
+            .map_err(map_vrm_error)?;
 
         Ok(Self { id, entity })
     }
@@ -93,4 +97,14 @@ fn not_found<E: std::fmt::Display>(e: E) -> (StatusCode, Json<serde_json::Value>
         StatusCode::NOT_FOUND,
         Json(serde_json::json!({"error": e.to_string()})),
     )
+}
+
+#[allow(dead_code)]
+fn map_vrm_error(e: ApiError) -> (StatusCode, Json<serde_json::Value>) {
+    let status = match &e {
+        ApiError::CharacterNotFound(_) => StatusCode::NOT_FOUND,
+        ApiError::VrmNotAttached(_) => StatusCode::UNPROCESSABLE_ENTITY,
+        _ => StatusCode::INTERNAL_SERVER_ERROR,
+    };
+    (status, Json(serde_json::json!({"error": e.to_string()})))
 }

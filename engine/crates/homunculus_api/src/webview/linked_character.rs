@@ -2,7 +2,7 @@ use crate::error::{ApiError, ApiResult};
 use crate::prelude::WebviewApi;
 use bevy::prelude::*;
 use bevy_flurx::action::once;
-use homunculus_core::prelude::{CharacterRegistry, LinkedCharacter};
+use homunculus_core::prelude::{CharacterId, CharacterRegistry, LinkedCharacter};
 
 impl WebviewApi {
     /// Gets the linked character ID for a webview.
@@ -81,24 +81,25 @@ fn get_linked_character(
     webviews: Query<Option<&LinkedCharacter>, With<bevy_cef::prelude::WebviewSource>>,
 ) -> ApiResult<Option<String>> {
     match webviews.get(webview) {
-        Ok(linked) => Ok(linked.map(|l| l.0.clone())),
+        Ok(linked) => Ok(linked.map(|l| l.0.to_string())),
         Err(_) => Err(ApiError::WebviewNotFound(webview)),
     }
 }
 
 fn set_linked_character(
-    In((webview, character_id)): In<(Entity, String)>,
+    In((webview, raw_id)): In<(Entity, String)>,
     mut commands: Commands,
     webviews: Query<Entity, With<bevy_cef::prelude::WebviewSource>>,
 ) -> ApiResult<()> {
-    if webviews.contains(webview) {
-        commands
-            .entity(webview)
-            .try_insert(LinkedCharacter(character_id));
-        Ok(())
-    } else {
-        Err(ApiError::WebviewNotFound(webview))
+    if !webviews.contains(webview) {
+        return Err(ApiError::WebviewNotFound(webview));
     }
+    let character_id =
+        CharacterId::new(&raw_id).map_err(|e| ApiError::InvalidCharacterId(e.to_string()))?;
+    commands
+        .entity(webview)
+        .try_insert(LinkedCharacter(character_id));
+    Ok(())
 }
 
 fn unlink_character(
@@ -125,10 +126,11 @@ fn set_linked_character_by_entity(
     }
     let character_id = registry
         .get_id(vrm_entity)
-        .ok_or_else(|| ApiError::EntityNotFound)?;
+        .ok_or_else(|| ApiError::EntityNotFound)?
+        .clone();
     commands
         .entity(webview)
-        .try_insert(LinkedCharacter(character_id.to_string()));
+        .try_insert(LinkedCharacter(character_id));
     Ok(())
 }
 
@@ -138,11 +140,7 @@ fn get_linked_character_entity(
     registry: Res<CharacterRegistry>,
 ) -> ApiResult<Option<Entity>> {
     match webviews.get(webview) {
-        Ok(Some(linked)) => {
-            let id = homunculus_core::character::CharacterId::new(&linked.0)
-                .map_err(|e| ApiError::InvalidCharacterId(e.to_string()))?;
-            Ok(registry.get(&id))
-        }
+        Ok(Some(linked)) => Ok(registry.get(&linked.0)),
         Ok(None) => Ok(None),
         Err(_) => Err(ApiError::WebviewNotFound(webview)),
     }

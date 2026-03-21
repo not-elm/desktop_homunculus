@@ -60,6 +60,8 @@ pub enum ApiError {
     VrmNotAttached(String),
     #[error("Invalid character ID: {0}")]
     InvalidCharacterId(String),
+    #[error("VRM initialization timed out for entity: {0:?}")]
+    VrmInitTimeout(Entity),
 }
 
 pub trait ApiResultExt {

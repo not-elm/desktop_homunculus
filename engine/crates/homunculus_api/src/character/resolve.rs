@@ -38,12 +38,53 @@ impl CharacterApi {
             })
             .await?
     }
+
+    /// Looks up the character ID for the given entity in a single ECS round-trip.
+    ///
+    /// Returns `None` if the entity is not registered in the [`CharacterRegistry`].
+    pub async fn id_for_entity(&self, entity: Entity) -> Option<CharacterId> {
+        self.0
+            .schedule(move |task| async move {
+                task.will(Update, once::run(find_id_for_entity).with(entity))
+                    .await
+            })
+            .await
+            .ok()
+            .flatten()
+    }
+
+    /// Returns the first registered character as `(CharacterId, Entity)` in a single ECS round-trip.
+    ///
+    /// Returns `None` if no characters are currently registered.
+    pub async fn first_character(&self) -> Option<(CharacterId, Entity)> {
+        self.0
+            .schedule(move |task| async move {
+                task.will(Update, once::run(query_first_character)).await
+            })
+            .await
+            .ok()
+            .flatten()
+    }
 }
 
 fn resolve_entity(In(id): In<CharacterId>, registry: Res<CharacterRegistry>) -> ApiResult<Entity> {
     registry
         .get(&id)
         .ok_or_else(|| ApiError::CharacterNotFound(id.to_string()))
+}
+
+fn find_id_for_entity(
+    In(entity): In<Entity>,
+    registry: Res<CharacterRegistry>,
+) -> Option<CharacterId> {
+    registry.get_id(entity).cloned()
+}
+
+fn query_first_character(registry: Res<CharacterRegistry>) -> Option<(CharacterId, Entity)> {
+    registry
+        .iter()
+        .next()
+        .map(|(id, &entity)| (id.clone(), entity))
 }
 
 fn resolve_entity_with_vrm(

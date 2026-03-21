@@ -114,17 +114,12 @@ impl HomunculusMcpHandler {
             return Ok((id, entity));
         }
 
-        let characters = self.character_api.list().await.map_err(|e| e.to_string())?;
-        let first = characters
-            .first()
-            .ok_or_else(|| "No characters loaded. Use create_character first.".to_string())?;
-        let id = CharacterId::new(&first.id).map_err(|e| e.to_string())?;
-        let entity = self
+        let (id, entity) = self
             .character_api
-            .resolve(id.clone())
+            .first_character()
             .await
-            .map_err(|e| e.to_string())?;
-        self.set_active_character(Some(first.id.clone()));
+            .ok_or_else(|| "No characters loaded. Use create_character first.".to_string())?;
+        self.set_active_character(Some(id.to_string()));
         Ok((id, entity))
     }
 
@@ -168,18 +163,12 @@ impl HomunculusMcpHandler {
             .ok_or_else(|| format!("No character found with name '{name}'"))
     }
 
-    /// Finds the character ID string for an entity by searching the character list.
+    /// Finds the character ID string for an entity using a single ECS round-trip.
     pub(crate) async fn find_character_id_for_entity(&self, target: Entity) -> Option<String> {
-        let characters = self.character_api.list().await.ok()?;
-        for info in &characters {
-            if let Ok(id) = CharacterId::new(&info.id)
-                && let Ok(entity) = self.character_api.resolve(id).await
-                && entity == target
-            {
-                return Some(info.id.clone());
-            }
-        }
-        None
+        self.character_api
+            .id_for_entity(target)
+            .await
+            .map(|id| id.to_string())
     }
 }
 

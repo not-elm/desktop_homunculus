@@ -1,4 +1,4 @@
-use crate::character::{CharacterName, CharacterState};
+use crate::character::{CharacterId, CharacterName, CharacterState};
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -35,13 +35,14 @@ pub struct GlobalViewport(pub Vec2);
 #[reflect(Component, Serialize, Deserialize)]
 pub struct PrimaryCamera;
 
-/// Links a webview to a character by its string identifier.
+/// Links a webview to a validated character ID.
 ///
-/// The tracking system resolves the character ID to an ECS entity via
+/// The tracking system looks up the character entity via
 /// [`CharacterRegistry`](crate::character_registry::CharacterRegistry) each frame.
+/// Storing a pre-validated [`CharacterId`] avoids per-frame string validation.
 #[derive(Component, Reflect, Serialize, Deserialize, Debug, Clone)]
 #[reflect(Component, Serialize, Deserialize)]
-pub struct LinkedCharacter(pub String);
+pub struct LinkedCharacter(pub CharacterId);
 
 #[deprecated(note = "Use LinkedCharacter instead")]
 pub type LinkedVrm = LinkedCharacter;

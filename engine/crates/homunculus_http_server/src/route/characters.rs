@@ -98,8 +98,9 @@ pub async fn create(
     let name = body.name.unwrap_or_else(|| body.id.clone());
     let ensure = query.ensure.unwrap_or(false);
 
-    api.create(id.clone(), asset_id, name, ensure).await?;
-    api.get_info(id).await.into_http_result()
+    api.create(id, asset_id, name, ensure)
+        .await
+        .into_http_result()
 }
 
 /// List all characters.

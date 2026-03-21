@@ -2,6 +2,7 @@ use crate::character::CharacterApi;
 use crate::error::{ApiError, ApiResult};
 use crate::vrm::initialized;
 use bevy::prelude::*;
+use bevy_flurx::action::delay;
 use bevy_flurx::prelude::*;
 use bevy_vrm1::prelude::{BodyTracking, Cameras, LookAt, RequestDetachVrm, VrmHandle};
 use bevy_vrm1::vrm::Vrm;
@@ -31,8 +32,18 @@ impl CharacterApi {
                 let entity = task
                     .will(Update, once::run(begin_attach).with(args))
                     .await?;
-                task.will(Update, wait::until(initialized).with(entity))
+                let result = task
+                    .will(
+                        Update,
+                        wait::either(
+                            wait::until(initialized).with(entity),
+                            delay::frames().with(600),
+                        ),
+                    )
                     .await;
+                if result.is_right() {
+                    return Err(ApiError::VrmInitTimeout(entity));
+                }
                 Ok(entity)
             })
             .await?

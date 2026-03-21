@@ -57,9 +57,6 @@ fn resolve_linked(
         return (None, None);
     };
     let character_id = linked.0.clone();
-    let entity_bits = homunculus_core::character::CharacterId::new(&character_id)
-        .ok()
-        .and_then(|id| registry.get(&id))
-        .map(|e| e.to_bits());
-    (Some(character_id), entity_bits)
+    let entity_bits = registry.get(&character_id).map(|e| e.to_bits());
+    (Some(character_id.to_string()), entity_bits)
 }
