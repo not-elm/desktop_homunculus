@@ -15,17 +15,20 @@ pub(super) fn resource_definitions() -> Vec<Resource> {
             .with_description("Application info including version, platform, features, and mods")
             .with_mime_type("application/json")
             .no_annotation(),
-        RawResource::new("homunculus://avatars", "homunculus-avatars")
+        RawResource::new("homunculus://characters", "homunculus-characters")
             .with_description(
-                "List of all registered avatars with IDs, names, asset IDs, states, \
+                "List of all registered characters with IDs, names, asset IDs, states, \
                  and VRM attachment status",
             )
             .with_mime_type("application/json")
             .no_annotation(),
-        RawResource::new("homunculus://characters", "homunculus-characters")
-            .with_description("Detailed snapshot of all loaded VRM characters (legacy)")
-            .with_mime_type("application/json")
-            .no_annotation(),
+        RawResource::new(
+            "homunculus://character-snapshots",
+            "homunculus-character-snapshots",
+        )
+        .with_description("Detailed snapshot of all loaded VRM characters (legacy)")
+        .with_mime_type("application/json")
+        .no_annotation(),
         RawResource::new("homunculus://mods", "homunculus-mods")
             .with_description("List of installed mods")
             .with_mime_type("application/json")
@@ -62,11 +65,11 @@ pub(super) async fn read_resource(
             });
             to_json_string(&info)?
         }
-        "homunculus://avatars" => {
-            let avatars = handler.avatar_api.list().await.map_err(api_err)?;
-            to_json_string(&avatars)?
-        }
         "homunculus://characters" => {
+            let characters = handler.character_api.list().await.map_err(api_err)?;
+            to_json_string(&characters)?
+        }
+        "homunculus://character-snapshots" => {
             let snapshots = handler.vrm_api.snapshot().await.map_err(api_err)?;
             to_json_string(&snapshots)?
         }

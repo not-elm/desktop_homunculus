@@ -69,8 +69,8 @@ pub mod prelude {
 }
 
 use crate::route::{
-    assets, audio, avatars, coordinates, displays, info, preferences, settings, shadow_panel, stt,
-    vrm, webviews,
+    assets, audio, characters, coordinates, displays, info, preferences, settings, shadow_panel,
+    stt, vrm, webviews,
 };
 use crate::state::HttpState;
 use axum::Router;
@@ -112,7 +112,7 @@ use utoipa_axum::{router::OpenApiRouter, routes};
         (name = "assets", description = "Asset management"),
         (name = "rpc", description = "MOD service RPC registration and proxy"),
         (name = "stt", description = "Speech-to-text"),
-        (name = "avatars", description = "Avatar lifecycle and configuration"),
+        (name = "characters", description = "Character lifecycle and configuration"),
     ),
     servers(
         (url = "http://localhost:3100", description = "Local development"),
@@ -212,7 +212,7 @@ async fn start_http_server(
 fn build_openapi_router() -> OpenApiRouter<HttpState> {
     OpenApiRouter::with_openapi(ApiDoc::openapi())
         .nest("/app", app_router())
-        .nest("/avatars", avatars_router())
+        .nest("/characters", characters_router())
         .nest("/settings", settings_router())
         .nest("/shadow-panel", shadow_panel_router())
         .nest("/entities", entities_router())
@@ -264,28 +264,28 @@ fn rpc_openapi_router() -> OpenApiRouter<HttpState> {
         .routes(routes!(route::rpc::call))
 }
 
-fn avatars_router() -> OpenApiRouter<HttpState> {
+fn characters_router() -> OpenApiRouter<HttpState> {
     OpenApiRouter::new()
-        .routes(routes!(avatars::create, avatars::list))
-        .nest("/{id}", avatar_entity_router())
+        .routes(routes!(characters::create, characters::list))
+        .nest("/{id}", character_entity_router())
 }
 
-fn avatar_entity_router() -> OpenApiRouter<HttpState> {
+fn character_entity_router() -> OpenApiRouter<HttpState> {
     OpenApiRouter::new()
-        .routes(routes!(avatars::get, avatars::destroy))
-        .routes(routes!(avatars::get_state, avatars::put_state))
-        .routes(routes!(avatars::get_persona, avatars::put_persona))
-        .routes(routes!(avatars::get_name, avatars::put_name))
-        .routes(routes!(avatars::attach_vrm))
-        .routes(routes!(avatars::detach_vrm))
+        .routes(routes!(characters::get, characters::destroy))
+        .routes(routes!(characters::get_state, characters::put_state))
+        .routes(routes!(characters::get_persona, characters::put_persona))
+        .routes(routes!(characters::get_name, characters::put_name))
+        .routes(routes!(characters::attach_vrm))
+        .routes(routes!(characters::detach_vrm))
         .nest("/extensions/{mod_name}", extension_router())
 }
 
 fn extension_router() -> OpenApiRouter<HttpState> {
     OpenApiRouter::new().routes(routes!(
-        avatars::extensions::get_extension,
-        avatars::extensions::set_extension,
-        avatars::extensions::delete_extension
+        characters::extensions::get_extension,
+        characters::extensions::set_extension,
+        characters::extensions::delete_extension
     ))
 }
 
@@ -415,9 +415,9 @@ fn webviews_router() -> OpenApiRouter<HttpState> {
         .routes(routes!(webviews::navigate_forward))
         .routes(routes!(webviews::reload))
         .routes(routes!(
-            webviews::get_linked_avatar,
-            webviews::set_linked_avatar,
-            webviews::unlink_avatar
+            webviews::get_linked_character,
+            webviews::set_linked_character,
+            webviews::unlink_character
         ))
         .routes(routes!(
             webviews::get_linked_vrm,

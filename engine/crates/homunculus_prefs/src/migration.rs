@@ -1,7 +1,7 @@
-//! Schema migration for the avatar tables.
+//! Schema migration for the character tables.
 //!
 //! Converts legacy preference keys (`persona::`, `transform::`, `name::`)
-//! into structured rows in the `avatars` table.  The migration is
+//! into structured rows in the `characters` table.  The migration is
 //! idempotent — it only runs when `schema_version` is absent or below the
 //! target version.
 
@@ -55,7 +55,7 @@ fn set_version(db: &PrefsDatabase, version: i64) -> Result<(), rusqlite::Error> 
     Ok(())
 }
 
-/// V0 → V1: populate `avatars` from legacy preference keys.
+/// V0 → V1: populate `characters` from legacy preference keys.
 fn migrate_v0_to_v1(db: &PrefsDatabase) -> Result<(), rusqlite::Error> {
     phase_a_personas(db)?;
     phase_b_transforms(db)?;
@@ -64,17 +64,17 @@ fn migrate_v0_to_v1(db: &PrefsDatabase) -> Result<(), rusqlite::Error> {
     Ok(())
 }
 
-/// Phase A — Create avatar rows from `persona::{asset_id}` keys.
+/// Phase A — Create character rows from `persona::{asset_id}` keys.
 fn phase_a_personas(db: &PrefsDatabase) -> Result<(), rusqlite::Error> {
     let entries = list_entries_with_prefix(db, "persona::")?;
     for (key, value) in entries {
         let asset_id = &key["persona::".len()..];
-        let Some(avatar_id) = strip_vrm_prefix(asset_id) else {
+        let Some(character_id) = strip_vrm_prefix(asset_id) else {
             continue;
         };
         db.0.execute(
-            "INSERT OR IGNORE INTO avatars (id, asset_id, persona) VALUES (?1, ?2, ?3)",
-            rusqlite::params![avatar_id, asset_id, value],
+            "INSERT OR IGNORE INTO characters (id, asset_id, persona) VALUES (?1, ?2, ?3)",
+            rusqlite::params![character_id, asset_id, value],
         )?;
     }
     Ok(())
@@ -85,12 +85,12 @@ fn phase_b_transforms(db: &PrefsDatabase) -> Result<(), rusqlite::Error> {
     let entries = list_entries_with_prefix(db, "transform::")?;
     for (key, value) in entries {
         let asset_id = &key["transform::".len()..];
-        let Some(avatar_id) = strip_vrm_prefix(asset_id) else {
+        let Some(character_id) = strip_vrm_prefix(asset_id) else {
             continue;
         };
         db.0.execute(
-            "UPDATE avatars SET transform = ?1 WHERE id = ?2",
-            rusqlite::params![value, avatar_id],
+            "UPDATE characters SET transform = ?1 WHERE id = ?2",
+            rusqlite::params![value, character_id],
         )?;
     }
     Ok(())
@@ -98,15 +98,15 @@ fn phase_b_transforms(db: &PrefsDatabase) -> Result<(), rusqlite::Error> {
 
 /// Phase C — Update names from `name::{asset_id}::{lang}` keys.
 ///
-/// For each avatar, prefers the `en` name; falls back to the first
+/// For each character, prefers the `en` name; falls back to the first
 /// alphabetically sorted key.
 fn phase_c_names(db: &PrefsDatabase) -> Result<(), rusqlite::Error> {
     let entries = list_entries_with_prefix(db, "name::")?;
     let grouped = group_name_entries(&entries);
-    for (avatar_id, best_name) in grouped {
+    for (character_id, best_name) in grouped {
         db.0.execute(
-            "UPDATE avatars SET name = ?1 WHERE id = ?2",
-            rusqlite::params![best_name, avatar_id],
+            "UPDATE characters SET name = ?1 WHERE id = ?2",
+            rusqlite::params![best_name, character_id],
         )?;
     }
     Ok(())
@@ -114,14 +114,14 @@ fn phase_c_names(db: &PrefsDatabase) -> Result<(), rusqlite::Error> {
 
 /// Phase D — Migrate mod extension keys.
 ///
-/// Currently a no-op placeholder.  When mods start persisting per-avatar
+/// Currently a no-op placeholder.  When mods start persisting per-character
 /// extension data under a well-known key prefix, this phase will move those
-/// values into the `avatar_extensions` table.
+/// values into the `character_extensions` table.
 fn phase_d_extensions(_db: &PrefsDatabase) -> Result<(), rusqlite::Error> {
     Ok(())
 }
 
-/// Strips the `"vrm:"` prefix from an asset ID, returning the avatar ID.
+/// Strips the `"vrm:"` prefix from an asset ID, returning the character ID.
 fn strip_vrm_prefix(asset_id: &str) -> Option<&str> {
     asset_id.strip_prefix("vrm:")
 }
@@ -144,7 +144,7 @@ fn list_entries_with_prefix(
     Ok(rows)
 }
 
-/// Groups `name::{asset_id}::{lang}` entries by avatar ID, picking the best name.
+/// Groups `name::{asset_id}::{lang}` entries by character ID, picking the best name.
 ///
 /// Prefers the `en` variant; otherwise falls back to the first key alphabetically
 /// (which is already guaranteed because entries arrive sorted by key ASC).
@@ -159,18 +159,18 @@ fn group_name_entries(entries: &[(String, String)]) -> Vec<(&str, &str)> {
         };
         let asset_id = &rest[..sep_pos];
         let lang = &rest[sep_pos + 2..];
-        let Some(avatar_id) = strip_vrm_prefix(asset_id) else {
+        let Some(character_id) = strip_vrm_prefix(asset_id) else {
             continue;
         };
 
-        if let Some(entry) = result.iter_mut().find(|(id, _)| *id == avatar_id) {
+        if let Some(entry) = result.iter_mut().find(|(id, _)| *id == character_id) {
             // Replace only if this is the `en` variant
             if lang == "en" {
                 entry.1 = value.as_str();
             }
         } else {
-            // First entry for this avatar — use it as the default
-            result.push((avatar_id, value.as_str()));
+            // First entry for this character — use it as the default
+            result.push((character_id, value.as_str()));
         }
     }
     result
@@ -214,7 +214,7 @@ mod tests {
     }
 
     #[test]
-    fn phase_a_creates_avatars_from_persona_keys() {
+    fn phase_a_creates_characters_from_persona_keys() {
         let db = test_db();
         let persona = r#"{"profile":"cheerful"}"#;
         db.save(
@@ -226,7 +226,7 @@ mod tests {
 
         phase_a_personas(&db).unwrap();
 
-        let repo = crate::avatar_repo::AvatarRepo(&db);
+        let repo = crate::character_repo::CharacterRepo(&db);
         let row = repo.find_by_id("elmer").unwrap().unwrap();
         assert_eq!(row.asset_id, "vrm:elmer");
         assert_eq!(row.persona, persona);
@@ -244,14 +244,14 @@ mod tests {
 
         phase_a_personas(&db).unwrap();
 
-        let repo = crate::avatar_repo::AvatarRepo(&db);
+        let repo = crate::character_repo::CharacterRepo(&db);
         assert!(repo.list_all().unwrap().is_empty());
     }
 
     #[test]
     fn phase_b_updates_transforms() {
         let db = test_db();
-        // Phase A first to create the avatar
+        // Phase A first to create the character
         db.save(
             "persona::vrm:elmer",
             rusqlite::types::Value::Text("{}".to_string()),
@@ -269,7 +269,7 @@ mod tests {
         .unwrap();
         phase_b_transforms(&db).unwrap();
 
-        let repo = crate::avatar_repo::AvatarRepo(&db);
+        let repo = crate::character_repo::CharacterRepo(&db);
         let row = repo.find_by_id("elmer").unwrap().unwrap();
         assert_eq!(row.transform, transform);
     }
@@ -299,7 +299,7 @@ mod tests {
         .unwrap();
         phase_c_names(&db).unwrap();
 
-        let repo = crate::avatar_repo::AvatarRepo(&db);
+        let repo = crate::character_repo::CharacterRepo(&db);
         let row = repo.find_by_id("elmer").unwrap().unwrap();
         assert_eq!(row.name, "Elmer");
     }
@@ -329,7 +329,7 @@ mod tests {
         .unwrap();
         phase_c_names(&db).unwrap();
 
-        let repo = crate::avatar_repo::AvatarRepo(&db);
+        let repo = crate::character_repo::CharacterRepo(&db);
         let row = repo.find_by_id("elmer").unwrap().unwrap();
         // `ja` < `zh` alphabetically, so `ja` is first
         assert_eq!(row.name, "エルマー");
@@ -367,7 +367,7 @@ mod tests {
 
         run_if_needed(&db).unwrap();
 
-        let repo = crate::avatar_repo::AvatarRepo(&db);
+        let repo = crate::character_repo::CharacterRepo(&db);
         let all = repo.list_all().unwrap();
         assert_eq!(all.len(), 2);
 
@@ -397,7 +397,7 @@ mod tests {
         run_if_needed(&db).unwrap();
         run_if_needed(&db).unwrap(); // second run should be a no-op
 
-        let repo = crate::avatar_repo::AvatarRepo(&db);
+        let repo = crate::character_repo::CharacterRepo(&db);
         assert_eq!(repo.list_all().unwrap().len(), 1);
         assert_eq!(current_version(&db).unwrap(), 1);
     }
@@ -435,7 +435,7 @@ mod tests {
     }
 
     #[test]
-    fn group_name_entries_multiple_avatars() {
+    fn group_name_entries_multiple_characters() {
         let entries = vec![
             ("name::vrm:a::en".to_string(), "Alice".to_string()),
             ("name::vrm:b::ja".to_string(), "ボブ".to_string()),

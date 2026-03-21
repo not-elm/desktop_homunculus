@@ -12,7 +12,7 @@ mod vrm;
 pub mod prelude {
     #[allow(deprecated)]
     pub use crate::events::{
-        AvatarStateChangeEvent, PersonaChangeEvent, VrmEvent, VrmEventReceiver, VrmEventSender,
+        CharacterStateChangeEvent, PersonaChangeEvent, VrmEvent, VrmEventReceiver, VrmEventSender,
         VrmMetadata, VrmStateChangeEvent, vrm::*,
     };
 }
@@ -31,12 +31,12 @@ pub struct VrmEvent<E> {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub struct AvatarStateChangeEvent {
+pub struct CharacterStateChangeEvent {
     pub state: String,
 }
 
-#[deprecated(note = "Use AvatarStateChangeEvent instead")]
-pub type VrmStateChangeEvent = AvatarStateChangeEvent;
+#[deprecated(note = "Use CharacterStateChangeEvent instead")]
+pub type VrmStateChangeEvent = CharacterStateChangeEvent;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct PersonaChangeEvent {
@@ -63,7 +63,7 @@ impl Plugin for HomunculusEventsPlugin {
         setup_channel::<OnPointerOverEvent>(app);
         setup_channel::<OnPointerOutEvent>(app);
         setup_channel::<OnPointerCancelEvent>(app);
-        setup_channel::<AvatarStateChangeEvent>(app);
+        setup_channel::<CharacterStateChangeEvent>(app);
         setup_channel::<VrmMetadata>(app);
         setup_channel::<ExpressionChangeEvent>(app);
         setup_channel::<VrmaPlayEvent>(app);
@@ -121,17 +121,17 @@ fn pointer<E1, E2>(
 }
 
 fn state_change(
-    tx: Res<VrmEventSender<AvatarStateChangeEvent>>,
-    vrms: Query<(Entity, &AvatarState), Changed<AvatarState>>,
+    tx: Res<VrmEventSender<CharacterStateChangeEvent>>,
+    vrms: Query<(Entity, &CharacterState), Changed<CharacterState>>,
 ) {
     for (vrm, state) in vrms.iter() {
         tx.try_broadcast(VrmEvent {
             vrm,
-            payload: AvatarStateChangeEvent {
+            payload: CharacterStateChangeEvent {
                 state: state.to_string(),
             },
         })
-        .output_log_if_error("Failed to broadcast AvatarStateChangeEvent");
+        .output_log_if_error("Failed to broadcast CharacterStateChangeEvent");
     }
 }
 

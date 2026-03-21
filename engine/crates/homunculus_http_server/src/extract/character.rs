@@ -3,25 +3,25 @@ use axum::extract::{FromRef, FromRequestParts, Path};
 use axum::http::StatusCode;
 use axum::http::request::Parts;
 use bevy::prelude::Entity;
-use homunculus_api::avatar::AvatarApi;
-use homunculus_core::prelude::AvatarId;
+use homunculus_api::character::CharacterApi;
+use homunculus_core::prelude::CharacterId;
 
-/// Extracts and resolves an avatar ID from the URL path.
+/// Extracts and resolves a character ID from the URL path.
 ///
-/// Validates the raw path parameter via [`AvatarId::new()`], then resolves
-/// the ID to an ECS [`Entity`] through [`AvatarApi::resolve()`].
+/// Validates the raw path parameter via [`CharacterId::new()`], then resolves
+/// the ID to an ECS [`Entity`] through [`CharacterApi::resolve()`].
 ///
 /// The `entity` field is available for handlers that need direct ECS access
 /// (e.g. VRM sub-routes in a later migration phase).
-pub struct AvatarIdExtractor {
-    pub id: AvatarId,
+pub struct CharacterIdExtractor {
+    pub id: CharacterId,
     #[allow(dead_code)]
     pub entity: Entity,
 }
 
-impl<S> FromRequestParts<S> for AvatarIdExtractor
+impl<S> FromRequestParts<S> for CharacterIdExtractor
 where
-    AvatarApi: FromRef<S>,
+    CharacterApi: FromRef<S>,
     S: Send + Sync,
 {
     type Rejection = (StatusCode, Json<serde_json::Value>);
@@ -31,31 +31,31 @@ where
             .await
             .map_err(bad_path)?;
 
-        let id = AvatarId::new(&id_str).map_err(bad_avatar_id)?;
+        let id = CharacterId::new(&id_str).map_err(bad_character_id)?;
 
-        let api = AvatarApi::from_ref(state);
+        let api = CharacterApi::from_ref(state);
         let entity = api.resolve(id.clone()).await.map_err(not_found)?;
 
         Ok(Self { id, entity })
     }
 }
 
-/// Extracts an avatar ID and verifies a VRM is attached.
+/// Extracts a character ID and verifies a VRM is attached.
 ///
-/// Uses [`AvatarApi::resolve_with_vrm()`] which returns an error when
-/// the avatar exists but has no VRM model loaded.
+/// Uses [`CharacterApi::resolve_with_vrm()`] which returns an error when
+/// the character exists but has no VRM model loaded.
 ///
 /// Will be used when existing `/vrm/{entity}/...` sub-routes are migrated
-/// to `/avatars/{id}/vrm/...`.
+/// to `/characters/{id}/vrm/...`.
 #[allow(dead_code)]
 pub struct VrmGuard {
-    pub id: AvatarId,
+    pub id: CharacterId,
     pub entity: Entity,
 }
 
 impl<S> FromRequestParts<S> for VrmGuard
 where
-    AvatarApi: FromRef<S>,
+    CharacterApi: FromRef<S>,
     S: Send + Sync,
 {
     type Rejection = (StatusCode, Json<serde_json::Value>);
@@ -65,9 +65,9 @@ where
             .await
             .map_err(bad_path)?;
 
-        let id = AvatarId::new(&id_str).map_err(bad_avatar_id)?;
+        let id = CharacterId::new(&id_str).map_err(bad_character_id)?;
 
-        let api = AvatarApi::from_ref(state);
+        let api = CharacterApi::from_ref(state);
         let entity = api.resolve_with_vrm(id.clone()).await.map_err(not_found)?;
 
         Ok(Self { id, entity })
@@ -81,7 +81,7 @@ fn bad_path<E: std::fmt::Display>(e: E) -> (StatusCode, Json<serde_json::Value>)
     )
 }
 
-fn bad_avatar_id<E: std::fmt::Display>(e: E) -> (StatusCode, Json<serde_json::Value>) {
+fn bad_character_id<E: std::fmt::Display>(e: E) -> (StatusCode, Json<serde_json::Value>) {
     (
         StatusCode::BAD_REQUEST,
         Json(serde_json::json!({"error": e.to_string()})),

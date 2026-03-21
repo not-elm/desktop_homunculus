@@ -52,14 +52,14 @@ pub enum ApiError {
         expected: AssetType,
         actual: AssetType,
     },
-    #[error("Avatar not found: {0}")]
-    AvatarNotFound(String),
-    #[error("Avatar already exists: {0}")]
-    AvatarAlreadyExists(String),
-    #[error("VRM not attached to avatar: {0}")]
+    #[error("Character not found: {0}")]
+    CharacterNotFound(String),
+    #[error("Character already exists: {0}")]
+    CharacterAlreadyExists(String),
+    #[error("VRM not attached to character: {0}")]
     VrmNotAttached(String),
-    #[error("Invalid avatar ID: {0}")]
-    InvalidAvatarId(String),
+    #[error("Invalid character ID: {0}")]
+    InvalidCharacterId(String),
 }
 
 pub trait ApiResultExt {
@@ -103,13 +103,13 @@ pub mod axum {
                 | ApiError::ModNotFound(_)
                 | ApiError::AssetNotFound(_)
                 | ApiError::NotFoundPreferences(_)
-                | ApiError::AvatarNotFound(_) => axum::http::StatusCode::NOT_FOUND,
+                | ApiError::CharacterNotFound(_) => axum::http::StatusCode::NOT_FOUND,
                 ApiError::InvalidInput(_)
                 | ApiError::AssetTypeMismatch { .. }
-                | ApiError::InvalidAvatarId(_) => axum::http::StatusCode::BAD_REQUEST,
+                | ApiError::InvalidCharacterId(_) => axum::http::StatusCode::BAD_REQUEST,
                 ApiError::BgmNotPlaying
                 | ApiError::BgmNotPaused
-                | ApiError::AvatarAlreadyExists(_) => axum::http::StatusCode::CONFLICT,
+                | ApiError::CharacterAlreadyExists(_) => axum::http::StatusCode::CONFLICT,
                 ApiError::VrmNotAttached(_) => axum::http::StatusCode::UNPROCESSABLE_ENTITY,
                 ApiError::MissingShadowPanel | ApiError::MissingName(_) => {
                     axum::http::StatusCode::BAD_REQUEST

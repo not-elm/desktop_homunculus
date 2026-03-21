@@ -55,7 +55,7 @@ use bevy::prelude::*;
 use bevy_vrm1::prelude::Initialized;
 use bevy_vrm1::vrm::Vrm;
 use homunculus_core::prelude::{
-    AppWindows, AvatarState, BoneOffsets, Coordinate, MascotTracker, VrmMeshRayCast,
+    AppWindows, BoneOffsets, CharacterState, Coordinate, MascotTracker, VrmMeshRayCast,
     global_cursor_pos,
 };
 use homunculus_screen::prelude::GlobalWindows;
@@ -145,7 +145,7 @@ fn on_drag_start(
     commands
         .entity(vrm_entity)
         .try_insert(DragHipsOffset(initial_offset))
-        .try_insert(AvatarState::from("drag"));
+        .try_insert(CharacterState::from("drag"));
 }
 
 fn on_drag_move(
@@ -222,11 +222,11 @@ fn on_drag_end(
             commands.entity(vrm).try_insert((
                 sitting_window,
                 transform,
-                AvatarState::from(AvatarState::SITTING),
+                CharacterState::from(CharacterState::SITTING),
             ));
         }
         None => {
-            commands.entity(vrm).try_insert(AvatarState::default());
+            commands.entity(vrm).try_insert(CharacterState::default());
         }
     }
 }

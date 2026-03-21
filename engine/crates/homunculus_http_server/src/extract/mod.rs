@@ -1,4 +1,4 @@
-pub mod avatar;
+pub mod character;
 
 use axum::RequestPartsExt;
 use axum::extract::{FromRequestParts, Path};

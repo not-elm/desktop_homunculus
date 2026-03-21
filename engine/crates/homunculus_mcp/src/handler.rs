@@ -12,10 +12,10 @@ use bevy::prelude::Entity;
 use homunculus_api::assets::AssetsApi;
 use homunculus_api::mods::ModsApi;
 use homunculus_api::prelude::{
-    ApiReactor, AudioBgmApi, AudioSeApi, AvatarApi, EntitiesApi, VrmAnimationApi, VrmApi,
+    ApiReactor, AudioBgmApi, AudioSeApi, CharacterApi, EntitiesApi, VrmAnimationApi, VrmApi,
     WebviewApi,
 };
-use homunculus_core::prelude::AvatarId;
+use homunculus_core::prelude::CharacterId;
 use homunculus_core::rpc_registry::RpcRegistry;
 use homunculus_utils::config::HomunculusConfig;
 use rmcp::handler::server::router::tool::ToolRouter;
@@ -52,15 +52,15 @@ pub(crate) fn to_json_string(value: &impl serde::Serialize) -> Result<String, rm
 pub struct HomunculusMcpHandler {
     pub(crate) webview_api: WebviewApi,
     pub(crate) vrm_api: VrmApi,
-    pub(crate) avatar_api: AvatarApi,
+    pub(crate) character_api: CharacterApi,
     pub(crate) mods_api: ModsApi,
     pub(crate) assets_api: AssetsApi,
     pub(crate) audio_se_api: AudioSeApi,
     pub(crate) audio_bgm_api: AudioBgmApi,
     pub(crate) entities_api: EntitiesApi,
     pub(crate) vrma_api: VrmAnimationApi,
-    /// The currently selected avatar ID for this MCP session.
-    pub(crate) active_avatar: Arc<Mutex<Option<String>>>,
+    /// The currently selected character ID for this MCP session.
+    pub(crate) active_character: Arc<Mutex<Option<String>>>,
     pub(crate) config: HomunculusConfig,
     /// Tracks open webview IDs so they can be cleaned up when the MCP session ends.
     pub(crate) open_webviews: Arc<Mutex<Vec<u64>>>,
@@ -78,14 +78,14 @@ impl HomunculusMcpHandler {
         Self {
             webview_api: WebviewApi::from(reactor.clone()),
             vrm_api: VrmApi::from(reactor.clone()),
-            avatar_api: AvatarApi::from(reactor.clone()),
+            character_api: CharacterApi::from(reactor.clone()),
             mods_api: ModsApi::from(reactor.clone()),
             audio_se_api: AudioSeApi::from(reactor.clone()),
             audio_bgm_api: AudioBgmApi::from(reactor.clone()),
             entities_api: EntitiesApi::from(reactor.clone()),
             vrma_api: VrmAnimationApi::from(reactor.clone()),
             assets_api: AssetsApi::from(reactor),
-            active_avatar: Arc::new(Mutex::new(None)),
+            active_character: Arc::new(Mutex::new(None)),
             config,
             open_webviews: Arc::new(Mutex::new(Vec::new())),
             rpc_registry,
@@ -93,10 +93,10 @@ impl HomunculusMcpHandler {
         }
     }
 
-    /// Resolves the active avatar ID, auto-selecting the first if none is set.
-    pub(crate) async fn resolve_avatar(&self) -> Result<(AvatarId, Entity), String> {
+    /// Resolves the active character ID, auto-selecting the first if none is set.
+    pub(crate) async fn resolve_character(&self) -> Result<(CharacterId, Entity), String> {
         let current = self
-            .active_avatar
+            .active_character
             .lock()
             .unwrap_or_else(|e| {
                 bevy::log::warn!("Mutex poisoned: {e}");
@@ -105,51 +105,51 @@ impl HomunculusMcpHandler {
             .clone();
 
         if let Some(id_str) = current {
-            let id = AvatarId::new(&id_str).map_err(|e| e.to_string())?;
+            let id = CharacterId::new(&id_str).map_err(|e| e.to_string())?;
             let entity = self
-                .avatar_api
+                .character_api
                 .resolve(id.clone())
                 .await
                 .map_err(|e| e.to_string())?;
             return Ok((id, entity));
         }
 
-        let avatars = self.avatar_api.list().await.map_err(|e| e.to_string())?;
-        let first = avatars
+        let characters = self.character_api.list().await.map_err(|e| e.to_string())?;
+        let first = characters
             .first()
-            .ok_or_else(|| "No avatars loaded. Use create_avatar first.".to_string())?;
-        let id = AvatarId::new(&first.id).map_err(|e| e.to_string())?;
+            .ok_or_else(|| "No characters loaded. Use create_character first.".to_string())?;
+        let id = CharacterId::new(&first.id).map_err(|e| e.to_string())?;
         let entity = self
-            .avatar_api
+            .character_api
             .resolve(id.clone())
             .await
             .map_err(|e| e.to_string())?;
-        self.set_active_avatar(Some(first.id.clone()));
+        self.set_active_character(Some(first.id.clone()));
         Ok((id, entity))
     }
 
-    /// Like [`resolve_avatar`](Self::resolve_avatar) but also verifies a VRM is attached.
-    pub(crate) async fn resolve_avatar_with_vrm(&self) -> Result<(AvatarId, Entity), String> {
-        let (id, _) = self.resolve_avatar().await?;
+    /// Like [`resolve_character`](Self::resolve_character) but also verifies a VRM is attached.
+    pub(crate) async fn resolve_character_with_vrm(&self) -> Result<(CharacterId, Entity), String> {
+        let (id, _) = self.resolve_character().await?;
         let entity = self
-            .avatar_api
+            .character_api
             .resolve_with_vrm(id.clone())
             .await
             .map_err(|e| e.to_string())?;
         Ok((id, entity))
     }
 
-    /// Sets or clears the active avatar ID.
-    pub(crate) fn set_active_avatar(&self, id: Option<String>) {
-        *self.active_avatar.lock().unwrap_or_else(|e| {
+    /// Sets or clears the active character ID.
+    pub(crate) fn set_active_character(&self, id: Option<String>) {
+        *self.active_character.lock().unwrap_or_else(|e| {
             bevy::log::warn!("Mutex poisoned: {e}");
             e.into_inner()
         }) = id;
     }
 
-    /// Clears the active avatar if it matches the given ID.
+    /// Clears the active character if it matches the given ID.
     pub(crate) fn clear_active_if_matches(&self, id_str: &str) {
-        let mut guard = self.active_avatar.lock().unwrap_or_else(|e| {
+        let mut guard = self.active_character.lock().unwrap_or_else(|e| {
             bevy::log::warn!("Mutex poisoned: {e}");
             e.into_inner()
         });
@@ -158,26 +158,22 @@ impl HomunculusMcpHandler {
         }
     }
 
-    /// Resolves a character display name to its avatar ID.
-    pub(crate) async fn resolve_avatar_id_by_name(&self, name: &str) -> Result<String, String> {
-        let avatars = self
-            .avatar_api
-            .list()
-            .await
-            .map_err(|e| e.to_string())?;
-        avatars
+    /// Resolves a character display name to its character ID.
+    pub(crate) async fn resolve_character_id_by_name(&self, name: &str) -> Result<String, String> {
+        let characters = self.character_api.list().await.map_err(|e| e.to_string())?;
+        characters
             .iter()
             .find(|a| a.name == name)
             .map(|a| a.id.clone())
-            .ok_or_else(|| format!("No avatar found with name '{name}'"))
+            .ok_or_else(|| format!("No character found with name '{name}'"))
     }
 
-    /// Finds the avatar ID string for an entity by searching the avatar list.
-    pub(crate) async fn find_avatar_id_for_entity(&self, target: Entity) -> Option<String> {
-        let avatars = self.avatar_api.list().await.ok()?;
-        for info in &avatars {
-            if let Ok(id) = AvatarId::new(&info.id)
-                && let Ok(entity) = self.avatar_api.resolve(id).await
+    /// Finds the character ID string for an entity by searching the character list.
+    pub(crate) async fn find_character_id_for_entity(&self, target: Entity) -> Option<String> {
+        let characters = self.character_api.list().await.ok()?;
+        for info in &characters {
+            if let Ok(id) = CharacterId::new(&info.id)
+                && let Ok(entity) = self.character_api.resolve(id).await
                 && entity == target
             {
                 return Some(info.id.clone());
@@ -354,8 +350,8 @@ mod tests {
 
         assert!(uris.contains(&"homunculus://info"), "missing info resource");
         assert!(
-            uris.contains(&"homunculus://avatars"),
-            "missing avatars resource"
+            uris.contains(&"homunculus://characters"),
+            "missing characters resource"
         );
         assert!(
             uris.contains(&"homunculus://characters"),
@@ -405,10 +401,13 @@ mod tests {
     }
 
     #[test]
-    fn handler_starts_with_no_active_avatar() {
+    fn handler_starts_with_no_active_character() {
         let handler = test_handler();
-        let active = handler.active_avatar.lock().unwrap();
-        assert!(active.is_none(), "new handler should have no active avatar");
+        let active = handler.active_character.lock().unwrap();
+        assert!(
+            active.is_none(),
+            "new handler should have no active character"
+        );
     }
 
     #[test]

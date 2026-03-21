@@ -1,16 +1,16 @@
-//! Data access layer for the `avatars` and `avatar_extensions` tables.
+//! Data access layer for the `characters` and `character_extensions` tables.
 //!
-//! [`AvatarRepo`] provides CRUD operations on avatar rows and their
+//! [`CharacterRepo`] provides CRUD operations on character rows and their
 //! per-mod extension data.  It borrows a [`PrefsDatabase`] reference so
 //! callers keep full control of the connection lifetime.
 
 use crate::PrefsDatabase;
 use serde::{Deserialize, Serialize};
 
-/// A single row from the `avatars` table.
+/// A single row from the `characters` table.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct AvatarRow {
+pub struct CharacterRow {
     pub id: String,
     pub asset_id: String,
     pub name: String,
@@ -22,29 +22,29 @@ pub struct AvatarRow {
     pub created_at: String,
 }
 
-/// A single row from the `avatar_extensions` table.
+/// A single row from the `character_extensions` table.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ExtensionRow {
-    pub avatar_id: String,
+    pub character_id: String,
     pub mod_name: String,
     /// JSON-encoded extension data.
     pub data: String,
 }
 
-/// Data-access object for avatar and avatar-extension tables.
+/// Data-access object for character and character-extension tables.
 ///
 /// Wraps a shared reference to [`PrefsDatabase`] and exposes typed
 /// query/mutation helpers.
-pub struct AvatarRepo<'a>(pub(crate) &'a PrefsDatabase);
+pub struct CharacterRepo<'a>(pub(crate) &'a PrefsDatabase);
 
-impl<'a> AvatarRepo<'a> {
-    /// Creates a new `AvatarRepo` from a database reference.
+impl<'a> CharacterRepo<'a> {
+    /// Creates a new `CharacterRepo` from a database reference.
     pub fn new(db: &'a PrefsDatabase) -> Self {
         Self(db)
     }
 
-    /// Inserts a new avatar row.
+    /// Inserts a new character row.
     pub fn create(
         &self,
         id: &str,
@@ -54,186 +54,196 @@ impl<'a> AvatarRepo<'a> {
         transform_json: &str,
     ) -> Result<(), rusqlite::Error> {
         self.0.0.execute(
-            "INSERT INTO avatars (id, asset_id, name, persona, transform) \
+            "INSERT INTO characters (id, asset_id, name, persona, transform) \
              VALUES (?1, ?2, ?3, ?4, ?5)",
             rusqlite::params![id, asset_id, name, persona_json, transform_json],
         )?;
         Ok(())
     }
 
-    /// Finds an avatar by its primary key.
-    pub fn find_by_id(&self, id: &str) -> Result<Option<AvatarRow>, rusqlite::Error> {
+    /// Finds a character by its primary key.
+    pub fn find_by_id(&self, id: &str) -> Result<Option<CharacterRow>, rusqlite::Error> {
         let mut stmt = self.0.0.prepare(
             "SELECT id, asset_id, name, persona, transform, state, created_at \
-             FROM avatars WHERE id = ?1",
+             FROM characters WHERE id = ?1",
         )?;
-        row_to_avatar_opt(&mut stmt, rusqlite::params![id])
+        row_to_character_opt(&mut stmt, rusqlite::params![id])
     }
 
-    /// Finds the first avatar with a given `asset_id`.
-    pub fn find_by_asset_id(&self, asset_id: &str) -> Result<Option<AvatarRow>, rusqlite::Error> {
+    /// Finds the first character with a given `asset_id`.
+    pub fn find_by_asset_id(
+        &self,
+        asset_id: &str,
+    ) -> Result<Option<CharacterRow>, rusqlite::Error> {
         let mut stmt = self.0.0.prepare(
             "SELECT id, asset_id, name, persona, transform, state, created_at \
-             FROM avatars WHERE asset_id = ?1",
+             FROM characters WHERE asset_id = ?1",
         )?;
-        row_to_avatar_opt(&mut stmt, rusqlite::params![asset_id])
+        row_to_character_opt(&mut stmt, rusqlite::params![asset_id])
     }
 
-    /// Returns every avatar row.
-    pub fn list_all(&self) -> Result<Vec<AvatarRow>, rusqlite::Error> {
+    /// Returns every character row.
+    pub fn list_all(&self) -> Result<Vec<CharacterRow>, rusqlite::Error> {
         let mut stmt = self.0.0.prepare(
             "SELECT id, asset_id, name, persona, transform, state, created_at \
-             FROM avatars ORDER BY created_at ASC",
+             FROM characters ORDER BY created_at ASC",
         )?;
-        rows_to_avatars(&mut stmt, [])
+        rows_to_characters(&mut stmt, [])
     }
 
-    /// Returns every avatar together with its extension rows.
+    /// Returns every character together with its extension rows.
     pub fn list_all_with_extensions(
         &self,
-    ) -> Result<Vec<(AvatarRow, Vec<ExtensionRow>)>, rusqlite::Error> {
-        let avatars = self.list_all()?;
-        let mut result = Vec::with_capacity(avatars.len());
-        for avatar in avatars {
-            let extensions = self.list_extensions(&avatar.id)?;
-            result.push((avatar, extensions));
+    ) -> Result<Vec<(CharacterRow, Vec<ExtensionRow>)>, rusqlite::Error> {
+        let characters = self.list_all()?;
+        let mut result = Vec::with_capacity(characters.len());
+        for character in characters {
+            let extensions = self.list_extensions(&character.id)?;
+            result.push((character, extensions));
         }
         Ok(result)
     }
 
-    /// Updates the persona JSON for an avatar.
+    /// Updates the persona JSON for a character.
     pub fn update_persona(&self, id: &str, persona_json: &str) -> Result<(), rusqlite::Error> {
         self.0.0.execute(
-            "UPDATE avatars SET persona = ?1 WHERE id = ?2",
+            "UPDATE characters SET persona = ?1 WHERE id = ?2",
             rusqlite::params![persona_json, id],
         )?;
         Ok(())
     }
 
-    /// Updates the asset ID for an avatar.
+    /// Updates the asset ID for a character.
     pub fn update_asset_id(&self, id: &str, asset_id: &str) -> Result<(), rusqlite::Error> {
         self.0.0.execute(
-            "UPDATE avatars SET asset_id = ?1 WHERE id = ?2",
+            "UPDATE characters SET asset_id = ?1 WHERE id = ?2",
             rusqlite::params![asset_id, id],
         )?;
         Ok(())
     }
 
-    /// Updates the display name for an avatar.
+    /// Updates the display name for a character.
     pub fn update_name(&self, id: &str, name: &str) -> Result<(), rusqlite::Error> {
         self.0.0.execute(
-            "UPDATE avatars SET name = ?1 WHERE id = ?2",
+            "UPDATE characters SET name = ?1 WHERE id = ?2",
             rusqlite::params![name, id],
         )?;
         Ok(())
     }
 
-    /// Updates the transform JSON for an avatar.
+    /// Updates the transform JSON for a character.
     pub fn update_transform(&self, id: &str, transform_json: &str) -> Result<(), rusqlite::Error> {
         self.0.0.execute(
-            "UPDATE avatars SET transform = ?1 WHERE id = ?2",
+            "UPDATE characters SET transform = ?1 WHERE id = ?2",
             rusqlite::params![transform_json, id],
         )?;
         Ok(())
     }
 
-    /// Updates the state string (e.g. `"idle"`, `"sitting"`) for an avatar.
+    /// Updates the state string (e.g. `"idle"`, `"sitting"`) for a character.
     pub fn update_state(&self, id: &str, state: &str) -> Result<(), rusqlite::Error> {
         self.0.0.execute(
-            "UPDATE avatars SET state = ?1 WHERE id = ?2",
+            "UPDATE characters SET state = ?1 WHERE id = ?2",
             rusqlite::params![state, id],
         )?;
         Ok(())
     }
 
-    /// Returns the extension data JSON for a specific avatar and mod.
+    /// Returns the extension data JSON for a specific character and mod.
     pub fn get_extension(
         &self,
-        avatar_id: &str,
+        character_id: &str,
         mod_name: &str,
     ) -> Result<Option<String>, rusqlite::Error> {
-        let mut stmt = self
-            .0
-            .0
-            .prepare("SELECT data FROM avatar_extensions WHERE avatar_id = ?1 AND mod_name = ?2")?;
-        let mut rows = stmt.query(rusqlite::params![avatar_id, mod_name])?;
+        let mut stmt = self.0.0.prepare(
+            "SELECT data FROM character_extensions WHERE character_id = ?1 AND mod_name = ?2",
+        )?;
+        let mut rows = stmt.query(rusqlite::params![character_id, mod_name])?;
         match rows.next()? {
             Some(row) => Ok(Some(row.get(0)?)),
             None => Ok(None),
         }
     }
 
-    /// Upserts extension data for a specific avatar and mod.
+    /// Upserts extension data for a specific character and mod.
     pub fn set_extension(
         &self,
-        avatar_id: &str,
+        character_id: &str,
         mod_name: &str,
         data_json: &str,
     ) -> Result<(), rusqlite::Error> {
         self.0.0.execute(
-            "INSERT OR REPLACE INTO avatar_extensions (avatar_id, mod_name, data) \
+            "INSERT OR REPLACE INTO character_extensions (character_id, mod_name, data) \
              VALUES (?1, ?2, ?3)",
-            rusqlite::params![avatar_id, mod_name, data_json],
+            rusqlite::params![character_id, mod_name, data_json],
         )?;
         Ok(())
     }
 
-    /// Deletes extension data for a specific avatar and mod.
-    pub fn delete_extension(&self, avatar_id: &str, mod_name: &str) -> Result<(), rusqlite::Error> {
+    /// Deletes extension data for a specific character and mod.
+    pub fn delete_extension(
+        &self,
+        character_id: &str,
+        mod_name: &str,
+    ) -> Result<(), rusqlite::Error> {
         self.0.0.execute(
-            "DELETE FROM avatar_extensions WHERE avatar_id = ?1 AND mod_name = ?2",
-            rusqlite::params![avatar_id, mod_name],
+            "DELETE FROM character_extensions WHERE character_id = ?1 AND mod_name = ?2",
+            rusqlite::params![character_id, mod_name],
         )?;
         Ok(())
     }
 
-    /// Returns all extension rows for a given avatar.
-    pub fn list_extensions(&self, avatar_id: &str) -> Result<Vec<ExtensionRow>, rusqlite::Error> {
+    /// Returns all extension rows for a given character.
+    pub fn list_extensions(
+        &self,
+        character_id: &str,
+    ) -> Result<Vec<ExtensionRow>, rusqlite::Error> {
         let mut stmt = self.0.0.prepare(
-            "SELECT avatar_id, mod_name, data FROM avatar_extensions \
-             WHERE avatar_id = ?1 ORDER BY mod_name ASC",
+            "SELECT character_id, mod_name, data FROM character_extensions \
+             WHERE character_id = ?1 ORDER BY mod_name ASC",
         )?;
         let rows = stmt
-            .query_map(rusqlite::params![avatar_id], read_extension_row)?
+            .query_map(rusqlite::params![character_id], read_extension_row)?
             .collect::<Result<Vec<_>, _>>()?;
         Ok(rows)
     }
 
-    /// Deletes an avatar row. Extensions are cascade-deleted by the FK constraint.
+    /// Deletes a character row. Extensions are cascade-deleted by the FK constraint.
     pub fn delete(&self, id: &str) -> Result<(), rusqlite::Error> {
-        self.0
-            .0
-            .execute("DELETE FROM avatars WHERE id = ?1", rusqlite::params![id])?;
+        self.0.0.execute(
+            "DELETE FROM characters WHERE id = ?1",
+            rusqlite::params![id],
+        )?;
         Ok(())
     }
 }
 
-/// Maps the first result row to an [`AvatarRow`], returning `None` for empty result sets.
-fn row_to_avatar_opt(
+/// Maps the first result row to an [`CharacterRow`], returning `None` for empty result sets.
+fn row_to_character_opt(
     stmt: &mut rusqlite::Statement<'_>,
     params: impl rusqlite::Params,
-) -> Result<Option<AvatarRow>, rusqlite::Error> {
+) -> Result<Option<CharacterRow>, rusqlite::Error> {
     let mut rows = stmt.query(params)?;
     match rows.next()? {
-        Some(row) => Ok(Some(read_avatar_row(row)?)),
+        Some(row) => Ok(Some(read_character_row(row)?)),
         None => Ok(None),
     }
 }
 
-/// Collects all result rows into a `Vec<AvatarRow>`.
-fn rows_to_avatars(
+/// Collects all result rows into a `Vec<CharacterRow>`.
+fn rows_to_characters(
     stmt: &mut rusqlite::Statement<'_>,
     params: impl rusqlite::Params,
-) -> Result<Vec<AvatarRow>, rusqlite::Error> {
+) -> Result<Vec<CharacterRow>, rusqlite::Error> {
     let rows = stmt
-        .query_map(params, read_avatar_row)?
+        .query_map(params, read_character_row)?
         .collect::<Result<Vec<_>, _>>()?;
     Ok(rows)
 }
 
-/// Reads a single `AvatarRow` from the current result row.
-fn read_avatar_row(row: &rusqlite::Row<'_>) -> Result<AvatarRow, rusqlite::Error> {
-    Ok(AvatarRow {
+/// Reads a single `CharacterRow` from the current result row.
+fn read_character_row(row: &rusqlite::Row<'_>) -> Result<CharacterRow, rusqlite::Error> {
+    Ok(CharacterRow {
         id: row.get(0)?,
         asset_id: row.get(1)?,
         name: row.get(2)?,
@@ -247,7 +257,7 @@ fn read_avatar_row(row: &rusqlite::Row<'_>) -> Result<AvatarRow, rusqlite::Error
 /// Reads a single `ExtensionRow` from the current result row.
 fn read_extension_row(row: &rusqlite::Row<'_>) -> Result<ExtensionRow, rusqlite::Error> {
     Ok(ExtensionRow {
-        avatar_id: row.get(0)?,
+        character_id: row.get(0)?,
         mod_name: row.get(1)?,
         data: row.get(2)?,
     })
@@ -261,8 +271,8 @@ mod tests {
         PrefsDatabase::open_in_memory()
     }
 
-    fn repo(db: &PrefsDatabase) -> AvatarRepo<'_> {
-        AvatarRepo(db)
+    fn repo(db: &PrefsDatabase) -> CharacterRepo<'_> {
+        CharacterRepo(db)
     }
 
     #[test]
@@ -419,7 +429,7 @@ mod tests {
     }
 
     #[test]
-    fn delete_avatar_cascades_extensions() {
+    fn delete_character_cascades_extensions() {
         let db = test_db();
         let r = repo(&db);
         r.create("e", "vrm:e", "E", "{}", "{}").unwrap();
@@ -434,7 +444,7 @@ mod tests {
     }
 
     #[test]
-    fn delete_nonexistent_avatar_is_ok() {
+    fn delete_nonexistent_character_is_ok() {
         let db = test_db();
         let r = repo(&db);
         r.delete("nonexistent").unwrap();
@@ -459,18 +469,18 @@ mod tests {
         let result = r.list_all_with_extensions().unwrap();
         assert_eq!(result.len(), 2);
 
-        let (avatar_a, exts_a) = &result[0];
-        assert_eq!(avatar_a.id, "a");
+        let (character_a, exts_a) = &result[0];
+        assert_eq!(character_a.id, "a");
         assert_eq!(exts_a.len(), 2);
 
-        let (avatar_b, exts_b) = &result[1];
-        assert_eq!(avatar_b.id, "b");
+        let (character_b, exts_b) = &result[1];
+        assert_eq!(character_b.id, "b");
         assert!(exts_b.is_empty());
     }
 
     #[test]
-    fn avatar_row_serde_roundtrip() {
-        let row = AvatarRow {
+    fn character_row_serde_roundtrip() {
+        let row = CharacterRow {
             id: "elmer".to_string(),
             asset_id: "vrm:elmer".to_string(),
             name: "Elmer".to_string(),
@@ -482,7 +492,7 @@ mod tests {
         let json = serde_json::to_string(&row).unwrap();
         assert!(json.contains("assetId"));
         assert!(json.contains("createdAt"));
-        let deserialized: AvatarRow = serde_json::from_str(&json).unwrap();
+        let deserialized: CharacterRow = serde_json::from_str(&json).unwrap();
         assert_eq!(deserialized.id, row.id);
         assert_eq!(deserialized.asset_id, row.asset_id);
     }
@@ -490,20 +500,20 @@ mod tests {
     #[test]
     fn extension_row_serde_roundtrip() {
         let row = ExtensionRow {
-            avatar_id: "elmer".to_string(),
+            character_id: "elmer".to_string(),
             mod_name: "voicevox".to_string(),
             data: r#"{"speakerId":1}"#.to_string(),
         };
         let json = serde_json::to_string(&row).unwrap();
-        assert!(json.contains("avatarId"));
+        assert!(json.contains("characterId"));
         assert!(json.contains("modName"));
         let deserialized: ExtensionRow = serde_json::from_str(&json).unwrap();
-        assert_eq!(deserialized.avatar_id, row.avatar_id);
+        assert_eq!(deserialized.character_id, row.character_id);
         assert_eq!(deserialized.mod_name, row.mod_name);
     }
 
     #[test]
-    fn update_nonexistent_avatar_is_ok() {
+    fn update_nonexistent_character_is_ok() {
         let db = test_db();
         let r = repo(&db);
         // These succeed (no rows affected) without error

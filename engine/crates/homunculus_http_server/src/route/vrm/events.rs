@@ -8,7 +8,7 @@ use bevy_flurx::action::once;
 use futures::stream::select_all;
 use homunculus_api::prelude::{ApiError, ApiReactor};
 use homunculus_core::prelude::{
-    AvatarStateChangeEvent, ExpressionChangeEvent, OnClickEvent, OnDragEndEvent, OnDragEvent,
+    CharacterStateChangeEvent, ExpressionChangeEvent, OnClickEvent, OnDragEndEvent, OnDragEvent,
     OnDragStartEvent, OnPointerCancelEvent, OnPointerMoveEvent, OnPointerOutEvent,
     OnPointerOverEvent, OnPointerPressedEvent, OnPointerReleasedEvent, VrmEventReceiver,
     VrmaFinishEvent, VrmaPlayEvent,
@@ -104,7 +104,7 @@ pub async fn events(
             let state_change = task
                 .will(
                     Update,
-                    once::run(observe_stream::<AvatarStateChangeEvent>)
+                    once::run(observe_stream::<CharacterStateChangeEvent>)
                         .with(("state-change", entity)),
                 )
                 .await;

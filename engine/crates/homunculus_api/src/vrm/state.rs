@@ -2,11 +2,11 @@ use crate::error::ApiResult;
 use crate::vrm::VrmApi;
 use bevy::prelude::*;
 use bevy_flurx::prelude::*;
-use homunculus_core::prelude::AvatarState;
+use homunculus_core::prelude::CharacterState;
 
 impl VrmApi {
     /// Retrieves the state of a VRM entity.
-    pub async fn state(&self, vrm_entity: Entity) -> ApiResult<AvatarState> {
+    pub async fn state(&self, vrm_entity: Entity) -> ApiResult<CharacterState> {
         self.0
             .schedule(move |task| async move {
                 task.will(Update, once::run(get_vrm_state).with(vrm_entity))
@@ -17,7 +17,7 @@ impl VrmApi {
     }
 
     /// Sets the state of a VRM entity.
-    pub async fn set_state(&self, vrm_entity: Entity, state: AvatarState) -> ApiResult {
+    pub async fn set_state(&self, vrm_entity: Entity, state: CharacterState) -> ApiResult {
         self.0
             .schedule(move |task| async move {
                 task.will(Update, once::run(put_vrm_state).with((vrm_entity, state)))
@@ -27,10 +27,13 @@ impl VrmApi {
     }
 }
 
-fn get_vrm_state(In(entity): In<Entity>, vrm_states: Query<&AvatarState>) -> Option<AvatarState> {
+fn get_vrm_state(
+    In(entity): In<Entity>,
+    vrm_states: Query<&CharacterState>,
+) -> Option<CharacterState> {
     vrm_states.get(entity).ok().cloned()
 }
 
-fn put_vrm_state(In((entity, state)): In<(Entity, AvatarState)>, mut commands: Commands) {
+fn put_vrm_state(In((entity, state)): In<(Entity, CharacterState)>, mut commands: Commands) {
     commands.entity(entity).try_insert(state);
 }

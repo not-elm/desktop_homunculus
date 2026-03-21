@@ -1,7 +1,7 @@
 mod close;
 mod get;
 mod is_closed;
-mod linked_avatar;
+mod linked_character;
 mod list;
 mod navigate;
 pub(super) mod open;

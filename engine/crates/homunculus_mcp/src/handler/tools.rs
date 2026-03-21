@@ -5,7 +5,7 @@
 
 mod animation;
 mod audio;
-mod avatar;
+mod character;
 mod rpc;
 mod system;
 mod transform;
@@ -19,7 +19,7 @@ use super::HomunculusMcpHandler;
 /// Returns the combined tool router from all domain submodules.
 pub(super) fn tool_router() -> ToolRouter<HomunculusMcpHandler> {
     HomunculusMcpHandler::webview_tool_router()
-        + HomunculusMcpHandler::avatar_tool_router()
+        + HomunculusMcpHandler::character_tool_router()
         + HomunculusMcpHandler::vrm_tool_router()
         + HomunculusMcpHandler::animation_tool_router()
         + HomunculusMcpHandler::audio_tool_router()

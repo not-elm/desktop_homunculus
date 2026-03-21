@@ -1,30 +1,30 @@
 pub mod extensions;
 
-use crate::extract::avatar::AvatarIdExtractor;
+use crate::extract::character::CharacterIdExtractor;
 use axum::Json;
 use axum::extract::{Query, State};
-use homunculus_api::avatar::{AvatarApi, AvatarInfo};
+use homunculus_api::character::{CharacterApi, CharacterInfo};
 use homunculus_api::prelude::axum::{HttpResult, IntoHttpResult};
-use homunculus_core::prelude::{AvatarId, AvatarState, Persona};
+use homunculus_core::prelude::{CharacterId, CharacterState, Persona};
 use homunculus_utils::prelude::AssetId;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-/// Detailed information about a single avatar, including persona.
+/// Detailed information about a single character, including persona.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, ToSchema)]
 #[serde(rename_all = "camelCase")]
-pub struct AvatarDetail {
-    /// The unique avatar identifier.
+pub struct CharacterDetail {
+    /// The unique character identifier.
     pub id: String,
     /// The display name.
     pub name: String,
-    /// The asset ID of the VRM model bound to this avatar.
+    /// The asset ID of the VRM model bound to this character.
     pub asset_id: String,
     /// The current behavioral state (e.g. "idle", "sitting").
     pub state: String,
     /// Whether a VRM model is currently attached.
     pub has_vrm: bool,
-    /// The avatar's persona configuration.
+    /// The character's persona configuration.
     pub persona: Persona,
 }
 
@@ -32,16 +32,16 @@ pub struct AvatarDetail {
 #[derive(Deserialize, Debug, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateQuery {
-    /// When true, returns the existing avatar if the ID is already taken
+    /// When true, returns the existing character if the ID is already taken
     /// instead of raising a conflict error.
     pub ensure: Option<bool>,
 }
 
-/// Request body for creating a new avatar.
+/// Request body for creating a new character.
 #[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateBody {
-    /// The unique avatar identifier.
+    /// The unique character identifier.
     pub id: String,
     /// The asset ID of the VRM model to bind.
     pub asset_id: String,
@@ -49,16 +49,16 @@ pub struct CreateBody {
     pub name: Option<String>,
 }
 
-/// Request body for updating the avatar state.
+/// Request body for updating the character state.
 #[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct PutStateBody {
     /// The new behavioral state value.
     #[schema(value_type = Object)]
-    pub state: AvatarState,
+    pub state: CharacterState,
 }
 
-/// Request body for updating the avatar display name.
+/// Request body for updating the character display name.
 #[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct PutNameBody {
@@ -74,26 +74,26 @@ pub struct AttachVrmBody {
     pub asset_id: String,
 }
 
-/// Create a new avatar.
+/// Create a new character.
 #[utoipa::path(
     post,
     path = "",
-    tag = "avatars",
+    tag = "characters",
     params(("ensure" = Option<bool>, Query, description = "Return existing if ID is taken")),
     request_body = CreateBody,
     responses(
-        (status = 200, description = "Avatar created", body = AvatarInfo),
-        (status = 400, description = "Invalid avatar ID"),
-        (status = 409, description = "Avatar already exists"),
+        (status = 200, description = "Character created", body = CharacterInfo),
+        (status = 400, description = "Invalid character ID"),
+        (status = 409, description = "Character already exists"),
     ),
 )]
 pub async fn create(
-    State(api): State<AvatarApi>,
+    State(api): State<CharacterApi>,
     Query(query): Query<CreateQuery>,
     Json(body): Json<CreateBody>,
-) -> HttpResult<AvatarInfo> {
-    let id = AvatarId::new(&body.id)
-        .map_err(|e| homunculus_api::prelude::ApiError::InvalidAvatarId(e.to_string()))?;
+) -> HttpResult<CharacterInfo> {
+    let id = CharacterId::new(&body.id)
+        .map_err(|e| homunculus_api::prelude::ApiError::InvalidCharacterId(e.to_string()))?;
     let asset_id = AssetId::new(&body.asset_id);
     let name = body.name.unwrap_or_else(|| body.id.clone());
     let ensure = query.ensure.unwrap_or(false);
@@ -102,37 +102,37 @@ pub async fn create(
     api.get_info(id).await.into_http_result()
 }
 
-/// List all avatars.
+/// List all characters.
 #[utoipa::path(
     get,
     path = "",
-    tag = "avatars",
+    tag = "characters",
     responses(
-        (status = 200, description = "List of avatars", body = Vec<AvatarInfo>),
+        (status = 200, description = "List of characters", body = Vec<CharacterInfo>),
     ),
 )]
-pub async fn list(State(api): State<AvatarApi>) -> HttpResult<Vec<AvatarInfo>> {
+pub async fn list(State(api): State<CharacterApi>) -> HttpResult<Vec<CharacterInfo>> {
     api.list().await.into_http_result()
 }
 
-/// Get detailed information about a single avatar.
+/// Get detailed information about a single character.
 #[utoipa::path(
     get,
     path = "",
-    tag = "avatars",
-    params(("id" = String, Path, description = "Avatar ID")),
+    tag = "characters",
+    params(("id" = String, Path, description = "Character ID")),
     responses(
-        (status = 200, description = "Avatar detail", body = AvatarDetail),
-        (status = 404, description = "Avatar not found"),
+        (status = 200, description = "Character detail", body = CharacterDetail),
+        (status = 404, description = "Character not found"),
     ),
 )]
 pub async fn get(
-    State(api): State<AvatarApi>,
-    AvatarIdExtractor { id, .. }: AvatarIdExtractor,
-) -> HttpResult<AvatarDetail> {
+    State(api): State<CharacterApi>,
+    CharacterIdExtractor { id, .. }: CharacterIdExtractor,
+) -> HttpResult<CharacterDetail> {
     let info = api.get_info(id.clone()).await?;
     let persona = api.get_persona(id).await?;
-    let detail = AvatarDetail {
+    let detail = CharacterDetail {
         id: info.id,
         name: info.name,
         asset_id: info.asset_id,
@@ -143,155 +143,155 @@ pub async fn get(
     Ok(Json(detail))
 }
 
-/// Destroy an avatar.
+/// Destroy a character.
 #[utoipa::path(
     delete,
     path = "",
-    tag = "avatars",
-    params(("id" = String, Path, description = "Avatar ID")),
+    tag = "characters",
+    params(("id" = String, Path, description = "Character ID")),
     responses(
-        (status = 200, description = "Avatar destroyed"),
-        (status = 404, description = "Avatar not found"),
+        (status = 200, description = "Character destroyed"),
+        (status = 404, description = "Character not found"),
     ),
 )]
 pub async fn destroy(
-    State(api): State<AvatarApi>,
-    AvatarIdExtractor { id, .. }: AvatarIdExtractor,
+    State(api): State<CharacterApi>,
+    CharacterIdExtractor { id, .. }: CharacterIdExtractor,
 ) -> HttpResult {
     api.destroy(id).await.into_http_result()
 }
 
-/// Get the current state of an avatar.
+/// Get the current state of a character.
 #[utoipa::path(
     get,
     path = "/state",
-    tag = "avatars",
-    params(("id" = String, Path, description = "Avatar ID")),
+    tag = "characters",
+    params(("id" = String, Path, description = "Character ID")),
     responses(
-        (status = 200, description = "Avatar state", body = PutStateBody),
-        (status = 404, description = "Avatar not found"),
+        (status = 200, description = "Character state", body = PutStateBody),
+        (status = 404, description = "Character not found"),
     ),
 )]
 pub async fn get_state(
-    State(api): State<AvatarApi>,
-    AvatarIdExtractor { id, .. }: AvatarIdExtractor,
+    State(api): State<CharacterApi>,
+    CharacterIdExtractor { id, .. }: CharacterIdExtractor,
 ) -> HttpResult<serde_json::Value> {
     let state = api.get_state(id).await?;
     Ok(Json(serde_json::json!({ "state": state.0 })))
 }
 
-/// Update the state of an avatar.
+/// Update the state of a character.
 #[utoipa::path(
     put,
     path = "/state",
-    tag = "avatars",
-    params(("id" = String, Path, description = "Avatar ID")),
+    tag = "characters",
+    params(("id" = String, Path, description = "Character ID")),
     request_body = PutStateBody,
     responses(
         (status = 200, description = "State updated"),
-        (status = 404, description = "Avatar not found"),
+        (status = 404, description = "Character not found"),
     ),
 )]
 pub async fn put_state(
-    State(api): State<AvatarApi>,
-    AvatarIdExtractor { id, .. }: AvatarIdExtractor,
+    State(api): State<CharacterApi>,
+    CharacterIdExtractor { id, .. }: CharacterIdExtractor,
     Json(body): Json<PutStateBody>,
 ) -> HttpResult {
     api.set_state(id, body.state).await.into_http_result()
 }
 
-/// Get the persona of an avatar.
+/// Get the persona of a character.
 #[utoipa::path(
     get,
     path = "/persona",
-    tag = "avatars",
-    params(("id" = String, Path, description = "Avatar ID")),
+    tag = "characters",
+    params(("id" = String, Path, description = "Character ID")),
     responses(
-        (status = 200, description = "Avatar persona", body = Persona),
-        (status = 404, description = "Avatar not found"),
+        (status = 200, description = "Character persona", body = Persona),
+        (status = 404, description = "Character not found"),
     ),
 )]
 pub async fn get_persona(
-    State(api): State<AvatarApi>,
-    AvatarIdExtractor { id, .. }: AvatarIdExtractor,
+    State(api): State<CharacterApi>,
+    CharacterIdExtractor { id, .. }: CharacterIdExtractor,
 ) -> HttpResult<Persona> {
     api.get_persona(id).await.into_http_result()
 }
 
-/// Update the persona of an avatar.
+/// Update the persona of a character.
 #[utoipa::path(
     put,
     path = "/persona",
-    tag = "avatars",
-    params(("id" = String, Path, description = "Avatar ID")),
+    tag = "characters",
+    params(("id" = String, Path, description = "Character ID")),
     request_body = Persona,
     responses(
         (status = 200, description = "Persona updated"),
-        (status = 404, description = "Avatar not found"),
+        (status = 404, description = "Character not found"),
     ),
 )]
 pub async fn put_persona(
-    State(api): State<AvatarApi>,
-    AvatarIdExtractor { id, .. }: AvatarIdExtractor,
+    State(api): State<CharacterApi>,
+    CharacterIdExtractor { id, .. }: CharacterIdExtractor,
     Json(body): Json<Persona>,
 ) -> HttpResult {
     api.set_persona(id, body).await.into_http_result()
 }
 
-/// Get the display name of an avatar.
+/// Get the display name of a character.
 #[utoipa::path(
     get,
     path = "/name",
-    tag = "avatars",
-    params(("id" = String, Path, description = "Avatar ID")),
+    tag = "characters",
+    params(("id" = String, Path, description = "Character ID")),
     responses(
-        (status = 200, description = "Avatar name", body = PutNameBody),
-        (status = 404, description = "Avatar not found"),
+        (status = 200, description = "Character name", body = PutNameBody),
+        (status = 404, description = "Character not found"),
     ),
 )]
 pub async fn get_name(
-    State(api): State<AvatarApi>,
-    AvatarIdExtractor { id, .. }: AvatarIdExtractor,
+    State(api): State<CharacterApi>,
+    CharacterIdExtractor { id, .. }: CharacterIdExtractor,
 ) -> HttpResult<serde_json::Value> {
     let name = api.get_name(id).await?;
     Ok(Json(serde_json::json!({ "name": name })))
 }
 
-/// Update the display name of an avatar.
+/// Update the display name of a character.
 #[utoipa::path(
     put,
     path = "/name",
-    tag = "avatars",
-    params(("id" = String, Path, description = "Avatar ID")),
+    tag = "characters",
+    params(("id" = String, Path, description = "Character ID")),
     request_body = PutNameBody,
     responses(
         (status = 200, description = "Name updated"),
-        (status = 404, description = "Avatar not found"),
+        (status = 404, description = "Character not found"),
     ),
 )]
 pub async fn put_name(
-    State(api): State<AvatarApi>,
-    AvatarIdExtractor { id, .. }: AvatarIdExtractor,
+    State(api): State<CharacterApi>,
+    CharacterIdExtractor { id, .. }: CharacterIdExtractor,
     Json(body): Json<PutNameBody>,
 ) -> HttpResult {
     api.set_name(id, body.name).await.into_http_result()
 }
 
-/// Attach a VRM model to an avatar.
+/// Attach a VRM model to a character.
 #[utoipa::path(
     post,
     path = "/vrm/attach",
-    tag = "avatars",
-    params(("id" = String, Path, description = "Avatar ID")),
+    tag = "characters",
+    params(("id" = String, Path, description = "Character ID")),
     request_body = AttachVrmBody,
     responses(
         (status = 200, description = "VRM attached"),
-        (status = 404, description = "Avatar not found"),
+        (status = 404, description = "Character not found"),
     ),
 )]
 pub async fn attach_vrm(
-    State(api): State<AvatarApi>,
-    AvatarIdExtractor { id, .. }: AvatarIdExtractor,
+    State(api): State<CharacterApi>,
+    CharacterIdExtractor { id, .. }: CharacterIdExtractor,
     Json(body): Json<AttachVrmBody>,
 ) -> HttpResult {
     let asset_id = AssetId::new(&body.asset_id);
@@ -299,21 +299,21 @@ pub async fn attach_vrm(
     Ok(Json(()))
 }
 
-/// Detach the VRM model from an avatar.
+/// Detach the VRM model from a character.
 #[utoipa::path(
     delete,
     path = "/vrm",
-    tag = "avatars",
-    params(("id" = String, Path, description = "Avatar ID")),
+    tag = "characters",
+    params(("id" = String, Path, description = "Character ID")),
     responses(
         (status = 200, description = "VRM detached"),
-        (status = 404, description = "Avatar not found"),
+        (status = 404, description = "Character not found"),
         (status = 422, description = "No VRM attached"),
     ),
 )]
 pub async fn detach_vrm(
-    State(api): State<AvatarApi>,
-    AvatarIdExtractor { id, .. }: AvatarIdExtractor,
+    State(api): State<CharacterApi>,
+    CharacterIdExtractor { id, .. }: CharacterIdExtractor,
 ) -> HttpResult {
     api.detach_vrm(id).await.into_http_result()
 }
@@ -324,24 +324,24 @@ mod tests {
     use axum::body::Body;
     use axum::http::{Request, StatusCode};
     use bevy::prelude::*;
-    use homunculus_api::avatar::AvatarInfo;
+    use homunculus_api::character::CharacterInfo;
     use homunculus_core::prelude::{
-        AssetId, AssetIdComponent, Avatar, AvatarId, AvatarName, AvatarState, Persona,
+        AssetId, AssetIdComponent, Character, CharacterId, CharacterName, CharacterState, Persona,
     };
 
-    /// Spawns an avatar entity with the necessary components and runs an
-    /// update so the `AvatarRegistry` observer registers it.
-    fn spawn_avatar(app: &mut App, id: &str, name: &str, asset_id: &str) -> Entity {
-        let avatar_id = AvatarId::new(id).unwrap();
+    /// Spawns a character entity with the necessary components and runs an
+    /// update so the `CharacterRegistry` observer registers it.
+    fn spawn_character(app: &mut App, id: &str, name: &str, asset_id: &str) -> Entity {
+        let character_id = CharacterId::new(id).unwrap();
         let entity = app
             .world_mut()
             .spawn((
-                Avatar,
-                avatar_id,
-                AvatarName(name.to_string()),
+                Character,
+                character_id,
+                CharacterName(name.to_string()),
                 Name::new(name.to_string()),
                 AssetIdComponent(AssetId::new(asset_id)),
-                AvatarState::default(),
+                CharacterState::default(),
                 Persona::default(),
             ))
             .id();
@@ -350,23 +350,23 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_list_avatars_empty() {
+    async fn test_list_characters_empty() {
         let (mut app, router) = test_app();
-        let request = Request::get("/avatars").body(Body::empty()).unwrap();
-        assert_response::<Vec<AvatarInfo>>(&mut app, router, request, vec![]).await;
+        let request = Request::get("/characters").body(Body::empty()).unwrap();
+        assert_response::<Vec<CharacterInfo>>(&mut app, router, request, vec![]).await;
     }
 
     #[tokio::test]
-    async fn test_list_avatars_with_entry() {
+    async fn test_list_characters_with_entry() {
         let (mut app, router) = test_app();
-        spawn_avatar(&mut app, "elmer", "Elmer", "test:model.vrm");
+        spawn_character(&mut app, "elmer", "Elmer", "test:model.vrm");
 
-        let request = Request::get("/avatars").body(Body::empty()).unwrap();
+        let request = Request::get("/characters").body(Body::empty()).unwrap();
         assert_response(
             &mut app,
             router,
             request,
-            vec![AvatarInfo {
+            vec![CharacterInfo {
                 id: "elmer".to_string(),
                 name: "Elmer".to_string(),
                 asset_id: "test:model.vrm".to_string(),
@@ -378,16 +378,18 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_get_avatar_detail() {
+    async fn test_get_character_detail() {
         let (mut app, router) = test_app();
-        spawn_avatar(&mut app, "elmer", "Elmer", "test:model.vrm");
+        spawn_character(&mut app, "elmer", "Elmer", "test:model.vrm");
 
-        let request = Request::get("/avatars/elmer").body(Body::empty()).unwrap();
+        let request = Request::get("/characters/elmer")
+            .body(Body::empty())
+            .unwrap();
         assert_response(
             &mut app,
             router,
             request,
-            super::AvatarDetail {
+            super::CharacterDetail {
                 id: "elmer".to_string(),
                 name: "Elmer".to_string(),
                 asset_id: "test:model.vrm".to_string(),
@@ -400,9 +402,9 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_get_avatar_not_found() {
+    async fn test_get_character_not_found() {
         let (mut app, router) = test_app();
-        let request = Request::get("/avatars/nonexistent")
+        let request = Request::get("/characters/nonexistent")
             .body(Body::empty())
             .unwrap();
         let response = call_any_status(&mut app, router, request).await;
@@ -410,11 +412,11 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_destroy_avatar() {
+    async fn test_destroy_character() {
         let (mut app, router) = test_app();
-        spawn_avatar(&mut app, "elmer", "Elmer", "test:model.vrm");
+        spawn_character(&mut app, "elmer", "Elmer", "test:model.vrm");
 
-        let request = Request::delete("/avatars/elmer")
+        let request = Request::delete("/characters/elmer")
             .body(Body::empty())
             .unwrap();
         let response = call(&mut app, router, request).await;
@@ -422,11 +424,11 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_get_avatar_state() {
+    async fn test_get_character_state() {
         let (mut app, router) = test_app();
-        spawn_avatar(&mut app, "elmer", "Elmer", "test:model.vrm");
+        spawn_character(&mut app, "elmer", "Elmer", "test:model.vrm");
 
-        let request = Request::get("/avatars/elmer/state")
+        let request = Request::get("/characters/elmer/state")
             .body(Body::empty())
             .unwrap();
         assert_response(
@@ -439,11 +441,11 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_put_avatar_state() {
+    async fn test_put_character_state() {
         let (mut app, router) = test_app();
-        spawn_avatar(&mut app, "elmer", "Elmer", "test:model.vrm");
+        spawn_character(&mut app, "elmer", "Elmer", "test:model.vrm");
 
-        let request = Request::put("/avatars/elmer/state")
+        let request = Request::put("/characters/elmer/state")
             .header("Content-Type", "application/json")
             .body(Body::from(r#"{"state":"dancing"}"#))
             .unwrap();
@@ -452,27 +454,27 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_get_avatar_persona() {
+    async fn test_get_character_persona() {
         let (mut app, router) = test_app();
-        spawn_avatar(&mut app, "elmer", "Elmer", "test:model.vrm");
+        spawn_character(&mut app, "elmer", "Elmer", "test:model.vrm");
 
-        let request = Request::get("/avatars/elmer/persona")
+        let request = Request::get("/characters/elmer/persona")
             .body(Body::empty())
             .unwrap();
         assert_response(&mut app, router, request, Persona::default()).await;
     }
 
     #[tokio::test]
-    async fn test_put_avatar_persona() {
+    async fn test_put_character_persona() {
         let (mut app, router) = test_app();
-        spawn_avatar(&mut app, "elmer", "Elmer", "test:model.vrm");
+        spawn_character(&mut app, "elmer", "Elmer", "test:model.vrm");
 
         let persona = Persona {
             profile: "A cheerful assistant".to_string(),
             personality: Some("Friendly".to_string()),
             ..Default::default()
         };
-        let request = Request::put("/avatars/elmer/persona")
+        let request = Request::put("/characters/elmer/persona")
             .header("Content-Type", "application/json")
             .body(Body::from(serde_json::to_string(&persona).unwrap()))
             .unwrap();
@@ -481,11 +483,11 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_get_avatar_name() {
+    async fn test_get_character_name() {
         let (mut app, router) = test_app();
-        spawn_avatar(&mut app, "elmer", "Elmer", "test:model.vrm");
+        spawn_character(&mut app, "elmer", "Elmer", "test:model.vrm");
 
-        let request = Request::get("/avatars/elmer/name")
+        let request = Request::get("/characters/elmer/name")
             .body(Body::empty())
             .unwrap();
         assert_response(
@@ -498,11 +500,11 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_put_avatar_name() {
+    async fn test_put_character_name() {
         let (mut app, router) = test_app();
-        spawn_avatar(&mut app, "elmer", "Elmer", "test:model.vrm");
+        spawn_character(&mut app, "elmer", "Elmer", "test:model.vrm");
 
-        let request = Request::put("/avatars/elmer/name")
+        let request = Request::put("/characters/elmer/name")
             .header("Content-Type", "application/json")
             .body(Body::from(r#"{"name":"New Name"}"#))
             .unwrap();
@@ -511,42 +513,45 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_invalid_avatar_id_rejected() {
+    async fn test_invalid_character_id_rejected() {
         let (mut app, router) = test_app();
-        let request = Request::get("/avatars/INVALID")
+        let request = Request::get("/characters/INVALID")
             .body(Body::empty())
             .unwrap();
         let response = call_any_status(&mut app, router, request).await;
         assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     }
 
-    /// Spawns an avatar entity AND creates the corresponding database row
+    /// Spawns a character entity AND creates the corresponding database row
     /// so that extension operations (which need the FK) succeed.
-    fn spawn_avatar_with_db(app: &mut App, id: &str, name: &str, asset_id: &str) -> Entity {
-        use homunculus_prefs::avatar_repo::AvatarRepo;
+    fn spawn_character_with_db(app: &mut App, id: &str, name: &str, asset_id: &str) -> Entity {
         use homunculus_prefs::PrefsDatabase;
+        use homunculus_prefs::character_repo::CharacterRepo;
 
-        let db = app.world().get_non_send_resource::<PrefsDatabase>().unwrap();
-        AvatarRepo::new(db)
+        let db = app
+            .world()
+            .get_non_send_resource::<PrefsDatabase>()
+            .unwrap();
+        CharacterRepo::new(db)
             .create(id, asset_id, name, "{}", "{}")
             .unwrap();
 
-        spawn_avatar(app, id, name, asset_id)
+        spawn_character(app, id, name, asset_id)
     }
 
     #[tokio::test]
     async fn test_set_and_get_extension() {
         let (mut app, router) = test_app();
-        spawn_avatar_with_db(&mut app, "elmer", "Elmer", "test:model.vrm");
+        spawn_character_with_db(&mut app, "elmer", "Elmer", "test:model.vrm");
 
-        let set_req = Request::put("/avatars/elmer/extensions/voicevox")
+        let set_req = Request::put("/characters/elmer/extensions/voicevox")
             .header("Content-Type", "application/json")
             .body(Body::from(r#"{"speakerId":1}"#))
             .unwrap();
         let response = call(&mut app, router.clone(), set_req).await;
         assert_eq!(response.status(), StatusCode::OK);
 
-        let get_req = Request::get("/avatars/elmer/extensions/voicevox")
+        let get_req = Request::get("/characters/elmer/extensions/voicevox")
             .body(Body::empty())
             .unwrap();
         assert_response(
@@ -561,10 +566,10 @@ mod tests {
     #[tokio::test]
     async fn test_delete_extension() {
         let (mut app, router) = test_app();
-        spawn_avatar_with_db(&mut app, "elmer", "Elmer", "test:model.vrm");
+        spawn_character_with_db(&mut app, "elmer", "Elmer", "test:model.vrm");
 
         // Set first
-        let set_req = Request::put("/avatars/elmer/extensions/voicevox")
+        let set_req = Request::put("/characters/elmer/extensions/voicevox")
             .header("Content-Type", "application/json")
             .body(Body::from(r#"{"v":1}"#))
             .unwrap();
@@ -572,14 +577,14 @@ mod tests {
         assert_eq!(response.status(), StatusCode::OK);
 
         // Delete
-        let del_req = Request::delete("/avatars/elmer/extensions/voicevox")
+        let del_req = Request::delete("/characters/elmer/extensions/voicevox")
             .body(Body::empty())
             .unwrap();
         let response = call(&mut app, router.clone(), del_req).await;
         assert_eq!(response.status(), StatusCode::OK);
 
         // Get should 404
-        let get_req = Request::get("/avatars/elmer/extensions/voicevox")
+        let get_req = Request::get("/characters/elmer/extensions/voicevox")
             .body(Body::empty())
             .unwrap();
         let response = call_any_status(&mut app, router, get_req).await;
@@ -589,9 +594,9 @@ mod tests {
     #[tokio::test]
     async fn test_get_extension_not_found() {
         let (mut app, router) = test_app();
-        spawn_avatar_with_db(&mut app, "elmer", "Elmer", "test:model.vrm");
+        spawn_character_with_db(&mut app, "elmer", "Elmer", "test:model.vrm");
 
-        let request = Request::get("/avatars/elmer/extensions/nonexistent")
+        let request = Request::get("/characters/elmer/extensions/nonexistent")
             .body(Body::empty())
             .unwrap();
         let response = call_any_status(&mut app, router, request).await;
@@ -599,10 +604,10 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_extension_avatar_not_found() {
+    async fn test_extension_character_not_found() {
         let (mut app, router) = test_app();
 
-        let request = Request::get("/avatars/nonexistent/extensions/voicevox")
+        let request = Request::get("/characters/nonexistent/extensions/voicevox")
             .body(Body::empty())
             .unwrap();
         let response = call_any_status(&mut app, router, request).await;

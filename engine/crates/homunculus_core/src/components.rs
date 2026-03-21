@@ -1,10 +1,10 @@
-use crate::avatar::{AvatarName, AvatarState};
+use crate::character::{CharacterName, CharacterState};
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[deprecated(note = "Use AvatarState instead")]
-pub type VrmState = AvatarState;
+#[deprecated(note = "Use CharacterState instead")]
+pub type VrmState = CharacterState;
 
 #[derive(Component, Reflect, Serialize, Deserialize, Debug, Default, Clone, Copy)]
 #[reflect(Component, Serialize, Deserialize)]
@@ -35,16 +35,16 @@ pub struct GlobalViewport(pub Vec2);
 #[reflect(Component, Serialize, Deserialize)]
 pub struct PrimaryCamera;
 
-/// Links a webview to an avatar by its string identifier.
+/// Links a webview to a character by its string identifier.
 ///
-/// The tracking system resolves the avatar ID to an ECS entity via
-/// [`AvatarRegistry`](crate::avatar_registry::AvatarRegistry) each frame.
+/// The tracking system resolves the character ID to an ECS entity via
+/// [`CharacterRegistry`](crate::character_registry::CharacterRegistry) each frame.
 #[derive(Component, Reflect, Serialize, Deserialize, Debug, Clone)]
 #[reflect(Component, Serialize, Deserialize)]
-pub struct LinkedAvatar(pub String);
+pub struct LinkedCharacter(pub String);
 
-#[deprecated(note = "Use LinkedAvatar instead")]
-pub type LinkedVrm = LinkedAvatar;
+#[deprecated(note = "Use LinkedCharacter instead")]
+pub type LinkedVrm = LinkedCharacter;
 
 /// Big Five personality traits (OCEAN model).
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
@@ -86,9 +86,9 @@ impl Plugin for CoreComponentsPlugin {
             .register_type::<ShadowPanel>()
             .register_type::<GlobalViewport>()
             .register_type::<PrimaryCamera>()
-            .register_type::<AvatarState>()
-            .register_type::<AvatarName>()
-            .register_type::<LinkedAvatar>()
+            .register_type::<CharacterState>()
+            .register_type::<CharacterName>()
+            .register_type::<LinkedCharacter>()
             .register_type::<AppWindow>();
     }
 }

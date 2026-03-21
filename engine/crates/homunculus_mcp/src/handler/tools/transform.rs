@@ -117,7 +117,7 @@ impl HomunculusMcpHandler {
     async fn move_character(&self, params: Parameters<MoveCharacterParams>) -> String {
         let args = params.0;
 
-        let (_id, entity) = match self.resolve_avatar_with_vrm().await {
+        let (_id, entity) = match self.resolve_character_with_vrm().await {
             Ok(v) => v,
             Err(e) => return format!("Error: {e}"),
         };
@@ -140,7 +140,7 @@ impl HomunculusMcpHandler {
     async fn tween_position(&self, params: Parameters<TweenPositionParams>) -> String {
         let args = params.0;
 
-        let (_id, entity) = match self.resolve_avatar_with_vrm().await {
+        let (_id, entity) = match self.resolve_character_with_vrm().await {
             Ok(v) => v,
             Err(e) => return format!("Error: {e}"),
         };
@@ -171,7 +171,7 @@ impl HomunculusMcpHandler {
     async fn tween_rotation(&self, params: Parameters<TweenRotationParams>) -> String {
         let args = params.0;
 
-        let (_id, entity) = match self.resolve_avatar_with_vrm().await {
+        let (_id, entity) = match self.resolve_character_with_vrm().await {
             Ok(v) => v,
             Err(e) => return format!("Error: {e}"),
         };
@@ -205,7 +205,7 @@ impl HomunculusMcpHandler {
     async fn tween_scale(&self, params: Parameters<TweenScaleParams>) -> String {
         let args = params.0;
 
-        let (_id, entity) = match self.resolve_avatar_with_vrm().await {
+        let (_id, entity) = match self.resolve_character_with_vrm().await {
             Ok(v) => v,
             Err(e) => return format!("Error: {e}"),
         };
@@ -241,7 +241,7 @@ impl HomunculusMcpHandler {
             }
         };
 
-        let (_id, entity) = match self.resolve_avatar_with_vrm().await {
+        let (_id, entity) = match self.resolve_character_with_vrm().await {
             Ok(v) => v,
             Err(e) => return format!("Error: {e}"),
         };

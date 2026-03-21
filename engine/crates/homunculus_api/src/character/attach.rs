@@ -1,4 +1,4 @@
-use crate::avatar::AvatarApi;
+use crate::character::CharacterApi;
 use crate::error::{ApiError, ApiResult};
 use crate::vrm::initialized;
 use bevy::prelude::*;
@@ -6,25 +6,25 @@ use bevy_flurx::prelude::*;
 use bevy_vrm1::prelude::{BodyTracking, Cameras, LookAt, RequestDetachVrm, VrmHandle};
 use bevy_vrm1::vrm::Vrm;
 use homunculus_core::prelude::{
-    AssetId, AssetIdComponent, AssetResolver, AvatarId, AvatarRegistry,
+    AssetId, AssetIdComponent, AssetResolver, CharacterId, CharacterRegistry,
 };
-use homunculus_prefs::avatar_repo::AvatarRepo;
+use homunculus_prefs::character_repo::CharacterRepo;
 use homunculus_prefs::prelude::PrefsDatabase;
 
-/// Arguments for attaching a VRM to an avatar.
+/// Arguments for attaching a VRM to a character.
 #[derive(Debug, Clone)]
 struct AttachVrmArgs {
-    id: AvatarId,
+    id: CharacterId,
     asset_id: AssetId,
 }
 
-impl AvatarApi {
-    /// Loads a VRM model and attaches it to an existing avatar entity.
+impl CharacterApi {
+    /// Loads a VRM model and attaches it to an existing character entity.
     ///
     /// Waits for the VRM to finish initialization before returning. After
-    /// initialization, the avatar's display name is restored (since VRM
+    /// initialization, the character's display name is restored (since VRM
     /// loading overwrites the Bevy `Name` component).
-    pub async fn attach_vrm(&self, id: AvatarId, asset_id: AssetId) -> ApiResult<Entity> {
+    pub async fn attach_vrm(&self, id: CharacterId, asset_id: AssetId) -> ApiResult<Entity> {
         let args = AttachVrmArgs { id, asset_id };
         self.0
             .schedule(move |task| async move {
@@ -38,11 +38,11 @@ impl AvatarApi {
             .await?
     }
 
-    /// Detaches the VRM model from an avatar entity.
+    /// Detaches the VRM model from a character entity.
     ///
-    /// The avatar entity itself remains alive; only the VRM hierarchy and
+    /// The character entity itself remains alive; only the VRM hierarchy and
     /// related components are removed.
-    pub async fn detach_vrm(&self, id: AvatarId) -> ApiResult {
+    pub async fn detach_vrm(&self, id: CharacterId) -> ApiResult {
         self.0
             .schedule(move |task| async move {
                 task.will(Update, once::run(begin_detach).with(id)).await
@@ -54,14 +54,14 @@ impl AvatarApi {
 fn begin_attach(
     In(args): In<AttachVrmArgs>,
     mut commands: Commands,
-    registry: Res<AvatarRegistry>,
+    registry: Res<CharacterRegistry>,
     asset_resolver: AssetResolver,
     cameras: Cameras,
     db: NonSend<PrefsDatabase>,
 ) -> ApiResult<Entity> {
     let entity = registry
         .get(&args.id)
-        .ok_or_else(|| ApiError::AvatarNotFound(args.id.to_string()))?;
+        .ok_or_else(|| ApiError::CharacterNotFound(args.id.to_string()))?;
 
     let handle = asset_resolver
         .load(&args.asset_id)
@@ -75,7 +75,7 @@ fn begin_attach(
         cameras.all_layers(),
     ));
 
-    AvatarRepo::new(&db)
+    CharacterRepo::new(&db)
         .update_asset_id(&args.id, args.asset_id.as_ref())
         .map_err(|e| ApiError::Sql(e.to_string()))?;
 
@@ -83,14 +83,14 @@ fn begin_attach(
 }
 
 fn begin_detach(
-    In(id): In<AvatarId>,
+    In(id): In<CharacterId>,
     mut commands: Commands,
-    registry: Res<AvatarRegistry>,
+    registry: Res<CharacterRegistry>,
     vrm_check: Query<(), With<Vrm>>,
 ) -> ApiResult {
     let entity = registry
         .get(&id)
-        .ok_or_else(|| ApiError::AvatarNotFound(id.to_string()))?;
+        .ok_or_else(|| ApiError::CharacterNotFound(id.to_string()))?;
 
     if vrm_check.get(entity).is_err() {
         return Err(ApiError::VrmNotAttached(id.to_string()));

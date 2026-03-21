@@ -1,12 +1,12 @@
 //! VRM tool implementations for the MCP handler.
 //!
 //! These tools operate on VRM characters and provide backward compatibility
-//! with the pre-avatar entity-based API.
+//! with the pre-character entity-based API.
 
 use super::super::HomunculusMcpHandler;
 use bevy::math::Vec2;
 use homunculus_api::entities::MoveTarget;
-use homunculus_core::prelude::{AvatarId, Persona};
+use homunculus_core::prelude::{CharacterId, Persona};
 use homunculus_utils::schema::asset::AssetId;
 use rmcp::handler::server::wrapper::Parameters;
 use rmcp::schemars;
@@ -31,18 +31,18 @@ pub struct SpawnCharacterParams {
     pub y: Option<f32>,
 }
 
-/// Parameters for the `select_character` tool.
+/// Parameters for the `select_character_by_name` tool.
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
-pub struct SelectCharacterParams {
+pub struct SelectCharacterByNameParams {
     /// Name of the character to select.
     pub name: String,
 }
 
-/// Parameters for the `remove_character` tool.
+/// Parameters for the `remove_character_by_name` tool.
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
-pub struct RemoveCharacterParams {
+pub struct RemoveCharacterByNameParams {
     /// Name of the character to remove. If omitted, removes the active character.
     pub name: Option<String>,
 }
@@ -92,37 +92,40 @@ impl HomunculusMcpHandler {
 
     /// Spawn a new VRM character on the desktop.
     ///
-    /// Deprecated: prefer `create_avatar` + `attach_vrm` for new integrations.
+    /// Deprecated: prefer `create_character` + `attach_vrm` for new integrations.
     #[tool(
         name = "spawn_character",
-        description = "Spawn a new VRM character on the desktop. Deprecated: use create_avatar + attach_vrm instead. Use the homunculus://assets resource to discover available VRM model assets. Returns the avatar ID."
+        description = "Spawn a new VRM character on the desktop. Deprecated: use create_character + attach_vrm instead. Use the homunculus://assets resource to discover available VRM model assets. Returns the character ID."
     )]
     async fn spawn_character(&self, params: Parameters<SpawnCharacterParams>) -> String {
         let args = params.0;
-        let avatar_id_str = generate_avatar_id(&args);
+        let character_id_str = generate_character_id(&args);
 
-        let id = match AvatarId::new(&avatar_id_str) {
+        let id = match CharacterId::new(&character_id_str) {
             Ok(id) => id,
             Err(e) => return format!("Error: {e}"),
         };
-        let name = args.name.clone().unwrap_or_else(|| avatar_id_str.clone());
+        let name = args
+            .name
+            .clone()
+            .unwrap_or_else(|| character_id_str.clone());
         let asset_id = AssetId::new(&args.asset);
 
         let entity = match self
-            .avatar_api
+            .character_api
             .create(id.clone(), asset_id.clone(), name, true)
             .await
         {
             Ok(e) => e,
-            Err(e) => return format!("Error creating avatar: {e}"),
+            Err(e) => return format!("Error creating character: {e}"),
         };
 
-        if let Err(e) = self.avatar_api.attach_vrm(id.clone(), asset_id).await {
-            return format!("Created avatar '{avatar_id_str}' but failed to attach VRM: {e}");
+        if let Err(e) = self.character_api.attach_vrm(id.clone(), asset_id).await {
+            return format!("Created character '{character_id_str}' but failed to attach VRM: {e}");
         }
 
         if let Some(persona) = build_persona(&args) {
-            let _ = self.avatar_api.set_persona(id, persona).await;
+            let _ = self.character_api.set_persona(id, persona).await;
         }
 
         if let (Some(x), Some(y)) = (args.x, args.y) {
@@ -130,33 +133,39 @@ impl HomunculusMcpHandler {
                 position: Vec2::new(x, y),
             };
             if let Err(e) = self.entities_api.move_to(entity, target).await {
-                return format!("Spawned avatar '{avatar_id_str}' but failed to move: {e}");
+                return format!("Spawned character '{character_id_str}' but failed to move: {e}");
             }
         }
 
-        self.set_active_avatar(Some(avatar_id_str.clone()));
-        format!("Spawned avatar '{avatar_id_str}'")
+        self.set_active_character(Some(character_id_str.clone()));
+        format!("Spawned character '{character_id_str}'")
     }
 
     /// Switch the active character by name.
     #[tool(
-        name = "select_character",
-        description = "Switch the active character by name. All subsequent tools will target this character. Use get_character_snapshot to see available characters."
+        name = "select_character_by_name",
+        description = "Switch the active character by display name. All subsequent tools will target this character. Use get_character_snapshot to see available characters. Deprecated: prefer select_character with a character ID."
     )]
-    async fn select_character(&self, params: Parameters<SelectCharacterParams>) -> String {
+    async fn select_character_by_name(
+        &self,
+        params: Parameters<SelectCharacterByNameParams>,
+    ) -> String {
         let name = params.0.name;
         match self.vrm_api.find_by_name(name.clone()).await {
             Ok(entity) => {
                 let entity_id = entity.to_bits();
-                // Try to find the avatar ID for this entity via the avatar list.
-                if let Ok(avatars) = self.avatar_api.list().await {
-                    for info in &avatars {
-                        if let Ok(id) = AvatarId::new(&info.id)
-                            && let Ok(e) = self.avatar_api.resolve(id).await
+                // Try to find the character ID for this entity via the character list.
+                if let Ok(characters) = self.character_api.list().await {
+                    for info in &characters {
+                        if let Ok(id) = CharacterId::new(&info.id)
+                            && let Ok(e) = self.character_api.resolve(id).await
                             && e == entity
                         {
-                            self.set_active_avatar(Some(info.id.clone()));
-                            return format!("Selected character '{name}' (avatar '{}')", info.id);
+                            self.set_active_character(Some(info.id.clone()));
+                            return format!(
+                                "Selected character '{name}' (character '{}')",
+                                info.id
+                            );
                         }
                     }
                 }
@@ -166,12 +175,15 @@ impl HomunculusMcpHandler {
         }
     }
 
-    /// Remove a VRM character from the desktop.
+    /// Remove a VRM character from the desktop by name.
     #[tool(
-        name = "remove_character",
-        description = "Remove a VRM character from the desktop. If no name is given, removes the active character."
+        name = "remove_character_by_name",
+        description = "Remove a VRM character from the desktop by display name. If no name is given, removes the active character. Deprecated: prefer remove_character with a character ID."
     )]
-    async fn remove_character(&self, params: Parameters<RemoveCharacterParams>) -> String {
+    async fn remove_character_by_name_tool(
+        &self,
+        params: Parameters<RemoveCharacterByNameParams>,
+    ) -> String {
         if let Some(name) = &params.0.name {
             self.remove_character_by_name(name).await
         } else {
@@ -185,7 +197,7 @@ impl HomunculusMcpHandler {
         description = "Set facial expression weights on the active character. Common expressions: happy, sad, angry, surprised, relaxed, neutral, aa, ih, ou, ee, oh, blink. Weights are 0.0-1.0. Modes: \"modify\" (default, partial update), \"set\" (replace all), \"clear\" (reset to animation control)."
     )]
     async fn set_expression(&self, params: Parameters<SetExpressionParams>) -> String {
-        let (_id, entity) = match self.resolve_avatar_with_vrm().await {
+        let (_id, entity) = match self.resolve_character_with_vrm().await {
             Ok(v) => v,
             Err(e) => return format!("Error: {e}"),
         };
@@ -222,7 +234,7 @@ impl HomunculusMcpHandler {
         description = "Set the active character's personality profile. This affects how the character is perceived in AI conversations."
     )]
     async fn set_persona(&self, params: Parameters<SetPersonaParams>) -> String {
-        let (_id, entity) = match self.resolve_avatar_with_vrm().await {
+        let (_id, entity) = match self.resolve_character_with_vrm().await {
             Ok(v) => v,
             Err(e) => return format!("Error: {e}"),
         };
@@ -246,7 +258,7 @@ impl HomunculusMcpHandler {
         description = "Control where the active character looks. Use \"cursor\" to follow the mouse cursor, or \"none\" to disable look-at (character looks forward)."
     )]
     async fn set_look_at(&self, params: Parameters<SetLookAtParams>) -> String {
-        let (_id, entity) = match self.resolve_avatar_with_vrm().await {
+        let (_id, entity) = match self.resolve_character_with_vrm().await {
             Ok(v) => v,
             Err(e) => return format!("Error: {e}"),
         };
@@ -269,21 +281,21 @@ impl HomunculusMcpHandler {
 }
 
 impl HomunculusMcpHandler {
-    /// Removes a character by name, looking up its avatar ID.
+    /// Removes a character by name, looking up its character ID.
     async fn remove_character_by_name(&self, name: &str) -> String {
         let entity = match self.vrm_api.find_by_name(name.to_string()).await {
             Ok(e) => e,
             Err(e) => return format!("Error finding character '{name}': {e}"),
         };
 
-        // Try to destroy via avatar API by finding its avatar ID.
-        if let Some(id_str) = self.find_avatar_id_for_entity(entity).await
-            && let Ok(id) = AvatarId::new(&id_str)
+        // Try to destroy via character API by finding its character ID.
+        if let Some(id_str) = self.find_character_id_for_entity(entity).await
+            && let Ok(id) = CharacterId::new(&id_str)
         {
-            match self.avatar_api.destroy(id).await {
+            match self.character_api.destroy(id).await {
                 Ok(()) => {
                     self.clear_active_if_matches(&id_str);
-                    return format!("Removed character '{name}' (avatar '{id_str}')");
+                    return format!("Removed character '{name}' (character '{id_str}')");
                 }
                 Err(e) => return format!("Error removing character: {e}"),
             }
@@ -296,17 +308,17 @@ impl HomunculusMcpHandler {
         }
     }
 
-    /// Removes the active character/avatar.
+    /// Removes the active character/character.
     async fn remove_active_character(&self) -> String {
-        match self.resolve_avatar().await {
+        match self.resolve_character().await {
             Ok((id, _entity)) => {
                 let id_str = id.to_string();
-                match self.avatar_api.destroy(id).await {
+                match self.character_api.destroy(id).await {
                     Ok(()) => {
-                        self.set_active_avatar(None);
-                        format!("Removed avatar '{id_str}'")
+                        self.set_active_character(None);
+                        format!("Removed character '{id_str}'")
                     }
-                    Err(e) => format!("Error removing avatar: {e}"),
+                    Err(e) => format!("Error removing character: {e}"),
                 }
             }
             Err(e) => format!("Error: {e}"),
@@ -314,11 +326,11 @@ impl HomunculusMcpHandler {
     }
 }
 
-/// Generates an avatar ID from spawn arguments.
+/// Generates a character ID from spawn arguments.
 ///
 /// Uses a sanitised version of the name if provided, otherwise derives
 /// from the asset ID.
-fn generate_avatar_id(args: &SpawnCharacterParams) -> String {
+fn generate_character_id(args: &SpawnCharacterParams) -> String {
     let base = args
         .name
         .as_deref()
@@ -336,7 +348,7 @@ fn generate_avatar_id(args: &SpawnCharacterParams) -> String {
 
     let trimmed = base.trim_matches('-');
     if trimmed.is_empty() {
-        "avatar".to_string()
+        "character".to_string()
     } else {
         trimmed[..trimmed.len().min(63)].to_string()
     }

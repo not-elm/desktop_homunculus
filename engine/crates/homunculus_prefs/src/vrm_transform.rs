@@ -5,11 +5,11 @@
 
 use std::time::Duration;
 
-use crate::avatar_repo::AvatarRepo;
+use crate::character_repo::CharacterRepo;
 use crate::{PrefsDatabase, PrefsKeys};
 use bevy::{prelude::*, time::common_conditions::on_timer};
 use bevy_vrm1::vrm::Vrm;
-use homunculus_core::prelude::{AssetIdComponent, AvatarId};
+use homunculus_core::prelude::{AssetIdComponent, CharacterId};
 
 /// Interval in seconds between periodic VRM transform saves.
 pub(super) struct PrefsVrmTransformPlugin;
@@ -26,34 +26,34 @@ impl Plugin for PrefsVrmTransformPlugin {
 
 fn save_vrm_transforms(
     db: NonSend<PrefsDatabase>,
-    transforms: Query<(&AssetIdComponent, &Transform, Option<&AvatarId>), With<Vrm>>,
+    transforms: Query<(&AssetIdComponent, &Transform, Option<&CharacterId>), With<Vrm>>,
 ) {
     info!("Saving VRM transforms to preferences...");
-    for (asset_id, transform, avatar_id) in transforms.iter() {
-        save_single_transform(&db, asset_id, transform, avatar_id);
+    for (asset_id, transform, character_id) in transforms.iter() {
+        save_single_transform(&db, asset_id, transform, character_id);
     }
 }
 
 fn periodic_save_vrm_transforms(
     db: NonSend<PrefsDatabase>,
-    transforms: Query<(&AssetIdComponent, &Transform, Option<&AvatarId>), With<Vrm>>,
+    transforms: Query<(&AssetIdComponent, &Transform, Option<&CharacterId>), With<Vrm>>,
 ) {
-    for (asset_id, transform, avatar_id) in transforms.iter() {
-        save_single_transform(&db, asset_id, transform, avatar_id);
+    for (asset_id, transform, character_id) in transforms.iter() {
+        save_single_transform(&db, asset_id, transform, character_id);
     }
 }
 
-/// Saves a single VRM transform. When an `AvatarId` is present, the transform
-/// is persisted to the avatar table instead of the global preferences.
+/// Saves a single VRM transform. When an `CharacterId` is present, the transform
+/// is persisted to the character table instead of the global preferences.
 fn save_single_transform(
     db: &PrefsDatabase,
     asset_id: &AssetIdComponent,
     transform: &Transform,
-    avatar_id: Option<&AvatarId>,
+    character_id: Option<&CharacterId>,
 ) {
-    if let Some(id) = avatar_id {
+    if let Some(id) = character_id {
         let json = serde_json::to_string(transform).unwrap_or_else(|_| "{}".to_string());
-        let _ = AvatarRepo::new(db).update_transform(id, &json);
+        let _ = CharacterRepo::new(db).update_transform(id, &json);
     } else {
         let key = PrefsKeys::asset_transform(asset_id.0.as_ref());
         let _ = db.save_as(&key, transform);

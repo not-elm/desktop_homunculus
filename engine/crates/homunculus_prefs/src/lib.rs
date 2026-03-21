@@ -28,7 +28,7 @@
 //! If the file-based database cannot be opened, the system automatically falls
 //! back to an in-memory database to ensure the application continues functioning.
 
-pub mod avatar_repo;
+pub mod character_repo;
 mod migration;
 
 #[cfg(feature = "bevy")]
@@ -280,7 +280,7 @@ fn create_tables(db: &rusqlite::Connection) -> Result<(), rusqlite::Error> {
         [],
     )?;
     db.execute(
-        "CREATE TABLE IF NOT EXISTS avatars (
+        "CREATE TABLE IF NOT EXISTS characters (
             id TEXT PRIMARY KEY NOT NULL,
             asset_id TEXT NOT NULL,
             name TEXT NOT NULL DEFAULT '',
@@ -292,11 +292,11 @@ fn create_tables(db: &rusqlite::Connection) -> Result<(), rusqlite::Error> {
         [],
     )?;
     db.execute(
-        "CREATE TABLE IF NOT EXISTS avatar_extensions (
-            avatar_id TEXT NOT NULL REFERENCES avatars(id) ON DELETE CASCADE,
+        "CREATE TABLE IF NOT EXISTS character_extensions (
+            character_id TEXT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
             mod_name TEXT NOT NULL,
             data TEXT NOT NULL DEFAULT '{}',
-            PRIMARY KEY (avatar_id, mod_name)
+            PRIMARY KEY (character_id, mod_name)
         ) WITHOUT ROWID",
         [],
     )?;

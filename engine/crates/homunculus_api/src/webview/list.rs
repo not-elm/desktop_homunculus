@@ -5,7 +5,7 @@ use bevy::prelude::*;
 use bevy_cef::prelude::WebviewSize;
 use bevy_flurx::action::once;
 use homunculus_core::prelude::{
-    AvatarRegistry, LinkedAvatar, WebviewInfo, WebviewMeshSize, WebviewOffset,
+    CharacterRegistry, LinkedCharacter, WebviewInfo, WebviewMeshSize, WebviewOffset,
 };
 
 impl WebviewApi {
@@ -24,23 +24,23 @@ fn list_webviews(
         Option<&WebviewMeshSize>,
         &WebviewSize,
         &WebviewOffset,
-        Option<&LinkedAvatar>,
+        Option<&LinkedCharacter>,
     )>,
-    registry: Res<AvatarRegistry>,
+    registry: Res<CharacterRegistry>,
 ) -> Vec<WebviewInfo> {
     webviews
         .iter()
         .map(
-            |(entity, source, mesh_size, viewport_size, offset, linked_avatar)| {
-                let (avatar_id, vrm_entity_bits) =
-                    resolve_linked_fields(linked_avatar, &registry);
+            |(entity, source, mesh_size, viewport_size, offset, linked_character)| {
+                let (character_id, vrm_entity_bits) =
+                    resolve_linked_fields(linked_character, &registry);
                 WebviewInfo {
                     entity,
                     source: webview_source_to_info(&source.0, false),
                     size: mesh_size.map_or(WebviewMeshSize::default().0, |s| s.0),
                     viewport_size: viewport_size.0,
                     offset: *offset,
-                    linked_avatar: avatar_id,
+                    linked_character: character_id,
                     linked_vrm: vrm_entity_bits,
                 }
             },
@@ -48,18 +48,18 @@ fn list_webviews(
         .collect()
 }
 
-/// Derives both `linked_avatar` and deprecated `linked_vrm` from the component.
+/// Derives both `linked_character` and deprecated `linked_vrm` from the component.
 fn resolve_linked_fields(
-    linked: Option<&LinkedAvatar>,
-    registry: &AvatarRegistry,
+    linked: Option<&LinkedCharacter>,
+    registry: &CharacterRegistry,
 ) -> (Option<String>, Option<u64>) {
     let Some(linked) = linked else {
         return (None, None);
     };
-    let avatar_id = linked.0.clone();
-    let entity_bits = homunculus_core::avatar::AvatarId::new(&avatar_id)
+    let character_id = linked.0.clone();
+    let entity_bits = homunculus_core::character::CharacterId::new(&character_id)
         .ok()
         .and_then(|id| registry.get(&id))
         .map(|e| e.to_bits());
-    (Some(avatar_id), entity_bits)
+    (Some(character_id), entity_bits)
 }

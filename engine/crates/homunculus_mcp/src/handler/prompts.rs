@@ -56,7 +56,7 @@ pub(super) fn get_prompt(
             let event = get_string_arg(args, "event").unwrap_or_default();
             format!(
                 "A development event occurred: \"{event}\". \
-                 Use the set_expression tool to make the desktop avatar react appropriately. \
+                 Use the set_expression tool to make the desktop character react appropriately. \
                  Choose the best expression from: happy, sad, angry, surprised, relaxed, neutral. \
                  For success events use \"happy\" or \"relaxed\". \
                  For failures use \"sad\" or \"angry\". \
@@ -69,8 +69,8 @@ pub(super) fn get_prompt(
                 .map(|m| format!(" Mood: {m}."))
                 .unwrap_or_default();
             format!(
-                "Interact with the desktop avatar. Message: \"{message}\".{mood_part} \
-                 First use get_avatars or get_character_snapshot to check the current state, \
+                "Interact with the desktop character. Message: \"{message}\".{mood_part} \
+                 First use get_characters or get_character_snapshot to check the current state, \
                  then use set_expression for the appropriate expression."
             )
         }

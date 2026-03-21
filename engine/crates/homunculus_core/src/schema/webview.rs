@@ -53,10 +53,10 @@ pub struct WebviewOpenOptions {
     pub viewport_size: Option<Vec2>,
     #[serde(default)]
     pub offset: Option<WebviewOffset>,
-    /// Avatar ID to link to this webview (optional).
+    /// Character ID to link to this webview (optional).
     #[serde(default)]
-    pub linked_avatar: Option<String>,
-    /// VRM entity to link to this webview (deprecated, use `linked_avatar`).
+    pub linked_character: Option<String>,
+    /// VRM entity to link to this webview (deprecated, use `linked_character`).
     #[serde(default)]
     #[cfg_attr(feature = "openapi", schema(value_type = Option<String>))]
     pub linked_vrm: Option<u64>,
@@ -91,9 +91,9 @@ pub struct WebviewInfo {
     #[cfg_attr(feature = "openapi", schema(value_type = [f32; 2]))]
     pub viewport_size: Vec2,
     pub offset: WebviewOffset,
-    /// The avatar ID linked to this webview.
+    /// The character ID linked to this webview.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub linked_avatar: Option<String>,
+    pub linked_character: Option<String>,
     /// Deprecated: VRM entity as bits, kept for backward compatibility.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub linked_vrm: Option<u64>,

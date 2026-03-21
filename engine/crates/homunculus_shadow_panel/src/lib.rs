@@ -6,7 +6,7 @@
 //!
 //! ## Overview
 //!
-//! The shadow panel system places a large transparent plane behind VRM avatars
+//! The shadow panel system places a large transparent plane behind VRM characters
 //! and applies a specialized shader that projects only the shadows of the models.
 //! This creates the illusion that the mascots are casting shadows on the desktop
 //! surface, enhancing visual realism and grounding.

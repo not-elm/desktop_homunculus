@@ -2,47 +2,51 @@ use crate::error::{ApiError, ApiResult};
 use crate::prelude::WebviewApi;
 use bevy::prelude::*;
 use bevy_flurx::action::once;
-use homunculus_core::prelude::{AvatarRegistry, LinkedAvatar};
+use homunculus_core::prelude::{CharacterRegistry, LinkedCharacter};
 
 impl WebviewApi {
-    /// Gets the linked avatar ID for a webview.
-    pub async fn linked_avatar(&self, webview: Entity) -> ApiResult<Option<String>> {
+    /// Gets the linked character ID for a webview.
+    pub async fn linked_character(&self, webview: Entity) -> ApiResult<Option<String>> {
         self.0
             .schedule(move |task| async move {
-                task.will(Update, once::run(get_linked_avatar).with(webview))
+                task.will(Update, once::run(get_linked_character).with(webview))
                     .await
             })
             .await?
     }
 
-    /// Sets the linked avatar for a webview by avatar ID.
-    pub async fn set_linked_avatar(&self, webview: Entity, avatar_id: String) -> ApiResult<()> {
+    /// Sets the linked character for a webview by character ID.
+    pub async fn set_linked_character(
+        &self,
+        webview: Entity,
+        character_id: String,
+    ) -> ApiResult<()> {
         self.0
             .schedule(move |task| async move {
                 task.will(
                     Update,
-                    once::run(set_linked_avatar).with((webview, avatar_id)),
+                    once::run(set_linked_character).with((webview, character_id)),
                 )
                 .await
             })
             .await?
     }
 
-    /// Removes the linked avatar from a webview.
-    pub async fn unlink_avatar(&self, webview: Entity) -> ApiResult<()> {
+    /// Removes the linked character from a webview.
+    pub async fn unlink_character(&self, webview: Entity) -> ApiResult<()> {
         self.0
             .schedule(move |task| async move {
-                task.will(Update, once::run(unlink_avatar).with(webview))
+                task.will(Update, once::run(unlink_character).with(webview))
                     .await
             })
             .await?
     }
 
-    /// Sets the linked avatar by resolving a VRM entity to its avatar ID.
+    /// Sets the linked character by resolving a VRM entity to its character ID.
     ///
     /// Used by the deprecated `PUT /webviews/{entity}/linked-vrm` route.
-    /// Looks up the entity in `AvatarRegistry` to find the avatar ID.
-    pub async fn set_linked_avatar_by_entity(
+    /// Looks up the entity in `CharacterRegistry` to find the character ID.
+    pub async fn set_linked_character_by_entity(
         &self,
         webview: Entity,
         vrm_entity: Entity,
@@ -51,30 +55,30 @@ impl WebviewApi {
             .schedule(move |task| async move {
                 task.will(
                     Update,
-                    once::run(set_linked_avatar_by_entity).with((webview, vrm_entity)),
+                    once::run(set_linked_character_by_entity).with((webview, vrm_entity)),
                 )
                 .await
             })
             .await?
     }
 
-    /// Gets the linked avatar as an entity (resolves via AvatarRegistry).
+    /// Gets the linked character as an entity (resolves via CharacterRegistry).
     ///
-    /// Returns the entity for the linked avatar, or `None` if not linked
-    /// or the avatar is not registered.
-    pub async fn linked_avatar_entity(&self, webview: Entity) -> ApiResult<Option<Entity>> {
+    /// Returns the entity for the linked character, or `None` if not linked
+    /// or the character is not registered.
+    pub async fn linked_character_entity(&self, webview: Entity) -> ApiResult<Option<Entity>> {
         self.0
             .schedule(move |task| async move {
-                task.will(Update, once::run(get_linked_avatar_entity).with(webview))
+                task.will(Update, once::run(get_linked_character_entity).with(webview))
                     .await
             })
             .await?
     }
 }
 
-fn get_linked_avatar(
+fn get_linked_character(
     In(webview): In<Entity>,
-    webviews: Query<Option<&LinkedAvatar>, With<bevy_cef::prelude::WebviewSource>>,
+    webviews: Query<Option<&LinkedCharacter>, With<bevy_cef::prelude::WebviewSource>>,
 ) -> ApiResult<Option<String>> {
     match webviews.get(webview) {
         Ok(linked) => Ok(linked.map(|l| l.0.clone())),
@@ -82,61 +86,61 @@ fn get_linked_avatar(
     }
 }
 
-fn set_linked_avatar(
-    In((webview, avatar_id)): In<(Entity, String)>,
+fn set_linked_character(
+    In((webview, character_id)): In<(Entity, String)>,
     mut commands: Commands,
     webviews: Query<Entity, With<bevy_cef::prelude::WebviewSource>>,
 ) -> ApiResult<()> {
     if webviews.contains(webview) {
         commands
             .entity(webview)
-            .try_insert(LinkedAvatar(avatar_id));
+            .try_insert(LinkedCharacter(character_id));
         Ok(())
     } else {
         Err(ApiError::WebviewNotFound(webview))
     }
 }
 
-fn unlink_avatar(
+fn unlink_character(
     In(webview): In<Entity>,
     mut commands: Commands,
     webviews: Query<Entity, With<bevy_cef::prelude::WebviewSource>>,
 ) -> ApiResult<()> {
     if webviews.contains(webview) {
-        commands.entity(webview).remove::<LinkedAvatar>();
+        commands.entity(webview).remove::<LinkedCharacter>();
         Ok(())
     } else {
         Err(ApiError::WebviewNotFound(webview))
     }
 }
 
-fn set_linked_avatar_by_entity(
+fn set_linked_character_by_entity(
     In((webview, vrm_entity)): In<(Entity, Entity)>,
     mut commands: Commands,
     webviews: Query<Entity, With<bevy_cef::prelude::WebviewSource>>,
-    registry: Res<AvatarRegistry>,
+    registry: Res<CharacterRegistry>,
 ) -> ApiResult<()> {
     if !webviews.contains(webview) {
         return Err(ApiError::WebviewNotFound(webview));
     }
-    let avatar_id = registry
+    let character_id = registry
         .get_id(vrm_entity)
         .ok_or_else(|| ApiError::EntityNotFound)?;
     commands
         .entity(webview)
-        .try_insert(LinkedAvatar(avatar_id.to_string()));
+        .try_insert(LinkedCharacter(character_id.to_string()));
     Ok(())
 }
 
-fn get_linked_avatar_entity(
+fn get_linked_character_entity(
     In(webview): In<Entity>,
-    webviews: Query<Option<&LinkedAvatar>, With<bevy_cef::prelude::WebviewSource>>,
-    registry: Res<AvatarRegistry>,
+    webviews: Query<Option<&LinkedCharacter>, With<bevy_cef::prelude::WebviewSource>>,
+    registry: Res<CharacterRegistry>,
 ) -> ApiResult<Option<Entity>> {
     match webviews.get(webview) {
         Ok(Some(linked)) => {
-            let id = homunculus_core::avatar::AvatarId::new(&linked.0)
-                .map_err(|e| ApiError::InvalidAvatarId(e.to_string()))?;
+            let id = homunculus_core::character::CharacterId::new(&linked.0)
+                .map_err(|e| ApiError::InvalidCharacterId(e.to_string()))?;
             Ok(registry.get(&id))
         }
         Ok(None) => Ok(None),
