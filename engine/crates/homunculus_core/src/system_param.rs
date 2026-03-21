@@ -9,8 +9,7 @@ pub mod windows;
 
 pub mod prelude {
     pub use crate::system_param::{
-        asset_resolver::*, bone_offsets::BoneOffsets, coordinate::Coordinate,
-        mascot_tracker::MascotTracker, mesh_aabb::VrmAabb, monitors::Monitors, vrm_mesh_raycast::*,
-        windows::*,
+        asset_resolver::*, bone_offsets::BoneOffsets, coordinate::Coordinate, mascot_tracker::MascotTracker, mesh_aabb::VrmAabb,
+        monitors::Monitors, vrm_mesh_raycast::*, windows::*,
     };
 }

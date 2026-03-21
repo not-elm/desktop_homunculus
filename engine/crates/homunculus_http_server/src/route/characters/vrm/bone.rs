@@ -3,6 +3,7 @@ use bevy::prelude::Entity;
 use bevy_vrm1::vrm::VrmBone;
 use homunculus_api::prelude::VrmApi;
 use homunculus_api::prelude::axum::{HttpResult, IntoHttpResult};
+use homunculus_core::prelude::CharacterId;
 
 /// Get the entity ID of a specific bone in a VRM model.
 #[utoipa::path(
@@ -10,7 +11,7 @@ use homunculus_api::prelude::axum::{HttpResult, IntoHttpResult};
     path = "/{bone_name}",
     tag = "vrm",
     params(
-        ("vrm" = String, Path, description = "VRM entity ID"),
+        ("id" = String, Path, description = "Character ID"),
         ("bone_name" = String, Path, description = "Bone name"),
     ),
     responses(
@@ -20,8 +21,8 @@ use homunculus_api::prelude::axum::{HttpResult, IntoHttpResult};
 )]
 pub async fn get(
     State(api): State<VrmApi>,
-    Path((vrm, bone_name)): Path<(Entity, String)>,
+    Path((id, bone_name)): Path<(CharacterId, String)>,
 ) -> HttpResult<Entity> {
     let bone_name = VrmBone(bone_name);
-    api.bone(vrm, bone_name).await.into_http_result()
+    api.bone(id, bone_name).await.into_http_result()
 }

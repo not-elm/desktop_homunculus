@@ -284,6 +284,7 @@ fn vrm_router() -> OpenApiRouter<HttpState> {
     OpenApiRouter::new()
         .routes(routes!(characters::vrm::attach_vrm))
         .routes(routes!(characters::vrm::detach_vrm))
+        .routes(routes!(characters::vrm::bone::get))
 }
 
 fn extension_router() -> OpenApiRouter<HttpState> {
