@@ -1,8 +1,12 @@
 pub mod bone;
 pub mod despawn;
+pub mod events;
 pub mod expressions;
+pub mod look;
 pub mod position;
 pub mod speech;
+pub mod spring_bones;
+pub mod vrma;
 
 use axum::{Json, extract::State};
 use homunculus_api::prelude::{

@@ -1,4 +1,4 @@
-use crate::extract::EntityId;
+use crate::extract::character::VrmGuard;
 use axum::extract::State;
 use axum::response::Sse;
 use axum::response::sse::{Event, KeepAlive};
@@ -18,7 +18,7 @@ use std::convert::Infallible;
 use std::pin::Pin;
 use std::time::Duration;
 
-/// Subscribe to VRM events via SSE.
+/// Subscribe to VRM events via SSE for a character.
 ///
 /// Events include: drag-start, drag, drag-end, pointer-press, pointer-click,
 /// pointer-move, pointer-release, pointer-over, pointer-out, pointer-cancel,
@@ -27,14 +27,14 @@ use std::time::Duration;
     get,
     path = "/events",
     tag = "vrm",
-    params(("entity" = String, Path, description = "Entity ID")),
+    params(("id" = String, Path, description = "Character ID")),
     responses(
         (status = 200, description = "SSE stream of VRM events", content_type = "text/event-stream"),
     ),
 )]
 pub async fn events(
     State(reactor): State<ApiReactor>,
-    EntityId(entity): EntityId,
+    VrmGuard { entity, .. }: VrmGuard,
 ) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>> + Send + Sync>, ApiError> {
     let stream = reactor
         .schedule(move |task| async move {

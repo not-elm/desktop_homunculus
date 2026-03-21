@@ -1,4 +1,4 @@
-use crate::extract::EntityId;
+use crate::extract::character::VrmGuard;
 use crate::route::AssetRequest;
 use axum::Json;
 use axum::extract::{Query, State};
@@ -12,22 +12,23 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use utoipa::ToSchema;
 
-/// List all VRMA animations under a VRM entity.
+/// List all VRMA animations under a character's VRM.
 #[utoipa::path(
     get,
     path = "/vrma",
     tag = "vrm",
-    params(("entity" = String, Path, description = "Entity ID")),
+    params(("id" = String, Path, description = "Character ID")),
     responses(
         (status = 200, description = "List of VRMA animations", body = Vec<VrmaInfo>),
-        (status = 404, description = "Entity not found"),
+        (status = 404, description = "Character not found"),
+        (status = 422, description = "No VRM attached"),
     ),
 )]
 pub async fn get(
     State(api): State<VrmAnimationApi>,
-    EntityId(vrm): EntityId,
+    VrmGuard { entity, .. }: VrmGuard,
 ) -> HttpResult<Vec<VrmaInfo>> {
-    api.list_all(vrm).await.into_http_result()
+    api.list_all(entity).await.into_http_result()
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
@@ -60,20 +61,21 @@ pub enum Repeat {
     post,
     path = "/vrma/play",
     tag = "vrm",
-    params(("entity" = String, Path, description = "Entity ID")),
+    params(("id" = String, Path, description = "Character ID")),
     request_body = PlayBody,
     responses(
         (status = 200, description = "Animation started"),
-        (status = 404, description = "Entity or animation not found"),
+        (status = 404, description = "Character or animation not found"),
+        (status = 422, description = "No VRM attached"),
     ),
 )]
 pub async fn play(
     State(vrm_api): State<VrmApi>,
     State(vrma_api): State<VrmAnimationApi>,
-    EntityId(vrm_entity): EntityId,
+    VrmGuard { entity, .. }: VrmGuard,
     Json(body): Json<PlayBody>,
 ) -> HttpResult {
-    let vrma = vrm_api.vrma(vrm_entity, body.asset).await?;
+    let vrma = vrm_api.vrma(entity, body.asset).await?;
 
     let mut args = PlayVrma {
         vrma,
@@ -102,20 +104,21 @@ pub async fn play(
     post,
     path = "/vrma/stop",
     tag = "vrm",
-    params(("entity" = String, Path, description = "Entity ID")),
+    params(("id" = String, Path, description = "Character ID")),
     request_body = AssetRequest,
     responses(
         (status = 200, description = "Animation stopped"),
-        (status = 404, description = "Entity or animation not found"),
+        (status = 404, description = "Character or animation not found"),
+        (status = 422, description = "No VRM attached"),
     ),
 )]
 pub async fn stop(
     State(vrm_api): State<VrmApi>,
     State(vrma_api): State<VrmAnimationApi>,
-    EntityId(vrm_entity): EntityId,
+    VrmGuard { entity, .. }: VrmGuard,
     Json(body): Json<AssetRequest>,
 ) -> HttpResult {
-    let vrma = vrm_api.vrma(vrm_entity, body.asset).await?;
+    let vrma = vrm_api.vrma(entity, body.asset).await?;
     vrma_api.stop(vrma).await.into_http_result()
 }
 
@@ -125,21 +128,22 @@ pub async fn stop(
     path = "/vrma/state",
     tag = "vrm",
     params(
-        ("entity" = String, Path, description = "Entity ID"),
+        ("id" = String, Path, description = "Character ID"),
         ("asset" = String, Query, description = "Asset ID of the VRMA animation"),
     ),
     responses(
         (status = 200, description = "Animation state", body = VrmaState),
-        (status = 404, description = "Entity or animation not found"),
+        (status = 404, description = "Character or animation not found"),
+        (status = 422, description = "No VRM attached"),
     ),
 )]
 pub async fn state(
     State(vrm_api): State<VrmApi>,
     State(vrma_api): State<VrmAnimationApi>,
-    EntityId(vrm_entity): EntityId,
+    VrmGuard { entity, .. }: VrmGuard,
     Query(query): Query<AssetRequest>,
 ) -> HttpResult<VrmaState> {
-    let vrma = vrm_api.vrma(vrm_entity, query.asset).await?;
+    let vrma = vrm_api.vrma(entity, query.asset).await?;
     vrma_api.state(vrma).await.into_http_result()
 }
 
@@ -156,20 +160,21 @@ pub struct SpeedBody {
     put,
     path = "/vrma/speed",
     tag = "vrm",
-    params(("entity" = String, Path, description = "Entity ID")),
+    params(("id" = String, Path, description = "Character ID")),
     request_body = SpeedBody,
     responses(
         (status = 200, description = "Playback speed updated"),
-        (status = 404, description = "Entity or animation not found"),
+        (status = 404, description = "Character or animation not found"),
+        (status = 422, description = "No VRM attached"),
     ),
 )]
 pub async fn speed(
     State(vrm_api): State<VrmApi>,
     State(vrma_api): State<VrmAnimationApi>,
-    EntityId(vrm_entity): EntityId,
+    VrmGuard { entity, .. }: VrmGuard,
     Json(body): Json<SpeedBody>,
 ) -> HttpResult {
-    let vrma = vrm_api.vrma(vrm_entity, body.asset).await?;
+    let vrma = vrm_api.vrma(entity, body.asset).await?;
     vrma_api
         .set_speed(vrma, body.speed)
         .await
@@ -178,7 +183,7 @@ pub async fn speed(
 
 #[cfg(test)]
 mod tests {
-    use crate::tests::{call, test_app};
+    use crate::tests::{call, spawn_character_with_vrm, test_app};
     use bevy::prelude::Name;
     use bevy_vrm1::prelude::{Vrma, VrmaAnimationPlayers};
     use homunculus_api::prelude::VrmaInfo;
@@ -187,7 +192,7 @@ mod tests {
     #[tokio::test]
     async fn test_get_vrma_list() {
         let (mut app, router) = test_app();
-        let vrm_entity = app.world_mut().spawn(Name::new("VRM")).id();
+        let vrm_entity = spawn_character_with_vrm(&mut app, "test-char");
         let vrma_entity = app
             .world_mut()
             .spawn((Name::new("idle"), Vrma, VrmaAnimationPlayers(vec![])))
@@ -196,10 +201,11 @@ mod tests {
             .commands()
             .entity(vrm_entity)
             .add_child(vrma_entity);
-        app.update();
-        let request = axum::http::Request::get(format!("/vrm/{}/vrma", vrm_entity.to_bits()))
-            .body(axum::body::Body::empty())
-            .unwrap();
+
+        let request =
+            axum::http::Request::get("/characters/test-char/vrm/vrma")
+                .body(axum::body::Body::empty())
+                .unwrap();
         let response = call(&mut app, router, request).await;
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let infos: Vec<VrmaInfo> = serde_json::from_slice(&body).unwrap();
