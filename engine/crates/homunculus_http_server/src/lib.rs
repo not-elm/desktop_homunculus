@@ -285,6 +285,16 @@ fn vrm_router() -> OpenApiRouter<HttpState> {
         .routes(routes!(characters::vrm::attach_vrm))
         .routes(routes!(characters::vrm::detach_vrm))
         .routes(routes!(characters::vrm::bone::get))
+        .routes(routes!(characters::vrm::position::get))
+        .routes(routes!(characters::vrm::despawn::despawn))
+        .routes(routes!(
+            characters::vrm::expressions::list,
+            characters::vrm::expressions::set,
+            characters::vrm::expressions::modify,
+            characters::vrm::expressions::clear
+        ))
+        .routes(routes!(characters::vrm::expressions::modify_mouth))
+        .routes(routes!(characters::vrm::speech::timeline))
 }
 
 fn extension_router() -> OpenApiRouter<HttpState> {
@@ -378,21 +388,11 @@ fn vrm_entity_router() -> OpenApiRouter<HttpState> {
         .routes(routes!(vrm::vrma::stop))
         .routes(routes!(vrm::vrma::state))
         .routes(routes!(vrm::vrma::speed))
-        .routes(routes!(
-            vrm::expressions::list,
-            vrm::expressions::set,
-            vrm::expressions::modify,
-            vrm::expressions::clear
-        ))
-        .routes(routes!(vrm::expressions::modify_mouth))
-        .routes(routes!(vrm::position::get))
         .routes(routes!(vrm::spring_bones::list))
         .routes(routes!(vrm::spring_bones::get, vrm::spring_bones::put))
-        .routes(routes!(vrm::speech::timeline))
         .routes(routes!(vrm::look::unlook))
         .routes(routes!(vrm::look::target))
         .routes(routes!(vrm::look::cursor))
-        .routes(routes!(vrm::despawn::despawn))
         .layer(axum::extract::DefaultBodyLimit::max(20 * 1024 * 1024))
 }
 

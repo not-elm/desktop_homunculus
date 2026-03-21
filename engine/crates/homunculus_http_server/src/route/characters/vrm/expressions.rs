@@ -1,4 +1,4 @@
-use crate::extract::EntityId;
+use crate::extract::character::VrmGuard;
 use axum::Json;
 use axum::extract::State;
 use homunculus_api::prelude::axum::{HttpResult, IntoHttpResult};
@@ -12,15 +12,16 @@ use utoipa::ToSchema;
     get,
     path = "/expressions",
     tag = "vrm",
-    params(("entity" = String, Path, description = "Entity ID")),
+    params(("id" = String, Path, description = "Character ID")),
     responses(
         (status = 200, description = "Expression weights", body = ExpressionsResponse),
-        (status = 404, description = "Entity not found"),
+        (status = 404, description = "Character not found"),
+        (status = 422, description = "No VRM attached"),
     ),
 )]
 pub async fn list(
     State(api): State<VrmApi>,
-    EntityId(entity): EntityId,
+    VrmGuard { entity, .. }: VrmGuard,
 ) -> HttpResult<ExpressionsResponse> {
     api.list_expressions(entity).await.into_http_result()
 }
@@ -35,16 +36,17 @@ pub struct WeightsBody {
     put,
     path = "/expressions",
     tag = "vrm",
-    params(("entity" = String, Path, description = "Entity ID")),
+    params(("id" = String, Path, description = "Character ID")),
     request_body = WeightsBody,
     responses(
         (status = 200, description = "Expressions set"),
-        (status = 404, description = "Entity not found"),
+        (status = 404, description = "Character not found"),
+        (status = 422, description = "No VRM attached"),
     ),
 )]
 pub async fn set(
     State(api): State<VrmApi>,
-    EntityId(entity): EntityId,
+    VrmGuard { entity, .. }: VrmGuard,
     Json(body): Json<WeightsBody>,
 ) -> HttpResult {
     api.set_expressions(entity, body.weights)
@@ -57,16 +59,17 @@ pub async fn set(
     patch,
     path = "/expressions",
     tag = "vrm",
-    params(("entity" = String, Path, description = "Entity ID")),
+    params(("id" = String, Path, description = "Character ID")),
     request_body = WeightsBody,
     responses(
         (status = 200, description = "Expressions modified"),
-        (status = 404, description = "Entity not found"),
+        (status = 404, description = "Character not found"),
+        (status = 422, description = "No VRM attached"),
     ),
 )]
 pub async fn modify(
     State(api): State<VrmApi>,
-    EntityId(entity): EntityId,
+    VrmGuard { entity, .. }: VrmGuard,
     Json(body): Json<WeightsBody>,
 ) -> HttpResult {
     api.modify_expressions(entity, body.weights)
@@ -79,13 +82,14 @@ pub async fn modify(
     delete,
     path = "/expressions",
     tag = "vrm",
-    params(("entity" = String, Path, description = "Entity ID")),
+    params(("id" = String, Path, description = "Character ID")),
     responses(
         (status = 200, description = "Expressions cleared"),
-        (status = 404, description = "Entity not found"),
+        (status = 404, description = "Character not found"),
+        (status = 422, description = "No VRM attached"),
     ),
 )]
-pub async fn clear(State(api): State<VrmApi>, EntityId(entity): EntityId) -> HttpResult {
+pub async fn clear(State(api): State<VrmApi>, VrmGuard { entity, .. }: VrmGuard) -> HttpResult {
     api.clear_expressions(entity).await.into_http_result()
 }
 
@@ -94,16 +98,17 @@ pub async fn clear(State(api): State<VrmApi>, EntityId(entity): EntityId) -> Htt
     patch,
     path = "/expressions/mouth",
     tag = "vrm",
-    params(("entity" = String, Path, description = "Entity ID")),
+    params(("id" = String, Path, description = "Character ID")),
     request_body = WeightsBody,
     responses(
         (status = 200, description = "Mouth expressions modified"),
-        (status = 404, description = "Entity not found"),
+        (status = 404, description = "Character not found"),
+        (status = 422, description = "No VRM attached"),
     ),
 )]
 pub async fn modify_mouth(
     State(api): State<VrmApi>,
-    EntityId(entity): EntityId,
+    VrmGuard { entity, .. }: VrmGuard,
     Json(body): Json<WeightsBody>,
 ) -> HttpResult {
     api.modify_mouth(entity, body.weights)

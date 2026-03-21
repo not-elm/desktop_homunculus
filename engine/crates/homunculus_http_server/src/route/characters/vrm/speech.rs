@@ -1,4 +1,4 @@
-use crate::extract::EntityId;
+use crate::extract::character::VrmGuard;
 use axum::Json;
 use axum::extract::State;
 use base64::Engine;
@@ -12,17 +12,18 @@ use utoipa::ToSchema;
     post,
     path = "/speech/timeline",
     tag = "vrm",
-    params(("entity" = String, Path, description = "Entity ID")),
+    params(("id" = String, Path, description = "Character ID")),
     request_body = TimelineBody,
     responses(
         (status = 200, description = "Speech timeline started"),
         (status = 400, description = "Invalid audio data"),
-        (status = 404, description = "Entity not found"),
+        (status = 404, description = "Character not found"),
+        (status = 422, description = "No VRM attached"),
     ),
 )]
 pub async fn timeline(
     State(api): State<SpeechApi>,
-    EntityId(vrm): EntityId,
+    VrmGuard { entity, .. }: VrmGuard,
     Json(body): Json<TimelineBody>,
 ) -> HttpResult {
     const MAX_AUDIO_BYTES: usize = 5 * 1024 * 1024;
@@ -38,7 +39,7 @@ pub async fn timeline(
         )));
     }
 
-    api.speak_with_timeline(vrm, wav, body.keyframes, body.options.unwrap_or_default())
+    api.speak_with_timeline(entity, wav, body.keyframes, body.options.unwrap_or_default())
         .await
         .into_http_result()
 }

@@ -1,4 +1,4 @@
-use crate::extract::EntityId;
+use crate::extract::character::VrmGuard;
 use axum::extract::State;
 use homunculus_api::prelude::axum::{HttpResult, IntoHttpResult};
 use homunculus_api::vrm::{PositionResponse, VrmApi};
@@ -8,15 +8,16 @@ use homunculus_api::vrm::{PositionResponse, VrmApi};
     get,
     path = "/position",
     tag = "vrm",
-    params(("entity" = String, Path, description = "Entity ID")),
+    params(("id" = String, Path, description = "Character ID")),
     responses(
         (status = 200, description = "VRM position data", body = PositionResponse),
-        (status = 404, description = "Entity not found"),
+        (status = 404, description = "Character not found"),
+        (status = 422, description = "No VRM attached"),
     ),
 )]
 pub async fn get(
     State(api): State<VrmApi>,
-    EntityId(entity): EntityId,
+    VrmGuard { entity, .. }: VrmGuard,
 ) -> HttpResult<PositionResponse> {
     api.position(entity).await.into_http_result()
 }

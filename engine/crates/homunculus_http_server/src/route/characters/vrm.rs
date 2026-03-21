@@ -1,4 +1,8 @@
 pub mod bone;
+pub mod despawn;
+pub mod expressions;
+pub mod position;
+pub mod speech;
 
 use axum::{Json, extract::State};
 use homunculus_api::prelude::{
