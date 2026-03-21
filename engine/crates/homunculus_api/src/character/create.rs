@@ -57,20 +57,23 @@ fn create_character(
 
     persist_character(&db, &args)?;
 
+    let entity = commands
+        .spawn((
+            Character,
+            args.id.clone(),
+            CharacterName(args.name.clone()),
+            Name::new(String::new()),
+            CharacterState::default(),
+            Persona::default(),
+        ))
+        .id();
     let info = CharacterInfo {
         id: args.id.to_string(),
-        name: args.name.clone(),
+        name: args.name,
         state: CharacterState::default().0.clone(),
         has_vrm: false,
+        entity: entity.to_bits(),
     };
-    commands.spawn((
-        Character,
-        args.id,
-        CharacterName(args.name),
-        Name::new(String::new()),
-        CharacterState::default(),
-        Persona::default(),
-    ));
     Ok(info)
 }
 
@@ -91,6 +94,7 @@ fn build_info_from_entity(
         name: name.0.clone(),
         state: state.0.clone(),
         has_vrm: false,
+        entity: entity.to_bits(),
     })
 }
 

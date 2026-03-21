@@ -84,8 +84,6 @@ export interface CharacterInfo {
   id: string;
   /** Display name. */
   name: string;
-  /** Asset ID of the associated VRM model. */
-  assetId: string;
   /** Current character state (e.g. "idle", "sitting"). */
   state: string;
   /** Whether a VRM model is currently attached. */
@@ -162,7 +160,6 @@ export class Character {
     const url = host.createUrl("characters");
     const body = {
       id: options.id,
-      assetId: options.assetId,
       name: options.name,
     };
     const response = await host.post(url, body);
@@ -340,6 +337,7 @@ export class Character {
    * ```
    */
   vrm(): Vrm {
+    console.log("+++++++", this.entity);
     return new Vrm(this.entity, this.characterId);
   }
 

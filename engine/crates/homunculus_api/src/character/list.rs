@@ -21,6 +21,7 @@ pub struct CharacterInfo {
     pub state: String,
     /// Whether a VRM model is currently attached.
     pub has_vrm: bool,
+    pub entity: u64,
 }
 
 impl CharacterApi {
@@ -46,6 +47,7 @@ impl CharacterApi {
 
 fn list_characters(
     characters: Query<(
+        Entity,
         &CharacterId,
         &CharacterName,
         &AssetIdComponent,
@@ -55,8 +57,8 @@ fn list_characters(
 ) -> ApiResult<Vec<CharacterInfo>> {
     let infos = characters
         .iter()
-        .map(|(id, name, asset_id, state, has_vrm)| {
-            to_character_info(id, name, asset_id, state, has_vrm)
+        .map(|(entity, id, name, asset_id, state, has_vrm)| {
+            to_character_info(id, name, state, has_vrm, entity)
         })
         .collect();
     Ok(infos)
@@ -79,20 +81,21 @@ fn get_character_info(
     let (id, name, asset_id, state, has_vrm) = characters
         .get(entity)
         .map_err(|_| ApiError::CharacterNotFound(id.to_string()))?;
-    Ok(to_character_info(id, name, asset_id, state, has_vrm))
+    Ok(to_character_info(id, name, state, has_vrm, entity))
 }
 
 fn to_character_info(
     id: &CharacterId,
     name: &CharacterName,
-    asset_id: &AssetIdComponent,
     state: &CharacterState,
     has_vrm: bool,
+    entity: Entity,
 ) -> CharacterInfo {
     CharacterInfo {
         id: id.to_string(),
         name: name.0.clone(),
         state: state.0.clone(),
         has_vrm,
+        entity: entity.to_bits(),
     }
 }
