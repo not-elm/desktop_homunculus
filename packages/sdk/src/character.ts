@@ -337,7 +337,6 @@ export class Character {
    * ```
    */
   vrm(): Vrm {
-    console.log("+++++++", this.entity);
     return new Vrm(this.entity, this.characterId);
   }
 

@@ -216,7 +216,7 @@ fn build_openapi_router() -> OpenApiRouter<HttpState> {
         .nest("/settings", settings_router())
         .nest("/shadow-panel", shadow_panel_router())
         .nest("/entities", entities_router())
-        .nest("/vrm", vrm_router())
+        .nest("/vrm", vrm_router_bk())
         .nest("/coordinates", coordinates_router())
         .nest("/preferences", preferences_router())
         .nest("/webviews", webviews_router())
@@ -276,9 +276,14 @@ fn character_entity_router() -> OpenApiRouter<HttpState> {
         .routes(routes!(characters::get_state, characters::put_state))
         .routes(routes!(characters::get_persona, characters::put_persona))
         .routes(routes!(characters::get_name, characters::put_name))
+        .nest("/extensions", extension_router())
+        .nest("/vrm", vrm_router())
+}
+
+fn vrm_router() -> OpenApiRouter<HttpState> {
+    OpenApiRouter::new()
         .routes(routes!(characters::vrm::attach_vrm))
         .routes(routes!(characters::vrm::detach_vrm))
-        .nest("/extensions", extension_router())
 }
 
 fn extension_router() -> OpenApiRouter<HttpState> {
@@ -353,7 +358,7 @@ fn entities_id_router() -> OpenApiRouter<HttpState> {
         .routes(routes!(entities::tween::tween_scale))
 }
 
-fn vrm_router() -> OpenApiRouter<HttpState> {
+fn vrm_router_bk() -> OpenApiRouter<HttpState> {
     OpenApiRouter::new()
         .routes(routes!(vrm::get::get, vrm::spawn::spawn))
         .routes(routes!(vrm::snapshot::snapshot))
@@ -386,7 +391,6 @@ fn vrm_entity_router() -> OpenApiRouter<HttpState> {
         .routes(routes!(vrm::look::unlook))
         .routes(routes!(vrm::look::target))
         .routes(routes!(vrm::look::cursor))
-        .routes(routes!(vrm::bone::get))
         .routes(routes!(vrm::despawn::despawn))
         .layer(axum::extract::DefaultBodyLimit::max(20 * 1024 * 1024))
 }

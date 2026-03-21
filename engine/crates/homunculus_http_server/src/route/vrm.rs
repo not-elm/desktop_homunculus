@@ -1,6 +1,5 @@
 //! `/vrm` provides methods for interacting with VRM models.
 
-pub mod bone;
 pub(crate) mod despawn;
 pub(crate) mod events;
 pub mod expressions;

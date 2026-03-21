@@ -1,3 +1,5 @@
+pub mod bone;
+
 use axum::{Json, extract::State};
 use homunculus_api::prelude::{
     CharacterApi,
@@ -10,7 +12,7 @@ use crate::{extract::character::CharacterIdExtractor, route::characters::AttachV
 /// Attach a VRM model to a character.
 #[utoipa::path(
     post,
-    path = "/vrm/attach",
+    path = "/attach",
     tag = "characters",
     params(("id" = String, Path, description = "Character ID")),
     request_body = AttachVrmBody,
@@ -32,7 +34,7 @@ pub async fn attach_vrm(
 /// Detach the VRM model from a character.
 #[utoipa::path(
     delete,
-    path = "/vrm",
+    path = "/",
     tag = "characters",
     params(("id" = String, Path, description = "Character ID")),
     responses(
