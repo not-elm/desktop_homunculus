@@ -503,6 +503,33 @@ mod tests {
         (app, router)
     }
 
+    /// Spawns a character entity with VRM marker and all required components,
+    /// then runs `app.update()` to register it in `CharacterRegistry`.
+    pub fn spawn_character_with_vrm(app: &mut App, id: &str) -> Entity {
+        use bevy_vrm1::vrm::Vrm;
+        use homunculus_core::prelude::{
+            AssetId, AssetIdComponent, Character, CharacterId, CharacterName, CharacterState,
+            Persona,
+        };
+
+        let character_id = CharacterId::new(id).unwrap();
+        let entity = app
+            .world_mut()
+            .spawn((
+                Character,
+                character_id,
+                CharacterName(id.to_string()),
+                Name::new(id.to_string()),
+                AssetIdComponent(AssetId::new("test:model.vrm")),
+                CharacterState::default(),
+                Persona::default(),
+                Vrm,
+            ))
+            .id();
+        app.update();
+        entity
+    }
+
     pub async fn assert_response<B>(
         app: &mut App,
         router: Router,

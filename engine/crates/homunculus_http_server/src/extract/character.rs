@@ -48,7 +48,6 @@ where
 ///
 /// Will be used when existing `/vrm/{entity}/...` sub-routes are migrated
 /// to `/characters/{id}/vrm/...`.
-#[allow(dead_code)]
 pub struct VrmGuard {
     pub id: CharacterId,
     pub entity: Entity,
@@ -99,7 +98,6 @@ fn not_found<E: std::fmt::Display>(e: E) -> (StatusCode, Json<serde_json::Value>
     )
 }
 
-#[allow(dead_code)]
 fn map_vrm_error(e: ApiError) -> (StatusCode, Json<serde_json::Value>) {
     let status = match &e {
         ApiError::CharacterNotFound(_) => StatusCode::NOT_FOUND,
