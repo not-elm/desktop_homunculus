@@ -12,7 +12,7 @@ import {type TimelineKeyframe} from "./vrm";
  *   [null, 0.05],
  *   ["oh", 0.12],
  * ]);
- * const vrm = await Vrm.findByName("MyAvatar");
+ * const vrm = await Vrm.findByName("MyCharacter");
  * await vrm.speakWithTimeline(wavData, keyframes);
  * ```
  */

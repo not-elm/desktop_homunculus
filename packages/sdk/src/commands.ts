@@ -33,7 +33,7 @@
 
 import { writeFileSync } from "node:fs";
 import { z, type ZodType } from "zod";
-import { Avatar } from "./avatar";
+import { Character } from "./character";
 import { Vrm } from "./vrm";
 
 /**
@@ -183,7 +183,7 @@ export namespace input {
    * menu UI. This helper validates the input and returns a ready-to-use
    * {@link Vrm} instance.
    *
-   * @deprecated Use {@link input.parseMenuAvatar} instead for avatar-based lifecycle management.
+   * @deprecated Use {@link input.parseMenuCharacter} instead for character-based lifecycle management.
    * @returns A {@link Vrm} instance for the linked entity
    * @throws {StdinParseError} With `code: "EMPTY_STDIN"` if stdin is empty
    * @throws {StdinParseError} With `code: "INVALID_JSON"` if stdin is not valid JSON
@@ -203,42 +203,42 @@ export namespace input {
   }
 
   /**
-   * Parse menu command stdin and return the linked Avatar instance.
+   * Parse menu command stdin and return the linked Character instance.
    *
-   * Menu commands receive `{ "linkedAvatar": "<avatarId>" }` on stdin from the
+   * Menu commands receive `{ "linkedCharacter": "<characterId>" }` on stdin from the
    * menu UI. This helper validates the input and returns a ready-to-use
-   * {@link Avatar} instance. Falls back to `linkedVrm` for backward compatibility.
+   * {@link Character} instance. Falls back to `linkedVrm` for backward compatibility.
    *
-   * @returns An {@link Avatar} instance for the linked avatar
+   * @returns A {@link Character} instance for the linked character
    * @throws {StdinParseError} With `code: "EMPTY_STDIN"` if stdin is empty
    * @throws {StdinParseError} With `code: "INVALID_JSON"` if stdin is not valid JSON
-   * @throws {StdinParseError} With `code: "VALIDATION_ERROR"` if neither `linkedAvatar` nor `linkedVrm` is present
+   * @throws {StdinParseError} With `code: "VALIDATION_ERROR"` if neither `linkedCharacter` nor `linkedVrm` is present
    *
    * @example
    * ```typescript
    * import { input } from "@hmcs/sdk/commands";
    *
-   * const avatar = await input.parseMenuAvatar();
-   * const vrm = avatar.vrm();
+   * const character = await input.parseMenuCharacter();
+   * const vrm = character.vrm();
    * await vrm.setExpressions({ happy: 1.0 });
    * ```
    */
-  export async function parseMenuAvatar(): Promise<Avatar> {
+  export async function parseMenuCharacter(): Promise<Character> {
     const schema = z.object({
-      linkedAvatar: z.string().optional(),
+      linkedCharacter: z.string().optional(),
       linkedVrm: z.number().optional(),
     });
     const parsed = await parse(schema);
 
-    if (parsed.linkedAvatar) {
-      return Avatar.find(parsed.linkedAvatar);
+    if (parsed.linkedCharacter) {
+      return Character.find(parsed.linkedCharacter);
     }
     if (parsed.linkedVrm !== undefined) {
-      return new Avatar("", parsed.linkedVrm);
+      return new Character("", parsed.linkedVrm);
     }
     throw new StdinParseError(
       "VALIDATION_ERROR",
-      "Expected linkedAvatar or linkedVrm in stdin",
+      "Expected linkedCharacter or linkedVrm in stdin",
     );
   }
 }

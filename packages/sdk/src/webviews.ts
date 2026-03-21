@@ -1,4 +1,4 @@
-import { Avatar } from "./avatar";
+import { Character } from "./character";
 import { host } from "./host";
 import { type Vec2 } from "./math";
 import { Vrm } from "./vrm";
@@ -180,10 +180,10 @@ export interface WebviewInfo {
     size: Vec2;
     viewportSize: Vec2;
     offset: Vec2;
-    /** @deprecated Use {@link linkedAvatar} instead. */
+    /** @deprecated Use {@link linkedCharacter} instead. */
     linkedVrm?: number | null;
-    /** The avatar ID linked to this webview, if any. */
-    linkedAvatar?: string | null;
+    /** The character ID linked to this webview, if any. */
+    linkedCharacter?: string | null;
 }
 
 /**
@@ -204,10 +204,10 @@ export interface WebviewOpenOptions {
     size?: Vec2;
     viewportSize?: Vec2;
     offset?: Vec2;
-    /** @deprecated Use {@link linkedAvatar} instead. */
+    /** @deprecated Use {@link linkedCharacter} instead. */
     linkedVrm?: number;
-    /** The avatar ID to link to this webview. */
-    linkedAvatar?: string;
+    /** The character ID to link to this webview. */
+    linkedCharacter?: string;
 }
 
 /** Request body for patching webview properties. */
@@ -222,12 +222,12 @@ export interface WebviewNavigateRequest {
     source: WebviewSource;
 }
 
-/** Request body for setting a webview's linked avatar. */
-export interface SetLinkedAvatarRequest {
-    avatarId: string;
+/** Request body for setting a webview's linked character. */
+export interface SetLinkedCharacterRequest {
+    characterId: string;
 }
 
-/** @deprecated Use {@link SetLinkedAvatarRequest} instead. */
+/** @deprecated Use {@link SetLinkedCharacterRequest} instead. */
 export interface SetLinkedVrmRequest {
     vrm: number;
 }
@@ -378,59 +378,59 @@ export class Webview {
     }
 
     /**
-     * Gets the avatar linked to this webview.
+     * Gets the character linked to this webview.
      *
-     * @returns The linked Avatar instance, or undefined if no avatar is linked
+     * @returns The linked Character instance, or undefined if no character is linked
      *
      * @example
      * ```typescript
      * const wv = Webview.current();
-     * const avatar = await wv?.linkedAvatar();
-     * if (avatar) {
-     *   console.log(avatar.avatarId);
+     * const character = await wv?.linkedCharacter();
+     * if (character) {
+     *   console.log(character.characterId);
      * }
      * ```
      */
-    async linkedAvatar(): Promise<Avatar | undefined> {
+    async linkedCharacter(): Promise<Character | undefined> {
         const response = await host.get(
-            host.createUrl(`webviews/${this.entity}/linked-avatar`)
+            host.createUrl(`webviews/${this.entity}/linked-character`)
         );
-        const avatarId = await response.json();
-        return avatarId !== null ? Avatar.find(avatarId) : undefined;
+        const characterId = await response.json();
+        return characterId !== null ? Character.find(characterId) : undefined;
     }
 
     /**
-     * Links this webview to an avatar.
+     * Links this webview to a character.
      *
-     * @param avatar - The Avatar to link to this webview
+     * @param character - The Character to link to this webview
      *
      * @example
      * ```typescript
-     * const avatar = await Avatar.find("elmer");
+     * const character = await Character.find("elmer");
      * const wv = await Webview.open({ source: webviewSource.local("my-mod:ui") });
-     * await wv.setLinkedAvatar(avatar);
+     * await wv.setLinkedCharacter(character);
      * ```
      */
-    async setLinkedAvatar(avatar: Avatar): Promise<void> {
+    async setLinkedCharacter(character: Character): Promise<void> {
         await host.put(
-            host.createUrl(`webviews/${this.entity}/linked-avatar`),
-            { avatarId: avatar.avatarId }
+            host.createUrl(`webviews/${this.entity}/linked-character`),
+            { characterId: character.characterId }
         );
     }
 
     /**
-     * Removes the avatar link from this webview.
+     * Removes the character link from this webview.
      */
-    async unlinkAvatar(): Promise<void> {
+    async unlinkCharacter(): Promise<void> {
         await host.deleteMethod(
-            host.createUrl(`webviews/${this.entity}/linked-avatar`)
+            host.createUrl(`webviews/${this.entity}/linked-character`)
         );
     }
 
     /**
      * Gets the VRM linked to this webview.
      *
-     * @deprecated Use {@link linkedAvatar} instead.
+     * @deprecated Use {@link linkedCharacter} instead.
      * @returns The linked VRM instance, or undefined if no VRM is linked
      */
     async linkedVrm(): Promise<Vrm | undefined> {
@@ -444,7 +444,7 @@ export class Webview {
     /**
      * Links this webview to a VRM entity.
      *
-     * @deprecated Use {@link setLinkedAvatar} instead.
+     * @deprecated Use {@link setLinkedCharacter} instead.
      * @param vrm - The VRM to link to this webview
      */
     async setLinkedVrm(vrm: Vrm): Promise<void> {
@@ -457,7 +457,7 @@ export class Webview {
     /**
      * Removes the VRM link from this webview.
      *
-     * @deprecated Use {@link unlinkAvatar} instead.
+     * @deprecated Use {@link unlinkCharacter} instead.
      */
     async unlinkVrm(): Promise<void> {
         await host.deleteMethod(

@@ -79,7 +79,7 @@ export type OverrideType = "none" | "blend" | "block";
  *
  * @example
  * ```typescript
- * const vrm = await Vrm.findByName("MyAvatar");
+ * const vrm = await Vrm.findByName("MyCharacter");
  * const { expressions } = await vrm.expressions();
  * for (const expr of expressions) {
  *   console.log(`${expr.name}: weight=${expr.weight}, binary=${expr.isBinary}`);
@@ -410,12 +410,12 @@ export class Vrm {
     /** The Bevy entity ID of the VRM instance. */
     readonly entity: number;
 
-    /** The avatar ID, if this Vrm was created from an Avatar. */
-    readonly avatarId?: string;
+    /** The character ID, if this Vrm was created from a Character. */
+    readonly characterId?: string;
 
-    constructor(entity: number, avatarId?: string) {
+    constructor(entity: number, characterId?: string) {
         this.entity = entity;
-        this.avatarId = avatarId;
+        this.characterId = characterId;
     }
 
     /**
@@ -449,7 +449,7 @@ export class Vrm {
      *
      * @example
      * ```typescript
-     * const vrm = await Vrm.findByName("MyAvatar");
+     * const vrm = await Vrm.findByName("MyCharacter");
      * const persona = await vrm.persona();
      * console.log(persona.profile);
      * ```
@@ -466,7 +466,7 @@ export class Vrm {
      *
      * @example
      * ```typescript
-     * const vrm = await Vrm.findByName("MyAvatar");
+     * const vrm = await Vrm.findByName("MyCharacter");
      * await vrm.setPersona({
      *   profile: "A cheerful assistant",
      *   ocean: { openness: 0.8, extraversion: 0.7 },
@@ -479,7 +479,7 @@ export class Vrm {
     }
 
     /**
-     * Returns the name of the VRM avatar.
+     * Returns the name of the VRM character.
      */
     async name(): Promise<string> {
         return await entities.name(this.entity);
@@ -522,7 +522,7 @@ export class Vrm {
      *
      * @example
      * ```typescript
-     * const vrm = await Vrm.findByName("MyAvatar");
+     * const vrm = await Vrm.findByName("MyCharacter");
      * const { expressions } = await vrm.expressions();
      * for (const expr of expressions) {
      *   console.log(`${expr.name}: ${expr.weight}`);
@@ -542,7 +542,7 @@ export class Vrm {
      *
      * @example
      * ```typescript
-     * const vrm = await Vrm.findByName("MyAvatar");
+     * const vrm = await Vrm.findByName("MyCharacter");
      * await vrm.setExpressions({ happy: 1.0, blink: 0.5 });
      * ```
      */
@@ -558,7 +558,7 @@ export class Vrm {
      *
      * @example
      * ```typescript
-     * const vrm = await Vrm.findByName("MyAvatar");
+     * const vrm = await Vrm.findByName("MyCharacter");
      * // Only modifies "happy", leaves other overrides intact
      * await vrm.modifyExpressions({ happy: 1.0 });
      * ```
@@ -572,7 +572,7 @@ export class Vrm {
      *
      * @example
      * ```typescript
-     * const vrm = await Vrm.findByName("MyAvatar");
+     * const vrm = await Vrm.findByName("MyCharacter");
      * await vrm.clearExpressions();
      * ```
      */
@@ -589,7 +589,7 @@ export class Vrm {
      *
      * @example
      * ```typescript
-     * const vrm = await Vrm.findByName("MyAvatar");
+     * const vrm = await Vrm.findByName("MyCharacter");
      * await vrm.modifyMouth({ aa: 0.8, oh: 0.2 });
      * ```
      */
@@ -682,7 +682,7 @@ export class Vrm {
      *
      * @example
      * ```typescript
-     * const vrm = await Vrm.findByName("MyAvatar");
+     * const vrm = await Vrm.findByName("MyCharacter");
      * const wavData = await fetchWavFromTTS("Hello world");
      * await vrm.speakWithTimeline(wavData, [
      *   { duration: 0.1, targets: { aa: 1.0 } },
@@ -735,7 +735,7 @@ export class Vrm {
     /**
      * Spawns a new VRM instance from the given mod asset ID.
      *
-     * @deprecated Use {@link Avatar.spawn} instead for avatar-based lifecycle management.
+     * @deprecated Use {@link Character.spawn} instead for character-based lifecycle management.
      */
     static async spawn(asset: string, options?: SpawnVrmOptions): Promise<Vrm> {
         const response = await host.post(host.createUrl("vrm"), {
@@ -749,8 +749,8 @@ export class Vrm {
     /**
      * Finds a VRM instance by its name.
      *
-     * @deprecated Use {@link Avatar.find} instead for avatar-based lifecycle management.
-     * @param vrmName VRM avatar name
+     * @deprecated Use {@link Character.find} instead for character-based lifecycle management.
+     * @param vrmName VRM character name
      */
     static async findByName(vrmName: string): Promise<Vrm> {
         const response = await host.get(host.createUrl("vrm", {name: vrmName}));
@@ -764,7 +764,7 @@ export class Vrm {
     /**
      * Waits for a VRM instance to be spawned and initialized by its name.
      *
-     * @param vrmName VRM avatar name
+     * @param vrmName VRM character name
      */
     static async waitLoadByName(vrmName: string): Promise<Vrm> {
         const response = await host.get(host.createUrl("vrm/wait-load", {
@@ -790,7 +790,7 @@ export class Vrm {
     /**
      * Returns detailed snapshot of all VRM instances.
      *
-     * @deprecated Use {@link Avatar.findAll} instead for avatar-based lifecycle management.
+     * @deprecated Use {@link Character.findAll} instead for character-based lifecycle management.
      *
      * @example
      * ```typescript
