@@ -11,7 +11,6 @@ mod list;
 mod name;
 mod persona;
 mod resolve;
-mod state;
 
 pub use list::CharacterInfo;
 

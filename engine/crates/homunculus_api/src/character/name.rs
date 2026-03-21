@@ -3,7 +3,7 @@ use crate::error::{ApiError, ApiResult};
 use bevy::prelude::*;
 use bevy_flurx::prelude::*;
 use homunculus_core::prelude::{CharacterId, CharacterName, CharacterRegistry};
-use homunculus_prefs::character_repo::CharacterRepo;
+use homunculus_prefs::characters::CharactersTable;
 use homunculus_prefs::prelude::PrefsDatabase;
 
 impl CharacterApi {
@@ -59,7 +59,7 @@ fn set_character_name(
         .entity(entity)
         .try_insert((CharacterName(name.clone()), Name::new(name.clone())));
 
-    CharacterRepo::new(&db)
+    CharactersTable::new(&db)
         .update_name(&id, &name)
         .map_err(|e| ApiError::Sql(e.to_string()))?;
 

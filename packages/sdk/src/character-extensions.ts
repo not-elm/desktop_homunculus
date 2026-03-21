@@ -66,27 +66,7 @@ export async function deleteExtension(characterId: string, modName: string): Pro
     await host.deleteMethod(url);
 }
 
-/**
- * Normalizes a mod name for use in URL paths.
- *
- * Replaces `@` and `/` with URL-safe characters so that scoped
- * npm package names can be used as path segments.
- *
- * @param modName - The original mod name
- * @returns The normalized name suitable for URL paths
- *
- * @example
- * ```ts
- * normalizeModName("@hmcs/voicevox") // "hmcs__voicevox"
- * normalizeModName("my-mod")         // "my-mod"
- * ```
- */
-export function normalizeModName(modName: string): string {
-    return modName.replace(/^@/, "").replace(/\//g, "__");
-}
-
 /** Builds the URL for an extension endpoint. */
 function extensionUrl(characterId: string, modName: string): URL {
-    const normalized = normalizeModName(modName);
-    return host.createUrl(`characters/${characterId}/extensions/${normalized}`);
+    return host.createUrl(`characters/${characterId}/extensions`, { mod: modName });
 }

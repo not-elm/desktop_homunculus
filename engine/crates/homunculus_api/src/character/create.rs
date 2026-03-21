@@ -4,17 +4,16 @@ use crate::error::{ApiError, ApiResult};
 use bevy::prelude::*;
 use bevy_flurx::prelude::*;
 use homunculus_core::prelude::{
-    AssetId, AssetIdComponent, Character, CharacterId, CharacterName, CharacterRegistry,
-    CharacterState, Persona,
+    AssetIdComponent, Character, CharacterId, CharacterName, CharacterRegistry, CharacterState,
+    Persona,
 };
-use homunculus_prefs::character_repo::CharacterRepo;
+use homunculus_prefs::characters::CharactersTable;
 use homunculus_prefs::prelude::PrefsDatabase;
 
 /// Arguments for creating a new character.
 #[derive(Debug, Clone)]
 pub(crate) struct CreateCharacterArgs {
     pub id: CharacterId,
-    pub asset_id: AssetId,
     pub name: String,
 }
 
@@ -27,12 +26,12 @@ impl CharacterApi {
     pub async fn create(
         &self,
         id: CharacterId,
-        asset_id: AssetId,
-        name: String,
+        name: impl Into<String>,
     ) -> ApiResult<CharacterInfo> {
+        let name = name.into();
         self.0
             .schedule(move |task| async move {
-                let args = CreateCharacterArgs { id, asset_id, name };
+                let args = CreateCharacterArgs { id, name };
                 task.will(Update, once::run(create_character).with(args))
                     .await
             })
@@ -61,7 +60,6 @@ fn create_character(
     let info = CharacterInfo {
         id: args.id.to_string(),
         name: args.name.clone(),
-        asset_id: args.asset_id.as_ref().to_string(),
         state: CharacterState::default().0.clone(),
         has_vrm: false,
     };
@@ -70,7 +68,6 @@ fn create_character(
         args.id,
         CharacterName(args.name),
         Name::new(String::new()),
-        AssetIdComponent(args.asset_id),
         CharacterState::default(),
         Persona::default(),
     ));
@@ -92,7 +89,6 @@ fn build_info_from_entity(
     Ok(CharacterInfo {
         id: id.to_string(),
         name: name.0.clone(),
-        asset_id: asset_id.0.as_ref().to_string(),
         state: state.0.clone(),
         has_vrm: false,
     })
@@ -102,13 +98,7 @@ fn build_info_from_entity(
 fn persist_character(db: &PrefsDatabase, args: &CreateCharacterArgs) -> ApiResult<()> {
     let persona_json =
         serde_json::to_string(&Persona::default()).unwrap_or_else(|_| "{}".to_string());
-    CharacterRepo::new(db)
-        .create(
-            &args.id,
-            args.asset_id.as_ref(),
-            &args.name,
-            &persona_json,
-            "{}",
-        )
+    CharactersTable::new(db)
+        .create(&args.id, &args.name, &persona_json, "{}")
         .map_err(|e| ApiError::Sql(e.to_string()))
 }

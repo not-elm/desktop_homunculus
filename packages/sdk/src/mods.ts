@@ -100,7 +100,7 @@ export namespace mods {
      * ```
      */
     export async function get(modName: string): Promise<ModInfo> {
-        const response = await host.get(host.createUrl(`mods/${modName}`));
+        const response = await host.get(host.createUrl("mods/by-name", { name: modName }));
         return await response.json();
     }
 

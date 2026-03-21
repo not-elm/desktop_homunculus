@@ -18,8 +18,6 @@ pub struct CharacterDetail {
     pub id: String,
     /// The display name.
     pub name: String,
-    /// The asset ID of the VRM model bound to this character.
-    pub asset_id: String,
     /// The current behavioral state (e.g. "idle", "sitting").
     pub state: String,
     /// Whether a VRM model is currently attached.
@@ -34,8 +32,6 @@ pub struct CharacterDetail {
 pub struct CreateBody {
     /// The unique character identifier.
     pub id: String,
-    /// The asset ID of the VRM model to bind.
-    pub asset_id: String,
     /// Optional display name. Defaults to the `id` when omitted.
     pub name: Option<String>,
 }
@@ -85,10 +81,9 @@ pub async fn create(
 ) -> HttpResult<CharacterInfo> {
     let id = CharacterId::new(&body.id)
         .map_err(|e| homunculus_api::prelude::ApiError::InvalidCharacterId(e.to_string()))?;
-    let asset_id = AssetId::new(&body.asset_id);
     let name = body.name.unwrap_or_else(|| body.id.clone());
 
-    api.create(id, asset_id, name).await.into_http_result()
+    api.create(id, name).await.into_http_result()
 }
 
 /// List all characters.
@@ -124,7 +119,6 @@ pub async fn get(
     let detail = CharacterDetail {
         id: info.id,
         name: info.name,
-        asset_id: info.asset_id,
         state: info.state,
         has_vrm: info.has_vrm,
         persona,
@@ -165,8 +159,9 @@ pub async fn get_state(
     State(api): State<CharacterApi>,
     CharacterIdExtractor { id, .. }: CharacterIdExtractor,
 ) -> HttpResult<serde_json::Value> {
-    let state = api.get_state(id).await?;
-    Ok(Json(serde_json::json!({ "state": state.0 })))
+    todo!()
+    // let state = api.get_state(id).await?;
+    // Ok(Json(serde_json::json!({ "state": state.0 })))
 }
 
 /// Update the state of a character.
@@ -186,7 +181,8 @@ pub async fn put_state(
     CharacterIdExtractor { id, .. }: CharacterIdExtractor,
     Json(body): Json<PutStateBody>,
 ) -> HttpResult {
-    api.set_state(id, body.state).await.into_http_result()
+    todo!()
+    // api.set_state(id, body.state).await.into_http_result()
 }
 
 /// Get the persona of a character.
@@ -515,13 +511,13 @@ mod tests {
     /// so that extension operations (which need the FK) succeed.
     fn spawn_character_with_db(app: &mut App, id: &str, name: &str, asset_id: &str) -> Entity {
         use homunculus_prefs::PrefsDatabase;
-        use homunculus_prefs::character_repo::CharacterRepo;
+        use homunculus_prefs::characters::CharactersTable;
 
         let db = app
             .world()
             .get_non_send_resource::<PrefsDatabase>()
             .unwrap();
-        CharacterRepo::new(db)
+        CharactersTable::new(db)
             .create(id, asset_id, name, "{}", "{}")
             .unwrap();
 

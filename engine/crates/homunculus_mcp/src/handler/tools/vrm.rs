@@ -4,10 +4,9 @@
 //! with the pre-character entity-based API.
 
 use super::super::HomunculusMcpHandler;
-use bevy::math::Vec2;
+use bevy::{asset::uuid, math::Vec2};
 use homunculus_api::entities::MoveTarget;
-use homunculus_core::prelude::{CharacterId, Persona};
-use homunculus_utils::schema::asset::AssetId;
+use homunculus_core::prelude::{AssetId, CharacterId, Persona};
 use rmcp::handler::server::wrapper::Parameters;
 use rmcp::schemars;
 use rmcp::schemars::JsonSchema;
@@ -19,10 +18,10 @@ use std::collections::HashMap;
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct SpawnCharacterParams {
-    /// Asset ID of the VRM model to spawn (e.g. "vrm:my-model").
-    pub asset: String,
     /// Optional display name for the character.
     pub name: Option<String>,
+    /// Optional vrm asset id for rendering character 3D model.
+    pub vrm_asset: Option<String>,
     /// Optional persona profile text describing the character.
     pub persona_profile: Option<String>,
     /// Optional viewport x position to place the character.
@@ -109,22 +108,22 @@ impl HomunculusMcpHandler {
             .name
             .clone()
             .unwrap_or_else(|| character_id_str.clone());
-        let asset_id = AssetId::new(&args.asset);
 
-        if let Err(e) = self
-            .character_api
-            .create(id.clone(), asset_id.clone(), name)
-            .await
-        {
+        if let Err(e) = self.character_api.create(id.clone(), name).await {
             return format!("Error creating character: {e}");
-        }
-
-        if let Err(e) = self.character_api.attach_vrm(id.clone(), asset_id).await {
-            return format!("Created character '{character_id_str}' but failed to attach VRM: {e}");
         }
 
         if let Some(persona) = build_persona(&args) {
             let _ = self.character_api.set_persona(id.clone(), persona).await;
+        }
+
+        if let Some(asset_id) = args.vrm_asset {
+            let asset_id = AssetId::from(asset_id);
+            if let Err(e) = self.character_api.attach_vrm(id.clone(), asset_id).await {
+                return format!(
+                    "Created character '{character_id_str}' but failed to attach VRM: {e}"
+                );
+            }
         }
 
         if let (Some(x), Some(y)) = (args.x, args.y) {
@@ -344,7 +343,7 @@ fn generate_character_id(args: &SpawnCharacterParams) -> String {
     let base = args
         .name
         .as_deref()
-        .unwrap_or(&args.asset)
+        .unwrap_or(&uuid::Uuid::new_v4().to_string())
         .to_lowercase()
         .chars()
         .map(|c| {

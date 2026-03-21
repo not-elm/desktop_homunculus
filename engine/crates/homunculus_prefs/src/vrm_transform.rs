@@ -3,13 +3,12 @@
 //! VRM transforms are also periodically saved to protect against unexpected
 //! termination (SIGKILL, Force Quit, power loss).
 
-use std::time::Duration;
-
-use crate::character_repo::CharacterRepo;
+use crate::characters::CharactersTable;
 use crate::{PrefsDatabase, PrefsKeys};
 use bevy::{prelude::*, time::common_conditions::on_timer};
 use bevy_vrm1::vrm::Vrm;
 use homunculus_core::prelude::{AssetIdComponent, CharacterId};
+use std::time::Duration;
 
 /// Interval in seconds between periodic VRM transform saves.
 pub(super) struct PrefsVrmTransformPlugin;
@@ -53,7 +52,7 @@ fn save_single_transform(
 ) {
     if let Some(id) = character_id {
         let json = serde_json::to_string(transform).unwrap_or_else(|_| "{}".to_string());
-        let _ = CharacterRepo::new(db).update_transform(id, &json);
+        let _ = CharactersTable::new(db).update_transform(id, &json);
     } else {
         let key = PrefsKeys::asset_transform(asset_id.0.as_ref());
         let _ = db.save_as(&key, transform);

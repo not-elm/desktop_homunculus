@@ -226,7 +226,7 @@ mod tests {
 
         phase_a_personas(&db).unwrap();
 
-        let repo = crate::character_repo::CharacterRepo(&db);
+        let repo = crate::characters::CharactersTable(&db);
         let row = repo.find_by_id("elmer").unwrap().unwrap();
         assert_eq!(row.asset_id, "vrm:elmer");
         assert_eq!(row.persona, persona);
@@ -244,7 +244,7 @@ mod tests {
 
         phase_a_personas(&db).unwrap();
 
-        let repo = crate::character_repo::CharacterRepo(&db);
+        let repo = crate::characters::CharactersTable(&db);
         assert!(repo.list_all().unwrap().is_empty());
     }
 
@@ -269,7 +269,7 @@ mod tests {
         .unwrap();
         phase_b_transforms(&db).unwrap();
 
-        let repo = crate::character_repo::CharacterRepo(&db);
+        let repo = crate::characters::CharactersTable(&db);
         let row = repo.find_by_id("elmer").unwrap().unwrap();
         assert_eq!(row.transform, transform);
     }
@@ -299,7 +299,7 @@ mod tests {
         .unwrap();
         phase_c_names(&db).unwrap();
 
-        let repo = crate::character_repo::CharacterRepo(&db);
+        let repo = crate::characters::CharactersTable(&db);
         let row = repo.find_by_id("elmer").unwrap().unwrap();
         assert_eq!(row.name, "Elmer");
     }
@@ -329,7 +329,7 @@ mod tests {
         .unwrap();
         phase_c_names(&db).unwrap();
 
-        let repo = crate::character_repo::CharacterRepo(&db);
+        let repo = crate::characters::CharactersTable(&db);
         let row = repo.find_by_id("elmer").unwrap().unwrap();
         // `ja` < `zh` alphabetically, so `ja` is first
         assert_eq!(row.name, "エルマー");
@@ -367,7 +367,7 @@ mod tests {
 
         run_if_needed(&db).unwrap();
 
-        let repo = crate::character_repo::CharacterRepo(&db);
+        let repo = crate::characters::CharactersTable(&db);
         let all = repo.list_all().unwrap();
         assert_eq!(all.len(), 2);
 
@@ -397,7 +397,7 @@ mod tests {
         run_if_needed(&db).unwrap();
         run_if_needed(&db).unwrap(); // second run should be a no-op
 
-        let repo = crate::character_repo::CharacterRepo(&db);
+        let repo = crate::characters::CharactersTable(&db);
         assert_eq!(repo.list_all().unwrap().len(), 1);
         assert_eq!(current_version(&db).unwrap(), 1);
     }

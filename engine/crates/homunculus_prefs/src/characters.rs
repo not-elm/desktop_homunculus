@@ -12,13 +12,11 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 pub struct CharacterRow {
     pub id: String,
-    pub asset_id: String,
     pub name: String,
     /// JSON-encoded persona object.
     pub persona: String,
     /// JSON-encoded transform object.
     pub transform: String,
-    pub state: String,
     pub created_at: String,
 }
 
@@ -36,9 +34,9 @@ pub struct ExtensionRow {
 ///
 /// Wraps a shared reference to [`PrefsDatabase`] and exposes typed
 /// query/mutation helpers.
-pub struct CharacterRepo<'a>(pub(crate) &'a PrefsDatabase);
+pub struct CharactersTable<'a>(pub(crate) &'a PrefsDatabase);
 
-impl<'a> CharacterRepo<'a> {
+impl<'a> CharactersTable<'a> {
     /// Creates a new `CharacterRepo` from a database reference.
     pub fn new(db: &'a PrefsDatabase) -> Self {
         Self(db)
@@ -48,15 +46,14 @@ impl<'a> CharacterRepo<'a> {
     pub fn create(
         &self,
         id: &str,
-        asset_id: &str,
         name: &str,
         persona_json: &str,
         transform_json: &str,
     ) -> Result<(), rusqlite::Error> {
         self.0.0.execute(
-            "INSERT INTO characters (id, asset_id, name, persona, transform) \
-             VALUES (?1, ?2, ?3, ?4, ?5)",
-            rusqlite::params![id, asset_id, name, persona_json, transform_json],
+            "INSERT OR IGNORE INTO characters (id, name, persona, transform) \
+             VALUES (?1, ?2, ?3, ?4)",
+            rusqlite::params![id, name, persona_json, transform_json],
         )?;
         Ok(())
     }
@@ -64,28 +61,16 @@ impl<'a> CharacterRepo<'a> {
     /// Finds a character by its primary key.
     pub fn find_by_id(&self, id: &str) -> Result<Option<CharacterRow>, rusqlite::Error> {
         let mut stmt = self.0.0.prepare(
-            "SELECT id, asset_id, name, persona, transform, state, created_at \
+            "SELECT id,  name, persona, transform, created_at \
              FROM characters WHERE id = ?1",
         )?;
         row_to_character_opt(&mut stmt, rusqlite::params![id])
     }
 
-    /// Finds the first character with a given `asset_id`.
-    pub fn find_by_asset_id(
-        &self,
-        asset_id: &str,
-    ) -> Result<Option<CharacterRow>, rusqlite::Error> {
-        let mut stmt = self.0.0.prepare(
-            "SELECT id, asset_id, name, persona, transform, state, created_at \
-             FROM characters WHERE asset_id = ?1",
-        )?;
-        row_to_character_opt(&mut stmt, rusqlite::params![asset_id])
-    }
-
     /// Returns every character row.
     pub fn list_all(&self) -> Result<Vec<CharacterRow>, rusqlite::Error> {
         let mut stmt = self.0.0.prepare(
-            "SELECT id, asset_id, name, persona, transform, state, created_at \
+            "SELECT id, name, persona, transform, state, created_at \
              FROM characters ORDER BY created_at ASC",
         )?;
         rows_to_characters(&mut stmt, [])
@@ -113,15 +98,6 @@ impl<'a> CharacterRepo<'a> {
         Ok(())
     }
 
-    /// Updates the asset ID for a character.
-    pub fn update_asset_id(&self, id: &str, asset_id: &str) -> Result<(), rusqlite::Error> {
-        self.0.0.execute(
-            "UPDATE characters SET asset_id = ?1 WHERE id = ?2",
-            rusqlite::params![asset_id, id],
-        )?;
-        Ok(())
-    }
-
     /// Updates the display name for a character.
     pub fn update_name(&self, id: &str, name: &str) -> Result<(), rusqlite::Error> {
         self.0.0.execute(
@@ -136,15 +112,6 @@ impl<'a> CharacterRepo<'a> {
         self.0.0.execute(
             "UPDATE characters SET transform = ?1 WHERE id = ?2",
             rusqlite::params![transform_json, id],
-        )?;
-        Ok(())
-    }
-
-    /// Updates the state string (e.g. `"idle"`, `"sitting"`) for a character.
-    pub fn update_state(&self, id: &str, state: &str) -> Result<(), rusqlite::Error> {
-        self.0.0.execute(
-            "UPDATE characters SET state = ?1 WHERE id = ?2",
-            rusqlite::params![state, id],
         )?;
         Ok(())
     }
@@ -245,12 +212,10 @@ fn rows_to_characters(
 fn read_character_row(row: &rusqlite::Row<'_>) -> Result<CharacterRow, rusqlite::Error> {
     Ok(CharacterRow {
         id: row.get(0)?,
-        asset_id: row.get(1)?,
-        name: row.get(2)?,
-        persona: row.get(3)?,
-        transform: row.get(4)?,
-        state: row.get(5)?,
-        created_at: row.get(6)?,
+        name: row.get(1)?,
+        persona: row.get(2)?,
+        transform: row.get(3)?,
+        created_at: row.get(4)?,
     })
 }
 
@@ -271,8 +236,8 @@ mod tests {
         PrefsDatabase::open_in_memory()
     }
 
-    fn repo(db: &PrefsDatabase) -> CharacterRepo<'_> {
-        CharacterRepo(db)
+    fn repo(db: &PrefsDatabase) -> CharactersTable<'_> {
+        CharactersTable(db)
     }
 
     #[test]
@@ -283,11 +248,9 @@ mod tests {
 
         let row = r.find_by_id("elmer").unwrap().unwrap();
         assert_eq!(row.id, "elmer");
-        assert_eq!(row.asset_id, "vrm:elmer");
         assert_eq!(row.name, "Elmer");
         assert_eq!(row.persona, "{}");
         assert_eq!(row.transform, "{}");
-        assert_eq!(row.state, "idle");
     }
 
     #[test]
@@ -524,11 +487,12 @@ mod tests {
     }
 
     #[test]
-    fn create_duplicate_id_fails() {
+    fn create_duplicate_id_is_ignored() {
         let db = test_db();
         let r = repo(&db);
         r.create("dup", "vrm:dup", "Dup", "{}", "{}").unwrap();
-        let result = r.create("dup", "vrm:other", "Other", "{}", "{}");
-        assert!(result.is_err());
+        r.create("dup", "vrm:other", "Other", "{}", "{}").unwrap();
+        let found = r.find_by_id("dup").unwrap().unwrap();
+        assert_eq!(found.name, "Dup");
     }
 }

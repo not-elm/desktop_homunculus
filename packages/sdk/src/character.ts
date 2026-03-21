@@ -44,12 +44,10 @@ import { Vrm } from "./vrm";
  * ```
  */
 export interface CreateCharacterOptions {
-    /** Unique character identifier. */
-    id: string;
-    /** Asset ID of the VRM model (e.g. "vrm:elmer"). */
-    assetId: string;
-    /** Optional display name. Defaults to the character ID if omitted. */
-    name?: string;
+  /** Unique character identifier. */
+  id: string;
+  /** Optional display name. Defaults to the character ID if omitted. */
+  name?: string;
 }
 
 /**
@@ -64,10 +62,10 @@ export interface CreateCharacterOptions {
  * ```
  */
 export interface SpawnCharacterOptions {
-    /** Optional display name. */
-    name?: string;
-    /** Optional persona to set on the character. */
-    persona?: Partial<Persona>;
+  /** Optional display name. */
+  name?: string;
+  /** Optional persona to set on the character. */
+  persona?: Partial<Persona>;
 }
 
 /**
@@ -82,18 +80,18 @@ export interface SpawnCharacterOptions {
  * ```
  */
 export interface CharacterInfo {
-    /** Unique character identifier. */
-    id: string;
-    /** Display name. */
-    name: string;
-    /** Asset ID of the associated VRM model. */
-    assetId: string;
-    /** Current character state (e.g. "idle", "sitting"). */
-    state: string;
-    /** Whether a VRM model is currently attached. */
-    hasVrm: boolean;
-    /** The underlying Bevy entity ID. */
-    entity: number;
+  /** Unique character identifier. */
+  id: string;
+  /** Display name. */
+  name: string;
+  /** Asset ID of the associated VRM model. */
+  assetId: string;
+  /** Current character state (e.g. "idle", "sitting"). */
+  state: string;
+  /** Whether a VRM model is currently attached. */
+  hasVrm: boolean;
+  /** The underlying Bevy entity ID. */
+  entity: number;
 }
 
 /**
@@ -107,8 +105,8 @@ export interface CharacterInfo {
  * ```
  */
 export interface CharacterDetail extends CharacterInfo {
-    /** The character's persona. */
-    persona: Persona;
+  /** The character's persona. */
+  persona: Persona;
 }
 
 // --- Character class ---
@@ -136,270 +134,264 @@ export interface CharacterDetail extends CharacterInfo {
  * ```
  */
 export class Character {
-    /** The character's unique identifier. */
-    readonly characterId: string;
+  /** The character's unique identifier. */
+  readonly characterId: string;
 
-    /** The underlying Bevy entity ID (internal use). */
-    readonly entity: number;
+  /** The underlying Bevy entity ID (internal use). */
+  readonly entity: number;
 
-    constructor(characterId: string, entity: number) {
-        this.characterId = characterId;
-        this.entity = entity;
-    }
+  constructor(characterId: string, entity: number) {
+    this.characterId = characterId;
+    this.entity = entity;
+  }
 
-    // --- Static Methods ---
+  // --- Static Methods ---
 
-    /**
-     * Creates a new character.
-     *
-     * @param options - Character creation options including ID, asset ID, and optional name.
-     * @returns A new Character instance.
-     *
-     * @example
-     * ```typescript
-     * const character = await Character.create({ id: "elmer", assetId: "vrm:elmer" });
-     * ```
-     */
-    static async create(options: CreateCharacterOptions): Promise<Character> {
-        const url = host.createUrl("characters");
-        const body = { id: options.id, assetId: options.assetId, name: options.name };
-        const response = await host.post(url, body);
-        const result = await response.json() as CharacterInfo;
-        return new Character(result.id, result.entity);
-    }
+  /**
+   * Creates a new character.
+   *
+   * @param options - Character creation options including ID, asset ID, and optional name.
+   * @returns A new Character instance.
+   *
+   * @example
+   * ```typescript
+   * const character = await Character.create({ id: "elmer", assetId: "vrm:elmer" });
+   * ```
+   */
+  static async create(options: CreateCharacterOptions): Promise<Character> {
+    const url = host.createUrl("characters");
+    const body = {
+      id: options.id,
+      assetId: options.assetId,
+      name: options.name,
+    };
+    const response = await host.post(url, body);
+    const result = (await response.json()) as CharacterInfo;
+    return new Character(result.id, result.entity);
+  }
 
-    /**
-     * Creates a character and immediately attaches a VRM model.
-     *
-     * This is a convenience method that combines {@link Character.create} with
-     * {@link Character.attachVrm} and optional persona configuration.
-     *
-     * @param id - Unique character identifier.
-     * @param assetId - Asset ID of the VRM model to attach (e.g. "vrm:elmer").
-     * @param options - Optional spawn settings (name, persona).
-     * @returns A new Character instance with a VRM model attached.
-     *
-     * @example
-     * ```typescript
-     * const character = await Character.spawn("elmer", "vrm:elmer");
-     * ```
-     */
-    static async spawn(id: string, assetId: string, options?: SpawnCharacterOptions): Promise<Character> {
-        const character = await Character.create({
-            id,
-            assetId,
-            name: options?.name,
-        });
-        await character.attachVrm(assetId);
-        if (options?.persona) {
-            await character.setPersona(options.persona);
-        }
-        return character;
-    }
+  /**
+   * Finds a character by its ID.
+   *
+   * @param id - The character's unique identifier.
+   * @returns The Character instance.
+   * @throws {HomunculusApiError} If no character exists with the given ID.
+   *
+   * @example
+   * ```typescript
+   * const character = await Character.find("elmer");
+   * console.log(await character.name());
+   * ```
+   */
+  static async find(id: string): Promise<Character> {
+    const response = await host.get(host.createUrl(`characters/${id}`));
+    const info = (await response.json()) as CharacterDetail;
+    return new Character(info.id, info.entity);
+  }
 
-    /**
-     * Finds a character by its ID.
-     *
-     * @param id - The character's unique identifier.
-     * @returns The Character instance.
-     * @throws {HomunculusApiError} If no character exists with the given ID.
-     *
-     * @example
-     * ```typescript
-     * const character = await Character.find("elmer");
-     * console.log(await character.name());
-     * ```
-     */
-    static async find(id: string): Promise<Character> {
-        const response = await host.get(host.createUrl(`characters/${id}`));
-        const info = await response.json() as CharacterDetail;
-        return new Character(info.id, info.entity);
-    }
+  /**
+   * Lists all registered characters.
+   *
+   * @returns An array of character summary information.
+   *
+   * @example
+   * ```typescript
+   * const characters = await Character.findAll();
+   * for (const info of characters) {
+   *   console.log(`${info.id}: ${info.name}`);
+   * }
+   * ```
+   */
+  static async findAll(): Promise<CharacterInfo[]> {
+    const response = await host.get(host.createUrl("characters"));
+    return (await response.json()) as CharacterInfo[];
+  }
 
-    /**
-     * Lists all registered characters.
-     *
-     * @returns An array of character summary information.
-     *
-     * @example
-     * ```typescript
-     * const characters = await Character.findAll();
-     * for (const info of characters) {
-     *   console.log(`${info.id}: ${info.name}`);
-     * }
-     * ```
-     */
-    static async findAll(): Promise<CharacterInfo[]> {
-        const response = await host.get(host.createUrl("characters"));
-        return await response.json() as CharacterInfo[];
-    }
+  // --- Instance Methods ---
 
-    // --- Instance Methods ---
+  /**
+   * Returns the character's display name.
+   *
+   * @returns The character's current display name.
+   *
+   * @example
+   * ```typescript
+   * const character = await Character.find("elmer");
+   * const name = await character.name();
+   * console.log(name); // "Elmer"
+   * ```
+   */
+  async name(): Promise<string> {
+    const response = await host.get(
+      host.createUrl(`characters/${this.characterId}/name`),
+    );
+    const result = (await response.json()) as { name: string };
+    return result.name;
+  }
 
-    /**
-     * Returns the character's display name.
-     *
-     * @returns The character's current display name.
-     *
-     * @example
-     * ```typescript
-     * const character = await Character.find("elmer");
-     * const name = await character.name();
-     * console.log(name); // "Elmer"
-     * ```
-     */
-    async name(): Promise<string> {
-        const response = await host.get(host.createUrl(`characters/${this.characterId}/name`));
-        const result = await response.json() as { name: string };
-        return result.name;
-    }
+  /**
+   * Sets the character's display name.
+   *
+   * @param name - The new display name.
+   *
+   * @example
+   * ```typescript
+   * const character = await Character.find("elmer");
+   * await character.setName("Elmer the Great");
+   * ```
+   */
+  async setName(name: string): Promise<void> {
+    await host.put(host.createUrl(`characters/${this.characterId}/name`), {
+      name,
+    });
+  }
 
-    /**
-     * Sets the character's display name.
-     *
-     * @param name - The new display name.
-     *
-     * @example
-     * ```typescript
-     * const character = await Character.find("elmer");
-     * await character.setName("Elmer the Great");
-     * ```
-     */
-    async setName(name: string): Promise<void> {
-        await host.put(host.createUrl(`characters/${this.characterId}/name`), { name });
-    }
+  /**
+   * Returns the character's persona.
+   *
+   * @returns The character's persona data.
+   *
+   * @example
+   * ```typescript
+   * const character = await Character.find("elmer");
+   * const persona = await character.persona();
+   * console.log(persona.profile);
+   * ```
+   */
+  async persona(): Promise<Persona> {
+    const response = await host.get(
+      host.createUrl(`characters/${this.characterId}/persona`),
+    );
+    return (await response.json()) as Persona;
+  }
 
-    /**
-     * Returns the character's persona.
-     *
-     * @returns The character's persona data.
-     *
-     * @example
-     * ```typescript
-     * const character = await Character.find("elmer");
-     * const persona = await character.persona();
-     * console.log(persona.profile);
-     * ```
-     */
-    async persona(): Promise<Persona> {
-        const response = await host.get(host.createUrl(`characters/${this.characterId}/persona`));
-        return await response.json() as Persona;
-    }
+  /**
+   * Sets the character's persona.
+   *
+   * @param persona - Partial persona data to set. Only provided fields are updated.
+   *
+   * @example
+   * ```typescript
+   * const character = await Character.find("elmer");
+   * await character.setPersona({
+   *   profile: "A cheerful virtual assistant",
+   *   ocean: { openness: 0.8, extraversion: 0.7 },
+   * });
+   * ```
+   */
+  async setPersona(persona: Partial<Persona>): Promise<void> {
+    await host.put(
+      host.createUrl(`characters/${this.characterId}/persona`),
+      persona,
+    );
+  }
 
-    /**
-     * Sets the character's persona.
-     *
-     * @param persona - Partial persona data to set. Only provided fields are updated.
-     *
-     * @example
-     * ```typescript
-     * const character = await Character.find("elmer");
-     * await character.setPersona({
-     *   profile: "A cheerful virtual assistant",
-     *   ocean: { openness: 0.8, extraversion: 0.7 },
-     * });
-     * ```
-     */
-    async setPersona(persona: Partial<Persona>): Promise<void> {
-        await host.put(host.createUrl(`characters/${this.characterId}/persona`), persona);
-    }
+  /**
+   * Returns the character's current state (e.g., "idle", "sitting").
+   *
+   * @returns The current state string.
+   *
+   * @example
+   * ```typescript
+   * const character = await Character.find("elmer");
+   * const state = await character.state();
+   * console.log(state); // "idle"
+   * ```
+   */
+  async state(): Promise<string> {
+    const response = await host.get(
+      host.createUrl(`characters/${this.characterId}/state`),
+    );
+    const result = (await response.json()) as { state: string };
+    return result.state;
+  }
 
-    /**
-     * Returns the character's current state (e.g., "idle", "sitting").
-     *
-     * @returns The current state string.
-     *
-     * @example
-     * ```typescript
-     * const character = await Character.find("elmer");
-     * const state = await character.state();
-     * console.log(state); // "idle"
-     * ```
-     */
-    async state(): Promise<string> {
-        const response = await host.get(host.createUrl(`characters/${this.characterId}/state`));
-        const result = await response.json() as { state: string };
-        return result.state;
-    }
+  /**
+   * Sets the character's state.
+   *
+   * @param state - The new state string (e.g. "idle", "sitting").
+   *
+   * @example
+   * ```typescript
+   * const character = await Character.find("elmer");
+   * await character.setState("sitting");
+   * ```
+   */
+  async setState(state: string): Promise<void> {
+    await host.put(host.createUrl(`characters/${this.characterId}/state`), {
+      state,
+    });
+  }
 
-    /**
-     * Sets the character's state.
-     *
-     * @param state - The new state string (e.g. "idle", "sitting").
-     *
-     * @example
-     * ```typescript
-     * const character = await Character.find("elmer");
-     * await character.setState("sitting");
-     * ```
-     */
-    async setState(state: string): Promise<void> {
-        await host.put(host.createUrl(`characters/${this.characterId}/state`), { state });
-    }
+  /**
+   * Returns a {@link Vrm} instance for controlling the attached VRM model.
+   *
+   * The returned Vrm uses the existing `/vrm/{entity}/...` routes for model
+   * control (expressions, animations, spring bones, etc.).
+   *
+   * @returns A Vrm instance bound to this character's entity.
+   *
+   * @example
+   * ```typescript
+   * const character = await Character.find("elmer");
+   * const vrm = character.vrm();
+   * await vrm.setExpressions({ happy: 1.0 });
+   * await vrm.playVrma({ asset: "vrma:idle-maid" });
+   * ```
+   */
+  vrm(): Vrm {
+    return new Vrm(this.entity, this.characterId);
+  }
 
-    /**
-     * Returns a {@link Vrm} instance for controlling the attached VRM model.
-     *
-     * The returned Vrm uses the existing `/vrm/{entity}/...` routes for model
-     * control (expressions, animations, spring bones, etc.).
-     *
-     * @returns A Vrm instance bound to this character's entity.
-     *
-     * @example
-     * ```typescript
-     * const character = await Character.find("elmer");
-     * const vrm = character.vrm();
-     * await vrm.setExpressions({ happy: 1.0 });
-     * await vrm.playVrma({ asset: "vrma:idle-maid" });
-     * ```
-     */
-    vrm(): Vrm {
-        return new Vrm(this.entity, this.characterId);
-    }
+  /**
+   * Attaches a VRM model to this character.
+   *
+   * @param assetId - Asset ID of the VRM model to attach (e.g. "vrm:elmer").
+   *
+   * @example
+   * ```typescript
+   * const character = await Character.find("elmer");
+   * await character.attachVrm("vrm:elmer");
+   * ```
+   */
+  async attachVrm(assetId: string): Promise<Vrm> {
+    await host.post(
+      host.createUrl(`characters/${this.characterId}/vrm/attach`),
+      { assetId },
+    );
+    return this.vrm();
+  }
 
-    /**
-     * Attaches a VRM model to this character.
-     *
-     * @param assetId - Asset ID of the VRM model to attach (e.g. "vrm:elmer").
-     *
-     * @example
-     * ```typescript
-     * const character = await Character.find("elmer");
-     * await character.attachVrm("vrm:elmer");
-     * ```
-     */
-    async attachVrm(assetId: string): Promise<void> {
-        await host.post(host.createUrl(`characters/${this.characterId}/vrm/attach`), { assetId });
-    }
+  /**
+   * Detaches the VRM model from this character.
+   *
+   * The character continues to exist without a 3D model. A new model can be
+   * attached later via {@link Character.attachVrm}.
+   *
+   * @example
+   * ```typescript
+   * const character = await Character.find("elmer");
+   * await character.detachVrm();
+   * ```
+   */
+  async detachVrm(): Promise<void> {
+    await host.deleteMethod(
+      host.createUrl(`characters/${this.characterId}/vrm`),
+    );
+  }
 
-    /**
-     * Detaches the VRM model from this character.
-     *
-     * The character continues to exist without a 3D model. A new model can be
-     * attached later via {@link Character.attachVrm}.
-     *
-     * @example
-     * ```typescript
-     * const character = await Character.find("elmer");
-     * await character.detachVrm();
-     * ```
-     */
-    async detachVrm(): Promise<void> {
-        await host.deleteMethod(host.createUrl(`characters/${this.characterId}/vrm`));
-    }
-
-    /**
-     * Destroys this character and its attached VRM (if any).
-     *
-     * After calling this method, the character instance should not be used.
-     *
-     * @example
-     * ```typescript
-     * const character = await Character.find("elmer");
-     * await character.destroy();
-     * ```
-     */
-    async destroy(): Promise<void> {
-        await host.deleteMethod(host.createUrl(`characters/${this.characterId}`));
-    }
+  /**
+   * Destroys this character and its attached VRM (if any).
+   *
+   * After calling this method, the character instance should not be used.
+   *
+   * @example
+   * ```typescript
+   * const character = await Character.find("elmer");
+   * await character.destroy();
+   * ```
+   */
+  async destroy(): Promise<void> {
+    await host.deleteMethod(host.createUrl(`characters/${this.characterId}`));
+  }
 }

@@ -25,6 +25,11 @@ const findCharacterIdByEntity = async (
   entity: number,
 ): Promise<string | undefined> => {
   const characters = await Character.findAll();
+  console.log("COUNT", characters.length);
+  console.log("Entity", entity);
+  characters.forEach((s) => {
+    console.log(s.name, s.entity);
+  });
   return characters.find((c) => c.entity === entity)?.id;
 };
 
@@ -50,9 +55,7 @@ signals.stream<{ entity: number }>("menu:close", async (payload) => {
   }
 });
 
-console.log("+++++++++++++++++++++++++++++");
 Vrm.stream(async (vrm) => {
-  console.log("VRM++++++", await vrm.name());
   // Close existing EventSource for this VRM before creating a new one.
   // Vrm.stream() replays existing VRMs on SSE reconnection, which would
   // otherwise accumulate duplicate listeners.
@@ -74,6 +77,7 @@ Vrm.stream(async (vrm) => {
         return;
       }
       const characterId = await findCharacterIdByEntity(vrm.entity);
+      console.log("++++++++++", characterId);
       if (!characterId) return;
       if (await existsLinkedWebview(characterId)) {
         return;

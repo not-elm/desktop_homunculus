@@ -3,7 +3,7 @@ use crate::error::{ApiError, ApiResult};
 use bevy::prelude::*;
 use bevy_flurx::prelude::*;
 use homunculus_core::prelude::{CharacterId, CharacterRegistry};
-use homunculus_prefs::character_repo::CharacterRepo;
+use homunculus_prefs::characters::CharactersTable;
 use homunculus_prefs::prelude::PrefsDatabase;
 
 impl CharacterApi {
@@ -59,7 +59,7 @@ fn get_ext(
 ) -> ApiResult<serde_json::Value> {
     require_character(&registry, &id)?;
 
-    let data_json = CharacterRepo::new(&db)
+    let data_json = CharactersTable::new(&db)
         .get_extension(&id, &mod_name)
         .map_err(|e| ApiError::Sql(e.to_string()))?
         .ok_or_else(|| ApiError::NotFoundPreferences(format!("extension:{id}:{mod_name}")))?;
@@ -77,7 +77,7 @@ fn set_ext(
     let data_json =
         serde_json::to_string(&data).map_err(|e| ApiError::FailedSave(e.to_string()))?;
 
-    CharacterRepo::new(&db)
+    CharactersTable::new(&db)
         .set_extension(&id, &mod_name, &data_json)
         .map_err(|e| ApiError::Sql(e.to_string()))?;
 
@@ -91,7 +91,7 @@ fn delete_ext(
 ) -> ApiResult {
     require_character(&registry, &id)?;
 
-    CharacterRepo::new(&db)
+    CharactersTable::new(&db)
         .delete_extension(&id, &mod_name)
         .map_err(|e| ApiError::Sql(e.to_string()))?;
 

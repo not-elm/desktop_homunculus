@@ -17,8 +17,6 @@ pub struct CharacterInfo {
     pub id: String,
     /// The display name.
     pub name: String,
-    /// The asset ID of the VRM model bound to this character.
-    pub asset_id: String,
     /// The current behavioral state (e.g. "idle", "sitting").
     pub state: String,
     /// Whether a VRM model is currently attached.
@@ -94,7 +92,6 @@ fn to_character_info(
     CharacterInfo {
         id: id.to_string(),
         name: name.0.clone(),
-        asset_id: asset_id.0.as_ref().to_string(),
         state: state.0.clone(),
         has_vrm,
     }

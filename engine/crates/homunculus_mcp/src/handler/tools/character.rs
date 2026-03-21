@@ -16,7 +16,7 @@ pub struct CreateCharacterParams {
     /// Unique character identifier (lowercase, URL-safe, e.g. "elmer").
     pub id: String,
     /// Asset ID of the VRM model to bind (e.g. "vrm:my-model").
-    pub asset_id: String,
+    pub asset_id: Option<String>,
     /// Optional display name for the character. Defaults to the ID if omitted.
     pub name: Option<String>,
 }
@@ -70,9 +70,7 @@ impl HomunculusMcpHandler {
             Err(e) => return format!("Error: {e}"),
         };
         let name = args.name.unwrap_or_else(|| args.id.clone());
-        let asset_id = AssetId::new(&args.asset_id);
-
-        match self.character_api.create(id, asset_id, name).await {
+        match self.character_api.create(id, name).await {
             Ok(_entity) => {
                 self.set_active_character(Some(args.id.clone()));
                 format!("Created character '{}'", args.id)

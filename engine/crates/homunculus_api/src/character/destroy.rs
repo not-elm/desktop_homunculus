@@ -3,7 +3,7 @@ use crate::error::{ApiError, ApiResult};
 use bevy::prelude::*;
 use bevy_flurx::prelude::*;
 use homunculus_core::prelude::{CharacterId, CharacterRegistry};
-use homunculus_prefs::character_repo::CharacterRepo;
+use homunculus_prefs::characters::CharactersTable;
 use homunculus_prefs::prelude::PrefsDatabase;
 
 impl CharacterApi {
@@ -30,7 +30,7 @@ fn destroy_character(
 
     commands.entity(entity).try_despawn();
 
-    CharacterRepo::new(&db)
+    CharactersTable::new(&db)
         .delete(&id)
         .map_err(|e| ApiError::Sql(e.to_string()))?;
 

@@ -9,7 +9,7 @@ use bevy_vrm1::vrm::Vrm;
 use homunculus_core::prelude::{
     AssetId, AssetIdComponent, AssetResolver, CharacterId, CharacterRegistry,
 };
-use homunculus_prefs::character_repo::CharacterRepo;
+use homunculus_prefs::characters::CharactersTable;
 use homunculus_prefs::prelude::PrefsDatabase;
 
 /// Arguments for attaching a VRM to a character.
@@ -68,7 +68,6 @@ fn begin_attach(
     registry: Res<CharacterRegistry>,
     asset_resolver: AssetResolver,
     cameras: Cameras,
-    db: NonSend<PrefsDatabase>,
 ) -> ApiResult<Entity> {
     let entity = registry
         .get(&args.id)
@@ -85,10 +84,6 @@ fn begin_attach(
         BodyTracking::default(),
         cameras.all_layers(),
     ));
-
-    CharacterRepo::new(&db)
-        .update_asset_id(&args.id, args.asset_id.as_ref())
-        .map_err(|e| ApiError::Sql(e.to_string()))?;
 
     Ok(entity)
 }

@@ -1,41 +1,50 @@
-import { type TransformArgs, Vrm, preferences, repeat, sleep } from "@hmcs/sdk";
-
-const elmerId = "vrm:elmer";
+import {
+  type TransformArgs,
+  Vrm,
+  preferences,
+  repeat,
+  sleep,
+  Character,
+} from "@hmcs/sdk";
+const elmerId = "elmer";
+const elmerAssetId = "vrm:elmer";
 const transform = await preferences.load<TransformArgs>(
-    `transform::${elmerId}`,
+  `transform::${elmerAssetId}`,
 );
-const elmer = await Vrm.spawn(elmerId, {
-    transform,
+const elmer = await Character.create({
+  id: elmerId,
 });
+const vrm = await elmer.attachVrm(elmerAssetId);
 const option = {
-    repeat: repeat.forever(),
-    transitionSecs: 0.5,
+  repeat: repeat.forever(),
+  transitionSecs: 0.5,
 } as const;
-await elmer.playVrma({
-    asset: "vrma:idle-maid",
-    ...option,
+await vrm.playVrma({
+  asset: "vrma:idle-maid",
+  ...option,
 });
-elmer.events().on("state-change", async (e) => {
-    if (e.state === "idle") {
-        await elmer.playVrma({
-            asset: "vrma:idle-maid",
-            ...option,
-        });
-        await sleep(500);
-        await elmer.lookAtCursor();
-    } else if (e.state === "drag") {
-        await elmer.unlook();
-        await elmer.playVrma({
-            asset: "vrma:grabbed",
-            ...option,
-            resetSpringBones: true,
-        });
-    } else if (e.state === "sitting") {
-        await elmer.playVrma({
-            asset: "vrma:idle-sitting",
-            ...option,
-        });
-        await sleep(500);
-        await elmer.lookAtCursor();
-    }
+vrm.events().on("state-change", async (e) => {
+  console.log("state-change", e);
+  if (e.state === "idle") {
+    await vrm.playVrma({
+      asset: "vrma:idle-maid",
+      ...option,
+    });
+    await sleep(500);
+    await vrm.lookAtCursor();
+  } else if (e.state === "drag") {
+    await vrm.unlook();
+    await vrm.playVrma({
+      asset: "vrma:grabbed",
+      ...option,
+      resetSpringBones: true,
+    });
+  } else if (e.state === "sitting") {
+    await vrm.playVrma({
+      asset: "vrma:idle-sitting",
+      ...option,
+    });
+    await sleep(500);
+    await vrm.lookAtCursor();
+  }
 });

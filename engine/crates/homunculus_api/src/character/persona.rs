@@ -3,7 +3,7 @@ use crate::error::{ApiError, ApiResult};
 use bevy::prelude::*;
 use bevy_flurx::prelude::*;
 use homunculus_core::prelude::{CharacterId, CharacterRegistry, Persona};
-use homunculus_prefs::character_repo::CharacterRepo;
+use homunculus_prefs::characters::CharactersTable;
 use homunculus_prefs::prelude::PrefsDatabase;
 
 impl CharacterApi {
@@ -58,7 +58,7 @@ fn set_character_persona(
     commands.entity(entity).try_insert(persona.clone());
 
     let persona_json = serde_json::to_string(&persona).unwrap_or_else(|_| "{}".to_string());
-    CharacterRepo::new(&db)
+    CharactersTable::new(&db)
         .update_persona(&id, &persona_json)
         .map_err(|e| ApiError::Sql(e.to_string()))?;
 

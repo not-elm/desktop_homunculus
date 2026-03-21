@@ -1,12 +1,8 @@
-import {
-    type Transform,
-    type TransformArgs,
-    type Vec3,
-} from "./math";
-import {type GlobalViewport} from "./coordinates";
-import {host} from "./host";
-import {EventSource} from "eventsource";
-import {entities} from "./entities";
+import { type Transform, type TransformArgs, type Vec3 } from "./math";
+import { type GlobalViewport } from "./coordinates";
+import { host } from "./host";
+import { EventSource } from "eventsource";
+import { entities } from "./entities";
 
 // --- Persona types ---
 
@@ -338,7 +334,7 @@ export interface PersonaChangeEvent {
 
 export type EventMap = {
     "drag-start": VrmPointerEvent;
-    "drag": VrmDragEvent;
+    drag: VrmDragEvent;
     "drag-end": VrmPointerEvent;
     "pointer-press": VrmMouseEvent;
     "pointer-click": VrmMouseEvent;
@@ -360,7 +356,7 @@ export interface VrmMetadata {
 }
 
 export type Bones =
-    "hips"
+    | "hips"
     | "spine"
     | "chest"
     | "neck"
@@ -381,16 +377,17 @@ export type Bones =
     | "rightFoot";
 
 export class VrmEventSource implements Disposable {
-    constructor(readonly eventSource: EventSource) {
-
-    }
+    constructor(readonly eventSource: EventSource) { }
 
     /**
      * Registers an event listener for the specified event type.
      */
-    on<K extends keyof EventMap>(event: K, callback: (event: EventMap[K]) => (void | Promise<void>)) {
-        this.eventSource.addEventListener(event, e => {
-            callback(JSON.parse(e.data) as EventMap[K])
+    on<K extends keyof EventMap>(
+        event: K,
+        callback: (event: EventMap[K]) => void | Promise<void>,
+    ) {
+        this.eventSource.addEventListener(event, (e) => {
+            callback(JSON.parse(e.data) as EventMap[K]);
         });
     }
 
@@ -431,7 +428,7 @@ export class Vrm {
      */
     async state(): Promise<string> {
         const response = await this.fetch("state");
-        const json = await response.json() as { state: string };
+        const json = (await response.json()) as { state: string };
         return json.state;
     }
 
@@ -441,7 +438,7 @@ export class Vrm {
      * @param state The new state to set.
      */
     async setState(state: string): Promise<void> {
-        await this.put("state", {state});
+        await this.put("state", { state });
     }
 
     /**
@@ -456,7 +453,7 @@ export class Vrm {
      */
     async persona(): Promise<Persona> {
         const response = await this.fetch("persona");
-        return await response.json() as Persona;
+        return (await response.json()) as Persona;
     }
 
     /**
@@ -489,7 +486,9 @@ export class Vrm {
      * Finds the entity ID of a bone by its name.
      */
     async findBoneEntity(bone: Bones): Promise<number> {
-        const response = await host.get(host.createUrl(`vrm/${this.entity}/bone/${bone}`));
+        const response = await host.get(
+            host.createUrl(`vrm/${this.entity}/bone/${bone}`),
+        );
         return Number(await response.json());
     }
 
@@ -513,7 +512,7 @@ export class Vrm {
      */
     async position(): Promise<PositionResponse> {
         const response = await this.fetch("position");
-        return await response.json() as PositionResponse;
+        return (await response.json()) as PositionResponse;
     }
 
     /**
@@ -531,7 +530,7 @@ export class Vrm {
      */
     async expressions(): Promise<ExpressionsResponse> {
         const response = await this.fetch("expressions");
-        return await response.json() as ExpressionsResponse;
+        return (await response.json()) as ExpressionsResponse;
     }
 
     /**
@@ -547,7 +546,7 @@ export class Vrm {
      * ```
      */
     async setExpressions(weights: Record<string, number>): Promise<void> {
-        await this.put("expressions", {weights});
+        await this.put("expressions", { weights });
     }
 
     /**
@@ -564,7 +563,7 @@ export class Vrm {
      * ```
      */
     async modifyExpressions(weights: Record<string, number>): Promise<void> {
-        await this.patch("expressions", {weights});
+        await this.patch("expressions", { weights });
     }
 
     /**
@@ -594,7 +593,7 @@ export class Vrm {
      * ```
      */
     async modifyMouth(weights: Record<string, number>): Promise<void> {
-        await this.patch("expressions/mouth", {weights});
+        await this.patch("expressions/mouth", { weights });
     }
 
     /**
@@ -602,7 +601,7 @@ export class Vrm {
      */
     async springBones(): Promise<SpringBoneChainsResponse> {
         const response = await this.fetch("spring-bones");
-        return await response.json() as SpringBoneChainsResponse;
+        return (await response.json()) as SpringBoneChainsResponse;
     }
 
     /**
@@ -611,8 +610,10 @@ export class Vrm {
      * @param chainId The chain entity ID.
      */
     async springBone(chainId: number): Promise<SpringBoneChain> {
-        const response = await host.get(host.createUrl(`vrm/${this.entity}/spring-bones/${chainId}`));
-        return await response.json() as SpringBoneChain;
+        const response = await host.get(
+            host.createUrl(`vrm/${this.entity}/spring-bones/${chainId}`),
+        );
+        return (await response.json()) as SpringBoneChain;
     }
 
     /**
@@ -621,8 +622,14 @@ export class Vrm {
      * @param chainId The chain entity ID.
      * @param props Partial properties to update.
      */
-    async setSpringBone(chainId: number, props: Partial<SpringBoneProps>): Promise<void> {
-        await host.put(host.createUrl(`vrm/${this.entity}/spring-bones/${chainId}`), props);
+    async setSpringBone(
+        chainId: number,
+        props: Partial<SpringBoneProps>,
+    ): Promise<void> {
+        await host.put(
+            host.createUrl(`vrm/${this.entity}/spring-bones/${chainId}`),
+            props,
+        );
     }
 
     /**
@@ -630,7 +637,7 @@ export class Vrm {
      */
     async listVrma(): Promise<VrmaInfo[]> {
         const response = await host.get(host.createUrl(`vrm/${this.entity}/vrma`));
-        return await response.json() as VrmaInfo[];
+        return (await response.json()) as VrmaInfo[];
     }
 
     /**
@@ -657,8 +664,10 @@ export class Vrm {
      * @param asset The asset ID of the VRMA animation to query.
      */
     async vrmaState(asset: string): Promise<VrmaState> {
-        const response = await host.get(host.createUrl(`vrm/${this.entity}/vrma/state`, {asset}));
-        return await response.json() as VrmaState;
+        const response = await host.get(
+            host.createUrl(`vrm/${this.entity}/vrma/state`, { asset }),
+        );
+        return (await response.json()) as VrmaState;
     }
 
     /**
@@ -668,7 +677,10 @@ export class Vrm {
      * @param speed The playback speed.
      */
     async setVrmaSpeed(asset: string, speed: number): Promise<void> {
-        await host.put(host.createUrl(`vrm/${this.entity}/vrma/speed`), {asset, speed});
+        await host.put(host.createUrl(`vrm/${this.entity}/vrma/speed`), {
+            asset,
+            speed,
+        });
     }
 
     /**
@@ -697,7 +709,7 @@ export class Vrm {
         options?: SpeakTimelineOptions,
     ): Promise<void> {
         const bytes = audio instanceof Uint8Array ? audio : new Uint8Array(audio);
-        let binary = '';
+        let binary = "";
         for (let i = 0; i < bytes.length; i++) {
             binary += String.fromCharCode(bytes[i]);
         }
@@ -733,28 +745,14 @@ export class Vrm {
     }
 
     /**
-     * Spawns a new VRM instance from the given mod asset ID.
-     *
-     * @deprecated Use {@link Character.spawn} instead for character-based lifecycle management.
-     */
-    static async spawn(asset: string, options?: SpawnVrmOptions): Promise<Vrm> {
-        const response = await host.post(host.createUrl("vrm"), {
-            asset,
-            transform: options?.transform,
-            persona: options?.persona,
-        });
-        return new Vrm(Number(await response.text()));
-    }
-
-    /**
      * Finds a VRM instance by its name.
      *
      * @deprecated Use {@link Character.find} instead for character-based lifecycle management.
      * @param vrmName VRM character name
      */
     static async findByName(vrmName: string): Promise<Vrm> {
-        const response = await host.get(host.createUrl("vrm", {name: vrmName}));
-        const entities = await response.json() as number[];
+        const response = await host.get(host.createUrl("vrm", { name: vrmName }));
+        const entities = (await response.json()) as number[];
         if (entities.length === 0) {
             throw new Error(`VRM not found: ${vrmName}`);
         }
@@ -767,9 +765,11 @@ export class Vrm {
      * @param vrmName VRM character name
      */
     static async waitLoadByName(vrmName: string): Promise<Vrm> {
-        const response = await host.get(host.createUrl("vrm/wait-load", {
-            name: vrmName,
-        }));
+        const response = await host.get(
+            host.createUrl("vrm/wait-load", {
+                name: vrmName,
+            }),
+        );
         return new Vrm(Number(await response.json()));
     }
 
@@ -784,7 +784,7 @@ export class Vrm {
      */
     static async findAllEntities(): Promise<number[]> {
         const response = await host.get(host.createUrl("vrm"));
-        return await response.json() as number[];
+        return (await response.json()) as number[];
     }
 
     /**
@@ -802,11 +802,11 @@ export class Vrm {
      */
     static async findAllDetailed(): Promise<VrmSnapshot[]> {
         const response = await host.get(host.createUrl("vrm/snapshot"));
-        return await response.json() as VrmSnapshot[];
+        return (await response.json()) as VrmSnapshot[];
     }
 
     static streamMetadata(
-        f: (vrm: VrmMetadata) => (void | Promise<void>)
+        f: (vrm: VrmMetadata) => void | Promise<void>,
     ): EventSource {
         const es = new EventSource(host.createUrl("vrm/stream"));
         es.addEventListener("message", (e) => {
@@ -819,10 +819,8 @@ export class Vrm {
      * Streams all currently existing VRM instances and any VRM instances that will be created in the future.
      * @param f
      */
-    static stream(
-        f: (vrm: Vrm) => (void | Promise<void>)
-    ): EventSource {
-        return Vrm.streamMetadata(metadata => {
+    static stream(f: (vrm: Vrm) => void | Promise<void>): EventSource {
+        return Vrm.streamMetadata((metadata) => {
             f(new Vrm(metadata.entity));
         });
     }
@@ -832,7 +830,7 @@ export class Vrm {
      */
     static async findAll(): Promise<Vrm[]> {
         const entities = await Vrm.findAllEntities();
-        return entities.map(entity => new Vrm(entity));
+        return entities.map((entity) => new Vrm(entity));
     }
 
     private async fetch(path: string): Promise<Response> {
