@@ -32,18 +32,8 @@ impl CharacterApi {
                 let entity = task
                     .will(Update, once::run(begin_attach).with(args))
                     .await?;
-                let result = task
-                    .will(
-                        Update,
-                        wait::either(
-                            wait::until(initialized).with(entity),
-                            delay::frames().with(600),
-                        ),
-                    )
+                task.will(Update, wait::until(initialized).with(entity))
                     .await;
-                if result.is_right() {
-                    return Err(ApiError::VrmInitTimeout(entity));
-                }
                 Ok(entity)
             })
             .await?
@@ -77,7 +67,7 @@ fn begin_attach(
         .load(&args.asset_id)
         .map_err(|_| ApiError::AssetNotFound(args.asset_id.clone()))?;
 
-    commands.entity(entity).try_insert((
+    commands.entity(entity).insert((
         VrmHandle(handle),
         AssetIdComponent(args.asset_id.clone()),
         LookAt::Cursor,

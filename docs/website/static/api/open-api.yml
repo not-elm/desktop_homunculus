@@ -180,6 +180,340 @@ paths:
           description: Sound effect played
         '400':
           description: Invalid request
+  /characters:
+    get:
+      tags:
+      - characters
+      summary: List all characters.
+      operationId: list
+      responses:
+        '200':
+          description: List of characters
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CharacterInfo'
+    post:
+      tags:
+      - characters
+      summary: Create a new character.
+      description: |-
+        If a character with the given ID already exists, its info is returned
+        without creating a duplicate (upsert semantics).
+      operationId: create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBody'
+        required: true
+      responses:
+        '200':
+          description: Character created or existing returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CharacterInfo'
+        '400':
+          description: Invalid character ID
+  /characters/{id}:
+    get:
+      tags:
+      - characters
+      summary: Get detailed information about a single character.
+      operationId: get
+      parameters:
+      - name: id
+        in: path
+        description: Character ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Character detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CharacterDetail'
+        '404':
+          description: Character not found
+    delete:
+      tags:
+      - characters
+      summary: Destroy a character.
+      operationId: destroy
+      parameters:
+      - name: id
+        in: path
+        description: Character ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Character destroyed
+        '404':
+          description: Character not found
+  /characters/{id}/extensions:
+    get:
+      tags:
+      - characters
+      summary: Get extension data for a specific mod on a character.
+      operationId: get_extension
+      parameters:
+      - name: id
+        in: path
+        description: Character ID
+        required: true
+        schema:
+          type: string
+      - name: mod
+        in: query
+        description: Mod package name (e.g. @hmcs/voicevox)
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Extension data
+          content:
+            application/json:
+              schema: {}
+        '404':
+          description: Character or extension not found
+    put:
+      tags:
+      - characters
+      summary: Set extension data for a specific mod on a character.
+      operationId: set_extension
+      parameters:
+      - name: id
+        in: path
+        description: Character ID
+        required: true
+        schema:
+          type: string
+      - name: mod
+        in: query
+        description: Mod package name (e.g. @hmcs/voicevox)
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema: {}
+        required: true
+      responses:
+        '200':
+          description: Extension data updated
+        '404':
+          description: Character not found
+    delete:
+      tags:
+      - characters
+      summary: Delete extension data for a specific mod on a character.
+      operationId: delete_extension
+      parameters:
+      - name: id
+        in: path
+        description: Character ID
+        required: true
+        schema:
+          type: string
+      - name: mod
+        in: query
+        description: Mod package name (e.g. @hmcs/voicevox)
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Extension data deleted
+        '404':
+          description: Character not found
+  /characters/{id}/name:
+    get:
+      tags:
+      - characters
+      summary: Get the display name of a character.
+      operationId: get_name
+      parameters:
+      - name: id
+        in: path
+        description: Character ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Character name
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PutNameBody'
+        '404':
+          description: Character not found
+    put:
+      tags:
+      - characters
+      summary: Update the display name of a character.
+      operationId: put_name
+      parameters:
+      - name: id
+        in: path
+        description: Character ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PutNameBody'
+        required: true
+      responses:
+        '200':
+          description: Name updated
+        '404':
+          description: Character not found
+  /characters/{id}/persona:
+    get:
+      tags:
+      - characters
+      summary: Get the persona of a character.
+      operationId: get_persona
+      parameters:
+      - name: id
+        in: path
+        description: Character ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Character persona
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Persona'
+        '404':
+          description: Character not found
+    put:
+      tags:
+      - characters
+      summary: Update the persona of a character.
+      operationId: put_persona
+      parameters:
+      - name: id
+        in: path
+        description: Character ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Persona'
+        required: true
+      responses:
+        '200':
+          description: Persona updated
+        '404':
+          description: Character not found
+  /characters/{id}/state:
+    get:
+      tags:
+      - characters
+      summary: Get the current state of a character.
+      operationId: get_state
+      parameters:
+      - name: id
+        in: path
+        description: Character ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Character state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PutStateBody'
+        '404':
+          description: Character not found
+    put:
+      tags:
+      - characters
+      summary: Update the state of a character.
+      operationId: put_state
+      parameters:
+      - name: id
+        in: path
+        description: Character ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PutStateBody'
+        required: true
+      responses:
+        '200':
+          description: State updated
+        '404':
+          description: Character not found
+  /characters/{id}/vrm:
+    delete:
+      tags:
+      - characters
+      summary: Detach the VRM model from a character.
+      operationId: detach_vrm
+      parameters:
+      - name: id
+        in: path
+        description: Character ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: VRM detached
+        '404':
+          description: Character not found
+        '422':
+          description: No VRM attached
+  /characters/{id}/vrm/attach:
+    post:
+      tags:
+      - characters
+      summary: Attach a VRM model to a character.
+      operationId: attach_vrm
+      parameters:
+      - name: id
+        in: path
+        description: Character ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttachVrmBody'
+        required: true
+      responses:
+        '200':
+          description: VRM attached
+        '404':
+          description: Character not found
   /commands/execute:
     post:
       tags:
@@ -518,6 +852,28 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ModInfo'
+  /mods/by-name:
+    get:
+      tags:
+      - mods
+      summary: Get a single mod by name.
+      operationId: get_one
+      parameters:
+      - name: name
+        in: query
+        description: Mod package name (e.g. @hmcs/voicevox)
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Mod information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModInfo'
+        '404':
+          description: Mod not found
   /mods/menus:
     get:
       tags:
@@ -533,28 +889,6 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ModMenuMetadata'
-  /mods/{mod_name}:
-    get:
-      tags:
-      - mods
-      summary: Get a single mod by name.
-      operationId: get_one
-      parameters:
-      - name: mod_name
-        in: path
-        description: Mod package name
-        required: true
-        schema:
-          type: string
-      responses:
-        '200':
-          description: Mod information
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ModInfo'
-        '404':
-          description: Mod not found
   /preferences:
     get:
       tags:
@@ -1611,11 +1945,69 @@ paths:
             text/plain:
               schema:
                 type: boolean
+  /webviews/{entity}/linked-character:
+    get:
+      tags:
+      - webviews
+      summary: Get the linked character for a webview.
+      operationId: get_linked_character
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Linked character ID
+          content:
+            application/json:
+              schema:
+                type:
+                - string
+                - 'null'
+    put:
+      tags:
+      - webviews
+      summary: Set the linked character for a webview.
+      operationId: set_linked_character
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetLinkedCharacterRequest'
+        required: true
+      responses:
+        '200':
+          description: Character linked to webview
+    delete:
+      tags:
+      - webviews
+      summary: Remove the linked character from a webview.
+      operationId: unlink_character
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Character unlinked from webview
   /webviews/{entity}/linked-vrm:
     get:
       tags:
       - webviews
-      summary: Get the linked VRM for a webview.
+      summary: Get the linked VRM entity for a webview (deprecated).
       operationId: get_linked_vrm
       parameters:
       - name: entity
@@ -1626,7 +2018,7 @@ paths:
           type: string
       responses:
         '200':
-          description: Linked VRM entity ID
+          description: Linked VRM entity ID (deprecated)
           content:
             application/json:
               schema:
@@ -1636,7 +2028,7 @@ paths:
     put:
       tags:
       - webviews
-      summary: Set the linked VRM for a webview.
+      summary: Set the linked VRM for a webview (deprecated, prefer linked-character).
       operationId: set_linked_vrm
       parameters:
       - name: entity
@@ -1653,11 +2045,11 @@ paths:
         required: true
       responses:
         '200':
-          description: VRM linked to webview
+          description: VRM linked to webview (deprecated)
     delete:
       tags:
       - webviews
-      summary: Remove the linked VRM from a webview.
+      summary: Remove the linked VRM from a webview (deprecated).
       operationId: unlink_vrm
       parameters:
       - name: entity
@@ -1668,7 +2060,7 @@ paths:
           type: string
       responses:
         '200':
-          description: VRM unlinked from webview
+          description: VRM unlinked from webview (deprecated)
   /webviews/{entity}/navigate:
     post:
       tags:
@@ -1820,6 +2212,15 @@ components:
       - sound
       - image
       - html
+    AttachVrmBody:
+      type: object
+      description: Request body for attaching a VRM model.
+      required:
+      - assetId
+      properties:
+        assetId:
+          type: string
+          description: The asset ID of the VRM model to attach.
     BgmPlayRequest:
       type: object
       required:
@@ -1903,6 +2304,78 @@ components:
           type: string
         modName:
           type: string
+    CharacterDetail:
+      type: object
+      description: Detailed information about a single character, including persona.
+      required:
+      - id
+      - name
+      - assetId
+      - state
+      - hasVrm
+      - persona
+      properties:
+        assetId:
+          type: string
+          description: The asset ID of the VRM model bound to this character.
+        hasVrm:
+          type: boolean
+          description: Whether a VRM model is currently attached.
+        id:
+          type: string
+          description: The unique character identifier.
+        name:
+          type: string
+          description: The display name.
+        persona:
+          $ref: '#/components/schemas/Persona'
+          description: The character's persona configuration.
+        state:
+          type: string
+          description: The current behavioral state (e.g. "idle", "sitting").
+    CharacterInfo:
+      type: object
+      description: Summary information about a single character.
+      required:
+      - id
+      - name
+      - assetId
+      - state
+      - hasVrm
+      properties:
+        assetId:
+          type: string
+          description: The asset ID of the VRM model bound to this character.
+        hasVrm:
+          type: boolean
+          description: Whether a VRM model is currently attached.
+        id:
+          type: string
+          description: The unique character identifier.
+        name:
+          type: string
+          description: The display name.
+        state:
+          type: string
+          description: The current behavioral state (e.g. "idle", "sitting").
+    CreateBody:
+      type: object
+      description: Request body for creating a new character.
+      required:
+      - id
+      - assetId
+      properties:
+        assetId:
+          type: string
+          description: The asset ID of the VRM model to bind.
+        id:
+          type: string
+          description: The unique character identifier.
+        name:
+          type:
+          - string
+          - 'null'
+          description: Optional display name. Defaults to the `id` when omitted.
     DeregisterRequest:
       type: object
       description: Body for `POST /rpc/deregister`.
@@ -2339,6 +2812,24 @@ components:
       properties:
         state:
           type: object
+    PutNameBody:
+      type: object
+      description: Request body for updating the character display name.
+      required:
+      - name
+      properties:
+        name:
+          type: string
+          description: The new display name.
+    PutStateBody:
+      type: object
+      description: Request body for updating the character state.
+      required:
+      - state
+      properties:
+        state:
+          type: object
+          description: The new behavioral state value.
     RegisterRequest:
       type: object
       description: Body for `POST /rpc/register`.
@@ -2453,8 +2944,18 @@ components:
           type: number
           format: double
           description: Frame rate in frames per second.
+    SetLinkedCharacterRequest:
+      type: object
+      description: Request body for setting a linked character.
+      required:
+      - characterId
+      properties:
+        characterId:
+          type: string
+          description: The character ID to link.
     SetLinkedVrmRequest:
       type: object
+      description: Deprecated request body for setting a linked VRM.
       required:
       - vrm
       properties:
@@ -2833,10 +3334,18 @@ components:
       properties:
         entity:
           type: string
-        linkedVrm:
+        linkedCharacter:
           type:
           - string
           - 'null'
+          description: The character ID linked to this webview.
+        linkedVrm:
+          type:
+          - integer
+          - 'null'
+          format: int64
+          description: 'Deprecated: VRM entity as bits, kept for backward compatibility.'
+          minimum: 0
         offset:
           $ref: '#/components/schemas/WebviewOffset'
         size:
@@ -2870,11 +3379,16 @@ components:
       required:
       - source
       properties:
+        linkedCharacter:
+          type:
+          - string
+          - 'null'
+          description: Character ID to link to this webview (optional).
         linkedVrm:
           type:
           - string
           - 'null'
-          description: VRM entity to link to this webview (optional).
+          description: VRM entity to link to this webview (deprecated, use `linked_character`).
         offset:
           oneOf:
           - type: 'null'
@@ -3049,3 +3563,5 @@ tags:
   description: Asset management
 - name: rpc
   description: MOD service RPC registration and proxy
+- name: characters
+  description: Character lifecycle and configuration
