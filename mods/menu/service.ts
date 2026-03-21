@@ -1,4 +1,12 @@
-import { Character, Vrm, Webview, audio, signals, isWebviewSourceInfoLocal, webviewSource } from "@hmcs/sdk";
+import {
+  Character,
+  Vrm,
+  Webview,
+  audio,
+  signals,
+  isWebviewSourceInfoLocal,
+  webviewSource,
+} from "@hmcs/sdk";
 const menuUIAssetId = "menu:ui";
 let isProcessing = false;
 const eventSources = new Map();
@@ -13,15 +21,20 @@ const existsLinkedWebview = async (characterId: string) => {
   return false;
 };
 
-const findCharacterIdByEntity = async (entity: number): Promise<string | undefined> => {
+const findCharacterIdByEntity = async (
+  entity: number,
+): Promise<string | undefined> => {
   const characters = await Character.findAll();
-  return characters.find(c => c.entity === entity)?.id;
+  return characters.find((c) => c.entity === entity)?.id;
 };
 
 const openedMenu = async () => {
   const webviews = await Webview.list();
   for (let webview of webviews) {
-    if (isWebviewSourceInfoLocal(webview.source) && webview.source.id === menuUIAssetId) {
+    if (
+      isWebviewSourceInfoLocal(webview.source) &&
+      webview.source.id === menuUIAssetId
+    ) {
       return new Webview(webview.entity);
     }
   }
@@ -37,7 +50,9 @@ signals.stream<{ entity: number }>("menu:close", async (payload) => {
   }
 });
 
+console.log("+++++++++++++++++++++++++++++");
 Vrm.stream(async (vrm) => {
+  console.log("VRM++++++", await vrm.name());
   // Close existing EventSource for this VRM before creating a new one.
   // Vrm.stream() replays existing VRMs on SSE reconnection, which would
   // otherwise accumulate duplicate listeners.
