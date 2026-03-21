@@ -1,17 +1,21 @@
-import { Vrm, Webview, audio, signals, isWebviewSourceInfoLocal, webviewSource } from "@hmcs/sdk";
+import { Character, Vrm, Webview, audio, signals, isWebviewSourceInfoLocal, webviewSource } from "@hmcs/sdk";
 const menuUIAssetId = "menu:ui";
 let isProcessing = false;
 const eventSources = new Map();
 
-const existsLinkedWebview = async (vrmEntity: number) => {
+const existsLinkedWebview = async (characterId: string) => {
   const webviews = await Webview.list();
   for (let webview of webviews) {
-    const linked = webview.linkedVrm;
-    if (linked === vrmEntity) {
+    if (webview.linkedCharacter === characterId) {
       return true;
     }
   }
   return false;
+};
+
+const findCharacterIdByEntity = async (entity: number): Promise<string | undefined> => {
+  const characters = await Character.findAll();
+  return characters.find(c => c.entity === entity)?.id;
 };
 
 const openedMenu = async () => {
@@ -54,7 +58,9 @@ Vrm.stream(async (vrm) => {
         await currentMenu.close();
         return;
       }
-      if (await existsLinkedWebview(vrm.entity)) {
+      const characterId = await findCharacterIdByEntity(vrm.entity);
+      if (!characterId) return;
+      if (await existsLinkedWebview(characterId)) {
         return;
       }
 
@@ -63,7 +69,7 @@ Vrm.stream(async (vrm) => {
         size: [0.8, 1],
         viewportSize: [500, 600],
         offset: [1, -0.3],
-        linkedVrm: vrm.entity,
+        linkedCharacter: characterId,
       });
       await audio.se.play("se:open");
     } catch (err) {

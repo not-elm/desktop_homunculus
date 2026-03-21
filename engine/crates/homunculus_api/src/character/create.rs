@@ -16,30 +16,23 @@ pub(crate) struct CreateCharacterArgs {
     pub id: CharacterId,
     pub asset_id: AssetId,
     pub name: String,
-    pub ensure: bool,
 }
 
 impl CharacterApi {
     /// Creates a new character entity, persists it to the database, and returns
     /// summary information about it.
     ///
-    /// When `ensure` is true and a character with the given ID already exists,
-    /// the existing character's info is returned instead of raising an error.
+    /// If a character with the given ID already exists, its info is returned
+    /// without creating a duplicate (upsert semantics).
     pub async fn create(
         &self,
         id: CharacterId,
         asset_id: AssetId,
         name: String,
-        ensure: bool,
     ) -> ApiResult<CharacterInfo> {
         self.0
             .schedule(move |task| async move {
-                let args = CreateCharacterArgs {
-                    id,
-                    asset_id,
-                    name,
-                    ensure,
-                };
+                let args = CreateCharacterArgs { id, asset_id, name };
                 task.will(Update, once::run(create_character).with(args))
                     .await
             })
@@ -60,10 +53,7 @@ fn create_character(
     db: NonSend<PrefsDatabase>,
 ) -> ApiResult<CharacterInfo> {
     if let Some(entity) = registry.get(&args.id) {
-        if args.ensure {
-            return build_info_from_entity(entity, &characters);
-        }
-        return Err(ApiError::CharacterAlreadyExists(args.id.to_string()));
+        return build_info_from_entity(entity, &characters);
     }
 
     persist_character(&db, &args)?;

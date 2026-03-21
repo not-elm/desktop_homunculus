@@ -113,7 +113,7 @@ impl HomunculusMcpHandler {
 
         if let Err(e) = self
             .character_api
-            .create(id.clone(), asset_id.clone(), name, true)
+            .create(id.clone(), asset_id.clone(), name)
             .await
         {
             return format!("Error creating character: {e}");

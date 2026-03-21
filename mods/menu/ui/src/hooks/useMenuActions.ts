@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from "react";
 import { Webview, mods, signals } from "@hmcs/sdk";
 import type { MenuItemData } from "./useMenuData";
 
-export function useMenuActions(entity: number | null) {
+export function useMenuActions(characterId: string | null) {
   const [closing, setClosing] = useState(false);
 
   const handleClose = useCallback(async () => {
@@ -27,18 +27,18 @@ export function useMenuActions(entity: number | null) {
       if (selectedRef.current) return;
       selectedRef.current = true;
       handleClose();
-      if (item.command && entity != null) {
+      if (item.command && characterId != null) {
         mods
           .executeCommand({
             command: item.command,
-            stdin: JSON.stringify({ linkedVrm: entity }),
+            stdin: JSON.stringify({ linkedCharacter: characterId }),
           })
           .catch((err) => {
             console.error("Command execution failed:", err);
           });
       }
     },
-    [entity, handleClose],
+    [characterId, handleClose],
   );
 
   return { closing, handleClose, handleSelect };

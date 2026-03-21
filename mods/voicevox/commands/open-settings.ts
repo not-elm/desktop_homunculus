@@ -6,13 +6,13 @@ import { audio, Webview, webviewSource } from "@hmcs/sdk";
 import { input, output } from "@hmcs/sdk/commands";
 
 try {
-  const vrm = await input.parseMenu();
+  const character = await input.parseMenuCharacter();
   await Webview.open({
     source: webviewSource.local("voicevox:ui"),
     size: [0.6, 0.8],
     viewportSize: [460, 520],
     offset: [1.1, 0],
-    linkedVrm: vrm.entity,
+    linkedCharacter: character.characterId,
   });
   await audio.se.play("se:open");
   output.succeed();

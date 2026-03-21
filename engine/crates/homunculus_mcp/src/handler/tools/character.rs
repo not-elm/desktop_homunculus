@@ -72,7 +72,7 @@ impl HomunculusMcpHandler {
         let name = args.name.unwrap_or_else(|| args.id.clone());
         let asset_id = AssetId::new(&args.asset_id);
 
-        match self.character_api.create(id, asset_id, name, false).await {
+        match self.character_api.create(id, asset_id, name).await {
             Ok(_entity) => {
                 self.set_active_character(Some(args.id.clone()));
                 format!("Created character '{}'", args.id)

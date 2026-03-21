@@ -60,6 +60,7 @@ fn create_global_webview(
     mut materials: ResMut<Assets<WebviewExtendStandardMaterial>>,
     cameras: Cameras,
     asset_resolver: AssetResolver,
+    registry: Res<CharacterRegistry>,
 ) -> ApiResult<Entity> {
     let webview_source = source_to_webview_source(&options.source, &asset_resolver)?;
 
@@ -77,14 +78,31 @@ fn create_global_webview(
         .try_insert(OriginalWebviewSource(options.source.clone()));
     insert_preload_scripts(&mut commands, webview);
 
-    if let Some(raw_id) = options.linked_character {
-        let character_id =
-            CharacterId::new(&raw_id).map_err(|e| ApiError::InvalidCharacterId(e.to_string()))?;
+    if let Some(character_id) = resolve_linked_character(&options, &registry)? {
         commands
             .entity(webview)
             .try_insert(LinkedCharacter(character_id));
     }
     Ok(webview)
+}
+
+/// Resolves the linked character from either `linked_character` or the deprecated `linked_vrm`.
+fn resolve_linked_character(
+    options: &WebviewOpenOptions,
+    registry: &CharacterRegistry,
+) -> ApiResult<Option<CharacterId>> {
+    if let Some(raw_id) = &options.linked_character {
+        let id =
+            CharacterId::new(raw_id).map_err(|e| ApiError::InvalidCharacterId(e.to_string()))?;
+        return Ok(Some(id));
+    }
+    if let Some(entity_bits) = options.linked_vrm {
+        let entity = Entity::from_bits(entity_bits);
+        if let Some(id) = registry.get_id(entity) {
+            return Ok(Some(id.clone()));
+        }
+    }
+    Ok(None)
 }
 
 /// Converts our API-level `WebviewSource` to bevy_cef's `WebviewSource` component.

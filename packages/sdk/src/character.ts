@@ -31,13 +31,15 @@ import { Vrm } from "./vrm";
 /**
  * Options for creating a new character.
  *
+ * If a character with the given ID already exists, it is returned without
+ * creating a duplicate (upsert semantics).
+ *
  * @example
  * ```typescript
  * const options: CreateCharacterOptions = {
  *   id: "elmer",
  *   assetId: "vrm:elmer",
  *   name: "Elmer",
- *   ensure: true,
  * };
  * ```
  */
@@ -48,8 +50,6 @@ export interface CreateCharacterOptions {
     assetId: string;
     /** Optional display name. Defaults to the character ID if omitted. */
     name?: string;
-    /** If true, returns an existing character instead of failing when one exists with the same ID. */
-    ensure?: boolean;
 }
 
 /**
@@ -161,8 +161,7 @@ export class Character {
      * ```
      */
     static async create(options: CreateCharacterOptions): Promise<Character> {
-        const params = options.ensure ? { ensure: "true" } : {};
-        const url = host.createUrl("characters", params);
+        const url = host.createUrl("characters");
         const body = { id: options.id, assetId: options.assetId, name: options.name };
         const response = await host.post(url, body);
         const result = await response.json() as CharacterInfo;
@@ -190,7 +189,6 @@ export class Character {
             id,
             assetId,
             name: options?.name,
-            ensure: true,
         });
         await character.attachVrm(assetId);
         if (options?.persona) {

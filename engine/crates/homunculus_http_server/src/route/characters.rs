@@ -2,7 +2,7 @@ pub mod extensions;
 
 use crate::extract::character::CharacterIdExtractor;
 use axum::Json;
-use axum::extract::{Query, State};
+use axum::extract::State;
 use homunculus_api::character::{CharacterApi, CharacterInfo};
 use homunculus_api::prelude::axum::{HttpResult, IntoHttpResult};
 use homunculus_core::prelude::{CharacterId, CharacterState, Persona};
@@ -26,15 +26,6 @@ pub struct CharacterDetail {
     pub has_vrm: bool,
     /// The character's persona configuration.
     pub persona: Persona,
-}
-
-/// Query parameters for the create endpoint.
-#[derive(Deserialize, Debug, ToSchema)]
-#[serde(rename_all = "camelCase")]
-pub struct CreateQuery {
-    /// When true, returns the existing character if the ID is already taken
-    /// instead of raising a conflict error.
-    pub ensure: Option<bool>,
 }
 
 /// Request body for creating a new character.
@@ -75,32 +66,29 @@ pub struct AttachVrmBody {
 }
 
 /// Create a new character.
+///
+/// If a character with the given ID already exists, its info is returned
+/// without creating a duplicate (upsert semantics).
 #[utoipa::path(
     post,
     path = "",
     tag = "characters",
-    params(("ensure" = Option<bool>, Query, description = "Return existing if ID is taken")),
     request_body = CreateBody,
     responses(
-        (status = 200, description = "Character created", body = CharacterInfo),
+        (status = 200, description = "Character created or existing returned", body = CharacterInfo),
         (status = 400, description = "Invalid character ID"),
-        (status = 409, description = "Character already exists"),
     ),
 )]
 pub async fn create(
     State(api): State<CharacterApi>,
-    Query(query): Query<CreateQuery>,
     Json(body): Json<CreateBody>,
 ) -> HttpResult<CharacterInfo> {
     let id = CharacterId::new(&body.id)
         .map_err(|e| homunculus_api::prelude::ApiError::InvalidCharacterId(e.to_string()))?;
     let asset_id = AssetId::new(&body.asset_id);
     let name = body.name.unwrap_or_else(|| body.id.clone());
-    let ensure = query.ensure.unwrap_or(false);
 
-    api.create(id, asset_id, name, ensure)
-        .await
-        .into_http_result()
+    api.create(id, asset_id, name).await.into_http_result()
 }
 
 /// List all characters.

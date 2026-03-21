@@ -54,8 +54,6 @@ pub enum ApiError {
     },
     #[error("Character not found: {0}")]
     CharacterNotFound(String),
-    #[error("Character already exists: {0}")]
-    CharacterAlreadyExists(String),
     #[error("VRM not attached to character: {0}")]
     VrmNotAttached(String),
     #[error("Invalid character ID: {0}")]
@@ -109,9 +107,9 @@ pub mod axum {
                 ApiError::InvalidInput(_)
                 | ApiError::AssetTypeMismatch { .. }
                 | ApiError::InvalidCharacterId(_) => axum::http::StatusCode::BAD_REQUEST,
-                ApiError::BgmNotPlaying
-                | ApiError::BgmNotPaused
-                | ApiError::CharacterAlreadyExists(_) => axum::http::StatusCode::CONFLICT,
+                ApiError::BgmNotPlaying | ApiError::BgmNotPaused => {
+                    axum::http::StatusCode::CONFLICT
+                }
                 ApiError::VrmNotAttached(_) => axum::http::StatusCode::UNPROCESSABLE_ENTITY,
                 ApiError::MissingShadowPanel | ApiError::MissingName(_) => {
                     axum::http::StatusCode::BAD_REQUEST

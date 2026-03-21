@@ -9,7 +9,7 @@ export interface MenuItemData {
 }
 
 export function useMenuData() {
-  const [entity, setEntity] = useState<number | null>(null);
+  const [characterId, setCharacterId] = useState<string | null>(null);
   const [characterName, setCharacterName] = useState<string>("");
   const [items, setItems] = useState<MenuItemData[]>([]);
 
@@ -20,12 +20,12 @@ export function useMenuData() {
     let cancelled = false;
 
     (async () => {
-      const vrm = await webview.linkedVrm();
+      const character = await webview.linkedCharacter();
       if (cancelled) return;
-      if (vrm) {
-        setEntity(vrm.entity);
+      if (character) {
+        setCharacterId(character.characterId);
         try {
-          const name = await vrm.name();
+          const name = await character.name();
           if (!cancelled) setCharacterName(name);
         } catch {
           /* name is optional for the HUD */
@@ -42,5 +42,5 @@ export function useMenuData() {
     };
   }, []);
 
-  return { entity, characterName, items };
+  return { characterId, characterName, items };
 }

@@ -18,7 +18,8 @@ export function __resetMocks() {
 
 export const Webview = {
   current: () => ({
-    linkedVrm: async () => ({
+    linkedCharacter: async () => ({
+      characterId: "elmer",
       entity: 1,
       name: async () => "Elmer",
     }),
