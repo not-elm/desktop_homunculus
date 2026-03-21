@@ -2,7 +2,7 @@
 
 use axum::Json;
 use axum::body::Body;
-use axum::extract::{Path, State};
+use axum::extract::{Query, State};
 use axum::response::{IntoResponse, Response};
 use homunculus_api::mods::ModsApi;
 use homunculus_api::prelude::ApiError;
@@ -15,6 +15,12 @@ use tokio::io::AsyncBufReadExt;
 use tokio_stream::StreamExt;
 use tokio_stream::wrappers::ReceiverStream;
 use utoipa::ToSchema;
+
+/// Query parameters for looking up a mod by name.
+#[derive(Deserialize)]
+pub struct ModNameQuery {
+    pub name: String,
+}
 
 /// List all loaded mods.
 #[utoipa::path(
@@ -32,10 +38,10 @@ pub async fn list(State(api): State<ModsApi>) -> HttpResult<Vec<ModInfo>> {
 /// Get a single mod by name.
 #[utoipa::path(
     get,
-    path = "/{mod_name}",
+    path = "/by-name",
     tag = "mods",
     params(
-        ("mod_name" = String, Path, description = "Mod package name"),
+        ("name" = String, Query, description = "Mod package name (e.g. @hmcs/voicevox)"),
     ),
     responses(
         (status = 200, description = "Mod information", body = ModInfo),
@@ -44,9 +50,9 @@ pub async fn list(State(api): State<ModsApi>) -> HttpResult<Vec<ModInfo>> {
 )]
 pub async fn get_one(
     State(api): State<ModsApi>,
-    Path(mod_name): Path<String>,
+    Query(query): Query<ModNameQuery>,
 ) -> HttpResult<ModInfo> {
-    api.find_by_name(mod_name).await.into_http_result()
+    api.find_by_name(query.name).await.into_http_result()
 }
 
 /// List all registered mod menus.

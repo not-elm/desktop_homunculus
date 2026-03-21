@@ -278,7 +278,7 @@ fn character_entity_router() -> OpenApiRouter<HttpState> {
         .routes(routes!(characters::get_name, characters::put_name))
         .routes(routes!(characters::attach_vrm))
         .routes(routes!(characters::detach_vrm))
-        .nest("/extensions/{mod_name}", extension_router())
+        .nest("/extensions", extension_router())
 }
 
 fn extension_router() -> OpenApiRouter<HttpState> {
@@ -651,7 +651,9 @@ mod tests {
                 tray: None,
                 mod_dir: PathBuf::default(),
             });
-        let request = Request::get("/mods/test-mod").body(Body::empty()).unwrap();
+        let request = Request::get("/mods/by-name?name=test-mod")
+            .body(Body::empty())
+            .unwrap();
         block_on(assert_response(
             &mut app,
             router,
@@ -682,7 +684,7 @@ mod tests {
     #[test]
     fn test_get_mod_not_found() {
         let (mut app, router) = test_app();
-        let request = Request::get("/mods/nonexistent")
+        let request = Request::get("/mods/by-name?name=nonexistent")
             .body(Body::empty())
             .unwrap();
         block_on(async {

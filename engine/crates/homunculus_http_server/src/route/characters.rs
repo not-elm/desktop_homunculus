@@ -533,14 +533,14 @@ mod tests {
         let (mut app, router) = test_app();
         spawn_character_with_db(&mut app, "elmer", "Elmer", "test:model.vrm");
 
-        let set_req = Request::put("/characters/elmer/extensions/voicevox")
+        let set_req = Request::put("/characters/elmer/extensions?mod=voicevox")
             .header("Content-Type", "application/json")
             .body(Body::from(r#"{"speakerId":1}"#))
             .unwrap();
         let response = call(&mut app, router.clone(), set_req).await;
         assert_eq!(response.status(), StatusCode::OK);
 
-        let get_req = Request::get("/characters/elmer/extensions/voicevox")
+        let get_req = Request::get("/characters/elmer/extensions?mod=voicevox")
             .body(Body::empty())
             .unwrap();
         assert_response(
@@ -558,7 +558,7 @@ mod tests {
         spawn_character_with_db(&mut app, "elmer", "Elmer", "test:model.vrm");
 
         // Set first
-        let set_req = Request::put("/characters/elmer/extensions/voicevox")
+        let set_req = Request::put("/characters/elmer/extensions?mod=voicevox")
             .header("Content-Type", "application/json")
             .body(Body::from(r#"{"v":1}"#))
             .unwrap();
@@ -566,14 +566,14 @@ mod tests {
         assert_eq!(response.status(), StatusCode::OK);
 
         // Delete
-        let del_req = Request::delete("/characters/elmer/extensions/voicevox")
+        let del_req = Request::delete("/characters/elmer/extensions?mod=voicevox")
             .body(Body::empty())
             .unwrap();
         let response = call(&mut app, router.clone(), del_req).await;
         assert_eq!(response.status(), StatusCode::OK);
 
         // Get should 404
-        let get_req = Request::get("/characters/elmer/extensions/voicevox")
+        let get_req = Request::get("/characters/elmer/extensions?mod=voicevox")
             .body(Body::empty())
             .unwrap();
         let response = call_any_status(&mut app, router, get_req).await;
@@ -585,7 +585,7 @@ mod tests {
         let (mut app, router) = test_app();
         spawn_character_with_db(&mut app, "elmer", "Elmer", "test:model.vrm");
 
-        let request = Request::get("/characters/elmer/extensions/nonexistent")
+        let request = Request::get("/characters/elmer/extensions?mod=nonexistent")
             .body(Body::empty())
             .unwrap();
         let response = call_any_status(&mut app, router, request).await;
@@ -596,10 +596,34 @@ mod tests {
     async fn test_extension_character_not_found() {
         let (mut app, router) = test_app();
 
-        let request = Request::get("/characters/nonexistent/extensions/voicevox")
+        let request = Request::get("/characters/nonexistent/extensions?mod=voicevox")
             .body(Body::empty())
             .unwrap();
         let response = call_any_status(&mut app, router, request).await;
         assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    }
+
+    #[tokio::test]
+    async fn test_extension_scoped_mod_name() {
+        let (mut app, router) = test_app();
+        spawn_character_with_db(&mut app, "elmer", "Elmer", "test:model.vrm");
+
+        let set_req = Request::put("/characters/elmer/extensions?mod=%40hmcs%2Fvoicevox")
+            .header("Content-Type", "application/json")
+            .body(Body::from(r#"{"speakerId":1}"#))
+            .unwrap();
+        let response = call(&mut app, router.clone(), set_req).await;
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let get_req = Request::get("/characters/elmer/extensions?mod=%40hmcs%2Fvoicevox")
+            .body(Body::empty())
+            .unwrap();
+        assert_response(
+            &mut app,
+            router,
+            get_req,
+            serde_json::json!({"speakerId": 1}),
+        )
+        .await;
     }
 }
