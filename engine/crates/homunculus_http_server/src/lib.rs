@@ -276,8 +276,8 @@ fn character_entity_router() -> OpenApiRouter<HttpState> {
         .routes(routes!(characters::get_state, characters::put_state))
         .routes(routes!(characters::get_persona, characters::put_persona))
         .routes(routes!(characters::get_name, characters::put_name))
-        .routes(routes!(characters::attach_vrm))
-        .routes(routes!(characters::detach_vrm))
+        .routes(routes!(characters::vrm::attach_vrm))
+        .routes(routes!(characters::vrm::detach_vrm))
         .nest("/extensions", extension_router())
 }
 

@@ -1,3 +1,5 @@
+pub mod vrm;
+
 pub mod extensions;
 
 use crate::extract::character::CharacterIdExtractor;
@@ -6,7 +8,6 @@ use axum::extract::State;
 use homunculus_api::character::{CharacterApi, CharacterInfo};
 use homunculus_api::prelude::axum::{HttpResult, IntoHttpResult};
 use homunculus_core::prelude::{CharacterId, CharacterState, Persona};
-use homunculus_utils::prelude::AssetId;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
@@ -156,8 +157,8 @@ pub async fn destroy(
     ),
 )]
 pub async fn get_state(
-    State(api): State<CharacterApi>,
-    CharacterIdExtractor { id, .. }: CharacterIdExtractor,
+    State(_api): State<CharacterApi>,
+    CharacterIdExtractor { id: _, .. }: CharacterIdExtractor,
 ) -> HttpResult<serde_json::Value> {
     todo!()
     // let state = api.get_state(id).await?;
@@ -177,9 +178,9 @@ pub async fn get_state(
     ),
 )]
 pub async fn put_state(
-    State(api): State<CharacterApi>,
-    CharacterIdExtractor { id, .. }: CharacterIdExtractor,
-    Json(body): Json<PutStateBody>,
+    State(_api): State<CharacterApi>,
+    CharacterIdExtractor { id: _, .. }: CharacterIdExtractor,
+    Json(_body): Json<PutStateBody>,
 ) -> HttpResult {
     todo!()
     // api.set_state(id, body.state).await.into_http_result()
@@ -260,47 +261,6 @@ pub async fn put_name(
     Json(body): Json<PutNameBody>,
 ) -> HttpResult {
     api.set_name(id, body.name).await.into_http_result()
-}
-
-/// Attach a VRM model to a character.
-#[utoipa::path(
-    post,
-    path = "/vrm/attach",
-    tag = "characters",
-    params(("id" = String, Path, description = "Character ID")),
-    request_body = AttachVrmBody,
-    responses(
-        (status = 200, description = "VRM attached"),
-        (status = 404, description = "Character not found"),
-    ),
-)]
-pub async fn attach_vrm(
-    State(api): State<CharacterApi>,
-    CharacterIdExtractor { id, .. }: CharacterIdExtractor,
-    Json(body): Json<AttachVrmBody>,
-) -> HttpResult {
-    let asset_id = AssetId::new(&body.asset_id);
-    api.attach_vrm(id, asset_id).await?;
-    Ok(Json(()))
-}
-
-/// Detach the VRM model from a character.
-#[utoipa::path(
-    delete,
-    path = "/vrm",
-    tag = "characters",
-    params(("id" = String, Path, description = "Character ID")),
-    responses(
-        (status = 200, description = "VRM detached"),
-        (status = 404, description = "Character not found"),
-        (status = 422, description = "No VRM attached"),
-    ),
-)]
-pub async fn detach_vrm(
-    State(api): State<CharacterApi>,
-    CharacterIdExtractor { id, .. }: CharacterIdExtractor,
-) -> HttpResult {
-    api.detach_vrm(id).await.into_http_result()
 }
 
 #[cfg(test)]
