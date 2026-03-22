@@ -23,7 +23,7 @@ await vrm.playVrma({
   asset: "vrma:idle-maid",
   ...option,
 });
-vrm.events().on("state-change", async (e) => {
+(await vrm.events()).on("state-change", async (e) => {
   console.log("state-change", e);
   if (e.state === "idle") {
     await vrm.playVrma({

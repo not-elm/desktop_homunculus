@@ -62,7 +62,7 @@ Vrm.stream(async (vrm) => {
   const oldEs = eventSources.get(vrm.entity);
   if (oldEs) oldEs.close();
 
-  const es = vrm.events();
+  const es = await vrm.events();
   eventSources.set(vrm.entity, es);
 
   es.on("pointer-click", async (e) => {

@@ -323,7 +323,7 @@ export class Character {
   /**
    * Returns a {@link Vrm} instance for controlling the attached VRM model.
    *
-   * The returned Vrm uses the existing `/vrm/{entity}/...` routes for model
+   * The returned Vrm uses the `/characters/{id}/vrm/...` routes for model
    * control (expressions, animations, spring bones, etc.).
    *
    * @returns A Vrm instance bound to this character's entity.

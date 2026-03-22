@@ -410,6 +410,8 @@ export class Vrm {
     /** The character ID, if this Vrm was created from a Character. */
     readonly characterId?: string;
 
+    private _resolvePromise?: Promise<string>;
+
     constructor(entity: number, characterId?: string) {
         this.entity = entity;
         this.characterId = characterId;
@@ -418,16 +420,23 @@ export class Vrm {
     /**
      * Returns an EventSource for receiving events related to this VRM entity.
      */
-    events(): VrmEventSource {
-        const url = host.createUrl(`vrm/${this.entity}/events`);
+    async events(): Promise<VrmEventSource> {
+        const url = host.createUrl(
+            `characters/${await this.resolveCharacterId()}/vrm/events`,
+        );
         return new VrmEventSource(new EventSource(url));
     }
 
     /**
      * Returns the current state of the VRM.
+     *
+     * @deprecated Use {@link Character.state} instead.
      */
     async state(): Promise<string> {
-        const response = await this.fetch("state");
+        const id = await this.resolveCharacterId();
+        const response = await host.get(
+            host.createUrl(`characters/${id}/state`),
+        );
         const json = (await response.json()) as { state: string };
         return json.state;
     }
@@ -435,14 +444,18 @@ export class Vrm {
     /**
      * Sets the state of the VRM.
      *
+     * @deprecated Use {@link Character.setState} instead.
      * @param state The new state to set.
      */
     async setState(state: string): Promise<void> {
-        await this.put("state", { state });
+        const id = await this.resolveCharacterId();
+        await host.put(host.createUrl(`characters/${id}/state`), { state });
     }
 
     /**
      * Returns the persona of the VRM.
+     *
+     * @deprecated Use {@link Character.persona} instead.
      *
      * @example
      * ```typescript
@@ -452,13 +465,17 @@ export class Vrm {
      * ```
      */
     async persona(): Promise<Persona> {
-        const response = await this.fetch("persona");
+        const id = await this.resolveCharacterId();
+        const response = await host.get(
+            host.createUrl(`characters/${id}/persona`),
+        );
         return (await response.json()) as Persona;
     }
 
     /**
      * Sets the persona of the VRM.
      *
+     * @deprecated Use {@link Character.setPersona} instead.
      * @param persona The persona data to set.
      *
      * @example
@@ -472,7 +489,8 @@ export class Vrm {
      * ```
      */
     async setPersona(persona: Persona): Promise<void> {
-        await this.put("persona", persona);
+        const id = await this.resolveCharacterId();
+        await host.put(host.createUrl(`characters/${id}/persona`), persona);
     }
 
     /**
@@ -486,9 +504,7 @@ export class Vrm {
      * Finds the entity ID of a bone by its name.
      */
     async findBoneEntity(bone: Bones): Promise<number> {
-        const response = await host.get(
-            host.createUrl(`vrm/${this.entity}/bone/${bone}`),
-        );
+        const response = await this.fetch(bone);
         return Number(await response.json());
     }
 
@@ -496,7 +512,7 @@ export class Vrm {
      * Despawns this VRM entity.
      */
     async despawn(): Promise<void> {
-        await host.deleteMethod(host.createUrl(`vrm/${this.entity}`));
+        await this.delete("despawn");
     }
 
     /**
@@ -610,9 +626,7 @@ export class Vrm {
      * @param chainId The chain entity ID.
      */
     async springBone(chainId: number): Promise<SpringBoneChain> {
-        const response = await host.get(
-            host.createUrl(`vrm/${this.entity}/spring-bones/${chainId}`),
-        );
+        const response = await this.fetch(`spring-bones/${chainId}`);
         return (await response.json()) as SpringBoneChain;
     }
 
@@ -626,17 +640,14 @@ export class Vrm {
         chainId: number,
         props: Partial<SpringBoneProps>,
     ): Promise<void> {
-        await host.put(
-            host.createUrl(`vrm/${this.entity}/spring-bones/${chainId}`),
-            props,
-        );
+        await this.put(`spring-bones/${chainId}`, props);
     }
 
     /**
      * Gets all VRMA animations for this VRM.
      */
     async listVrma(): Promise<VrmaInfo[]> {
-        const response = await host.get(host.createUrl(`vrm/${this.entity}/vrma`));
+        const response = await this.fetch("vrma");
         return (await response.json()) as VrmaInfo[];
     }
 
@@ -664,8 +675,9 @@ export class Vrm {
      * @param asset The asset ID of the VRMA animation to query.
      */
     async vrmaState(asset: string): Promise<VrmaState> {
+        const id = await this.resolveCharacterId();
         const response = await host.get(
-            host.createUrl(`vrm/${this.entity}/vrma/state`, { asset }),
+            host.createUrl(`characters/${id}/vrm/vrma/state`, { asset }),
         );
         return (await response.json()) as VrmaState;
     }
@@ -677,10 +689,7 @@ export class Vrm {
      * @param speed The playback speed.
      */
     async setVrmaSpeed(asset: string, speed: number): Promise<void> {
-        await host.put(host.createUrl(`vrm/${this.entity}/vrma/speed`), {
-            asset,
-            speed,
-        });
+        await this.put("vrma/speed", { asset, speed });
     }
 
     /**
@@ -833,23 +842,62 @@ export class Vrm {
         return entities.map((entity) => new Vrm(entity));
     }
 
+    private async resolveCharacterId(): Promise<string> {
+        if (this.characterId) return this.characterId;
+        if (!this._resolvePromise) {
+            this._resolvePromise = this.fetchCharacterId();
+        }
+        return this._resolvePromise;
+    }
+
+    private async fetchCharacterId(): Promise<string> {
+        const response = await host.get(host.createUrl("characters"));
+        const characters = (await response.json()) as Array<{
+            id: string;
+            entity: number;
+        }>;
+        const match = characters.find((c) => c.entity === this.entity);
+        if (!match) {
+            throw new Error(`No character found for entity ${this.entity}`);
+        }
+        return match.id;
+    }
+
+    private async characterVrmUrl(path: string): Promise<string> {
+        const id = await this.resolveCharacterId();
+        return `characters/${id}/vrm/${path}`;
+    }
+
     private async fetch(path: string): Promise<Response> {
-        return await host.get(host.createUrl(`vrm/${this.entity}/${path}`));
+        return await host.get(
+            host.createUrl(await this.characterVrmUrl(path)),
+        );
     }
 
     private async post(path: string, body?: object): Promise<Response> {
-        return await host.post(host.createUrl(`vrm/${this.entity}/${path}`), body);
+        return await host.post(
+            host.createUrl(await this.characterVrmUrl(path)),
+            body,
+        );
     }
 
     private async put(path: string, body?: object) {
-        await host.put(host.createUrl(`vrm/${this.entity}/${path}`), body);
+        await host.put(
+            host.createUrl(await this.characterVrmUrl(path)),
+            body,
+        );
     }
 
     private async patch(path: string, body?: object) {
-        await host.patch(host.createUrl(`vrm/${this.entity}/${path}`), body);
+        await host.patch(
+            host.createUrl(await this.characterVrmUrl(path)),
+            body,
+        );
     }
 
     private async delete(path: string) {
-        await host.deleteMethod(host.createUrl(`vrm/${this.entity}/${path}`));
+        await host.deleteMethod(
+            host.createUrl(await this.characterVrmUrl(path)),
+        );
     }
 }
