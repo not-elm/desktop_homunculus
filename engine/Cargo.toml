@@ -62,7 +62,7 @@ bevy_flurx = { version = "0.14.1", features = [
     "state",
     "tokio",
 ] }
-bevy_vrm1 = { version = "0.6.2", features = ["serde", "log"] }
+bevy_vrm1 = { version = "0.6.3", features = ["serde", "log"] }
 bevy_tray_icon = { version = "0.3" }
 url = { version = "2", features = ["serde"] }
 bevy = { version = "0.18", features = [
@@ -94,6 +94,7 @@ homunculus_api = { path = "crates/homunculus_api" }
 homunculus_audio = { path = "crates/homunculus_audio" }
 homunculus_tray = { path = "crates/homunculus_tray" }
 homunculus_mcp = { path = "crates/homunculus_mcp" }
+homunculus_microphone = { path = "crates/homunculus_microphone" }
 homunculus_utils = { path = "crates/homunculus_utils", default-features = false }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1" }
@@ -106,6 +107,9 @@ bevy_tweening = "0.15"
 bevy_framepace = "0.21"
 tracing = "0.1"
 thiserror = "2"
+tokio-util = "0.7"
+crossbeam-channel = "0.5"
+futures-lite = "2"
 clap = { version = "4", features = ["derive"] }
 comfy-table = "7"
 toml = "0.8"
@@ -114,6 +118,7 @@ utoipa-axum = { version = "0.2" }
 libc = "0.2"
 windows = "0.60"
 raw-window-handle = "0.6"
+num_cpus = "1"
 
 [build-dependencies]
 embed-resource = "3"
@@ -128,6 +133,8 @@ develop = [
     "homunculus_hit_test/develop",
     "bevy_cef/debug",
 ]
+stt-cuda = ["homunculus_api/cuda"]
+stt-metal = ["homunculus_api/metal"]
 
 [profile.dev.package."*"]
 opt-level = 3

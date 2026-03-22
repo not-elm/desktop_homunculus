@@ -169,7 +169,12 @@ pub async fn execute_command(
                 std::process::Stdio::null()
             });
         #[cfg(windows)]
-        cmd.creation_flags(0x08000000);
+        {
+            cmd.creation_flags(0x08000000);
+            if let Some(path) = homunculus_utils::process::path_with_node_prepended() {
+                cmd.env("PATH", path);
+            }
+        }
         let mut child = match cmd.spawn() {
             Ok(c) => c,
             Err(_) => {

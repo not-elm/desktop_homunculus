@@ -1,0 +1,474 @@
+//! STT (Speech-to-Text) API.
+//!
+//! Manages STT sessions and model downloads using `homunculus_microphone`.
+
+use std::sync::Arc;
+use std::time::Instant;
+
+use async_broadcast::Receiver;
+use homunculus_microphone::session::{SttEvent, SttSession, SttStartOptions, SttState};
+use homunculus_microphone::{
+    DownloadProgress, SharedSttModelCache, SharedSttSession, SttModelSize, WhisperContext,
+    get_input_device, load_whisper_context,
+    model::{
+        download_model as mic_download_model, is_model_available, list_available_models, model_path,
+    },
+    permissions::ensure_microphone_permission,
+    pipeline::spawn_pipeline,
+};
+use serde::{Deserialize, Serialize};
+use tokio::sync::watch;
+use tokio_util::sync::CancellationToken;
+
+#[cfg(feature = "openapi")]
+use utoipa::ToSchema;
+
+/// STT API error types with HTTP status code mappings.
+#[derive(Debug, thiserror::Error)]
+pub enum SttError {
+    #[error("Session already active")]
+    SessionAlreadyActive,
+    #[error("Session is loading a model, please wait")]
+    SessionLoading,
+    #[error("Model not available: {0}")]
+    ModelNotAvailable(String),
+    #[error("Model load failed: {0}")]
+    ModelLoadFailed(String),
+    #[error("Pipeline failed: {0}")]
+    PipelineFailed(String),
+    #[error("No microphone device found")]
+    NoMicrophone,
+    #[error("Microphone permission denied")]
+    MicrophonePermissionDenied,
+    #[error("Download failed: {0}")]
+    DownloadFailed(String),
+    #[error("Download cancelled")]
+    DownloadCancelled,
+    #[error("Invalid language: {0}")]
+    InvalidLanguage(String),
+    #[error("Invalid model size")]
+    InvalidModelSize,
+}
+
+/// Whisper-supported language codes (ISO 639-1) plus "auto" for auto-detection.
+const WHISPER_SUPPORTED_LANGUAGES: &[&str] = &[
+    "auto", "en", "zh", "de", "es", "ru", "ko", "fr", "ja", "pt", "tr", "pl", "ca", "nl", "ar",
+    "sv", "it", "id", "hi", "fi", "vi", "he", "uk", "el", "ms", "cs", "ro", "da", "hu", "ta", "no",
+    "th", "ur", "hr", "bg", "lt", "la", "mi", "ml", "cy", "sk", "te", "fa", "lv", "bn", "sr", "az",
+    "sl", "kn", "et", "mk", "br", "eu", "is", "hy", "ne", "mn", "bs", "kk", "sq", "sw", "gl", "mr",
+    "pa", "si", "km", "sn", "yo", "so", "af", "oc", "ka", "be", "tg", "sd", "gu", "am", "yi", "lo",
+    "uz", "fo", "ht", "ps", "tk", "nn", "mt", "sa", "lb", "my", "bo", "tl", "mg", "as", "tt",
+    "haw", "ln", "ha", "ba", "jw", "su", "yue",
+];
+
+/// Response for model download endpoint.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct ModelDownloadResponse {
+    pub model_size: SttModelSize,
+    pub status: DownloadStatus,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub path: Option<String>,
+}
+
+/// Download status.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+#[serde(rename_all = "snake_case")]
+pub enum DownloadStatus {
+    Downloaded,
+    AlreadyExists,
+    Downloading,
+}
+
+/// Model info for the list endpoint.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct ModelInfo {
+    pub model_size: SttModelSize,
+    pub size_bytes: u64,
+    pub path: String,
+}
+
+/// Response from the start endpoint, includes restart indicator.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct SttStartResponse {
+    #[serde(flatten)]
+    pub state: SttState,
+    /// True if an existing Listening session was implicitly stopped.
+    pub restarted: bool,
+}
+
+/// Bevy resource wrapping the parent cancellation token for STT downloads.
+///
+/// Cancelling this token propagates to all in-progress download child tokens.
+/// Used by the `AppExit` shutdown system to cancel downloads without acquiring
+/// the `SharedSttModelCache` mutex.
+#[derive(Clone)]
+pub struct SttShutdownToken(CancellationToken);
+
+impl SttShutdownToken {
+    /// Cancel all in-progress downloads by cancelling the parent token.
+    pub fn cancel(&self) {
+        self.0.cancel();
+    }
+}
+
+/// STT API resource — manages STT sessions and model downloads.
+#[derive(Clone)]
+pub struct SttApi {
+    session: SharedSttSession,
+    model_cache: SharedSttModelCache,
+    shutdown_token: SttShutdownToken,
+}
+
+impl SttApi {
+    /// Returns the list of supported language codes.
+    pub fn supported_languages() -> &'static [&'static str] {
+        WHISPER_SUPPORTED_LANGUAGES
+    }
+
+    pub fn new(session: SharedSttSession) -> Self {
+        let parent = CancellationToken::new();
+        let shutdown_token = SttShutdownToken(parent.clone());
+        Self {
+            session,
+            model_cache: SharedSttModelCache::new(parent),
+            shutdown_token,
+        }
+    }
+
+    /// Returns a clone of the shutdown token for use as a Bevy resource.
+    pub fn shutdown_token(&self) -> SttShutdownToken {
+        self.shutdown_token.clone()
+    }
+
+    /// Start an STT session.
+    pub async fn start(&self, options: SttStartOptions) -> Result<SttStartResponse, SttError> {
+        let size = options.model_size;
+        let language = options.language.clone();
+
+        if !WHISPER_SUPPORTED_LANGUAGES.contains(&language.as_str()) {
+            return Err(SttError::InvalidLanguage(language));
+        }
+
+        let restarted = self.ensure_session_ready(size, &language).await?;
+
+        let ctx = self.load_or_get_context(size).await?;
+
+        let mut session = self.session.0.lock().await;
+        if !matches!(session.state, SttState::Loading { .. }) {
+            return Ok(SttStartResponse {
+                state: session.state.clone(),
+                restarted,
+            });
+        }
+
+        let state = self
+            .launch_pipeline(&mut session, ctx, size, language)
+            .await?;
+        Ok(SttStartResponse { state, restarted })
+    }
+
+    /// Stop the current STT session. Idempotent.
+    pub async fn stop(&self) -> SttState {
+        let mut session = self.session.0.lock().await;
+        session.stop();
+        session.state.clone()
+    }
+
+    /// Get the current session status.
+    pub async fn status(&self) -> SttState {
+        let session = self.session.0.lock().await;
+        session.state.clone()
+    }
+
+    /// Get a new SSE event receiver.
+    pub async fn new_event_receiver(&self) -> Receiver<SttEvent> {
+        let session = self.session.0.lock().await;
+        session.new_event_receiver()
+    }
+
+    /// Get the current state for late-join sync.
+    pub async fn current_state(&self) -> SttState {
+        let session = self.session.0.lock().await;
+        session.state.clone()
+    }
+
+    /// Atomically get current state and event receiver under one lock.
+    /// Eliminates TOCTOU race between separate `current_state()` + `new_event_receiver()` calls.
+    pub async fn subscribe(&self) -> (SttState, Receiver<SttEvent>) {
+        let session = self.session.0.lock().await;
+        let state = session.state.clone();
+        let rx = session.new_event_receiver();
+        (state, rx)
+    }
+
+    /// Download a model. Returns the download status.
+    pub async fn download_model(
+        &self,
+        size: SttModelSize,
+    ) -> Result<ModelDownloadResponse, SttError> {
+        if is_model_available(size) {
+            return Ok(already_exists_response(size));
+        }
+        if self.is_download_in_progress(size).await {
+            return Ok(downloading_response(size));
+        }
+
+        self.execute_download(size).await
+    }
+
+    /// Cancel a specific model download. Returns `true` if a download was cancelled.
+    pub async fn cancel_download(&self, size: SttModelSize) -> bool {
+        let cache = self.model_cache.0.lock().await;
+        if let Some(token) = cache.get_download_token(size) {
+            token.cancel();
+            true
+        } else {
+            false
+        }
+    }
+
+    /// Cancel all in-progress downloads by cancelling individual child tokens.
+    ///
+    /// Does NOT cancel the parent token (which would permanently poison future downloads).
+    pub async fn cancel_all_downloads(&self) -> usize {
+        let cache = self.model_cache.0.lock().await;
+        cache.cancel_all_downloads()
+    }
+
+    /// List available (downloaded) models.
+    pub fn list_models(&self) -> Vec<ModelInfo> {
+        list_available_models()
+            .into_iter()
+            .map(|(size, bytes, _path)| ModelInfo {
+                model_size: size,
+                size_bytes: bytes,
+                path: relative_model_path(size),
+            })
+            .collect()
+    }
+
+    /// Start a streaming model download.
+    ///
+    /// Returns the progress watch receiver, the download join handle,
+    /// and the cancellation token for this download.
+    /// The caller is responsible for streaming progress and calling
+    /// `finish_download()` when the handle completes.
+    pub async fn start_download_stream(
+        &self,
+        size: SttModelSize,
+    ) -> (
+        watch::Receiver<DownloadProgress>,
+        tokio::task::JoinHandle<Result<(), homunculus_microphone::error::DownloadError>>,
+        CancellationToken,
+    ) {
+        let cancel = self.mark_downloading(size).await;
+        let (rx, handle) = mic_download_model(size, &cancel);
+        (rx, handle, cancel)
+    }
+
+    /// Mark a model download as no longer in progress.
+    pub async fn finish_download(&self, size: SttModelSize) {
+        self.unmark_downloading(size).await;
+    }
+
+    /// Check if a model is already downloaded.
+    pub fn is_model_available(&self, size: SttModelSize) -> bool {
+        is_model_available(size)
+    }
+
+    /// Check if a download is currently in progress for the given model size.
+    pub async fn is_downloading(&self, size: SttModelSize) -> bool {
+        self.is_download_in_progress(size).await
+    }
+
+    /// Returns `Ok(true)` if an existing session was stopped (implicit restart),
+    /// `Ok(false)` if no session was active.
+    async fn ensure_session_ready(
+        &self,
+        size: SttModelSize,
+        language: &str,
+    ) -> Result<bool, SttError> {
+        let mut session = self.session.0.lock().await;
+        let restarted = match &session.state {
+            SttState::Loading { .. } => {
+                return Err(SttError::SessionLoading);
+            }
+            SttState::Listening { .. } => {
+                session.stop();
+                true
+            }
+            _ => false,
+        };
+        if !is_model_available(size) {
+            return Err(SttError::ModelNotAvailable(format!(
+                "Model '{}' is not downloaded. Use POST /stt/models/download first.",
+                size.as_str()
+            )));
+        }
+        session.language = language.to_string();
+        session.model_size = size;
+        session.transition(SttState::Loading {
+            language: language.to_string(),
+            model_size: size,
+        });
+        Ok(restarted)
+    }
+
+    async fn launch_pipeline(
+        &self,
+        session: &mut SttSession,
+        ctx: Arc<WhisperContext>,
+        size: SttModelSize,
+        language: String,
+    ) -> Result<SttState, SttError> {
+        ensure_microphone_permission()
+            .await
+            .map_err(|_| SttError::MicrophonePermissionDenied)?;
+
+        let device = get_input_device().map_err(|_| SttError::NoMicrophone)?;
+
+        let cancel = CancellationToken::new();
+        let started_at = Instant::now();
+        session.cancel = Some(cancel.clone());
+        session.started_at = Some(started_at);
+
+        spawn_pipeline(
+            device,
+            ctx,
+            language.clone(),
+            cancel,
+            session.event_tx.clone(),
+            self.session.clone(),
+            started_at,
+        )
+        .map_err(|e| SttError::PipelineFailed(e.to_string()))?;
+
+        session.transition(SttState::Listening {
+            language,
+            model_size: size,
+        });
+
+        Ok(session.state.clone())
+    }
+
+    async fn load_or_get_context(
+        &self,
+        size: SttModelSize,
+    ) -> Result<Arc<WhisperContext>, SttError> {
+        if let Some(cached) = self.get_cached_context(size).await {
+            return Ok(cached);
+        }
+
+        let ctx = load_context_blocking(size).await?;
+        self.cache_context(size, ctx.clone()).await;
+        Ok(ctx)
+    }
+
+    async fn get_cached_context(&self, size: SttModelSize) -> Option<Arc<WhisperContext>> {
+        let cache = self.model_cache.0.lock().await;
+        cache.get_context(size)
+    }
+
+    async fn cache_context(&self, size: SttModelSize, ctx: Arc<WhisperContext>) {
+        let mut cache = self.model_cache.0.lock().await;
+        cache.insert_context(size, ctx);
+    }
+
+    async fn is_download_in_progress(&self, size: SttModelSize) -> bool {
+        let cache = self.model_cache.0.lock().await;
+        cache.is_downloading(size)
+    }
+
+    async fn execute_download(
+        &self,
+        size: SttModelSize,
+    ) -> Result<ModelDownloadResponse, SttError> {
+        let cancel = self.mark_downloading(size).await;
+        let tmp_path = model_path(size).with_extension("bin.tmp");
+        let (_rx, handle) = mic_download_model(size, &cancel);
+
+        let result = tokio::select! {
+            join_result = handle => {
+                match join_result {
+                    Ok(Ok(())) => Ok(downloaded_response(size)),
+                    Ok(Err(homunculus_microphone::error::DownloadError::Cancelled)) => {
+                        Err(SttError::DownloadCancelled)
+                    }
+                    Ok(Err(e)) => Err(SttError::DownloadFailed(e.to_string())),
+                    Err(e) => Err(SttError::DownloadFailed(e.to_string())),
+                }
+            }
+            _ = cancel.cancelled() => {
+                // Dropped future's in-band cleanup may not run; explicitly remove temp file.
+                let _ = tokio::fs::remove_file(&tmp_path).await;
+                Err(SttError::DownloadCancelled)
+            }
+        };
+
+        self.unmark_downloading(size).await;
+        result
+    }
+
+    async fn mark_downloading(&self, size: SttModelSize) -> CancellationToken {
+        let mut cache = self.model_cache.0.lock().await;
+        // If a download is already in progress, return its existing token.
+        // Callers should check is_download_in_progress first.
+        cache
+            .mark_downloading(size)
+            .unwrap_or_else(|| cache.get_download_token(size).unwrap())
+    }
+
+    async fn unmark_downloading(&self, size: SttModelSize) {
+        let mut cache = self.model_cache.0.lock().await;
+        cache.unmark_downloading(size);
+    }
+}
+
+async fn load_context_blocking(size: SttModelSize) -> Result<Arc<WhisperContext>, SttError> {
+    tokio::task::spawn_blocking(move || {
+        load_whisper_context(size).map_err(SttError::ModelLoadFailed)
+    })
+    .await
+    .map_err(|e| SttError::ModelLoadFailed(e.to_string()))?
+}
+
+fn relative_model_path(size: SttModelSize) -> String {
+    let path = model_path(size);
+    format!(
+        "models/{}",
+        path.file_name()
+            .map(|f| f.to_string_lossy())
+            .unwrap_or_default()
+    )
+}
+
+fn already_exists_response(size: SttModelSize) -> ModelDownloadResponse {
+    ModelDownloadResponse {
+        model_size: size,
+        status: DownloadStatus::AlreadyExists,
+        path: Some(relative_model_path(size)),
+    }
+}
+
+fn downloading_response(size: SttModelSize) -> ModelDownloadResponse {
+    ModelDownloadResponse {
+        model_size: size,
+        status: DownloadStatus::Downloading,
+        path: None,
+    }
+}
+
+fn downloaded_response(size: SttModelSize) -> ModelDownloadResponse {
+    ModelDownloadResponse {
+        model_size: size,
+        status: DownloadStatus::Downloaded,
+        path: Some(relative_model_path(size)),
+    }
+}
