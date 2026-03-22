@@ -6,8 +6,10 @@ use homunculus_api::prelude::{
     ApiReactor, AppApi, AudioBgmApi, AudioSeApi, CameraApi, EffectsApi, EntitiesApi, SettingsApi,
     ShadowPanelApi, SignalsApi, SpeechApi, VrmAnimationApi, WebviewApi,
 };
+use homunculus_api::stt::SttApi;
 use homunculus_api::vrm::VrmApi;
 use homunculus_core::rpc_registry::RpcRegistry;
+use homunculus_microphone::SharedSttSession;
 use homunculus_utils::config::HomunculusConfig;
 use std::sync::{Arc, RwLock};
 
@@ -30,6 +32,10 @@ pub struct HttpState {
     pub entities: EntitiesApi,
     pub assets: AssetsApi,
     pub mods: ModsApi,
+    /// STT API — intentionally bypasses the ApiReactor pattern.
+    /// STT involves long-running audio pipelines with SSE streaming that don't map
+    /// to one-shot ECS systems. State is managed via `Arc<Mutex>` directly.
+    pub stt: SttApi,
     pub config: HomunculusConfig,
     pub rpc_registry: Arc<RwLock<RpcRegistry>>,
 }
@@ -57,6 +63,7 @@ impl HttpState {
             entities: EntitiesApi::from(reactor.clone()),
             assets: AssetsApi::from(reactor.clone()),
             mods: ModsApi::from(reactor.clone()),
+            stt: SttApi::new(SharedSttSession::new()),
             config,
             rpc_registry,
             reactor,

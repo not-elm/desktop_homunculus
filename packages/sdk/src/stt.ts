@@ -1,0 +1,673 @@
+import {host, HomunculusApiError} from "./host";
+import {EventSource} from "eventsource";
+import {
+    matchWakeWord,
+    normalizePhrase,
+} from "./wake-word-matcher";
+import type {NormalizedPhrase} from "./wake-word-matcher";
+
+/**
+ * Speech-to-Text (STT) API namespace for controlling real-time speech recognition.
+ *
+ * Provides session lifecycle management, real-time transcription event streaming,
+ * and model management for Whisper-based speech recognition.
+ *
+ * Only one STT session can be active at a time. Starting a new session while
+ * one is already listening will implicitly restart with the new options.
+ *
+ * @example
+ * ```typescript
+ * // Start transcription and listen for results
+ * await stt.session.start({ language: "ja", modelSize: "small" });
+ *
+ * const stream = stt.stream({
+ *   onResult: (result) => console.log(result.text),
+ * });
+ *
+ * // Later, stop
+ * await stt.session.stop();
+ * stream.close();
+ * ```
+ */
+export namespace stt {
+    /** Whisper model sizes available for STT. */
+    export type SttModelSize = "tiny" | "base" | "small" | "medium" | "large-v3-turbo" | "large-v3";
+
+    /**
+     * Session state as a tagged union. Matches the engine's `SttState` enum.
+     *
+     * Use the `state` field to discriminate:
+     * - `"idle"` — No active session
+     * - `"loading"` — Model is being loaded
+     * - `"listening"` — Actively transcribing
+     * - `"error"` — Session encountered an error
+     */
+    export type SttState =
+        | { state: "idle" }
+        | { state: "loading"; language: string; modelSize: SttModelSize }
+        | { state: "listening"; language: string; modelSize: SttModelSize }
+        | { state: "error"; error: string; message: string };
+
+    /** A transcription result from the STT engine. */
+    export interface SttResult {
+        /** The transcribed text. */
+        text: string;
+        /** Timestamp in seconds from session start. */
+        timestamp: number;
+        /** Detected or specified language code. */
+        language: string;
+    }
+
+    /** An error event from the STT session. */
+    export interface SttSessionError {
+        /** The error code. */
+        error: string;
+        /** A human-readable error message. */
+        message: string;
+    }
+
+    /** Options for starting an STT session. */
+    export interface SttStartOptions {
+        /**
+         * Language code for transcription (ISO 639-1).
+         * Use `"auto"` for automatic language detection.
+         * @defaultValue `"auto"`
+         */
+        language?: string;
+        /**
+         * Whisper model size to use.
+         * @defaultValue `"small"`
+         */
+        modelSize?: SttModelSize;
+    }
+
+    /** STT error codes returned by the engine. */
+    export type SttErrorCode =
+        | "session_already_active"
+        | "session_loading"
+        | "model_not_available"
+        | "model_load_failed"
+        | "pipeline_failed"
+        | "no_microphone"
+        | "microphone_permission_denied"
+        | "download_failed"
+        | "invalid_model_size"
+        | "invalid_language";
+
+    /**
+     * Type guard for STT-specific API errors.
+     *
+     * @param e - The caught error
+     * @param code - Optional specific error code to check
+     * @returns `true` if the error is an STT API error (optionally matching the given code)
+     *
+     * @example
+     * ```typescript
+     * try {
+     *   await stt.session.start({ language: "ja" });
+     * } catch (e) {
+     *   if (stt.isSttError(e, "no_microphone")) {
+     *     console.error("No microphone found");
+     *   } else if (stt.isSttError(e, "model_not_available")) {
+     *     console.error("Model not downloaded");
+     *   }
+     * }
+     * ```
+     */
+    export function isSttError(
+        e: unknown,
+        code?: SttErrorCode,
+    ): e is HomunculusApiError {
+        if (!(e instanceof HomunculusApiError)) return false;
+        if (code === undefined) return e.code !== undefined;
+        return e.code === code;
+    }
+
+    /**
+     * Session management sub-namespace.
+     *
+     * Only one STT session can be active at a time. Calling `start()` while
+     * a session is in `listening` state will implicitly stop the current
+     * session and start a new one. Calling `start()` while in `loading`
+     * state will return a `session_loading` error.
+     */
+    export namespace session {
+        /**
+         * Starts an STT session with the given options.
+         *
+         * If a session is already in `listening` state, it will be implicitly
+         * stopped and a new session started (implicit restart). If a session is
+         * in `loading` state, a `session_loading` error is returned.
+         *
+         * @param options - Session configuration (language, model size)
+         * @returns The new session state
+         *
+         * @example
+         * ```typescript
+         * // Start with defaults (auto language, small model)
+         * const state = await stt.session.start();
+         *
+         * // Start with specific options
+         * const state = await stt.session.start({
+         *   language: "ja",
+         *   modelSize: "small",
+         * });
+         * ```
+         */
+        export async function start(options?: SttStartOptions): Promise<SttState> {
+            const response = await host.post(host.createUrl("stt/start"), options ?? {});
+            const body = await response.json() as SttState & { restarted?: boolean };
+            if (body.restarted) {
+                console.warn("STT session was implicitly restarted. Previous session was stopped.");
+            }
+            return body;
+        }
+
+        /**
+         * Stops the current STT session. Idempotent — safe to call even if
+         * no session is active.
+         *
+         * @returns The session state after stopping (always `idle`)
+         *
+         * @example
+         * ```typescript
+         * await stt.session.stop();
+         * ```
+         */
+        export async function stop(): Promise<SttState> {
+            const response = await host.post(host.createUrl("stt/stop"));
+            return await response.json() as SttState;
+        }
+
+        /**
+         * Gets the current STT session status.
+         *
+         * @returns The current session state
+         *
+         * @example
+         * ```typescript
+         * const status = await stt.session.status();
+         * if (status.state === "listening") {
+         *   console.log("STT is active");
+         * }
+         * ```
+         */
+        export async function status(): Promise<SttState> {
+            const response = await host.get(host.createUrl("stt/status"));
+            return await response.json() as SttState;
+        }
+    }
+
+    /** Information about a downloaded STT model. */
+    export interface ModelInfo {
+        /** The model size. */
+        modelSize: SttModelSize;
+        /** File size in bytes. */
+        sizeBytes: number;
+        /** Relative file path. */
+        path: string;
+    }
+
+    /** Response from the non-streaming model download endpoint. */
+    export interface ModelDownloadResponse {
+        /** The model size. */
+        modelSize: SttModelSize;
+        /** Download status. */
+        status: "downloaded" | "alreadyExists" | "downloading";
+        /** File path (present when downloaded or already exists). */
+        path?: string;
+    }
+
+    /** A progress or completion event from the streaming download endpoint. */
+    export type DownloadEvent =
+        | { type: "progress"; downloadedBytes: number; totalBytes: number; percentage: number }
+        | { type: "complete"; modelSize: SttModelSize; path: string }
+        | { type: "error"; message: string };
+
+    /**
+     * Model management sub-namespace for downloading and listing STT models.
+     */
+    export namespace models {
+        /**
+         * Lists all downloaded STT models.
+         *
+         * @returns Array of downloaded model information
+         *
+         * @example
+         * ```typescript
+         * const models = await stt.models.list();
+         * for (const m of models) {
+         *   console.log(`${m.modelSize}: ${m.sizeBytes} bytes`);
+         * }
+         * ```
+         */
+        export async function list(): Promise<ModelInfo[]> {
+            const response = await host.get(host.createUrl("stt/models"));
+            return await response.json() as ModelInfo[];
+        }
+
+        /**
+         * Downloads an STT model with optional progress streaming.
+         *
+         * When called with `await`, returns the final download response.
+         * When iterated with `for await...of`, yields progress events.
+         *
+         * @param options - Download options including model size
+         * @returns An async iterable of download events (also awaitable for final result)
+         *
+         * @example
+         * ```typescript
+         * // Simple download (no progress)
+         * const result = await stt.models.download({ modelSize: "small" });
+         * console.log(result.status); // "downloaded" | "alreadyExists"
+         *
+         * // Download with progress
+         * for await (const event of stt.models.download({ modelSize: "small" })) {
+         *   if (event.type === "progress") {
+         *     console.log(`${event.percentage.toFixed(1)}%`);
+         *   } else if (event.type === "complete") {
+         *     console.log(`Done: ${event.path}`);
+         *   }
+         * }
+         * ```
+         */
+        export function download(options: {
+            modelSize: SttModelSize;
+            signal?: AbortSignal;
+        }): DownloadStream {
+            return new DownloadStream(options);
+        }
+
+        /**
+         * Cancels an in-progress model download.
+         *
+         * @param modelSize - The model size to cancel
+         * @returns `true` if a download was cancelled, `false` if no active download
+         *
+         * @example
+         * ```typescript
+         * const cancelled = await stt.models.cancelDownload("small");
+         * ```
+         */
+        export async function cancelDownload(modelSize: SttModelSize): Promise<boolean> {
+            try {
+                await host.deleteMethod(
+                    host.createUrl("stt/models/download", { modelSize }),
+                );
+                return true;
+            } catch (e) {
+                if (e instanceof HomunculusApiError && e.statusCode === 404) {
+                    return false;
+                }
+                throw e;
+            }
+        }
+    }
+
+    /**
+     * A download stream that is both an async iterable (for progress)
+     * and a thenable (for simple await).
+     */
+    export class DownloadStream implements AsyncIterable<DownloadEvent>, PromiseLike<ModelDownloadResponse> {
+        private readonly options: { modelSize: SttModelSize; signal?: AbortSignal };
+
+        constructor(options: { modelSize: SttModelSize; signal?: AbortSignal }) {
+            this.options = options;
+        }
+
+        async *[Symbol.asyncIterator](): AsyncIterator<DownloadEvent> {
+            const stream = host.postStream<DownloadEvent>(
+                host.createUrl("stt/models/download/stream"),
+                { modelSize: this.options.modelSize },
+                this.options.signal,
+            );
+            yield* stream;
+        }
+
+        then<TResult1 = ModelDownloadResponse, TResult2 = never>(
+            onfulfilled?: ((value: ModelDownloadResponse) => TResult1 | PromiseLike<TResult1>) | null,
+            onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
+        ): Promise<TResult1 | TResult2> {
+            const promise = (async (): Promise<ModelDownloadResponse> => {
+                const response = await host.post(
+                    host.createUrl("stt/models/download"),
+                    { modelSize: this.options.modelSize },
+                );
+                return await response.json() as ModelDownloadResponse;
+            })();
+            return promise.then(onfulfilled, onrejected);
+        }
+    }
+
+    /** Callbacks for SSE stream events. All callbacks are optional. */
+    export interface StreamCallbacks {
+        /** Called when a transcription result is received. */
+        onResult?: (result: SttResult) => void | Promise<void>;
+        /** Called when the session state changes. */
+        onStatus?: (state: SttState) => void | Promise<void>;
+        /** Called when a session error occurs. */
+        onSessionError?: (error: SttSessionError) => void | Promise<void>;
+        /** Called when the session is stopped. */
+        onStopped?: () => void | Promise<void>;
+    }
+
+    /**
+     * Wrapper around an SSE connection to the STT event stream.
+     *
+     * The server sends an initial `status` event on connect (late-join sync),
+     * so there is no need to separately query the current state.
+     */
+    export class SttStream {
+        private readonly es: EventSource;
+
+        constructor(callbacks: StreamCallbacks) {
+            const url = host.createUrl("stt/stream");
+            this.es = new EventSource(url.toString());
+
+            if (callbacks.onStatus) {
+                const cb = callbacks.onStatus;
+                this.es.addEventListener("status", async (event: MessageEvent) => {
+                    try {
+                        const state: SttState = JSON.parse(event.data);
+                        await cb(state);
+                    } catch (error) {
+                        console.error("Error processing STT status event:", error);
+                    }
+                });
+            }
+
+            if (callbacks.onResult) {
+                const cb = callbacks.onResult;
+                this.es.addEventListener("result", async (event: MessageEvent) => {
+                    try {
+                        const result: SttResult = JSON.parse(event.data);
+                        await cb(result);
+                    } catch (error) {
+                        console.error("Error processing STT result event:", error);
+                    }
+                });
+            }
+
+            if (callbacks.onSessionError) {
+                const cb = callbacks.onSessionError;
+                this.es.addEventListener("session_error", async (event: MessageEvent) => {
+                    try {
+                        const err: SttSessionError = JSON.parse(event.data);
+                        await cb(err);
+                    } catch (error) {
+                        console.error("Error processing STT session_error event:", error);
+                    }
+                });
+            }
+
+            if (callbacks.onStopped) {
+                const cb = callbacks.onStopped;
+                this.es.addEventListener("stopped", async () => {
+                    try {
+                        await cb();
+                    } catch (error) {
+                        console.error("Error processing STT stopped event:", error);
+                    }
+                });
+            }
+        }
+
+        /**
+         * Closes the SSE connection.
+         *
+         * @example
+         * ```typescript
+         * const stream = stt.stream({ onResult: (r) => console.log(r.text) });
+         * // ... later
+         * stream.close();
+         * ```
+         */
+        close(): void {
+            this.es.close();
+        }
+    }
+
+    /**
+     * Creates a persistent SSE connection to receive real-time STT events.
+     *
+     * The server sends the current session state immediately on connect
+     * (late-join sync), so the `onStatus` callback will fire right away.
+     *
+     * @param callbacks - Event handlers for different STT event types
+     * @returns An `SttStream` instance for managing the connection
+     *
+     * @example
+     * ```typescript
+     * // Listen for transcription results only
+     * const stream = stt.stream({
+     *   onResult: (result) => {
+     *     console.log(`[${result.language}] ${result.text}`);
+     *   },
+     * });
+     *
+     * // Listen for all events
+     * const stream = stt.stream({
+     *   onResult: (result) => console.log(result.text),
+     *   onStatus: (state) => console.log("State:", state.state),
+     *   onSessionError: (err) => console.error(err.message),
+     *   onStopped: () => console.log("Session ended"),
+     * });
+     *
+     * // Close the stream when done
+     * stream.close();
+     * ```
+     */
+    export function stream(callbacks: StreamCallbacks): SttStream {
+        return new SttStream(callbacks);
+    }
+
+    /** A supported language entry. */
+    export interface LanguageEntry {
+        /** ISO 639-1 (or similar) language code. */
+        code: string;
+        /** Human-readable display name. */
+        label: string;
+    }
+
+    /**
+     * Fetches the list of supported STT languages from the engine.
+     *
+     * Returns language codes with human-readable labels generated via
+     * `Intl.DisplayNames`. Codes not recognized by the browser fall back
+     * to the raw code string.
+     *
+     * @returns Array of language entries sorted with "auto" first
+     *
+     * @example
+     * ```typescript
+     * const languages = await stt.languages();
+     * // [{ code: "auto", label: "Auto Detect" }, { code: "en", label: "English" }, ...]
+     * ```
+     */
+    // -----------------------------------------------------------------------
+    // Wake word detection
+    // -----------------------------------------------------------------------
+
+    /** Options for wake word detection. */
+    export interface WakeWordOptions {
+        /**
+         * Wake-word phrases to listen for (e.g., `["エルマー", "Hey Elmer"]`).
+         * Must contain at least one phrase.
+         */
+        phrases: string[];
+        /**
+         * Matching threshold — a preset name or a raw number (0.0–1.0).
+         * @defaultValue `"strict"` (0.80)
+         */
+        threshold?: WakeWordThreshold;
+        /** Abort signal to cancel the wake word listener. */
+        signal?: AbortSignal;
+    }
+
+    /** Subscription handle returned by {@link onWakeWord}. */
+    export interface WakeWordSubscription {
+        /** Stop listening for wake words and close the underlying SSE stream. */
+        close(): void;
+    }
+
+    /** Result of a successful wake-word match. */
+    export interface WakeWordMatch {
+        /** The registered phrase that matched. */
+        matchedPhrase: string;
+        /** Full raw STT transcript. */
+        transcript: string;
+        /** Similarity score (0.0–1.0). */
+        confidence: number;
+        /** Text after the wake word (the user's instruction). */
+        remainingText: string;
+    }
+
+    /** Threshold preset name or a raw numeric value (0.0–1.0). */
+    export type WakeWordThreshold = number | "strict" | "normal" | "loose";
+
+    /**
+     * Waits for a single wake-word match from the STT stream.
+     *
+     * Resolves with the first match and automatically closes the stream.
+     * The STT session must already be started via {@link session.start}.
+     *
+     * @param options - Wake word detection options
+     * @returns The first wake-word match
+     * @throws {RangeError} If `phrases` is empty
+     * @throws {DOMException} `AbortError` if the signal is aborted
+     *
+     * @example
+     * ```typescript
+     * await stt.session.start({ language: "ja" });
+     *
+     * const match = await stt.waitWakeWord({
+     *   phrases: ["エルマー", "Hey Elmer"],
+     * });
+     *
+     * console.log(match.matchedPhrase);   // "エルマー"
+     * console.log(match.remainingText);   // "テスト直して"
+     * console.log(match.confidence);      // 1.0
+     * ```
+     */
+    export function waitWakeWord(options: WakeWordOptions): Promise<WakeWordMatch> {
+        validatePhrases(options.phrases);
+        const phrases = options.phrases.map(normalizePhrase);
+
+        return new Promise<WakeWordMatch>((resolve, reject) => {
+            const sttStream = createWakeWordStream(phrases, options.threshold, (match) => {
+                sttStream.close();
+                resolve(match);
+            });
+
+            if (options.signal) {
+                handleAbortSignal(options.signal, sttStream, reject);
+            }
+        });
+    }
+
+    /**
+     * Listens continuously for wake-word matches from the STT stream.
+     *
+     * Fires the callback on every match. The STT session must already be
+     * started via {@link session.start}. Call `.close()` on the returned
+     * subscription to stop listening.
+     *
+     * @param options - Wake word detection options
+     * @param callback - Called on each wake-word match
+     * @returns A subscription handle with a `close()` method
+     * @throws {RangeError} If `phrases` is empty
+     *
+     * @example
+     * ```typescript
+     * await stt.session.start({ language: "ja" });
+     *
+     * const sub = stt.onWakeWord(
+     *   { phrases: ["エルマー"] },
+     *   (match) => {
+     *     console.log(`Wake word detected: ${match.matchedPhrase}`);
+     *     console.log(`Instruction: ${match.remainingText}`);
+     *   },
+     * );
+     *
+     * // Later, stop listening
+     * sub.close();
+     * ```
+     */
+    export function onWakeWord(
+        options: WakeWordOptions,
+        callback: (match: WakeWordMatch) => void | Promise<void>,
+    ): WakeWordSubscription {
+        validatePhrases(options.phrases);
+        const phrases = options.phrases.map(normalizePhrase);
+
+        const sttStream = createWakeWordStream(phrases, options.threshold, callback);
+
+        if (options.signal) {
+            handleAbortSignal(options.signal, sttStream, () => {});
+        }
+
+        return {close: () => sttStream.close()};
+    }
+
+    function validatePhrases(phrases: string[]): void {
+        if (phrases.length === 0) {
+            throw new RangeError("phrases must contain at least one wake-word phrase");
+        }
+    }
+
+    function createWakeWordStream(
+        phrases: NormalizedPhrase[],
+        threshold: WakeWordThreshold | undefined,
+        onMatch: (match: WakeWordMatch) => void | Promise<void>,
+    ): SttStream {
+        return stream({
+            onResult: (result) => {
+                const match = matchWakeWord(result.text, phrases, threshold);
+                if (match) {
+                    void onMatch(match);
+                }
+            },
+        });
+    }
+
+    function handleAbortSignal(
+        signal: AbortSignal,
+        sttStream: SttStream,
+        reject: (reason: unknown) => void,
+    ): void {
+        if (signal.aborted) {
+            sttStream.close();
+            reject(new DOMException("The operation was aborted.", "AbortError"));
+            return;
+        }
+        signal.addEventListener("abort", () => {
+            sttStream.close();
+            reject(new DOMException("The operation was aborted.", "AbortError"));
+        }, {once: true});
+    }
+
+    export async function languages(): Promise<LanguageEntry[]> {
+        const response = await host.get(host.createUrl("stt/languages"));
+        const codes = await response.json() as string[];
+
+        let displayNames: Intl.DisplayNames | null = null;
+        try {
+            displayNames = new Intl.DisplayNames(["en"], { type: "language" });
+        } catch {
+            // Fallback: use raw codes
+        }
+
+        return codes.map((code) => {
+            if (code === "auto") return { code, label: "Auto Detect" };
+            let label = code;
+            if (displayNames) {
+                try {
+                    label = displayNames.of(code) ?? code;
+                } catch {
+                    label = code;
+                }
+            }
+            return { code, label };
+        });
+    }
+}

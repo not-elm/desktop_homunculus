@@ -27,6 +27,7 @@ const cleanDistTypes = {
     name: 'clean-dist-types',
     closeBundle() {
         rimrafSync('dist/types');
+        process.exit(0);
     }
 };
 

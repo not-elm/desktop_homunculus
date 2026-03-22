@@ -2,9 +2,10 @@ use crate::node_process::{NodeAvailable, NodeProcessHandle};
 use bevy::prelude::*;
 use homunculus_core::prelude::SharedRpcRegistry;
 use homunculus_utils::process::CommandNoWindow;
+use std::io::{BufRead, BufReader};
 use std::net::TcpListener;
 use std::path::PathBuf;
-use std::process::Command;
+use std::process::{Command, Stdio};
 
 /// A MOD service identified by its absolute filesystem path.
 ///
@@ -53,7 +54,7 @@ fn run_mod_services(
         match launch_mod_service_process(service, rpc_port) {
             Ok(child) => {
                 append_pid_file(child.id());
-                commands.spawn(build_process_handle(child));
+                commands.spawn(build_process_handle(child, &service.mod_name));
             }
             Err(e) => {
                 error!(
@@ -95,6 +96,8 @@ fn launch_mod_service_process(
 ) -> std::io::Result<std::process::Child> {
     Command::new("node")
         .no_window_process_group()
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
         .arg("--import")
         .arg("tsx")
         .arg(&service.script_path)
@@ -104,7 +107,10 @@ fn launch_mod_service_process(
         .spawn()
 }
 
-fn build_process_handle(child: std::process::Child) -> NodeProcessHandle {
+fn build_process_handle(mut child: std::process::Child, mod_name: &str) -> NodeProcessHandle {
+    spawn_log_reader(child.stdout.take(), mod_name, false);
+    spawn_log_reader(child.stderr.take(), mod_name, true);
+
     #[cfg(windows)]
     let job = homunculus_utils::process::create_job_for_child(&child);
     #[cfg(windows)]
@@ -119,4 +125,46 @@ fn build_process_handle(child: std::process::Child) -> NodeProcessHandle {
 fn allocate_ephemeral_port() -> std::io::Result<u16> {
     let listener = TcpListener::bind("127.0.0.1:0")?;
     Ok(listener.local_addr()?.port())
+}
+
+fn spawn_log_reader<R: std::io::Read + Send + 'static>(
+    reader: Option<R>,
+    mod_name: &str,
+    is_stderr: bool,
+) {
+    let Some(reader) = reader else { return };
+    let stream = if is_stderr { "stderr" } else { "stdout" };
+    let thread_name = format!("mod-{mod_name}-{stream}");
+    let mod_name = mod_name.to_owned();
+    let result = std::thread::Builder::new()
+        .name(thread_name)
+        .spawn(move || {
+            let mut reader = BufReader::new(reader);
+            let mut buf = Vec::new();
+            loop {
+                buf.clear();
+                match reader.read_until(b'\n', &mut buf) {
+                    Ok(0) => break,
+                    Ok(_) => {
+                        if buf.last() == Some(&b'\n') {
+                            buf.pop();
+                        }
+                        if buf.last() == Some(&b'\r') {
+                            buf.pop();
+                        }
+                        let line = String::from_utf8_lossy(&buf);
+                        if is_stderr {
+                            warn!(target: "mod", "[{mod_name}] {line}");
+                        } else {
+                            info!(target: "mod", "[{mod_name}] {line}");
+                        }
+                    }
+                    Err(_) => break,
+                }
+            }
+        });
+
+    if let Err(e) = result {
+        error!("Failed to spawn log reader thread for mod: {e}");
+    }
 }

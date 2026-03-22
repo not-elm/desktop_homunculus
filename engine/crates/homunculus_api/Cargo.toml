@@ -20,6 +20,7 @@ homunculus_audio = { workspace = true }
 homunculus_effects = { workspace = true }
 homunculus_prefs = { workspace = true }
 homunculus_shadow_panel = { workspace = true }
+homunculus_microphone = { workspace = true }
 homunculus_speech = { workspace = true }
 homunculus_power_saver = { workspace = true }
 thiserror = { workspace = true }
@@ -27,13 +28,17 @@ axum = { workspace = true, optional = true }
 bevy_cef = { workspace = true }
 bevy_tweening = "0.15"
 homunculus_utils = { workspace = true, optional = true }
+tokio = { workspace = true }
+tokio-util = { workspace = true }
 utoipa = { workspace = true, optional = true }
 
 [features]
 default = []
 develop = []
 axum = ["dep:axum"]
-openapi = ["dep:utoipa", "dep:homunculus_utils", "homunculus_utils/openapi", "homunculus_core/openapi", "homunculus_audio/openapi"]
+cuda = ["homunculus_microphone/cuda"]
+metal = ["homunculus_microphone/metal"]
+openapi = ["dep:utoipa", "dep:homunculus_utils", "homunculus_utils/openapi", "homunculus_core/openapi", "homunculus_audio/openapi", "homunculus_microphone/openapi"]
 
 [lints]
 workspace = true

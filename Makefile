@@ -19,6 +19,11 @@ debug:
 	pnpm build --filter '!docs'
 	$(MAKE) -C engine debug
 
+
+debug-cuda:
+	pnpm build --filter '!docs'
+	$(MAKE) -C engine debug-cuda
+	
 test:
 	pnpm test
 	$(MAKE) -C engine test

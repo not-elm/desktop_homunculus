@@ -48,6 +48,7 @@ mod settings;
 mod shadow_panel;
 mod signals;
 mod speech;
+pub mod stt;
 pub mod vrm;
 mod vrma;
 mod webview;

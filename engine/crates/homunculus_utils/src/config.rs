@@ -7,6 +7,20 @@ use bevy::prelude::Resource;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
+/// STT configuration stored in `[stt]` section of config.toml.
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct SttConfig {
+    /// VAD silence threshold in milliseconds.
+    pub silence_ms: Option<u32>,
+    /// RMS energy threshold (0.0–1.0).
+    pub energy_threshold: Option<f32>,
+    /// Default Whisper model size.
+    pub default_model: Option<String>,
+    /// Maximum speech chunk duration in milliseconds before forced emission.
+    /// Prevents O(L²) inference cost from unbounded continuous speech.
+    pub max_chunk_ms: Option<u32>,
+}
+
 fn default_mods_dir() -> PathBuf {
     crate::path::mod_dir()
 }
@@ -18,7 +32,6 @@ fn default_port() -> u16 {
 /// Application configuration stored at `~/.homunculus/config.toml`.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[cfg_attr(feature = "bevy", derive(Resource))]
-#[serde(deny_unknown_fields)]
 pub struct HomunculusConfig {
     /// MOD installation directory (default: `~/.homunculus/mods/`).
     #[serde(default = "default_mods_dir")]
@@ -27,6 +40,10 @@ pub struct HomunculusConfig {
     /// HTTP server port for the engine (default: `3100`).
     #[serde(default = "default_port")]
     pub port: u16,
+
+    /// STT (Speech-to-Text) configuration.
+    #[serde(default)]
+    pub stt: SttConfig,
 }
 
 impl Default for HomunculusConfig {
@@ -34,6 +51,7 @@ impl Default for HomunculusConfig {
         Self {
             mods_dir: default_mods_dir(),
             port: default_port(),
+            stt: SttConfig::default(),
         }
     }
 }
@@ -110,6 +128,7 @@ mod tests {
         let config = HomunculusConfig {
             mods_dir: PathBuf::from("/custom/mods"),
             port: 4000,
+            ..Default::default()
         };
         let toml_str = toml::to_string_pretty(&config).unwrap();
         let parsed: HomunculusConfig = toml::from_str(&toml_str).unwrap();
@@ -151,6 +170,7 @@ mod tests {
         let config = HomunculusConfig {
             mods_dir: PathBuf::from("/my/mods"),
             port: 8080,
+            ..Default::default()
         };
         let toml_str = toml::to_string(&config).unwrap();
         assert!(
@@ -168,12 +188,6 @@ mod tests {
     }
 
     #[test]
-    fn test_config_deny_unknown_fields() {
-        let result = toml::from_str::<HomunculusConfig>("port = 3100\nunknown = true");
-        assert!(result.is_err(), "expected error for unknown field");
-    }
-
-    #[test]
     fn test_default_serializes_all_fields() {
         let config = HomunculusConfig::default();
         let table: toml::Value = toml::Value::try_from(&config).unwrap();
@@ -183,5 +197,37 @@ mod tests {
             map.contains_key("mods_dir"),
             "default must serialize 'mods_dir'"
         );
+        assert!(map.contains_key("stt"), "default must serialize 'stt'");
+    }
+
+    #[test]
+    fn test_config_with_stt_section() {
+        let toml_str = r#"
+            port = 3100
+            [stt]
+            silence_ms = 500
+            energy_threshold = 0.02
+            default_model = "tiny"
+        "#;
+        let config: HomunculusConfig = toml::from_str(toml_str).unwrap();
+        assert_eq!(config.stt.silence_ms, Some(500));
+        assert_eq!(config.stt.energy_threshold, Some(0.02));
+        assert_eq!(config.stt.default_model, Some("tiny".to_string()));
+    }
+
+    #[test]
+    fn test_config_without_stt_section() {
+        let config: HomunculusConfig = toml::from_str("port = 3100").unwrap();
+        assert_eq!(config.stt.silence_ms, None);
+        assert_eq!(config.stt.energy_threshold, None);
+        assert_eq!(config.stt.default_model, None);
+    }
+
+    #[test]
+    fn test_stt_config_default() {
+        let config = SttConfig::default();
+        assert_eq!(config.silence_ms, None);
+        assert_eq!(config.energy_threshold, None);
+        assert_eq!(config.default_model, None);
     }
 }

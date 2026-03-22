@@ -63,6 +63,13 @@ const TSX_PACKAGE: &str = "tsx@4.21.0";
 /// quickly without network access.
 /// The installed tsx is used by mod services via `node --import tsx`.
 pub fn ensure_tsx() -> UtilResult {
+    let config = HomunculusConfig::load()?;
+    let package_json = config.mods_dir.join("package.json");
+    if !package_json.exists() {
+        std::fs::write(&package_json, "{}\n")
+            .map_err(|e| UtilError::Mods(ModsError::Install(e)))?;
+    }
+
     let status = create_pnpm_command()?
         .no_window()
         .arg("add")
@@ -150,6 +157,10 @@ fn create_pnpm_command() -> UtilResult<Command> {
     let config = HomunculusConfig::load()?;
     let mut command = Command::new(pnpm_program());
     command.args(["-C", &format!("{}", &config.mods_dir.display())]);
+    #[cfg(windows)]
+    if let Some(path) = crate::process::path_with_node_prepended() {
+        command.env("PATH", path);
+    }
     Ok(command)
 }
 
