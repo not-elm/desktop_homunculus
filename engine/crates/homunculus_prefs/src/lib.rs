@@ -281,10 +281,13 @@ fn create_tables(db: &rusqlite::Connection) -> Result<(), rusqlite::Error> {
     )?;
     db.execute(
         "CREATE TABLE IF NOT EXISTS characters (
-            id TEXT PRIMARY KEY NOT NULL,
+            id TEXT PRIMARY KEY NOT NULL
+                CHECK(length(id) BETWEEN 1 AND 63),
             name TEXT NOT NULL DEFAULT '',
-            persona TEXT NOT NULL DEFAULT '{}',
-            transform TEXT NOT NULL DEFAULT '{}',
+            persona TEXT NOT NULL DEFAULT '{}'
+                CHECK(json_valid(persona)),
+            transform TEXT NOT NULL DEFAULT '{}'
+                CHECK(json_valid(transform)),
             created_at TEXT NOT NULL DEFAULT (datetime('now'))
         ) WITHOUT ROWID",
         [],
@@ -293,7 +296,8 @@ fn create_tables(db: &rusqlite::Connection) -> Result<(), rusqlite::Error> {
         "CREATE TABLE IF NOT EXISTS character_extensions (
             character_id TEXT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
             mod_name TEXT NOT NULL,
-            data TEXT NOT NULL DEFAULT '{}',
+            data TEXT NOT NULL DEFAULT '{}'
+                CHECK(json_valid(data)),
             PRIMARY KEY (character_id, mod_name)
         ) WITHOUT ROWID",
         [],

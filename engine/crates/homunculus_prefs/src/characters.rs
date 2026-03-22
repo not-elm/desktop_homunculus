@@ -51,8 +51,9 @@ impl<'a> CharactersTable<'a> {
         transform_json: &str,
     ) -> Result<(), rusqlite::Error> {
         self.0.0.execute(
-            "INSERT OR IGNORE INTO characters (id, name, persona, transform) \
-             VALUES (?1, ?2, ?3, ?4)",
+            "INSERT INTO characters (id, name, persona, transform) \
+             VALUES (?1, ?2, ?3, ?4) \
+             ON CONFLICT(id) DO NOTHING",
             rusqlite::params![id, name, persona_json, transform_json],
         )?;
         Ok(())
@@ -460,5 +461,39 @@ mod tests {
         r.create("dup", "Other", "{}", "{}").unwrap();
         let found = r.find_by_id("dup").unwrap().unwrap();
         assert_eq!(found.name, "Dup");
+    }
+
+    #[test]
+    fn create_rejects_invalid_persona_json() {
+        let db = test_db();
+        let r = repo(&db);
+        let result = r.create("e", "E", "not-json", "{}");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn create_rejects_invalid_transform_json() {
+        let db = test_db();
+        let r = repo(&db);
+        let result = r.create("e", "E", "{}", "not-json");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn create_rejects_id_too_long() {
+        let db = test_db();
+        let r = repo(&db);
+        let long_id = "a".repeat(64);
+        let result = r.create(&long_id, "Name", "{}", "{}");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn create_accepts_max_length_id() {
+        let db = test_db();
+        let r = repo(&db);
+        let max_id = "a".repeat(63);
+        r.create(&max_id, "Name", "{}", "{}").unwrap();
+        assert!(r.find_by_id(&max_id).unwrap().is_some());
     }
 }

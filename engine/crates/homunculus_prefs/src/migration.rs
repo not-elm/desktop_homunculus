@@ -8,7 +8,7 @@
 use crate::PrefsDatabase;
 
 /// Current schema version. Increment when adding new migration phases.
-const TARGET_VERSION: i64 = 1;
+const TARGET_VERSION: i64 = 2;
 
 /// Runs pending migrations if the database is behind [`TARGET_VERSION`].
 ///
@@ -31,7 +31,13 @@ pub(crate) fn run_if_needed(db: &PrefsDatabase) -> Result<(), rusqlite::Error> {
 }
 
 fn migrate_and_set_version(db: &PrefsDatabase) -> Result<(), rusqlite::Error> {
-    migrate_v0_to_v1(db)?;
+    let current = current_version(db)?;
+    if current < 1 {
+        migrate_v0_to_v1(db)?;
+    }
+    if current < 2 {
+        migrate_v1_to_v2(db)?;
+    }
     set_version(db, TARGET_VERSION)
 }
 
@@ -61,6 +67,52 @@ fn migrate_v0_to_v1(db: &PrefsDatabase) -> Result<(), rusqlite::Error> {
     phase_b_transforms(db)?;
     phase_c_names(db)?;
     phase_d_extensions(db)?;
+    Ok(())
+}
+
+/// V1 → V2: Recreate tables with CHECK constraints.
+///
+/// SQLite cannot add CHECK constraints via ALTER TABLE, so we recreate
+/// both tables with the new constraints and copy data over.
+fn migrate_v1_to_v2(db: &PrefsDatabase) -> Result<(), rusqlite::Error> {
+    db.0.execute_batch("PRAGMA foreign_keys = OFF")?;
+
+    db.0.execute_batch(
+        "CREATE TABLE characters_new (
+            id TEXT PRIMARY KEY NOT NULL
+                CHECK(length(id) BETWEEN 1 AND 63),
+            name TEXT NOT NULL DEFAULT '',
+            persona TEXT NOT NULL DEFAULT '{}'
+                CHECK(json_valid(persona)),
+            transform TEXT NOT NULL DEFAULT '{}'
+                CHECK(json_valid(transform)),
+            created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        ) WITHOUT ROWID;
+
+        INSERT INTO characters_new (id, name, persona, transform, created_at)
+            SELECT id, name, persona, transform, created_at FROM characters;
+
+        DROP TABLE characters;
+
+        ALTER TABLE characters_new RENAME TO characters;
+
+        CREATE TABLE character_extensions_new (
+            character_id TEXT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
+            mod_name TEXT NOT NULL,
+            data TEXT NOT NULL DEFAULT '{}'
+                CHECK(json_valid(data)),
+            PRIMARY KEY (character_id, mod_name)
+        ) WITHOUT ROWID;
+
+        INSERT INTO character_extensions_new (character_id, mod_name, data)
+            SELECT character_id, mod_name, data FROM character_extensions;
+
+        DROP TABLE character_extensions;
+
+        ALTER TABLE character_extensions_new RENAME TO character_extensions;
+
+        PRAGMA foreign_keys = ON;",
+    )?;
     Ok(())
 }
 
@@ -380,7 +432,7 @@ mod tests {
         assert_eq!(maid.transform, "{}"); // default, no transform key
         assert_eq!(maid.name, ""); // default, no name key
 
-        assert_eq!(current_version(&db).unwrap(), 1);
+        assert_eq!(current_version(&db).unwrap(), 2);
     }
 
     #[test]
@@ -398,7 +450,7 @@ mod tests {
 
         let repo = crate::characters::CharactersTable(&db);
         assert_eq!(repo.list_all().unwrap().len(), 1);
-        assert_eq!(current_version(&db).unwrap(), 1);
+        assert_eq!(current_version(&db).unwrap(), 2);
     }
 
     #[test]
@@ -457,5 +509,34 @@ mod tests {
         let entries = vec![("name::vrm:e".to_string(), "no lang".to_string())];
         let grouped = group_name_entries(&entries);
         assert!(grouped.is_empty());
+    }
+
+    #[test]
+    fn migrate_v1_to_v2_adds_check_constraints() {
+        let db = test_db();
+        set_version(&db, 1).unwrap();
+
+        db.0.execute(
+            "INSERT INTO characters (id, name, persona, transform) VALUES ('test', 'Test', '{}', '{}')",
+            [],
+        )
+        .unwrap();
+
+        migrate_v1_to_v2(&db).unwrap();
+
+        // Verify data survived
+        let mut stmt = db
+            .0
+            .prepare("SELECT name FROM characters WHERE id = 'test'")
+            .unwrap();
+        let name: String = stmt.query_row([], |r| r.get(0)).unwrap();
+        assert_eq!(name, "Test");
+
+        // Verify CHECK constraint is now active
+        let result = db.0.execute(
+            "INSERT INTO characters (id, name, persona, transform) VALUES ('bad', 'Bad', 'not-json', '{}')",
+            [],
+        );
+        assert!(result.is_err());
     }
 }
