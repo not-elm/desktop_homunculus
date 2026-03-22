@@ -525,10 +525,9 @@ mod tests {
         migrate_v1_to_v2(&db).unwrap();
 
         // Verify data survived
-        let mut stmt = db
-            .0
-            .prepare("SELECT name FROM characters WHERE id = 'test'")
-            .unwrap();
+        let mut stmt =
+            db.0.prepare("SELECT name FROM characters WHERE id = 'test'")
+                .unwrap();
         let name: String = stmt.query_row([], |r| r.get(0)).unwrap();
         assert_eq!(name, "Test");
 
