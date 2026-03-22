@@ -70,7 +70,7 @@ impl<'a> CharactersTable<'a> {
     /// Returns every character row.
     pub fn list_all(&self) -> Result<Vec<CharacterRow>, rusqlite::Error> {
         let mut stmt = self.0.0.prepare(
-            "SELECT id, name, persona, transform, state, created_at \
+            "SELECT id, name, persona, transform, created_at \
              FROM characters ORDER BY created_at ASC",
         )?;
         rows_to_characters(&mut stmt, [])
@@ -244,7 +244,7 @@ mod tests {
     fn create_and_find_by_id() {
         let db = test_db();
         let r = repo(&db);
-        r.create("elmer", "vrm:elmer", "Elmer", "{}", "{}").unwrap();
+        r.create("elmer", "Elmer", "{}", "{}").unwrap();
 
         let row = r.find_by_id("elmer").unwrap().unwrap();
         assert_eq!(row.id, "elmer");
@@ -261,28 +261,11 @@ mod tests {
     }
 
     #[test]
-    fn find_by_asset_id() {
-        let db = test_db();
-        let r = repo(&db);
-        r.create("elmer", "vrm:elmer", "Elmer", "{}", "{}").unwrap();
-
-        let row = r.find_by_asset_id("vrm:elmer").unwrap().unwrap();
-        assert_eq!(row.id, "elmer");
-    }
-
-    #[test]
-    fn find_by_asset_id_missing_returns_none() {
-        let db = test_db();
-        let r = repo(&db);
-        assert!(r.find_by_asset_id("vrm:nope").unwrap().is_none());
-    }
-
-    #[test]
     fn list_all_returns_all_in_creation_order() {
         let db = test_db();
         let r = repo(&db);
-        r.create("a", "vrm:a", "A", "{}", "{}").unwrap();
-        r.create("b", "vrm:b", "B", "{}", "{}").unwrap();
+        r.create("a", "A", "{}", "{}").unwrap();
+        r.create("b", "B", "{}", "{}").unwrap();
 
         let all = r.list_all().unwrap();
         assert_eq!(all.len(), 2);
@@ -301,7 +284,7 @@ mod tests {
     fn update_persona() {
         let db = test_db();
         let r = repo(&db);
-        r.create("e", "vrm:e", "E", "{}", "{}").unwrap();
+        r.create("e", "E", "{}", "{}").unwrap();
 
         let new_persona = r#"{"profile":"cheerful"}"#;
         r.update_persona("e", new_persona).unwrap();
@@ -314,7 +297,7 @@ mod tests {
     fn update_name() {
         let db = test_db();
         let r = repo(&db);
-        r.create("e", "vrm:e", "", "{}", "{}").unwrap();
+        r.create("e", "", "{}", "{}").unwrap();
 
         r.update_name("e", "New Name").unwrap();
 
@@ -326,7 +309,7 @@ mod tests {
     fn update_transform() {
         let db = test_db();
         let r = repo(&db);
-        r.create("e", "vrm:e", "E", "{}", "{}").unwrap();
+        r.create("e", "E", "{}", "{}").unwrap();
 
         let transform = r#"{"x":1.0,"y":2.0}"#;
         r.update_transform("e", transform).unwrap();
@@ -336,22 +319,10 @@ mod tests {
     }
 
     #[test]
-    fn update_state() {
-        let db = test_db();
-        let r = repo(&db);
-        r.create("e", "vrm:e", "E", "{}", "{}").unwrap();
-
-        r.update_state("e", "sitting").unwrap();
-
-        let row = r.find_by_id("e").unwrap().unwrap();
-        assert_eq!(row.state, "sitting");
-    }
-
-    #[test]
     fn extension_set_get_list_delete() {
         let db = test_db();
         let r = repo(&db);
-        r.create("e", "vrm:e", "E", "{}", "{}").unwrap();
+        r.create("e", "E", "{}", "{}").unwrap();
 
         // Initially empty
         assert!(r.get_extension("e", "voicevox").unwrap().is_none());
@@ -381,7 +352,7 @@ mod tests {
     fn set_extension_upserts() {
         let db = test_db();
         let r = repo(&db);
-        r.create("e", "vrm:e", "E", "{}", "{}").unwrap();
+        r.create("e", "E", "{}", "{}").unwrap();
 
         r.set_extension("e", "voicevox", r#"{"v":1}"#).unwrap();
         r.set_extension("e", "voicevox", r#"{"v":2}"#).unwrap();
@@ -395,7 +366,7 @@ mod tests {
     fn delete_character_cascades_extensions() {
         let db = test_db();
         let r = repo(&db);
-        r.create("e", "vrm:e", "E", "{}", "{}").unwrap();
+        r.create("e", "E", "{}", "{}").unwrap();
         r.set_extension("e", "mod_a", "{}").unwrap();
         r.set_extension("e", "mod_b", "{}").unwrap();
 
@@ -424,8 +395,8 @@ mod tests {
     fn list_all_with_extensions() {
         let db = test_db();
         let r = repo(&db);
-        r.create("a", "vrm:a", "A", "{}", "{}").unwrap();
-        r.create("b", "vrm:b", "B", "{}", "{}").unwrap();
+        r.create("a", "A", "{}", "{}").unwrap();
+        r.create("b", "B", "{}", "{}").unwrap();
         r.set_extension("a", "mod1", r#"{"x":1}"#).unwrap();
         r.set_extension("a", "mod2", r#"{"x":2}"#).unwrap();
 
@@ -445,19 +416,15 @@ mod tests {
     fn character_row_serde_roundtrip() {
         let row = CharacterRow {
             id: "elmer".to_string(),
-            asset_id: "vrm:elmer".to_string(),
             name: "Elmer".to_string(),
             persona: "{}".to_string(),
             transform: "{}".to_string(),
-            state: "idle".to_string(),
             created_at: "2026-01-01 00:00:00".to_string(),
         };
         let json = serde_json::to_string(&row).unwrap();
-        assert!(json.contains("assetId"));
         assert!(json.contains("createdAt"));
         let deserialized: CharacterRow = serde_json::from_str(&json).unwrap();
         assert_eq!(deserialized.id, row.id);
-        assert_eq!(deserialized.asset_id, row.asset_id);
     }
 
     #[test]
@@ -483,15 +450,14 @@ mod tests {
         r.update_persona("ghost", "{}").unwrap();
         r.update_name("ghost", "name").unwrap();
         r.update_transform("ghost", "{}").unwrap();
-        r.update_state("ghost", "idle").unwrap();
     }
 
     #[test]
     fn create_duplicate_id_is_ignored() {
         let db = test_db();
         let r = repo(&db);
-        r.create("dup", "vrm:dup", "Dup", "{}", "{}").unwrap();
-        r.create("dup", "vrm:other", "Other", "{}", "{}").unwrap();
+        r.create("dup", "Dup", "{}", "{}").unwrap();
+        r.create("dup", "Other", "{}", "{}").unwrap();
         let found = r.find_by_id("dup").unwrap().unwrap();
         assert_eq!(found.name, "Dup");
     }

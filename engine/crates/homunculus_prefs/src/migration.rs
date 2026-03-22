@@ -73,8 +73,8 @@ fn phase_a_personas(db: &PrefsDatabase) -> Result<(), rusqlite::Error> {
             continue;
         };
         db.0.execute(
-            "INSERT OR IGNORE INTO characters (id, asset_id, persona) VALUES (?1, ?2, ?3)",
-            rusqlite::params![character_id, asset_id, value],
+            "INSERT OR IGNORE INTO characters (id, persona) VALUES (?1, ?2)",
+            rusqlite::params![character_id, value],
         )?;
     }
     Ok(())
@@ -228,7 +228,6 @@ mod tests {
 
         let repo = crate::characters::CharactersTable(&db);
         let row = repo.find_by_id("elmer").unwrap().unwrap();
-        assert_eq!(row.asset_id, "vrm:elmer");
         assert_eq!(row.persona, persona);
     }
 
