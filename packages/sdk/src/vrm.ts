@@ -40,7 +40,6 @@ export interface Ocean {
  *   profile: "A cheerful virtual assistant",
  *   personality: "Friendly and helpful",
  *   ocean: { openness: 0.8, extraversion: 0.7 },
- *   metadata: {},
  * };
  * ```
  */
@@ -51,8 +50,6 @@ export interface Persona {
     personality?: string | null;
     /** Big Five personality parameters. */
     ocean: Ocean;
-    /** Extension metadata for MODs. */
-    metadata: Record<string, unknown>;
 }
 
 // --- VRM types ---
@@ -484,7 +481,6 @@ export class Vrm {
      * await vrm.setPersona({
      *   profile: "A cheerful assistant",
      *   ocean: { openness: 0.8, extraversion: 0.7 },
-     *   metadata: {},
      * });
      * ```
      */
