@@ -1,7 +1,6 @@
 use crate::character::{CharacterId, CharacterName, CharacterState};
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 #[deprecated(note = "Use CharacterState instead")]
 pub type VrmState = CharacterState;
@@ -74,9 +73,6 @@ pub struct Persona {
     pub personality: Option<String>,
     #[serde(default)]
     pub ocean: Ocean,
-    #[serde(default, skip_serializing_if = "HashMap::is_empty")]
-    #[cfg_attr(feature = "openapi", schema(value_type = std::collections::HashMap<String, Object>))]
-    pub metadata: HashMap<String, serde_json::Value>,
 }
 
 pub struct CoreComponentsPlugin;

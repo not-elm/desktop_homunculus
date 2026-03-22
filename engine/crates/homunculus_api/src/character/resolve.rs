@@ -17,7 +17,6 @@ impl CharacterApi {
             .await?
     }
 
-    /// Resolves a character ID to its ECS entity and verifies a VRM is attached.
     ///
     /// Returns `CharacterNotFound` if no entity is registered, or `VrmNotAttached`
     /// if the entity does not have the `Vrm` marker component.
