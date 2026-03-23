@@ -11,11 +11,21 @@ use crate::error::InferenceError;
 use crate::session::{SharedSttSession, SttEvent};
 use crate::vad::ChunkEnvelope;
 
+/// Configurable thresholds for the inference pipeline.
+#[derive(Clone, Copy, Debug)]
+pub struct InferenceConfig {
+    /// Unconditional discard threshold for `no_speech_prob` (tier 1).
+    pub no_speech_discard_threshold: f32,
+    /// Minimum RMS energy for a chunk to be sent to Whisper.
+    pub inference_energy_threshold: f32,
+}
+
 /// Thread 3: spawn the Whisper inference thread via `tokio::task::spawn_blocking`.
 ///
 /// A monitoring task awaits the blocking handle so that if the thread panics
 /// beyond `catch_unwind`, the session transitions to `Error` state instead of
 /// remaining stuck in `Listening`.
+#[allow(clippy::too_many_arguments)]
 pub fn spawn_inference_thread(
     ctx: Arc<WhisperContext>,
     chunk_rx: crossbeam_channel::Receiver<ChunkEnvelope>,
@@ -24,17 +34,11 @@ pub fn spawn_inference_thread(
     event_tx: Sender<SttEvent>,
     session: SharedSttSession,
     started_at: Instant,
-    no_speech_discard_threshold: f32,
+    config: InferenceConfig,
 ) {
     let handle = tokio::task::spawn_blocking(move || {
         inference_loop(
-            &ctx,
-            &chunk_rx,
-            &language,
-            &cancel,
-            &event_tx,
-            started_at,
-            no_speech_discard_threshold,
+            &ctx, &chunk_rx, &language, &cancel, &event_tx, started_at, config,
         );
         event_tx.try_broadcast(SttEvent::Stopped).ok();
     });
@@ -51,6 +55,7 @@ pub fn spawn_inference_thread(
     });
 }
 
+#[allow(clippy::too_many_arguments)]
 fn inference_loop(
     ctx: &WhisperContext,
     chunk_rx: &crossbeam_channel::Receiver<ChunkEnvelope>,
@@ -58,7 +63,7 @@ fn inference_loop(
     cancel: &CancellationToken,
     event_tx: &Sender<SttEvent>,
     started_at: Instant,
-    no_speech_discard_threshold: f32,
+    config: InferenceConfig,
 ) {
     log_gpu_backend();
 
@@ -88,12 +93,23 @@ fn inference_loop(
             ReceiveResult::Disconnected => break,
         };
 
+        let chunk_rms = crate::vad::rms_energy(&envelope.samples);
+        if chunk_rms < config.inference_energy_threshold {
+            tracing::info!(
+                "Inference: skipping chunk seq={} — RMS energy {chunk_rms:.4} below \
+                 inference threshold {}",
+                envelope.seq,
+                config.inference_energy_threshold,
+            );
+            continue;
+        }
+
         let result = execute_inference(
             &mut state,
             &envelope,
             language,
             max_audio_ctx,
-            no_speech_discard_threshold,
+            config.no_speech_discard_threshold,
         );
 
         if result.is_err() {
@@ -320,10 +336,7 @@ fn should_discard_segment(
 
 /// Check avg_logprobs across all segments. Discard if confidence is too low
 /// to prevent hallucinated output from being emitted.
-fn should_discard_low_confidence(
-    state: &WhisperState,
-    no_speech_discard_threshold: f32,
-) -> bool {
+fn should_discard_low_confidence(state: &WhisperState, no_speech_discard_threshold: f32) -> bool {
     let n_segments = state.full_n_segments();
     if n_segments == 0 {
         return false;
