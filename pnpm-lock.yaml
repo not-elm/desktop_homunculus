@@ -659,6 +659,9 @@ importers:
 
   sandbox:
     dependencies:
+      '@hmcs/agent':
+        specifier: workspace:*
+        version: link:../mods/agent
       '@hmcs/app-exit':
         specifier: workspace:*
         version: link:../mods/app-exit
