@@ -39,6 +39,7 @@ export default defineConfig([
             path.join(srcDir, 'src', 'index.ts'),
             path.join(srcDir, 'src', 'commands.ts'),
             path.join(srcDir, 'src', 'rpc.ts'),
+            path.join(srcDir, 'src', 'wake-word-matcher.ts'),
         ],
         output: [
             {
@@ -97,6 +98,11 @@ export default defineConfig([
     {
         input: 'dist/types/rpc-client.d.ts',
         output: {file: 'dist/rpc-client.d.ts', format: 'es'},
+        plugins: [dts()]
+    },
+    {
+        input: 'dist/types/wake-word-matcher.d.ts',
+        output: {file: 'dist/wake-word-matcher.d.ts', format: 'es'},
         plugins: [dts(), cleanDistTypes]
     },
 ]);

@@ -32,6 +32,12 @@
         "import": "./dist/rpc-client.js",
         "require": "./dist/rpc-client.cjs"
       }
+    },
+    "./wake-word-matcher": {
+      "types": "./dist/wake-word-matcher.d.ts",
+      "import": "./dist/wake-word-matcher.js",
+      "require": "./dist/wake-word-matcher.cjs",
+      "default": "./dist/wake-word-matcher.js"
     }
   },
   "engines": {
