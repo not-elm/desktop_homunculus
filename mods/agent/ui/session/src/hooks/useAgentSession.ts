@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { signals } from "@hmcs/sdk";
+import { signals, Webview } from "@hmcs/sdk";
 import { rpc } from "@hmcs/sdk/rpc";
 
 export type AgentState = "idle" | "thinking" | "executing" | "waiting";
@@ -39,9 +39,21 @@ export interface AgentSessionActions {
   answerQuestion: (requestId: string, answers: Record<string, string>) => Promise<void>;
 }
 
-const characterId = new URLSearchParams(location.search).get("linkedCharacter") ?? "";
-
 export function useAgentSession(): AgentSessionState & AgentSessionActions {
+  const [characterId, setCharacterId] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const vrm = await Webview.current()?.linkedVrm();
+      if (cancelled) return;
+      const name = vrm ? await vrm.name() : "";
+      if (cancelled) return;
+      setCharacterId(name);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
   const [state, setState] = useState<AgentState>("idle");
   const [entries, setEntries] = useState<LogEntry[]>([]);
   const [permission, setPermission] = useState<PendingPermission | null>(null);
@@ -50,6 +62,7 @@ export function useAgentSession(): AgentSessionState & AgentSessionActions {
   const startTimeRef = useRef<number | null>(null);
 
   useEffect(() => {
+    if (!characterId) return;
     const sources = [
       subscribeToStatus(characterId, (newState) => {
         setState(newState);
@@ -73,7 +86,7 @@ export function useAgentSession(): AgentSessionState & AgentSessionActions {
       }),
     ];
     return () => sources.forEach((s) => s.close());
-  }, []);
+  }, [characterId]);
 
   useEffect(() => {
     if (state === "idle") return;
