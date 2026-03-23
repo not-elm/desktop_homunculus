@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { dialog } from "@hmcs/sdk";
 
 interface DirectoryListFieldProps {
   label: string;
@@ -20,6 +21,7 @@ export function DirectoryListField({
   onSetDefault,
 }: DirectoryListFieldProps) {
   const [inputValue, setInputValue] = useState("");
+  const [browsing, setBrowsing] = useState(false);
 
   function handleAdd() {
     const trimmed = inputValue.trim();
@@ -30,6 +32,18 @@ export function DirectoryListField({
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter") handleAdd();
+  }
+
+  async function handleBrowse() {
+    setBrowsing(true);
+    try {
+      const path = await dialog.pickFolder();
+      if (path) {
+        onAdd(path);
+      }
+    } finally {
+      setBrowsing(false);
+    }
   }
 
   return (
@@ -60,6 +74,14 @@ export function DirectoryListField({
         />
         <button className="agent-add-btn" type="button" onClick={handleAdd}>
           Add
+        </button>
+        <button
+          className="agent-add-btn"
+          type="button"
+          onClick={handleBrowse}
+          disabled={browsing}
+        >
+          Browse
         </button>
       </div>
     </label>

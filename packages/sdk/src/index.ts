@@ -39,6 +39,7 @@
  */
 
 export * from "./coordinates";
+export * from "./dialog";
 export * from "./displays";
 export * from "./audio";
 export * from "./effects";
