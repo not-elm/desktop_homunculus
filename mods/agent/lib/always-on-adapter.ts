@@ -7,7 +7,7 @@ import type { SttHandler } from "./stt-handler.ts";
  *
  * Lifecycle:
  * 1. `createAsyncGenerator()` puts `SttHandler` into `session_active` state
- * 2. Each STT result triggers `onTextReady`, which resolves the pending promise
+ * 2. Each STT result triggers `onTextReady`, which queues a message
  * 3. Shutdown words are checked by `SttHandler` before forwarding
  * 4. `close()` exits the generator and restores `SttHandler` to `idle`
  *
@@ -18,6 +18,7 @@ import type { SttHandler } from "./stt-handler.ts";
 export class AlwaysOnAdapter implements InputAdapter {
   private sttHandler: SttHandler;
   private characterId: string;
+  private queue: SDKUserMessage[] = [];
   private pendingResolve: ((msg: SDKUserMessage) => void) | null = null;
   private closed = false;
 
@@ -28,12 +29,16 @@ export class AlwaysOnAdapter implements InputAdapter {
 
   async *createAsyncGenerator(): AsyncGenerator<SDKUserMessage> {
     this.sttHandler.onTextReady = (characterId, text) => {
-      if (characterId === this.characterId && this.pendingResolve) {
-        this.pendingResolve({
-          type: "user",
-          message: { role: "user", content: text },
-        });
+      if (characterId !== this.characterId) return;
+      const msg: SDKUserMessage = {
+        type: "user",
+        message: { role: "user", content: text },
+      };
+      if (this.pendingResolve) {
+        this.pendingResolve(msg);
         this.pendingResolve = null;
+      } else {
+        this.queue.push(msg);
       }
     };
     this.sttHandler.enterSessionActive(this.characterId);
@@ -58,6 +63,8 @@ export class AlwaysOnAdapter implements InputAdapter {
   }
 
   private waitForNextMessage(): Promise<SDKUserMessage> {
+    const queued = this.queue.shift();
+    if (queued) return Promise.resolve(queued);
     return new Promise((resolve) => {
       this.pendingResolve = resolve;
     });

@@ -18,7 +18,7 @@ const DEFAULT_SETTINGS: AgentSettings = {
   completionPhrases: [],
   errorPhrases: [],
   workingDirectories: { paths: [], default: 0 },
-  listeningMode: "ptt",
+  listeningMode: "always-on",
   pttKey: null,
   approvalPhrases: ["はい", "yes", "ok", "allow"],
   denyPhrases: ["いいえ", "no", "deny", "cancel"],
@@ -151,9 +151,9 @@ function setupShutdownWordHandler(): void {
   sttHandler.onShutdownWord = (characterId) => {
     const manager = sessionManagers.get(characterId);
     manager
-      ?.interrupt()
+      ?.stop()
       .catch((err) =>
-        console.error(`[agent] Failed to interrupt session for ${characterId}:`, err),
+        console.error(`[agent] Failed to stop session for ${characterId}:`, err),
       );
   };
 }
