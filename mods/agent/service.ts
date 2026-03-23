@@ -3,7 +3,7 @@ import { Vrm, preferences, Webview, webviewSource } from "@hmcs/sdk";
 import { rpc } from "@hmcs/sdk/rpc";
 import { normalizePhrase } from "@hmcs/sdk/wake-word-matcher";
 import { KeyboardHookService } from "./lib/keyboard-hook.ts";
-import { resolveUiohookKeycode } from "./lib/key-mapping.ts";
+import { resolvePttKeycodes } from "./lib/key-mapping.ts";
 import { SttHandler } from "./lib/stt-handler.ts";
 import { PttAdapter } from "./lib/ptt-adapter.ts";
 import { PermissionBridge } from "./lib/permission-bridge.ts";
@@ -59,9 +59,9 @@ async function registerCharacter(
   });
 
   if (settings.listeningMode === "ptt" && settings.pttKey !== null) {
-    const uiohookCode = resolveUiohookKeycode(settings.pttKey);
-    if (uiohookCode !== null) {
-      const adapter = new PttAdapter(keyboardHook, sttHandler, uiohookCode, characterId);
+    const resolved = resolvePttKeycodes(settings.pttKey);
+    if (resolved !== null) {
+      const adapter = new PttAdapter(keyboardHook, sttHandler, resolved, characterId);
       pttAdapters.set(characterId, adapter);
     }
   }

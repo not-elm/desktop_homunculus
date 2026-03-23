@@ -9,6 +9,11 @@ import type { PttAdapter } from "./ptt-adapter.ts";
 
 export type SessionState = "idle" | "running" | "interrupted" | "recovering";
 
+export interface PttKey {
+  code: string;
+  modifiers: string[];
+}
+
 export interface AgentSettings {
   wakeWords: string[];
   shutdownWords: string[];
@@ -17,7 +22,7 @@ export interface AgentSettings {
   errorPhrases: string[];
   workingDirectories: { paths: string[]; default: number };
   listeningMode: "ptt" | "always-on";
-  pttKey: string | null;
+  pttKey: PttKey | null;
   approvalPhrases: string[];
   denyPhrases: string[];
   allowList: string[];

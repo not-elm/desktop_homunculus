@@ -138,7 +138,35 @@ const BROWSER_CODE_TO_UIOHOOK: Record<string, number> = {
   PrintScreen: 3639,
 };
 
+/** Maps modifier names to their Left/Right uiohook keycodes. */
+const MODIFIER_TO_UIOHOOK: Record<string, readonly number[]> = {
+  ctrl: [29, 3613],
+  shift: [42, 54],
+  alt: [56, 3640],
+  meta: [3675, 3676],
+};
+
+export interface PttKeyInput {
+  code: string;
+  modifiers: string[];
+}
+
+export interface ResolvedPttKey {
+  primaryKeycode: number;
+  modifiers: ReadonlyArray<readonly number[]>;
+}
+
 /** Converts a browser `KeyboardEvent.code` to the corresponding uiohook keycode. */
 export function resolveUiohookKeycode(browserCode: string): number | null {
   return BROWSER_CODE_TO_UIOHOOK[browserCode] ?? null;
+}
+
+/** Resolves a PttKey (primary + modifiers) to uiohook keycodes. */
+export function resolvePttKeycodes(pttKey: PttKeyInput): ResolvedPttKey | null {
+  const primary = BROWSER_CODE_TO_UIOHOOK[pttKey.code];
+  if (primary === undefined) return null;
+  const modifiers = pttKey.modifiers
+    .map((m) => MODIFIER_TO_UIOHOOK[m])
+    .filter((v): v is readonly number[] => v !== undefined);
+  return { primaryKeycode: primary, modifiers };
 }

@@ -1,4 +1,5 @@
 import type { KeyboardHookService } from "./keyboard-hook.ts";
+import type { ResolvedPttKey } from "./key-mapping.ts";
 import type { SttHandler } from "./stt-handler.ts";
 
 interface SDKUserMessage {
@@ -10,34 +11,35 @@ interface SDKUserMessage {
  * Bridges PTT keyboard events and STT results into an AsyncGenerator of
  * SDKUserMessage for the Claude Agent SDK's streaming input mode.
  *
- * Flow: PTT key down → SttHandler starts accumulating → PTT key up →
- * wait for final STT results → yield SDKUserMessage → SDK processes it.
+ * Uses a state-transition model: on every keydown/keyup, re-evaluates whether
+ * the full combo (primary key + all modifiers) is held. Transitions from
+ * inactive→active start recording, active→inactive stop recording.
  */
 export class PttAdapter {
+  private resolvedKey: ResolvedPttKey;
   private keyboardHook: KeyboardHookService;
   private sttHandler: SttHandler;
-  private keycode: number;
   private characterId: string;
   private unsubscribe: (() => void) | null = null;
   private pendingResolve: ((msg: SDKUserMessage) => void) | null = null;
+  private active = false;
   private closed = false;
 
   constructor(
     keyboardHook: KeyboardHookService,
     sttHandler: SttHandler,
-    keycode: number,
+    resolvedKey: ResolvedPttKey,
     characterId: string,
   ) {
     this.keyboardHook = keyboardHook;
     this.sttHandler = sttHandler;
-    this.keycode = keycode;
+    this.resolvedKey = resolvedKey;
     this.characterId = characterId;
   }
 
   async *createAsyncGenerator(): AsyncGenerator<SDKUserMessage> {
-    this.unsubscribe = this.keyboardHook.subscribe(this.keycode, {
-      onPttStart: () => this.sttHandler.startAccumulating(this.characterId),
-      onPttStop: () => this.handlePttStop(),
+    this.unsubscribe = this.keyboardHook.subscribeCombo({
+      onKeyEvent: (pressedKeys) => this.evaluateState(pressedKeys),
     });
 
     try {
@@ -66,8 +68,20 @@ export class PttAdapter {
    * loss during shutdown (call before uiohook.stop).
    */
   forceFlush(): void {
-    const isPttActive = this.sttHandler.getState() === "ptt_active";
-    if (isPttActive && this.pendingResolve) {
+    if (this.active && this.pendingResolve) {
+      this.active = false;
+      this.handlePttStop();
+    }
+  }
+
+  private evaluateState(pressedKeys: ReadonlySet<number>): void {
+    const shouldBeActive = isComboHeld(pressedKeys, this.resolvedKey);
+
+    if (shouldBeActive && !this.active) {
+      this.active = true;
+      this.sttHandler.startAccumulating(this.characterId);
+    } else if (!shouldBeActive && this.active) {
+      this.active = false;
       this.handlePttStop();
     }
   }
@@ -93,4 +107,12 @@ export class PttAdapter {
       this.pendingResolve = null;
     }
   }
+}
+
+/** Checks if the primary key and all required modifiers (Left or Right) are held. */
+function isComboHeld(pressedKeys: ReadonlySet<number>, key: ResolvedPttKey): boolean {
+  if (!pressedKeys.has(key.primaryKeycode)) return false;
+  return key.modifiers.every((keycodes) =>
+    keycodes.some((kc) => pressedKeys.has(kc)),
+  );
 }

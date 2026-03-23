@@ -5,10 +5,16 @@ export interface PttCallback {
   onPttStop(): void;
 }
 
+/** Callback that receives the full set of currently pressed keys on every key event. */
+export interface ComboCallback {
+  onKeyEvent(pressedKeys: ReadonlySet<number>): void;
+}
+
 export class KeyboardHookService {
   private pressedKeys = new Set<number>();
   private pressTimestamps = new Map<number, number>();
   private subscribers = new Map<number, Set<PttCallback>>();
+  private comboSubscribers = new Set<ComboCallback>();
   private staleKeyTimeoutMs = 30_000;
   private staleCheckInterval: ReturnType<typeof setInterval> | null = null;
   private started = false;
@@ -48,11 +54,19 @@ export class KeyboardHookService {
     };
   }
 
+  subscribeCombo(callback: ComboCallback): () => void {
+    this.comboSubscribers.add(callback);
+    return () => {
+      this.comboSubscribers.delete(callback);
+    };
+  }
+
   private handleKeyDown(keycode: number): void {
     if (this.pressedKeys.has(keycode)) return; // Debounce OS autorepeat
     this.pressedKeys.add(keycode);
     this.pressTimestamps.set(keycode, Date.now());
     this.subscribers.get(keycode)?.forEach((cb) => cb.onPttStart());
+    this.notifyComboSubscribers();
   }
 
   private handleKeyUp(keycode: number): void {
@@ -60,6 +74,13 @@ export class KeyboardHookService {
     this.pressedKeys.delete(keycode);
     this.pressTimestamps.delete(keycode);
     this.subscribers.get(keycode)?.forEach((cb) => cb.onPttStop());
+    this.notifyComboSubscribers();
+  }
+
+  private notifyComboSubscribers(): void {
+    for (const cb of this.comboSubscribers) {
+      cb.onKeyEvent(this.pressedKeys);
+    }
   }
 
   // Force-flush all pressed keys before stopping to avoid stuck PTT state

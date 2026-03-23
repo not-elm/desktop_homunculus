@@ -589,6 +589,13 @@ body {
   margin-left: auto;
 }
 
+.agent-key-warning {
+  font-size: 0.7rem;
+  color: oklch(0.75 0.14 60 / 0.85);
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
 /* Add-item row */
 .agent-add-row {
   display: flex;

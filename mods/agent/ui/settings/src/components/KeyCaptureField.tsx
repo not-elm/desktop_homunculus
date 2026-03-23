@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { PttKey } from "../hooks/useAgentSettings";
 
 interface KeyCaptureFieldProps {
   label: string;
   description?: string;
-  pttKey: string | null;
-  onChange: (key: string | null) => void;
+  pttKey: PttKey | null;
+  onChange: (key: PttKey | null) => void;
 }
 
 export function KeyCaptureField({
@@ -15,12 +16,12 @@ export function KeyCaptureField({
 }: KeyCaptureFieldProps) {
   const [capturing, setCapturing] = useState(false);
   const [displayName, setDisplayName] = useState<string>(
-    pttKey !== null ? formatKeyName(pttKey) : "None",
+    pttKey !== null ? formatPttKeyName(pttKey) : "None",
   );
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setDisplayName(pttKey !== null ? formatKeyName(pttKey) : "None");
+    setDisplayName(pttKey !== null ? formatPttKeyName(pttKey) : "None");
   }, [pttKey]);
 
   const startCapture = useCallback(() => {
@@ -32,7 +33,11 @@ export function KeyCaptureField({
     (e: React.KeyboardEvent<HTMLDivElement>) => {
       if (!capturing) return;
       e.preventDefault();
-      onChange(e.code);
+      if (isModifierCode(e.code)) {
+        onChange({ code: e.code, modifiers: [] });
+      } else {
+        onChange({ code: e.code, modifiers: collectModifiers(e) });
+      }
       setCapturing(false);
     },
     [capturing, onChange],
@@ -41,6 +46,8 @@ export function KeyCaptureField({
   const handleBlur = useCallback(() => {
     setCapturing(false);
   }, []);
+
+  const showWarning = pttKey !== null && isModifierCode(pttKey.code) && pttKey.modifiers.length === 0;
 
   return (
     <div className="settings-label">
@@ -63,12 +70,51 @@ export function KeyCaptureField({
           {capturing ? "Press any key..." : "Click to capture"}
         </span>
       </div>
+      {showWarning && (
+        <span className="agent-key-warning">
+          Modifier keys alone may trigger during normal typing
+        </span>
+      )}
     </div>
   );
 }
 
-/** Converts a browser `KeyboardEvent.code` to a user-friendly display name. */
-function formatKeyName(code: string): string {
+const MODIFIER_CODES = new Set([
+  "ControlLeft", "ControlRight",
+  "ShiftLeft", "ShiftRight",
+  "AltLeft", "AltRight",
+  "MetaLeft", "MetaRight",
+]);
+
+function isModifierCode(code: string): boolean {
+  return MODIFIER_CODES.has(code);
+}
+
+function collectModifiers(e: React.KeyboardEvent): string[] {
+  const mods: string[] = [];
+  if (e.ctrlKey) mods.push("ctrl");
+  if (e.shiftKey) mods.push("shift");
+  if (e.altKey) mods.push("alt");
+  if (e.metaKey) mods.push("meta");
+  return mods;
+}
+
+const MODIFIER_DISPLAY: Record<string, string> = {
+  ctrl: "Ctrl",
+  shift: "Shift",
+  alt: "Alt",
+  meta: "Cmd",
+};
+
+/** Formats a PttKey for display, e.g. "Ctrl + Space". */
+function formatPttKeyName(key: PttKey): string {
+  const modLabels = key.modifiers.map((m) => MODIFIER_DISPLAY[m] ?? m);
+  const keyLabel = formatKeyCode(key.code);
+  return [...modLabels, keyLabel].join(" + ");
+}
+
+/** Converts a browser KeyboardEvent.code to a user-friendly display name. */
+function formatKeyCode(code: string): string {
   if (code.startsWith("Key")) return code.slice(3);
   if (code.startsWith("Digit")) return code.slice(5);
   return code.replace(/(Left|Right)$/, " ($1)");
