@@ -40,10 +40,10 @@ use bevy::image::Image;
 use bevy::pbr::MeshMaterial3d;
 use bevy::picking::mesh_picking::ray_cast::RayMeshHit;
 use bevy::prelude::*;
-use bevy::render::render_resource::TextureFormat;
 use bevy::window::{CursorOptions, Window};
 use bevy_cef::prelude::WebviewExtendStandardMaterial;
 use bevy_vrm1::prelude::{Cameras, MToonMaterial};
+use homunculus_core::texture::{TRANSPARENT_ALPHA_THRESHOLD, sample_texture_alpha};
 use std::fmt::Debug;
 
 #[derive(Debug, Clone, PartialEq, Reflect, Message)]
@@ -252,48 +252,5 @@ fn is_hit_opaque(
 
     // Sample alpha at UV and compare against cutoff
     let alpha = sample_texture_alpha(image, uv);
-    alpha > 0.0
-}
-
-/// Samples the alpha value from a texture at the given UV coordinates.
-///
-/// Handles UV wrapping and various texture formats. Returns 1.0 (fully opaque)
-/// if the texture format doesn't have an alpha channel or is unsupported.
-fn sample_texture_alpha(image: &Image, uv: Vec2) -> f32 {
-    let width = image.width();
-    let height = image.height();
-
-    if width == 0 || height == 0 {
-        return 1.0;
-    }
-
-    // Get pixel data, return opaque if not available
-    let Some(data) = &image.data else {
-        return 1.0;
-    };
-
-    // Wrap UV to [0, 1) using Euclidean remainder for proper negative handling
-    let u = uv.x.rem_euclid(1.0);
-    let v = uv.y.rem_euclid(1.0);
-
-    // Convert to pixel coordinates
-    // Flip V coordinate (1.0 - v) because texture coordinates typically have Y=0 at bottom
-    let x = ((u * width as f32) as usize).min(width as usize - 1);
-    let y = ((v * height as f32) as usize).min(height as usize - 1);
-
-    // Get alpha based on texture format
-    match image.texture_descriptor.format {
-        TextureFormat::Rgba8Unorm | TextureFormat::Rgba8UnormSrgb => {
-            // RGBA8: 4 bytes per pixel, alpha at offset 3
-            let idx = (y * width as usize + x) * 4 + 3;
-            data.get(idx).map(|&a| a as f32 / 255.0).unwrap_or(1.0)
-        }
-        TextureFormat::Bgra8Unorm | TextureFormat::Bgra8UnormSrgb => {
-            // BGRA8: 4 bytes per pixel, alpha is still at offset 3
-            let idx = (y * width as usize + x) * 4 + 3;
-            data.get(idx).map(|&a| a as f32 / 255.0).unwrap_or(1.0)
-        }
-        // Unknown or unsupported format - treat as opaque
-        _ => 1.0,
-    }
+    alpha > TRANSPARENT_ALPHA_THRESHOLD
 }
