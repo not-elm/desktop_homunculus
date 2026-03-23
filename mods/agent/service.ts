@@ -3,6 +3,7 @@ import { Vrm, preferences, Webview, webviewSource } from "@hmcs/sdk";
 import { rpc } from "@hmcs/sdk/rpc";
 import { normalizePhrase } from "@hmcs/sdk/wake-word-matcher";
 import { KeyboardHookService } from "./lib/keyboard-hook.ts";
+import { resolveUiohookKeycode } from "./lib/key-mapping.ts";
 import { SttHandler } from "./lib/stt-handler.ts";
 import { PttAdapter } from "./lib/ptt-adapter.ts";
 import { PermissionBridge } from "./lib/permission-bridge.ts";
@@ -16,7 +17,7 @@ const DEFAULT_SETTINGS: AgentSettings = {
   errorPhrases: [],
   workingDirectories: { paths: [], default: 0 },
   listeningMode: "ptt",
-  pttKeycode: null,
+  pttKey: null,
   approvalPhrases: ["はい", "yes", "ok", "allow"],
   denyPhrases: ["いいえ", "no", "deny", "cancel"],
   allowList: [],
@@ -57,9 +58,12 @@ async function registerCharacter(
     characterId,
   });
 
-  if (settings.listeningMode === "ptt" && settings.pttKeycode !== null) {
-    const adapter = new PttAdapter(keyboardHook, sttHandler, settings.pttKeycode, characterId);
-    pttAdapters.set(characterId, adapter);
+  if (settings.listeningMode === "ptt" && settings.pttKey !== null) {
+    const uiohookCode = resolveUiohookKeycode(settings.pttKey);
+    if (uiohookCode !== null) {
+      const adapter = new PttAdapter(keyboardHook, sttHandler, uiohookCode, characterId);
+      pttAdapters.set(characterId, adapter);
+    }
   }
 }
 

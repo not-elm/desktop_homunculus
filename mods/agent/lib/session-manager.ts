@@ -17,7 +17,7 @@ export interface AgentSettings {
   errorPhrases: string[];
   workingDirectories: { paths: string[]; default: number };
   listeningMode: "ptt" | "always-on";
-  pttKeycode: number | null;
+  pttKey: string | null;
   approvalPhrases: string[];
   denyPhrases: string[];
   allowList: string[];

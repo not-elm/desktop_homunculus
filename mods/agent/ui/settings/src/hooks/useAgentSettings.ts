@@ -14,7 +14,7 @@ export interface AgentSettings {
   errorPhrases: string[];
   workingDirectories: WorkingDirectories;
   listeningMode: "ptt" | "always-on";
-  pttKeycode: number | null;
+  pttKey: string | null;
   approvalPhrases: string[];
   denyPhrases: string[];
   allowList: string[];
@@ -29,7 +29,7 @@ const DEFAULT_SETTINGS: AgentSettings = {
   errorPhrases: [],
   workingDirectories: { paths: [], default: 0 },
   listeningMode: "always-on",
-  pttKeycode: null,
+  pttKey: null,
   approvalPhrases: [],
   denyPhrases: [],
   allowList: [],
@@ -116,7 +116,9 @@ async function loadAllPreferences(
     preferences.load<string>("agent::api-key"),
   ]);
   return {
-    settings: savedSettings ?? DEFAULT_SETTINGS,
+    settings: savedSettings
+      ? { ...DEFAULT_SETTINGS, ...savedSettings }
+      : DEFAULT_SETTINGS,
     apiKey: savedApiKey ?? "",
   };
 }

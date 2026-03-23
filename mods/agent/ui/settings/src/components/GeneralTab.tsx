@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useRef } from "react";
 import {
   Select,
   SelectContent,
@@ -16,6 +17,32 @@ interface GeneralTabProps {
 }
 
 export function GeneralTab({ settings, onSettingsChange }: GeneralTabProps) {
+  const pttFieldRef = useRef<HTMLDivElement>(null);
+  const shouldScrollRef = useRef(false);
+
+  const scrollToPttField = useCallback(() => {
+    if (!shouldScrollRef.current) return;
+    shouldScrollRef.current = false;
+    pttFieldRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, []);
+
+  useEffect(() => {
+    if (settings.listeningMode === "ptt") {
+      shouldScrollRef.current = true;
+      // Fallback for prefers-reduced-motion where animation is disabled
+      const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+      if (mq.matches) {
+        requestAnimationFrame(() => scrollToPttField());
+      }
+    }
+  }, [settings.listeningMode, scrollToPttField]);
+
+  function handlePttAnimationEnd(e: React.AnimationEvent<HTMLDivElement>) {
+    if (e.animationName === "ptt-reveal" && e.target === e.currentTarget) {
+      scrollToPttField();
+    }
+  }
+
   function update<K extends keyof AgentSettings>(
     key: K,
     value: AgentSettings[K],
@@ -52,6 +79,43 @@ export function GeneralTab({ settings, onSettingsChange }: GeneralTabProps) {
 
   return (
     <div className="settings-section">
+      <div className="agent-listening-group">
+        <label className="settings-label">
+          Listening Mode
+          <Select
+            value={settings.listeningMode}
+            onValueChange={(v) =>
+              update("listeningMode", v as "ptt" | "always-on")
+            }
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="always-on">Always On</SelectItem>
+              <SelectItem value="ptt">Push to Talk</SelectItem>
+            </SelectContent>
+          </Select>
+        </label>
+
+        {settings.listeningMode === "ptt" && (
+          <div
+            ref={pttFieldRef}
+            className="agent-listening-ptt"
+            onAnimationEnd={handlePttAnimationEnd}
+          >
+            <KeyCaptureField
+              label="Push-to-Talk Key"
+              description="Press the key to capture it"
+              pttKey={settings.pttKey}
+              onChange={(key) => update("pttKey", key)}
+            />
+          </div>
+        )}
+      </div>
+
+      <div className="agent-divider" />
+
       <PhraseListField
         label="Wake Words"
         description="Phrases that activate the agent"
@@ -105,35 +169,6 @@ export function GeneralTab({ settings, onSettingsChange }: GeneralTabProps) {
         onRemove={removeDirectory}
         onSetDefault={setDefaultDirectory}
       />
-
-      <div className="agent-divider" />
-
-      <label className="settings-label">
-        Listening Mode
-        <Select
-          value={settings.listeningMode}
-          onValueChange={(v) =>
-            update("listeningMode", v as "ptt" | "always-on")
-          }
-        >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="always-on">Always On</SelectItem>
-            <SelectItem value="ptt">Push to Talk</SelectItem>
-          </SelectContent>
-        </Select>
-      </label>
-
-      {settings.listeningMode === "ptt" && (
-        <KeyCaptureField
-          label="Push-to-Talk Key"
-          description="Press the key to capture it"
-          keyCode={settings.pttKeycode}
-          onChange={(code) => update("pttKeycode", code)}
-        />
-      )}
     </div>
   );
 }

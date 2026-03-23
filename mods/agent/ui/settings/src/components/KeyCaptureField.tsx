@@ -3,25 +3,25 @@ import { useCallback, useEffect, useRef, useState } from "react";
 interface KeyCaptureFieldProps {
   label: string;
   description?: string;
-  keyCode: number | null;
-  onChange: (keyCode: number | null) => void;
+  pttKey: string | null;
+  onChange: (key: string | null) => void;
 }
 
 export function KeyCaptureField({
   label,
   description,
-  keyCode,
+  pttKey,
   onChange,
 }: KeyCaptureFieldProps) {
   const [capturing, setCapturing] = useState(false);
   const [displayName, setDisplayName] = useState<string>(
-    keyCode !== null ? `Code ${keyCode}` : "None",
+    pttKey !== null ? formatKeyName(pttKey) : "None",
   );
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setDisplayName(keyCode !== null ? `Code ${keyCode}` : "None");
-  }, [keyCode]);
+    setDisplayName(pttKey !== null ? formatKeyName(pttKey) : "None");
+  }, [pttKey]);
 
   const startCapture = useCallback(() => {
     setCapturing(true);
@@ -32,9 +32,7 @@ export function KeyCaptureField({
     (e: React.KeyboardEvent<HTMLDivElement>) => {
       if (!capturing) return;
       e.preventDefault();
-      const code = resolveKeyCode(e.code);
-      setDisplayName(e.code);
-      onChange(code);
+      onChange(e.code);
       setCapturing(false);
     },
     [capturing, onChange],
@@ -69,16 +67,9 @@ export function KeyCaptureField({
   );
 }
 
-/**
- * Maps a browser KeyboardEvent.code string to a numeric keycode.
- * Uses the key code value directly encoded as a hash of the string for
- * cross-platform consistency. The service layer (using uiohook) will
- * interpret these values independently.
- */
-function resolveKeyCode(code: string): number {
-  let hash = 0;
-  for (let i = 0; i < code.length; i++) {
-    hash = (hash * 31 + code.charCodeAt(i)) >>> 0;
-  }
-  return hash;
+/** Converts a browser `KeyboardEvent.code` to a user-friendly display name. */
+function formatKeyName(code: string): string {
+  if (code.startsWith("Key")) return code.slice(3);
+  if (code.startsWith("Digit")) return code.slice(5);
+  return code.replace(/(Left|Right)$/, " ($1)");
 }
