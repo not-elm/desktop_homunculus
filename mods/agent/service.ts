@@ -7,7 +7,11 @@ import { resolvePttKeycodes } from "./lib/key-mapping.ts";
 import { SttHandler } from "./lib/stt-handler.ts";
 import { PttAdapter } from "./lib/ptt-adapter.ts";
 import { PermissionBridge } from "./lib/permission-bridge.ts";
-import { SessionManager, type AgentSettings, type SessionState } from "./lib/session-manager.ts";
+import {
+  SessionManager,
+  type AgentSettings,
+  type SessionState,
+} from "./lib/session-manager.ts";
 import { AlwaysOnAdapter } from "./lib/always-on-adapter.ts";
 import type { InputAdapter } from "./lib/input-adapter.ts";
 
@@ -35,11 +39,16 @@ const pttAdapters = new Map<string, PttAdapter>();
 
 async function loadApiKey(): Promise<string> {
   const apiKey = await preferences.load<string>("agent::api-key");
-  if (!apiKey) throw new Error("API key not configured. Set 'agent::api-key' in preferences.");
+  if (!apiKey)
+    throw new Error(
+      "API key not configured. Set 'agent::api-key' in preferences.",
+    );
   return apiKey;
 }
 
-async function loadCharacterSettings(characterId: string): Promise<AgentSettings> {
+async function loadCharacterSettings(
+  characterId: string,
+): Promise<AgentSettings> {
   const saved = await preferences.load<AgentSettings>("agent::" + characterId);
   return saved ? { ...DEFAULT_SETTINGS, ...saved } : { ...DEFAULT_SETTINGS };
 }
@@ -49,7 +58,12 @@ async function registerCharacter(
   settings: AgentSettings,
   apiKey: string,
 ): Promise<void> {
-  const sessionManager = new SessionManager(characterId, settings, permissionBridge, apiKey);
+  const sessionManager = new SessionManager(
+    characterId,
+    settings,
+    permissionBridge,
+    apiKey,
+  );
   sessionManagers.set(characterId, sessionManager);
 
   sttHandler.registerCharacter({
@@ -61,14 +75,24 @@ async function registerCharacter(
   });
 
   if (settings.wakeWords.length === 0) {
-    console.warn(`[agent] No wake words configured for "${characterId}". Wake word detection will not work.`);
-    emitAgentError(characterId, "No wake words configured. Open Agent Settings to add wake words.");
+    console.warn(
+      `[agent] No wake words configured for "${characterId}". Wake word detection will not work.`,
+    );
+    emitAgentError(
+      characterId,
+      "No wake words configured. Open Agent Settings to add wake words.",
+    );
   }
 
   if (settings.listeningMode === "ptt" && settings.pttKey !== null) {
     const resolved = resolvePttKeycodes(settings.pttKey);
     if (resolved !== null) {
-      const adapter = new PttAdapter(keyboardHook, sttHandler, resolved, characterId);
+      const adapter = new PttAdapter(
+        keyboardHook,
+        sttHandler,
+        resolved,
+        characterId,
+      );
       pttAdapters.set(characterId, adapter);
     }
   }
@@ -86,11 +110,16 @@ async function openSessionUi(characterId: string): Promise<void> {
   const vrm = await Vrm.findByName(characterId);
   await Webview.open({
     source: webviewSource.local("agent:session-ui"),
+    size: [0.6, 0.8],
+    viewportSize: [400, 500],
     linkedVrm: vrm.entity,
   });
 }
 
-async function speakGreeting(characterId: string, phrases: string[]): Promise<void> {
+async function speakGreeting(
+  characterId: string,
+  phrases: string[],
+): Promise<void> {
   if (phrases.length === 0) return;
   const phrase = phrases[Math.floor(Math.random() * phrases.length)];
   await rpc
@@ -141,6 +170,7 @@ async function startSession(characterId: string): Promise<void> {
 
 function setupWakeWordHandler(): void {
   sttHandler.onWakeWord = (characterId) => {
+    console.log("++++++++++++++++++++");
     startSession(characterId).catch((err) =>
       console.error(`[agent] Failed to start session for ${characterId}:`, err),
     );
@@ -153,7 +183,10 @@ function setupShutdownWordHandler(): void {
     manager
       ?.stop()
       .catch((err) =>
-        console.error(`[agent] Failed to stop session for ${characterId}:`, err),
+        console.error(
+          `[agent] Failed to stop session for ${characterId}:`,
+          err,
+        ),
       );
   };
 }
@@ -209,7 +242,9 @@ function buildRpcMethods() {
 async function startKeyboardHook(): Promise<void> {
   const started = keyboardHook.start();
   if (!started) {
-    console.warn("[agent] Keyboard hook failed to start — falling back to wake-word-only mode");
+    console.warn(
+      "[agent] Keyboard hook failed to start — falling back to wake-word-only mode",
+    );
   }
 }
 
@@ -230,7 +265,7 @@ async function shutdown(): Promise<void> {
   console.log("[agent] Shutting down...");
 
   for (const manager of sessionManagers.values()) {
-    await manager.stop().catch(() => {});
+    await manager.stop().catch(() => { });
   }
 
   for (const adapter of pttAdapters.values()) {
@@ -246,10 +281,13 @@ async function main(): Promise<void> {
   try {
     apiKey = await loadApiKey();
   } catch {
-    console.error("[agent] API key not configured. Agent service will not start.");
+    console.error(
+      "[agent] API key not configured. Agent service will not start.",
+    );
     signals.send("agent:error", {
       characterId: "*",
-      message: "API key not configured. Open Agent Settings to set your Anthropic API key.",
+      message:
+        "API key not configured. Open Agent Settings to set your Anthropic API key.",
     });
     return;
   }
