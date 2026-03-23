@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Vrm, preferences, Webview, webviewSource } from "@hmcs/sdk";
+import { Vrm, preferences, Webview, webviewSource, signals } from "@hmcs/sdk";
 import { rpc } from "@hmcs/sdk/rpc";
 import { normalizePhrase } from "@hmcs/sdk/wake-word-matcher";
 import { KeyboardHookService } from "./lib/keyboard-hook.ts";
@@ -8,6 +8,8 @@ import { SttHandler } from "./lib/stt-handler.ts";
 import { PttAdapter } from "./lib/ptt-adapter.ts";
 import { PermissionBridge } from "./lib/permission-bridge.ts";
 import { SessionManager, type AgentSettings, type SessionState } from "./lib/session-manager.ts";
+import { AlwaysOnAdapter } from "./lib/always-on-adapter.ts";
+import type { InputAdapter } from "./lib/input-adapter.ts";
 
 const DEFAULT_SETTINGS: AgentSettings = {
   wakeWords: [],
@@ -95,9 +97,33 @@ async function speakGreeting(characterId: string, phrases: string[]): Promise<vo
     .catch(() => console.warn("[agent] TTS unavailable for greeting"));
 }
 
+function resolveInputAdapter(
+  characterId: string,
+  settings: AgentSettings,
+): InputAdapter | null {
+  if (settings.listeningMode === "ptt") {
+    return pttAdapters.get(characterId) ?? null;
+  }
+  return new AlwaysOnAdapter(sttHandler, characterId);
+}
+
+function emitAgentError(characterId: string, message: string): void {
+  console.error(`[agent] ${characterId}: ${message}`);
+  signals.send("agent:error", { characterId, message });
+}
+
 async function startSession(characterId: string): Promise<void> {
   const manager = sessionManagers.get(characterId);
   if (!manager) return;
+
+  const adapter = resolveInputAdapter(characterId, manager.settings);
+  if (!adapter) {
+    emitAgentError(
+      characterId,
+      "PTT key not configured. Open Agent Settings to set a push-to-talk key.",
+    );
+    return;
+  }
 
   const vrm = await Vrm.findByName(characterId);
   const sdkPersona = await vrm.persona();
@@ -105,13 +131,6 @@ async function startSession(characterId: string): Promise<void> {
 
   await openSessionUi(characterId);
   await speakGreeting(characterId, manager.settings.greetingPhrases);
-
-  const adapter = pttAdapters.get(characterId);
-  if (!adapter) {
-    console.warn(`[agent] No PTT adapter for character ${characterId}, skipping session start`);
-    return;
-  }
-
   await manager.start(persona, adapter);
 }
 
