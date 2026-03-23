@@ -24,9 +24,18 @@ pub fn spawn_inference_thread(
     event_tx: Sender<SttEvent>,
     session: SharedSttSession,
     started_at: Instant,
+    no_speech_discard_threshold: f32,
 ) {
     let handle = tokio::task::spawn_blocking(move || {
-        inference_loop(&ctx, &chunk_rx, &language, &cancel, &event_tx, started_at);
+        inference_loop(
+            &ctx,
+            &chunk_rx,
+            &language,
+            &cancel,
+            &event_tx,
+            started_at,
+            no_speech_discard_threshold,
+        );
         event_tx.try_broadcast(SttEvent::Stopped).ok();
     });
 
@@ -49,6 +58,7 @@ fn inference_loop(
     cancel: &CancellationToken,
     event_tx: &Sender<SttEvent>,
     started_at: Instant,
+    no_speech_discard_threshold: f32,
 ) {
     log_gpu_backend();
 
@@ -78,7 +88,13 @@ fn inference_loop(
             ReceiveResult::Disconnected => break,
         };
 
-        let result = execute_inference(&mut state, &envelope, language, max_audio_ctx);
+        let result = execute_inference(
+            &mut state,
+            &envelope,
+            language,
+            max_audio_ctx,
+            no_speech_discard_threshold,
+        );
 
         if result.is_err() {
             match recover_whisper_state(ctx) {
@@ -153,10 +169,17 @@ fn execute_inference(
     envelope: &ChunkEnvelope,
     language: &str,
     max_audio_ctx: i32,
+    no_speech_discard_threshold: f32,
 ) -> Result<Result<Option<(String, String)>, InferenceError>, Box<dyn Any + Send>> {
     let inference_start = Instant::now();
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        run_inference(state, &envelope.samples, language, max_audio_ctx)
+        run_inference(
+            state,
+            &envelope.samples,
+            language,
+            max_audio_ctx,
+            no_speech_discard_threshold,
+        )
     }));
     let inference_ms = inference_start.elapsed().as_millis();
     tracing::info!("Inference: completed in {inference_ms}ms");
@@ -230,15 +253,17 @@ const MIN_INFERENCE_SAMPLES: usize = 16000;
 /// English, so `-1.5` is used here as a more conservative discard floor.
 const AVG_LOGPROBS_THRESHOLD: f32 = -1.5;
 
-/// Segments with `no_speech_prob` above this value are considered silence.
-/// Matches the upstream Whisper default (`no_speech_threshold = 0.6`).
-const NO_SPEECH_PROB_THRESHOLD: f32 = 0.6;
+/// Combined-gate threshold for `no_speech_prob` in tier-2 discard logic.
+/// Slightly below the upstream Whisper default (0.6) to catch borderline
+/// hallucinations that slip through with moderate no-speech confidence.
+const NO_SPEECH_PROB_THRESHOLD: f32 = 0.55;
 
 fn run_inference(
     state: &mut WhisperState,
     samples: &[f32],
     language: &str,
     max_audio_ctx: i32,
+    no_speech_discard_threshold: f32,
 ) -> Result<Option<(String, String)>, InferenceError> {
     let samples = pad_short_chunk(samples);
     let params = create_whisper_params(language, samples.len(), max_audio_ctx);
@@ -247,7 +272,7 @@ fn run_inference(
         .full(params, &samples)
         .map_err(|e| InferenceError::Full(e.to_string()))?;
 
-    if should_discard_low_confidence(state) {
+    if should_discard_low_confidence(state, no_speech_discard_threshold) {
         return Ok(None);
     }
 
@@ -283,12 +308,22 @@ fn should_discard_segment(
     no_speech_threshold: f32,
     logprobs_threshold: f32,
 ) -> bool {
-    avg_logprobs < logprobs_threshold && no_speech_prob > no_speech_threshold
+    // Tier 1: Unconditional discard when encoder is highly confident
+    // there is no speech. Catches confident hallucinations where
+    // avg_logprobs look normal.
+    if no_speech_prob > no_speech_threshold {
+        return true;
+    }
+    // Tier 2: Combined gate for borderline cases.
+    avg_logprobs < logprobs_threshold && no_speech_prob > NO_SPEECH_PROB_THRESHOLD
 }
 
 /// Check avg_logprobs across all segments. Discard if confidence is too low
 /// to prevent hallucinated output from being emitted.
-fn should_discard_low_confidence(state: &WhisperState) -> bool {
+fn should_discard_low_confidence(
+    state: &WhisperState,
+    no_speech_discard_threshold: f32,
+) -> bool {
     let n_segments = state.full_n_segments();
     if n_segments == 0 {
         return false;
@@ -334,14 +369,21 @@ fn should_discard_low_confidence(state: &WhisperState) -> bool {
         if should_discard_segment(
             avg_logprobs,
             no_speech_prob,
-            NO_SPEECH_PROB_THRESHOLD,
+            no_speech_discard_threshold,
             AVG_LOGPROBS_THRESHOLD,
         ) {
-            tracing::info!(
-                "Inference: discarding low-confidence result \
-                 (avg_logprobs={avg_logprobs:.3} < {AVG_LOGPROBS_THRESHOLD} \
-                 AND no_speech_prob={no_speech_prob:.3} > {NO_SPEECH_PROB_THRESHOLD})"
-            );
+            if no_speech_prob > no_speech_discard_threshold {
+                tracing::info!(
+                    "Inference: discarding segment {i} — no_speech_prob={no_speech_prob:.3} \
+                     exceeds unconditional threshold {no_speech_discard_threshold}"
+                );
+            } else {
+                tracing::info!(
+                    "Inference: discarding segment {i} — avg_logprobs={avg_logprobs:.3} < \
+                     {AVG_LOGPROBS_THRESHOLD} AND no_speech_prob={no_speech_prob:.3} > \
+                     {NO_SPEECH_PROB_THRESHOLD}"
+                );
+            }
             return true;
         }
     }
@@ -457,12 +499,13 @@ mod tests {
 
     #[test]
     fn discard_segment_both_conditions_met() {
-        assert!(should_discard_segment(-2.0, 0.7, 0.6, -1.5));
+        // avg_logprobs < -1.5 AND no_speech_prob > 0.55 (tier 2) → discard
+        assert!(should_discard_segment(-2.0, 0.6, 0.8, -1.5));
     }
 
     #[test]
     fn discard_segment_only_logprobs_bad() {
-        assert!(!should_discard_segment(-2.0, 0.3, 0.6, -1.5));
+        assert!(!should_discard_segment(-2.0, 0.3, 0.8, -1.5));
     }
 
     #[test]
@@ -473,12 +516,43 @@ mod tests {
 
     #[test]
     fn discard_segment_neither_condition() {
-        assert!(!should_discard_segment(-0.5, 0.2, 0.6, -1.5));
+        assert!(!should_discard_segment(-0.5, 0.2, 0.8, -1.5));
     }
 
     #[test]
     fn discard_segment_boundary_values() {
         // Exactly at thresholds (not crossing) → keep
-        assert!(!should_discard_segment(-1.5, 0.6, 0.6, -1.5));
+        assert!(!should_discard_segment(-1.5, 0.55, 0.8, -1.5));
+    }
+
+    #[test]
+    fn discard_segment_tier1_high_no_speech_alone() {
+        // no_speech_prob > 0.8 → discard regardless of avg_logprobs
+        assert!(should_discard_segment(-0.5, 0.85, 0.8, -1.5));
+    }
+
+    #[test]
+    fn discard_segment_tier1_boundary() {
+        // Exactly 0.8 → not discarded (must exceed)
+        assert!(!should_discard_segment(-0.5, 0.8, 0.8, -1.5));
+    }
+
+    #[test]
+    fn discard_segment_tier2_and_gate() {
+        // avg_logprobs < -1.5 AND no_speech_prob > 0.55 but <= 0.8 → discard
+        assert!(should_discard_segment(-2.0, 0.6, 0.8, -1.5));
+    }
+
+    #[test]
+    fn discard_segment_hallucination_case() {
+        // The actual hallucination: confident logprobs + elevated no_speech_prob
+        // Before fix: NOT discarded. After fix: DISCARDED (tier 1).
+        assert!(should_discard_segment(-0.5, 0.85, 0.8, -1.5));
+    }
+
+    #[test]
+    fn discard_segment_quiet_speech_preserved() {
+        // Quiet legitimate speech: normal logprobs, low no_speech_prob
+        assert!(!should_discard_segment(-0.8, 0.2, 0.8, -1.5));
     }
 }

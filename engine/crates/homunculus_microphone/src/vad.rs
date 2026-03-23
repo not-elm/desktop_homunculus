@@ -70,15 +70,12 @@ impl Default for VadConfig {
 }
 
 impl VadConfig {
-    /// Load VAD configuration from `~/.homunculus/config.toml`, falling back to defaults.
-    pub fn from_config() -> Self {
-        match homunculus_utils::config::HomunculusConfig::load() {
-            Ok(config) => Self {
-                silence_ms: config.stt.silence_ms.unwrap_or(300),
-                energy_threshold: config.stt.energy_threshold.unwrap_or(0.01),
-                max_chunk_ms: config.stt.max_chunk_ms.or(Some(8000)),
-            },
-            Err(_) => Self::default(),
+    /// Build VAD configuration from the given `SttConfig`, falling back to defaults.
+    pub fn from_stt_config(stt: &homunculus_utils::config::SttConfig) -> Self {
+        Self {
+            silence_ms: stt.silence_ms.unwrap_or(300),
+            energy_threshold: stt.energy_threshold.unwrap_or(0.01),
+            max_chunk_ms: stt.max_chunk_ms.or(Some(8000)),
         }
     }
 }
