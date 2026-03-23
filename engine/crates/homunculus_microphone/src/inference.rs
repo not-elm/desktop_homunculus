@@ -273,6 +273,19 @@ fn pad_short_chunk(samples: &[f32]) -> Cow<'_, [f32]> {
     }
 }
 
+/// Discard decision based on extracted segment metrics.
+///
+/// Returns `true` if the segment should be discarded as low-confidence
+/// or likely silence/hallucination.
+fn should_discard_segment(
+    avg_logprobs: f32,
+    no_speech_prob: f32,
+    no_speech_threshold: f32,
+    logprobs_threshold: f32,
+) -> bool {
+    avg_logprobs < logprobs_threshold && no_speech_prob > no_speech_threshold
+}
+
 /// Check avg_logprobs across all segments. Discard if confidence is too low
 /// to prevent hallucinated output from being emitted.
 fn should_discard_low_confidence(state: &WhisperState) -> bool {
@@ -318,7 +331,12 @@ fn should_discard_low_confidence(state: &WhisperState) -> bool {
              no_speech_prob={no_speech_prob:.3}, content_tokens={content_token_count}"
         );
 
-        if avg_logprobs < AVG_LOGPROBS_THRESHOLD && no_speech_prob > NO_SPEECH_PROB_THRESHOLD {
+        if should_discard_segment(
+            avg_logprobs,
+            no_speech_prob,
+            NO_SPEECH_PROB_THRESHOLD,
+            AVG_LOGPROBS_THRESHOLD,
+        ) {
             tracing::info!(
                 "Inference: discarding low-confidence result \
                  (avg_logprobs={avg_logprobs:.3} < {AVG_LOGPROBS_THRESHOLD} \
@@ -435,5 +453,32 @@ mod tests {
     fn compute_audio_ctx_alignment() {
         // 256000 samples → 800 tokens + 128 = 928, ceil_64 = 960
         assert_eq!(compute_audio_ctx(256000, 1500), 960);
+    }
+
+    #[test]
+    fn discard_segment_both_conditions_met() {
+        assert!(should_discard_segment(-2.0, 0.7, 0.6, -1.5));
+    }
+
+    #[test]
+    fn discard_segment_only_logprobs_bad() {
+        assert!(!should_discard_segment(-2.0, 0.3, 0.6, -1.5));
+    }
+
+    #[test]
+    fn discard_segment_only_no_speech_high() {
+        // threshold=0.8 so tier 1 doesn't fire; tests pure AND gate behavior
+        assert!(!should_discard_segment(-0.5, 0.7, 0.8, -1.5));
+    }
+
+    #[test]
+    fn discard_segment_neither_condition() {
+        assert!(!should_discard_segment(-0.5, 0.2, 0.6, -1.5));
+    }
+
+    #[test]
+    fn discard_segment_boundary_values() {
+        // Exactly at thresholds (not crossing) → keep
+        assert!(!should_discard_segment(-1.5, 0.6, 0.6, -1.5));
     }
 }
