@@ -1,9 +1,10 @@
 use bevy::camera::NormalizedRenderTarget;
 use bevy::ecs::system::SystemParam;
 use bevy::pbr::MeshMaterial3d;
+use bevy::picking::mesh_picking::ray_cast::RayMeshHit;
 use bevy::picking::pointer::Location;
 use bevy::prelude::{
-    ContainsEntity, MeshRayCast, MeshRayCastSettings, Query, RayCastVisibility, default,
+    ContainsEntity, Entity, MeshRayCast, MeshRayCastSettings, Query, RayCastVisibility, default,
 };
 use bevy_vrm1::prelude::{Cameras, MToonMaterial};
 
@@ -37,9 +38,26 @@ impl VrmMeshRayCast<'_, '_> {
         }
     }
 
-    /// Returns true only if the closest mesh at the pointer location is a VRM mesh.
-    /// Returns false if a non-VRM mesh (e.g., webview) is closer to the camera.
-    pub fn is_frontmost_hit(&mut self, location: &Location) -> bool {
+    /// Returns true only if the closest *opaque* mesh at the pointer location is a VRM mesh.
+    ///
+    /// The `should_skip` callback is called for each hit in depth order. If it returns
+    /// `true`, that hit is skipped (treated as transparent). The first non-skipped hit
+    /// is checked for MToon material.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// // Skip transparent webview pixels:
+    /// vrm_ray_cast.is_frontmost_hit(&location, |entity, hit| {
+    ///     // return true to skip this hit (e.g., transparent webview pixel)
+    ///     false
+    /// });
+    /// ```
+    pub fn is_frontmost_hit(
+        &mut self,
+        location: &Location,
+        should_skip: impl Fn(Entity, &RayMeshHit) -> bool,
+    ) -> bool {
         if let NormalizedRenderTarget::Window(window) = location.target
             && let Some((_, camera, _, tf, _)) =
                 self.cameras.find_camera_from_window(window.entity())
@@ -49,10 +67,12 @@ impl VrmMeshRayCast<'_, '_> {
                 ray,
                 &MeshRayCastSettings {
                     visibility: RayCastVisibility::VisibleInView,
+                    early_exit_test: &|_| false,
                     ..default()
                 },
             );
-            hits.first()
+            hits.iter()
+                .find(|(entity, hit)| !should_skip(*entity, hit))
                 .is_some_and(|(entity, _)| self.mtoon_materials.get(*entity).is_ok())
         } else {
             false
