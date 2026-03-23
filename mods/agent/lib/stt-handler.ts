@@ -5,7 +5,11 @@ import {
   type NormalizedPhrase,
 } from "@hmcs/sdk/wake-word-matcher";
 
-export type SttState = "idle" | "ptt_active" | "session_active" | "permission_wait";
+export type SttState =
+  | "idle"
+  | "ptt_active"
+  | "session_active"
+  | "permission_wait";
 
 export interface SttHandlerConfig {
   wakeWordPhrases: NormalizedPhrase[];
@@ -48,7 +52,7 @@ export class SttHandler {
     }
     this.stream = stt.stream({
       onResult: (result) => this.handleResult(result),
-      onStopped: () => {},
+      onStopped: () => { },
     });
   }
 
@@ -92,7 +96,9 @@ export class SttHandler {
 
   enterSessionActive(characterId: string): void {
     if (this.state === "session_active") {
-      console.warn(`[stt-handler] Session already active for ${this.sessionActiveCharacterId}, overwriting with ${characterId}`);
+      console.warn(
+        `[stt-handler] Session already active for ${this.sessionActiveCharacterId}, overwriting with ${characterId}`,
+      );
     }
     this.state = "session_active";
     this.sessionActiveCharacterId = characterId;
