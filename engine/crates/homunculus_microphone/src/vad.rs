@@ -63,7 +63,7 @@ impl Default for VadConfig {
     fn default() -> Self {
         Self {
             silence_ms: 300,
-            energy_threshold: 0.01,
+            energy_threshold: 0.015,
             max_chunk_ms: Some(8000),
         }
     }
@@ -74,7 +74,7 @@ impl VadConfig {
     pub fn from_stt_config(stt: &homunculus_utils::config::SttConfig) -> Self {
         Self {
             silence_ms: stt.silence_ms.unwrap_or(300),
-            energy_threshold: stt.energy_threshold.unwrap_or(0.01),
+            energy_threshold: stt.energy_threshold.unwrap_or(0.015),
             max_chunk_ms: stt.max_chunk_ms.or(Some(8000)),
         }
     }
@@ -554,7 +554,7 @@ mod tests {
     fn ignores_short_chunks() {
         let config = VadConfig {
             silence_ms: 700,
-            energy_threshold: 0.01,
+            energy_threshold: 0.015,
             max_chunk_ms: None,
         };
         let mut sm = VadStateMachine::new(&config, 16000, false);
@@ -623,7 +623,7 @@ mod tests {
     fn vad_config_defaults() {
         let config = VadConfig::default();
         assert_eq!(config.silence_ms, 300);
-        assert!((config.energy_threshold - 0.01).abs() < f32::EPSILON);
+        assert!((config.energy_threshold - 0.015).abs() < f32::EPSILON);
         assert_eq!(config.max_chunk_ms, Some(8000));
     }
 

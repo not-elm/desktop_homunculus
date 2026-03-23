@@ -5,7 +5,7 @@ use whisper_rs::WhisperContext;
 
 use crate::capture::{self, CaptureHandle};
 use crate::error::PipelineError;
-use crate::inference;
+use crate::inference::{self, InferenceConfig};
 use crate::session::{SharedSttSession, SttEvent};
 use crate::vad::{self, PipelineMetrics, VadConfig};
 
@@ -21,7 +21,10 @@ pub fn spawn_pipeline(
 ) -> Result<(), PipelineError> {
     let config = homunculus_utils::config::HomunculusConfig::load().unwrap_or_default();
     let vad_config = VadConfig::from_stt_config(&config.stt);
-    let no_speech_discard_threshold = config.stt.no_speech_threshold.unwrap_or(0.8);
+    let inference_config = InferenceConfig {
+        no_speech_discard_threshold: config.stt.no_speech_threshold.unwrap_or(0.8),
+        inference_energy_threshold: config.stt.inference_energy_threshold.unwrap_or(0.02),
+    };
 
     let CaptureHandle {
         audio_rx,
@@ -49,7 +52,7 @@ pub fn spawn_pipeline(
         event_tx,
         session,
         started_at,
-        no_speech_discard_threshold,
+        inference_config,
     );
 
     Ok(())
