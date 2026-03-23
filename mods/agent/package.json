@@ -15,7 +15,7 @@
       {
         "id": "open-agent-settings",
         "text": "Agent Settings",
-        "command": "open-settings"
+        "command": "agent-open-settings"
       }
     ],
     "assets": {
@@ -32,7 +32,7 @@
     }
   },
   "bin": {
-    "open-settings": "commands/open-settings.ts"
+    "agent-open-settings": "commands/open-settings.ts"
   },
   "dependencies": {
     "@hmcs/sdk": "workspace:*",

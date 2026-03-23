@@ -14,7 +14,7 @@
       {
         "id": "open-character-settings",
         "text": "Character Settings",
-        "command": "open-ui"
+        "command": "character-settings-open-ui"
       }
     ],
     "assets": {
@@ -26,7 +26,7 @@
     }
   },
   "bin": {
-    "open-ui": "commands/open-ui.ts"
+    "character-settings-open-ui": "commands/open-ui.ts"
   },
   "dependencies": {
     "@hmcs/sdk": "workspace:*",
