@@ -9,7 +9,7 @@ try {
   await Webview.open({
     source: webviewSource.local("agent:settings-ui"),
     size: [0.7, 0.9],
-    viewportSize: [400, 700],
+    viewportSize: [600, 800],
     offset: [1.1, 0],
     linkedVrm: vrm.entity,
   });
