@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Character, preferences, Webview, webviewSource } from "@hmcs/sdk";
+import { Vrm, preferences, Webview, webviewSource } from "@hmcs/sdk";
 import { rpc } from "@hmcs/sdk/rpc";
 import { normalizePhrase } from "@hmcs/sdk/wake-word-matcher";
 import { KeyboardHookService } from "./lib/keyboard-hook.ts";
@@ -64,17 +64,18 @@ async function registerCharacter(
 }
 
 async function registerAllCharacters(apiKey: string): Promise<void> {
-  const characters = await Character.findAll();
-  for (const info of characters) {
-    const settings = await loadCharacterSettings(info.id);
-    await registerCharacter(info.id, settings, apiKey);
+  const snapshots = await Vrm.findAllDetailed();
+  for (const snapshot of snapshots) {
+    const settings = await loadCharacterSettings(snapshot.name);
+    await registerCharacter(snapshot.name, settings, apiKey);
   }
 }
 
 async function openSessionUi(characterId: string): Promise<void> {
+  const vrm = await Vrm.findByName(characterId);
   await Webview.open({
     source: webviewSource.local("agent:session-ui"),
-    linkedCharacter: characterId,
+    linkedVrm: vrm.entity,
   });
 }
 
@@ -94,8 +95,9 @@ async function startSession(characterId: string): Promise<void> {
   const manager = sessionManagers.get(characterId);
   if (!manager) return;
 
-  const character = await Character.find(characterId);
-  const persona = await character.persona();
+  const vrm = await Vrm.findByName(characterId);
+  const sdkPersona = await vrm.persona();
+  const persona = { name: characterId, ...sdkPersona };
 
   await openSessionUi(characterId);
   await speakGreeting(characterId, manager.settings.greetingPhrases);
