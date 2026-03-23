@@ -76,7 +76,9 @@ export class SttHandler {
   }
 
   enterPermissionWait(): Promise<boolean> {
-    this.previousState = this.state;
+    if (this.state !== "permission_wait") {
+      this.previousState = this.state;
+    }
     this.state = "permission_wait";
     return new Promise((resolve) => {
       this.permissionResolver = resolve;
@@ -89,6 +91,9 @@ export class SttHandler {
   }
 
   enterSessionActive(characterId: string): void {
+    if (this.state === "session_active") {
+      console.warn(`[stt-handler] Session already active for ${this.sessionActiveCharacterId}, overwriting with ${characterId}`);
+    }
     this.state = "session_active";
     this.sessionActiveCharacterId = characterId;
   }

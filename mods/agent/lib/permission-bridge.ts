@@ -65,6 +65,7 @@ export class PermissionBridge {
       pending.resolve({ behavior: "deny", message: "Session interrupted" });
     }
     this.pending.clear();
+    this.sttHandler.exitPermissionWait();
   }
 
   private async handlePermissionRequest(
