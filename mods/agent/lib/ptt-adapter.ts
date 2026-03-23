@@ -1,11 +1,7 @@
 import type { KeyboardHookService } from "./keyboard-hook.ts";
+import type { InputAdapter, SDKUserMessage } from "./input-adapter.ts";
 import type { ResolvedPttKey } from "./key-mapping.ts";
 import type { SttHandler } from "./stt-handler.ts";
-
-interface SDKUserMessage {
-  type: "user";
-  message: { role: "user"; content: string };
-}
 
 /**
  * Bridges PTT keyboard events and STT results into an AsyncGenerator of
@@ -15,7 +11,7 @@ interface SDKUserMessage {
  * the full combo (primary key + all modifiers) is held. Transitions from
  * inactive→active start recording, active→inactive stop recording.
  */
-export class PttAdapter {
+export class PttAdapter implements InputAdapter {
   private resolvedKey: ResolvedPttKey;
   private keyboardHook: KeyboardHookService;
   private sttHandler: SttHandler;

@@ -5,7 +5,7 @@ import { mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import path from "node:path";
 import type { PermissionBridge } from "./permission-bridge.ts";
-import type { PttAdapter } from "./ptt-adapter.ts";
+import type { InputAdapter } from "./input-adapter.ts";
 
 export type SessionState = "idle" | "running" | "interrupted" | "recovering";
 
@@ -52,7 +52,7 @@ export class SessionManager {
   private state: SessionState = "idle";
   private sessionId: string | null = null;
   private currentQuery: QueryHandle | null = null;
-  private pttAdapter: PttAdapter | null = null;
+  private adapter: InputAdapter | null = null;
   private readonly permissionBridge: PermissionBridge;
   private readonly apiKey: string;
 
@@ -72,9 +72,9 @@ export class SessionManager {
     return this.state;
   }
 
-  async start(persona: Persona, pttAdapter: PttAdapter): Promise<void> {
+  async start(persona: Persona, adapter: InputAdapter): Promise<void> {
     if (this.state === "running") return;
-    this.pttAdapter = pttAdapter;
+    this.adapter = adapter;
 
     const workDir = this.resolveWorkingDirectory();
     mkdirSync(workDir, { recursive: true });
@@ -84,7 +84,7 @@ export class SessionManager {
     );
 
     this.currentQuery = query({
-      prompt: pttAdapter.createAsyncGenerator(),
+      prompt: adapter.createAsyncGenerator(),
       options: buildQueryOptions({
         characterId: this.characterId,
         persona,
@@ -207,8 +207,8 @@ export class SessionManager {
   private teardown(): void {
     this.currentQuery?.close?.();
     this.currentQuery = null;
-    this.pttAdapter?.close();
-    this.pttAdapter = null;
+    this.adapter?.close();
+    this.adapter = null;
     this.state = "idle";
   }
 
