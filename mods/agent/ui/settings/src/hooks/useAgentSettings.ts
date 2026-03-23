@@ -47,9 +47,10 @@ export function useAgentSettings() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const character = await Webview.current()?.linkedCharacter();
+      const vrm = await Webview.current()?.linkedVrm();
       if (cancelled) return;
-      const id = character?.characterId ?? null;
+      const id = vrm ? await vrm.name() : null;
+      if (cancelled) return;
       setCharacterId(id);
       const { settings: s, apiKey: k } = await loadAllPreferences(id);
       if (cancelled) return;
