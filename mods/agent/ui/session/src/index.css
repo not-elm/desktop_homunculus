@@ -1,0 +1,612 @@
+@import "tailwindcss";
+@import "@hmcs/ui/dist/index.css";
+
+body {
+  background: transparent;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+/* ━━ Keyframes ━━ */
+
+@keyframes hud-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.88);
+    filter: blur(6px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.02);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes pill-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.85) translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes holo-scanline {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes holo-corner-pulse {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+@keyframes holo-highlight-sweep {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes status-pulse {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 4px currentColor;
+  }
+  50% {
+    opacity: 0.5;
+    box-shadow: 0 0 10px currentColor;
+  }
+}
+
+@keyframes notification-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.3);
+  }
+}
+
+@keyframes slide-up {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ━━ HUD Pill (collapsed) ━━ */
+
+.hud-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  height: 32px;
+  min-width: 120px;
+  background: oklch(0.13 0.015 250 / 0.9);
+  border: 1px solid oklch(0.72 0.14 192 / 0.25);
+  border-radius: 16px;
+  cursor: pointer;
+  user-select: none;
+  animation: pill-in 200ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  backdrop-filter: blur(8px);
+  position: relative;
+  overflow: hidden;
+  transition: border-color 180ms ease, background 180ms ease;
+}
+
+.hud-pill:hover {
+  background: oklch(0.16 0.02 250 / 0.92);
+  border-color: oklch(0.72 0.14 192 / 0.45);
+}
+
+.hud-pill:active {
+  transform: scale(0.97);
+}
+
+/* ━━ HUD Panel (expanded) ━━ */
+
+.hud-panel {
+  position: relative;
+  width: 320px;
+  background: oklch(0.13 0.015 250 / 0.93);
+  border: 1px solid oklch(0.72 0.14 192 / 0.18);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: hud-in 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  backdrop-filter: blur(12px);
+}
+
+/* ━━ Holographic Decorations ━━ */
+
+.hud-corner {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  pointer-events: none;
+  z-index: 10;
+  animation: holo-corner-pulse 3s ease-in-out infinite;
+}
+
+.hud-corner--tl {
+  top: -1px;
+  left: -1px;
+  border-top: 1.5px solid oklch(0.72 0.14 192 / 0.55);
+  border-left: 1.5px solid oklch(0.72 0.14 192 / 0.55);
+  filter: drop-shadow(0 0 3px oklch(0.72 0.14 192 / 0.3));
+}
+
+.hud-corner--tr {
+  top: -1px;
+  right: -1px;
+  border-top: 1.5px solid oklch(0.65 0.18 285 / 0.4);
+  border-right: 1.5px solid oklch(0.65 0.18 285 / 0.4);
+  filter: drop-shadow(0 0 3px oklch(0.65 0.18 285 / 0.2));
+  animation-delay: 0.75s;
+}
+
+.hud-corner--bl {
+  bottom: -1px;
+  left: -1px;
+  border-bottom: 1.5px solid oklch(0.65 0.18 285 / 0.4);
+  border-left: 1.5px solid oklch(0.65 0.18 285 / 0.4);
+  filter: drop-shadow(0 0 3px oklch(0.65 0.18 285 / 0.2));
+  animation-delay: 1.5s;
+}
+
+.hud-corner--br {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 1.5px solid oklch(0.7 0.16 350 / 0.35);
+  border-right: 1.5px solid oklch(0.7 0.16 350 / 0.35);
+  filter: drop-shadow(0 0 3px oklch(0.7 0.16 350 / 0.2));
+  animation-delay: 2.25s;
+}
+
+.hud-highlight {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 5%,
+    oklch(0.72 0.14 192 / 0.3) 20%,
+    oklch(0.65 0.18 285 / 0.2) 50%,
+    oklch(0.7 0.16 350 / 0.3) 80%,
+    transparent 95%
+  );
+  pointer-events: none;
+  z-index: 10;
+}
+
+.hud-highlight::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    oklch(1 0 0 / 0.12) 45%,
+    oklch(1 0 0 / 0.22) 50%,
+    oklch(1 0 0 / 0.12) 55%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: holo-highlight-sweep 3s ease-in-out infinite;
+  animation-delay: 1s;
+}
+
+.hud-scanline {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 6;
+  border-radius: inherit;
+}
+
+.hud-scanline::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    oklch(0.72 0.14 192 / 0.025) 40%,
+    oklch(0.72 0.14 192 / 0.04) 50%,
+    oklch(0.72 0.14 192 / 0.025) 60%,
+    transparent
+  );
+  animation: holo-scanline 5s linear infinite;
+}
+
+/* ━━ Status Dot ━━ */
+
+.hud-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.hud-status-dot--idle {
+  background: oklch(0.55 0.02 250);
+}
+
+.hud-status-dot--thinking {
+  background: oklch(0.72 0.18 192);
+  animation: status-pulse 1s ease-in-out infinite;
+}
+
+.hud-status-dot--executing {
+  background: oklch(0.78 0.16 75);
+  animation: status-pulse 0.7s ease-in-out infinite;
+}
+
+.hud-status-dot--waiting {
+  background: oklch(0.65 0.2 15);
+  animation: status-pulse 0.8s ease-in-out infinite;
+}
+
+/* ━━ Status Label ━━ */
+
+.hud-status-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: oklch(0.78 0.06 250 / 0.85);
+}
+
+.hud-status-label--idle {
+  color: oklch(0.6 0.03 250 / 0.7);
+}
+
+.hud-status-label--thinking {
+  color: oklch(0.72 0.18 192);
+}
+
+.hud-status-label--executing {
+  color: oklch(0.78 0.16 75);
+}
+
+.hud-status-label--waiting {
+  color: oklch(0.65 0.2 15);
+}
+
+/* ━━ Timer ━━ */
+
+.hud-timer {
+  font-family: monospace;
+  font-size: 0.72rem;
+  color: oklch(0.55 0.03 250 / 0.7);
+  letter-spacing: 0.04em;
+}
+
+/* ━━ Notification Dot ━━ */
+
+.hud-notification-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: oklch(0.65 0.2 15);
+  animation: notification-pulse 1s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+/* ━━ Expand/Collapse Button ━━ */
+
+.hud-toggle-btn {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: oklch(0.55 0.03 250 / 0.6);
+  display: flex;
+  align-items: center;
+  transition: color 150ms ease;
+  line-height: 1;
+}
+
+.hud-toggle-btn:hover {
+  color: oklch(0.72 0.14 192 / 0.9);
+}
+
+/* ━━ Status Bar (panel header) ━━ */
+
+.hud-statusbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid oklch(0.72 0.14 192 / 0.08);
+  position: relative;
+  z-index: 7;
+  flex-shrink: 0;
+}
+
+.hud-statusbar-spacer {
+  flex: 1;
+}
+
+/* ━━ Activity Log ━━ */
+
+.hud-log {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-height: 120px;
+  max-height: 240px;
+  position: relative;
+  z-index: 7;
+  scrollbar-width: none;
+}
+
+.hud-log::-webkit-scrollbar {
+  display: none;
+}
+
+.hud-log-empty {
+  color: oklch(0.45 0.02 250 / 0.5);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 16px 0;
+}
+
+.hud-log-entry {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.hud-log-icon {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  margin-top: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hud-log-text {
+  flex: 1;
+  color: oklch(0.75 0.03 250 / 0.85);
+  overflow-wrap: break-word;
+  word-break: break-all;
+}
+
+.hud-log-text--assistant {
+  color: oklch(0.72 0.14 192 / 0.9);
+  font-style: italic;
+}
+
+.hud-log-text--done {
+  color: oklch(0.65 0.18 145 / 0.9);
+}
+
+.hud-log-text--error {
+  color: oklch(0.65 0.2 20 / 0.9);
+}
+
+.hud-log-ts {
+  flex-shrink: 0;
+  font-family: monospace;
+  font-size: 0.65rem;
+  color: oklch(0.4 0.02 250 / 0.5);
+  margin-top: 2px;
+}
+
+/* ━━ Permission / Question Dialog ━━ */
+
+.hud-dialog {
+  border-top: 1px solid oklch(0.72 0.14 192 / 0.12);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+  z-index: 7;
+  animation: slide-up 200ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  background: oklch(0.11 0.015 250 / 0.5);
+}
+
+.hud-dialog-tool-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hud-dialog-tool-badge {
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: oklch(0.65 0.2 15 / 0.15);
+  border: 1px solid oklch(0.65 0.2 15 / 0.35);
+  color: oklch(0.65 0.2 15);
+}
+
+.hud-dialog-target {
+  font-family: monospace;
+  font-size: 0.7rem;
+  color: oklch(0.72 0.06 250 / 0.75);
+  background: oklch(0.1 0.01 250 / 0.6);
+  border: 1px solid oklch(0.4 0.02 250 / 0.2);
+  border-radius: 4px;
+  padding: 6px 10px;
+  overflow-wrap: break-word;
+  word-break: break-all;
+  max-height: 60px;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.hud-dialog-target::-webkit-scrollbar {
+  display: none;
+}
+
+.hud-dialog-hints {
+  font-size: 0.65rem;
+  color: oklch(0.5 0.03 250 / 0.55);
+  line-height: 1.5;
+}
+
+.hud-dialog-hint-approve {
+  color: oklch(0.65 0.18 145 / 0.6);
+}
+
+.hud-dialog-hint-deny {
+  color: oklch(0.65 0.2 15 / 0.6);
+}
+
+.hud-dialog-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.hud-btn {
+  flex: 1;
+  padding: 7px 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+  font-family: inherit;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.hud-btn--approve {
+  background: oklch(0.65 0.18 145 / 0.15);
+  border-color: oklch(0.65 0.18 145 / 0.35);
+  color: oklch(0.65 0.18 145);
+}
+
+.hud-btn--approve:hover {
+  background: oklch(0.65 0.18 145 / 0.25);
+  border-color: oklch(0.65 0.18 145 / 0.55);
+  box-shadow: 0 0 10px oklch(0.65 0.18 145 / 0.15);
+}
+
+.hud-btn--deny {
+  background: oklch(0.65 0.2 15 / 0.12);
+  border-color: oklch(0.65 0.2 15 / 0.3);
+  color: oklch(0.65 0.2 15 / 0.85);
+}
+
+.hud-btn--deny:hover {
+  background: oklch(0.65 0.2 15 / 0.22);
+  border-color: oklch(0.65 0.2 15 / 0.5);
+}
+
+/* ━━ Question Dialog ━━ */
+
+.hud-question-text {
+  font-size: 0.78rem;
+  color: oklch(0.82 0.04 250 / 0.9);
+  line-height: 1.5;
+}
+
+.hud-question-options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.hud-btn--option {
+  width: 100%;
+  text-align: left;
+  padding: 7px 12px;
+  font-size: 0.75rem;
+  letter-spacing: 0.03em;
+  text-transform: none;
+  font-weight: 500;
+  font-family: inherit;
+  border-radius: 6px;
+  cursor: pointer;
+  background: oklch(0.72 0.14 192 / 0.08);
+  border: 1px solid oklch(0.72 0.14 192 / 0.2);
+  color: oklch(0.78 0.08 192 / 0.9);
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+.hud-btn--option:hover {
+  background: oklch(0.72 0.14 192 / 0.18);
+  border-color: oklch(0.72 0.14 192 / 0.4);
+}
+
+/* ━━ Reduced Motion ━━ */
+
+@media (prefers-reduced-motion: reduce) {
+  .hud-panel,
+  .hud-pill {
+    animation: none;
+    opacity: 1;
+  }
+
+  .hud-scanline::after,
+  .hud-highlight::after {
+    animation: none;
+  }
+
+  .hud-corner {
+    animation: none;
+    opacity: 0.6;
+  }
+
+  .hud-status-dot--thinking,
+  .hud-status-dot--executing,
+  .hud-status-dot--waiting,
+  .hud-notification-dot {
+    animation: none;
+  }
+
+  .hud-dialog {
+    animation: none;
+  }
+}
