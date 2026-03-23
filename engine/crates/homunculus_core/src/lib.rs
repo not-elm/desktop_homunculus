@@ -81,8 +81,14 @@ pub mod texture;
 
 pub mod prelude {
     pub use crate::{
-        HomunculusCorePlugin, components::*, error::*, events::prelude::*, resources::prelude::*,
-        rpc_registry::*, schema::prelude::*, system_param::prelude::*,
+        HomunculusCorePlugin,
+        components::*,
+        error::*,
+        events::prelude::*,
+        resources::prelude::*,
+        rpc_registry::*,
+        schema::prelude::*,
+        system_param::prelude::*,
         system_set::HomunculusSystemSet,
         texture::{TRANSPARENT_ALPHA_THRESHOLD, sample_texture_alpha},
     };

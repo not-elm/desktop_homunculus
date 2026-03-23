@@ -4567,6 +4567,7 @@ name = "homunculus_drag"
 version = "0.1.0-alpha.6-dev"
 dependencies = [
  "bevy",
+ "bevy_cef",
  "bevy_vrm1",
  "homunculus_core",
  "homunculus_screen",
