@@ -5,7 +5,7 @@ import {
   type NormalizedPhrase,
 } from "@hmcs/sdk/wake-word-matcher";
 
-export type SttState = "idle" | "ptt_active" | "permission_wait";
+export type SttState = "idle" | "ptt_active" | "session_active" | "permission_wait";
 
 export interface SttHandlerConfig {
   wakeWordPhrases: NormalizedPhrase[];
@@ -26,6 +26,8 @@ export class SttHandler {
   private buffer: AccumulationBuffer | null = null;
   private permissionResolver: ((approved: boolean) => void) | null = null;
   private configs = new Map<string, SttHandlerConfig>();
+  private sessionActiveCharacterId: string | null = null;
+  private previousState: SttState = "idle";
 
   onWakeWord: ((characterId: string) => void) | null = null;
   onShutdownWord: ((characterId: string) => void) | null = null;
@@ -74,6 +76,7 @@ export class SttHandler {
   }
 
   enterPermissionWait(): Promise<boolean> {
+    this.previousState = this.state;
     this.state = "permission_wait";
     return new Promise((resolve) => {
       this.permissionResolver = resolve;
@@ -81,8 +84,18 @@ export class SttHandler {
   }
 
   exitPermissionWait(): void {
-    this.state = "ptt_active";
+    this.state = this.previousState;
     this.permissionResolver = null;
+  }
+
+  enterSessionActive(characterId: string): void {
+    this.state = "session_active";
+    this.sessionActiveCharacterId = characterId;
+  }
+
+  exitSessionActive(): void {
+    this.state = "idle";
+    this.sessionActiveCharacterId = null;
   }
 
   private handleResult(result: stt.SttResult): void {
@@ -95,6 +108,9 @@ export class SttHandler {
         break;
       case "permission_wait":
         this.handlePermissionResult(result.text);
+        break;
+      case "session_active":
+        this.handleSessionActiveResult(result.text);
         break;
     }
   }
@@ -118,6 +134,16 @@ export class SttHandler {
       return;
     }
     this.buffer.texts.push(text);
+  }
+
+  private handleSessionActiveResult(text: string): void {
+    if (!this.sessionActiveCharacterId) return;
+    if (this.isShutdownWord(text, this.sessionActiveCharacterId)) {
+      this.onShutdownWord?.(this.sessionActiveCharacterId);
+      this.exitSessionActive();
+      return;
+    }
+    this.onTextReady?.(this.sessionActiveCharacterId, text);
   }
 
   private isShutdownWord(text: string, characterId: string): boolean {
