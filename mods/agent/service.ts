@@ -60,6 +60,11 @@ async function registerCharacter(
     characterId,
   });
 
+  if (settings.wakeWords.length === 0) {
+    console.warn(`[agent] No wake words configured for "${characterId}". Wake word detection will not work.`);
+    emitAgentError(characterId, "No wake words configured. Open Agent Settings to add wake words.");
+  }
+
   if (settings.listeningMode === "ptt" && settings.pttKey !== null) {
     const resolved = resolvePttKeycodes(settings.pttKey);
     if (resolved !== null) {
@@ -212,7 +217,12 @@ async function startStt(): Promise<void> {
   try {
     await sttHandler.start();
   } catch (err) {
-    console.warn("[agent] STT session start failed:", err);
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[agent] STT session start failed:", message);
+    signals.send("agent:error", {
+      characterId: "*",
+      message: `STT startup failed: ${message}`,
+    });
   }
 }
 
@@ -231,16 +241,30 @@ async function shutdown(): Promise<void> {
   sttHandler.close();
 }
 
-const apiKey = await loadApiKey();
+async function main(): Promise<void> {
+  let apiKey: string;
+  try {
+    apiKey = await loadApiKey();
+  } catch {
+    console.error("[agent] API key not configured. Agent service will not start.");
+    signals.send("agent:error", {
+      characterId: "*",
+      message: "API key not configured. Open Agent Settings to set your Anthropic API key.",
+    });
+    return;
+  }
 
-await startKeyboardHook();
-await startStt();
-await registerAllCharacters(apiKey);
+  await startKeyboardHook();
+  await startStt();
+  await registerAllCharacters(apiKey);
 
-setupWakeWordHandler();
-setupShutdownWordHandler();
+  setupWakeWordHandler();
+  setupShutdownWordHandler();
 
-await rpc.serve({ methods: buildRpcMethods() });
+  await rpc.serve({ methods: buildRpcMethods() });
+}
+
+main().catch((err) => console.error("[agent] Fatal startup error:", err));
 
 process.once("SIGTERM", () => {
   shutdown().catch((err) => console.error("[agent] Shutdown error:", err));
