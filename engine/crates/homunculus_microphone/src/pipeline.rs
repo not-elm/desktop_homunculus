@@ -19,7 +19,9 @@ pub fn spawn_pipeline(
     session: SharedSttSession,
     started_at: Instant,
 ) -> Result<(), PipelineError> {
-    let vad_config = VadConfig::from_config();
+    let config = homunculus_utils::config::HomunculusConfig::load().unwrap_or_default();
+    let vad_config = VadConfig::from_stt_config(&config.stt);
+    let no_speech_discard_threshold = config.stt.no_speech_threshold.unwrap_or(0.8);
 
     let CaptureHandle {
         audio_rx,
@@ -40,7 +42,14 @@ pub fn spawn_pipeline(
     )?;
 
     inference::spawn_inference_thread(
-        ctx, chunk_rx, language, cancel, event_tx, session, started_at,
+        ctx,
+        chunk_rx,
+        language,
+        cancel,
+        event_tx,
+        session,
+        started_at,
+        no_speech_discard_threshold,
     );
 
     Ok(())
