@@ -45,13 +45,21 @@ export function useAgentSettings() {
   const [characterId, setCharacterId] = useState<string | null>(null);
 
   useEffect(() => {
-    const id = resolveCharacterId();
-    setCharacterId(id);
-    loadAllPreferences(id).then(({ settings: s, apiKey: k }) => {
+    let cancelled = false;
+    (async () => {
+      const character = await Webview.current()?.linkedCharacter();
+      if (cancelled) return;
+      const id = character?.characterId ?? null;
+      setCharacterId(id);
+      const { settings: s, apiKey: k } = await loadAllPreferences(id);
+      if (cancelled) return;
       setSettings(s);
       setApiKey(k);
       setLoading(false);
-    });
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const saveSettings = useCallback(async () => {
@@ -95,10 +103,6 @@ export function useAgentSettings() {
     saveApiKey,
     handleClose,
   };
-}
-
-function resolveCharacterId(): string | null {
-  return new URLSearchParams(location.search).get("linkedCharacter");
 }
 
 async function loadAllPreferences(
