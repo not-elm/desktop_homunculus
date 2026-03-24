@@ -33,11 +33,19 @@ export function KeyCaptureField({
     (e: React.KeyboardEvent<HTMLDivElement>) => {
       if (!capturing) return;
       e.preventDefault();
-      if (isModifierCode(e.code)) {
-        onChange({ code: e.code, modifiers: [] });
-      } else {
-        onChange({ code: e.code, modifiers: collectModifiers(e) });
-      }
+      if (isModifierCode(e.code)) return;
+      onChange({ code: e.code, modifiers: collectModifiers(e) });
+      setCapturing(false);
+    },
+    [capturing, onChange],
+  );
+
+  const handleKeyUp = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (!capturing) return;
+      if (!isModifierCode(e.code)) return;
+      if (hasActiveModifiers(e)) return;
+      onChange({ code: e.code, modifiers: [] });
       setCapturing(false);
     },
     [capturing, onChange],
@@ -61,6 +69,7 @@ export function KeyCaptureField({
         tabIndex={0}
         onClick={startCapture}
         onKeyDown={handleKeyDown}
+        onKeyUp={handleKeyUp}
         onBlur={handleBlur}
         role="button"
         aria-label={capturing ? "Press a key to capture" : `Current key: ${displayName}. Click to change.`}
@@ -88,6 +97,10 @@ const MODIFIER_CODES = new Set([
 
 function isModifierCode(code: string): boolean {
   return MODIFIER_CODES.has(code);
+}
+
+function hasActiveModifiers(e: React.KeyboardEvent): boolean {
+  return e.ctrlKey || e.shiftKey || e.altKey || e.metaKey;
 }
 
 function collectModifiers(e: React.KeyboardEvent): string[] {
