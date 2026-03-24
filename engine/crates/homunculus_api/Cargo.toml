@@ -27,7 +27,7 @@ thiserror = { workspace = true }
 axum = { workspace = true, optional = true }
 bevy_cef = { workspace = true }
 bevy_tweening = "0.15"
-homunculus_utils = { workspace = true, optional = true }
+homunculus_utils = { workspace = true }
 tokio = { workspace = true }
 tokio-util = { workspace = true }
 utoipa = { workspace = true, optional = true }
@@ -38,7 +38,7 @@ develop = []
 axum = ["dep:axum"]
 cuda = ["homunculus_microphone/cuda"]
 metal = ["homunculus_microphone/metal"]
-openapi = ["dep:utoipa", "dep:homunculus_utils", "homunculus_utils/openapi", "homunculus_core/openapi", "homunculus_audio/openapi", "homunculus_microphone/openapi"]
+openapi = ["dep:utoipa", "homunculus_utils/openapi", "homunculus_core/openapi", "homunculus_audio/openapi", "homunculus_microphone/openapi"]
 
 [lints]
 workspace = true
