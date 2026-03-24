@@ -5,37 +5,8 @@ import { mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import path from "node:path";
 import type { PermissionBridge } from "./permission-bridge.ts";
-import type { InputAdapter } from "./input-adapter.ts";
-
-export type SessionState = "idle" | "running" | "interrupted" | "recovering";
-
-export interface PttKey {
-  code: string;
-  modifiers: string[];
-}
-
-export interface AgentSettings {
-  wakeWords: string[];
-  shutdownWords: string[];
-  greetingPhrases: string[];
-  completionPhrases: string[];
-  errorPhrases: string[];
-  workingDirectories: { paths: string[]; default: number };
-  listeningMode: "ptt" | "always-on";
-  pttKey: PttKey | null;
-  approvalPhrases: string[];
-  denyPhrases: string[];
-  allowList: string[];
-  disallowedTools: string[];
-  model: string;
-}
-
-/** Persona type from @hmcs/sdk vrm.ts */
-interface Persona {
-  name: string;
-  profile: string;
-  personality?: string | null;
-}
+import type { InputAdapter, SDKUserMessage } from "./input-adapter.ts";
+import type { SessionState, AgentSettings, Persona } from "./types.ts";
 
 /** Opaque handle to a running `query()` call from the Claude Agent SDK. */
 type QueryHandle = AsyncIterable<any> & {
@@ -54,6 +25,7 @@ export class SessionManager {
   private sessionId: string | null = null;
   private currentQuery: QueryHandle | null = null;
   private adapter: InputAdapter | null = null;
+  private adapterAbort: AbortController | null = null;
   private readonly permissionBridge: PermissionBridge;
   private readonly apiKey: string;
 
@@ -74,30 +46,20 @@ export class SessionManager {
   }
 
   async start(persona: Persona, adapter: InputAdapter): Promise<void> {
-    if (this.state === "running") return;
-    this.state = "running";
+    if (this.state !== "idle") return;
+    this.state = "listening";
     this.adapter = adapter;
+    this.adapterAbort = new AbortController();
 
     const workDir = this.resolveWorkingDirectory();
     mkdirSync(workDir, { recursive: true });
 
-    const savedSessionId = await preferences.load<string>(
-      `${SESSION_PREF_PREFIX}${this.characterId}`,
-    );
-
-    this.beginQuery(persona, workDir, savedSessionId);
-    this.emitStatus("idle");
+    const savedSessionId = await loadSavedSession(this.characterId);
+    this.beginQuery(persona, workDir, savedSessionId, this.adapterAbort.signal);
+    this.emitStatus("listening");
     this.processMessages().catch((err) =>
       this.handleSessionErrorWithRetry(err, persona, workDir, savedSessionId),
     );
-  }
-
-  async interrupt(): Promise<void> {
-    if (this.state !== "running" || !this.currentQuery) return;
-    this.state = "interrupted";
-    this.permissionBridge.cancelAll();
-    await this.currentQuery.interrupt?.();
-    this.state = "running";
   }
 
   async stop(): Promise<void> {
@@ -105,6 +67,7 @@ export class SessionManager {
       this.state = "idle";
       return;
     }
+    this.adapterAbort?.abort();
     this.permissionBridge.cancelAll();
     await this.drainWithDeadline();
     this.teardown();
@@ -114,9 +77,12 @@ export class SessionManager {
     persona: Persona,
     workDir: string,
     savedSessionId: string | null | undefined,
+    adapterSignal: AbortSignal,
   ): void {
+    const rawGenerator = this.adapter!.createAsyncGenerator(adapterSignal);
+    const wrappedPrompt = this.wrapWithUserSignals(rawGenerator);
     this.currentQuery = query({
-      prompt: this.adapter!.createAsyncGenerator(),
+      prompt: wrappedPrompt,
       options: buildQueryOptions({
         characterId: this.characterId,
         persona,
@@ -128,6 +94,17 @@ export class SessionManager {
         apiKey: this.apiKey,
       }),
     });
+  }
+
+  private async *wrapWithUserSignals(
+    generator: AsyncGenerator<SDKUserMessage>,
+  ): AsyncGenerator<SDKUserMessage> {
+    for await (const msg of generator) {
+      this.emitUserLog(msg.message.content);
+      this.emitStatus("thinking");
+      yield msg;
+      this.emitStatus("listening");
+    }
   }
 
   private async processMessages(): Promise<void> {
@@ -158,10 +135,7 @@ export class SessionManager {
   private handleSystemMessage(msg: any): void {
     if (msg.session_id) {
       this.sessionId = msg.session_id;
-      preferences.save(
-        `${SESSION_PREF_PREFIX}${this.characterId}`,
-        this.sessionId,
-      );
+      saveSession(this.characterId, this.sessionId);
     }
   }
 
@@ -182,10 +156,7 @@ export class SessionManager {
   private handleResultMessage(msg: any): void {
     this.emitStatus("idle");
     if (this.sessionId) {
-      preferences.save(
-        `${SESSION_PREF_PREFIX}${this.characterId}`,
-        this.sessionId,
-      );
+      saveSession(this.characterId, this.sessionId);
     }
     const phrases =
       msg.subtype === "success"
@@ -205,7 +176,7 @@ export class SessionManager {
       preferences.save(`${SESSION_PREF_PREFIX}${this.characterId}`, null);
       this.currentQuery?.close?.();
       this.currentQuery = null;
-      this.beginQuery(persona, workDir, null);
+      this.beginQuery(persona, workDir, null, this.adapterAbort!.signal);
       this.processMessages().catch((retryErr) =>
         this.handleSessionError(retryErr),
       );
@@ -223,8 +194,8 @@ export class SessionManager {
   }
 
   private handleProcessComplete(): void {
-    this.adapter?.close();
     this.adapter = null;
+    this.adapterAbort = null;
     this.state = "idle";
     this.currentQuery = null;
   }
@@ -237,10 +208,11 @@ export class SessionManager {
   }
 
   private teardown(): void {
-    this.adapter?.close();
+    this.adapterAbort?.abort();
     this.currentQuery?.close?.();
     this.currentQuery = null;
     this.adapter = null;
+    this.adapterAbort = null;
     this.state = "idle";
   }
 
@@ -250,6 +222,15 @@ export class SessionManager {
       dirs.paths[dirs.default] ??
       path.join(homedir(), ".homunculus", "agents", this.characterId)
     );
+  }
+
+  private emitUserLog(text: string): void {
+    signals.send("agent:log", {
+      characterId: this.characterId,
+      type: "user",
+      message: text,
+      timestamp: Date.now(),
+    });
   }
 
   private emitStatus(state: string): void {
@@ -276,6 +257,19 @@ export class SessionManager {
       })
       .catch(() => this.emitLog("warning", "TTS unavailable"));
   }
+}
+
+async function loadSavedSession(
+  characterId: string,
+): Promise<string | null | undefined> {
+  return preferences.load<string>(`${SESSION_PREF_PREFIX}${characterId}`);
+}
+
+function saveSession(
+  characterId: string,
+  sessionId: string | null,
+): void {
+  preferences.save(`${SESSION_PREF_PREFIX}${characterId}`, sessionId);
 }
 
 interface QueryContext {
@@ -323,7 +317,6 @@ function buildReadOnlyHook(): Record<string, unknown> {
 function buildCharacterPrompt(persona: Persona): string {
   return [
     `あなたは「${persona.name}」です。`,
-    persona.profile && `プロフィール: ${persona.profile}`,
     persona.personality && `性格: ${persona.personality}`,
     `Desktop Homunculusのキャラクターとして、ユーザーの指示に従って作業を行ってください。`,
     `応答は簡潔にしてください。`,
