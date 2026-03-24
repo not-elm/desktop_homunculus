@@ -39,7 +39,8 @@ export type LogType =
   | "done"
   | "error"
   | "warning"
-  | "user";
+  | "user"
+  | "interrupt";
 
 /** Activity log entry. */
 export interface LogEntry {
@@ -66,3 +67,5 @@ export const DEFAULT_SETTINGS: AgentSettings = {
   disallowedTools: [],
   model: "",
 };
+
+export type { AgentEvent, AgentResponse, AIAgentExecuter } from "./ai-agent-executer.ts";
