@@ -4,6 +4,7 @@ interface StatusBarProps {
   state: AgentState;
   elapsedMs: number;
   isRecording?: boolean;
+  onInterrupt?: () => void;
   onToggleCollapse: () => void;
 }
 
@@ -15,11 +16,14 @@ const STATE_LABELS: Record<AgentState, string> = {
   listening: "Listening",
 };
 
-export function StatusBar({ state, elapsedMs, isRecording, onToggleCollapse }: StatusBarProps) {
+export function StatusBar({ state, elapsedMs, isRecording, onInterrupt, onToggleCollapse }: StatusBarProps) {
+  const interruptible = state === "thinking" || state === "executing";
+
   return (
     <div className="hud-statusbar">
       <StatusIndicator state={state} isRecording={isRecording} />
       <StatusLabel state={state} isRecording={isRecording} />
+      {interruptible && onInterrupt && <InterruptButton onClick={onInterrupt} />}
       <div className="hud-statusbar-spacer" />
       <ElapsedTimer elapsedMs={elapsedMs} active={state !== "idle"} />
       <button className="hud-toggle-btn" onClick={onToggleCollapse} title="Collapse">
@@ -40,6 +44,22 @@ function RecordingIndicator() {
       <MicIcon />
       <StaggeredDots />
     </span>
+  );
+}
+
+function InterruptButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button className="hud-interrupt-btn" onClick={onClick} title="Interrupt">
+      <StopIcon />
+    </button>
+  );
+}
+
+function StopIcon() {
+  return (
+    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="2" y="2" width="6" height="6" rx="1" fill="currentColor" />
+    </svg>
   );
 }
 

@@ -4,7 +4,7 @@ import { rpc } from "@hmcs/sdk/rpc";
 
 export type AgentState = "idle" | "thinking" | "executing" | "waiting" | "listening";
 
-export type LogType = "read" | "edit" | "run" | "tool" | "assistant" | "done" | "error" | "warning" | "user";
+export type LogType = "read" | "edit" | "run" | "tool" | "assistant" | "done" | "error" | "warning" | "user" | "interrupt";
 
 export interface LogEntry {
   id: string;
@@ -38,6 +38,7 @@ export interface AgentSessionActions {
   approvePermission: (requestId: string) => Promise<void>;
   denyPermission: (requestId: string) => Promise<void>;
   answerQuestion: (requestId: string, answers: Record<string, string>) => Promise<void>;
+  interruptSession: () => Promise<void>;
 }
 
 export function useAgentSession(): AgentSessionState & AgentSessionActions {
@@ -116,6 +117,10 @@ export function useAgentSession(): AgentSessionState & AgentSessionActions {
     setQuestion(null);
   }, []);
 
+  const interruptSession = useCallback(async () => {
+    if (characterId) await callInterruptSession(characterId);
+  }, [characterId]);
+
   return {
     state,
     elapsedMs,
@@ -127,6 +132,7 @@ export function useAgentSession(): AgentSessionState & AgentSessionActions {
     approvePermission,
     denyPermission,
     answerQuestion,
+    interruptSession,
   };
 }
 
@@ -225,5 +231,13 @@ async function callAnswerQuestion(requestId: string, answers: Record<string, str
     modName: "@hmcs/agent",
     method: "answer-question",
     body: { requestId, answers },
+  });
+}
+
+async function callInterruptSession(characterId: string): Promise<void> {
+  await rpc.call({
+    modName: "@hmcs/agent",
+    method: "interrupt-session",
+    body: { characterId },
   });
 }

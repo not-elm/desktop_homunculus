@@ -90,6 +90,7 @@ function ExpandedPanel({ session, onCollapse }: ExpandedPanelProps) {
         state={session.state}
         elapsedMs={session.elapsedMs}
         isRecording={session.isRecording}
+        onInterrupt={session.interruptSession}
         onToggleCollapse={onCollapse}
       />
       <ActivityLog entries={session.entries} />

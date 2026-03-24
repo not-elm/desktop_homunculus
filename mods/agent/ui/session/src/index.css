@@ -387,6 +387,31 @@ body {
   color: oklch(0.72 0.14 192 / 0.9);
 }
 
+/* ━━ Interrupt Button ━━ */
+
+.hud-interrupt-btn {
+  background: oklch(0.75 0.15 55 / 0.12);
+  border: 1px solid oklch(0.75 0.15 55 / 0.3);
+  border-radius: 4px;
+  padding: 2px 4px;
+  cursor: pointer;
+  color: oklch(0.75 0.15 55);
+  display: flex;
+  align-items: center;
+  transition: background 150ms ease, border-color 150ms ease;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.hud-interrupt-btn:hover {
+  background: oklch(0.75 0.15 55 / 0.25);
+  border-color: oklch(0.75 0.15 55 / 0.55);
+}
+
+.hud-interrupt-btn:active {
+  transform: scale(0.92);
+}
+
 /* ━━ Status Bar (panel header) ━━ */
 
 .hud-statusbar {
@@ -484,6 +509,10 @@ body {
 
 .hud-log-text--error {
   color: oklch(0.65 0.2 20 / 0.9);
+}
+
+.hud-log-text--interrupt {
+  color: oklch(0.75 0.15 55 / 0.9);
 }
 
 .hud-log-text--user {

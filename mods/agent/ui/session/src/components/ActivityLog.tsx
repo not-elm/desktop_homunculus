@@ -78,6 +78,7 @@ function textClass(type: LogType): string {
     case "assistant": return "hud-log-text--assistant";
     case "done": return "hud-log-text--done";
     case "error": return "hud-log-text--error";
+    case "interrupt": return "hud-log-text--interrupt";
     default: return "";
   }
 }
@@ -92,6 +93,7 @@ function LogIcon({ type }: { type: LogType }) {
     case "done": return <DoneIcon />;
     case "error": return <ErrorIcon />;
     case "warning": return <WarningIcon />;
+    case "interrupt": return <InterruptIcon />;
     case "user": return <MicIcon />;
     default: return <DotIcon />;
   }
@@ -170,6 +172,15 @@ function WarningIcon() {
     <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
       <path d="M5 2L8.5 8H1.5L5 2Z" stroke="oklch(0.78 0.16 75)" strokeWidth="1.1" strokeLinejoin="round" />
       <path d="M5 4.5V6M5 7V7.5" stroke="oklch(0.78 0.16 75)" strokeWidth="1.1" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function InterruptIcon() {
+  return (
+    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+      <circle cx="5" cy="5" r="4" stroke="oklch(0.75 0.15 55)" strokeWidth="1.1" />
+      <rect x="3.5" y="3.5" width="3" height="3" rx="0.5" fill="oklch(0.75 0.15 55)" />
     </svg>
   );
 }
