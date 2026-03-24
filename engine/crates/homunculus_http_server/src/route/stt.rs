@@ -10,8 +10,8 @@ use axum::response::{IntoResponse, Response};
 use bevy::tasks::futures_lite::StreamExt;
 use homunculus_api::stt::{ModelDownloadResponse, ModelInfo, RecognizeOptions, SttApi, SttError};
 use homunculus_microphone::SttModelSize;
-use homunculus_microphone::model::model_path;
 use homunculus_microphone::SttResult;
+use homunculus_microphone::model::model_path;
 use serde::{Deserialize, Serialize};
 use tokio_stream::wrappers::ReceiverStream;
 use utoipa::ToSchema;
@@ -347,9 +347,10 @@ fn error_to_status_code(err: &SttError) -> (StatusCode, &'static str) {
         SttError::ModelLoadFailed(_) => (StatusCode::INTERNAL_SERVER_ERROR, "model_load_failed"),
         SttError::PipelineFailed(_) => (StatusCode::INTERNAL_SERVER_ERROR, "pipeline_failed"),
         SttError::NoMicrophone => (StatusCode::SERVICE_UNAVAILABLE, "no_microphone"),
-        SttError::MicrophonePermissionDenied => {
-            (StatusCode::SERVICE_UNAVAILABLE, "microphone_permission_denied")
-        }
+        SttError::MicrophonePermissionDenied => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            "microphone_permission_denied",
+        ),
         SttError::DownloadFailed(_) => (StatusCode::INTERNAL_SERVER_ERROR, "download_failed"),
         SttError::DownloadCancelled => (StatusCode::CONFLICT, "download_cancelled"),
         SttError::InvalidLanguage(_) => (StatusCode::UNPROCESSABLE_ENTITY, "invalid_language"),

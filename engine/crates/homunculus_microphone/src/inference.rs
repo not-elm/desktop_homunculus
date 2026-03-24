@@ -85,7 +85,7 @@ fn run_inference_with_recovery(
     ctx: &WhisperContext,
     config: InferenceConfig,
 ) -> Result<(String, String), InferenceError> {
-    let max_audio_ctx = ctx.model_n_audio_ctx() as i32;
+    let max_audio_ctx = ctx.model_n_audio_ctx();
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         run_inference(
             state,
