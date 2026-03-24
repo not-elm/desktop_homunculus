@@ -1,11 +1,3 @@
-import { useCallback, useEffect, useRef } from "react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@hmcs/ui";
 import type { AgentSettings } from "../hooks/useAgentSettings";
 import { PhraseListField } from "./PhraseListField";
 import { DirectoryListField } from "./DirectoryListField";
@@ -17,32 +9,6 @@ interface GeneralTabProps {
 }
 
 export function GeneralTab({ settings, onSettingsChange }: GeneralTabProps) {
-  const pttFieldRef = useRef<HTMLDivElement>(null);
-  const shouldScrollRef = useRef(false);
-
-  const scrollToPttField = useCallback(() => {
-    if (!shouldScrollRef.current) return;
-    shouldScrollRef.current = false;
-    pttFieldRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  }, []);
-
-  useEffect(() => {
-    if (settings.listeningMode === "ptt") {
-      shouldScrollRef.current = true;
-      // Fallback for prefers-reduced-motion where animation is disabled
-      const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-      if (mq.matches) {
-        requestAnimationFrame(() => scrollToPttField());
-      }
-    }
-  }, [settings.listeningMode, scrollToPttField]);
-
-  function handlePttAnimationEnd(e: React.AnimationEvent<HTMLDivElement>) {
-    if (e.animationName === "ptt-reveal" && e.target === e.currentTarget) {
-      scrollToPttField();
-    }
-  }
-
   function update<K extends keyof AgentSettings>(
     key: K,
     value: AgentSettings[K],
@@ -50,11 +16,11 @@ export function GeneralTab({ settings, onSettingsChange }: GeneralTabProps) {
     onSettingsChange({ ...settings, [key]: value });
   }
 
-  function addPhrase(key: keyof Pick<AgentSettings, "wakeWords" | "shutdownWords" | "greetingPhrases" | "completionPhrases" | "errorPhrases">, phrase: string) {
+  function addPhrase(key: keyof Pick<AgentSettings, "greetingPhrases" | "completionPhrases" | "errorPhrases">, phrase: string) {
     update(key, [...settings[key], phrase]);
   }
 
-  function removePhrase(key: keyof Pick<AgentSettings, "wakeWords" | "shutdownWords" | "greetingPhrases" | "completionPhrases" | "errorPhrases">, index: number) {
+  function removePhrase(key: keyof Pick<AgentSettings, "greetingPhrases" | "completionPhrases" | "errorPhrases">, index: number) {
     update(key, settings[key].filter((_, i) => i !== index));
   }
 
@@ -79,57 +45,29 @@ export function GeneralTab({ settings, onSettingsChange }: GeneralTabProps) {
 
   return (
     <div className="settings-section">
-      <div className="agent-listening-group">
-        <label className="settings-label">
-          Listening Mode
-          <Select
-            value={settings.listeningMode}
-            onValueChange={(v) =>
-              update("listeningMode", v as "ptt" | "always-on")
-            }
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="always-on">Always On</SelectItem>
-              <SelectItem value="ptt">Push to Talk</SelectItem>
-            </SelectContent>
-          </Select>
-        </label>
-
-        {settings.listeningMode === "ptt" && (
-          <div
-            ref={pttFieldRef}
-            className="agent-listening-ptt"
-            onAnimationEnd={handlePttAnimationEnd}
-          >
-            <KeyCaptureField
-              label="Push-to-Talk Key"
-              description="Press the key to capture it"
-              pttKey={settings.pttKey}
-              onChange={(key) => update("pttKey", key)}
-            />
-          </div>
-        )}
-      </div>
+      <KeyCaptureField
+        label="Push-to-Talk Key"
+        description="Press the key to capture it"
+        pttKey={settings.pttKey}
+        onChange={(key) => update("pttKey", key)}
+      />
 
       <div className="agent-divider" />
 
       <PhraseListField
-        label="Wake Words"
-        description="Phrases that activate the agent"
-        phrases={settings.wakeWords}
-        onAdd={(p) => addPhrase("wakeWords", p)}
-        onRemove={(i) => removePhrase("wakeWords", i)}
+        label="Approval Phrases"
+        description="Phrases to approve agent actions"
+        phrases={settings.approvalPhrases}
+        onAdd={(p) => update("approvalPhrases", [...settings.approvalPhrases, p])}
+        onRemove={(i) => update("approvalPhrases", settings.approvalPhrases.filter((_, idx) => idx !== i))}
       />
 
       <PhraseListField
-        label="Shutdown Words"
-        description="Phrases that deactivate the agent"
-        phrases={settings.shutdownWords}
-        onAdd={(p) => addPhrase("shutdownWords", p)}
-        onRemove={(i) => removePhrase("shutdownWords", i)}
+        label="Deny Phrases"
+        description="Phrases to deny agent actions"
+        phrases={settings.denyPhrases}
+        onAdd={(p) => update("denyPhrases", [...settings.denyPhrases, p])}
+        onRemove={(i) => update("denyPhrases", settings.denyPhrases.filter((_, idx) => idx !== i))}
       />
 
       <div className="agent-divider" />

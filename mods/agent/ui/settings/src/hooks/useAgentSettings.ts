@@ -12,13 +12,10 @@ export interface PttKey {
 }
 
 export interface AgentSettings {
-  wakeWords: string[];
-  shutdownWords: string[];
   greetingPhrases: string[];
   completionPhrases: string[];
   errorPhrases: string[];
   workingDirectories: WorkingDirectories;
-  listeningMode: "ptt" | "always-on";
   pttKey: PttKey | null;
   approvalPhrases: string[];
   denyPhrases: string[];
@@ -28,13 +25,10 @@ export interface AgentSettings {
 }
 
 const DEFAULT_SETTINGS: AgentSettings = {
-  wakeWords: [],
-  shutdownWords: [],
   greetingPhrases: [],
   completionPhrases: [],
   errorPhrases: [],
   workingDirectories: { paths: [], default: 0 },
-  listeningMode: "always-on",
   pttKey: null,
   approvalPhrases: [],
   denyPhrases: [],
