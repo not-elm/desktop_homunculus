@@ -1,5 +1,4 @@
 import { signals } from "@hmcs/sdk";
-import type { SttHandler } from "./stt-handler.ts";
 
 interface PendingRequest {
   resolve: (result: PermissionResult | QuestionResult) => void;
@@ -19,28 +18,41 @@ interface QuestionResult {
   message?: string;
 }
 
+/** Handler function signature for Claude Agent SDK's canUseTool callback. */
+export type PermissionHandler = (
+  toolName: string,
+  input: unknown,
+  options?: { toolUseID?: string; suggestions?: unknown[] },
+) => Promise<PermissionResult | QuestionResult>;
+
 const DEFAULT_TIMEOUT_MS = 60_000;
 
+/**
+ * Bridges Claude Agent SDK permission/question requests to UI signals and
+ * external resolution channels (e.g. voice approval via PttAdapter).
+ *
+ * Has zero STT dependency — voice approval is wired externally by service.ts
+ * through the `onPermissionWaitStart` / `onPermissionResolved` callbacks and
+ * the `resolveExternally()` method.
+ */
 export class PermissionBridge {
   private pending = new Map<string, PendingRequest>();
-  private sttHandler: SttHandler;
   private timeoutMs = DEFAULT_TIMEOUT_MS;
 
-  constructor(sttHandler: SttHandler) {
-    this.sttHandler = sttHandler;
-  }
+  /** Called when a permission request starts waiting. */
+  onPermissionWaitStart?: (requestId: string) => void;
 
-  createHandler(characterId: string) {
-    return async (
-      toolName: string,
-      input: unknown,
-      options?: { toolUseID?: string; suggestions?: unknown[] },
-    ) => {
+  /** Called when a permission request is resolved by any channel. */
+  onPermissionResolved?: () => void;
+
+  /** Create the `canUseTool` callback for Claude Agent SDK. */
+  createHandler(characterId: string): PermissionHandler {
+    return async (toolName, input, options) => {
       const requestId = options?.toolUseID ?? crypto.randomUUID();
       if (toolName === "AskUserQuestion") {
-        return this.handleAskUserQuestion(characterId, input, requestId);
+        return this.handleQuestion(characterId, input, requestId);
       }
-      return this.handlePermissionRequest(
+      return this.handlePermission(
         characterId,
         toolName,
         input,
@@ -50,15 +62,15 @@ export class PermissionBridge {
     };
   }
 
+  /** Resolve a permission request from the UI (RPC call). */
   resolvePermission(requestId: string, approved: boolean): void {
     const pending = this.pending.get(requestId);
     if (!pending) return;
-    clearTimeout(pending.timeout);
-    this.pending.delete(requestId);
-    this.sttHandler.exitPermissionWait();
+    this.finalizePending(requestId);
     pending.resolve(permissionResult(approved, pending.suggestions));
   }
 
+  /** Resolve a question request from the UI (RPC call). */
   resolveQuestion(requestId: string, answers: Record<string, string>): void {
     const pending = this.pending.get(requestId);
     if (!pending) return;
@@ -67,18 +79,25 @@ export class PermissionBridge {
     pending.resolve({ behavior: "allow", updatedInput: { answers } });
   }
 
+  /** Resolve a permission request from an external source (e.g. voice). */
+  resolveExternally(requestId: string, approved: boolean): void {
+    const pending = this.pending.get(requestId);
+    if (!pending) return;
+    this.finalizePending(requestId);
+    const message = approved ? undefined : "Denied by voice";
+    pending.resolve(permissionResult(approved, pending.suggestions, message));
+  }
+
+  /** Cancel all pending requests (called on session stop). */
   cancelAll(): void {
     for (const [, pending] of this.pending) {
       clearTimeout(pending.timeout);
       pending.resolve({ behavior: "deny", message: "Session interrupted" });
     }
     this.pending.clear();
-    if (this.sttHandler.getState() === "permission_wait") {
-      this.sttHandler.exitPermissionWait();
-    }
   }
 
-  private async handlePermissionRequest(
+  private async handlePermission(
     characterId: string,
     toolName: string,
     input: unknown,
@@ -86,51 +105,35 @@ export class PermissionBridge {
     suggestions?: unknown[],
   ): Promise<PermissionResult> {
     signalPermissionRequest(characterId, requestId, toolName, input);
-    const voicePromise = this.sttHandler.enterPermissionWait();
-    return Promise.race([
-      this.createPermissionUiPromise(requestId, suggestions),
-      this.wrapVoicePromise(requestId, voicePromise),
-    ]);
+    this.onPermissionWaitStart?.(requestId);
+    return this.awaitResolution(requestId, suggestions);
   }
 
-  private createPermissionUiPromise(
-    requestId: string,
-    suggestions?: unknown[],
-  ): Promise<PermissionResult> {
-    return new Promise((resolve) => {
-      const timeout = setTimeout(() => {
-        this.pending.delete(requestId);
-        this.sttHandler.exitPermissionWait();
-        resolve({ behavior: "deny", message: "Permission request timed out" });
-      }, this.timeoutMs);
-      this.pending.set(requestId, { resolve, timeout, suggestions });
-    });
-  }
-
-  private async wrapVoicePromise(
-    requestId: string,
-    voicePromise: Promise<boolean>,
-  ): Promise<PermissionResult> {
-    const approved = await voicePromise;
-    const pending = this.pending.get(requestId);
-    if (pending) {
-      clearTimeout(pending.timeout);
-      this.pending.delete(requestId);
-    }
-    return permissionResult(
-      approved,
-      pending?.suggestions,
-      approved ? undefined : "Denied by voice",
-    );
-  }
-
-  private async handleAskUserQuestion(
+  private async handleQuestion(
     characterId: string,
     input: unknown,
     requestId: string,
   ): Promise<QuestionResult> {
     const questions = extractQuestions(input);
     signals.send("agent:question", { characterId, requestId, questions });
+    return this.awaitQuestionResolution(requestId);
+  }
+
+  private awaitResolution(
+    requestId: string,
+    suggestions?: unknown[],
+  ): Promise<PermissionResult> {
+    return new Promise((resolve) => {
+      const timeout = setTimeout(() => {
+        this.pending.delete(requestId);
+        this.onPermissionResolved?.();
+        resolve({ behavior: "deny", message: "Permission request timed out" });
+      }, this.timeoutMs);
+      this.pending.set(requestId, { resolve, timeout, suggestions });
+    });
+  }
+
+  private awaitQuestionResolution(requestId: string): Promise<QuestionResult> {
     return new Promise((resolve) => {
       const timeout = setTimeout(() => {
         this.pending.delete(requestId);
@@ -138,6 +141,14 @@ export class PermissionBridge {
       }, this.timeoutMs);
       this.pending.set(requestId, { resolve, timeout });
     });
+  }
+
+  private finalizePending(requestId: string): void {
+    const pending = this.pending.get(requestId);
+    if (!pending) return;
+    clearTimeout(pending.timeout);
+    this.pending.delete(requestId);
+    this.onPermissionResolved?.();
   }
 }
 
