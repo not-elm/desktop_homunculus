@@ -295,10 +295,7 @@ fn mods_router() -> OpenApiRouter<HttpState> {
 
 fn stt_router() -> OpenApiRouter<HttpState> {
     OpenApiRouter::new()
-        .routes(routes!(stt::start))
-        .routes(routes!(stt::stop))
-        .routes(routes!(stt::status))
-        .routes(routes!(stt::stream))
+        .routes(routes!(stt::recognize))
         .routes(routes!(stt::download_model))
         .routes(routes!(stt::cancel_download))
         .routes(routes!(stt::download_model_stream))
@@ -793,30 +790,6 @@ mod tests {
             router,
             request,
             vec![],
-        ));
-    }
-
-    #[test]
-    fn test_stt_status() {
-        let (mut app, router) = test_app();
-        let req = Request::get("/stt/status").body(Body::empty()).unwrap();
-        block_on(assert_response(
-            &mut app,
-            router,
-            req,
-            serde_json::json!({"state": "idle"}),
-        ));
-    }
-
-    #[test]
-    fn test_stt_stop_idempotent() {
-        let (mut app, router) = test_app();
-        let req = Request::post("/stt/stop").body(Body::empty()).unwrap();
-        block_on(assert_response(
-            &mut app,
-            router,
-            req,
-            serde_json::json!({"state": "idle"}),
         ));
     }
 
