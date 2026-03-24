@@ -33,6 +33,12 @@ pub enum InferenceError {
     CreateState(String),
     #[error("Whisper inference failed: {0}")]
     Full(String),
+    #[error("Audio below energy threshold")]
+    BelowEnergyThreshold,
+    #[error("Empty recognition result")]
+    EmptyResult,
+    #[error("Whisper inference panicked")]
+    WhisperPanic,
 }
 
 /// Model download errors.

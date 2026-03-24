@@ -1,15 +1,9 @@
-use std::any::Any;
 use std::borrow::Cow;
-use std::sync::Arc;
 use std::time::Instant;
 
-use async_broadcast::Sender;
-use tokio_util::sync::CancellationToken;
 use whisper_rs::{FullParams, SamplingStrategy, WhisperContext, WhisperState};
 
 use crate::error::InferenceError;
-use crate::session::{SharedSttSession, SttEvent};
-use crate::vad::ChunkEnvelope;
 
 /// Configurable thresholds for the inference pipeline.
 #[derive(Clone, Copy, Debug)]
@@ -20,241 +14,93 @@ pub struct InferenceConfig {
     pub inference_energy_threshold: f32,
 }
 
-/// Thread 3: spawn the Whisper inference thread via `tokio::task::spawn_blocking`.
+impl InferenceConfig {
+    /// Create from application config with defaults.
+    pub fn from_stt_config(stt: &homunculus_utils::config::SttConfig) -> Self {
+        Self {
+            no_speech_discard_threshold: stt.no_speech_threshold.unwrap_or(0.8),
+            inference_energy_threshold: stt.inference_energy_threshold.unwrap_or(0.02),
+        }
+    }
+}
+
+/// Result of a single speech recognition.
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct SttResult {
+    /// The recognized text.
+    pub text: String,
+    /// Timestamp offset from request start (seconds, f64).
+    pub timestamp: f64,
+    /// Detected or specified language code.
+    pub language: String,
+}
+
+/// Perform one-shot Whisper inference on a speech chunk.
 ///
-/// A monitoring task awaits the blocking handle so that if the thread panics
-/// beyond `catch_unwind`, the session transitions to `Error` state instead of
-/// remaining stuck in `Listening`.
-#[allow(clippy::too_many_arguments)]
-pub fn spawn_inference_thread(
-    ctx: Arc<WhisperContext>,
-    chunk_rx: crossbeam_channel::Receiver<ChunkEnvelope>,
-    language: String,
-    cancel: CancellationToken,
-    event_tx: Sender<SttEvent>,
-    session: SharedSttSession,
-    started_at: Instant,
-    config: InferenceConfig,
-) {
-    let handle = tokio::task::spawn_blocking(move || {
-        inference_loop(
-            &ctx, &chunk_rx, &language, &cancel, &event_tx, started_at, config,
-        );
-        event_tx.try_broadcast(SttEvent::Stopped).ok();
-    });
-
-    tokio::spawn(async move {
-        if let Err(join_err) = handle.await {
-            tracing::error!("inference thread panicked: {join_err}");
-            let mut session = session.0.lock().await;
-            session.fail(
-                "inference_panic".into(),
-                format!("Inference thread panicked: {join_err}"),
-            );
-        }
-    });
-}
-
-#[allow(clippy::too_many_arguments)]
-fn inference_loop(
+/// Creates a `WhisperState`, runs inference with confidence gating,
+/// and returns the recognized text. Intended for `tokio::task::spawn_blocking`.
+pub fn whisper_infer(
     ctx: &WhisperContext,
-    chunk_rx: &crossbeam_channel::Receiver<ChunkEnvelope>,
+    samples: &[f32],
     language: &str,
-    cancel: &CancellationToken,
-    event_tx: &Sender<SttEvent>,
     started_at: Instant,
     config: InferenceConfig,
-) {
-    log_gpu_backend();
+) -> Result<SttResult, InferenceError> {
+    check_energy_gate(samples, config.inference_energy_threshold)?;
+    let mut state = create_whisper_state(ctx)?;
+    let (text, detected_lang) =
+        run_inference_with_recovery(&mut state, samples, language, ctx, config)?;
+    Ok(SttResult {
+        text,
+        timestamp: started_at.elapsed().as_secs_f64(),
+        language: detected_lang,
+    })
+}
 
-    let max_audio_ctx = ctx.model_n_audio_ctx();
-    tracing::info!(
-        "Inference: n_threads={}, model_n_audio_ctx={max_audio_ctx}",
-        optimal_n_threads()
-    );
-
-    let mut prev_seq: Option<u64> = None;
-    let mut state = match ctx.create_state() {
-        Ok(state) => state,
-        Err(e) => {
-            tracing::error!("failed to create initial whisper state: {e}");
-            return;
-        }
-    };
-
-    loop {
-        if cancel.is_cancelled() {
-            break;
-        }
-
-        let envelope = match receive_chunk(chunk_rx, &mut prev_seq, max_audio_ctx) {
-            ReceiveResult::Chunk(envelope) => envelope,
-            ReceiveResult::Timeout => continue,
-            ReceiveResult::Disconnected => break,
-        };
-
-        let chunk_rms = crate::vad::rms_energy(&envelope.samples);
-        if chunk_rms < config.inference_energy_threshold {
-            tracing::info!(
-                "Inference: skipping chunk seq={} — RMS energy {chunk_rms:.4} below \
-                 inference threshold {}",
-                envelope.seq,
-                config.inference_energy_threshold,
-            );
-            continue;
-        }
-
-        let result = execute_inference(
-            &mut state,
-            &envelope,
-            language,
-            max_audio_ctx,
-            config.no_speech_discard_threshold,
+/// Reject chunks whose RMS energy is below the threshold.
+fn check_energy_gate(samples: &[f32], threshold: f32) -> Result<(), InferenceError> {
+    let rms = crate::vad::rms_energy(samples);
+    if rms < threshold {
+        tracing::debug!(
+            "Inference: skipping chunk — RMS energy {rms:.4} below threshold {threshold}"
         );
-
-        if result.is_err() {
-            match recover_whisper_state(ctx) {
-                Some(new_state) => state = new_state,
-                None => break,
-            }
-        }
-
-        handle_inference_result(result, started_at, event_tx);
+        return Err(InferenceError::BelowEnergyThreshold);
     }
+    Ok(())
 }
 
-fn log_gpu_backend() {
-    #[cfg(feature = "cuda")]
-    tracing::info!("Inference: CUDA GPU acceleration enabled");
-    #[cfg(feature = "metal")]
-    tracing::info!("Inference: Metal GPU acceleration enabled");
-    #[cfg(not(any(feature = "cuda", feature = "metal")))]
-    tracing::info!("Inference: CPU-only mode (no GPU features enabled)");
+/// Create a fresh WhisperState from the context.
+fn create_whisper_state(ctx: &WhisperContext) -> Result<WhisperState, InferenceError> {
+    ctx.create_state()
+        .map_err(|e| InferenceError::CreateState(e.to_string()))
 }
 
-enum ReceiveResult {
-    Chunk(ChunkEnvelope),
-    Timeout,
-    Disconnected,
-}
-
-/// Wait for the next chunk, log sequence gaps and queue latency.
-fn receive_chunk(
-    chunk_rx: &crossbeam_channel::Receiver<ChunkEnvelope>,
-    prev_seq: &mut Option<u64>,
-    max_audio_ctx: i32,
-) -> ReceiveResult {
-    match chunk_rx.recv_timeout(std::time::Duration::from_millis(100)) {
-        Ok(envelope) => {
-            log_chunk_reception(&envelope, prev_seq, max_audio_ctx);
-            *prev_seq = Some(envelope.seq);
-            ReceiveResult::Chunk(envelope)
-        }
-        Err(crossbeam_channel::RecvTimeoutError::Timeout) => ReceiveResult::Timeout,
-        Err(crossbeam_channel::RecvTimeoutError::Disconnected) => ReceiveResult::Disconnected,
-    }
-}
-
-fn log_chunk_reception(envelope: &ChunkEnvelope, prev_seq: &Option<u64>, max_audio_ctx: i32) {
-    let latency_ms = envelope.enqueued_at.elapsed().as_millis();
-    let len = envelope.samples.len();
-    let secs = len as f64 / 16000.0;
-
-    if let Some(prev) = prev_seq {
-        let gap = envelope.seq.saturating_sub(*prev);
-        if gap > 1 {
-            tracing::warn!(
-                "Inference: seq gap detected: prev={prev}, current={}, dropped={}",
-                envelope.seq,
-                gap - 1
-            );
-        }
-    }
-
-    let audio_ctx = compute_audio_ctx(len.max(MIN_INFERENCE_SAMPLES), max_audio_ctx);
-    tracing::info!(
-        "Inference: received chunk seq={}, {len} samples ({secs:.1}s), \
-         queue_latency={latency_ms}ms, audio_ctx={audio_ctx}",
-        envelope.seq
-    );
-}
-
-/// Run inference with panic recovery, returning the raw catch_unwind result.
-fn execute_inference(
+/// Run inference inside `catch_unwind` to recover from whisper.cpp panics.
+fn run_inference_with_recovery(
     state: &mut WhisperState,
-    envelope: &ChunkEnvelope,
+    samples: &[f32],
     language: &str,
-    max_audio_ctx: i32,
-    no_speech_discard_threshold: f32,
-) -> Result<Result<Option<(String, String)>, InferenceError>, Box<dyn Any + Send>> {
-    let inference_start = Instant::now();
+    ctx: &WhisperContext,
+    config: InferenceConfig,
+) -> Result<(String, String), InferenceError> {
+    let max_audio_ctx = ctx.model_n_audio_ctx() as i32;
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         run_inference(
             state,
-            &envelope.samples,
+            samples,
             language,
             max_audio_ctx,
-            no_speech_discard_threshold,
+            config.no_speech_discard_threshold,
         )
     }));
-    let inference_ms = inference_start.elapsed().as_millis();
-    tracing::info!("Inference: completed in {inference_ms}ms");
-    result
-}
-
-/// Recreate the whisper state after a panic, returning `None` on fatal failure.
-fn recover_whisper_state(ctx: &WhisperContext) -> Option<WhisperState> {
-    tracing::warn!("Inference: panic detected, recreating whisper state");
-    let recreate_start = Instant::now();
-    match ctx.create_state() {
-        Ok(s) => {
-            let recreate_ms = recreate_start.elapsed().as_millis();
-            tracing::info!("Inference: state recreated in {recreate_ms}ms");
-            Some(s)
-        }
-        Err(e) => {
-            tracing::error!("failed to recreate whisper state after panic: {e}");
-            None
-        }
-    }
-}
-
-fn handle_inference_result(
-    result: Result<Result<Option<(String, String)>, InferenceError>, Box<dyn Any + Send>>,
-    started_at: Instant,
-    event_tx: &Sender<SttEvent>,
-) {
     match result {
-        Ok(Ok(Some((text, detected_lang)))) => {
-            tracing::info!("Inference: result text={text:?}, lang={detected_lang}");
-            let timestamp = started_at.elapsed().as_secs_f64();
-            event_tx
-                .try_broadcast(SttEvent::Result {
-                    text,
-                    timestamp,
-                    language: detected_lang,
-                })
-                .ok();
-        }
-        Ok(Ok(None)) => {
-            tracing::debug!("Inference: empty result (no segments)");
-        }
-        Ok(Err(e)) => {
-            tracing::error!("whisper inference error: {e}");
-        }
-        Err(ref panic_info) => {
-            let msg = extract_panic_message(panic_info);
-            tracing::error!("whisper inference panic: {msg}");
-        }
+        Ok(Ok(Some(pair))) => Ok(pair),
+        Ok(Ok(None)) => Err(InferenceError::EmptyResult),
+        Ok(Err(e)) => Err(e),
+        Err(_) => Err(InferenceError::WhisperPanic),
     }
-}
-
-fn extract_panic_message(panic_info: &Box<dyn Any + Send>) -> &str {
-    panic_info
-        .downcast_ref::<String>()
-        .map(|s| s.as_str())
-        .or_else(|| panic_info.downcast_ref::<&str>().copied())
-        .unwrap_or("unknown panic")
 }
 
 /// Minimum samples (1 second at 16kHz) to expand timestamp search space.
@@ -374,7 +220,7 @@ fn should_discard_low_confidence(state: &WhisperState, no_speech_discard_thresho
 
         let avg_logprobs = sum_logprobs / content_token_count as f32;
 
-        tracing::info!(
+        tracing::debug!(
             "Inference: segment {i} confidence: avg_logprobs={avg_logprobs:.3}, \
              no_speech_prob={no_speech_prob:.3}, content_tokens={content_token_count}"
         );
@@ -386,12 +232,12 @@ fn should_discard_low_confidence(state: &WhisperState, no_speech_discard_thresho
             AVG_LOGPROBS_THRESHOLD,
         ) {
             if no_speech_prob > no_speech_discard_threshold {
-                tracing::info!(
+                tracing::debug!(
                     "Inference: discarding segment {i} — no_speech_prob={no_speech_prob:.3} \
                      exceeds unconditional threshold {no_speech_discard_threshold}"
                 );
             } else {
-                tracing::info!(
+                tracing::debug!(
                     "Inference: discarding segment {i} — avg_logprobs={avg_logprobs:.3} < \
                      {AVG_LOGPROBS_THRESHOLD} AND no_speech_prob={no_speech_prob:.3} > \
                      {NO_SPEECH_PROB_THRESHOLD}"
@@ -422,6 +268,10 @@ fn create_whisper_params<'a>(
     params.set_no_context(true);
     params.set_temperature_inc(0.2);
     params.set_audio_ctx(compute_audio_ctx(sample_count, max_audio_ctx));
+    params.set_print_progress(false);
+    params.set_print_realtime(false);
+    params.set_print_timestamps(false);
+    params.set_print_special(false);
 
     if language == "auto" {
         params.set_language(None);
