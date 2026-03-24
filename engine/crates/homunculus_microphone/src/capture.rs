@@ -4,7 +4,6 @@ use std::sync::{Arc, mpsc};
 use tokio_util::sync::CancellationToken;
 
 use crate::error::CaptureError;
-use crate::session::SharedSttSession;
 
 /// Thread 1 -> Thread 2 PCM frame channel capacity.
 pub const AUDIO_CHANNEL_CAPACITY: usize = 512;
@@ -27,7 +26,6 @@ pub fn get_input_device() -> Result<cpal::Device, CaptureError> {
 pub fn spawn_capture_thread(
     device: cpal::Device,
     cancel: CancellationToken,
-    session: SharedSttSession,
 ) -> Result<CaptureHandle, CaptureError> {
     let (config, needs_resample) = select_input_config(&device)?;
     let sample_rate = config.sample_rate.0;
@@ -36,7 +34,7 @@ pub fn spawn_capture_thread(
 
     std::thread::Builder::new()
         .name("stt-capture".into())
-        .spawn(move || capture_loop(device, config, tx, channels, session, cancel))
+        .spawn(move || capture_loop(device, config, tx, channels, cancel))
         .map_err(|e| CaptureError::ThreadSpawn(e.to_string()))?;
 
     Ok(CaptureHandle {
@@ -51,7 +49,6 @@ fn capture_loop(
     config: cpal::StreamConfig,
     tx: mpsc::SyncSender<Vec<f32>>,
     channels: usize,
-    session: SharedSttSession,
     cancel: CancellationToken,
 ) {
     tracing::info!(
@@ -59,21 +56,17 @@ fn capture_loop(
         config
     );
 
-    let error_session = session.clone();
-    let stream = match build_input_stream_adaptive(&device, &config, tx, channels, move |err| {
-        tracing::error!("cpal error: {err}");
-        report_device_error(&error_session, format!("Audio device error: {err}"));
+    let stream = match build_input_stream_adaptive(&device, &config, tx, channels, |err| {
+        tracing::error!("Audio device error: {err}");
     }) {
         Ok(s) => s,
         Err(e) => {
             tracing::error!("Failed to build input stream: {e}");
-            report_device_error(&session, format!("Failed to build input stream: {e}"));
             return;
         }
     };
     if let Err(e) = stream.play() {
         tracing::error!("Failed to start input stream: {e}");
-        report_device_error(&session, format!("Failed to start input stream: {e}"));
         return;
     }
     wait_for_cancellation(&cancel);
@@ -197,14 +190,6 @@ fn try_send_audio(tx: &mpsc::SyncSender<Vec<f32>>, mono: Vec<f32>) {
         Err(mpsc::TrySendError::Disconnected(_)) => {
             tracing::warn!("capture→VAD channel disconnected");
         }
-    }
-}
-
-fn report_device_error(session: &SharedSttSession, message: String) {
-    if let Ok(mut session) = session.0.try_lock() {
-        session.fail("device_lost".into(), message);
-    } else {
-        tracing::warn!("Could not report device error (lock contended): {message}");
     }
 }
 
