@@ -55,6 +55,21 @@ async function registerAllCharacters(apiKey: string): Promise<void> {
   }
 }
 
+/** Lazy registration: register on first use if not already registered. */
+async function ensureCharacterRegistered(
+  characterId: string,
+): Promise<SessionManager> {
+  let manager = sessionManagers.get(characterId);
+  if (!manager) {
+    await registerCharacter(characterId, currentApiKey!);
+    manager = sessionManagers.get(characterId);
+  }
+  if (!manager) {
+    throw new Error(`Character "${characterId}" could not be registered.`);
+  }
+  return manager;
+}
+
 async function openSessionUi(characterId: string): Promise<void> {
   const vrm = await Vrm.findByName(characterId);
   await Webview.open({
@@ -92,12 +107,8 @@ async function startSession(characterId: string): Promise<void> {
     );
   }
 
-  const manager = sessionManagers.get(characterId);
-  if (!manager) {
-    throw new Error(
-      `Character "${characterId}" is not registered. Try restarting the application.`,
-    );
-  }
+  const manager = await ensureCharacterRegistered(characterId);
+
 
   const settings = manager.settings;
   const resolvedKey = resolveSessionPttKey(characterId, settings);
