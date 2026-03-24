@@ -15,7 +15,7 @@ export function ActivityLog({ entries }: ActivityLogProps) {
   return (
     <div className="hud-log">
       {entries.length === 0 ? (
-        <div className="hud-log-empty">Awaiting activity</div>
+        <div className="hud-log-empty">Ready to listen...</div>
       ) : (
         entries.map((entry) => <LogRow key={entry.id} entry={entry} />)
       )}

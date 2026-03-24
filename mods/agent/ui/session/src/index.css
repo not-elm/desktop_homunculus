@@ -253,6 +253,34 @@ body {
   animation: holo-scanline 5s linear infinite;
 }
 
+/* ━━ Recording Indicator ━━ */
+
+.hud-recording-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.hud-staggered-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.hud-staggered-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: oklch(0.75 0.18 30);
+  animation: dot-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes dot-pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
 /* ━━ Status Dot ━━ */
 
 .hud-status-dot {
@@ -281,6 +309,11 @@ body {
   animation: status-pulse 0.8s ease-in-out infinite;
 }
 
+.hud-status-dot--listening {
+  background: oklch(0.75 0.18 30);
+  animation: status-pulse 1s ease-in-out infinite;
+}
+
 /* ━━ Status Label ━━ */
 
 .hud-status-label {
@@ -305,6 +338,10 @@ body {
 
 .hud-status-label--waiting {
   color: oklch(0.65 0.2 15);
+}
+
+.hud-status-label--listening {
+  color: oklch(0.75 0.18 30);
 }
 
 /* ━━ Timer ━━ */
@@ -602,8 +639,14 @@ body {
   .hud-status-dot--thinking,
   .hud-status-dot--executing,
   .hud-status-dot--waiting,
+  .hud-status-dot--listening,
   .hud-notification-dot {
     animation: none;
+  }
+
+  .hud-staggered-dot {
+    animation: none;
+    opacity: 1;
   }
 
   .hud-dialog {
