@@ -1,14 +1,10 @@
-/** Message shape expected by the Claude Agent SDK's streaming prompt input. */
+/** A single user message yielded by an input adapter. */
 export interface SDKUserMessage {
   type: "user";
   message: { role: "user"; content: string };
 }
 
-/**
- * Adapter that bridges an input source (PTT keyboard events or always-on STT)
- * into an AsyncGenerator of SDKUserMessage for the Claude Agent SDK.
- */
+/** Contract for input adapters that feed user messages into the Claude Agent SDK. */
 export interface InputAdapter {
-  createAsyncGenerator(): AsyncGenerator<SDKUserMessage>;
-  close(): void;
+  createAsyncGenerator(signal: AbortSignal): AsyncGenerator<SDKUserMessage>;
 }
