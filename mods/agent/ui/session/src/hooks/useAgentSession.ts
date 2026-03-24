@@ -2,9 +2,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { signals, Webview } from "@hmcs/sdk";
 import { rpc } from "@hmcs/sdk/rpc";
 
-export type AgentState = "idle" | "thinking" | "executing" | "waiting";
+export type AgentState = "idle" | "thinking" | "executing" | "waiting" | "listening";
 
-export type LogType = "read" | "edit" | "run" | "tool" | "assistant" | "done" | "error" | "warning";
+export type LogType = "read" | "edit" | "run" | "tool" | "assistant" | "done" | "error" | "warning" | "user";
 
 export interface LogEntry {
   id: string;
@@ -31,6 +31,7 @@ export interface AgentSessionState {
   permission: PendingPermission | null;
   question: PendingQuestion | null;
   hasPending: boolean;
+  isRecording: boolean;
 }
 
 export interface AgentSessionActions {
@@ -59,6 +60,7 @@ export function useAgentSession(): AgentSessionState & AgentSessionActions {
   const [permission, setPermission] = useState<PendingPermission | null>(null);
   const [question, setQuestion] = useState<PendingQuestion | null>(null);
   const [elapsedMs, setElapsedMs] = useState(0);
+  const [isRecording, setIsRecording] = useState(false);
   const startTimeRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -84,6 +86,7 @@ export function useAgentSession(): AgentSessionState & AgentSessionActions {
         setQuestion(q);
         setState("waiting");
       }),
+      subscribeToRecording(characterId, setIsRecording),
     ];
     return () => sources.forEach((s) => s.close());
   }, [characterId]);
@@ -120,6 +123,7 @@ export function useAgentSession(): AgentSessionState & AgentSessionActions {
     permission,
     question,
     hasPending: permission !== null || question !== null,
+    isRecording,
     approvePermission,
     denyPermission,
     answerQuestion,
@@ -189,6 +193,20 @@ function subscribeToQuestion(
           requestId: payload.requestId,
           questions: payload.questions,
         });
+      }
+    },
+  );
+}
+
+function subscribeToRecording(
+  id: string,
+  onRecording: (recording: boolean) => void,
+) {
+  return signals.stream<{ characterId: string; recording: boolean }>(
+    "agent:recording",
+    (payload) => {
+      if (payload.characterId === id) {
+        onRecording(payload.recording);
       }
     },
   );
