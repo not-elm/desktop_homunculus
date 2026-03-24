@@ -3,6 +3,7 @@
 
 import { rpc } from "@hmcs/sdk/rpc";
 import { input, output } from "@hmcs/sdk/commands";
+import { signals } from "@hmcs/sdk";
 
 try {
   const vrm = await input.parseMenu();
@@ -14,5 +15,7 @@ try {
   });
   output.succeed();
 } catch (e) {
-  output.fail("START_SESSION_FAILED", (e as Error).message);
+  const message = e instanceof Error ? e.message : String(e);
+  signals.send("agent:error", { characterId: "*", message }).catch(() => {});
+  output.fail("START_SESSION_FAILED", message);
 }

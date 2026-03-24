@@ -16,6 +16,7 @@ const keyboardHook = new KeyboardHookService();
 const permissionBridge = new PermissionBridge();
 
 const sessionManagers = new Map<string, SessionManager>();
+let currentApiKey: string | null = null;
 
 async function loadApiKey(): Promise<string> {
   const apiKey = await preferences.load<string>("agent::api-key");
@@ -85,12 +86,26 @@ function emitAgentError(characterId: string, message: string): void {
 }
 
 async function startSession(characterId: string): Promise<void> {
+  if (!currentApiKey) {
+    throw new Error(
+      "API key not configured. Open Agent Settings to set your Anthropic API key.",
+    );
+  }
+
   const manager = sessionManagers.get(characterId);
-  if (!manager) return;
+  if (!manager) {
+    throw new Error(
+      `Character "${characterId}" is not registered. Try restarting the application.`,
+    );
+  }
 
   const settings = manager.settings;
   const resolvedKey = resolveSessionPttKey(characterId, settings);
-  if (!resolvedKey) return;
+  if (!resolvedKey) {
+    throw new Error(
+      "PTT key not configured. Open Agent Settings to set a push-to-talk key.",
+    );
+  }
 
   const vrm = await Vrm.findByName(characterId);
   const sdkPersona = await vrm.persona();
@@ -213,23 +228,18 @@ async function shutdown(): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  let apiKey: string;
   try {
-    apiKey = await loadApiKey();
+    currentApiKey = await loadApiKey();
   } catch {
-    console.error(
-      "[agent] API key not configured. Agent service will not start.",
+    console.warn(
+      "[agent] API key not configured. RPC server will start but sessions require an API key.",
     );
-    signals.send("agent:error", {
-      characterId: "*",
-      message:
-        "API key not configured. Open Agent Settings to set your Anthropic API key.",
-    });
-    return;
   }
 
   await startKeyboardHook();
-  await registerAllCharacters(apiKey);
+  if (currentApiKey) {
+    await registerAllCharacters(currentApiKey);
+  }
   await rpc.serve({ methods: buildRpcMethods() });
 }
 
