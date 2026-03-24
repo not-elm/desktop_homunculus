@@ -1,42 +1,21 @@
 import { z } from "zod";
 import { Vrm, preferences, Webview, webviewSource, signals } from "@hmcs/sdk";
 import { rpc } from "@hmcs/sdk/rpc";
-import { normalizePhrase } from "@hmcs/sdk/wake-word-matcher";
 import { KeyboardHookService } from "./lib/keyboard-hook.ts";
 import { resolvePttKeycodes } from "./lib/key-mapping.ts";
-import { SttHandler } from "./lib/stt-handler.ts";
 import { PttAdapter } from "./lib/ptt-adapter.ts";
 import { PermissionBridge } from "./lib/permission-bridge.ts";
+import { SessionManager } from "./lib/session-manager.ts";
 import {
-  SessionManager,
   type AgentSettings,
   type SessionState,
-} from "./lib/session-manager.ts";
-import { AlwaysOnAdapter } from "./lib/always-on-adapter.ts";
-import type { InputAdapter } from "./lib/input-adapter.ts";
-
-const DEFAULT_SETTINGS: AgentSettings = {
-  wakeWords: [],
-  shutdownWords: [],
-  greetingPhrases: [],
-  completionPhrases: [],
-  errorPhrases: [],
-  workingDirectories: { paths: [], default: 0 },
-  listeningMode: "always-on",
-  pttKey: null,
-  approvalPhrases: ["はい", "yes", "ok", "allow"],
-  denyPhrases: ["いいえ", "no", "deny", "cancel"],
-  allowList: [],
-  disallowedTools: [],
-  model: "",
-};
+  DEFAULT_SETTINGS,
+} from "./lib/types.ts";
 
 const keyboardHook = new KeyboardHookService();
-const sttHandler = new SttHandler();
-const permissionBridge = new PermissionBridge(sttHandler);
+const permissionBridge = new PermissionBridge();
 
 const sessionManagers = new Map<string, SessionManager>();
-const pttAdapters = new Map<string, PttAdapter>();
 
 async function loadApiKey(): Promise<string> {
   const apiKey = await preferences.load<string>("agent::api-key");
@@ -56,9 +35,9 @@ async function loadCharacterSettings(
 
 async function registerCharacter(
   characterId: string,
-  settings: AgentSettings,
   apiKey: string,
 ): Promise<void> {
+  const settings = await loadCharacterSettings(characterId);
   const sessionManager = new SessionManager(
     characterId,
     settings,
@@ -66,44 +45,12 @@ async function registerCharacter(
     apiKey,
   );
   sessionManagers.set(characterId, sessionManager);
-
-  sttHandler.registerCharacter({
-    wakeWordPhrases: settings.wakeWords.map(normalizePhrase),
-    shutdownPhrases: settings.shutdownWords.map(normalizePhrase),
-    approvalPhrases: settings.approvalPhrases.map(normalizePhrase),
-    denyPhrases: settings.denyPhrases.map(normalizePhrase),
-    characterId,
-  });
-
-  if (settings.wakeWords.length === 0) {
-    console.warn(
-      `[agent] No wake words configured for "${characterId}". Wake word detection will not work.`,
-    );
-    emitAgentError(
-      characterId,
-      "No wake words configured. Open Agent Settings to add wake words.",
-    );
-  }
-
-  if (settings.listeningMode === "ptt" && settings.pttKey !== null) {
-    const resolved = resolvePttKeycodes(settings.pttKey);
-    if (resolved !== null) {
-      const adapter = new PttAdapter(
-        keyboardHook,
-        sttHandler,
-        resolved,
-        characterId,
-      );
-      pttAdapters.set(characterId, adapter);
-    }
-  }
 }
 
 async function registerAllCharacters(apiKey: string): Promise<void> {
   const snapshots = await Vrm.findAllDetailed();
   for (const snapshot of snapshots) {
-    const settings = await loadCharacterSettings(snapshot.name);
-    await registerCharacter(snapshot.name, settings, apiKey);
+    await registerCharacter(snapshot.name, apiKey);
   }
 }
 
@@ -132,16 +79,6 @@ async function speakGreeting(
     .catch(() => console.warn("[agent] TTS unavailable for greeting"));
 }
 
-function resolveInputAdapter(
-  characterId: string,
-  settings: AgentSettings,
-): InputAdapter | null {
-  if (settings.listeningMode === "ptt") {
-    return pttAdapters.get(characterId) ?? null;
-  }
-  return new AlwaysOnAdapter(sttHandler, characterId);
-}
-
 function emitAgentError(characterId: string, message: string): void {
   console.error(`[agent] ${characterId}: ${message}`);
   signals.send("agent:error", { characterId, message });
@@ -151,44 +88,62 @@ async function startSession(characterId: string): Promise<void> {
   const manager = sessionManagers.get(characterId);
   if (!manager) return;
 
-  const adapter = resolveInputAdapter(characterId, manager.settings);
-  if (!adapter) {
-    emitAgentError(
-      characterId,
-      "PTT key not configured. Open Agent Settings to set a push-to-talk key.",
-    );
-    return;
-  }
+  const settings = manager.settings;
+  const resolvedKey = resolveSessionPttKey(characterId, settings);
+  if (!resolvedKey) return;
 
   const vrm = await Vrm.findByName(characterId);
   const sdkPersona = await vrm.persona();
   const persona = { name: characterId, ...sdkPersona };
 
   await openSessionUi(characterId);
-  await speakGreeting(characterId, manager.settings.greetingPhrases);
-  await manager.start(persona, adapter);
+  await speakGreeting(characterId, settings.greetingPhrases);
+
+  const pttAdapter = new PttAdapter(keyboardHook, resolvedKey, characterId);
+  wireVoiceApproval(pttAdapter, permissionBridge, settings);
+  await manager.start(persona, pttAdapter);
 }
 
-function setupWakeWordHandler(): void {
-  sttHandler.onWakeWord = (characterId) => {
-    startSession(characterId).catch((err) =>
-      console.error(`[agent] Failed to start session for ${characterId}:`, err),
+function resolveSessionPttKey(
+  characterId: string,
+  settings: AgentSettings,
+): ReturnType<typeof resolvePttKeycodes> {
+  if (!settings.pttKey) {
+    emitAgentError(
+      characterId,
+      "PTT key not configured. Open Agent Settings to set a push-to-talk key.",
     );
+    return null;
+  }
+  const resolved = resolvePttKeycodes(settings.pttKey);
+  if (!resolved) {
+    emitAgentError(characterId, "PTT key could not be resolved.");
+    return null;
+  }
+  return resolved;
+}
+
+function wireVoiceApproval(
+  pttAdapter: PttAdapter,
+  bridge: PermissionBridge,
+  settings: AgentSettings,
+): void {
+  bridge.onPermissionWaitStart = (requestId: string) => {
+    pttAdapter.setMode("permission_wait", (text) => {
+      const approved = matchApprovalPhrase(text, settings);
+      bridge.resolveExternally(requestId, approved);
+    });
+  };
+  bridge.onPermissionResolved = () => {
+    pttAdapter.setMode("normal");
   };
 }
 
-function setupShutdownWordHandler(): void {
-  sttHandler.onShutdownWord = (characterId) => {
-    const manager = sessionManagers.get(characterId);
-    manager
-      ?.stop()
-      .catch((err) =>
-        console.error(
-          `[agent] Failed to stop session for ${characterId}:`,
-          err,
-        ),
-      );
-  };
+function matchApprovalPhrase(text: string, settings: AgentSettings): boolean {
+  const lower = text.toLowerCase();
+  return settings.approvalPhrases.some((phrase) =>
+    lower.includes(phrase.toLowerCase()),
+  );
 }
 
 function buildRpcMethods() {
@@ -203,7 +158,10 @@ function buildRpcMethods() {
     }),
     "answer-question": rpc.method({
       description: "Answer a pending question request",
-      input: z.object({ requestId: z.string(), answers: z.record(z.string()) }),
+      input: z.object({
+        requestId: z.string(),
+        answers: z.record(z.string()),
+      }),
       handler: async ({ requestId, answers }) => {
         permissionBridge.resolveQuestion(requestId, answers);
         return { success: true as const };
@@ -242,38 +200,16 @@ function buildRpcMethods() {
 async function startKeyboardHook(): Promise<void> {
   const started = keyboardHook.start();
   if (!started) {
-    console.warn(
-      "[agent] Keyboard hook failed to start — falling back to wake-word-only mode",
-    );
-  }
-}
-
-async function startStt(): Promise<void> {
-  try {
-    await sttHandler.start();
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error("[agent] STT session start failed:", message);
-    signals.send("agent:error", {
-      characterId: "*",
-      message: `STT startup failed: ${message}`,
-    });
+    console.warn("[agent] Keyboard hook failed to start.");
   }
 }
 
 async function shutdown(): Promise<void> {
   console.log("[agent] Shutting down...");
-
   for (const manager of sessionManagers.values()) {
-    await manager.stop().catch(() => { });
+    await manager.stop().catch(() => {});
   }
-
-  for (const adapter of pttAdapters.values()) {
-    adapter.forceFlush();
-  }
-
   keyboardHook.stop();
-  sttHandler.close();
 }
 
 async function main(): Promise<void> {
@@ -293,12 +229,7 @@ async function main(): Promise<void> {
   }
 
   await startKeyboardHook();
-  await startStt();
   await registerAllCharacters(apiKey);
-
-  setupWakeWordHandler();
-  setupShutdownWordHandler();
-
   await rpc.serve({ methods: buildRpcMethods() });
 }
 
