@@ -269,6 +269,22 @@ paths:
                   format: float
         '500':
           description: Conversion failed
+  /dialog/pick-folder:
+    post:
+      tags:
+      - dialog
+      summary: Open a native OS directory picker dialog.
+      description: |-
+        Returns the selected directory path. If the user cancels the dialog,
+        `path` will be `null`.
+      operationId: pick_folder
+      responses:
+        '200':
+          description: Folder selection result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PickFolderResponse'
   /displays:
     get:
       tags:
@@ -819,6 +835,128 @@ paths:
       responses:
         '200':
           description: Signal sent
+  /stt/languages:
+    get:
+      tags:
+      - stt
+      summary: List supported STT languages.
+      operationId: list_languages
+      responses:
+        '200':
+          description: List of supported language codes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+  /stt/models:
+    get:
+      tags:
+      - stt
+      summary: List downloaded STT models.
+      operationId: list_models
+      responses:
+        '200':
+          description: List of available models
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ModelInfo'
+  /stt/models/download:
+    post:
+      tags:
+      - stt
+      summary: Download an STT model.
+      operationId: download_model
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ModelDownloadRequest'
+        required: true
+      responses:
+        '200':
+          description: Download result
+        '422':
+          description: Invalid model size
+        '500':
+          description: Download failed
+    delete:
+      tags:
+      - stt
+      summary: Cancel an in-progress model download.
+      description: |-
+        With `modelSize` query param: cancel a specific download.
+        Without: cancel all in-progress downloads.
+      operationId: cancel_download
+      parameters:
+      - name: modelSize
+        in: query
+        description: Model size to cancel. Omit to cancel all.
+        required: false
+        schema:
+          $ref: '#/components/schemas/SttModelSize'
+      responses:
+        '200':
+          description: Download(s) cancelled
+        '404':
+          description: No active download for the specified model
+  /stt/models/download/stream:
+    post:
+      tags:
+      - stt
+      summary: Download an STT model with NDJSON progress streaming.
+      description: |-
+        Streams progress events as NDJSON lines. If the model already exists,
+        returns a single `complete` event. Returns 409 if a download is already in progress.
+      operationId: download_model_stream
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ModelDownloadRequest'
+        required: true
+      responses:
+        '200':
+          description: NDJSON stream of download progress
+          content:
+            application/x-ndjson: {}
+        '409':
+          description: Download already in progress
+        '422':
+          description: Invalid model size
+  /stt/recognize:
+    post:
+      tags:
+      - stt
+      summary: Recognize a single sentence from the microphone.
+      description: |-
+        Starts a cpal capture -> VAD -> Whisper pipeline, returns the first
+        recognized sentence, then destroys the pipeline. Long-polls until
+        speech is detected or timeout (60s).
+      operationId: recognize
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecognizeOptions'
+        required: true
+      responses:
+        '200':
+          description: Recognized text
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SttResult'
+        '408':
+          description: Timeout — no speech detected
+        '422':
+          description: Invalid language or model size
+        '503':
+          description: Model not available or microphone error
   /vrm:
     get:
       tags:
@@ -2166,6 +2304,30 @@ components:
           type: string
         text:
           type: string
+    ModelDownloadRequest:
+      type: object
+      description: Request body for model download.
+      required:
+      - modelSize
+      properties:
+        modelSize:
+          $ref: '#/components/schemas/SttModelSize'
+    ModelInfo:
+      type: object
+      description: Model info for the list endpoint.
+      required:
+      - modelSize
+      - sizeBytes
+      - path
+      properties:
+        modelSize:
+          $ref: '#/components/schemas/SttModelSize'
+        path:
+          type: string
+        sizeBytes:
+          type: integer
+          format: int64
+          minimum: 0
     MoveTarget:
       oneOf:
       - type: object
@@ -2279,6 +2441,15 @@ components:
           - 'null'
         profile:
           type: string
+    PickFolderResponse:
+      type: object
+      description: Response from the folder picker dialog.
+      properties:
+        path:
+          type:
+          - string
+          - 'null'
+          description: The selected directory path, or `null` if the user cancelled.
     PlatformInfo:
       type: object
       required:
@@ -2339,6 +2510,14 @@ components:
       properties:
         state:
           type: object
+    RecognizeOptions:
+      type: object
+      description: Request options for a stateless recognition call.
+      properties:
+        language:
+          type: string
+        modelSize:
+          $ref: '#/components/schemas/SttModelSize'
     RegisterRequest:
       type: object
       description: Body for `POST /rpc/register`.
@@ -2590,6 +2769,34 @@ components:
         properties:
           asset:
             $ref: '#/components/schemas/AssetId'
+    SttModelSize:
+      type: string
+      description: Whisper model size variants.
+      enum:
+      - tiny
+      - base
+      - small
+      - medium
+      - large-v3-turbo
+      - large-v3
+    SttResult:
+      type: object
+      description: Result of a single speech recognition.
+      required:
+      - text
+      - timestamp
+      - language
+      properties:
+        language:
+          type: string
+          description: Detected or specified language code.
+        text:
+          type: string
+          description: The recognized text.
+        timestamp:
+          type: number
+          format: double
+          description: Timestamp offset from request start (seconds, f64).
     TimelineBody:
       allOf:
       - type:
@@ -3049,3 +3256,7 @@ tags:
   description: Asset management
 - name: rpc
   description: MOD service RPC registration and proxy
+- name: stt
+  description: Speech-to-text
+- name: dialog
+  description: Native OS dialogs
