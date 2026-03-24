@@ -28,6 +28,7 @@ const DEFAULT_SETTINGS: AgentSettings = {
   denyPhrases: ["いいえ", "no", "deny", "cancel"],
   allowList: [],
   disallowedTools: [],
+  model: "",
 };
 
 const keyboardHook = new KeyboardHookService();
@@ -170,7 +171,6 @@ async function startSession(characterId: string): Promise<void> {
 
 function setupWakeWordHandler(): void {
   sttHandler.onWakeWord = (characterId) => {
-    console.log("++++++++++++++++++++");
     startSession(characterId).catch((err) =>
       console.error(`[agent] Failed to start session for ${characterId}:`, err),
     );

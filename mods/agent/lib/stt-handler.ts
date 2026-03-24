@@ -46,14 +46,43 @@ export class SttHandler {
   }
 
   async start(): Promise<void> {
-    const status = await stt.session.status();
-    if (status.state === "idle") {
-      await stt.session.start();
-    }
+    this.stream?.close();
     this.stream = stt.stream({
       onResult: (result) => this.handleResult(result),
-      onStopped: () => { },
+      onStopped: () => {},
     });
+
+    await this.ensureSessionStarted();
+  }
+
+  forceResetToIdle(): void {
+    this.state = "idle";
+    this.sessionActiveCharacterId = null;
+    this.permissionResolver = null;
+  }
+
+  private async ensureSessionStarted(): Promise<void> {
+    const MAX_RETRIES = 10;
+    const RETRY_DELAY_MS = 1_000;
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        const status = await stt.session.status();
+        if (status.state === "idle" || status.state === "error") {
+          await stt.session.start();
+        }
+        return;
+      } catch {
+        if (attempt < MAX_RETRIES) {
+          console.warn(
+            `[stt-handler] STT session start attempt ${attempt}/${MAX_RETRIES} failed, retrying...`,
+          );
+          await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
+        }
+      }
+    }
+    console.error(
+      "[stt-handler] Failed to connect to STT server after all retries",
+    );
   }
 
   close(): void {

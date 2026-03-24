@@ -1,4 +1,11 @@
 import { useState } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@hmcs/ui";
 import type { AgentSettings } from "../hooks/useAgentSettings";
 import { PhraseListField } from "./PhraseListField";
 
@@ -79,6 +86,29 @@ export function ClaudeCodeTab({
           </button>
         </div>
       </div>
+
+      <div className="agent-divider" />
+
+      <label className="settings-label">
+        Model
+        <span className="settings-label-desc">
+          Claude model for the agent to use
+        </span>
+        <Select
+          value={settings.model || "default"}
+          onValueChange={(v) => update("model", v === "default" ? "" : v)}
+        >
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="default">Default</SelectItem>
+            <SelectItem value="claude-sonnet-4-6">Claude Sonnet 4.6</SelectItem>
+            <SelectItem value="claude-opus-4-6">Claude Opus 4.6</SelectItem>
+            <SelectItem value="claude-haiku-4-5">Claude Haiku 4.5</SelectItem>
+          </SelectContent>
+        </Select>
+      </label>
 
       <div className="agent-divider" />
 

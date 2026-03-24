@@ -24,6 +24,7 @@ export interface AgentSettings {
   denyPhrases: string[];
   allowList: string[];
   disallowedTools: string[];
+  model: string;
 }
 
 const DEFAULT_SETTINGS: AgentSettings = {
@@ -39,6 +40,7 @@ const DEFAULT_SETTINGS: AgentSettings = {
   denyPhrases: [],
   allowList: [],
   disallowedTools: [],
+  model: "",
 };
 
 export function useAgentSettings() {

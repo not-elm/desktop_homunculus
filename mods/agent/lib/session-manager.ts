@@ -27,6 +27,7 @@ export interface AgentSettings {
   denyPhrases: string[];
   allowList: string[];
   disallowedTools: string[];
+  model: string;
 }
 
 /** Persona type from @hmcs/sdk vrm.ts */
@@ -74,6 +75,7 @@ export class SessionManager {
 
   async start(persona: Persona, adapter: InputAdapter): Promise<void> {
     if (this.state === "running") return;
+    this.state = "running";
     this.adapter = adapter;
 
     const workDir = this.resolveWorkingDirectory();
@@ -83,22 +85,11 @@ export class SessionManager {
       `${SESSION_PREF_PREFIX}${this.characterId}`,
     );
 
-    this.currentQuery = query({
-      prompt: adapter.createAsyncGenerator(),
-      options: buildQueryOptions({
-        characterId: this.characterId,
-        persona,
-        workDir,
-        savedSessionId,
-        disallowedTools: this.settings.disallowedTools,
-        permissionHandler: this.permissionBridge.createHandler(this.characterId),
-        apiKey: this.apiKey,
-      }),
-    });
-
-    this.state = "running";
+    this.beginQuery(persona, workDir, savedSessionId);
     this.emitStatus("idle");
-    this.processMessages().catch((err) => this.handleSessionError(err));
+    this.processMessages().catch((err) =>
+      this.handleSessionErrorWithRetry(err, persona, workDir, savedSessionId),
+    );
   }
 
   async interrupt(): Promise<void> {
@@ -119,12 +110,32 @@ export class SessionManager {
     this.teardown();
   }
 
+  private beginQuery(
+    persona: Persona,
+    workDir: string,
+    savedSessionId: string | null | undefined,
+  ): void {
+    this.currentQuery = query({
+      prompt: this.adapter!.createAsyncGenerator(),
+      options: buildQueryOptions({
+        characterId: this.characterId,
+        persona,
+        workDir,
+        savedSessionId,
+        disallowedTools: this.settings.disallowedTools,
+        model: this.settings.model,
+        permissionHandler: this.permissionBridge.createHandler(this.characterId),
+        apiKey: this.apiKey,
+      }),
+    });
+  }
+
   private async processMessages(): Promise<void> {
     if (!this.currentQuery) return;
     for await (const msg of this.currentQuery) {
       this.handleMessage(msg);
     }
-    this.handleProcessExit(0);
+    this.handleProcessComplete();
   }
 
   private handleMessage(msg: any): void {
@@ -164,7 +175,7 @@ export class SessionManager {
 
   private handleToolUseSummary(msg: any): void {
     this.emitStatus("executing");
-    const preview = JSON.stringify(msg.tool_input).slice(0, 100);
+    const preview = safeStringify(msg.tool_input, 100);
     this.emitLog("tool", `${msg.tool_name}: ${preview}`);
   }
 
@@ -183,16 +194,37 @@ export class SessionManager {
     this.speakRandomPhrase(phrases);
   }
 
-  private handleSessionError(err: unknown): void {
-    console.error(`[agent] Session error for ${this.characterId}:`, err);
-    this.handleProcessExit(1);
+  private handleSessionErrorWithRetry(
+    err: unknown,
+    persona: Persona,
+    workDir: string,
+    savedSessionId: string | null | undefined,
+  ): void {
+    if (savedSessionId) {
+      console.warn(`[agent] Retrying without resume for ${this.characterId}`);
+      preferences.save(`${SESSION_PREF_PREFIX}${this.characterId}`, null);
+      this.currentQuery?.close?.();
+      this.currentQuery = null;
+      this.beginQuery(persona, workDir, null);
+      this.processMessages().catch((retryErr) =>
+        this.handleSessionError(retryErr),
+      );
+      return;
+    }
+    this.handleSessionError(err);
   }
 
-  private handleProcessExit(code: number): void {
-    if (code !== 0) {
-      this.emitLog("error", `Agent process exited with code ${code}`);
-      this.speakRandomPhrase(this.settings.errorPhrases);
-    }
+  private handleSessionError(err: unknown): void {
+    const message = extractErrorMessage(err);
+    console.error(`[agent] Session error for ${this.characterId}:`, message);
+    this.emitLog("error", message);
+    this.speakRandomPhrase(this.settings.errorPhrases);
+    this.teardown();
+  }
+
+  private handleProcessComplete(): void {
+    this.adapter?.close();
+    this.adapter = null;
     this.state = "idle";
     this.currentQuery = null;
   }
@@ -205,9 +237,9 @@ export class SessionManager {
   }
 
   private teardown(): void {
+    this.adapter?.close();
     this.currentQuery?.close?.();
     this.currentQuery = null;
-    this.adapter?.close();
     this.adapter = null;
     this.state = "idle";
   }
@@ -252,6 +284,7 @@ interface QueryContext {
   workDir: string;
   savedSessionId: string | null | undefined;
   disallowedTools: string[];
+  model: string;
   permissionHandler: ReturnType<PermissionBridge["createHandler"]>;
   apiKey: string;
 }
@@ -271,6 +304,9 @@ function buildQueryOptions(ctx: QueryContext): Record<string, unknown> {
     env: { ...process.env, NODE_OPTIONS: "", ANTHROPIC_API_KEY: ctx.apiKey },
     maxTurns: 100,
   };
+  if (ctx.model) {
+    options.model = ctx.model;
+  }
   if (ctx.savedSessionId) {
     options.resume = ctx.savedSessionId;
   }
@@ -302,4 +338,18 @@ function extractTextContent(msg: any): string {
   );
   if (!textBlocks?.length) return "";
   return textBlocks.map((b: any) => b.text).join("");
+}
+
+function extractErrorMessage(err: unknown): string {
+  if (!(err instanceof Error)) return String(err);
+  const cause = err.cause instanceof Error ? `: ${err.cause.message}` : "";
+  return `${err.message}${cause}`;
+}
+
+function safeStringify(value: unknown, maxLength: number): string {
+  try {
+    return JSON.stringify(value).slice(0, maxLength);
+  } catch {
+    return "[unserializable]";
+  }
 }

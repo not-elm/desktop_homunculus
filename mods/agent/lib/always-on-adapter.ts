@@ -56,6 +56,8 @@ export class AlwaysOnAdapter implements InputAdapter {
 
   close(): void {
     this.closed = true;
+    this.sttHandler.exitSessionActive();
+    this.sttHandler.onTextReady = null;
     this.pendingResolve?.({
       type: "user",
       message: { role: "user", content: "" },
