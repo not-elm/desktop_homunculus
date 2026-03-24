@@ -90,6 +90,11 @@ body {
   }
 }
 
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 @keyframes slide-up {
   0% {
     opacity: 0;
@@ -434,6 +439,21 @@ body {
   gap: 7px;
   font-size: 0.75rem;
   line-height: 1.4;
+  background: oklch(0 0 0 / 0.3);
+  border-radius: 6px;
+  padding: 4px 8px;
+}
+
+.hud-log-entry--user {
+  flex-direction: row-reverse;
+  background: oklch(0.75 0.18 30 / 0.12);
+  border: 1px solid oklch(0.75 0.18 30 / 0.25);
+  border-radius: 12px 12px 4px 12px;
+}
+
+.hud-log-entry--system {
+  font-size: 0.68rem;
+  font-weight: 300;
 }
 
 .hud-log-icon {
@@ -464,6 +484,14 @@ body {
 
 .hud-log-text--error {
   color: oklch(0.65 0.2 20 / 0.9);
+}
+
+.hud-log-text--user {
+  color: oklch(0.88 0.06 30 / 0.95);
+}
+
+.hud-log-text--system {
+  color: oklch(0.65 0.02 250 / 0.7);
 }
 
 .hud-log-ts {

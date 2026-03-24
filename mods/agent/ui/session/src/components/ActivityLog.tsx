@@ -25,12 +25,29 @@ export function ActivityLog({ entries }: ActivityLogProps) {
 }
 
 function LogRow({ entry }: { entry: LogEntry }) {
+  if (entry.type === "user") return <UserBubble entry={entry} />;
+  if (isSystemEvent(entry.type)) return <SystemRow entry={entry} />;
+  return <StandardRow entry={entry} />;
+}
+
+function UserBubble({ entry }: { entry: LogEntry }) {
   return (
-    <div className="hud-log-entry">
+    <div className="hud-log-entry hud-log-entry--user" style={{ animation: "fade-in 300ms ease both" }}>
+      <span className="hud-log-text hud-log-text--user">{entry.message}</span>
+      <span className="hud-log-icon">
+        <MicIcon />
+      </span>
+    </div>
+  );
+}
+
+function StandardRow({ entry }: { entry: LogEntry }) {
+  return (
+    <div className="hud-log-entry hud-log-entry--standard">
       <span className="hud-log-icon">
         <LogIcon type={entry.type} />
       </span>
-      <span className={`hud-log-text hud-log-text--${entry.type === "assistant" ? "assistant" : entry.type === "done" ? "done" : entry.type === "error" ? "error" : ""}`}>
+      <span className={`hud-log-text ${textClass(entry.type)}`}>
         {entry.message}
       </span>
       <span className="hud-log-ts">{formatTime(entry.timestamp)}</span>
@@ -38,27 +55,56 @@ function LogRow({ entry }: { entry: LogEntry }) {
   );
 }
 
+function SystemRow({ entry }: { entry: LogEntry }) {
+  return (
+    <div className="hud-log-entry hud-log-entry--system">
+      <span className="hud-log-icon">
+        <LogIcon type={entry.type} />
+      </span>
+      <span className={`hud-log-text hud-log-text--system ${textClass(entry.type)}`}>
+        {entry.message}
+      </span>
+      <span className="hud-log-ts">{formatTime(entry.timestamp)}</span>
+    </div>
+  );
+}
+
+function isSystemEvent(type: LogType): boolean {
+  return type === "read" || type === "edit" || type === "run" || type === "tool";
+}
+
+function textClass(type: LogType): string {
+  switch (type) {
+    case "assistant": return "hud-log-text--assistant";
+    case "done": return "hud-log-text--done";
+    case "error": return "hud-log-text--error";
+    default: return "";
+  }
+}
+
 function LogIcon({ type }: { type: LogType }) {
   switch (type) {
-    case "read":
-      return <ReadIcon />;
-    case "edit":
-      return <EditIcon />;
-    case "run":
-      return <RunIcon />;
-    case "tool":
-      return <ToolIcon />;
-    case "assistant":
-      return <DiamondIcon />;
-    case "done":
-      return <DoneIcon />;
-    case "error":
-      return <ErrorIcon />;
-    case "warning":
-      return <WarningIcon />;
-    default:
-      return <DotIcon />;
+    case "read": return <ReadIcon />;
+    case "edit": return <EditIcon />;
+    case "run": return <RunIcon />;
+    case "tool": return <ToolIcon />;
+    case "assistant": return <DiamondIcon />;
+    case "done": return <DoneIcon />;
+    case "error": return <ErrorIcon />;
+    case "warning": return <WarningIcon />;
+    case "user": return <MicIcon />;
+    default: return <DotIcon />;
   }
+}
+
+function MicIcon() {
+  return (
+    <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+      <rect x="4" y="1" width="4" height="6" rx="2" fill="oklch(0.75 0.18 30)" />
+      <path d="M2.5 5.5V6a3.5 3.5 0 0 0 7 0V5.5" stroke="oklch(0.75 0.18 30)" strokeWidth="1.1" strokeLinecap="round" />
+      <path d="M6 9.5V11" stroke="oklch(0.75 0.18 30)" strokeWidth="1.1" strokeLinecap="round" />
+    </svg>
+  );
 }
 
 function ReadIcon() {
