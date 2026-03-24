@@ -329,135 +329,6 @@ body {
   animation: holo-corner-pulse 2s ease-in-out infinite;
 }
 
-/* ━━ STT Keyframes ━━ */
-
-@keyframes stt-dot-wave {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 1; }
-}
-
-@keyframes stt-dot-bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
-}
-
-/* ━━ STT Status Indicator ━━ */
-
-.stt-status {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.stt-status__header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.75rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.stt-status__indicator {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: oklch(0.72 0.14 192 / 0.5);
-}
-
-.stt-status__indicator--listening {
-  background: oklch(0.72 0.14 192);
-  box-shadow: 0 0 8px oklch(0.72 0.14 192 / 0.5);
-}
-
-.stt-status__indicator--error {
-  background: oklch(0.7 0.18 25);
-}
-
-.stt-status__label {
-  color: oklch(0.72 0.14 192 / 0.7);
-}
-
-.stt-status__label--error {
-  color: oklch(0.7 0.18 25 / 0.8);
-}
-
-/* ━━ STT Dots Visualizer ━━ */
-
-.stt-dots {
-  display: flex;
-  gap: 4px;
-  padding: 6px 8px;
-  background: oklch(0.12 0.01 250 / 0.5);
-  border-radius: 4px;
-  justify-content: center;
-}
-
-.stt-dot {
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: oklch(0.72 0.14 192 / 0.25);
-  transition: background 180ms ease;
-}
-
-.stt-dot--loading {
-  animation: stt-dot-wave 1.2s ease-in-out infinite;
-}
-
-.stt-dot--listening {
-  background: oklch(0.72 0.14 192 / 0.7);
-  animation: stt-dot-bounce 0.6s ease-in-out infinite;
-}
-
-.stt-dot--error {
-  background: oklch(0.7 0.18 25 / 0.5);
-}
-
-/* ━━ STT Toggle Button ━━ */
-
-.stt-toggle {
-  width: 100%;
-  padding: 10px 24px;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  font-family: inherit;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: background 180ms ease, border-color 180ms ease,
-              box-shadow 180ms ease, color 180ms ease;
-}
-
-.stt-toggle--start {
-  background: oklch(0.72 0.14 192 / 0.15);
-  border: 1px solid oklch(0.72 0.14 192 / 0.3);
-  color: oklch(0.72 0.14 192);
-}
-
-.stt-toggle--start:hover {
-  background: oklch(0.72 0.14 192 / 0.25);
-  border-color: oklch(0.72 0.14 192 / 0.5);
-  box-shadow: 0 0 12px oklch(0.72 0.14 192 / 0.2);
-}
-
-.stt-toggle--stop {
-  background: oklch(0.7 0.18 25 / 0.15);
-  border: 1px solid oklch(0.7 0.18 25 / 0.3);
-  color: oklch(0.7 0.18 25);
-}
-
-.stt-toggle--stop:hover {
-  background: oklch(0.7 0.18 25 / 0.25);
-  border-color: oklch(0.7 0.18 25 / 0.5);
-  box-shadow: 0 0 12px oklch(0.7 0.18 25 / 0.2);
-}
-
-.stt-toggle:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 /* ━━ STT Section Divider ━━ */
 
 .stt-section-divider {
@@ -493,36 +364,19 @@ body {
 }
 
 .stt-model-card {
-  background: oklch(0.15 0.01 250 / 0.4);
-  border: 1px solid oklch(0.4 0.02 250 / 0.15);
+  background: oklch(0.18 0.01 250 / 0.6);
+  border: 1px solid oklch(0.4 0.02 250 / 0.25);
   border-radius: 8px;
   padding: 12px;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  transition: border-color 180ms ease, box-shadow 180ms ease;
   text-align: left;
   font-family: inherit;
-  cursor: default;
 }
 
 .stt-model-card--ready {
-  cursor: pointer;
-}
-
-.stt-model-card--ready:hover {
   border-color: oklch(0.72 0.14 192 / 0.3);
-}
-
-.stt-model-card:focus-visible {
-  outline: 2px solid oklch(0.72 0.14 192 / 0.6);
-  outline-offset: 2px;
-}
-
-.stt-model-card--selected {
-  border-color: oklch(0.72 0.14 192 / 0.6);
-  box-shadow: 0 0 10px oklch(0.72 0.14 192 / 0.1);
-  background: oklch(0.72 0.14 192 / 0.05);
 }
 
 .stt-model-card__name {
@@ -609,14 +463,6 @@ body {
   letter-spacing: 0.04em;
 }
 
-.stt-hint {
-  font-size: 0.7rem;
-  color: oklch(0.55 0.02 250 / 0.5);
-  letter-spacing: 0.04em;
-  text-align: center;
-  padding-top: 4px;
-}
-
 /* ━━ Reduced Motion ━━ */
 
 @media (prefers-reduced-motion: reduce) {
@@ -643,14 +489,4 @@ body {
     opacity: 0.5;
   }
 
-  .stt-dot--loading,
-  .stt-dot--listening {
-    animation: none;
-  }
-  .stt-dot--loading {
-    background: oklch(0.72 0.14 192 / 0.6);
-  }
-  .stt-dot--listening {
-    background: oklch(0.72 0.14 192 / 0.7);
-  }
 }
