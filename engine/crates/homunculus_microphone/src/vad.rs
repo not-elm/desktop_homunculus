@@ -226,7 +226,9 @@ fn vad_blocking_loop(
                 }
             }
             AudioReceiveResult::Timeout => {
-                if let Some(chunk) = try_flush_on_idle(last_audio_at, idle_threshold, &mut pipeline.state_machine) {
+                if let Some(chunk) =
+                    try_flush_on_idle(last_audio_at, idle_threshold, &mut pipeline.state_machine)
+                {
                     return Ok(chunk);
                 }
             }
@@ -351,7 +353,9 @@ fn flush_or_error(state_machine: &mut VadStateMachine) -> Result<Vec<f32>, Pipel
     if let Some(chunk) = state_machine.flush_speech() {
         Ok(chunk)
     } else {
-        Err(PipelineError::Vad("audio channel disconnected with no speech detected".into()))
+        Err(PipelineError::Vad(
+            "audio channel disconnected with no speech detected".into(),
+        ))
     }
 }
 

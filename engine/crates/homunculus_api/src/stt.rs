@@ -7,12 +7,12 @@ use std::time::Instant;
 
 use homunculus_microphone::{
     DownloadProgress, InferenceConfig, SharedSttModelCache, SttModelSize, SttResult, VadConfig,
-    WhisperContext, get_input_device, load_whisper_context, spawn_capture_thread,
-    vad_until_speech, whisper_infer,
+    WhisperContext, get_input_device, load_whisper_context,
     model::{
         download_model as mic_download_model, is_model_available, list_available_models, model_path,
     },
     permissions::ensure_microphone_permission,
+    spawn_capture_thread, vad_until_speech, whisper_infer,
 };
 use serde::{Deserialize, Serialize};
 use tokio::sync::watch;
@@ -132,6 +132,12 @@ impl Drop for PipelineCancelGuard {
 pub struct SttApi {
     model_cache: SharedSttModelCache,
     shutdown_token: SttShutdownToken,
+}
+
+impl Default for SttApi {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl SttApi {
@@ -349,7 +355,9 @@ async fn ensure_microphone_access() -> Result<(), SttError> {
 }
 
 /// Acquire the default input device and spawn the capture thread.
-fn start_capture(cancel: CancellationToken) -> Result<homunculus_microphone::CaptureHandle, SttError> {
+fn start_capture(
+    cancel: CancellationToken,
+) -> Result<homunculus_microphone::CaptureHandle, SttError> {
     let device = get_input_device().map_err(|_| SttError::NoMicrophone)?;
     spawn_capture_thread(device, cancel).map_err(|e| SttError::PipelineFailed(e.to_string()))
 }
@@ -368,12 +376,10 @@ async fn run_whisper_inference(
     started_at: Instant,
     config: InferenceConfig,
 ) -> Result<SttResult, SttError> {
-    tokio::task::spawn_blocking(move || {
-        whisper_infer(&ctx, &chunk, &language, started_at, config)
-    })
-    .await
-    .map_err(|e| SttError::PipelineFailed(format!("Inference task panicked: {e}")))?
-    .map_err(|e| SttError::PipelineFailed(e.to_string()))
+    tokio::task::spawn_blocking(move || whisper_infer(&ctx, &chunk, &language, started_at, config))
+        .await
+        .map_err(|e| SttError::PipelineFailed(format!("Inference task panicked: {e}")))?
+        .map_err(|e| SttError::PipelineFailed(e.to_string()))
 }
 
 async fn load_context_blocking(size: SttModelSize) -> Result<Arc<WhisperContext>, SttError> {
