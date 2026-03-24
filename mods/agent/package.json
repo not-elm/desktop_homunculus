@@ -16,6 +16,16 @@
         "id": "open-agent-settings",
         "text": "Agent Settings",
         "command": "agent-open-settings"
+      },
+      {
+        "id": "start-agent-session",
+        "text": "会話を開始",
+        "command": "agent-start-session"
+      },
+      {
+        "id": "stop-agent-session",
+        "text": "会話を終了",
+        "command": "agent-stop-session"
       }
     ],
     "assets": {
@@ -32,7 +42,9 @@
     }
   },
   "bin": {
-    "agent-open-settings": "commands/open-settings.ts"
+    "agent-open-settings": "commands/open-settings.ts",
+    "agent-start-session": "commands/start-session.ts",
+    "agent-stop-session": "commands/stop-session.ts"
   },
   "dependencies": {
     "@hmcs/sdk": "workspace:*",
