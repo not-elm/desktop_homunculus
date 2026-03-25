@@ -1,4 +1,7 @@
-import { useEffect, useRef } from "react";
+import { memo, useEffect, useRef } from "react";
+import type { ComponentPropsWithoutRef } from "react";
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import type { LogEntry, LogType } from "../hooks/useAgentSession";
 
 interface ActivityLogProps {
@@ -27,6 +30,7 @@ export function ActivityLog({ entries }: ActivityLogProps) {
 function LogRow({ entry }: { entry: LogEntry }) {
   if (entry.type === "user") return <UserBubble entry={entry} />;
   if (isSystemEvent(entry.type)) return <SystemRow entry={entry} />;
+  if (entry.type === "assistant") return <AssistantRow entry={entry} />;
   return <StandardRow entry={entry} />;
 }
 
@@ -200,3 +204,92 @@ function formatTime(timestamp: number): string {
   const s = String(d.getSeconds()).padStart(2, "0");
   return `${h}:${m}:${s}`;
 }
+
+const UNSAFE_PROTOCOL = /^(javascript|file|data|vbscript):/i;
+
+function isSafeUrl(href: string | undefined): boolean {
+  if (!href) return false;
+  return !UNSAFE_PROTOCOL.test(href);
+}
+
+const DISALLOWED_ELEMENTS = ["table", "thead", "tbody", "tr", "th", "td", "img"];
+
+const mdComponents = {
+  p: ({ children }: ComponentPropsWithoutRef<"p">) => (
+    <p className="hud-md-paragraph">{children}</p>
+  ),
+  h1: ({ children }: ComponentPropsWithoutRef<"h1">) => (
+    <h1 className="hud-md-heading">{children}</h1>
+  ),
+  h2: ({ children }: ComponentPropsWithoutRef<"h2">) => (
+    <h2 className="hud-md-heading">{children}</h2>
+  ),
+  h3: ({ children }: ComponentPropsWithoutRef<"h3">) => (
+    <h3 className="hud-md-heading">{children}</h3>
+  ),
+  code: ({ className, children, ...props }: ComponentPropsWithoutRef<"code">) => {
+    const isBlock = className?.includes("language-") || (typeof children === "string" && children.includes("\n"));
+    return isBlock ? (
+      <code className={`hud-md-code-block ${className ?? ""}`} {...props}>{children}</code>
+    ) : (
+      <code className="hud-md-code-inline" {...props}>{children}</code>
+    );
+  },
+  pre: ({ children }: ComponentPropsWithoutRef<"pre">) => <>{children}</>,
+  blockquote: ({ children }: ComponentPropsWithoutRef<"blockquote">) => (
+    <blockquote className="hud-md-blockquote">{children}</blockquote>
+  ),
+  a: ({ href, children }: ComponentPropsWithoutRef<"a">) => {
+    if (!isSafeUrl(href)) {
+      return <span className="hud-md-link--disabled">{children}</span>;
+    }
+    return (
+      <a
+        className="hud-md-link"
+        href={href}
+        rel="noopener noreferrer"
+        onClick={(e) => {
+          e.preventDefault();
+          window.open(href, "_blank");
+        }}
+      >
+        {children}
+      </a>
+    );
+  },
+  ul: ({ children }: ComponentPropsWithoutRef<"ul">) => (
+    <ul className="hud-md-list">{children}</ul>
+  ),
+  ol: ({ children }: ComponentPropsWithoutRef<"ol">) => (
+    <ol className="hud-md-list">{children}</ol>
+  ),
+  li: ({ children }: ComponentPropsWithoutRef<"li">) => (
+    <li className="hud-md-list-item">{children}</li>
+  ),
+  strong: ({ children }: ComponentPropsWithoutRef<"strong">) => (
+    <strong className="hud-md-strong">{children}</strong>
+  ),
+  em: ({ children }: ComponentPropsWithoutRef<"em">) => (
+    <em className="hud-md-em">{children}</em>
+  ),
+};
+
+const AssistantRow = memo(function AssistantRow({ entry }: { entry: LogEntry }) {
+  return (
+    <div className="hud-log-entry hud-log-entry--standard">
+      <span className="hud-log-icon">
+        <DiamondIcon />
+      </span>
+      <div className="hud-log-text hud-log-text--assistant">
+        <Markdown
+          remarkPlugins={[remarkGfm]}
+          components={mdComponents}
+          disallowedElements={DISALLOWED_ELEMENTS}
+        >
+          {entry.message}
+        </Markdown>
+      </div>
+      <span className="hud-log-ts">{formatTime(entry.timestamp)}</span>
+    </div>
+  );
+});
