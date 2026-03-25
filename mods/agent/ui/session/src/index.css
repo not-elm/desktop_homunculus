@@ -500,7 +500,7 @@ body {
 
 .hud-log-text--assistant {
   color: oklch(0.72 0.14 192 / 0.9);
-  font-style: italic;
+  word-break: normal;
 }
 
 .hud-log-text--done {
@@ -521,6 +521,107 @@ body {
 
 .hud-log-text--system {
   color: oklch(0.65 0.02 250 / 0.7);
+}
+
+/* ━━ Markdown (assistant) ━━ */
+
+.hud-md-paragraph {
+  margin: 0 0 0.4em;
+}
+
+.hud-md-paragraph:last-child {
+  margin-bottom: 0;
+}
+
+.hud-md-heading {
+  font-weight: 600;
+  margin: 0.5em 0 0.3em;
+  color: oklch(0.78 0.14 192 / 0.95);
+}
+
+h1.hud-md-heading {
+  font-size: 1.05em;
+}
+
+h2.hud-md-heading {
+  font-size: 0.95em;
+}
+
+h3.hud-md-heading {
+  font-size: 0.9em;
+}
+
+.hud-md-code-inline {
+  font-family: monospace;
+  font-size: 0.88em;
+  background: oklch(0.1 0.01 250 / 0.6);
+  border: 1px solid oklch(0.4 0.02 250 / 0.2);
+  border-radius: 3px;
+  padding: 0.1em 0.35em;
+}
+
+.hud-md-code-block {
+  display: block;
+  font-family: monospace;
+  font-size: 0.82em;
+  background: oklch(0.1 0.01 250 / 0.6);
+  border: 1px solid oklch(0.4 0.02 250 / 0.2);
+  border-radius: 4px;
+  padding: 8px 10px;
+  margin: 0.4em 0;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 200px;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.hud-md-code-block::-webkit-scrollbar {
+  display: none;
+}
+
+.hud-md-blockquote {
+  margin: 0.4em 0;
+  padding: 0.3em 0 0.3em 0.8em;
+  border-left: 2px solid oklch(0.72 0.14 192 / 0.3);
+  background: oklch(0.72 0.14 192 / 0.05);
+  border-radius: 0 4px 4px 0;
+}
+
+.hud-md-link {
+  color: oklch(0.78 0.14 192 / 0.95);
+  text-decoration: underline;
+  text-decoration-color: oklch(0.72 0.14 192 / 0.4);
+  text-underline-offset: 2px;
+  cursor: pointer;
+  transition: text-decoration-color 150ms ease;
+}
+
+.hud-md-link:hover {
+  text-decoration-color: oklch(0.72 0.14 192 / 0.8);
+}
+
+.hud-md-link--disabled {
+  cursor: default;
+  text-decoration: none;
+  color: oklch(0.72 0.14 192 / 0.6);
+}
+
+.hud-md-list {
+  margin: 0.3em 0;
+  padding-left: 1.4em;
+}
+
+.hud-md-list-item {
+  margin: 0.15em 0;
+}
+
+.hud-md-strong {
+  font-weight: 600;
+}
+
+.hud-md-em {
+  font-style: italic;
 }
 
 .hud-log-ts {
