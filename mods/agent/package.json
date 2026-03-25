@@ -47,11 +47,13 @@
     "agent-stop-session": "commands/stop-session.ts"
   },
   "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.2.81",
     "@hmcs/sdk": "workspace:*",
     "@hmcs/ui": "workspace:*",
-    "@anthropic-ai/claude-agent-sdk": "^0.2.81",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
     "uiohook-napi": "^1.5.4",
     "zod": "^3.25.76"
   },
