@@ -142,14 +142,15 @@ body {
 .hud-panel {
   position: relative;
   width: 100%;
-  max-width: 420px;
+  max-width: 400px;
+  max-height: 100vh;
   box-sizing: border-box;
   background: oklch(0.13 0.015 250 / 0.93);
   border: 1px solid oklch(0.72 0.14 192 / 0.18);
   border-radius: 12px;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: hidden auto;
   animation: hud-in 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
   backdrop-filter: blur(12px);
 }
@@ -441,7 +442,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 7px;
-  min-height: 180px;
+  min-height: 60px;
   max-height: 360px;
   position: relative;
   z-index: 7;
@@ -642,6 +643,7 @@ h3.hud-md-heading {
   padding: 14px 16px;
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
   gap: 10px;
   position: relative;
   z-index: 7;
