@@ -51,7 +51,7 @@ export class HomunculusApiError extends Error {
      * @example
      * ```typescript
      * try {
-     *   await stt.session.start();
+     *   await stt.recognize();
      * } catch (e) {
      *   if (e instanceof HomunculusApiError && e.code === "no_microphone") {
      *     // Handle missing microphone
@@ -164,6 +164,7 @@ export namespace host {
      *
      * @param url - The URL to send the POST request to
      * @param body - Optional request body that will be JSON-serialized
+     * @param signal - Optional AbortSignal to cancel the request
      * @returns The Response object if successful
      * @throws {HomunculusApiError} If the response status is >= 400
      *
@@ -175,13 +176,14 @@ export namespace host {
      * );
      * ```
      */
-    export async function post<B>(url: URL, body?: B): Promise<Response> {
+    export async function post<B>(url: URL, body?: B, signal?: AbortSignal): Promise<Response> {
         const response = await fetch(url, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify(body ?? {})
+            body: JSON.stringify(body ?? {}),
+            signal,
         });
         await throwIfError(response);
         return response;
