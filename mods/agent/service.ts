@@ -439,6 +439,12 @@ async function resolvePermission(
   settings: AgentSettings,
   signal: AbortSignal,
 ): Promise<AgentResponse> {
+  const deferred = new Deferred<{ approved: boolean; message?: string }>();
+  const permAbort = new AbortController();
+  const combined = AbortSignal.any([signal, permAbort.signal]);
+
+  pendingApprovals.set(event.requestId, deferred);
+
   signals.send("agent:permission", {
     characterId,
     requestId: event.requestId,
@@ -446,39 +452,55 @@ async function resolvePermission(
     target: JSON.stringify(event.input),
   });
 
-  const candidates: Promise<{ approved: boolean; message?: string }>[] = [
-    waitForUiApproval(event.requestId),
-    timeoutDeny(60_000),
-  ];
+  const timer = setTimeout(
+    () => deferred.resolve({ approved: false, message: "Permission request timed out" }),
+    60_000,
+  );
+
+  const onAbort = () => deferred.reject(signal.reason);
+  signal.addEventListener("abort", onAbort, { once: true });
+
   const resolvedKey = resolvePttKeycodes(settings.pttKey!);
   if (resolvedKey) {
-    candidates.push(waitForVoiceApproval(characterId, resolvedKey, settings, signal));
+    runVoiceApproval(characterId, resolvedKey, settings, combined, deferred);
   }
-  const result = await Promise.race(candidates);
 
-  return {
-    type: "permission",
-    approved: result.approved,
-    message: result.message,
-  };
+  try {
+    const result = await deferred.promise;
+    return { type: "permission", approved: result.approved, message: result.message };
+  } finally {
+    clearTimeout(timer);
+    signal.removeEventListener("abort", onAbort);
+    permAbort.abort();
+    pendingApprovals.delete(event.requestId);
+  }
 }
 
-async function waitForVoiceApproval(
+function runVoiceApproval(
   characterId: string,
   resolvedKey: ResolvedPttKey,
   settings: AgentSettings,
   signal: AbortSignal,
-): Promise<{ approved: boolean; message?: string }> {
-  await waitForComboPress(resolvedKey, signal);
-  emitRecording(characterId, true);
-
-  try {
-    const text = await recognizeWithCancel(resolvedKey, signal);
-    if (text === null) return { approved: false, message: "Cancelled" };
-    return evaluateApprovalPhrase(text, settings);
-  } finally {
-    emitRecording(characterId, false);
-  }
+  deferred: Deferred<{ approved: boolean; message?: string }>,
+): void {
+  (async () => {
+    try {
+      await waitForComboPress(resolvedKey, signal);
+      emitRecording(characterId, true);
+      try {
+        const text = await recognizeWithCancel(resolvedKey, signal);
+        if (text === null) {
+          deferred.resolve({ approved: false, message: "Cancelled" });
+        } else {
+          deferred.resolve(evaluateApprovalPhrase(text, settings));
+        }
+      } finally {
+        emitRecording(characterId, false);
+      }
+    } catch {
+      // Voice approval failed (aborted or error) — UI/timeout will handle it
+    }
+  })();
 }
 
 function evaluateApprovalPhrase(
@@ -497,28 +519,6 @@ function evaluateApprovalPhrase(
   return { approved: false, message: `Unrecognized: "${text}"` };
 }
 
-async function waitForUiApproval(
-  requestId: string,
-): Promise<{ approved: boolean; message?: string }> {
-  const deferred = new Deferred<{ approved: boolean; message?: string }>();
-  pendingApprovals.set(requestId, deferred);
-  try {
-    return await deferred.promise;
-  } finally {
-    pendingApprovals.delete(requestId);
-  }
-}
-
-function timeoutDeny(
-  ms: number,
-): Promise<{ approved: boolean; message?: string }> {
-  return new Promise((resolve) => {
-    setTimeout(
-      () => resolve({ approved: false, message: "Permission request timed out" }),
-      ms,
-    );
-  });
-}
 
 async function resolveElicitation(
   characterId: string,
@@ -583,7 +583,7 @@ async function waitForPttDuringExecution(
   signal: AbortSignal,
 ): Promise<void> {
   const resolvedKey = resolvePttKeycodes(settings.pttKey!);
-  if (!resolvedKey) throw new Error("PTT key not resolved");
+  if (!resolvedKey) return new Promise<void>(() => {});
   await waitForComboPress(resolvedKey, signal);
 }
 
