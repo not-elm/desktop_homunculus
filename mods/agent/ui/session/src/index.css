@@ -3,6 +3,7 @@
 
 body {
   background: transparent;
+  overflow: hidden;
 }
 
 #root {
@@ -140,7 +141,9 @@ body {
 
 .hud-panel {
   position: relative;
-  width: 420px;
+  width: 100%;
+  max-width: 420px;
+  box-sizing: border-box;
   background: oklch(0.13 0.015 250 / 0.93);
   border: 1px solid oklch(0.72 0.14 192 / 0.18);
   border-radius: 12px;
