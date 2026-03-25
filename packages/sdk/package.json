@@ -32,12 +32,6 @@
         "import": "./dist/rpc-client.js",
         "require": "./dist/rpc-client.cjs"
       }
-    },
-    "./wake-word-matcher": {
-      "types": "./dist/wake-word-matcher.d.ts",
-      "import": "./dist/wake-word-matcher.js",
-      "require": "./dist/wake-word-matcher.cjs",
-      "default": "./dist/wake-word-matcher.js"
     }
   },
   "engines": {
@@ -62,7 +56,6 @@
   ],
   "dependencies": {
     "eventsource": "^4.1.0",
-    "fastest-levenshtein": "^1.0.16",
     "zod": "^3.25.76"
   },
   "devDependencies": {
