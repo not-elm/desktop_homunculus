@@ -212,6 +212,7 @@ function isSafeUrl(href: string | undefined): boolean {
   return !UNSAFE_PROTOCOL.test(href);
 }
 
+const REMARK_PLUGINS = [remarkGfm];
 const DISALLOWED_ELEMENTS = ["table", "thead", "tbody", "tr", "th", "td", "img"];
 
 const mdComponents = {
@@ -282,7 +283,7 @@ const AssistantRow = memo(function AssistantRow({ entry }: { entry: LogEntry }) 
       </span>
       <div className="hud-log-text hud-log-text--assistant">
         <Markdown
-          remarkPlugins={[remarkGfm]}
+          remarkPlugins={REMARK_PLUGINS}
           components={mdComponents}
           disallowedElements={DISALLOWED_ELEMENTS}
         >
