@@ -722,9 +722,10 @@ function buildRpcMethods() {
       input: z.object({ requestId: z.string(), approved: z.boolean() }),
       handler: async ({ requestId, approved }) => {
         const deferred = pendingApprovals.get(requestId);
-        if (deferred) {
-          deferred.resolve({ approved });
+        if (!deferred) {
+          return { success: false as const, error: "No pending approval for this request" };
         }
+        deferred.resolve({ approved });
         return { success: true as const };
       },
     }),
