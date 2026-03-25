@@ -259,13 +259,13 @@ async function executeOneRound(
 ): Promise<string | null> {
   const interruptAbort = new AbortController();
   const executorGen = executer.execute(text, sessionId, interruptAbort.signal);
-  const createInterrupt = () => waitForInterrupt(characterId, settings, sessionSignal);
+  const interruptPromise = waitForInterrupt(characterId, settings, sessionSignal);
 
   try {
     return await driveExecutor(
       characterId,
       executorGen,
-      createInterrupt,
+      interruptPromise,
       interruptAbort,
       sessionId,
       settings,
@@ -280,7 +280,7 @@ async function executeOneRound(
 async function driveExecutor(
   characterId: string,
   executorGen: AsyncGenerator<AgentEvent, void, AgentResponse | undefined>,
-  createInterrupt: () => Promise<"ptt" | "ui">,
+  interruptPromise: Promise<"ptt" | "ui">,
   interruptAbort: AbortController,
   sessionId: string | null,
   settings: AgentSettings,
@@ -288,7 +288,6 @@ async function driveExecutor(
 ): Promise<string | null> {
   let lastSessionId = sessionId;
   let response: AgentResponse | undefined = undefined;
-  let interruptPromise = createInterrupt();
 
   while (true) {
     const raceResult = await raceInterrupt(executorGen.next(response), interruptPromise);
@@ -301,9 +300,6 @@ async function driveExecutor(
     const event = raceResult.value as AgentEvent;
     response = await handleAgentEvent(characterId, event, settings, sessionSignal);
     if (event.type === "completed") lastSessionId = event.sessionId;
-    if (event.type === "permission_request" || event.type === "elicitation_request") {
-      interruptPromise = createInterrupt();
-    }
   }
 
   return lastSessionId;
