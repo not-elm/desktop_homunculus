@@ -442,11 +442,15 @@ async function resolvePermission(
     target: JSON.stringify(event.input),
   });
 
-  const result = await Promise.race([
-    waitForVoiceApproval(characterId, settings, signal),
+  const candidates: Promise<{ approved: boolean; message?: string }>[] = [
     waitForUiApproval(event.requestId),
     timeoutDeny(60_000),
-  ]);
+  ];
+  const resolvedKey = resolvePttKeycodes(settings.pttKey!);
+  if (resolvedKey) {
+    candidates.push(waitForVoiceApproval(characterId, resolvedKey, settings, signal));
+  }
+  const result = await Promise.race(candidates);
 
   return {
     type: "permission",
@@ -457,12 +461,10 @@ async function resolvePermission(
 
 async function waitForVoiceApproval(
   characterId: string,
+  resolvedKey: ResolvedPttKey,
   settings: AgentSettings,
   signal: AbortSignal,
 ): Promise<{ approved: boolean; message?: string }> {
-  const resolvedKey = resolvePttKeycodes(settings.pttKey!);
-  if (!resolvedKey) throw new Error("PTT key not resolved");
-
   await waitForComboPress(resolvedKey, signal);
   emitRecording(characterId, true);
 
