@@ -7,9 +7,8 @@ import {
   SelectValue,
 } from "@hmcs/ui";
 import type { AgentSettings } from "../hooks/useAgentSettings";
-import { PhraseListField } from "./PhraseListField";
 
-interface ClaudeCodeTabProps {
+interface ClaudeTabProps {
   settings: AgentSettings;
   onSettingsChange: (settings: AgentSettings) => void;
   apiKey: string;
@@ -18,14 +17,14 @@ interface ClaudeCodeTabProps {
   savingApiKey: boolean;
 }
 
-export function ClaudeCodeTab({
+export function ClaudeTab({
   settings,
   onSettingsChange,
   apiKey,
   onApiKeyChange,
   onApiKeySave,
   savingApiKey,
-}: ClaudeCodeTabProps) {
+}: ClaudeTabProps) {
   const [showKey, setShowKey] = useState(false);
   const needsApiKey = settings.executor === "sdk";
 
@@ -34,20 +33,6 @@ export function ClaudeCodeTab({
     value: AgentSettings[K],
   ) {
     onSettingsChange({ ...settings, [key]: value });
-  }
-
-  function addToList(
-    key: keyof Pick<AgentSettings, "approvalPhrases" | "denyPhrases" | "allowList" | "disallowedTools">,
-    item: string,
-  ) {
-    update(key, [...settings[key], item]);
-  }
-
-  function removeFromList(
-    key: keyof Pick<AgentSettings, "approvalPhrases" | "denyPhrases" | "allowList" | "disallowedTools">,
-    index: number,
-  ) {
-    update(key, settings[key].filter((_, i) => i !== index));
   }
 
   return (
@@ -122,8 +107,8 @@ export function ClaudeCodeTab({
           Model for the agent to use
         </span>
         <Select
-          value={settings.model || "default"}
-          onValueChange={(v) => update("model", v === "default" ? "" : v)}
+          value={settings.claudeModel || "default"}
+          onValueChange={(v) => update("claudeModel", v === "default" ? "" : v)}
         >
           <SelectTrigger>
             <SelectValue />
@@ -136,46 +121,6 @@ export function ClaudeCodeTab({
           </SelectContent>
         </Select>
       </label>
-
-      <div className="agent-divider" />
-
-      <PhraseListField
-        label="Approval Phrases"
-        description="Phrases that confirm agent tool use requests"
-        phrases={settings.approvalPhrases}
-        onAdd={(p) => addToList("approvalPhrases", p)}
-        onRemove={(i) => removeFromList("approvalPhrases", i)}
-        badgeVariant="violet"
-      />
-
-      <PhraseListField
-        label="Deny Phrases"
-        description="Phrases that reject agent tool use requests"
-        phrases={settings.denyPhrases}
-        onAdd={(p) => addToList("denyPhrases", p)}
-        onRemove={(i) => removeFromList("denyPhrases", i)}
-        badgeVariant="rose"
-      />
-
-      <div className="agent-divider" />
-
-      <PhraseListField
-        label="Default Allow List"
-        description="Tools always permitted without asking"
-        phrases={settings.allowList}
-        onAdd={(p) => addToList("allowList", p)}
-        onRemove={(i) => removeFromList("allowList", i)}
-        badgeVariant="green"
-      />
-
-      <PhraseListField
-        label="Disallowed Tools"
-        description="Tools the agent is never permitted to use"
-        phrases={settings.disallowedTools}
-        onAdd={(p) => addToList("disallowedTools", p)}
-        onRemove={(i) => removeFromList("disallowedTools", i)}
-        badgeVariant="rose"
-      />
     </div>
   );
 }

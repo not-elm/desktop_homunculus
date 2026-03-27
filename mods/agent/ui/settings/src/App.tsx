@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { useAgentSettings } from "./hooks/useAgentSettings";
 import { GeneralTab } from "./components/GeneralTab";
-import { ClaudeCodeTab } from "./components/ClaudeCodeTab";
+import { ClaudeTab } from "./components/ClaudeTab";
+import { CodexTab } from "./components/CodexTab";
 
-type Tab = "general" | "claude-code";
+type Tab = "general" | "claude" | "codex";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "general", label: "General" },
-  { id: "claude-code", label: "Claude Code" },
+  { id: "claude", label: "Claude" },
+  { id: "codex", label: "Codex" },
 ];
 
 export function App() {
@@ -71,8 +73,8 @@ export function App() {
         {tab === "general" && (
           <GeneralTab settings={settings} onSettingsChange={setSettings} />
         )}
-        {tab === "claude-code" && (
-          <ClaudeCodeTab
+        {tab === "claude" && (
+          <ClaudeTab
             settings={settings}
             onSettingsChange={setSettings}
             apiKey={apiKey}
@@ -80,6 +82,9 @@ export function App() {
             onApiKeySave={saveApiKey}
             savingApiKey={savingApiKey}
           />
+        )}
+        {tab === "codex" && (
+          <CodexTab settings={settings} onSettingsChange={setSettings} />
         )}
       </div>
 

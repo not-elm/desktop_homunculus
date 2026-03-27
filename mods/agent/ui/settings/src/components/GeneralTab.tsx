@@ -24,6 +24,20 @@ export function GeneralTab({ settings, onSettingsChange }: GeneralTabProps) {
     update(key, settings[key].filter((_, i) => i !== index));
   }
 
+  function addToList(
+    key: keyof Pick<AgentSettings, "approvalPhrases" | "denyPhrases" | "allowList" | "disallowedTools">,
+    item: string,
+  ) {
+    onSettingsChange({ ...settings, [key]: [...settings[key], item] });
+  }
+
+  function removeFromList(
+    key: keyof Pick<AgentSettings, "approvalPhrases" | "denyPhrases" | "allowList" | "disallowedTools">,
+    index: number,
+  ) {
+    onSettingsChange({ ...settings, [key]: settings[key].filter((_: string, i: number) => i !== index) });
+  }
+
   function addDirectory(path: string) {
     const { paths, default: def } = settings.workingDirectories;
     update("workingDirectories", { paths: [...paths, path], default: def });
@@ -50,24 +64,6 @@ export function GeneralTab({ settings, onSettingsChange }: GeneralTabProps) {
         description="Press the key to capture it"
         pttKey={settings.pttKey}
         onChange={(key) => update("pttKey", key)}
-      />
-
-      <div className="agent-divider" />
-
-      <PhraseListField
-        label="Approval Phrases"
-        description="Phrases to approve agent actions"
-        phrases={settings.approvalPhrases}
-        onAdd={(p) => update("approvalPhrases", [...settings.approvalPhrases, p])}
-        onRemove={(i) => update("approvalPhrases", settings.approvalPhrases.filter((_, idx) => idx !== i))}
-      />
-
-      <PhraseListField
-        label="Deny Phrases"
-        description="Phrases to deny agent actions"
-        phrases={settings.denyPhrases}
-        onAdd={(p) => update("denyPhrases", [...settings.denyPhrases, p])}
-        onRemove={(i) => update("denyPhrases", settings.denyPhrases.filter((_, idx) => idx !== i))}
       />
 
       <div className="agent-divider" />
@@ -106,6 +102,46 @@ export function GeneralTab({ settings, onSettingsChange }: GeneralTabProps) {
         onAdd={addDirectory}
         onRemove={removeDirectory}
         onSetDefault={setDefaultDirectory}
+      />
+
+      <div className="agent-divider" />
+
+      <PhraseListField
+        label="Approval Phrases"
+        description="Phrases that confirm agent tool use requests"
+        phrases={settings.approvalPhrases}
+        onAdd={(p) => addToList("approvalPhrases", p)}
+        onRemove={(i) => removeFromList("approvalPhrases", i)}
+        badgeVariant="violet"
+      />
+
+      <PhraseListField
+        label="Deny Phrases"
+        description="Phrases that reject agent tool use requests"
+        phrases={settings.denyPhrases}
+        onAdd={(p) => addToList("denyPhrases", p)}
+        onRemove={(i) => removeFromList("denyPhrases", i)}
+        badgeVariant="rose"
+      />
+
+      <div className="agent-divider" />
+
+      <PhraseListField
+        label="Default Allow List"
+        description="Tools always permitted without asking"
+        phrases={settings.allowList}
+        onAdd={(p) => addToList("allowList", p)}
+        onRemove={(i) => removeFromList("allowList", i)}
+        badgeVariant="green"
+      />
+
+      <PhraseListField
+        label="Disallowed Tools"
+        description="Tools the agent is never permitted to use"
+        phrases={settings.disallowedTools}
+        onAdd={(p) => addToList("disallowedTools", p)}
+        onRemove={(i) => removeFromList("disallowedTools", i)}
+        badgeVariant="rose"
       />
     </div>
   );
