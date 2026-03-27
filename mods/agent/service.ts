@@ -205,7 +205,7 @@ function createExecuter(
     case "sdk":
       return new ClaudeAgentExecuter(persona, settings, apiKey!, workDir);
     default:
-      return new ClaudeAgentExecuter(persona, settings, apiKey!, workDir);
+      throw new Error(`Executor "${settings.executor}" is not yet implemented.`);
   }
 }
 

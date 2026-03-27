@@ -25,7 +25,7 @@ export class CodexAgentExecuter implements AIAgentExecuter {
 
   constructor(
     persona: Persona,
-    private readonly settings: AgentSettings,
+    settings: AgentSettings,
     workDir: string,
   ) {
     this.codex = new Codex({
