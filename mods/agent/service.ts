@@ -229,16 +229,24 @@ const SESSION_PREF_PREFIX = "agent::session::";
 
 async function loadSavedSession(
   characterId: string,
+  executor: AgentSettings["executor"],
 ): Promise<string | null> {
   return (
     (await preferences.load<string>(
-      `${SESSION_PREF_PREFIX}${characterId}`,
+      `${SESSION_PREF_PREFIX}${executor}::${characterId}`,
     )) ?? null
   );
 }
 
-function saveSession(characterId: string, sessionId: string | null): void {
-  preferences.save(`${SESSION_PREF_PREFIX}${characterId}`, sessionId);
+function saveSession(
+  characterId: string,
+  executor: AgentSettings["executor"],
+  sessionId: string | null,
+): void {
+  preferences.save(
+    `${SESSION_PREF_PREFIX}${executor}::${characterId}`,
+    sessionId,
+  );
 }
 
 async function runSession(
@@ -248,7 +256,7 @@ async function runSession(
   settings: AgentSettings,
   resolvedKey: ResolvedPttKey,
 ): Promise<void> {
-  let sessionId = await loadSavedSession(characterId);
+  let sessionId = await loadSavedSession(characterId, settings.executor);
   const signal = sessionAbort.signal;
 
   try {
@@ -444,7 +452,7 @@ function handleCompleted(
   settings: AgentSettings,
 ): undefined {
   emitStatus(characterId, "idle");
-  saveSession(characterId, sessionId);
+  saveSession(characterId, settings.executor, sessionId);
   speakRandomPhrase(characterId, settings.completionPhrases);
   return undefined;
 }

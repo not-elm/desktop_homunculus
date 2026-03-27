@@ -49,13 +49,13 @@ export class CodexAgentExecuter implements AIAgentExecuter {
     sessionId: string | null,
     signal: AbortSignal,
   ): AsyncGenerator<AgentEvent, void, AgentResponse | undefined> {
-    const thread = sessionId
-      ? this.codex.resumeThread(sessionId, this.threadOptions)
-      : this.codex.startThread(this.threadOptions);
+    const { events, initialSessionId } = await this.startOrResume(
+      text,
+      sessionId,
+      signal,
+    );
 
-    const { events } = await thread.runStreamed(text, { signal });
-    let currentSessionId = sessionId ?? thread.id ?? null;
-
+    let currentSessionId = initialSessionId;
     for await (const event of events) {
       if (event.type === "thread.started") {
         currentSessionId = event.thread_id;
@@ -63,6 +63,32 @@ export class CodexAgentExecuter implements AIAgentExecuter {
       const mapped = mapThreadEvent(event, currentSessionId);
       if (mapped) yield mapped;
     }
+  }
+
+  private async startOrResume(
+    text: string,
+    sessionId: string | null,
+    signal: AbortSignal,
+  ): Promise<{
+    events: AsyncIterable<ThreadEvent>;
+    initialSessionId: string | null;
+  }> {
+    if (sessionId) {
+      try {
+        const thread = this.codex.resumeThread(sessionId, this.threadOptions);
+        const { events } = await thread.runStreamed(text, { signal });
+        return { events, initialSessionId: sessionId };
+      } catch (e) {
+        console.warn(
+          `[codex] Failed to resume thread ${sessionId}, starting fresh:`,
+          e instanceof Error ? e.message : e,
+        );
+      }
+    }
+
+    const thread = this.codex.startThread(this.threadOptions);
+    const { events } = await thread.runStreamed(text, { signal });
+    return { events, initialSessionId: thread.id ?? null };
   }
 }
 
