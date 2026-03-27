@@ -14,6 +14,7 @@ import {
   type Persona,
   DEFAULT_SETTINGS,
 } from "./lib/types.ts";
+import { sanitizeForTts } from "./lib/tts.ts";
 import { mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import path from "node:path";
@@ -91,6 +92,18 @@ async function speakRandomPhrase(
       modName: "@hmcs/voicevox",
       method: "speak",
       body: { name: characterId, text: phrase },
+    })
+    .catch(() => emitLog(characterId, "warning", "TTS unavailable"));
+}
+
+function speakText(characterId: string, text: string): void {
+  const sentences = sanitizeForTts(text);
+  if (sentences.length === 0) return;
+  rpc
+    .call({
+      modName: "@hmcs/voicevox",
+      method: "speak",
+      body: { name: characterId, text: sentences },
     })
     .catch(() => emitLog(characterId, "warning", "TTS unavailable"));
 }
@@ -418,6 +431,7 @@ function handleAssistantMessage(
 ): undefined {
   emitStatus(characterId, "thinking");
   emitLog(characterId, "assistant", text);
+  speakText(characterId, text);
   return undefined;
 }
 
