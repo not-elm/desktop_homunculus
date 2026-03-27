@@ -6,6 +6,7 @@ export interface PttKey {
 
 /** Agent settings stored in preferences. */
 export interface AgentSettings {
+  executor: "sdk" | "cli" | "codex";
   pttKey: PttKey | null;
   approvalPhrases: string[];
   denyPhrases: string[];
@@ -56,6 +57,7 @@ export interface Persona {
 }
 
 export const DEFAULT_SETTINGS: AgentSettings = {
+  executor: "sdk",
   pttKey: null,
   approvalPhrases: ["はい", "yes", "ok", "allow"],
   denyPhrases: ["いいえ", "no", "deny", "cancel"],
