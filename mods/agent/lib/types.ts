@@ -16,7 +16,8 @@ export interface AgentSettings {
   workingDirectories: { paths: string[]; default: number };
   allowList: string[];
   disallowedTools: string[];
-  model: string;
+  claudeModel: string;
+  codexModel: string;
 }
 
 /** Session lifecycle states. */
@@ -67,7 +68,8 @@ export const DEFAULT_SETTINGS: AgentSettings = {
   workingDirectories: { paths: [], default: 0 },
   allowList: [],
   disallowedTools: [],
-  model: "",
+  claudeModel: "",
+  codexModel: "",
 };
 
 export type { AgentEvent, AgentResponse, AIAgentExecuter } from "./ai-agent-executer.ts";

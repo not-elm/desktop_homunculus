@@ -22,7 +22,8 @@ export interface AgentSettings {
   denyPhrases: string[];
   allowList: string[];
   disallowedTools: string[];
-  model: string;
+  claudeModel: string;
+  codexModel: string;
 }
 
 const DEFAULT_SETTINGS: AgentSettings = {
@@ -36,7 +37,8 @@ const DEFAULT_SETTINGS: AgentSettings = {
   denyPhrases: [],
   allowList: [],
   disallowedTools: [],
-  model: "",
+  claudeModel: "",
+  codexModel: "",
 };
 
 export function useAgentSettings() {

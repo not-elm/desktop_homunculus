@@ -248,7 +248,7 @@ function buildQueryOptions(
       }
     },
   };
-  if (settings.model) options.model = settings.model;
+  if (settings.claudeModel) options.model = settings.claudeModel;
   if (sessionId) options.resume = sessionId;
   return options;
 }
