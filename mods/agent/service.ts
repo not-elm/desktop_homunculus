@@ -19,6 +19,7 @@ import path from "node:path";
 const keyboardHook = new KeyboardHookService();
 
 const activeSessions = new Map<string, AbortController>();
+const activeWebviews = new Map<string, Webview>();
 const pendingApprovals = new Map<string, Deferred<{ approved: boolean; message?: string }>>();
 const pendingQuestions = new Map<string, Deferred<Record<string, string>>>();
 const pendingInterrupts = new Map<string, Deferred<void>>();
@@ -41,15 +42,25 @@ async function loadCharacterSettings(
   return saved ? { ...DEFAULT_SETTINGS, ...saved } : { ...DEFAULT_SETTINGS };
 }
 
-async function openSessionUi(characterId: string): Promise<void> {
+async function openSessionUi(characterId: string): Promise<Webview> {
   const vrm = await Vrm.findByName(characterId);
-  await Webview.open({
+  return Webview.open({
     source: webviewSource.local("agent:session-ui"),
     size: [0.6, 0.8],
     viewportSize: [400, 500],
     linkedVrm: vrm.entity,
     offset: [-0.8, 0],
   });
+}
+
+function closeSessionUi(characterId: string): void {
+  const webview = activeWebviews.get(characterId);
+  if (webview) {
+    webview.close().catch((err) =>
+      console.warn("[agent] Failed to close session UI:", err),
+    );
+    activeWebviews.delete(characterId);
+  }
 }
 
 async function speakGreeting(
@@ -108,7 +119,8 @@ async function startSession(characterId: string): Promise<void> {
   const sessionAbort = new AbortController();
   activeSessions.set(characterId, sessionAbort);
 
-  await openSessionUi(characterId);
+  const webview = await openSessionUi(characterId);
+  activeWebviews.set(characterId, webview);
   await speakGreeting(characterId, settings.greetingPhrases);
   launchSessionLoop(characterId, executer, sessionAbort, settings, resolvedKey);
 }
@@ -147,6 +159,7 @@ function handleSessionCrash(
     speakRandomPhrase(characterId, settings.errorPhrases);
   }
   activeSessions.delete(characterId);
+  closeSessionUi(characterId);
   emitStatus(characterId, "idle");
 }
 
@@ -185,6 +198,7 @@ async function stopSession(characterId: string): Promise<void> {
   if (!controller) return;
   controller.abort();
   activeSessions.delete(characterId);
+  closeSessionUi(characterId);
   emitStatus(characterId, "idle");
 }
 
@@ -440,6 +454,7 @@ async function resolvePermission(
   const combined = AbortSignal.any([signal, permAbort.signal]);
 
   pendingApprovals.set(event.requestId, deferred);
+  console.log(`[agent] resolvePermission: ${event.tool} (${event.requestId})`);
 
   signals.send("agent:permission", {
     characterId,
@@ -463,6 +478,7 @@ async function resolvePermission(
 
   try {
     const result = await deferred.promise;
+    console.log(`[agent] permission result: approved=${result.approved}, message=${result.message}`);
     return { type: "permission", approved: result.approved, message: result.message };
   } finally {
     clearTimeout(timer);
