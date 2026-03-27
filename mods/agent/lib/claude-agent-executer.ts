@@ -9,6 +9,7 @@ import type {
 import type { AIAgentExecuter, AgentEvent, AgentResponse } from "./ai-agent-executer.ts";
 import { AsyncQueue, Deferred } from "./async-queue.ts";
 import type { AgentSettings, Persona } from "./types.ts";
+import { buildCharacterPrompt } from "./prompt.ts";
 
 /** Item enqueued by canUseTool; awaited by mergeStreams. */
 interface PermissionQueueItem {
@@ -73,6 +74,7 @@ function createCanUseToolHandler(
   permQueue: AsyncQueue<PermissionQueueItem>,
 ): Options["canUseTool"] {
   return (toolName, input, options) => {
+    console.log(`[agent] canUseTool called: ${toolName} (${options.toolUseID})`);
     const deferred = new Deferred<PermissionResult>();
     permQueue.trackDeferred(deferred);
 
@@ -234,26 +236,21 @@ function buildQueryOptions(
     hooks: {
       PreToolUse: [buildReadOnlyHook()],
     },
+    settings: { permissions: { allow: ["Bash(*)", "Write(*)", "Edit(*)"] } },
+    allowedTools: settings.allowList.length > 0 ? settings.allowList : undefined,
     disallowedTools: settings.disallowedTools,
     canUseTool,
-    env: { ...process.env, NODE_OPTIONS: "", ANTHROPIC_API_KEY: apiKey },
+    env: { ...process.env, NODE_OPTIONS: "", ANTHROPIC_API_KEY: apiKey, DEBUG_CLAUDE_AGENT_SDK: "1" },
     maxTurns: 100,
+    stderr: (data: string) => {
+      for (const line of data.split("\n")) {
+        if (line.trim()) console.log(`[sdk-stderr] ${line}`);
+      }
+    },
   };
   if (settings.model) options.model = settings.model;
   if (sessionId) options.resume = sessionId;
   return options;
-}
-
-/** Builds the system prompt from persona information. */
-function buildCharacterPrompt(persona: Persona): string {
-  return [
-    `あなたは「${persona.name}」です。`,
-    persona.personality && `性格: ${persona.personality}`,
-    `Desktop Homunculusのキャラクターとして、ユーザーの指示に従って作業を行ってください。`,
-    `応答は簡潔にしてください。`,
-  ]
-    .filter(Boolean)
-    .join("\n");
 }
 
 /** Hook that auto-allows read-only tools without prompting. */
