@@ -31,13 +31,16 @@ impl NodeProcessHandle {
         Self { child, job }
     }
 
-    /// Gracefully shut down the child process.
+    /// Shut down the child process.
     ///
     /// On Unix: sends SIGTERM, waits up to `grace` for the process to exit,
     /// then falls back to SIGKILL + wait.
     ///
-    /// On Windows: sends CTRL_BREAK_EVENT (best-effort), waits up to `grace`,
-    /// then falls back to TerminateJobObject (or kill) + wait.
+    /// On Windows: sends CTRL_BREAK_EVENT as a best-effort signal and returns
+    /// immediately — does **not** block. Actual termination is delegated to
+    /// [`Drop`], which closes the Job Object handle (triggering
+    /// `KILL_ON_JOB_CLOSE`). When no Job Object is available, falls back to
+    /// `kill()` + `try_wait()` inline.
     pub(crate) fn shutdown(&mut self, _grace: Duration) {
         if let Ok(Some(_)) = self.child.try_wait() {
             return;
@@ -62,26 +65,19 @@ impl NodeProcessHandle {
 
         #[cfg(windows)]
         {
-            // Best-effort graceful signal: CTRL_BREAK_EVENT to the process group.
-            // Only works if spawned with CREATE_NEW_PROCESS_GROUP.
-            // Node.js translates this to SIGBREAK (not SIGINT).
+            // Best-effort graceful signal — may not be delivered in release
+            // builds where the parent is a GUI-subsystem process and the child
+            // was spawned with CREATE_NO_WINDOW (no shared console).
             let _ = homunculus_utils::process::send_ctrl_break(self.child.id());
 
-            let deadline = std::time::Instant::now() + _grace;
-            while std::time::Instant::now() < deadline {
-                if let Ok(Some(_)) = self.child.try_wait() {
-                    return;
-                }
-                std::thread::sleep(Duration::from_millis(25));
-            }
-
-            // Grace period expired — forceful termination.
-            if let Some(ref job) = self.job {
-                homunculus_utils::process::terminate_job(job);
-            } else {
+            // Do NOT busy-wait for the process to exit. Actual termination is
+            // handled by Drop (Job Object KILL_ON_JOB_CLOSE). When no Job
+            // Object is available, kill the direct child immediately.
+            if self.job.is_none() {
                 let _ = self.child.kill();
+                // Non-blocking: Drop will reap if the process is still running.
+                let _ = self.child.try_wait();
             }
-            let _ = self.child.wait();
         }
 
         #[cfg(not(any(unix, windows)))]
