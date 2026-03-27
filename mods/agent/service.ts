@@ -4,6 +4,8 @@ import { rpc } from "@hmcs/sdk/rpc";
 import { KeyboardHookService } from "./lib/keyboard-hook.ts";
 import { resolvePttKeycodes, type ResolvedPttKey } from "./lib/key-mapping.ts";
 import { ClaudeAgentExecuter } from "./lib/claude-agent-executer.ts";
+import { CodexAgentExecuter } from "./lib/codex-agent-executer.ts";
+import type { AIAgentExecuter } from "./lib/ai-agent-executer.ts";
 import { Deferred } from "./lib/async-queue.ts";
 import type { AgentEvent, AgentResponse } from "./lib/ai-agent-executer.ts";
 import {
@@ -101,20 +103,15 @@ async function startKeyboardHook(): Promise<void> {
 }
 
 async function startSession(characterId: string): Promise<void> {
-  assertCanStartSession(characterId);
-
   const settings = await loadCharacterSettings(characterId);
+  assertCanStartSession(characterId, settings);
+
   const resolvedKey = validatePttKey(settings);
   const persona = await loadPersona(characterId);
   const workDir = resolveWorkingDirectory(characterId, settings);
   mkdirSync(workDir, { recursive: true });
 
-  const executer = new ClaudeAgentExecuter(
-    persona,
-    settings,
-    currentApiKey!,
-    workDir,
-  );
+  const executer = createExecuter(settings, persona, currentApiKey, workDir);
 
   const sessionAbort = new AbortController();
   activeSessions.set(characterId, sessionAbort);
@@ -125,8 +122,11 @@ async function startSession(characterId: string): Promise<void> {
   launchSessionLoop(characterId, executer, sessionAbort, settings, resolvedKey);
 }
 
-function assertCanStartSession(characterId: string): void {
-  if (!currentApiKey) {
+function assertCanStartSession(
+  characterId: string,
+  settings: AgentSettings,
+): void {
+  if (settings.executor === "sdk" && !currentApiKey) {
     throw new Error(
       "API key not configured. Open Agent Settings to set your Anthropic API key.",
     );
@@ -138,7 +138,7 @@ function assertCanStartSession(characterId: string): void {
 
 function launchSessionLoop(
   characterId: string,
-  executer: ClaudeAgentExecuter,
+  executer: AIAgentExecuter,
   sessionAbort: AbortController,
   settings: AgentSettings,
   resolvedKey: ResolvedPttKey,
@@ -193,6 +193,22 @@ function resolveWorkingDirectory(
   );
 }
 
+function createExecuter(
+  settings: AgentSettings,
+  persona: Persona,
+  apiKey: string | null,
+  workDir: string,
+): AIAgentExecuter {
+  switch (settings.executor) {
+    case "codex":
+      return new CodexAgentExecuter(persona, settings, workDir);
+    case "sdk":
+      return new ClaudeAgentExecuter(persona, settings, apiKey!, workDir);
+    default:
+      return new ClaudeAgentExecuter(persona, settings, apiKey!, workDir);
+  }
+}
+
 async function stopSession(characterId: string): Promise<void> {
   const controller = activeSessions.get(characterId);
   if (!controller) return;
@@ -227,7 +243,7 @@ function saveSession(characterId: string, sessionId: string | null): void {
 
 async function runSession(
   characterId: string,
-  executer: ClaudeAgentExecuter,
+  executer: AIAgentExecuter,
   sessionAbort: AbortController,
   settings: AgentSettings,
   resolvedKey: ResolvedPttKey,
@@ -265,7 +281,7 @@ async function runSession(
 
 async function executeOneRound(
   characterId: string,
-  executer: ClaudeAgentExecuter,
+  executer: AIAgentExecuter,
   text: string,
   sessionId: string | null,
   settings: AgentSettings,
