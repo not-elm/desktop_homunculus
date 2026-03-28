@@ -50,6 +50,30 @@ const PARAMS: {
       max: 2.0,
       step: 0.05,
     },
+    {
+      key: "pauseLength",
+      label: "Pause Length",
+      desc: "Pause duration at punctuation marks",
+      min: 0,
+      max: 2.0,
+      step: 0.01,
+    },
+    {
+      key: "prePhonemeLength",
+      label: "Pre Phoneme Length",
+      desc: "Silence before speech starts",
+      min: 0,
+      max: 1.5,
+      step: 0.01,
+    },
+    {
+      key: "postPhonemeLength",
+      label: "Post Phoneme Length",
+      desc: "Silence after speech ends",
+      min: 0,
+      max: 1.5,
+      step: 0.01,
+    },
   ];
 
 export function App() {
