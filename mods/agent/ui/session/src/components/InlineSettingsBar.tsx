@@ -6,14 +6,20 @@ import {
   SelectValue,
 } from "@hmcs/ui";
 import type { AgentSettings, PttKey } from "../hooks/useAgentSettings";
+import { useModelOptions } from "../hooks/useModelOptions";
+import type { SelectOption } from "../hooks/useModelOptions";
 import { KeyCaptureField } from "./KeyCaptureField";
 
 interface InlineSettingsBarProps {
   settings: AgentSettings;
   onSettingsChange: (settings: AgentSettings) => void;
+  apiKey: string;
 }
 
-export function InlineSettingsBar({ settings, onSettingsChange }: InlineSettingsBarProps) {
+export function InlineSettingsBar({ settings, onSettingsChange, apiKey }: InlineSettingsBarProps) {
+  const { options: modelOptions, loading: modelsLoading } = useModelOptions(settings.executor, apiKey);
+  const currentModel = settings.executor === "codex" ? settings.codexModel : settings.claudeModel;
+
   function updatePttKey(key: PttKey | null) {
     onSettingsChange({ ...settings, pttKey: key });
   }
@@ -27,15 +33,19 @@ export function InlineSettingsBar({ settings, onSettingsChange }: InlineSettings
     onSettingsChange({ ...settings, [key]: value === "default" ? "" : value });
   }
 
-  const currentModel = settings.executor === "codex" ? settings.codexModel : settings.claudeModel;
-
   return (
     <div className="hud-inline-settings">
       <CompactKeyCapture pttKey={settings.pttKey} onChange={updatePttKey} />
       <span className="hud-inline-sep" />
       <CompactSelect value={settings.executor} onChange={updateExecutor} options={EXECUTOR_OPTIONS} />
       <span className="hud-inline-sep" />
-      <CompactSelect value={currentModel || "default"} onChange={updateModel} options={MODEL_OPTIONS} />
+      <CompactSelect
+        key={settings.executor}
+        value={currentModel || "default"}
+        onChange={updateModel}
+        options={modelOptions}
+        loading={modelsLoading}
+      />
     </div>
   );
 }
@@ -52,14 +62,17 @@ function CompactKeyCapture({ pttKey, onChange }: { pttKey: PttKey | null; onChan
   );
 }
 
-interface SelectOption { value: string; label: string }
-
-function CompactSelect({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: SelectOption[] }) {
+function CompactSelect({ value, onChange, options, loading }: {
+  value: string;
+  onChange: (v: string) => void;
+  options: SelectOption[];
+  loading?: boolean;
+}) {
   return (
     <div className="hud-inline-select">
-      <Select value={value} onValueChange={onChange}>
+      <Select value={value} onValueChange={onChange} disabled={loading}>
         <SelectTrigger className="hud-inline-select-trigger">
-          <SelectValue />
+          {loading ? <span className="hud-inline-loading">...</span> : <SelectValue />}
         </SelectTrigger>
         <SelectContent>
           {options.map((o) => (
@@ -75,11 +88,4 @@ const EXECUTOR_OPTIONS: SelectOption[] = [
   { value: "sdk", label: "Claude SDK" },
   { value: "cli", label: "Claude CLI" },
   { value: "codex", label: "Codex" },
-];
-
-const MODEL_OPTIONS: SelectOption[] = [
-  { value: "default", label: "Default" },
-  { value: "claude-sonnet-4-6", label: "Sonnet 4.6" },
-  { value: "claude-opus-4-6", label: "Opus 4.6" },
-  { value: "claude-haiku-4-5", label: "Haiku 4.5" },
 ];

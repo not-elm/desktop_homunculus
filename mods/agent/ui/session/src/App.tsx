@@ -100,6 +100,7 @@ function AgentPanel({ session, settingsHook, view, onViewChange, onCollapse }: A
       <InlineSettingsBar
         settings={settingsHook.settings}
         onSettingsChange={settingsHook.setSettings}
+        apiKey={settingsHook.apiKey}
       />
       {view === "session" ? (
         <SessionContent session={session} />
