@@ -8,6 +8,7 @@ export function useCharacterSettings() {
   const [entity, setEntity] = useState<number | null>(null);
   const [tab, setTab] = useState<Tab>("basic");
   const [name, setName] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [scale, setScale] = useState(1);
   const [profile, setProfile] = useState("");
   const [personality, setPersonality] = useState("");
@@ -35,6 +36,7 @@ export function useCharacterSettings() {
       if (cancelled) return;
 
       setName(vrmName);
+      setDisplayName(persona.displayName ?? "");
       setScale(transform.scale[0]);
       setProfile(persona.profile);
       setPersonality(persona.personality ?? "");
@@ -57,6 +59,7 @@ export function useCharacterSettings() {
     setSaving(true);
     try {
       await vrm.setPersona({
+        displayName: displayName || null,
         profile,
         personality: personality || null,
         ocean,
@@ -75,11 +78,13 @@ export function useCharacterSettings() {
     } finally {
       setSaving(false);
     }
-  }, [vrm, entity, profile, personality, ocean, scale, saving]);
+  }, [vrm, entity, displayName, profile, personality, ocean, scale, saving]);
 
   return {
     loading,
     name,
+    displayName,
+    setDisplayName,
     tab,
     setTab,
     scale,

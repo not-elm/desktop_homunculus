@@ -7,6 +7,8 @@ export function App() {
   const {
     loading,
     name,
+    displayName,
+    setDisplayName,
     tab,
     setTab,
     scale,
@@ -51,7 +53,7 @@ export function App() {
       {/* Header */}
       <div className="settings-header">
         <h1 className="settings-title">Settings</h1>
-        <span className="settings-entity-name">{name}</span>
+        <span className="settings-entity-name">{displayName || name}</span>
       </div>
 
       {/* Tabs */}
@@ -70,7 +72,13 @@ export function App() {
       {/* Content */}
       <div className={`settings-content${tab === "basic" ? " settings-content--visible" : ""}`}>
         {tab === "basic" && (
-          <BasicTab name={name} scale={scale} onScaleChange={setScale} />
+          <BasicTab
+            name={name}
+            displayName={displayName}
+            onDisplayNameChange={setDisplayName}
+            scale={scale}
+            onScaleChange={setScale}
+          />
         )}
         {tab === "persona" && (
           <PersonaTab
