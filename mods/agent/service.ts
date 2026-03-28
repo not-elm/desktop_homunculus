@@ -44,36 +44,6 @@ async function loadCharacterSettings(
   return saved ? { ...DEFAULT_SETTINGS, ...saved } : { ...DEFAULT_SETTINGS };
 }
 
-async function speakGreeting(
-  characterId: string,
-  phrases: string[],
-): Promise<void> {
-  if (phrases.length === 0) return;
-  const phrase = phrases[Math.floor(Math.random() * phrases.length)];
-  await rpc
-    .call({
-      modName: "@hmcs/voicevox",
-      method: "speak",
-      body: { name: characterId, text: phrase },
-    })
-    .catch(() => console.warn("[agent] TTS unavailable for greeting"));
-}
-
-async function speakRandomPhrase(
-  characterId: string,
-  phrases: string[],
-): Promise<void> {
-  if (phrases.length === 0) return;
-  const phrase = phrases[Math.floor(Math.random() * phrases.length)];
-  rpc
-    .call({
-      modName: "@hmcs/voicevox",
-      method: "speak",
-      body: { name: characterId, text: phrase },
-    })
-    .catch(() => emitLog(characterId, "warning", "TTS unavailable"));
-}
-
 function speakText(characterId: string, text: string): void {
   const { sentences, log } = sanitizeForTts(text);
   if (sentences.length === 0) return;
@@ -110,7 +80,6 @@ async function startSession(characterId: string): Promise<void> {
   const sessionAbort = new AbortController();
   activeSessions.set(characterId, sessionAbort);
 
-  await speakGreeting(characterId, settings.greetingPhrases);
   launchSessionLoop(characterId, executer, sessionAbort, settings, resolvedKey);
 }
 
@@ -148,7 +117,6 @@ function handleSessionCrash(
   if (!isAbortError(err)) {
     console.error(`[agent] Session error for ${characterId}:`, err);
     emitLog(characterId, "error", extractErrorMessage(err));
-    speakRandomPhrase(characterId, settings.errorPhrases);
   }
   activeSessions.delete(characterId);
   emitStatus(characterId, "idle");
@@ -444,7 +412,6 @@ function handleCompleted(
 ): undefined {
   emitStatus(characterId, "idle");
   saveSession(characterId, settings.executor, sessionId);
-  speakRandomPhrase(characterId, settings.completionPhrases);
   return undefined;
 }
 
@@ -454,7 +421,6 @@ function handleError(
   settings: AgentSettings,
 ): undefined {
   emitLog(characterId, "error", message);
-  speakRandomPhrase(characterId, settings.errorPhrases);
   return undefined;
 }
 

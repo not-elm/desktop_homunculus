@@ -13,9 +13,6 @@ export interface PttKey {
 
 export interface AgentSettings {
   executor: "sdk" | "cli" | "codex";
-  greetingPhrases: string[];
-  completionPhrases: string[];
-  errorPhrases: string[];
   workingDirectories: WorkingDirectories;
   pttKey: PttKey | null;
   approvalPhrases: string[];
@@ -27,9 +24,6 @@ export interface AgentSettings {
 
 const DEFAULT_SETTINGS: AgentSettings = {
   executor: "sdk",
-  greetingPhrases: [],
-  completionPhrases: [],
-  errorPhrases: [],
   workingDirectories: { paths: [], default: 0 },
   pttKey: null,
   approvalPhrases: [],

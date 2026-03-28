@@ -12,14 +12,6 @@ export function GeneralSettingsTab({ settings, onSettingsChange }: GeneralSettin
     onSettingsChange({ ...settings, [key]: value });
   }
 
-  function addPhrase(key: keyof Pick<AgentSettings, "greetingPhrases" | "completionPhrases" | "errorPhrases">, phrase: string) {
-    update(key, [...settings[key], phrase]);
-  }
-
-  function removePhrase(key: keyof Pick<AgentSettings, "greetingPhrases" | "completionPhrases" | "errorPhrases">, index: number) {
-    update(key, settings[key].filter((_, i) => i !== index));
-  }
-
   function addToList(
     key: keyof Pick<AgentSettings, "approvalPhrases" | "denyPhrases" | "allowList" | "disallowedTools">,
     item: string,
@@ -60,32 +52,6 @@ export function GeneralSettingsTab({ settings, onSettingsChange }: GeneralSettin
         onAdd={addDirectory}
         onRemove={removeDirectory}
         onSetDefault={setDefaultDirectory}
-      />
-
-      <div className="agent-divider" />
-
-      <PhraseListField
-        label="Greeting Phrases"
-        description="Said when the agent activates"
-        phrases={settings.greetingPhrases}
-        onAdd={(p) => addPhrase("greetingPhrases", p)}
-        onRemove={(i) => removePhrase("greetingPhrases", i)}
-      />
-
-      <PhraseListField
-        label="Completion Phrases"
-        description="Said when a task finishes"
-        phrases={settings.completionPhrases}
-        onAdd={(p) => addPhrase("completionPhrases", p)}
-        onRemove={(i) => removePhrase("completionPhrases", i)}
-      />
-
-      <PhraseListField
-        label="Error Phrases"
-        description="Said when an error occurs"
-        phrases={settings.errorPhrases}
-        onAdd={(p) => addPhrase("errorPhrases", p)}
-        onRemove={(i) => removePhrase("errorPhrases", i)}
       />
 
       <div className="agent-divider" />

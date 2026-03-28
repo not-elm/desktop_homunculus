@@ -10,9 +10,6 @@ export interface AgentSettings {
   pttKey: PttKey | null;
   approvalPhrases: string[];
   denyPhrases: string[];
-  greetingPhrases: string[];
-  completionPhrases: string[];
-  errorPhrases: string[];
   workingDirectories: { paths: string[]; default: number };
   allowList: string[];
   disallowedTools: string[];
@@ -61,9 +58,6 @@ export const DEFAULT_SETTINGS: AgentSettings = {
   pttKey: null,
   approvalPhrases: ["はい", "yes", "ok", "allow"],
   denyPhrases: ["いいえ", "no", "deny", "cancel"],
-  greetingPhrases: [],
-  completionPhrases: [],
-  errorPhrases: [],
   workingDirectories: { paths: [], default: 0 },
   allowList: [],
   disallowedTools: [],
