@@ -102,20 +102,23 @@ function AgentPanel({ session, settingsHook, view, onViewChange, onCollapse }: A
         onSettingsChange={settingsHook.setSettings}
         apiKey={settingsHook.apiKey}
       />
-      {view === "session" ? (
-        <SessionContent session={session} />
-      ) : (
-        <SettingsView
-          settings={settingsHook.settings}
-          onSettingsChange={settingsHook.setSettings}
-          saving={settingsHook.saving}
-          onSave={settingsHook.saveSettings}
-          apiKey={settingsHook.apiKey}
-          onApiKeyChange={settingsHook.setApiKey}
-          savingApiKey={settingsHook.savingApiKey}
-          onApiKeySave={settingsHook.saveApiKey}
-        />
-      )}
+      <div className="hud-view-slider" data-view={view}>
+        <div className="hud-view-slide">
+          <SessionContent session={session} />
+        </div>
+        <div className="hud-view-slide">
+          <SettingsView
+            settings={settingsHook.settings}
+            onSettingsChange={settingsHook.setSettings}
+            saving={settingsHook.saving}
+            onSave={settingsHook.saveSettings}
+            apiKey={settingsHook.apiKey}
+            onApiKeyChange={settingsHook.setApiKey}
+            savingApiKey={settingsHook.savingApiKey}
+            onApiKeySave={settingsHook.saveApiKey}
+          />
+        </div>
+      </div>
     </div>
   );
 }
