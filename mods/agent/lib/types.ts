@@ -6,13 +6,15 @@ export interface PttKey {
 
 /** Agent settings stored in preferences. */
 export interface AgentSettings {
-  executor: "sdk" | "cli" | "codex";
+  executor: "sdk" | "cli" | "codex" | "codex-appserver";
   pttKey: PttKey | null;
   approvalPhrases: string[];
   denyPhrases: string[];
   workingDirectories: { paths: string[]; default: number };
   allowList: string[];
   disallowedTools: string[];
+  /** Shell command patterns auto-approved by AppServer executor (regex strings). */
+  commandAutoApprovePatterns: string[];
   claudeModel: string;
 }
 
@@ -61,6 +63,7 @@ export const DEFAULT_SETTINGS: AgentSettings = {
   workingDirectories: { paths: [], default: 0 },
   allowList: [],
   disallowedTools: [],
+  commandAutoApprovePatterns: ["^(cat|head|tail|less|more)\\s", "^ls\\b", "^pwd$", "^echo\\s", "^wc\\s", "^find\\s", "^grep\\s", "^rg\\s"],
   claudeModel: "",
 };
 
