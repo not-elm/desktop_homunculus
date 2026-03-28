@@ -2,6 +2,10 @@
 //!
 //! Stateless speech recognition and model downloads using `homunculus_microphone`.
 
+pub mod ptt;
+
+pub use ptt::{PttSessionRegistry, PttStartOptions, PttStartResponse, SttPttPlugin};
+
 use std::sync::Arc;
 use std::time::Instant;
 
@@ -42,6 +46,10 @@ pub enum SttError {
     InvalidLanguage(String),
     #[error("Invalid model size")]
     InvalidModelSize,
+    #[error("PTT session not found: {0}")]
+    SessionNotFound(String),
+    #[error("PTT session expired: {0}")]
+    SessionExpired(String),
 }
 
 /// Whisper-supported language codes (ISO 639-1) plus "auto" for auto-detection.
