@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Vrm, preferences, Webview, webviewSource, signals, stt } from "@hmcs/sdk";
+import { Vrm, preferences, signals, stt } from "@hmcs/sdk";
 import { rpc } from "@hmcs/sdk/rpc";
 import { KeyboardHookService } from "./lib/keyboard-hook.ts";
 import { resolvePttKeycodes, type ResolvedPttKey } from "./lib/key-mapping.ts";
@@ -22,7 +22,6 @@ import path from "node:path";
 const keyboardHook = new KeyboardHookService();
 
 const activeSessions = new Map<string, AbortController>();
-const activeWebviews = new Map<string, Webview>();
 const pendingApprovals = new Map<string, Deferred<{ approved: boolean; message?: string }>>();
 const pendingQuestions = new Map<string, Deferred<Record<string, string>>>();
 const pendingInterrupts = new Map<string, Deferred<void>>();
@@ -43,27 +42,6 @@ async function loadCharacterSettings(
 ): Promise<AgentSettings> {
   const saved = await preferences.load<AgentSettings>("agent::" + characterId);
   return saved ? { ...DEFAULT_SETTINGS, ...saved } : { ...DEFAULT_SETTINGS };
-}
-
-async function openSessionUi(characterId: string): Promise<Webview> {
-  const vrm = await Vrm.findByName(characterId);
-  return Webview.open({
-    source: webviewSource.local("agent:session-ui"),
-    size: [0.6, 0.8],
-    viewportSize: [400, 500],
-    linkedVrm: vrm.entity,
-    offset: [-0.8, 0],
-  });
-}
-
-function closeSessionUi(characterId: string): void {
-  const webview = activeWebviews.get(characterId);
-  if (webview) {
-    webview.close().catch((err) =>
-      console.warn("[agent] Failed to close session UI:", err),
-    );
-    activeWebviews.delete(characterId);
-  }
 }
 
 async function speakGreeting(
@@ -132,8 +110,6 @@ async function startSession(characterId: string): Promise<void> {
   const sessionAbort = new AbortController();
   activeSessions.set(characterId, sessionAbort);
 
-  const webview = await openSessionUi(characterId);
-  activeWebviews.set(characterId, webview);
   await speakGreeting(characterId, settings.greetingPhrases);
   launchSessionLoop(characterId, executer, sessionAbort, settings, resolvedKey);
 }
@@ -175,7 +151,6 @@ function handleSessionCrash(
     speakRandomPhrase(characterId, settings.errorPhrases);
   }
   activeSessions.delete(characterId);
-  closeSessionUi(characterId);
   emitStatus(characterId, "idle");
 }
 
@@ -230,7 +205,6 @@ async function stopSession(characterId: string): Promise<void> {
   if (!controller) return;
   controller.abort();
   activeSessions.delete(characterId);
-  closeSessionUi(characterId);
   emitStatus(characterId, "idle");
 }
 

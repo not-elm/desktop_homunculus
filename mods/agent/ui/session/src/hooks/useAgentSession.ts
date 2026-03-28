@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { signals, Webview } from "@hmcs/sdk";
+import { audio, signals, Webview } from "@hmcs/sdk";
 import { rpc } from "@hmcs/sdk/rpc";
 
 export type AgentState = "idle" | "thinking" | "executing" | "waiting" | "listening";
@@ -24,24 +24,7 @@ export interface PendingQuestion {
   questions: unknown;
 }
 
-export interface AgentSessionState {
-  state: AgentState;
-  elapsedMs: number;
-  entries: LogEntry[];
-  permission: PendingPermission | null;
-  question: PendingQuestion | null;
-  hasPending: boolean;
-  isRecording: boolean;
-}
-
-export interface AgentSessionActions {
-  approvePermission: (requestId: string) => Promise<void>;
-  denyPermission: (requestId: string) => Promise<void>;
-  answerQuestion: (requestId: string, answers: Record<string, string>) => Promise<void>;
-  interruptSession: () => Promise<void>;
-}
-
-export function useAgentSession(): AgentSessionState & AgentSessionActions {
+export function useAgentSession() {
   const [characterId, setCharacterId] = useState("");
 
   useEffect(() => {
@@ -50,8 +33,7 @@ export function useAgentSession(): AgentSessionState & AgentSessionActions {
       const vrm = await Webview.current()?.linkedVrm();
       if (cancelled) return;
       const name = vrm ? await vrm.name() : "";
-      if (cancelled) return;
-      setCharacterId(name);
+      if (!cancelled) setCharacterId(name);
     })();
     return () => { cancelled = true; };
   }, []);
@@ -62,7 +44,20 @@ export function useAgentSession(): AgentSessionState & AgentSessionActions {
   const [question, setQuestion] = useState<PendingQuestion | null>(null);
   const [elapsedMs, setElapsedMs] = useState(0);
   const [isRecording, setIsRecording] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const startTimeRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!characterId) return;
+    let cancelled = false;
+    checkInitialStatus(characterId).then((active) => {
+      if (!cancelled && active) {
+        setState((prev) => (prev === "idle" ? "listening" : prev));
+        startTimeRef.current ??= Date.now();
+      }
+    });
+    return () => { cancelled = true; };
+  }, [characterId]);
 
   useEffect(() => {
     if (!characterId) return;
@@ -103,23 +98,52 @@ export function useAgentSession(): AgentSessionState & AgentSessionActions {
   }, [state]);
 
   const approvePermission = useCallback(async (requestId: string) => {
-    await callApprovePermission(requestId, true);
+    await callRpc("approve-permission", { requestId, approved: true });
     setPermission(null);
   }, []);
 
   const denyPermission = useCallback(async (requestId: string) => {
-    await callApprovePermission(requestId, false);
+    await callRpc("approve-permission", { requestId, approved: false });
     setPermission(null);
   }, []);
 
   const answerQuestion = useCallback(async (requestId: string, answers: Record<string, string>) => {
-    await callAnswerQuestion(requestId, answers);
+    await callRpc("answer-question", { requestId, answers });
     setQuestion(null);
   }, []);
 
   const interruptSession = useCallback(async () => {
-    if (characterId) await callInterruptSession(characterId);
+    if (characterId) await callRpc("interrupt-session", { characterId });
   }, [characterId]);
+
+  const startSession = useCallback(async () => {
+    if (!characterId) return;
+    setError(null);
+    setEntries([]);
+    try {
+      await callRpc("start-session", { characterId });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  }, [characterId]);
+
+  const stopSession = useCallback(async () => {
+    if (!characterId) return;
+    setError(null);
+    try {
+      await callRpc("stop-session", { characterId });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  }, [characterId]);
+
+  const closePanel = useCallback(async () => {
+    if (characterId && state !== "idle") {
+      await callRpc("stop-session", { characterId }).catch(() => {});
+    }
+    audio.se.play("se:close").catch(() => {});
+    await Webview.current()?.close();
+  }, [characterId, state]);
 
   return {
     state,
@@ -129,115 +153,66 @@ export function useAgentSession(): AgentSessionState & AgentSessionActions {
     question,
     hasPending: permission !== null || question !== null,
     isRecording,
+    error,
     approvePermission,
     denyPermission,
     answerQuestion,
     interruptSession,
+    startSession,
+    stopSession,
+    closePanel,
   };
 }
 
-function subscribeToStatus(
-  id: string,
-  onState: (state: AgentState) => void,
-) {
+async function checkInitialStatus(characterId: string): Promise<boolean> {
+  try {
+    const result = await callRpc("status", {});
+    if (result && typeof result === "object") {
+      return characterId in (result as Record<string, string>);
+    }
+  } catch { /* ignore */ }
+  return false;
+}
+
+function callRpc(method: string, body: Record<string, unknown>) {
+  return rpc.call({ modName: "@hmcs/agent", method, body });
+}
+
+function subscribeToStatus(id: string, onState: (state: AgentState) => void) {
   return signals.stream<{ characterId: string; state: string }>(
     "agent:status",
-    (payload) => {
-      if (payload.characterId === id) {
-        onState(payload.state as AgentState);
-      }
-    },
+    (p) => { if (p.characterId === id) onState(p.state as AgentState); },
   );
 }
 
-function subscribeToLog(
-  id: string,
-  onEntry: (entry: LogEntry) => void,
-) {
+function subscribeToLog(id: string, onEntry: (entry: LogEntry) => void) {
   return signals.stream<{ characterId: string; type: string; message: string; timestamp: number }>(
     "agent:log",
-    (payload) => {
-      if (payload.characterId === id) {
-        onEntry({
-          id: crypto.randomUUID(),
-          type: payload.type as LogType,
-          message: payload.message,
-          timestamp: payload.timestamp,
-        });
+    (p) => {
+      if (p.characterId === id) {
+        onEntry({ id: crypto.randomUUID(), type: p.type as LogType, message: p.message, timestamp: p.timestamp });
       }
     },
   );
 }
 
-function subscribeToPermission(
-  id: string,
-  onPermission: (perm: PendingPermission) => void,
-) {
+function subscribeToPermission(id: string, onPermission: (perm: PendingPermission) => void) {
   return signals.stream<{ characterId: string; requestId: string; action: string; target: string }>(
     "agent:permission",
-    (payload) => {
-      if (payload.characterId === id) {
-        onPermission({
-          requestId: payload.requestId,
-          action: payload.action,
-          target: payload.target,
-        });
-      }
-    },
+    (p) => { if (p.characterId === id) onPermission({ requestId: p.requestId, action: p.action, target: p.target }); },
   );
 }
 
-function subscribeToQuestion(
-  id: string,
-  onQuestion: (q: PendingQuestion) => void,
-) {
+function subscribeToQuestion(id: string, onQuestion: (q: PendingQuestion) => void) {
   return signals.stream<{ characterId: string; requestId: string; questions: unknown }>(
     "agent:question",
-    (payload) => {
-      if (payload.characterId === id) {
-        onQuestion({
-          requestId: payload.requestId,
-          questions: payload.questions,
-        });
-      }
-    },
+    (p) => { if (p.characterId === id) onQuestion({ requestId: p.requestId, questions: p.questions }); },
   );
 }
 
-function subscribeToRecording(
-  id: string,
-  onRecording: (recording: boolean) => void,
-) {
+function subscribeToRecording(id: string, onRecording: (recording: boolean) => void) {
   return signals.stream<{ characterId: string; recording: boolean }>(
     "agent:recording",
-    (payload) => {
-      if (payload.characterId === id) {
-        onRecording(payload.recording);
-      }
-    },
+    (p) => { if (p.characterId === id) onRecording(p.recording); },
   );
-}
-
-async function callApprovePermission(requestId: string, approved: boolean): Promise<void> {
-  await rpc.call({
-    modName: "@hmcs/agent",
-    method: "approve-permission",
-    body: { requestId, approved },
-  });
-}
-
-async function callAnswerQuestion(requestId: string, answers: Record<string, string>): Promise<void> {
-  await rpc.call({
-    modName: "@hmcs/agent",
-    method: "answer-question",
-    body: { requestId, answers },
-  });
-}
-
-async function callInterruptSession(characterId: string): Promise<void> {
-  await rpc.call({
-    modName: "@hmcs/agent",
-    method: "interrupt-session",
-    body: { characterId },
-  });
 }

@@ -14,19 +14,9 @@
     "service": "service.ts",
     "menus": [
       {
-        "id": "open-agent-settings",
-        "text": "Agent Settings",
-        "command": "agent-open-settings"
-      },
-      {
-        "id": "start-agent-session",
-        "text": "会話を開始",
-        "command": "agent-start-session"
-      },
-      {
-        "id": "stop-agent-session",
-        "text": "会話を終了",
-        "command": "agent-stop-session"
+        "id": "open-agent",
+        "text": "Agent",
+        "command": "agent-open-agent"
       }
     ],
     "assets": {
@@ -43,6 +33,7 @@
     }
   },
   "bin": {
+    "agent-open-agent": "commands/open-agent.ts",
     "agent-open-settings": "commands/open-settings.ts",
     "agent-start-session": "commands/start-session.ts",
     "agent-stop-session": "commands/stop-session.ts"
