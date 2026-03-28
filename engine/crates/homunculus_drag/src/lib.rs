@@ -133,7 +133,7 @@ fn on_drag_start(
     if !matches!(trigger.event.button, PointerButton::Primary) {
         return;
     }
-    if !vrm_ray_cast.is_frontmost_hit(&trigger.pointer_location) {
+    if !vrm_ray_cast.is_frontmost_hit(&trigger.pointer_location, |_, _| false) {
         return;
     }
     let vrm_entity = trigger.entity;
