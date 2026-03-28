@@ -7,7 +7,8 @@
   "type": "module",
   "scripts": {
     "build": "pnpm exec vite build ui/settings && pnpm exec vite build ui/session",
-    "dev": "concurrently \"pnpm exec vite dev ui/settings\" \"pnpm exec vite dev ui/session\""
+    "dev": "concurrently \"pnpm exec vite dev ui/settings\" \"pnpm exec vite dev ui/session\"",
+    "test": "vitest run"
   },
   "homunculus": {
     "service": "service.ts",
@@ -60,6 +61,7 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.2.1",
+    "vitest": "^3.2.3",
     "@types/node": "^25.3.3",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
