@@ -158,4 +158,41 @@ describe("sanitizeForTts", () => {
       expect(inlineCodeLog!.length).toBeLessThan(200);
     });
   });
+
+  describe("bracket expansion", () => {
+    it("expands fullwidth brackets with comma insertion", () => {
+      const result = sanitizeForTts("React（UIライブラリ）を使います。");
+      expect(result.sentences[0]).toBe("React、UIライブラリ、を使います。");
+    });
+
+    it("expands halfwidth brackets with comma insertion", () => {
+      const result = sanitizeForTts("エラー(404)が発生。");
+      expect(result.sentences[0]).toBe("エラー、404、が発生。");
+    });
+
+    it("removes empty fullwidth brackets", () => {
+      const result = sanitizeForTts("空（）です。");
+      expect(result.sentences[0]).toBe("空です。");
+    });
+
+    it("removes empty halfwidth brackets", () => {
+      const result = sanitizeForTts("空()です。");
+      expect(result.sentences[0]).toBe("空です。");
+    });
+
+    it("suppresses leading comma at string start", () => {
+      const result = sanitizeForTts("（注意）これは重要。");
+      expect(result.sentences[0]).toBe("注意、これは重要。");
+    });
+
+    it("handles multiple brackets in one sentence", () => {
+      const result = sanitizeForTts("A（補足1）とB（補足2）です。");
+      expect(result.sentences[0]).toBe("A、補足1、とB、補足2、です。");
+    });
+
+    it("logs bracket expansions", () => {
+      const result = sanitizeForTts("React（UIライブラリ）を使います。");
+      expect(result.log.some((l) => l.includes("bracket"))).toBe(true);
+    });
+  });
 });

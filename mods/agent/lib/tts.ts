@@ -26,6 +26,7 @@ export function sanitizeForTts(text: string): SanitizeResult {
   cleaned = applyRule(cleaned, /[*_~]{1,3}/g, "", "emphasis", log);
   cleaned = applyRule(cleaned, /\[([^\]]+)\]\([^)]+\)/g, "$1", "md-link", log);
   cleaned = applyRule(cleaned, /https?:\/\/\S+/g, "URL省略", "bare-url", log);
+  cleaned = expandBrackets(cleaned, log);
   cleaned = cleaned.replace(/\n{2,}/g, "\n").trim();
   if (!cleaned) return { sentences: [], log };
   const sentences = cleaned
@@ -33,6 +34,22 @@ export function sanitizeForTts(text: string): SanitizeResult {
     .map((s) => s.trim())
     .filter(Boolean);
   return { sentences, log };
+}
+
+/**
+ * Expands bracketed phrases into comma-delimited pauses for natural TTS reading.
+ *
+ * Fullwidth `（content）` and halfwidth `(content)` brackets are replaced with
+ * `、content、` so VOICEVOX inserts natural pauses. Empty brackets are removed.
+ * A leading comma is suppressed when the bracket appears at the start of the string.
+ */
+function expandBrackets(text: string, log: string[]): string {
+  return text.replace(/[（(]([^）)]*)[）)]/g, (match, content: string, offset: number) => {
+    if (!content) return "";
+    const truncated = match.length > 80 ? match.slice(0, 80) + "…" : match;
+    log.push(`[bracket] expanded: ${truncated}`);
+    return offset === 0 ? `${content}、` : `、${content}、`;
+  });
 }
 
 function applyRule(
