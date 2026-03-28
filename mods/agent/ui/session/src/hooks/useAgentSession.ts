@@ -17,6 +17,8 @@ export interface PendingPermission {
   requestId: string;
   action: string;
   target: string;
+  /** Available decision options from AppServer. Undefined for Claude executor. */
+  availableDecisions?: string[];
 }
 
 export interface PendingQuestion {
@@ -97,13 +99,13 @@ export function useAgentSession() {
     return () => clearInterval(interval);
   }, [state]);
 
-  const approvePermission = useCallback(async (requestId: string) => {
-    await callRpc("approve-permission", { requestId, approved: true });
+  const approvePermission = useCallback(async (requestId: string, decision?: string) => {
+    await callRpc("approve-permission", { requestId, approved: true, decision: decision ?? "accept" });
     setPermission(null);
   }, []);
 
-  const denyPermission = useCallback(async (requestId: string) => {
-    await callRpc("approve-permission", { requestId, approved: false });
+  const denyPermission = useCallback(async (requestId: string, decision?: string) => {
+    await callRpc("approve-permission", { requestId, approved: false, decision: decision ?? "decline" });
     setPermission(null);
   }, []);
 
@@ -197,9 +199,18 @@ function subscribeToLog(id: string, onEntry: (entry: LogEntry) => void) {
 }
 
 function subscribeToPermission(id: string, onPermission: (perm: PendingPermission) => void) {
-  return signals.stream<{ characterId: string; requestId: string; action: string; target: string }>(
+  return signals.stream<{ characterId: string; requestId: string; action: string; target: string; availableDecisions?: string[] }>(
     "agent:permission",
-    (p) => { if (p.characterId === id) onPermission({ requestId: p.requestId, action: p.action, target: p.target }); },
+    (p) => {
+      if (p.characterId === id) {
+        onPermission({
+          requestId: p.requestId,
+          action: p.action,
+          target: p.target,
+          availableDecisions: p.availableDecisions,
+        });
+      }
+    },
   );
 }
 
