@@ -41,6 +41,7 @@ export interface Ocean {
  * @example
  * ```typescript
  * const persona: Persona = {
+ *   displayName: "エルマー",
  *   profile: "A cheerful virtual assistant",
  *   personality: "Friendly and helpful",
  *   ocean: { openness: 0.8, extraversion: 0.7 },
@@ -49,6 +50,8 @@ export interface Ocean {
  * ```
  */
 export interface Persona {
+    /** Optional display name / nickname for the character. */
+    displayName?: string | null;
     /** Character profile/background description. */
     profile: string;
     /** Personality description in natural language. */
