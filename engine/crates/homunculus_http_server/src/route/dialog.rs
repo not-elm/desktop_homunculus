@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 /// A file type filter for native file dialogs.
-#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct FileFilter {
     /// Display name for the filter (e.g. "Images").
@@ -160,4 +160,84 @@ fn build_file_dialog(
         dialog = dialog.set_directory(path);
     }
     dialog
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn pick_file_request_deserialize_empty() {
+        let json = "{}";
+        let req: PickFileRequest = serde_json::from_str(json).unwrap();
+        assert_eq!(req.title, None);
+        assert_eq!(req.filters, None);
+        assert_eq!(req.default_path, None);
+    }
+
+    #[test]
+    fn pick_file_request_deserialize_full() {
+        let json = r#"{
+            "title": "Choose",
+            "filters": [{"name": "Images", "extensions": ["png", "jpg"]}],
+            "defaultPath": "/tmp"
+        }"#;
+        let req: PickFileRequest = serde_json::from_str(json).unwrap();
+        assert_eq!(req.title.as_deref(), Some("Choose"));
+        assert_eq!(req.filters.as_ref().unwrap().len(), 1);
+        assert_eq!(req.filters.as_ref().unwrap()[0].name, "Images");
+        assert_eq!(
+            req.filters.as_ref().unwrap()[0].extensions,
+            vec!["png", "jpg"]
+        );
+        assert_eq!(req.default_path.as_deref(), Some("/tmp"));
+    }
+
+    #[test]
+    fn pick_folder_request_deserialize_empty() {
+        let json = "{}";
+        let req: PickFolderRequest = serde_json::from_str(json).unwrap();
+        assert_eq!(req.title, None);
+        assert_eq!(req.default_path, None);
+    }
+
+    #[test]
+    fn pick_folder_request_deserialize_full() {
+        let json = r#"{"title": "Pick Dir", "defaultPath": "/home"}"#;
+        let req: PickFolderRequest = serde_json::from_str(json).unwrap();
+        assert_eq!(req.title.as_deref(), Some("Pick Dir"));
+        assert_eq!(req.default_path.as_deref(), Some("/home"));
+    }
+
+    #[test]
+    fn pick_file_response_serialize_with_path() {
+        let resp = PickFileResponse {
+            path: Some("/tmp/file.txt".to_string()),
+        };
+        let json = serde_json::to_value(&resp).unwrap();
+        assert_eq!(json["path"], "/tmp/file.txt");
+    }
+
+    #[test]
+    fn pick_file_response_serialize_cancelled() {
+        let resp = PickFileResponse { path: None };
+        let json = serde_json::to_value(&resp).unwrap();
+        assert!(json["path"].is_null());
+    }
+
+    #[test]
+    fn pick_files_response_serialize_with_paths() {
+        let resp = PickFilesResponse {
+            paths: vec!["/a.txt".to_string(), "/b.txt".to_string()],
+        };
+        let json = serde_json::to_value(&resp).unwrap();
+        assert_eq!(json["paths"], serde_json::json!(["/a.txt", "/b.txt"]));
+    }
+
+    #[test]
+    fn pick_files_response_serialize_cancelled() {
+        let resp = PickFilesResponse { paths: vec![] };
+        let json = serde_json::to_value(&resp).unwrap();
+        assert_eq!(json["paths"], serde_json::json!([]));
+    }
 }
