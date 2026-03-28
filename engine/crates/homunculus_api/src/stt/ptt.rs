@@ -109,11 +109,11 @@ impl PttSessionRegistry {
     /// Remove a session by ID. Returns [`SessionRemoveResult`] indicating
     /// whether the session was found, expired, or unknown.
     pub fn remove(&mut self, id: &Uuid) -> SessionRemoveResult {
-        if let Some((active_id, _)) = &self.active {
-            if active_id == id {
-                let (_, session) = self.active.take().unwrap();
-                return SessionRemoveResult::Found(session);
-            }
+        if let Some((active_id, _)) = &self.active
+            && active_id == id
+        {
+            let (_, session) = self.active.take().unwrap();
+            return SessionRemoveResult::Found(session);
         }
         if self.expired.contains_key(id) {
             self.expired.remove(id);
@@ -124,11 +124,11 @@ impl PttSessionRegistry {
 
     /// Record a session as expired (called by the timeout task).
     pub fn mark_expired(&mut self, id: &Uuid) {
-        if let Some((active_id, _)) = &self.active {
-            if active_id == id {
-                self.active.take();
-                self.expired.insert(*id, Instant::now());
-            }
+        if let Some((active_id, _)) = &self.active
+            && active_id == id
+        {
+            self.active.take();
+            self.expired.insert(*id, Instant::now());
         }
     }
 
@@ -200,7 +200,10 @@ mod tests {
         let mut registry = PttSessionRegistry::default();
         let id = Uuid::new_v4();
         registry.insert(id, dummy_session());
-        assert!(matches!(registry.remove(&id), SessionRemoveResult::Found(_)));
+        assert!(matches!(
+            registry.remove(&id),
+            SessionRemoveResult::Found(_)
+        ));
         assert!(registry.active.is_none());
     }
 
@@ -208,7 +211,10 @@ mod tests {
     fn remove_returns_not_found_for_unknown_id() {
         let mut registry = PttSessionRegistry::default();
         let id = Uuid::new_v4();
-        assert!(matches!(registry.remove(&id), SessionRemoveResult::NotFound));
+        assert!(matches!(
+            registry.remove(&id),
+            SessionRemoveResult::NotFound
+        ));
     }
 
     #[test]

@@ -9,8 +9,8 @@ pub use ptt::{PttSessionRegistry, PttStartOptions, PttStartResponse, SttPttPlugi
 use std::sync::Arc;
 use std::time::Instant;
 
-use bevy::prelude::*;
 use crate::prelude::ApiReactor;
+use bevy::prelude::*;
 use bevy_flurx::prelude::*;
 use homunculus_microphone::{
     DownloadProgress, InferenceConfig, SharedSttModelCache, SttModelSize, SttResult, VadConfig,
@@ -284,12 +284,8 @@ impl SttApi {
             .await
             .map_err(|e| SttError::PipelineFailed(e.to_string()))?
             .map_err(|e| match e {
-                RemoveSessionError::NotFound => {
-                    SttError::SessionNotFound(session_id.to_string())
-                }
-                RemoveSessionError::Expired => {
-                    SttError::SessionExpired(session_id.to_string())
-                }
+                RemoveSessionError::NotFound => SttError::SessionNotFound(session_id.to_string()),
+                RemoveSessionError::Expired => SttError::SessionExpired(session_id.to_string()),
             })?;
 
         let started_at = session.started_at;
@@ -513,10 +509,7 @@ fn insert_session(
 }
 
 /// One-shot Bevy system: mark a PTT session as expired (timeout).
-fn mark_session_expired(
-    In(id): In<Uuid>,
-    mut registry: ResMut<ptt::PttSessionRegistry>,
-) {
+fn mark_session_expired(In(id): In<Uuid>, mut registry: ResMut<ptt::PttSessionRegistry>) {
     registry.mark_expired(&id);
 }
 

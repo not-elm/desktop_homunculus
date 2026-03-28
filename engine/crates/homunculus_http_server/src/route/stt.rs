@@ -3,8 +3,8 @@ use std::time::Duration;
 
 use axum::Json;
 use axum::body::Body;
-use axum::extract::{Path, Query};
 use axum::extract::State;
+use axum::extract::{Path, Query};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use bevy::tasks::futures_lite::StreamExt;
