@@ -13,6 +13,9 @@ const DEFAULTS = {
   pitchScale: 0.0,
   intonationScale: 1.0,
   volumeScale: 1.0,
+  pauseLength: 1.0,
+  prePhonemeLength: 0.1,
+  postPhonemeLength: 0.1,
 };
 
 interface VoicevoxSettings {
@@ -21,6 +24,9 @@ interface VoicevoxSettings {
   pitchScale: number;
   intonationScale: number;
   volumeScale: number;
+  pauseLength: number;
+  prePhonemeLength: number;
+  postPhonemeLength: number;
 }
 
 const characterLocks = new Map<string, Promise<unknown>>();
@@ -142,6 +148,9 @@ function applyVoiceParams(query: any, settings: VoicevoxSettings): void {
   query.pitchScale = settings.pitchScale;
   query.intonationScale = settings.intonationScale;
   query.volumeScale = settings.volumeScale;
+  query.pauseLength = settings.pauseLength;
+  query.prePhonemeLength = settings.prePhonemeLength;
+  query.postPhonemeLength = settings.postPhonemeLength;
 }
 
 function generateTimeline(query: any) {
