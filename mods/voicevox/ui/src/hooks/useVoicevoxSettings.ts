@@ -9,6 +9,9 @@ const DEFAULTS: VoicevoxSettings = {
   pitchScale: 0.0,
   intonationScale: 1.0,
   volumeScale: 1.0,
+  pauseLength: 1.0,
+  prePhonemeLength: 0.1,
+  postPhonemeLength: 0.1,
 };
 
 export interface VoicevoxSettings {
@@ -17,6 +20,9 @@ export interface VoicevoxSettings {
   pitchScale: number;
   intonationScale: number;
   volumeScale: number;
+  pauseLength: number;
+  prePhonemeLength: number;
+  postPhonemeLength: number;
 }
 
 export interface VoicevoxStyle {
