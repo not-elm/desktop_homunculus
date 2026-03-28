@@ -3,7 +3,7 @@ import type { Persona } from "./types.ts";
 /** Builds the system prompt with spoken-style instructions and personality. */
 export function buildCharacterPrompt(persona: Persona): string {
   const lines = [
-    `あなたは「${persona.name}」です。`,
+    `あなたの名前は「${persona.name}」です。名前を聞かれたら必ずこの名前で答えてください。`,
     persona.personality && buildPersonalityInstruction(persona.personality),
     "",
     buildSpokenStyleSection(),
