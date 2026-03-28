@@ -9,7 +9,7 @@
  * @module
  */
 
-import { AsyncQueue, Deferred } from "./async-queue.ts";
+import { AsyncQueue } from "./async-queue.ts";
 import type {
   AIAgentExecuter,
   AgentEvent,
@@ -26,6 +26,7 @@ import type {
   TurnCompletedNotification,
   ItemStartedNotification,
   ItemCompletedNotification,
+  ThreadItem,
   CommandExecutionRequestApprovalParams,
   FileChangeRequestApprovalParams,
   PermissionsRequestApprovalParams,
@@ -155,7 +156,6 @@ export class CodexAppServerExecuter implements AIAgentExecuter {
       baseInstructions: buildCharacterPrompt(this.persona),
       personality: "none",
       sandbox: "workspace-write",
-      experimentalRawEvents: false,
       persistExtendedHistory: false,
       config: {
         mcp_servers: {
@@ -196,7 +196,7 @@ export class CodexAppServerExecuter implements AIAgentExecuter {
   private async startTurn(threadId: string, text: string): Promise<void> {
     const params: TurnStartParams = {
       threadId,
-      input: { text },
+      input: [{ type: "text", text, text_elements: [] }],
       approvalPolicy: "on-request",
     };
     await this.process.sendRequest("turn/start", params);
@@ -292,7 +292,7 @@ export class CodexAppServerExecuter implements AIAgentExecuter {
     pendingRequests: Map<string, string>,
   ): AsyncGenerator<AgentEvent, void, AgentResponse | undefined> {
     const cmdParams = params as CommandExecutionRequestApprovalParams;
-    yield { type: "tool_use", tool: "bash", summary: `[auto] $ ${cmdParams.command}` };
+    yield { type: "tool_use", tool: "bash", summary: `[auto] $ ${cmdParams.command ?? ""}` };
 
     this.process.sendResponse(id, { decision: "accept" });
     pendingRequests.delete(String(id));
@@ -343,7 +343,7 @@ export class CodexAppServerExecuter implements AIAgentExecuter {
     params: TurnStartedNotification,
     onTurnId: (id: string) => void,
   ): AgentEvent[] {
-    onTurnId(params.turnId);
+    onTurnId(params.turn.id);
     return [];
   }
 
@@ -357,38 +357,38 @@ export class CodexAppServerExecuter implements AIAgentExecuter {
       return [{ type: "completed", sessionId: threadId }];
     }
     if (status === "failed") {
-      return [{ type: "error", message: error ?? "Turn failed" }];
+      return [{ type: "error", message: error?.message ?? "Turn failed" }];
     }
     // "interrupted" — abort handler already manages this
     return [];
   }
 
   private handleItemStarted(params: ItemStartedNotification): AgentEvent[] {
-    switch (params.itemType) {
-      case "command_execution":
-        return [{ type: "tool_use", tool: "bash", summary: `$ ${extractCommandFromMetadata(params)}` }];
-      case "file_change":
-        return [{ type: "tool_use", tool: "file_change", summary: extractPathFromMetadata(params) }];
+    switch (params.item.type) {
+      case "commandExecution":
+        return [{ type: "tool_use", tool: "bash", summary: `$ ${params.item.command}` }];
+      case "fileChange":
+        return [{ type: "tool_use", tool: "file_change", summary: extractFileChangeSummaryFromItem(params.item) }];
       default:
         return [];
     }
   }
 
   private handleItemCompleted(params: ItemCompletedNotification): AgentEvent[] {
-    switch (params.itemType) {
-      case "agent_message":
-        return [{ type: "assistant_message", text: extractTextFromItem(params) }];
-      case "command_execution":
-        return [{ type: "tool_use", tool: "bash", summary: `$ ${extractCommandFromItem(params)}` }];
-      case "file_change":
-        return [{ type: "tool_use", tool: "file_change", summary: extractFileChangeSummary(params) }];
+    switch (params.item.type) {
+      case "agentMessage":
+        return [{ type: "assistant_message", text: params.item.text }];
+      case "commandExecution":
+        return [{ type: "tool_use", tool: "bash", summary: `$ ${params.item.command}` }];
+      case "fileChange":
+        return [{ type: "tool_use", tool: "file_change", summary: extractFileChangeSummaryFromItem(params.item) }];
       default:
         return [];
     }
   }
 
   private handleErrorNotification(params: ErrorNotification): AgentEvent[] {
-    return [{ type: "error", message: params.message }];
+    return [{ type: "error", message: params.error.message }];
   }
 
   /**
@@ -427,15 +427,16 @@ export class CodexAppServerExecuter implements AIAgentExecuter {
     params: CommandExecutionRequestApprovalParams,
     method: string,
   ): AgentEvent {
+    const defaultDecisions = ["accept", "acceptForSession", "decline", "cancel"];
     return {
       type: "permission_request",
       requestId: String(id),
       tool: "bash",
-      input: { command: params.command, cwd: params.cwd },
-      title: `Command: ${params.command}`,
-      description: params.reason,
+      input: { command: params.command ?? "", cwd: params.cwd },
+      title: `Command: ${params.command ?? ""}`,
+      description: params.reason ?? undefined,
       requestMethod: method,
-      availableDecisions: ["accept", "acceptForSession", "decline", "cancel"],
+      availableDecisions: params.availableDecisions?.map(String) ?? defaultDecisions,
     };
   }
 
@@ -448,9 +449,9 @@ export class CodexAppServerExecuter implements AIAgentExecuter {
       type: "permission_request",
       requestId: String(id),
       tool: "file_change",
-      input: { path: params.path, kind: params.kind, diff: params.diff },
-      title: `File: ${params.kind ?? "modify"} ${params.path}`,
-      description: params.reason,
+      input: { grantRoot: params.grantRoot },
+      title: "File change approval",
+      description: params.reason ?? undefined,
       requestMethod: method,
       availableDecisions: ["accept", "acceptForSession", "decline", "cancel"],
     };
@@ -467,7 +468,7 @@ export class CodexAppServerExecuter implements AIAgentExecuter {
       tool: "permissions",
       input: { permissions: params.permissions },
       title: "Permission request",
-      description: params.description,
+      description: params.reason ?? undefined,
       requestMethod: method,
       availableDecisions: ["accept", "decline"],
     };
@@ -482,7 +483,7 @@ export class CodexAppServerExecuter implements AIAgentExecuter {
       requestId: String(id),
       serverName: params.serverName,
       message: params.message,
-      schema: params.schema,
+      schema: params.mode === "form" ? params.requestedSchema : undefined,
     };
   }
 
@@ -490,11 +491,11 @@ export class CodexAppServerExecuter implements AIAgentExecuter {
     id: RequestId,
     params: ToolRequestUserInputParams,
   ): AgentEvent {
-    const questionText = params.questions.map((q) => q.text).join("; ");
+    const questionText = params.questions.map((q) => q.question).join("; ");
     return {
       type: "elicitation_request",
       requestId: String(id),
-      serverName: params.toolName,
+      serverName: "tool",
       message: questionText,
     };
   }
@@ -582,7 +583,7 @@ export class CodexAppServerExecuter implements AIAgentExecuter {
     if (method !== "item/commandExecution/requestApproval") return false;
 
     const cmdParams = params as CommandExecutionRequestApprovalParams;
-    const command = cmdParams.command;
+    const command = cmdParams.command ?? "";
     return this.settings.commandAutoApprovePatterns.some((pattern) => {
       try {
         return new RegExp(pattern).test(command);
@@ -629,32 +630,10 @@ export class CodexAppServerExecuter implements AIAgentExecuter {
   }
 }
 
-/** Extract the command string from item/started metadata. */
-function extractCommandFromMetadata(params: ItemStartedNotification): string {
-  return (params.metadata?.command as string) ?? "(unknown command)";
-}
-
-/** Extract the file path from item/started metadata. */
-function extractPathFromMetadata(params: ItemStartedNotification): string {
-  return (params.metadata?.path as string) ?? "(unknown file)";
-}
-
-/** Extract the text content from an agent_message item/completed notification. */
-function extractTextFromItem(params: ItemCompletedNotification): string {
-  return (params.item?.text as string) ?? "";
-}
-
-/** Extract the command string from a command_execution item/completed notification. */
-function extractCommandFromItem(params: ItemCompletedNotification): string {
-  return (params.item?.command as string) ?? "(unknown command)";
-}
-
-/** Build a summary string from a file_change item/completed notification. */
-function extractFileChangeSummary(params: ItemCompletedNotification): string {
-  const changes = params.item?.changes;
-  if (!Array.isArray(changes)) return "(unknown file change)";
-
-  return changes
-    .map((c: Record<string, unknown>) => `${c.kind}: ${c.path}`)
-    .join(", ");
+/** Build a summary string from a fileChange ThreadItem. */
+function extractFileChangeSummaryFromItem(
+  item: Extract<ThreadItem, { type: "fileChange" }>,
+): string {
+  if (item.changes.length === 0) return "(unknown file change)";
+  return item.changes.map((c) => `${c.kind}: ${c.path}`).join(", ");
 }

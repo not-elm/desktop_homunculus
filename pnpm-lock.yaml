@@ -84,6 +84,9 @@ importers:
       '@hmcs/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      '@openai/codex':
+        specifier: ^0.117.0
+        version: 0.117.0
       '@openai/codex-sdk':
         specifier: ^0.117.0
         version: 0.117.0

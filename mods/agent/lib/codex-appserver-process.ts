@@ -10,6 +10,7 @@
  */
 
 import { spawn, type ChildProcess } from "node:child_process";
+import { createRequire } from "node:module";
 import { createInterface, type Interface as ReadlineInterface } from "node:readline";
 import { Deferred } from "./async-queue.ts";
 import type {
@@ -174,7 +175,8 @@ export class CodexAppServerProcess {
   }
 
   private async spawnAndInitialize(): Promise<void> {
-    const proc = spawn("codex", ["app-server", "--listen", "stdio://"], {
+    const codexBinPath = resolveCodexBinPath();
+    const proc = spawn(process.execPath, [codexBinPath, "app-server", "--listen", "stdio://"], {
       stdio: ["pipe", "pipe", "pipe"],
       env: { ...process.env },
     });
@@ -194,14 +196,19 @@ export class CodexAppServerProcess {
     proc.on("exit", (code, signal) => this.handleProcessExit(code, signal));
 
     const initResult = await this.sendRequest<InitializeResponse>("initialize", {
-      clientName: "homunculus",
-      clientVersion: "0.1.0",
-      protocolVersion: "2025-01-01",
-      capabilities: {},
+      clientInfo: {
+        name: "homunculus",
+        version: "0.1.0",
+        title: null,
+      },
+      capabilities: {
+        experimentalApi: true,
+        optOutNotificationMethods: null,
+      },
     });
 
     console.log(
-      `[codex-appserver] Initialized: ${initResult.name} v${initResult.version} (protocol ${initResult.protocolVersion})`,
+      `[codex-appserver] Initialized: ${initResult.userAgent} (${initResult.platformOs})`,
     );
 
     this.sendNotification("initialized");
@@ -336,6 +343,12 @@ export class CodexAppServerProcess {
  * of their params. Returns `undefined` if not present or params is not
  * an object.
  */
+/** Resolve the absolute path to `@openai/codex/bin/codex.js` via the SDK package. */
+function resolveCodexBinPath(): string {
+  const req = createRequire(import.meta.url);
+  return req.resolve("@openai/codex/bin/codex.js");
+}
+
 export function extractThreadId(params: unknown): string | undefined {
   if (params != null && typeof params === "object" && "threadId" in params) {
     const value = (params as Record<string, unknown>).threadId;
