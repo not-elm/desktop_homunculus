@@ -2427,6 +2427,10 @@ components:
       type: object
       description: Persona data for a VRM character.
       properties:
+        displayName:
+          type:
+          - string
+          - 'null'
         metadata:
           type: object
           additionalProperties:
