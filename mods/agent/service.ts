@@ -4,7 +4,6 @@ import { rpc } from "@hmcs/sdk/rpc";
 import { KeyboardHookService } from "./lib/keyboard-hook.ts";
 import { resolvePttKeycodes, type ResolvedPttKey } from "./lib/key-mapping.ts";
 import { ClaudeAgentExecuter } from "./lib/claude-agent-executer.ts";
-import { CodexAgentExecuter } from "./lib/codex-agent-executer.ts";
 import { CodexAppServerExecuter } from "./lib/codex-appserver-executer.ts";
 import { CodexAppServerProcess } from "./lib/codex-appserver-process.ts";
 import type { AIAgentExecuter } from "./lib/ai-agent-executer.ts";
@@ -171,8 +170,6 @@ function createExecuter(
 ): AIAgentExecuter {
   switch (settings.executor) {
     case "codex":
-      return new CodexAgentExecuter(persona, settings, workDir);
-    case "codex-appserver":
       return new CodexAppServerExecuter(persona, settings, workDir, getAppServerProcess());
     case "sdk":
       return new ClaudeAgentExecuter(persona, settings, apiKey!, workDir);

@@ -53,7 +53,6 @@ export function ClaudeTab({
             <SelectItem value="sdk">Claude SDK</SelectItem>
             <SelectItem value="cli">Claude CLI</SelectItem>
             <SelectItem value="codex">Codex</SelectItem>
-            <SelectItem value="codex-appserver">Codex AppServer</SelectItem>
           </SelectContent>
         </Select>
       </label>

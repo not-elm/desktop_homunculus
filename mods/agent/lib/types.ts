@@ -6,14 +6,14 @@ export interface PttKey {
 
 /** Agent settings stored in preferences. */
 export interface AgentSettings {
-  executor: "sdk" | "cli" | "codex" | "codex-appserver";
+  executor: "sdk" | "cli" | "codex";
   pttKey: PttKey | null;
   approvalPhrases: string[];
   denyPhrases: string[];
   workingDirectories: { paths: string[]; default: number };
   allowList: string[];
   disallowedTools: string[];
-  /** Shell command patterns auto-approved by AppServer executor (regex strings). */
+  /** Shell command patterns auto-approved by the Codex executor (regex strings). */
   commandAutoApprovePatterns: string[];
   claudeModel: string;
 }

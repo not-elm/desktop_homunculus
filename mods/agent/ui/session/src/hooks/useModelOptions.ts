@@ -15,7 +15,7 @@ export function useModelOptions(
   const cacheRef = useRef(new Map<string, SelectOption[]>());
 
   useEffect(() => {
-    if (executor === "codex" || executor === "codex-appserver") {
+    if (executor === "codex") {
       setOptions([]);
       setLoading(false);
       return;
@@ -76,7 +76,7 @@ async function fetchAnthropicModels(apiKey: string): Promise<SelectOption[]> {
 }
 
 function fallbackOptions(executor: AgentSettings["executor"]): SelectOption[] {
-  return executor === "codex" || executor === "codex-appserver" ? [] : CLAUDE_FALLBACK;
+  return executor === "codex" ? [] : CLAUDE_FALLBACK;
 }
 
 const CLAUDE_FALLBACK: SelectOption[] = [

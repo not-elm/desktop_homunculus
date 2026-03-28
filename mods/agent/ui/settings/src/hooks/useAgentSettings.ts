@@ -12,7 +12,7 @@ export interface PttKey {
 }
 
 export interface AgentSettings {
-  executor: "sdk" | "cli" | "codex" | "codex-appserver";
+  executor: "sdk" | "cli" | "codex";
   workingDirectories: WorkingDirectories;
   pttKey: PttKey | null;
   approvalPhrases: string[];

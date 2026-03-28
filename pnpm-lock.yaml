@@ -87,9 +87,6 @@ importers:
       '@openai/codex':
         specifier: ^0.117.0
         version: 0.117.0
-      '@openai/codex-sdk':
-        specifier: ^0.117.0
-        version: 0.117.0
       react:
         specifier: ^19.2.4
         version: 19.2.4
@@ -2752,10 +2749,6 @@ packages:
   '@nodelib/fs.walk@1.2.8':
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
-
-  '@openai/codex-sdk@0.117.0':
-    resolution: {integrity: sha512-qJxkBEf3ninCC18g3YypNJ149byASwTdC9eyE060CsSBMCGZN5RNeQhYJxGjGcVFKaysWCXZ16SMzmYlcLAKVw==}
-    engines: {node: '>=18'}
 
   '@openai/codex@0.117.0':
     resolution: {integrity: sha512-UmWo39UCGqFB2ImWwtI/TOnVQ1M2JIbCeDVBzOtG57WuTIPBNvDyluPNrzNv6eAcTYpyDLC5+nT5k49LrzEwow==}
@@ -12933,10 +12926,6 @@ snapshots:
     dependencies:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.20.1
-
-  '@openai/codex-sdk@0.117.0':
-    dependencies:
-      '@openai/codex': 0.117.0
 
   '@openai/codex@0.117.0':
     optionalDependencies:
