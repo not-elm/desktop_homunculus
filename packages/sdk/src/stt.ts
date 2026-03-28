@@ -306,12 +306,12 @@ export namespace stt {
      * @example
      * ```typescript
      * // Start recording
-     * const { sessionId } = await stt.ptt.start({ language: "ja" });
+     * const session = await stt.ptt.start({ language: "ja" });
      *
      * // ... user holds button ...
      *
      * // Stop and get result
-     * const result = await stt.ptt.stop(sessionId);
+     * const result = await session.stop();
      * console.log(result.text);
      * ```
      */
@@ -326,10 +326,31 @@ export namespace stt {
             timeoutSecs?: number;
         }
 
-        /** Response from starting a PTT session. */
-        export interface StartResponse {
-            /** Unique session identifier. Pass to `stop()` to end recording. */
-            sessionId: string;
+        /** An active PTT recording session. */
+        export interface PttSession {
+            /** Unique session identifier. */
+            readonly sessionId: string;
+            /** Recognition language for this session. */
+            readonly language: string;
+            /** Whisper model size for this session. */
+            readonly modelSize: SttModelSize;
+
+            /**
+             * Stop recording and get the recognition result.
+             *
+             * Stops the microphone capture, runs Whisper inference on the
+             * buffered audio, and returns the transcription.
+             *
+             * @returns Recognition result with transcribed text
+             *
+             * @example
+             * ```typescript
+             * const session = await stt.ptt.start({ language: "ja" });
+             * const result = await session.stop();
+             * console.log(result.text);
+             * ```
+             */
+            stop(): Promise<SttResult>;
         }
 
         /**
@@ -339,41 +360,38 @@ export namespace stt {
          * session exists, it is automatically cancelled.
          *
          * @param options - Recognition options
-         * @returns Session ID for use with `stop()`
+         * @returns A session instance with metadata and a `stop()` method
          *
          * @example
          * ```typescript
-         * const { sessionId } = await stt.ptt.start();
+         * const session = await stt.ptt.start({ language: "ja" });
+         * console.log(session.sessionId, session.language);
+         * const result = await session.stop();
+         * console.log(result.text);
          * ```
          */
         export async function start(
             options?: StartOptions,
-        ): Promise<StartResponse> {
-            return host.post<StartOptions>(
-                host.createUrl("/stt/ptt/start"),
+        ): Promise<PttSession> {
+            const response = await host.post(
+                host.createUrl("stt/ptt/start"),
                 options ?? {},
             );
-        }
-
-        /**
-         * Stop a PTT session and get the recognition result.
-         *
-         * Stops recording, runs Whisper inference, and returns the transcription.
-         *
-         * @param sessionId - Session ID from `start()`
-         * @returns Recognition result with transcribed text
-         *
-         * @example
-         * ```typescript
-         * const result = await stt.ptt.stop(sessionId);
-         * console.log(result.text, result.language);
-         * ```
-         */
-        export async function stop(sessionId: string): Promise<SttResult> {
-            return host.post(
-                host.createUrl(`/stt/ptt/${sessionId}/stop`),
-                {},
-            );
+            const { sessionId } = await response.json() as { sessionId: string };
+            const language = options?.language ?? "auto";
+            const modelSize = options?.modelSize ?? "base";
+            return {
+                sessionId,
+                language,
+                modelSize,
+                stop: async () => {
+                    const stopResponse = await host.post(
+                        host.createUrl(`stt/ptt/${sessionId}/stop`),
+                        {},
+                    );
+                    return await stopResponse.json() as SttResult;
+                },
+            };
         }
     }
 }
