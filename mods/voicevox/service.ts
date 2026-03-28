@@ -142,6 +142,8 @@ function applyVoiceParams(query: any, settings: VoicevoxSettings): void {
   query.pitchScale = settings.pitchScale;
   query.intonationScale = settings.intonationScale;
   query.volumeScale = settings.volumeScale;
+  query.prePhonemeLength = 0;
+  query.postPhonemeLength = 0;
 }
 
 function generateTimeline(query: any) {
