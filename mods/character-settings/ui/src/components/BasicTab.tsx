@@ -1,19 +1,28 @@
 interface BasicTabProps {
   name: string;
+  displayName: string;
+  onDisplayNameChange: (displayName: string) => void;
   scale: number;
   onScaleChange: (scale: number) => void;
 }
 
-export function BasicTab({ name, scale, onScaleChange }: BasicTabProps) {
+export function BasicTab({
+  name,
+  displayName,
+  onDisplayNameChange,
+  scale,
+  onScaleChange,
+}: BasicTabProps) {
   return (
     <div className="settings-section">
       <label className="settings-label">
-        Name
+        Display Name
         <input
           type="text"
           className="settings-input"
-          value={name}
-          readOnly
+          value={displayName}
+          placeholder={name}
+          onChange={(e) => onDisplayNameChange(e.target.value)}
         />
       </label>
 
