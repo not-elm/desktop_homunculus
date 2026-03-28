@@ -1,3 +1,5 @@
+import { writeFileSync } from "node:fs";
+import path from "node:path";
 import {
   Codex,
   type ThreadOptions,
@@ -18,19 +20,25 @@ import type { AgentSettings, Persona } from "./types.ts";
  * Uses `approvalPolicy: "never"` for fully automatic tool approval
  * and `sandboxMode: "workspace-write"` for safety. Authentication
  * relies on prior `codex login` (no API key needed).
+ *
+ * Note: `config.instructions` is silently dropped in Codex CLI exec mode.
+ * We use `model_instructions_file` instead to replace the built-in
+ * "You are Codex" base instructions with our character persona prompt.
  */
 export class CodexAgentExecuter implements AIAgentExecuter {
   private readonly codex: Codex;
   private readonly threadOptions: ThreadOptions;
+  readonly instructionsPath: string;
 
   constructor(
     persona: Persona,
     settings: AgentSettings,
     workDir: string,
   ) {
+    this.instructionsPath = writeInstructionsFile(workDir, persona);
     this.codex = new Codex({
       config: {
-        instructions: buildCharacterPrompt(persona),
+        model_instructions_file: this.instructionsPath,
         mcp_servers: {
           homunculus: { url: "http://localhost:3100/mcp" },
         },
@@ -91,6 +99,13 @@ export class CodexAgentExecuter implements AIAgentExecuter {
     const { events } = await thread.runStreamed(text, { signal });
     return { events, initialSessionId: thread.id ?? null };
   }
+}
+
+/** Writes the character prompt to a file that Codex CLI reads as model instructions. */
+function writeInstructionsFile(workDir: string, persona: Persona): string {
+  const filePath = path.join(workDir, ".codex-persona.md");
+  writeFileSync(filePath, buildCharacterPrompt(persona), "utf-8");
+  return filePath;
 }
 
 /** Maps a Codex ThreadEvent to an AgentEvent, or null to skip. */
