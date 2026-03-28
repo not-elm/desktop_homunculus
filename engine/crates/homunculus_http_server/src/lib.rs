@@ -309,7 +309,10 @@ fn stt_router() -> OpenApiRouter<HttpState> {
 }
 
 fn dialog_router() -> OpenApiRouter<HttpState> {
-    OpenApiRouter::new().routes(routes!(route::dialog::pick_folder))
+    OpenApiRouter::new()
+        .routes(routes!(route::dialog::pick_folder))
+        .routes(routes!(route::dialog::pick_file))
+        .routes(routes!(route::dialog::pick_files))
 }
 
 fn commands_router() -> OpenApiRouter<HttpState> {
