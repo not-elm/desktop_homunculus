@@ -266,6 +266,69 @@ impl SttApi {
         Ok(ptt::PttStartResponse { session_id })
     }
 
+    /// Stop a PTT session and return the recognition result.
+    ///
+    /// Phase 1 (inside schedule, World lock): remove session from registry.
+    /// Phase 2 (outside schedule, no lock): await buffer, run inference.
+    pub async fn stop_ptt(
+        &self,
+        session_id: Uuid,
+    ) -> Result<homunculus_microphone::SttResult, SttError> {
+        let session: ptt::PttSession = self
+            .reactor
+            .schedule(move |task| async move {
+                task.will(Update, once::run(remove_session).with(session_id))
+                    .await
+            })
+            .await
+            .map_err(|e| SttError::PipelineFailed(e.to_string()))?
+            .map_err(|e| match e {
+                RemoveSessionError::NotFound => {
+                    SttError::SessionNotFound(session_id.to_string())
+                }
+                RemoveSessionError::Expired => {
+                    SttError::SessionExpired(session_id.to_string())
+                }
+            })?;
+
+        let started_at = session.started_at;
+        let language = session.language.clone();
+        let model_size = session.model_size;
+        let sample_rate = session.sample_rate;
+        let needs_resample = session.needs_resample;
+
+        session.cancel_token.cancel();
+
+        let buffer = session
+            .buffer_task
+            .await
+            .map_err(|e| SttError::PipelineFailed(format!("Buffer task failed: {e}")))?;
+
+        // Drop session to release microphone (cpal stream drop).
+        drop(session);
+
+        if buffer.is_empty() {
+            return Ok(homunculus_microphone::SttResult {
+                text: String::new(),
+                timestamp: started_at.elapsed().as_secs_f64(),
+                language,
+            });
+        }
+
+        let resampled = resample_if_needed(buffer, sample_rate, needs_resample);
+
+        let ctx = self.load_or_get_context(model_size).await?;
+        let (_, inference_config) = load_recognition_configs();
+
+        let inference_timeout = std::time::Duration::from_secs(30);
+        tokio::time::timeout(
+            inference_timeout,
+            run_whisper_inference(ctx, resampled, language, started_at, inference_config),
+        )
+        .await
+        .map_err(|_| SttError::PipelineFailed("Inference timed out".to_string()))?
+    }
+
     /// Download a model. Returns the download status.
     pub async fn download_model(
         &self,
@@ -451,6 +514,46 @@ fn mark_session_expired(
     mut registry: ResMut<ptt::PttSessionRegistry>,
 ) {
     registry.mark_expired(&id);
+}
+
+enum RemoveSessionError {
+    NotFound,
+    Expired,
+}
+
+/// One-shot Bevy system: remove a PTT session from the registry.
+fn remove_session(
+    In(id): In<Uuid>,
+    mut registry: ResMut<ptt::PttSessionRegistry>,
+) -> Result<ptt::PttSession, RemoveSessionError> {
+    match registry.remove(&id) {
+        ptt::SessionRemoveResult::Found(session) => Ok(session),
+        ptt::SessionRemoveResult::Expired => Err(RemoveSessionError::Expired),
+        ptt::SessionRemoveResult::NotFound => Err(RemoveSessionError::NotFound),
+    }
+}
+
+/// Resample audio to 16kHz via linear interpolation if the device rate differs.
+fn resample_if_needed(buffer: Vec<f32>, sample_rate: u32, needs_resample: bool) -> Vec<f32> {
+    if !needs_resample || sample_rate == 16000 {
+        return buffer;
+    }
+    // Use simple linear interpolation for resampling to 16kHz.
+    // The target is always 16000 Hz for Whisper.
+    let ratio = 16000.0 / sample_rate as f64;
+    let new_len = (buffer.len() as f64 * ratio) as usize;
+    let mut resampled = Vec::with_capacity(new_len);
+    for i in 0..new_len {
+        let src_idx = i as f64 / ratio;
+        let idx = src_idx as usize;
+        let frac = (src_idx - idx as f64) as f32;
+        if idx + 1 < buffer.len() {
+            resampled.push(buffer[idx] * (1.0 - frac) + buffer[idx + 1] * frac);
+        } else if idx < buffer.len() {
+            resampled.push(buffer[idx]);
+        }
+    }
+    resampled
 }
 
 fn validate_language(language: String) -> Result<String, SttError> {
