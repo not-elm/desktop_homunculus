@@ -460,6 +460,7 @@ async function resolvePermission(
     requestId: event.requestId,
     action: event.tool,
     target: JSON.stringify(event.input),
+    availableDecisions: event.availableDecisions,
   });
 
   const timer = setTimeout(
