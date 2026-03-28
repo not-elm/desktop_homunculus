@@ -9,6 +9,7 @@ pub use ptt::{PttSessionRegistry, PttStartOptions, PttStartResponse, SttPttPlugi
 use std::sync::Arc;
 use std::time::Instant;
 
+use bevy::prelude::*;
 use crate::prelude::ApiReactor;
 use bevy_flurx::prelude::*;
 use homunculus_microphone::{
@@ -243,7 +244,7 @@ impl SttApi {
 
         let session = ptt::PttSession {
             cancel_token: cancel,
-            buffer_task,
+            buffer_task: Some(buffer_task),
             timeout_task,
             sample_rate: capture.sample_rate,
             needs_resample: capture.needs_resample,
@@ -274,7 +275,7 @@ impl SttApi {
         &self,
         session_id: Uuid,
     ) -> Result<homunculus_microphone::SttResult, SttError> {
-        let session: ptt::PttSession = self
+        let mut session: ptt::PttSession = self
             .reactor
             .schedule(move |task| async move {
                 task.will(Update, once::run(remove_session).with(session_id))
@@ -299,8 +300,11 @@ impl SttApi {
 
         session.cancel_token.cancel();
 
-        let buffer = session
+        let buffer_task = session
             .buffer_task
+            .take()
+            .ok_or_else(|| SttError::PipelineFailed("Buffer task already consumed".into()))?;
+        let buffer = buffer_task
             .await
             .map_err(|e| SttError::PipelineFailed(format!("Buffer task failed: {e}")))?;
 

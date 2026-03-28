@@ -115,7 +115,7 @@ futures-lite = "2"
 clap = { version = "4", features = ["derive"] }
 comfy-table = "7"
 toml = "0.8"
-utoipa = { version = "5", features = ["yaml"] }
+utoipa = { version = "5", features = ["yaml", "uuid"] }
 utoipa-axum = { version = "0.2" }
 libc = "0.2"
 windows = "0.60"

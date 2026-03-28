@@ -56,7 +56,7 @@ pub struct PttStartResponse {
 /// An active PTT recording session.
 pub struct PttSession {
     pub cancel_token: CancellationToken,
-    pub buffer_task: JoinHandle<Vec<f32>>,
+    pub buffer_task: Option<JoinHandle<Vec<f32>>>,
     pub timeout_task: JoinHandle<()>,
     pub sample_rate: u32,
     pub needs_resample: bool,
@@ -68,7 +68,9 @@ pub struct PttSession {
 impl Drop for PttSession {
     fn drop(&mut self) {
         self.cancel_token.cancel();
-        self.buffer_task.abort();
+        if let Some(task) = &self.buffer_task {
+            task.abort();
+        }
         self.timeout_task.abort();
     }
 }
@@ -164,7 +166,7 @@ mod tests {
         std::mem::forget(rt);
         PttSession {
             cancel_token: cancel,
-            buffer_task,
+            buffer_task: Some(buffer_task),
             timeout_task,
             sample_rate: 16000,
             needs_resample: false,
