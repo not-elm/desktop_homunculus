@@ -15,6 +15,10 @@ export type AgentEvent =
       title?: string;
       description?: string;
       suggestions?: unknown[];
+      /** Original JSON-RPC method name from the AppServer protocol. */
+      requestMethod?: string;
+      /** Available decision options for this request (AppServer only), e.g. `["accept", "acceptForSession", "decline", "cancel"]`. */
+      availableDecisions?: string[];
     }
   | {
       type: "elicitation_request";
@@ -29,8 +33,8 @@ export type AgentEvent =
 /**
  * Responses sent back into the generator via `next()`.
  *
- * - `permission`: Approves or denies a tool-use permission request.
- * - `elicitation`: Accepts or declines an MCP server elicitation request.
+ * - `permission`: Approves or denies a tool-use permission request. When `decision` is present, it takes precedence over `approved`.
+ * - `elicitation`: Accepts, declines, or cancels an MCP server elicitation request.
  * - `undefined`: No response (used when the event does not require one).
  */
 export type AgentResponse =
@@ -39,11 +43,15 @@ export type AgentResponse =
       approved: boolean;
       message?: string;
       updatedPermissions?: unknown[];
+      /** Rich decision payload for AppServer. When present, takes precedence over `approved`. */
+      decision?: string | Record<string, unknown>;
     }
   | {
       type: "elicitation";
-      action: "accept" | "decline";
+      action: "accept" | "decline" | "cancel";
       values?: Record<string, string>;
+      /** Structured content for MCP elicitation (AppServer only). */
+      content?: unknown;
     }
   | undefined;
 
