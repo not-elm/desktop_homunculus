@@ -33,6 +33,12 @@ pub enum InferenceError {
     CreateState(String),
     #[error("Whisper inference failed: {0}")]
     Full(String),
+    #[error("Audio below energy threshold")]
+    BelowEnergyThreshold,
+    #[error("Empty recognition result")]
+    EmptyResult,
+    #[error("Whisper inference panicked")]
+    WhisperPanic,
 }
 
 /// Model download errors.
@@ -62,6 +68,12 @@ pub enum PermissionError {
 pub enum PipelineError {
     #[error("Capture error: {0}")]
     Capture(String),
-    #[error("VAD thread error: {0}")]
+    #[error("VAD error: {0}")]
     Vad(String),
+    #[error("VAD task failed: {0}")]
+    VadFailed(String),
+    #[error("Recognition timed out")]
+    Timeout,
+    #[error("Recognition cancelled")]
+    Cancelled,
 }

@@ -6,22 +6,15 @@ use axum::body::Body;
 use axum::extract::Query;
 use axum::extract::State;
 use axum::http::StatusCode;
-use axum::response::sse::{Event, KeepAlive};
-use axum::response::{IntoResponse, Response, Sse};
-use bevy::tasks::futures_lite::{Stream, StreamExt};
-use futures::stream::unfold;
-use homunculus_api::stt::{ModelDownloadResponse, ModelInfo, SttApi, SttError, SttStartResponse};
-use homunculus_microphone::{
-    SttModelSize,
-    model::model_path,
-    session::{SttEvent, SttStartOptions, SttState},
-};
+use axum::response::{IntoResponse, Response};
+use bevy::tasks::futures_lite::StreamExt;
+use homunculus_api::stt::{ModelDownloadResponse, ModelInfo, RecognizeOptions, SttApi, SttError};
+use homunculus_microphone::SttModelSize;
+use homunculus_microphone::SttResult;
+use homunculus_microphone::model::model_path;
 use serde::{Deserialize, Serialize};
 use tokio_stream::wrappers::ReceiverStream;
 use utoipa::ToSchema;
-
-/// SSE keepalive interval in seconds.
-const SSE_KEEPALIVE_SECS: u64 = 30;
 
 /// Request body for model download.
 #[derive(Clone, Debug, Serialize, Deserialize, ToSchema)]
@@ -30,105 +23,29 @@ pub struct ModelDownloadRequest {
     pub model_size: SttModelSize,
 }
 
-/// SSE payload for STT recognition results.
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct SttResultPayload<'a> {
-    text: &'a str,
-    timestamp: f64,
-    language: &'a str,
-}
-
-/// SSE payload for STT session errors.
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct SttSessionErrorPayload<'a> {
-    error: &'a str,
-    message: &'a str,
-}
-
-/// Start an STT session.
-#[utoipa::path(
-    post,
-    path = "/start",
-    tag = "stt",
-    request_body(content = Option<SttStartOptions>, content_type = "application/json"),
-    responses(
-        (status = 200, description = "Session started", body = SttStartResponse),
-        (status = 409, description = "Session already active or loading"),
-        (status = 412, description = "Model not available"),
-        (status = 422, description = "Invalid language"),
-        (status = 500, description = "Internal server error"),
-        (status = 503, description = "Microphone unavailable"),
-    ),
-)]
-pub async fn start(
-    State(api): State<SttApi>,
-    body: Option<Json<SttStartOptions>>,
-) -> Result<Json<SttStartResponse>, SttErrorResponse> {
-    let options = body.map(|b| b.0).unwrap_or_default();
-    let response = api.start(options).await?;
-    Ok(Json(response))
-}
-
-/// Stop the current STT session. Idempotent.
-#[utoipa::path(
-    post,
-    path = "/stop",
-    tag = "stt",
-    responses(
-        (status = 200, description = "Session stopped", body = SttState),
-    ),
-)]
-pub async fn stop(State(api): State<SttApi>) -> Json<SttState> {
-    Json(api.stop().await)
-}
-
-/// Get the current STT session status.
-#[utoipa::path(
-    get,
-    path = "/status",
-    tag = "stt",
-    responses(
-        (status = 200, description = "Current session state", body = SttState),
-    ),
-)]
-pub async fn status(State(api): State<SttApi>) -> Json<SttState> {
-    Json(api.status().await)
-}
-
-/// Stream STT events via SSE.
+/// Recognize a single sentence from the microphone.
 ///
-/// Events: `status`, `result`, `session_error`, `stopped`.
-/// Sends current status on connect (late-join sync).
+/// Starts a cpal capture -> VAD -> Whisper pipeline, returns the first
+/// recognized sentence, then destroys the pipeline. Long-polls until
+/// speech is detected or timeout (60s).
 #[utoipa::path(
-    get,
-    path = "/stream",
+    post,
+    path = "/recognize",
     tag = "stt",
+    request_body = RecognizeOptions,
     responses(
-        (status = 200, description = "SSE event stream", content_type = "text/event-stream"),
-    ),
+        (status = 200, description = "Recognized text", body = SttResult),
+        (status = 408, description = "Timeout — no speech detected"),
+        (status = 422, description = "Invalid language or model size"),
+        (status = 503, description = "Model not available or microphone error"),
+    )
 )]
-pub async fn stream(
+pub async fn recognize(
     State(api): State<SttApi>,
-) -> Sse<impl Stream<Item = Result<Event, Infallible>> + Send> {
-    let (current_state, rx) = api.subscribe().await;
-
-    let initial =
-        futures::stream::once(
-            async move { Ok(stt_event_to_sse(&SttEvent::Status(current_state))) },
-        );
-
-    let ongoing = unfold(rx, |mut rx| async move {
-        let event = rx.recv().await.ok()?;
-        Some((Ok(stt_event_to_sse(&event)), rx))
-    });
-
-    let disconnected =
-        futures::stream::once(async { Ok(Event::default().event("disconnected").data("{}")) });
-
-    Sse::new(initial.chain(ongoing).chain(disconnected))
-        .keep_alive(KeepAlive::new().interval(Duration::from_secs(SSE_KEEPALIVE_SECS)))
+    Json(options): Json<RecognizeOptions>,
+) -> Result<Json<SttResult>, SttErrorResponse> {
+    let result = api.recognize(options).await?;
+    Ok(Json(result))
 }
 
 /// Download an STT model.
@@ -189,30 +106,38 @@ pub async fn cancel_download(
     Query(query): Query<CancelDownloadQuery>,
 ) -> Response {
     if let Some(size) = query.model_size {
-        let cancelled = api.cancel_download(size).await;
-        if cancelled {
-            let body = CancelDownloadResponse {
-                status: "cancelled",
-                model_size: Some(size),
-                cancelled_count: 1,
-            };
-            (StatusCode::OK, Json(body)).into_response()
-        } else {
-            let body = serde_json::json!({
-                "error": "no_active_download",
-                "message": format!("No active download for model size '{}'", size.as_str()),
-            });
-            (StatusCode::NOT_FOUND, Json(body)).into_response()
-        }
+        cancel_specific_download(&api, size).await
     } else {
-        let count = api.cancel_all_downloads().await;
+        cancel_all_downloads(&api).await
+    }
+}
+
+async fn cancel_specific_download(api: &SttApi, size: SttModelSize) -> Response {
+    let cancelled = api.cancel_download(size).await;
+    if cancelled {
         let body = CancelDownloadResponse {
             status: "cancelled",
-            model_size: None,
-            cancelled_count: count,
+            model_size: Some(size),
+            cancelled_count: 1,
         };
         (StatusCode::OK, Json(body)).into_response()
+    } else {
+        let body = serde_json::json!({
+            "error": "no_active_download",
+            "message": format!("No active download for model size '{}'", size.as_str()),
+        });
+        (StatusCode::NOT_FOUND, Json(body)).into_response()
     }
+}
+
+async fn cancel_all_downloads(api: &SttApi) -> Response {
+    let count = api.cancel_all_downloads().await;
+    let body = CancelDownloadResponse {
+        status: "cancelled",
+        model_size: None,
+        cancelled_count: count,
+    };
+    (StatusCode::OK, Json(body)).into_response()
 }
 
 /// List downloaded STT models.
@@ -391,63 +316,10 @@ fn ndjson_streaming_response(mpsc_rx: tokio::sync::mpsc::Receiver<Vec<u8>>) -> R
         .into_response()
 }
 
-/// Convert an `SttEvent` into an SSE `Event`.
-fn stt_event_to_sse(event: &SttEvent) -> Event {
-    match event {
-        SttEvent::Status(state) => {
-            Event::default()
-                .event("status")
-                .data(serde_json::to_string(state).unwrap_or_else(|e| {
-                    bevy::log::error!("SSE serialization failed: {e}");
-                    "{}".to_string()
-                }))
-        }
-        SttEvent::Result {
-            text,
-            timestamp,
-            language,
-        } => Event::default().event("result").data(
-            serde_json::to_string(&SttResultPayload {
-                text,
-                timestamp: *timestamp,
-                language,
-            })
-            .unwrap_or_else(|e| {
-                bevy::log::error!("SSE serialization failed: {e}");
-                "{}".to_string()
-            }),
-        ),
-        SttEvent::Interim {
-            text,
-            timestamp,
-            language,
-        } => Event::default().event("interim").data(
-            serde_json::to_string(&SttResultPayload {
-                text,
-                timestamp: *timestamp,
-                language,
-            })
-            .unwrap_or_else(|e| {
-                bevy::log::error!("SSE serialization failed: {e}");
-                "{}".to_string()
-            }),
-        ),
-        SttEvent::SessionError { error, message } => Event::default().event("session_error").data(
-            serde_json::to_string(&SttSessionErrorPayload { error, message }).unwrap_or_else(|e| {
-                bevy::log::error!("SSE serialization failed: {e}");
-                "{}".to_string()
-            }),
-        ),
-        SttEvent::Stopped => Event::default().event("stopped").data("{}"),
-        _ => Event::default().event("unknown").data("{}"),
-    }
-}
-
 /// Wrapper for converting `SttError` into HTTP responses.
 ///
-/// STT needs domain-specific HTTP status codes (409 conflict, 412 precondition,
-/// 503 unavailable) that don't map to the shared `ApiError` variants.
-/// Long-term, `ApiError` could be extended with a `Domain` variant.
+/// STT needs domain-specific HTTP status codes that don't map to the
+/// shared `ApiError` variants.
 pub struct SttErrorResponse(SttError);
 
 impl From<SttError> for SttErrorResponse {
@@ -458,26 +330,7 @@ impl From<SttError> for SttErrorResponse {
 
 impl IntoResponse for SttErrorResponse {
     fn into_response(self) -> Response {
-        let (status, error_code) = match &self.0 {
-            SttError::SessionAlreadyActive => (StatusCode::CONFLICT, "session_already_active"),
-            SttError::SessionLoading => (StatusCode::CONFLICT, "session_loading"),
-            SttError::ModelNotAvailable(_) => {
-                (StatusCode::PRECONDITION_FAILED, "model_not_available")
-            }
-            SttError::ModelLoadFailed(_) => {
-                (StatusCode::INTERNAL_SERVER_ERROR, "model_load_failed")
-            }
-            SttError::PipelineFailed(_) => (StatusCode::INTERNAL_SERVER_ERROR, "pipeline_failed"),
-            SttError::NoMicrophone => (StatusCode::SERVICE_UNAVAILABLE, "no_microphone"),
-            SttError::MicrophonePermissionDenied => (
-                StatusCode::SERVICE_UNAVAILABLE,
-                "microphone_permission_denied",
-            ),
-            SttError::DownloadFailed(_) => (StatusCode::INTERNAL_SERVER_ERROR, "download_failed"),
-            SttError::DownloadCancelled => (StatusCode::CONFLICT, "download_cancelled"),
-            SttError::InvalidLanguage(_) => (StatusCode::UNPROCESSABLE_ENTITY, "invalid_language"),
-            SttError::InvalidModelSize => (StatusCode::UNPROCESSABLE_ENTITY, "invalid_model_size"),
-        };
+        let (status, error_code) = error_to_status_code(&self.0);
 
         let body = serde_json::json!({
             "error": error_code,
@@ -485,5 +338,22 @@ impl IntoResponse for SttErrorResponse {
         });
 
         (status, Json(body)).into_response()
+    }
+}
+
+fn error_to_status_code(err: &SttError) -> (StatusCode, &'static str) {
+    match err {
+        SttError::ModelNotAvailable(_) => (StatusCode::SERVICE_UNAVAILABLE, "model_not_available"),
+        SttError::ModelLoadFailed(_) => (StatusCode::INTERNAL_SERVER_ERROR, "model_load_failed"),
+        SttError::PipelineFailed(_) => (StatusCode::INTERNAL_SERVER_ERROR, "pipeline_failed"),
+        SttError::NoMicrophone => (StatusCode::SERVICE_UNAVAILABLE, "no_microphone"),
+        SttError::MicrophonePermissionDenied => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            "microphone_permission_denied",
+        ),
+        SttError::DownloadFailed(_) => (StatusCode::INTERNAL_SERVER_ERROR, "download_failed"),
+        SttError::DownloadCancelled => (StatusCode::CONFLICT, "download_cancelled"),
+        SttError::InvalidLanguage(_) => (StatusCode::UNPROCESSABLE_ENTITY, "invalid_language"),
+        SttError::InvalidModelSize => (StatusCode::UNPROCESSABLE_ENTITY, "invalid_model_size"),
     }
 }

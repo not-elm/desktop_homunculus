@@ -1,20 +1,18 @@
 //! STT (Speech-to-Text) API.
 //!
-//! Manages STT sessions and model downloads using `homunculus_microphone`.
+//! Stateless speech recognition and model downloads using `homunculus_microphone`.
 
 use std::sync::Arc;
 use std::time::Instant;
 
-use async_broadcast::Receiver;
-use homunculus_microphone::session::{SttEvent, SttSession, SttStartOptions, SttState};
 use homunculus_microphone::{
-    DownloadProgress, SharedSttModelCache, SharedSttSession, SttModelSize, WhisperContext,
-    get_input_device, load_whisper_context,
+    DownloadProgress, InferenceConfig, SharedSttModelCache, SttModelSize, SttResult, VadConfig,
+    WhisperContext, get_input_device, load_whisper_context,
     model::{
         download_model as mic_download_model, is_model_available, list_available_models, model_path,
     },
     permissions::ensure_microphone_permission,
-    pipeline::spawn_pipeline,
+    spawn_capture_thread, vad_until_speech, whisper_infer,
 };
 use serde::{Deserialize, Serialize};
 use tokio::sync::watch;
@@ -26,10 +24,6 @@ use utoipa::ToSchema;
 /// STT API error types with HTTP status code mappings.
 #[derive(Debug, thiserror::Error)]
 pub enum SttError {
-    #[error("Session already active")]
-    SessionAlreadyActive,
-    #[error("Session is loading a model, please wait")]
-    SessionLoading,
     #[error("Model not available: {0}")]
     ModelNotAvailable(String),
     #[error("Model load failed: {0}")]
@@ -60,6 +54,21 @@ const WHISPER_SUPPORTED_LANGUAGES: &[&str] = &[
     "uz", "fo", "ht", "ps", "tk", "nn", "mt", "sa", "lb", "my", "bo", "tl", "mg", "as", "tt",
     "haw", "ln", "ha", "ba", "jw", "su", "yue",
 ];
+
+/// Request options for a stateless recognition call.
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct RecognizeOptions {
+    #[serde(default = "default_language")]
+    pub language: String,
+    #[serde(default)]
+    pub model_size: SttModelSize,
+}
+
+fn default_language() -> String {
+    "auto".to_string()
+}
 
 /// Response for model download endpoint.
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -92,17 +101,6 @@ pub struct ModelInfo {
     pub path: String,
 }
 
-/// Response from the start endpoint, includes restart indicator.
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[cfg_attr(feature = "openapi", derive(ToSchema))]
-#[serde(rename_all = "camelCase")]
-pub struct SttStartResponse {
-    #[serde(flatten)]
-    pub state: SttState,
-    /// True if an existing Listening session was implicitly stopped.
-    pub restarted: bool,
-}
-
 /// Bevy resource wrapping the parent cancellation token for STT downloads.
 ///
 /// Cancelling this token propagates to all in-progress download child tokens.
@@ -118,12 +116,28 @@ impl SttShutdownToken {
     }
 }
 
-/// STT API resource — manages STT sessions and model downloads.
+/// Cancels the capture pipeline when dropped (e.g. on client disconnect).
+struct PipelineCancelGuard {
+    cancel: CancellationToken,
+}
+
+impl Drop for PipelineCancelGuard {
+    fn drop(&mut self) {
+        self.cancel.cancel();
+    }
+}
+
+/// STT API resource — stateless speech recognition and model downloads.
 #[derive(Clone)]
 pub struct SttApi {
-    session: SharedSttSession,
     model_cache: SharedSttModelCache,
     shutdown_token: SttShutdownToken,
+}
+
+impl Default for SttApi {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl SttApi {
@@ -132,11 +146,10 @@ impl SttApi {
         WHISPER_SUPPORTED_LANGUAGES
     }
 
-    pub fn new(session: SharedSttSession) -> Self {
+    pub fn new() -> Self {
         let parent = CancellationToken::new();
         let shutdown_token = SttShutdownToken(parent.clone());
         Self {
-            session,
             model_cache: SharedSttModelCache::new(parent),
             shutdown_token,
         }
@@ -147,65 +160,34 @@ impl SttApi {
         self.shutdown_token.clone()
     }
 
-    /// Start an STT session.
-    pub async fn start(&self, options: SttStartOptions) -> Result<SttStartResponse, SttError> {
-        let size = options.model_size;
-        let language = options.language.clone();
+    /// Perform a single stateless recognition: capture audio, detect speech, infer text.
+    pub async fn recognize(&self, options: RecognizeOptions) -> Result<SttResult, SttError> {
+        let language = validate_language(options.language)?;
+        let ctx = self.load_or_get_context(options.model_size).await?;
+        ensure_microphone_access().await?;
 
-        if !WHISPER_SUPPORTED_LANGUAGES.contains(&language.as_str()) {
-            return Err(SttError::InvalidLanguage(language));
-        }
+        let cancel = CancellationToken::new();
+        let _guard = PipelineCancelGuard {
+            cancel: cancel.clone(),
+        };
+        let started_at = Instant::now();
+        let (vad_config, inference_config) = load_recognition_configs();
 
-        let restarted = self.ensure_session_ready(size, &language).await?;
+        let capture = start_capture(cancel.clone())?;
 
-        let ctx = self.load_or_get_context(size).await?;
+        let chunk = vad_until_speech(
+            capture.audio_rx,
+            capture.sample_rate,
+            capture.needs_resample,
+            cancel.clone(),
+            vad_config,
+        )
+        .await
+        .map_err(|e| SttError::PipelineFailed(e.to_string()))?;
 
-        let mut session = self.session.0.lock().await;
-        if !matches!(session.state, SttState::Loading { .. }) {
-            return Ok(SttStartResponse {
-                state: session.state.clone(),
-                restarted,
-            });
-        }
+        cancel.cancel();
 
-        let state = self
-            .launch_pipeline(&mut session, ctx, size, language)
-            .await?;
-        Ok(SttStartResponse { state, restarted })
-    }
-
-    /// Stop the current STT session. Idempotent.
-    pub async fn stop(&self) -> SttState {
-        let mut session = self.session.0.lock().await;
-        session.stop();
-        session.state.clone()
-    }
-
-    /// Get the current session status.
-    pub async fn status(&self) -> SttState {
-        let session = self.session.0.lock().await;
-        session.state.clone()
-    }
-
-    /// Get a new SSE event receiver.
-    pub async fn new_event_receiver(&self) -> Receiver<SttEvent> {
-        let session = self.session.0.lock().await;
-        session.new_event_receiver()
-    }
-
-    /// Get the current state for late-join sync.
-    pub async fn current_state(&self) -> SttState {
-        let session = self.session.0.lock().await;
-        session.state.clone()
-    }
-
-    /// Atomically get current state and event receiver under one lock.
-    /// Eliminates TOCTOU race between separate `current_state()` + `new_event_receiver()` calls.
-    pub async fn subscribe(&self) -> (SttState, Receiver<SttEvent>) {
-        let session = self.session.0.lock().await;
-        let state = session.state.clone();
-        let rx = session.new_event_receiver();
-        (state, rx)
+        run_whisper_inference(ctx, chunk, language, started_at, inference_config).await
     }
 
     /// Download a model. Returns the download status.
@@ -288,76 +270,6 @@ impl SttApi {
         self.is_download_in_progress(size).await
     }
 
-    /// Returns `Ok(true)` if an existing session was stopped (implicit restart),
-    /// `Ok(false)` if no session was active.
-    async fn ensure_session_ready(
-        &self,
-        size: SttModelSize,
-        language: &str,
-    ) -> Result<bool, SttError> {
-        let mut session = self.session.0.lock().await;
-        let restarted = match &session.state {
-            SttState::Loading { .. } => {
-                return Err(SttError::SessionLoading);
-            }
-            SttState::Listening { .. } => {
-                session.stop();
-                true
-            }
-            _ => false,
-        };
-        if !is_model_available(size) {
-            return Err(SttError::ModelNotAvailable(format!(
-                "Model '{}' is not downloaded. Use POST /stt/models/download first.",
-                size.as_str()
-            )));
-        }
-        session.language = language.to_string();
-        session.model_size = size;
-        session.transition(SttState::Loading {
-            language: language.to_string(),
-            model_size: size,
-        });
-        Ok(restarted)
-    }
-
-    async fn launch_pipeline(
-        &self,
-        session: &mut SttSession,
-        ctx: Arc<WhisperContext>,
-        size: SttModelSize,
-        language: String,
-    ) -> Result<SttState, SttError> {
-        ensure_microphone_permission()
-            .await
-            .map_err(|_| SttError::MicrophonePermissionDenied)?;
-
-        let device = get_input_device().map_err(|_| SttError::NoMicrophone)?;
-
-        let cancel = CancellationToken::new();
-        let started_at = Instant::now();
-        session.cancel = Some(cancel.clone());
-        session.started_at = Some(started_at);
-
-        spawn_pipeline(
-            device,
-            ctx,
-            language.clone(),
-            cancel,
-            session.event_tx.clone(),
-            self.session.clone(),
-            started_at,
-        )
-        .map_err(|e| SttError::PipelineFailed(e.to_string()))?;
-
-        session.transition(SttState::Listening {
-            language,
-            model_size: size,
-        });
-
-        Ok(session.state.clone())
-    }
-
     async fn load_or_get_context(
         &self,
         size: SttModelSize,
@@ -406,7 +318,6 @@ impl SttApi {
                 }
             }
             _ = cancel.cancelled() => {
-                // Dropped future's in-band cleanup may not run; explicitly remove temp file.
                 let _ = tokio::fs::remove_file(&tmp_path).await;
                 Err(SttError::DownloadCancelled)
             }
@@ -418,8 +329,6 @@ impl SttApi {
 
     async fn mark_downloading(&self, size: SttModelSize) -> CancellationToken {
         let mut cache = self.model_cache.0.lock().await;
-        // If a download is already in progress, return its existing token.
-        // Callers should check is_download_in_progress first.
         cache
             .mark_downloading(size)
             .unwrap_or_else(|| cache.get_download_token(size).unwrap())
@@ -429,6 +338,48 @@ impl SttApi {
         let mut cache = self.model_cache.0.lock().await;
         cache.unmark_downloading(size);
     }
+}
+
+fn validate_language(language: String) -> Result<String, SttError> {
+    if !WHISPER_SUPPORTED_LANGUAGES.contains(&language.as_str()) {
+        return Err(SttError::InvalidLanguage(language));
+    }
+    Ok(language)
+}
+
+/// Verify microphone permission before starting capture.
+async fn ensure_microphone_access() -> Result<(), SttError> {
+    ensure_microphone_permission()
+        .await
+        .map_err(|_| SttError::MicrophonePermissionDenied)
+}
+
+/// Acquire the default input device and spawn the capture thread.
+fn start_capture(
+    cancel: CancellationToken,
+) -> Result<homunculus_microphone::CaptureHandle, SttError> {
+    let device = get_input_device().map_err(|_| SttError::NoMicrophone)?;
+    spawn_capture_thread(device, cancel).map_err(|e| SttError::PipelineFailed(e.to_string()))
+}
+
+fn load_recognition_configs() -> (VadConfig, InferenceConfig) {
+    let config = homunculus_utils::config::HomunculusConfig::load().unwrap_or_default();
+    let vad_config = VadConfig::from_stt_config(&config.stt);
+    let inference_config = InferenceConfig::from_stt_config(&config.stt);
+    (vad_config, inference_config)
+}
+
+async fn run_whisper_inference(
+    ctx: Arc<WhisperContext>,
+    chunk: Vec<f32>,
+    language: String,
+    started_at: Instant,
+    config: InferenceConfig,
+) -> Result<SttResult, SttError> {
+    tokio::task::spawn_blocking(move || whisper_infer(&ctx, &chunk, &language, started_at, config))
+        .await
+        .map_err(|e| SttError::PipelineFailed(format!("Inference task panicked: {e}")))?
+        .map_err(|e| SttError::PipelineFailed(e.to_string()))
 }
 
 async fn load_context_blocking(size: SttModelSize) -> Result<Arc<WhisperContext>, SttError> {

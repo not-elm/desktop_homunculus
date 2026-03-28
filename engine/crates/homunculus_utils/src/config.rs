@@ -19,6 +19,14 @@ pub struct SttConfig {
     /// Maximum speech chunk duration in milliseconds before forced emission.
     /// Prevents O(L²) inference cost from unbounded continuous speech.
     pub max_chunk_ms: Option<u32>,
+    /// Unconditional discard threshold for `no_speech_prob`.
+    /// Segments where `no_speech_prob` exceeds this value are discarded
+    /// regardless of `avg_logprobs`. Default: 0.8.
+    pub no_speech_threshold: Option<f32>,
+    /// Pre-inference RMS energy threshold (applied to 16kHz unpadded samples).
+    /// Chunks below this threshold are skipped before Whisper inference.
+    /// Default: 0.02.
+    pub inference_energy_threshold: Option<f32>,
 }
 
 fn default_mods_dir() -> PathBuf {
@@ -208,11 +216,15 @@ mod tests {
             silence_ms = 500
             energy_threshold = 0.02
             default_model = "tiny"
+            no_speech_threshold = 0.75
+            inference_energy_threshold = 0.03
         "#;
         let config: HomunculusConfig = toml::from_str(toml_str).unwrap();
         assert_eq!(config.stt.silence_ms, Some(500));
         assert_eq!(config.stt.energy_threshold, Some(0.02));
         assert_eq!(config.stt.default_model, Some("tiny".to_string()));
+        assert_eq!(config.stt.no_speech_threshold, Some(0.75));
+        assert_eq!(config.stt.inference_energy_threshold, Some(0.03));
     }
 
     #[test]
@@ -229,5 +241,7 @@ mod tests {
         assert_eq!(config.silence_ms, None);
         assert_eq!(config.energy_threshold, None);
         assert_eq!(config.default_model, None);
+        assert_eq!(config.no_speech_threshold, None);
+        assert_eq!(config.inference_energy_threshold, None);
     }
 }
