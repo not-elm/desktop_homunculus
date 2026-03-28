@@ -81,6 +81,8 @@ pub struct Ocean {
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct Persona {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub display_name: Option<String>,
     #[serde(default)]
     pub profile: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
