@@ -18,7 +18,7 @@ interface InlineSettingsBarProps {
 
 export function InlineSettingsBar({ settings, onSettingsChange, apiKey }: InlineSettingsBarProps) {
   const { options: modelOptions, loading: modelsLoading } = useModelOptions(settings.executor, apiKey);
-  const showModelSelector = settings.executor !== "codex";
+  const showModelSelector = settings.executor !== "codex" && settings.executor !== "codex-appserver";
 
   function updatePttKey(key: PttKey | null) {
     onSettingsChange({ ...settings, pttKey: key });
@@ -91,4 +91,5 @@ const EXECUTOR_OPTIONS: SelectOption[] = [
   { value: "sdk", label: "Claude SDK" },
   { value: "cli", label: "Claude CLI" },
   { value: "codex", label: "Codex" },
+  { value: "codex-appserver", label: "Codex AppServer" },
 ];
