@@ -5,6 +5,8 @@ import { KeyboardHookService } from "./lib/keyboard-hook.ts";
 import { resolvePttKeycodes, type ResolvedPttKey } from "./lib/key-mapping.ts";
 import { ClaudeAgentExecuter } from "./lib/claude-agent-executer.ts";
 import { CodexAgentExecuter } from "./lib/codex-agent-executer.ts";
+import { CodexAppServerExecuter } from "./lib/codex-appserver-executer.ts";
+import { CodexAppServerProcess } from "./lib/codex-appserver-process.ts";
 import type { AIAgentExecuter } from "./lib/ai-agent-executer.ts";
 import { Deferred } from "./lib/async-queue.ts";
 import type { AgentEvent, AgentResponse } from "./lib/ai-agent-executer.ts";
@@ -22,9 +24,18 @@ import path from "node:path";
 const keyboardHook = new KeyboardHookService();
 
 const activeSessions = new Map<string, AbortController>();
-const pendingApprovals = new Map<string, Deferred<{ approved: boolean; message?: string }>>();
+const pendingApprovals = new Map<string, Deferred<{ approved: boolean; message?: string; decision?: string | Record<string, unknown> }>>();
 const pendingQuestions = new Map<string, Deferred<Record<string, string>>>();
 const pendingInterrupts = new Map<string, Deferred<void>>();
+
+let appServerProcess: CodexAppServerProcess | null = null;
+
+function getAppServerProcess(): CodexAppServerProcess {
+  if (!appServerProcess) {
+    appServerProcess = new CodexAppServerProcess();
+  }
+  return appServerProcess;
+}
 
 let currentApiKey: string | null = null;
 
@@ -161,6 +172,8 @@ function createExecuter(
   switch (settings.executor) {
     case "codex":
       return new CodexAgentExecuter(persona, settings, workDir);
+    case "codex-appserver":
+      return new CodexAppServerExecuter(persona, settings, workDir, getAppServerProcess());
     case "sdk":
       return new ClaudeAgentExecuter(persona, settings, apiKey!, workDir);
     default:
@@ -174,6 +187,11 @@ async function stopSession(characterId: string): Promise<void> {
   controller.abort();
   activeSessions.delete(characterId);
   emitStatus(characterId, "idle");
+
+  if (appServerProcess && appServerProcess.refCount === 0) {
+    appServerProcess.shutdown();
+    appServerProcess = null;
+  }
 }
 
 async function interruptSession(characterId: string): Promise<void> {
@@ -430,7 +448,7 @@ async function resolvePermission(
   settings: AgentSettings,
   signal: AbortSignal,
 ): Promise<AgentResponse> {
-  const deferred = new Deferred<{ approved: boolean; message?: string }>();
+  const deferred = new Deferred<{ approved: boolean; message?: string; decision?: string | Record<string, unknown> }>();
   const permAbort = new AbortController();
   const combined = AbortSignal.any([signal, permAbort.signal]);
 
@@ -460,7 +478,7 @@ async function resolvePermission(
   try {
     const result = await deferred.promise;
     console.log(`[agent] permission result: approved=${result.approved}, message=${result.message}`);
-    return { type: "permission", approved: result.approved, message: result.message };
+    return { type: "permission", approved: result.approved, message: result.message, decision: result.decision };
   } finally {
     clearTimeout(timer);
     signal.removeEventListener("abort", onAbort);
@@ -474,7 +492,7 @@ function runVoiceApproval(
   resolvedKey: ResolvedPttKey,
   settings: AgentSettings,
   signal: AbortSignal,
-  deferred: Deferred<{ approved: boolean; message?: string }>,
+  deferred: Deferred<{ approved: boolean; message?: string; decision?: string | Record<string, unknown> }>,
 ): void {
   (async () => {
     try {
@@ -712,13 +730,17 @@ function buildRpcMethods() {
   return {
     "approve-permission": rpc.method({
       description: "Approve or deny a pending permission request",
-      input: z.object({ requestId: z.string(), approved: z.boolean() }),
-      handler: async ({ requestId, approved }) => {
+      input: z.object({
+        requestId: z.string(),
+        approved: z.boolean(),
+        decision: z.union([z.string(), z.record(z.unknown())]).optional(),
+      }),
+      handler: async ({ requestId, approved, decision }) => {
         const deferred = pendingApprovals.get(requestId);
         if (!deferred) {
           return { success: false as const, error: "No pending approval for this request" };
         }
-        deferred.resolve({ approved });
+        deferred.resolve({ approved, decision });
         return { success: true as const };
       },
     }),
@@ -780,6 +802,11 @@ async function shutdown(): Promise<void> {
   }
   activeSessions.clear();
   keyboardHook.stop();
+
+  if (appServerProcess) {
+    appServerProcess.shutdown();
+    appServerProcess = null;
+  }
 }
 
 async function main(): Promise<void> {
