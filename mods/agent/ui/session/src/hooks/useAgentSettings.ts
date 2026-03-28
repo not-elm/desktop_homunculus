@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { preferences, Webview } from "@hmcs/sdk";
 
 export interface WorkingDirectories {
@@ -46,6 +46,7 @@ export function useAgentSettings() {
   const [apiKey, setApiKey] = useState("");
   const [savingApiKey, setSavingApiKey] = useState(false);
   const [characterId, setCharacterId] = useState<string | null>(null);
+  const saveVersionRef = useRef(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -63,6 +64,19 @@ export function useAgentSettings() {
     })();
     return () => { cancelled = true; };
   }, []);
+
+  const setAndSaveSettings = useCallback(async (newSettings: AgentSettings) => {
+    setSettings(newSettings);
+    if (!characterId) return;
+    const version = ++saveVersionRef.current;
+    try {
+      await preferences.save(`agent::${characterId}`, newSettings);
+    } catch (err) {
+      if (version === saveVersionRef.current) {
+        console.error("Failed to auto-save agent settings:", err);
+      }
+    }
+  }, [characterId]);
 
   const saveSettings = useCallback(async () => {
     if (saving || !characterId) return;
@@ -92,6 +106,7 @@ export function useAgentSettings() {
     loading,
     settings,
     setSettings,
+    setAndSaveSettings,
     saving,
     saveSettings,
     apiKey,

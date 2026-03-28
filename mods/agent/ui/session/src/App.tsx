@@ -99,7 +99,7 @@ function AgentPanel({ session, settingsHook, view, onViewChange, onCollapse }: A
       />
       <InlineSettingsBar
         settings={settingsHook.settings}
-        onSettingsChange={settingsHook.setSettings}
+        onSettingsChange={settingsHook.setAndSaveSettings}
         apiKey={settingsHook.apiKey}
       />
       <div className="hud-view-slider" data-view={view}>
