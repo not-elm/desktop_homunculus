@@ -102,6 +102,7 @@ serde_json = { version = "1" }
 anyhow = { version = "1", features = ["std"] }
 base64 = "0.22"
 reqwest = { version = "0.12", features = ["json"] }
+rfd = "0.15"
 bevy_egui = { version = "0.39.0" }
 bevy-inspector-egui = { version = "0.36.0" }
 bevy_tweening = "0.15"
