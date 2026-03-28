@@ -97,8 +97,11 @@ async function speakRandomPhrase(
 }
 
 function speakText(characterId: string, text: string): void {
-  const sentences = sanitizeForTts(text);
+  const { sentences, log } = sanitizeForTts(text);
   if (sentences.length === 0) return;
+  if (log.length > 0) {
+    emitLog(characterId, "tts-sanitize", log.join("; "));
+  }
   rpc
     .call({
       modName: "@hmcs/voicevox",
