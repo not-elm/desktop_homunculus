@@ -4408,6 +4408,7 @@ dependencies = [
  "tokio",
  "tokio-util",
  "utoipa",
+ "uuid",
 ]
 
 [[package]]
