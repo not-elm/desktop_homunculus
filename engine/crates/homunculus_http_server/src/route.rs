@@ -7,6 +7,7 @@ pub(crate) mod app;
 pub(crate) mod assets;
 pub(crate) mod audio;
 pub(crate) mod coordinates;
+pub(crate) mod dialog;
 pub(crate) mod displays;
 pub(crate) mod effects;
 pub(crate) mod entities;
