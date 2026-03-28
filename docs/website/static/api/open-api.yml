@@ -269,6 +269,52 @@ paths:
                   format: float
         '500':
           description: Conversion failed
+  /dialog/pick-file:
+    post:
+      tags:
+      - dialog
+      summary: Open a native OS single-file picker dialog.
+      description: |-
+        Returns the selected file path. If the user cancels the dialog,
+        `path` will be `null`. Optionally accepts filters and a default directory.
+      operationId: pick_file
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - type: 'null'
+              - $ref: '#/components/schemas/PickFileRequest'
+      responses:
+        '200':
+          description: File selection result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PickFileResponse'
+  /dialog/pick-files:
+    post:
+      tags:
+      - dialog
+      summary: Open a native OS multi-file picker dialog.
+      description: |-
+        Returns the selected file paths. If the user cancels the dialog,
+        `paths` will be an empty array. Optionally accepts filters and a default directory.
+      operationId: pick_files
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - type: 'null'
+              - $ref: '#/components/schemas/PickFileRequest'
+      responses:
+        '200':
+          description: Multi-file selection result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PickFilesResponse'
   /dialog/pick-folder:
     post:
       tags:
@@ -276,8 +322,15 @@ paths:
       summary: Open a native OS directory picker dialog.
       description: |-
         Returns the selected directory path. If the user cancels the dialog,
-        `path` will be `null`.
+        `path` will be `null`. Optionally accepts a title and default directory.
       operationId: pick_folder
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - type: 'null'
+              - $ref: '#/components/schemas/PickFolderRequest'
       responses:
         '200':
           description: Folder selection result
@@ -928,35 +981,76 @@ paths:
           description: Download already in progress
         '422':
           description: Invalid model size
-  /stt/recognize:
+  /stt/start:
     post:
       tags:
       - stt
-      summary: Recognize a single sentence from the microphone.
-      description: |-
-        Starts a cpal capture -> VAD -> Whisper pipeline, returns the first
-        recognized sentence, then destroys the pipeline. Long-polls until
-        speech is detected or timeout (60s).
-      operationId: recognize
+      summary: Start an STT session.
+      operationId: start
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RecognizeOptions'
-        required: true
+              oneOf:
+              - type: 'null'
+              - $ref: '#/components/schemas/SttStartOptions'
       responses:
         '200':
-          description: Recognized text
+          description: Session started
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SttResult'
-        '408':
-          description: Timeout — no speech detected
+                $ref: '#/components/schemas/SttStartResponse'
+        '409':
+          description: Session already active or loading
+        '412':
+          description: Model not available
         '422':
-          description: Invalid language or model size
+          description: Invalid language
+        '500':
+          description: Internal server error
         '503':
-          description: Model not available or microphone error
+          description: Microphone unavailable
+  /stt/status:
+    get:
+      tags:
+      - stt
+      summary: Get the current STT session status.
+      operationId: status
+      responses:
+        '200':
+          description: Current session state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SttState'
+  /stt/stop:
+    post:
+      tags:
+      - stt
+      summary: Stop the current STT session. Idempotent.
+      operationId: stop
+      responses:
+        '200':
+          description: Session stopped
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SttState'
+  /stt/stream:
+    get:
+      tags:
+      - stt
+      summary: Stream STT events via SSE.
+      description: |-
+        Events: `status`, `result`, `session_error`, `stopped`.
+        Sends current status on connect (late-join sync).
+      operationId: stream
+      responses:
+        '200':
+          description: SSE event stream
+          content:
+            text/event-stream: {}
   /vrm:
     get:
       tags:
@@ -2165,6 +2259,21 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ExpressionInfo'
+    FileFilter:
+      type: object
+      description: A file type filter for native file dialogs.
+      required:
+      - name
+      - extensions
+      properties:
+        extensions:
+          type: array
+          items:
+            type: string
+          description: File extensions without leading dot (e.g. `["png", "jpg"]`).
+        name:
+          type: string
+          description: Display name for the filter (e.g. "Images").
     GlobalDisplay:
       type: object
       required:
@@ -2427,6 +2536,10 @@ components:
       type: object
       description: Persona data for a VRM character.
       properties:
+        displayName:
+          type:
+          - string
+          - 'null'
         metadata:
           type: object
           additionalProperties:
@@ -2441,6 +2554,61 @@ components:
           - 'null'
         profile:
           type: string
+    PickFileRequest:
+      type: object
+      description: Request body for file picker dialogs.
+      properties:
+        defaultPath:
+          type:
+          - string
+          - 'null'
+          description: Initial directory to open the dialog in.
+        filters:
+          type:
+          - array
+          - 'null'
+          items:
+            $ref: '#/components/schemas/FileFilter'
+          description: File type filters shown in the dialog.
+        title:
+          type:
+          - string
+          - 'null'
+          description: Dialog window title. Defaults to `"Select File"` or `"Select Files"`.
+    PickFileResponse:
+      type: object
+      description: Response from the single file picker dialog.
+      properties:
+        path:
+          type:
+          - string
+          - 'null'
+          description: The selected file path, or `null` if the user cancelled.
+    PickFilesResponse:
+      type: object
+      description: Response from the multi-file picker dialog.
+      required:
+      - paths
+      properties:
+        paths:
+          type: array
+          items:
+            type: string
+          description: The selected file paths. Empty if the user cancelled.
+    PickFolderRequest:
+      type: object
+      description: Request body for folder picker dialog.
+      properties:
+        defaultPath:
+          type:
+          - string
+          - 'null'
+          description: Initial directory to open the dialog in.
+        title:
+          type:
+          - string
+          - 'null'
+          description: Dialog window title. Defaults to `"Select Directory"`.
     PickFolderResponse:
       type: object
       description: Response from the folder picker dialog.
@@ -2510,14 +2678,6 @@ components:
       properties:
         state:
           type: object
-    RecognizeOptions:
-      type: object
-      description: Request options for a stateless recognition call.
-      properties:
-        language:
-          type: string
-        modelSize:
-          $ref: '#/components/schemas/SttModelSize'
     RegisterRequest:
       type: object
       description: Body for `POST /rpc/register`.
@@ -2779,24 +2939,78 @@ components:
       - medium
       - large-v3-turbo
       - large-v3
-    SttResult:
+    SttStartOptions:
       type: object
-      description: Result of a single speech recognition.
-      required:
-      - text
-      - timestamp
-      - language
+      description: Session start options.
       properties:
         language:
           type: string
-          description: Detected or specified language code.
-        text:
-          type: string
-          description: The recognized text.
-        timestamp:
-          type: number
-          format: double
-          description: Timestamp offset from request start (seconds, f64).
+        modelSize:
+          $ref: '#/components/schemas/SttModelSize'
+    SttStartResponse:
+      allOf:
+      - $ref: '#/components/schemas/SttState'
+      - type: object
+        required:
+        - restarted
+        properties:
+          restarted:
+            type: boolean
+            description: True if an existing Listening session was implicitly stopped.
+      description: Response from the start endpoint, includes restart indicator.
+    SttState:
+      oneOf:
+      - type: object
+        required:
+        - state
+        properties:
+          state:
+            type: string
+            enum:
+            - idle
+      - type: object
+        required:
+        - language
+        - modelSize
+        - state
+        properties:
+          language:
+            type: string
+          modelSize:
+            $ref: '#/components/schemas/SttModelSize'
+          state:
+            type: string
+            enum:
+            - loading
+      - type: object
+        required:
+        - language
+        - modelSize
+        - state
+        properties:
+          language:
+            type: string
+          modelSize:
+            $ref: '#/components/schemas/SttModelSize'
+          state:
+            type: string
+            enum:
+            - listening
+      - type: object
+        required:
+        - error
+        - message
+        - state
+        properties:
+          error:
+            type: string
+          message:
+            type: string
+          state:
+            type: string
+            enum:
+            - error
+      description: STT session state.
     TimelineBody:
       allOf:
       - type:

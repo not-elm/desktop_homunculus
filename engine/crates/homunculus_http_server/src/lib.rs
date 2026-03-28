@@ -112,6 +112,7 @@ use utoipa_axum::{router::OpenApiRouter, routes};
         (name = "assets", description = "Asset management"),
         (name = "rpc", description = "MOD service RPC registration and proxy"),
         (name = "stt", description = "Speech-to-text"),
+        (name = "dialog", description = "Native OS dialogs"),
     ),
     servers(
         (url = "http://localhost:3100", description = "Local development"),
@@ -225,6 +226,7 @@ fn build_openapi_router() -> OpenApiRouter<HttpState> {
         .nest("/mods", mods_router())
         .nest("/commands", commands_router())
         .nest("/stt", stt_router())
+        .nest("/dialog", dialog_router())
         .routes(routes!(assets::list))
         .nest("/rpc", rpc_openapi_router())
 }
@@ -301,6 +303,13 @@ fn stt_router() -> OpenApiRouter<HttpState> {
         .routes(routes!(stt::download_model_stream))
         .routes(routes!(stt::list_models))
         .routes(routes!(stt::list_languages))
+}
+
+fn dialog_router() -> OpenApiRouter<HttpState> {
+    OpenApiRouter::new()
+        .routes(routes!(route::dialog::pick_folder))
+        .routes(routes!(route::dialog::pick_file))
+        .routes(routes!(route::dialog::pick_files))
 }
 
 fn commands_router() -> OpenApiRouter<HttpState> {
