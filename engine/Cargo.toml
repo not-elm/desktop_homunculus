@@ -55,8 +55,8 @@ async-channel = "2.5.0"
 tokio = { workspace = true }
 
 [workspace.dependencies]
-bevy_cef = { version = "0.5.0" }
-bevy_cef_core = { version = "0.5.0" }
+bevy_cef = { version = "0.5.2" }
+bevy_cef_core = {version = "0.5.2" }
 bevy_flurx = { version = "0.14.1", features = [
     "side-effect",
     "state",
@@ -75,7 +75,7 @@ bevy = { version = "0.18", features = [
 async-channel = "2.5"
 async-broadcast = "0.7"
 dirs = "6"
-tokio = { version = "1", features = ["rt-multi-thread", "rt"] }
+tokio = { version = "1", features = ["rt-multi-thread", "rt", "macros"] }
 axum = { version = "0.8" }
 homunculus_core = { path = "crates/homunculus_core" }
 homunculus_drag = { path = "crates/homunculus_drag" }
@@ -101,6 +101,7 @@ serde_json = { version = "1" }
 anyhow = { version = "1", features = ["std"] }
 base64 = "0.22"
 reqwest = { version = "0.12", features = ["json"] }
+rfd = "0.15"
 bevy_egui = { version = "0.39.0" }
 bevy-inspector-egui = { version = "0.36.0" }
 bevy_tweening = "0.15"
