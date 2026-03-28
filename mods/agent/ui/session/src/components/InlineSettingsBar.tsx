@@ -18,7 +18,7 @@ interface InlineSettingsBarProps {
 
 export function InlineSettingsBar({ settings, onSettingsChange, apiKey }: InlineSettingsBarProps) {
   const { options: modelOptions, loading: modelsLoading } = useModelOptions(settings.executor, apiKey);
-  const currentModel = settings.executor === "codex" ? settings.codexModel : settings.claudeModel;
+  const showModelSelector = settings.executor !== "codex";
 
   function updatePttKey(key: PttKey | null) {
     onSettingsChange({ ...settings, pttKey: key });
@@ -29,8 +29,7 @@ export function InlineSettingsBar({ settings, onSettingsChange, apiKey }: Inline
   }
 
   function updateModel(value: string) {
-    const key = settings.executor === "codex" ? "codexModel" : "claudeModel";
-    onSettingsChange({ ...settings, [key]: value === "default" ? "" : value });
+    onSettingsChange({ ...settings, claudeModel: value === "default" ? "" : value });
   }
 
   return (
@@ -38,14 +37,18 @@ export function InlineSettingsBar({ settings, onSettingsChange, apiKey }: Inline
       <CompactKeyCapture pttKey={settings.pttKey} onChange={updatePttKey} />
       <span className="hud-inline-sep" />
       <CompactSelect value={settings.executor} onChange={updateExecutor} options={EXECUTOR_OPTIONS} />
-      <span className="hud-inline-sep" />
-      <CompactSelect
-        key={settings.executor}
-        value={currentModel || "default"}
-        onChange={updateModel}
-        options={modelOptions}
-        loading={modelsLoading}
-      />
+      {showModelSelector && (
+        <>
+          <span className="hud-inline-sep" />
+          <CompactSelect
+            key={settings.executor}
+            value={settings.claudeModel || "default"}
+            onChange={updateModel}
+            options={modelOptions}
+            loading={modelsLoading}
+          />
+        </>
+      )}
     </div>
   );
 }

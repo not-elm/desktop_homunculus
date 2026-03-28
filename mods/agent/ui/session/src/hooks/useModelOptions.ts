@@ -16,7 +16,7 @@ export function useModelOptions(
 
   useEffect(() => {
     if (executor === "codex") {
-      setOptions(CODEX_FALLBACK);
+      setOptions([]);
       setLoading(false);
       return;
     }
@@ -76,7 +76,7 @@ async function fetchAnthropicModels(apiKey: string): Promise<SelectOption[]> {
 }
 
 function fallbackOptions(executor: AgentSettings["executor"]): SelectOption[] {
-  return executor === "codex" ? CODEX_FALLBACK : CLAUDE_FALLBACK;
+  return executor === "codex" ? [] : CLAUDE_FALLBACK;
 }
 
 const CLAUDE_FALLBACK: SelectOption[] = [
@@ -84,8 +84,4 @@ const CLAUDE_FALLBACK: SelectOption[] = [
   { value: "claude-sonnet-4-6", label: "Claude Sonnet 4.6" },
   { value: "claude-opus-4-6", label: "Claude Opus 4.6" },
   { value: "claude-haiku-4-5", label: "Claude Haiku 4.5" },
-];
-
-const CODEX_FALLBACK: SelectOption[] = [
-  { value: "default", label: "Default (gpt-5.3-codex)" },
 ];

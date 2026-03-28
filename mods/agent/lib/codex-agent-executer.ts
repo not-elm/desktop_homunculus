@@ -45,7 +45,6 @@ export class CodexAgentExecuter implements AIAgentExecuter {
       },
     });
     this.threadOptions = {
-      model: settings.codexModel || undefined,
       sandboxMode: "workspace-write",
       workingDirectory: workDir,
       skipGitRepoCheck: true,

@@ -17,7 +17,6 @@ export interface AgentSettings {
   allowList: string[];
   disallowedTools: string[];
   claudeModel: string;
-  codexModel: string;
 }
 
 /** Session lifecycle states. */
@@ -69,7 +68,6 @@ export const DEFAULT_SETTINGS: AgentSettings = {
   allowList: [],
   disallowedTools: [],
   claudeModel: "",
-  codexModel: "",
 };
 
 export type { AgentEvent, AgentResponse, AIAgentExecuter } from "./ai-agent-executer.ts";
