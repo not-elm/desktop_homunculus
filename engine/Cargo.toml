@@ -65,6 +65,7 @@ bevy_flurx = { version = "0.14.1", features = [
 bevy_vrm1 = { version = "0.6.3", features = ["serde", "log"] }
 bevy_tray_icon = { version = "0.3" }
 url = { version = "2", features = ["serde"] }
+uuid = { version = "1", features = ["v4", "serde"] }
 bevy = { version = "0.18", features = [
     "wav",
     "serialize",
