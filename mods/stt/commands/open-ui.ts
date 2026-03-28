@@ -9,7 +9,7 @@ try {
   await Webview.open({
     source: webviewSource.local("stt:ui"),
     size: [0.8, 1],
-    viewportSize: [600, 800],
+    viewportSize: [600, 500],
     offset: [1.1, 0],
   });
   await audio.se.play("se:open");
