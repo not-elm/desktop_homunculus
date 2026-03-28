@@ -40,7 +40,9 @@ export namespace stt {
         | "microphone_permission_denied"
         | "download_failed"
         | "invalid_model_size"
-        | "invalid_language";
+        | "invalid_language"
+        | "session_not_found"
+        | "session_expired";
 
     /**
      * Type guard for STT-specific API errors.
@@ -296,5 +298,82 @@ export namespace stt {
             }
             return { code, label };
         });
+    }
+
+    /**
+     * Push-to-Talk (PTT) API for manual recording control.
+     *
+     * @example
+     * ```typescript
+     * // Start recording
+     * const { sessionId } = await stt.ptt.start({ language: "ja" });
+     *
+     * // ... user holds button ...
+     *
+     * // Stop and get result
+     * const result = await stt.ptt.stop(sessionId);
+     * console.log(result.text);
+     * ```
+     */
+    export namespace ptt {
+        /** Options for starting a PTT session. */
+        export interface StartOptions {
+            /** Recognition language. Defaults to "auto". */
+            language?: string;
+            /** Whisper model size. Defaults to "base". */
+            modelSize?: SttModelSize;
+            /** Session timeout in seconds (max 300). Defaults to 60. */
+            timeoutSecs?: number;
+        }
+
+        /** Response from starting a PTT session. */
+        export interface StartResponse {
+            /** Unique session identifier. Pass to `stop()` to end recording. */
+            sessionId: string;
+        }
+
+        /**
+         * Start a PTT recording session.
+         *
+         * Begins capturing audio from the default microphone. If an active
+         * session exists, it is automatically cancelled.
+         *
+         * @param options - Recognition options
+         * @returns Session ID for use with `stop()`
+         *
+         * @example
+         * ```typescript
+         * const { sessionId } = await stt.ptt.start();
+         * ```
+         */
+        export async function start(
+            options?: StartOptions,
+        ): Promise<StartResponse> {
+            return host.post<StartOptions>(
+                host.createUrl("/stt/ptt/start"),
+                options ?? {},
+            );
+        }
+
+        /**
+         * Stop a PTT session and get the recognition result.
+         *
+         * Stops recording, runs Whisper inference, and returns the transcription.
+         *
+         * @param sessionId - Session ID from `start()`
+         * @returns Recognition result with transcribed text
+         *
+         * @example
+         * ```typescript
+         * const result = await stt.ptt.stop(sessionId);
+         * console.log(result.text, result.language);
+         * ```
+         */
+        export async function stop(sessionId: string): Promise<SttResult> {
+            return host.post(
+                host.createUrl(`/stt/ptt/${sessionId}/stop`),
+                {},
+            );
+        }
     }
 }
