@@ -690,11 +690,12 @@ h3.hud-md-heading {
 
 .hud-dialog-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
 .hud-btn {
-  flex: 1;
+  flex: 1 1 calc(50% - 4px);
   padding: 7px 0;
   font-size: 0.72rem;
   letter-spacing: 0.08em;
@@ -728,6 +729,41 @@ h3.hud-md-heading {
 .hud-btn--deny:hover {
   background: oklch(0.65 0.2 15 / 0.22);
   border-color: oklch(0.65 0.2 15 / 0.5);
+}
+
+.hud-btn--approve-session {
+  background: oklch(0.65 0.14 175 / 0.15);
+  border-color: oklch(0.65 0.14 175 / 0.35);
+  color: oklch(0.65 0.14 175);
+}
+
+.hud-btn--approve-session:hover {
+  background: oklch(0.65 0.14 175 / 0.25);
+  border-color: oklch(0.65 0.14 175 / 0.55);
+  box-shadow: 0 0 10px oklch(0.65 0.14 175 / 0.15);
+}
+
+.hud-btn--policy {
+  background: oklch(0.65 0.14 265 / 0.15);
+  border-color: oklch(0.65 0.14 265 / 0.35);
+  color: oklch(0.65 0.14 265);
+}
+
+.hud-btn--policy:hover {
+  background: oklch(0.65 0.14 265 / 0.25);
+  border-color: oklch(0.65 0.14 265 / 0.55);
+  box-shadow: 0 0 10px oklch(0.65 0.14 265 / 0.15);
+}
+
+.hud-btn--cancel {
+  background: oklch(0.55 0.05 250 / 0.12);
+  border-color: oklch(0.55 0.05 250 / 0.25);
+  color: oklch(0.65 0.05 250 / 0.8);
+}
+
+.hud-btn--cancel:hover {
+  background: oklch(0.55 0.05 250 / 0.2);
+  border-color: oklch(0.55 0.05 250 / 0.4);
 }
 
 /* ━━ Question Dialog ━━ */

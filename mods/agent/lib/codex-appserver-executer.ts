@@ -436,7 +436,7 @@ export class CodexAppServerExecuter implements AIAgentExecuter {
       title: `Command: ${params.command ?? ""}`,
       description: params.reason ?? undefined,
       requestMethod: method,
-      availableDecisions: params.availableDecisions?.map(String) ?? defaultDecisions,
+      availableDecisions: params.availableDecisions ?? defaultDecisions,
     };
   }
 

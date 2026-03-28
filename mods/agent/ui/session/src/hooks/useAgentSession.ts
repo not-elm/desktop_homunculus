@@ -6,6 +6,9 @@ export type AgentState = "idle" | "thinking" | "executing" | "waiting" | "listen
 
 export type LogType = "read" | "edit" | "run" | "tool" | "assistant" | "done" | "error" | "warning" | "user" | "interrupt";
 
+/** A decision can be a simple string ("accept", "decline") or a tagged-union object from the AppServer. */
+export type Decision = string | Record<string, unknown>;
+
 export interface LogEntry {
   id: string;
   type: LogType;
@@ -18,7 +21,7 @@ export interface PendingPermission {
   action: string;
   target: string;
   /** Available decision options from AppServer. Undefined for Claude executor. */
-  availableDecisions?: string[];
+  availableDecisions?: Decision[];
 }
 
 export interface PendingQuestion {
@@ -99,12 +102,12 @@ export function useAgentSession() {
     return () => clearInterval(interval);
   }, [state]);
 
-  const approvePermission = useCallback(async (requestId: string, decision?: string) => {
+  const approvePermission = useCallback(async (requestId: string, decision?: Decision) => {
     await callRpc("approve-permission", { requestId, approved: true, decision: decision ?? "accept" });
     setPermission(null);
   }, []);
 
-  const denyPermission = useCallback(async (requestId: string, decision?: string) => {
+  const denyPermission = useCallback(async (requestId: string, decision?: Decision) => {
     await callRpc("approve-permission", { requestId, approved: false, decision: decision ?? "decline" });
     setPermission(null);
   }, []);
@@ -199,7 +202,7 @@ function subscribeToLog(id: string, onEntry: (entry: LogEntry) => void) {
 }
 
 function subscribeToPermission(id: string, onPermission: (perm: PendingPermission) => void) {
-  return signals.stream<{ characterId: string; requestId: string; action: string; target: string; availableDecisions?: string[] }>(
+  return signals.stream<{ characterId: string; requestId: string; action: string; target: string; availableDecisions?: Decision[] }>(
     "agent:permission",
     (p) => {
       if (p.characterId === id) {

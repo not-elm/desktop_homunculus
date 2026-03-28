@@ -1,9 +1,9 @@
-import type { PendingPermission } from "../hooks/useAgentSession";
+import type { Decision, PendingPermission } from "../hooks/useAgentSession";
 
 interface PermissionDialogProps {
   permission: PendingPermission | null;
-  onApprove: (requestId: string, decision?: string) => void;
-  onDeny: (requestId: string, decision?: string) => void;
+  onApprove: (requestId: string, decision?: Decision) => void;
+  onDeny: (requestId: string, decision?: Decision) => void;
 }
 
 export function PermissionDialog({
@@ -34,8 +34,8 @@ function DecisionButtons({
   onDeny,
 }: {
   permission: PendingPermission;
-  onApprove: (requestId: string, decision?: string) => void;
-  onDeny: (requestId: string, decision?: string) => void;
+  onApprove: (requestId: string, decision?: Decision) => void;
+  onDeny: (requestId: string, decision?: Decision) => void;
 }) {
   const { availableDecisions } = permission;
 
@@ -47,7 +47,7 @@ function DecisionButtons({
     <>
       {availableDecisions.map((decision) => (
         <DynamicDecisionButton
-          key={decision}
+          key={decisionKey(decision)}
           decision={decision}
           requestId={permission.requestId}
           onApprove={onApprove}
@@ -64,8 +64,8 @@ function FallbackButtons({
   onDeny,
 }: {
   requestId: string;
-  onApprove: (requestId: string, decision?: string) => void;
-  onDeny: (requestId: string, decision?: string) => void;
+  onApprove: (requestId: string, decision?: Decision) => void;
+  onDeny: (requestId: string, decision?: Decision) => void;
 }) {
   return (
     <>
@@ -85,8 +85,28 @@ function FallbackButtons({
   );
 }
 
-/** Maps a decision string to its display label and CSS class. */
-function decisionMeta(decision: string): { label: string; className: string; isApproval: boolean } {
+/** Generate a stable string key for a decision (for React keys). */
+function decisionKey(decision: Decision): string {
+  if (typeof decision === "string") return decision;
+  return JSON.stringify(decision);
+}
+
+/** Extract the tag key from a tagged-union decision object, or null for strings. */
+function decisionTag(decision: Decision): string | null {
+  if (typeof decision === "string") return null;
+  const keys = Object.keys(decision);
+  return keys.length > 0 ? keys[0] : null;
+}
+
+/** Maps a decision to its display label, CSS class, and approval semantics. */
+function decisionMeta(decision: Decision): { label: string; className: string; isApproval: boolean } {
+  if (typeof decision === "string") {
+    return stringDecisionMeta(decision);
+  }
+  return objectDecisionMeta(decision);
+}
+
+function stringDecisionMeta(decision: string): { label: string; className: string; isApproval: boolean } {
   switch (decision) {
     case "accept":
       return { label: "Approve", className: "hud-btn hud-btn--approve", isApproval: true };
@@ -101,16 +121,34 @@ function decisionMeta(decision: string): { label: string; className: string; isA
   }
 }
 
+function objectDecisionMeta(decision: Record<string, unknown>): { label: string; className: string; isApproval: boolean } {
+  const tag = decisionTag(decision);
+
+  switch (tag) {
+    case "acceptWithExecpolicyAmendment":
+      return { label: "Always Allow", className: "hud-btn hud-btn--policy", isApproval: true };
+    case "applyNetworkPolicyAmendment": {
+      const inner = decision[tag] as { network_policy_amendment?: { host?: string; action?: string } } | undefined;
+      const host = inner?.network_policy_amendment?.host ?? "unknown";
+      const action = inner?.network_policy_amendment?.action ?? "allow";
+      const label = action === "deny" ? `Block ${host}` : `Allow ${host}`;
+      return { label, className: "hud-btn hud-btn--policy", isApproval: action !== "deny" };
+    }
+    default:
+      return { label: tag ?? "Unknown", className: "hud-btn", isApproval: false };
+  }
+}
+
 function DynamicDecisionButton({
   decision,
   requestId,
   onApprove,
   onDeny,
 }: {
-  decision: string;
+  decision: Decision;
   requestId: string;
-  onApprove: (requestId: string, decision?: string) => void;
-  onDeny: (requestId: string, decision?: string) => void;
+  onApprove: (requestId: string, decision?: Decision) => void;
+  onDeny: (requestId: string, decision?: Decision) => void;
 }) {
   const { label, className, isApproval } = decisionMeta(decision);
   const handler = isApproval ? onApprove : onDeny;

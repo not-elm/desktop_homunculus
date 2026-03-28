@@ -1,3 +1,6 @@
+/** A decision can be a simple string ("accept", "decline") or a tagged-union object from the AppServer. */
+export type Decision = string | Record<string, unknown>;
+
 /**
  * Events yielded by an AIAgentExecuter during execution.
  *
@@ -18,7 +21,7 @@ export type AgentEvent =
       /** Original JSON-RPC method name from the AppServer protocol. */
       requestMethod?: string;
       /** Available decision options for this request (AppServer only), e.g. `["accept", "acceptForSession", "decline", "cancel"]`. */
-      availableDecisions?: string[];
+      availableDecisions?: Decision[];
     }
   | {
       type: "elicitation_request";
