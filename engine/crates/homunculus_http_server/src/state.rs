@@ -61,7 +61,7 @@ impl HttpState {
             entities: EntitiesApi::from(reactor.clone()),
             assets: AssetsApi::from(reactor.clone()),
             mods: ModsApi::from(reactor.clone()),
-            stt: SttApi::new(),
+            stt: SttApi::new(reactor.clone()),
             config,
             rpc_registry,
             reactor,
