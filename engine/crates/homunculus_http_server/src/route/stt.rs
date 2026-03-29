@@ -3,18 +3,22 @@ use std::time::Duration;
 
 use axum::Json;
 use axum::body::Body;
-use axum::extract::Query;
 use axum::extract::State;
+use axum::extract::{Path, Query};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use bevy::tasks::futures_lite::StreamExt;
-use homunculus_api::stt::{ModelDownloadResponse, ModelInfo, RecognizeOptions, SttApi, SttError};
+use homunculus_api::stt::{
+    ModelDownloadResponse, ModelInfo, PttStartOptions, PttStartResponse, RecognizeOptions, SttApi,
+    SttError,
+};
 use homunculus_microphone::SttModelSize;
 use homunculus_microphone::SttResult;
 use homunculus_microphone::model::model_path;
 use serde::{Deserialize, Serialize};
 use tokio_stream::wrappers::ReceiverStream;
 use utoipa::ToSchema;
+use uuid::Uuid;
 
 /// Request body for model download.
 #[derive(Clone, Debug, Serialize, Deserialize, ToSchema)]
@@ -355,5 +359,60 @@ fn error_to_status_code(err: &SttError) -> (StatusCode, &'static str) {
         SttError::DownloadCancelled => (StatusCode::CONFLICT, "download_cancelled"),
         SttError::InvalidLanguage(_) => (StatusCode::UNPROCESSABLE_ENTITY, "invalid_language"),
         SttError::InvalidModelSize => (StatusCode::UNPROCESSABLE_ENTITY, "invalid_model_size"),
+        SttError::SessionNotFound(_) => (StatusCode::NOT_FOUND, "session_not_found"),
+        SttError::SessionExpired(_) => (StatusCode::GONE, "session_expired"),
     }
+}
+
+/// Path parameter for PTT session ID.
+#[derive(Deserialize, utoipa::IntoParams)]
+pub struct PttSessionPath {
+    session_id: Uuid,
+}
+
+/// Start a PTT recording session.
+///
+/// Returns a session ID that must be passed to the stop endpoint.
+/// If an active session exists, it is automatically cancelled.
+#[utoipa::path(
+    post,
+    path = "/ptt/start",
+    tag = "stt",
+    request_body = PttStartOptions,
+    responses(
+        (status = 200, description = "Session started", body = PttStartResponse),
+        (status = 422, description = "Invalid language or model size"),
+        (status = 503, description = "Model not available or microphone error"),
+    )
+)]
+pub async fn ptt_start(
+    State(api): State<SttApi>,
+    Json(options): Json<PttStartOptions>,
+) -> Result<Json<PttStartResponse>, SttErrorResponse> {
+    let result = api.start_ptt(options).await?;
+    Ok(Json(result))
+}
+
+/// Stop a PTT recording session and return the recognition result.
+///
+/// Stops recording, runs Whisper inference on the captured audio,
+/// and returns the transcription.
+#[utoipa::path(
+    post,
+    path = "/ptt/{session_id}/stop",
+    tag = "stt",
+    params(PttSessionPath),
+    responses(
+        (status = 200, description = "Recognition result", body = SttResult),
+        (status = 404, description = "Session not found"),
+        (status = 410, description = "Session expired (timed out)"),
+        (status = 500, description = "Inference failed"),
+    )
+)]
+pub async fn ptt_stop(
+    State(api): State<SttApi>,
+    Path(PttSessionPath { session_id }): Path<PttSessionPath>,
+) -> Result<Json<SttResult>, SttErrorResponse> {
+    let result = api.stop_ptt(session_id).await?;
+    Ok(Json(result))
 }
