@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { Vrm, preferences, signals, stt } from "@hmcs/sdk";
 import { rpc } from "@hmcs/sdk/rpc";
-import { KeyboardHookService } from "./lib/keyboard-hook.ts";
+import { KeyboardHookService, waitForComboRelease } from "./lib/keyboard-hook.ts";
 import { resolvePttKeycodes, type ResolvedPttKey } from "./lib/key-mapping.ts";
 import { ClaudeAgentExecuter } from "./lib/claude-agent-executer.ts";
 import { CodexAppServerExecuter } from "./lib/codex-appserver-executer.ts";
@@ -616,35 +616,30 @@ async function recognizeOneSentence(
   signal: AbortSignal,
 ): Promise<string | null> {
   await waitForComboPress(resolvedKey, signal);
+  return await recognizeWhileHeld(characterId, resolvedKey, signal);
+}
+
+async function recognizeWhileHeld(
+  characterId: string,
+  resolvedKey: ResolvedPttKey,
+  signal: AbortSignal,
+): Promise<string | null> {
   emitRecording(characterId, true);
+  let session: Awaited<ReturnType<typeof stt.ptt.start>> | null = null;
 
   try {
-    const text = await recognizeWithCancel(resolvedKey, signal);
-    return text?.trim() || null;
+    session = await stt.ptt.start({ language: "ja" });
+    await waitForComboRelease(keyboardHook, resolvedKey, signal);
+    const result = await session.stop();
+    return result.text?.trim() || null;
+  } catch (e) {
+    if (session) {
+      try { await session.stop(); } catch { /* best-effort cleanup */ }
+    }
+    throw e;
   } finally {
     emitRecording(characterId, false);
   }
-}
-
-async function recognizeWithCancel(
-  resolvedKey: ResolvedPttKey,
-  sessionSignal: AbortSignal,
-): Promise<string | null> {
-  const cancelAbort = new AbortController();
-  const combined = AbortSignal.any([sessionSignal, cancelAbort.signal]);
-
-  const cancelPromise = waitForComboPress(resolvedKey, sessionSignal);
-  const recognizePromise = stt.recognize({ language: "ja" }, combined);
-
-  const result = await Promise.race([
-    recognizePromise.then((r) => ({ text: r.text })),
-    cancelPromise.then(() => {
-      cancelAbort.abort();
-      return { text: null };
-    }),
-  ]);
-
-  return result.text;
 }
 
 function waitForComboPress(
