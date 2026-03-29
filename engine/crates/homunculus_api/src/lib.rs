@@ -56,6 +56,7 @@ mod webview;
 use crate::prelude::{ShadowPanelApiPlugin, WebviewApiPlugin};
 use crate::reactor::ApiReactorPlugin;
 use crate::signals::SignalsApiPlugin;
+use crate::stt::SttPttPlugin;
 use bevy::app::PluginGroupBuilder;
 use bevy::prelude::*;
 
@@ -106,6 +107,7 @@ impl PluginGroup for HomunculusApiPlugin {
             .add(WebviewApiPlugin)
             .add(SignalsApiPlugin)
             .add(ShadowPanelApiPlugin)
+            .add(SttPttPlugin)
             .build()
     }
 }

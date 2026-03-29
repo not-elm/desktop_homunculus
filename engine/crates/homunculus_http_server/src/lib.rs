@@ -303,6 +303,8 @@ fn stt_router() -> OpenApiRouter<HttpState> {
         .routes(routes!(stt::download_model_stream))
         .routes(routes!(stt::list_models))
         .routes(routes!(stt::list_languages))
+        .routes(routes!(stt::ptt_start))
+        .routes(routes!(stt::ptt_stop))
 }
 
 fn dialog_router() -> OpenApiRouter<HttpState> {
