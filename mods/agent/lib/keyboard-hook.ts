@@ -1,4 +1,5 @@
 import { uIOhook } from "uiohook-napi";
+import { type ResolvedPttKey } from "./key-mapping.ts";
 
 export interface PttCallback {
   onPttStart(): void;
@@ -99,4 +100,53 @@ export class KeyboardHookService {
       }
     }
   }
+}
+
+/**
+ * Wait until a held combo is released (any required key lifts).
+ *
+ * Subscribes to combo events and resolves once `isComboHeld()` returns
+ * `false` — meaning the primary key or a required modifier was released.
+ */
+export function waitForComboRelease(
+  hook: KeyboardHookService,
+  resolvedKey: ResolvedPttKey,
+  signal: AbortSignal,
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (signal.aborted) {
+      reject(signal.reason);
+      return;
+    }
+
+    const unsubscribe = hook.subscribeCombo({
+      onKeyEvent(pressedKeys) {
+        if (!isComboHeld(pressedKeys, resolvedKey)) {
+          cleanup();
+          resolve();
+        }
+      },
+    });
+
+    const onAbort = () => {
+      cleanup();
+      reject(signal.reason);
+    };
+    signal.addEventListener("abort", onAbort, { once: true });
+
+    function cleanup() {
+      unsubscribe();
+      signal.removeEventListener("abort", onAbort);
+    }
+  });
+}
+
+export function isComboHeld(
+  pressedKeys: ReadonlySet<number>,
+  key: ResolvedPttKey,
+): boolean {
+  if (!pressedKeys.has(key.primaryKeycode)) return false;
+  return key.modifiers.every((keycodes) =>
+    keycodes.some((kc) => pressedKeys.has(kc)),
+  );
 }
