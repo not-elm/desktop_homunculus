@@ -233,24 +233,33 @@ async function runSession(
   const signal = sessionAbort.signal;
 
   try {
+    let pendingText: string | null = null;
+
     while (!signal.aborted) {
-      emitStatus(characterId, "listening");
-      const text = await recognizeOneSentence(
-        characterId,
-        resolvedKey,
-        signal,
-      );
+      let text: string | null;
+
+      if (pendingText) {
+        text = pendingText;
+        pendingText = null;
+      } else {
+        emitStatus(characterId, "listening");
+        text = await recognizeOneSentence(characterId, resolvedKey, signal);
+      }
+
       if (text === null) continue;
 
       emitUserLog(characterId, text);
-      sessionId = await executeOneRound(
+      const result = await executeOneRound(
         characterId,
         executer,
         text,
         sessionId,
         settings,
+        resolvedKey,
         signal,
       );
+      sessionId = result.sessionId;
+      pendingText = result.nextText;
     }
   } catch (e) {
     if (!isAbortError(e)) throw e;
@@ -260,14 +269,20 @@ async function runSession(
   }
 }
 
+interface RoundResult {
+  sessionId: string | null;
+  nextText: string | null;
+}
+
 async function executeOneRound(
   characterId: string,
   executer: AIAgentExecuter,
   text: string,
   sessionId: string | null,
   settings: AgentSettings,
+  resolvedKey: ResolvedPttKey,
   sessionSignal: AbortSignal,
-): Promise<string | null> {
+): Promise<RoundResult> {
   const interruptAbort = new AbortController();
   const executorGen = executer.execute(text, sessionId, interruptAbort.signal);
   const interruptPromise = waitForInterrupt(characterId, settings, sessionSignal);
@@ -280,11 +295,12 @@ async function executeOneRound(
       interruptAbort,
       sessionId,
       settings,
+      resolvedKey,
       sessionSignal,
     );
   } catch (e) {
     if (!isAbortError(e)) throw e;
-    return sessionId;
+    return { sessionId, nextText: null };
   }
 }
 
@@ -295,8 +311,9 @@ async function driveExecutor(
   interruptAbort: AbortController,
   sessionId: string | null,
   settings: AgentSettings,
+  resolvedKey: ResolvedPttKey,
   sessionSignal: AbortSignal,
-): Promise<string | null> {
+): Promise<RoundResult> {
   let lastSessionId = sessionId;
   let response: AgentResponse | undefined = undefined;
 
@@ -304,7 +321,14 @@ async function driveExecutor(
     const raceResult = await raceInterrupt(executorGen.next(response), interruptPromise);
 
     if (raceResult.interrupted) {
-      return await abortExecution(characterId, executorGen, interruptAbort, lastSessionId);
+      lastSessionId = await abortExecution(characterId, executorGen, interruptAbort, lastSessionId);
+
+      if (raceResult.source === "ptt") {
+        const nextText = await recognizeWhileHeld(characterId, resolvedKey, sessionSignal);
+        return { sessionId: lastSessionId, nextText };
+      }
+
+      return { sessionId: lastSessionId, nextText: null };
     }
     if (raceResult.done) break;
 
@@ -313,7 +337,7 @@ async function driveExecutor(
     if (event.type === "completed") lastSessionId = event.sessionId;
   }
 
-  return lastSessionId;
+  return { sessionId: lastSessionId, nextText: null };
 }
 
 async function abortExecution(
@@ -577,23 +601,15 @@ async function waitForInterrupt(
   settings: AgentSettings,
   sessionSignal: AbortSignal,
 ): Promise<"ptt" | "ui"> {
-  return Promise.race([
-    waitForPttDuringExecution(settings, sessionSignal).then(
-      () => "ptt" as const,
-    ),
-    waitForInterruptRpc(characterId, sessionSignal).then(
-      () => "ui" as const,
-    ),
-  ]);
-}
-
-async function waitForPttDuringExecution(
-  settings: AgentSettings,
-  signal: AbortSignal,
-): Promise<void> {
   const resolvedKey = resolvePttKeycodes(settings.pttKey!);
-  if (!resolvedKey) return new Promise<void>(() => {});
-  await waitForComboPress(resolvedKey, signal);
+  const pttPromise = resolvedKey
+    ? waitForComboPress(resolvedKey, sessionSignal).then(() => "ptt" as const)
+    : new Promise<never>(() => {});
+
+  return Promise.race([
+    pttPromise,
+    waitForInterruptRpc(characterId, sessionSignal).then(() => "ui" as const),
+  ]);
 }
 
 async function waitForInterruptRpc(
