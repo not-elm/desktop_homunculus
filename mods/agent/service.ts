@@ -519,16 +519,11 @@ function runVoiceApproval(
   (async () => {
     try {
       await waitForComboPress(resolvedKey, signal);
-      emitRecording(characterId, true);
-      try {
-        const text = await recognizeWithCancel(resolvedKey, signal);
-        if (text === null) {
-          deferred.resolve({ approved: false, message: "Cancelled" });
-        } else {
-          deferred.resolve(evaluateApprovalPhrase(text, settings));
-        }
-      } finally {
-        emitRecording(characterId, false);
+      const text = await recognizeWhileHeld(characterId, resolvedKey, signal);
+      if (text === null) {
+        deferred.resolve({ approved: false, message: "No speech detected" });
+      } else {
+        deferred.resolve(evaluateApprovalPhrase(text, settings));
       }
     } catch {
       // Voice approval failed (aborted or error) — UI/timeout will handle it
