@@ -51,6 +51,8 @@ pub enum SttError {
     InvalidLanguage(String),
     #[error("Invalid model size")]
     InvalidModelSize,
+    #[error("Audio below energy threshold")]
+    BelowEnergyThreshold,
     #[error("PTT session not found: {0}")]
     SessionNotFound(String),
     #[error("PTT session expired: {0}")]
@@ -321,12 +323,18 @@ impl SttApi {
         let (_, inference_config) = load_recognition_configs();
 
         let inference_timeout = std::time::Duration::from_secs(30);
-        tokio::time::timeout(
+        let result = tokio::time::timeout(
             inference_timeout,
-            run_whisper_inference(ctx, resampled, language, started_at, inference_config),
+            run_whisper_inference(ctx, resampled, language.clone(), started_at, inference_config),
         )
         .await
-        .map_err(|_| SttError::PipelineFailed("Inference timed out".to_string()))?
+        .map_err(|_| SttError::PipelineFailed("Inference timed out".to_string()))?;
+
+        match result {
+            Ok(stt_result) => Ok(stt_result),
+            Err(SttError::BelowEnergyThreshold) => Ok(empty_result(started_at, language)),
+            Err(e) => Err(e),
+        }
     }
 
     /// Download a model. Returns the download status.
@@ -593,7 +601,12 @@ async fn run_whisper_inference(
     tokio::task::spawn_blocking(move || whisper_infer(&ctx, &chunk, &language, started_at, config))
         .await
         .map_err(|e| SttError::PipelineFailed(format!("Inference task panicked: {e}")))?
-        .map_err(|e| SttError::PipelineFailed(e.to_string()))
+        .map_err(|e| match e {
+            homunculus_microphone::error::InferenceError::BelowEnergyThreshold => {
+                SttError::BelowEnergyThreshold
+            }
+            other => SttError::PipelineFailed(other.to_string()),
+        })
 }
 
 async fn load_context_blocking(size: SttModelSize) -> Result<Arc<WhisperContext>, SttError> {
@@ -602,6 +615,14 @@ async fn load_context_blocking(size: SttModelSize) -> Result<Arc<WhisperContext>
     })
     .await
     .map_err(|e| SttError::ModelLoadFailed(e.to_string()))?
+}
+
+fn empty_result(started_at: Instant, language: String) -> SttResult {
+    SttResult {
+        text: String::new(),
+        timestamp: started_at.elapsed().as_secs_f64(),
+        language,
+    }
 }
 
 fn relative_model_path(size: SttModelSize) -> String {
