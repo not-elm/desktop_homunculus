@@ -4521,6 +4521,7 @@ dependencies = [
  "tokio",
  "tokio-util",
  "utoipa",
+ "uuid",
 ]
 
 [[package]]
@@ -4630,6 +4631,7 @@ dependencies = [
  "tower-http",
  "utoipa",
  "utoipa-axum",
+ "uuid",
 ]
 
 [[package]]
@@ -9126,6 +9128,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.117",
+ "uuid",
 ]
 
 [[package]]

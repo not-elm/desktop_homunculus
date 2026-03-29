@@ -2,9 +2,16 @@
 //!
 //! Stateless speech recognition and model downloads using `homunculus_microphone`.
 
+pub mod ptt;
+
+pub use ptt::{PttSessionRegistry, PttStartOptions, PttStartResponse, SttPttPlugin};
+
 use std::sync::Arc;
 use std::time::Instant;
 
+use crate::prelude::ApiReactor;
+use bevy::prelude::*;
+use bevy_flurx::prelude::*;
 use homunculus_microphone::{
     DownloadProgress, InferenceConfig, SharedSttModelCache, SttModelSize, SttResult, VadConfig,
     WhisperContext, get_input_device, load_whisper_context,
@@ -16,7 +23,9 @@ use homunculus_microphone::{
 };
 use serde::{Deserialize, Serialize};
 use tokio::sync::watch;
+use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
+use uuid::Uuid;
 
 #[cfg(feature = "openapi")]
 use utoipa::ToSchema;
@@ -42,6 +51,10 @@ pub enum SttError {
     InvalidLanguage(String),
     #[error("Invalid model size")]
     InvalidModelSize,
+    #[error("PTT session not found: {0}")]
+    SessionNotFound(String),
+    #[error("PTT session expired: {0}")]
+    SessionExpired(String),
 }
 
 /// Whisper-supported language codes (ISO 639-1) plus "auto" for auto-detection.
@@ -132,12 +145,7 @@ impl Drop for PipelineCancelGuard {
 pub struct SttApi {
     model_cache: SharedSttModelCache,
     shutdown_token: SttShutdownToken,
-}
-
-impl Default for SttApi {
-    fn default() -> Self {
-        Self::new()
-    }
+    reactor: ApiReactor,
 }
 
 impl SttApi {
@@ -146,12 +154,13 @@ impl SttApi {
         WHISPER_SUPPORTED_LANGUAGES
     }
 
-    pub fn new() -> Self {
+    pub fn new(reactor: ApiReactor) -> Self {
         let parent = CancellationToken::new();
         let shutdown_token = SttShutdownToken(parent.clone());
         Self {
             model_cache: SharedSttModelCache::new(parent),
             shutdown_token,
+            reactor,
         }
     }
 
@@ -188,6 +197,136 @@ impl SttApi {
         cancel.cancel();
 
         run_whisper_inference(ctx, chunk, language, started_at, inference_config).await
+    }
+
+    /// Start a PTT recording session.
+    ///
+    /// Validates options, loads the Whisper model, ensures microphone access,
+    /// spawns capture and buffer tasks, and registers the session.
+    pub async fn start_ptt(
+        &self,
+        options: ptt::PttStartOptions,
+    ) -> Result<ptt::PttStartResponse, SttError> {
+        let language = validate_language(options.language)?;
+        let timeout_secs = options.timeout_secs.min(ptt::MAX_TIMEOUT_SECS);
+        let model_size = options.model_size;
+
+        let _ctx = self.load_or_get_context(model_size).await?;
+        ensure_microphone_access().await?;
+
+        let cancel = CancellationToken::new();
+        let capture = start_capture(cancel.clone())?;
+        let started_at = std::time::Instant::now();
+
+        let buffer_task = spawn_buffer_task(capture.audio_rx, cancel.clone());
+
+        let session_id = Uuid::new_v4();
+        let timeout_cancel = cancel.clone();
+        let timeout_reactor = self.reactor.clone();
+        let timeout_id = session_id;
+        let timeout_task = tokio::spawn(async move {
+            tokio::select! {
+                _ = tokio::time::sleep(std::time::Duration::from_secs(timeout_secs)) => {
+                    timeout_cancel.cancel();
+                    let _ = timeout_reactor
+                        .schedule(move |task| async move {
+                            task.will(
+                                Update,
+                                once::run(mark_session_expired).with(timeout_id),
+                            )
+                            .await;
+                        })
+                        .await;
+                }
+                _ = timeout_cancel.cancelled() => {}
+            }
+        });
+
+        let session = ptt::PttSession {
+            cancel_token: cancel,
+            buffer_task: Some(buffer_task),
+            timeout_task,
+            sample_rate: capture.sample_rate,
+            needs_resample: capture.needs_resample,
+            language,
+            model_size,
+            started_at,
+        };
+
+        self.reactor
+            .schedule(move |task| async move {
+                task.will(
+                    Update,
+                    once::run(insert_session).with((session_id, session)),
+                )
+                .await;
+            })
+            .await
+            .map_err(|e| SttError::PipelineFailed(e.to_string()))?;
+
+        Ok(ptt::PttStartResponse { session_id })
+    }
+
+    /// Stop a PTT session and return the recognition result.
+    ///
+    /// Phase 1 (inside schedule, World lock): remove session from registry.
+    /// Phase 2 (outside schedule, no lock): await buffer, run inference.
+    pub async fn stop_ptt(
+        &self,
+        session_id: Uuid,
+    ) -> Result<homunculus_microphone::SttResult, SttError> {
+        let mut session: ptt::PttSession = self
+            .reactor
+            .schedule(move |task| async move {
+                task.will(Update, once::run(remove_session).with(session_id))
+                    .await
+            })
+            .await
+            .map_err(|e| SttError::PipelineFailed(e.to_string()))?
+            .map_err(|e| match e {
+                RemoveSessionError::NotFound => SttError::SessionNotFound(session_id.to_string()),
+                RemoveSessionError::Expired => SttError::SessionExpired(session_id.to_string()),
+            })?;
+
+        let started_at = session.started_at;
+        let language = session.language.clone();
+        let model_size = session.model_size;
+        let sample_rate = session.sample_rate;
+        let needs_resample = session.needs_resample;
+
+        session.cancel_token.cancel();
+
+        let buffer_task = session
+            .buffer_task
+            .take()
+            .ok_or_else(|| SttError::PipelineFailed("Buffer task already consumed".into()))?;
+        let buffer = buffer_task
+            .await
+            .map_err(|e| SttError::PipelineFailed(format!("Buffer task failed: {e}")))?;
+
+        // Drop session to release microphone (cpal stream drop).
+        drop(session);
+
+        if buffer.is_empty() {
+            return Ok(homunculus_microphone::SttResult {
+                text: String::new(),
+                timestamp: started_at.elapsed().as_secs_f64(),
+                language,
+            });
+        }
+
+        let resampled = resample_if_needed(buffer, sample_rate, needs_resample);
+
+        let ctx = self.load_or_get_context(model_size).await?;
+        let (_, inference_config) = load_recognition_configs();
+
+        let inference_timeout = std::time::Duration::from_secs(30);
+        tokio::time::timeout(
+            inference_timeout,
+            run_whisper_inference(ctx, resampled, language, started_at, inference_config),
+        )
+        .await
+        .map_err(|_| SttError::PipelineFailed("Inference timed out".to_string()))?
     }
 
     /// Download a model. Returns the download status.
@@ -339,6 +478,81 @@ impl SttApi {
         cache.unmark_downloading(size);
     }
 }
+
+/// Spawn a tokio task that collects audio frames into a local buffer.
+fn spawn_buffer_task(
+    audio_rx: std::sync::mpsc::Receiver<Vec<f32>>,
+    cancel: CancellationToken,
+) -> JoinHandle<Vec<f32>> {
+    tokio::spawn(async move {
+        let mut buffer = Vec::new();
+        loop {
+            if cancel.is_cancelled() {
+                break;
+            }
+            match audio_rx.recv_timeout(std::time::Duration::from_millis(50)) {
+                Ok(frames) => buffer.extend_from_slice(&frames),
+                Err(std::sync::mpsc::RecvTimeoutError::Timeout) => continue,
+                Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => break,
+            }
+        }
+        buffer
+    })
+}
+
+/// One-shot Bevy system: insert a PTT session into the registry.
+fn insert_session(
+    In((id, session)): In<(Uuid, ptt::PttSession)>,
+    mut registry: ResMut<ptt::PttSessionRegistry>,
+) {
+    registry.insert(id, session);
+}
+
+/// One-shot Bevy system: mark a PTT session as expired (timeout).
+fn mark_session_expired(In(id): In<Uuid>, mut registry: ResMut<ptt::PttSessionRegistry>) {
+    registry.mark_expired(&id);
+}
+
+enum RemoveSessionError {
+    NotFound,
+    Expired,
+}
+
+/// One-shot Bevy system: remove a PTT session from the registry.
+fn remove_session(
+    In(id): In<Uuid>,
+    mut registry: ResMut<ptt::PttSessionRegistry>,
+) -> Result<ptt::PttSession, RemoveSessionError> {
+    match registry.remove(&id) {
+        ptt::SessionRemoveResult::Found(session) => Ok(session),
+        ptt::SessionRemoveResult::Expired => Err(RemoveSessionError::Expired),
+        ptt::SessionRemoveResult::NotFound => Err(RemoveSessionError::NotFound),
+    }
+}
+
+/// Resample audio to 16kHz via linear interpolation if the device rate differs.
+fn resample_if_needed(buffer: Vec<f32>, sample_rate: u32, needs_resample: bool) -> Vec<f32> {
+    if !needs_resample || sample_rate == 16000 {
+        return buffer;
+    }
+    // Use simple linear interpolation for resampling to 16kHz.
+    // The target is always 16000 Hz for Whisper.
+    let ratio = 16000.0 / sample_rate as f64;
+    let new_len = (buffer.len() as f64 * ratio) as usize;
+    let mut resampled = Vec::with_capacity(new_len);
+    for i in 0..new_len {
+        let src_idx = i as f64 / ratio;
+        let idx = src_idx as usize;
+        let frac = (src_idx - idx as f64) as f32;
+        if idx + 1 < buffer.len() {
+            resampled.push(buffer[idx] * (1.0 - frac) + buffer[idx + 1] * frac);
+        } else if idx < buffer.len() {
+            resampled.push(buffer[idx]);
+        }
+    }
+    resampled
+}
+
 
 fn validate_language(language: String) -> Result<String, SttError> {
     if !WHISPER_SUPPORTED_LANGUAGES.contains(&language.as_str()) {

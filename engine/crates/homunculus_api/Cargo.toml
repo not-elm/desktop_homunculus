@@ -30,6 +30,7 @@ bevy_tweening = "0.15"
 homunculus_utils = { workspace = true }
 tokio = { workspace = true }
 tokio-util = { workspace = true }
+uuid = { workspace = true }
 utoipa = { workspace = true, optional = true }
 
 [features]
