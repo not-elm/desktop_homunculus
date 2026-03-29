@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { Vrm, preferences, signals, stt } from "@hmcs/sdk";
 import { rpc } from "@hmcs/sdk/rpc";
-import { KeyboardHookService, waitForComboRelease } from "./lib/keyboard-hook.ts";
+import { KeyboardHookService, waitForComboRelease, isComboHeld } from "./lib/keyboard-hook.ts";
 import { resolvePttKeycodes, type ResolvedPttKey } from "./lib/key-mapping.ts";
 import { ClaudeAgentExecuter } from "./lib/claude-agent-executer.ts";
 import { CodexAppServerExecuter } from "./lib/codex-appserver-executer.ts";
@@ -285,7 +285,7 @@ async function executeOneRound(
 ): Promise<RoundResult> {
   const interruptAbort = new AbortController();
   const executorGen = executer.execute(text, sessionId, interruptAbort.signal);
-  const interruptPromise = waitForInterrupt(characterId, settings, sessionSignal);
+  const interruptPromise = waitForInterrupt(characterId, resolvedKey, sessionSignal);
 
   try {
     return await driveExecutor(
@@ -593,10 +593,9 @@ function timeoutReject(ms: number): Promise<never> {
 
 async function waitForInterrupt(
   characterId: string,
-  settings: AgentSettings,
+  resolvedKey: ResolvedPttKey | null,
   sessionSignal: AbortSignal,
 ): Promise<"ptt" | "ui"> {
-  const resolvedKey = resolvePttKeycodes(settings.pttKey!);
   const pttPromise = resolvedKey
     ? waitForComboPress(resolvedKey, sessionSignal).then(() => "ptt" as const)
     : new Promise<never>(() => {});
@@ -636,7 +635,7 @@ async function recognizeWhileHeld(
   signal: AbortSignal,
 ): Promise<string | null> {
   emitRecording(characterId, true);
-  let session: Awaited<ReturnType<typeof stt.ptt.start>> | null = null;
+  let session: stt.ptt.PttSession | null = null;
 
   try {
     session = await stt.ptt.start({ language: "ja" });
@@ -683,16 +682,6 @@ function waitForComboPress(
       signal.removeEventListener("abort", onAbort);
     }
   });
-}
-
-function isComboHeld(
-  pressedKeys: ReadonlySet<number>,
-  key: ResolvedPttKey,
-): boolean {
-  if (!pressedKeys.has(key.primaryKeycode)) return false;
-  return key.modifiers.every((keycodes) =>
-    keycodes.some((kc) => pressedKeys.has(kc)),
-  );
 }
 
 function emitStatus(characterId: string, state: AgentStatus): void {
