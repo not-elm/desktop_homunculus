@@ -31,16 +31,16 @@ body {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  flex: 1;
   min-height: 0;
+  max-height: 500px;
 }
 
 .hud-container--ready .hud-body {
-  transition: flex 280ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: max-height 280ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .hud-container[data-expanded="false"] .hud-body {
-  flex: 0;
+  max-height: 0;
 }
 
 .hud-body-inner {
