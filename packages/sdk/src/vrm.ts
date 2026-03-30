@@ -35,6 +35,9 @@ export interface Ocean {
     neuroticism?: number;
 }
 
+/** Gender identity for a VRM character. */
+export type Gender = "male" | "female" | "other" | "unknown";
+
 /**
  * Persona data for a VRM character.
  *
@@ -42,6 +45,9 @@ export interface Ocean {
  * ```typescript
  * const persona: Persona = {
  *   displayName: "エルマー",
+ *   age: 25,
+ *   gender: "female",
+ *   firstPersonPronoun: "わたし",
  *   profile: "A cheerful virtual assistant",
  *   personality: "Friendly and helpful",
  *   ocean: { openness: 0.8, extraversion: 0.7 },
@@ -52,6 +58,12 @@ export interface Ocean {
 export interface Persona {
     /** Optional display name / nickname for the character. */
     displayName?: string | null;
+    /** Age of the character. null means age unknown. */
+    age?: number | null;
+    /** Gender identity. Defaults to "unknown". */
+    gender: Gender;
+    /** First-person pronoun (e.g. "わたし", "僕", "俺"). null means unset (AI infers). */
+    firstPersonPronoun?: string | null;
     /** Character profile/background description. */
     profile: string;
     /** Personality description in natural language. */
