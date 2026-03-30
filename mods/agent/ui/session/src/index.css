@@ -22,15 +22,14 @@ body {
   border: 1px solid oklch(0.72 0.14 192 / 0.18);
   border-radius: 12px;
   display: grid;
-  grid-template-rows: auto 0fr;
-  overflow: hidden;
-  animation: hud-in 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  grid-template-rows: auto 1fr;
+  overflow: clip;
   backdrop-filter: blur(12px);
   transition: grid-template-rows 280ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.hud-container[data-expanded="true"] {
-  grid-template-rows: auto 1fr;
+.hud-container[data-expanded="false"] {
+  grid-template-rows: auto 0fr;
 }
 
 .hud-body {
@@ -39,15 +38,16 @@ body {
 }
 
 .hud-body-inner {
-  opacity: 0;
+  opacity: 1;
   transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition-delay: 80ms;
   display: flex;
   flex-direction: column;
 }
 
-.hud-container[data-expanded="true"] .hud-body-inner {
-  opacity: 1;
-  transition-delay: 80ms;
+.hud-container[data-expanded="false"] .hud-body-inner {
+  opacity: 0;
+  transition-delay: 0ms;
 }
 
 /* ━━ Keyframes ━━ */
