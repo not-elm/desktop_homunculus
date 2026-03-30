@@ -4,6 +4,9 @@ import type { Persona } from "./types.ts";
 export function buildCharacterPrompt(persona: Persona): string {
   const lines = [
     `あなたの名前は「${persona.name}」です。名前を聞かれたら必ずこの名前で答えてください。`,
+    buildAgeLine(persona.age),
+    buildGenderLine(persona.gender),
+    buildFirstPersonPronounLine(persona.firstPersonPronoun),
     persona.personality && buildPersonalityInstruction(persona.personality),
     "",
     buildSpokenStyleSection(),
@@ -19,9 +22,34 @@ export function buildCharacterPrompt(persona: Persona): string {
 function buildPersonalityInstruction(personality: string): string {
   return [
     `性格: ${personality}`,
-    "この性格に合った話し方をしてください。一人称、語尾、トーンを性格から自然に推論し、",
+    "この性格に合った話し方をしてください。語尾やトーンを性格から自然に推論し、",
     "一貫して使ってください。ただし、必ず口語体を保ってください。",
   ].join("\n");
+}
+
+/** Builds the age line for the system prompt. Returns empty string if age is null. */
+function buildAgeLine(age: number | null): string {
+  if (age == null) return "";
+  return `年齢: ${age}歳`;
+}
+
+const GENDER_LABEL: Record<string, string> = {
+  male: "男性",
+  female: "女性",
+  other: "その他",
+};
+
+/** Builds the gender line for the system prompt. Returns empty string if unknown. */
+function buildGenderLine(gender: string): string {
+  const label = GENDER_LABEL[gender];
+  if (!label) return "";
+  return `性別: ${label}`;
+}
+
+/** Builds the first-person pronoun instruction. Returns empty string if null. */
+function buildFirstPersonPronounLine(pronoun: string | null): string {
+  if (!pronoun) return "";
+  return `一人称は必ず「${pronoun}」を使ってください。`;
 }
 
 function buildSpokenStyleSection(): string {
