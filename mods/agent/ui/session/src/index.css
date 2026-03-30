@@ -400,12 +400,12 @@ body {
 /* ━━ Interrupt Button ━━ */
 
 .hud-interrupt-btn {
-  background: oklch(0.75 0.15 55 / 0.12);
-  border: 1px solid oklch(0.75 0.15 55 / 0.3);
-  border-radius: 4px;
-  padding: 2px 4px;
+  background: oklch(0.75 0.15 55 / 0.15);
+  border: 1px solid oklch(0.75 0.15 55 / 0.35);
+  border-radius: 5px;
+  padding: 3px 5px;
   cursor: pointer;
-  color: oklch(0.75 0.15 55);
+  color: oklch(0.8 0.15 55);
   display: flex;
   align-items: center;
   transition: background 150ms ease, border-color 150ms ease;
@@ -826,28 +826,30 @@ h3.hud-md-heading {
 }
 
 .hud-icon-btn {
-  background: transparent;
-  border: none;
-  padding: 6px;
+  background: oklch(1 0 0 / 0.06);
+  border: 1px solid oklch(1 0 0 / 0.08);
+  padding: 5px;
   cursor: pointer;
-  color: oklch(0.55 0.03 250 / 0.6);
+  color: oklch(0.72 0.04 250 / 0.85);
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
-  transition: color 150ms ease, background 150ms ease;
+  border-radius: 5px;
+  transition: color 150ms ease, background 150ms ease, border-color 150ms ease;
   line-height: 1;
   flex-shrink: 0;
 }
 
 .hud-icon-btn:hover {
-  color: oklch(0.78 0.08 192 / 0.9);
-  background: oklch(0.72 0.14 192 / 0.08);
+  color: oklch(0.85 0.1 192);
+  background: oklch(0.72 0.14 192 / 0.12);
+  border-color: oklch(0.72 0.14 192 / 0.25);
 }
 
 .hud-icon-btn--close:hover {
-  color: oklch(0.72 0.16 15 / 0.9);
-  background: oklch(0.65 0.2 15 / 0.08);
+  color: oklch(0.78 0.18 15);
+  background: oklch(0.65 0.2 15 / 0.12);
+  border-color: oklch(0.65 0.2 15 / 0.25);
 }
 
 /* ━━ Session Toggle Button ━━ */
