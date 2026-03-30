@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { Webview, Vrm, entities, type Ocean, audio } from "@hmcs/sdk";
 
-export type Tab = "basic" | "persona" | "ocean";
+export type Tab = "persona" | "ocean" | "appearance";
 
 export function useCharacterSettings() {
   const [vrm, setVrm] = useState<Vrm | null>(null);
   const [entity, setEntity] = useState<number | null>(null);
-  const [tab, setTab] = useState<Tab>("basic");
+  const [tab, setTab] = useState<Tab>("persona");
   const [name, setName] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [scale, setScale] = useState(1);
