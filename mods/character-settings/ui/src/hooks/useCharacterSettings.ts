@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Webview, Vrm, entities, type Ocean, audio } from "@hmcs/sdk";
+import { Webview, Vrm, entities, type Ocean, type Gender, audio } from "@hmcs/sdk";
 
 export type Tab = "persona" | "ocean" | "appearance";
 
@@ -12,6 +12,10 @@ export function useCharacterSettings() {
   const [scale, setScale] = useState(1);
   const [profile, setProfile] = useState("");
   const [personality, setPersonality] = useState("");
+  const [age, setAge] = useState<number | null>(null);
+  const [ageUnknown, setAgeUnknown] = useState(true);
+  const [gender, setGender] = useState<Gender>("unknown");
+  const [firstPersonPronoun, setFirstPersonPronoun] = useState("");
   const [ocean, setOcean] = useState<Ocean>({});
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -40,6 +44,10 @@ export function useCharacterSettings() {
       setScale(transform.scale[0]);
       setProfile(persona.profile);
       setPersonality(persona.personality ?? "");
+      setAge(persona.age ?? null);
+      setAgeUnknown(persona.age == null);
+      setGender(persona.gender ?? "unknown");
+      setFirstPersonPronoun(persona.firstPersonPronoun ?? "");
       setOcean(persona.ocean);
       setLoading(false);
     })();
@@ -60,6 +68,9 @@ export function useCharacterSettings() {
     try {
       await vrm.setPersona({
         displayName: displayName || null,
+        age: ageUnknown ? null : age,
+        gender,
+        firstPersonPronoun: firstPersonPronoun || null,
         profile,
         personality: personality || null,
         ocean,
@@ -78,7 +89,7 @@ export function useCharacterSettings() {
     } finally {
       setSaving(false);
     }
-  }, [vrm, entity, displayName, profile, personality, ocean, scale, saving]);
+  }, [vrm, entity, displayName, age, ageUnknown, gender, firstPersonPronoun, profile, personality, ocean, scale, saving]);
 
   return {
     loading,
@@ -93,6 +104,14 @@ export function useCharacterSettings() {
     setProfile,
     personality,
     setPersonality,
+    age,
+    setAge,
+    ageUnknown,
+    setAgeUnknown,
+    gender,
+    setGender,
+    firstPersonPronoun,
+    setFirstPersonPronoun,
     ocean,
     setOcean,
     saving,
