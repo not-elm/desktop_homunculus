@@ -24,8 +24,10 @@ body {
   border-radius: 12px;
   display: grid;
   grid-template-rows: auto 1fr;
-  overflow: clip;
   backdrop-filter: blur(12px);
+}
+
+.hud-container.hud-container--ready {
   transition: grid-template-rows 280ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -40,10 +42,13 @@ body {
 
 .hud-body-inner {
   opacity: 1;
-  transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1);
-  transition-delay: 80ms;
   display: flex;
   flex-direction: column;
+}
+
+.hud-container--ready .hud-body-inner {
+  transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition-delay: 80ms;
 }
 
 .hud-container[data-expanded="false"] .hud-body-inner {

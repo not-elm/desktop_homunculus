@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAgentSession } from "./hooks/useAgentSession";
 import { useAgentSettings } from "./hooks/useAgentSettings";
 import { ActivityLog } from "./components/ActivityLog";
@@ -12,14 +12,19 @@ type View = "session" | "settings";
 
 export function App() {
   const [expanded, setExpanded] = useState(true);
+  const [mounted, setMounted] = useState(false);
   const [view, setView] = useState<View>("session");
   const session = useAgentSession();
   const settingsHook = useAgentSettings();
   const isActive = session.state !== "idle";
   const showBack = view === "settings";
 
+  useEffect(() => {
+    requestAnimationFrame(() => setMounted(true));
+  }, []);
+
   return (
-    <div className="hud-container" data-expanded={expanded}>
+    <div className={`hud-container${mounted ? " hud-container--ready" : ""}`} data-expanded={expanded}>
       <HudDecorations />
       <PanelHeader
         state={session.state}
