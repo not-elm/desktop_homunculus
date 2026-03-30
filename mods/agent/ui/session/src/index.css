@@ -11,7 +11,7 @@ body {
   height: 100%;
 }
 
-/* ━━ Unified Container (Grid-based collapse/expand) ━━ */
+/* ━━ Unified Container (Flex-based collapse/expand) ━━ */
 
 .hud-container {
   position: relative;
@@ -22,28 +22,33 @@ body {
   background: oklch(0.13 0.015 250 / 0.93);
   border: 1px solid oklch(0.72 0.14 192 / 0.18);
   border-radius: 12px;
-  display: grid;
-  grid-template-rows: auto 1fr;
+  display: flex;
+  flex-direction: column;
   backdrop-filter: blur(12px);
-}
-
-.hud-container.hud-container--ready {
-  transition: grid-template-rows 280ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.hud-container[data-expanded="false"] {
-  grid-template-rows: auto 0fr;
 }
 
 .hud-body {
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
   min-height: 0;
+}
+
+.hud-container--ready .hud-body {
+  transition: flex 280ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hud-container[data-expanded="false"] .hud-body {
+  flex: 0;
 }
 
 .hud-body-inner {
   opacity: 1;
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 
 .hud-container--ready .hud-body-inner {
