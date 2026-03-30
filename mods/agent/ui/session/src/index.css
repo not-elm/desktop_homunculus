@@ -113,11 +113,11 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 0 12px;
-  height: 32px;
+  padding: 0 14px;
+  height: 36px;
   min-width: 120px;
-  background: oklch(0.13 0.015 250 / 0.9);
-  border: 1px solid oklch(0.72 0.14 192 / 0.25);
+  background: oklch(0.13 0.015 250 / 0.95);
+  border: 1px solid oklch(0.72 0.14 192 / 0.3);
   border-radius: 16px;
   cursor: pointer;
   user-select: none;
@@ -129,8 +129,8 @@ body {
 }
 
 .hud-pill:hover {
-  background: oklch(0.16 0.02 250 / 0.92);
-  border-color: oklch(0.72 0.14 192 / 0.45);
+  background: oklch(0.16 0.02 250 / 0.96);
+  border-color: oklch(0.72 0.14 192 / 0.5);
 }
 
 .hud-pill:active {
@@ -278,10 +278,10 @@ body {
 }
 
 .hud-staggered-dot {
-  width: 4px;
-  height: 4px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
-  background: oklch(0.75 0.18 30);
+  background: oklch(0.8 0.18 30);
   animation: dot-pulse 1.5s ease-in-out infinite;
 }
 
@@ -293,82 +293,88 @@ body {
 /* ━━ Status Dot ━━ */
 
 .hud-status-dot {
-  width: 7px;
-  height: 7px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   flex-shrink: 0;
 }
 
 .hud-status-dot--idle {
   background: oklch(0.55 0.02 250);
+  box-shadow: 0 0 4px oklch(0.55 0.02 250 / 0.3);
 }
 
 .hud-status-dot--thinking {
   background: oklch(0.72 0.18 192);
+  box-shadow: 0 0 8px oklch(0.72 0.18 192 / 0.5);
   animation: status-pulse 1s ease-in-out infinite;
 }
 
 .hud-status-dot--executing {
   background: oklch(0.78 0.16 75);
+  box-shadow: 0 0 8px oklch(0.78 0.16 75 / 0.5);
   animation: status-pulse 0.7s ease-in-out infinite;
 }
 
 .hud-status-dot--waiting {
   background: oklch(0.65 0.2 15);
+  box-shadow: 0 0 8px oklch(0.65 0.2 15 / 0.5);
   animation: status-pulse 0.8s ease-in-out infinite;
 }
 
 .hud-status-dot--listening {
   background: oklch(0.75 0.18 30);
+  box-shadow: 0 0 8px oklch(0.75 0.18 30 / 0.5);
   animation: status-pulse 1s ease-in-out infinite;
 }
 
 /* ━━ Status Label ━━ */
 
 .hud-status-label {
-  font-size: 0.68rem;
-  letter-spacing: 0.12em;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   font-weight: 600;
-  color: oklch(0.78 0.06 250 / 0.85);
+  color: oklch(0.8 0.06 250 / 0.9);
 }
 
 .hud-status-label--idle {
-  color: oklch(0.6 0.03 250 / 0.7);
+  color: oklch(0.65 0.03 250 / 0.8);
 }
 
 .hud-status-label--thinking {
-  color: oklch(0.72 0.18 192);
+  color: oklch(0.78 0.18 192);
 }
 
 .hud-status-label--executing {
-  color: oklch(0.78 0.16 75);
+  color: oklch(0.82 0.16 75);
 }
 
 .hud-status-label--waiting {
-  color: oklch(0.65 0.2 15);
+  color: oklch(0.72 0.2 15);
 }
 
 .hud-status-label--listening {
-  color: oklch(0.75 0.18 30);
+  color: oklch(0.8 0.18 30);
 }
 
 /* ━━ Timer ━━ */
 
 .hud-timer {
   font-family: monospace;
-  font-size: 0.72rem;
-  color: oklch(0.55 0.03 250 / 0.7);
+  font-size: 0.75rem;
+  color: oklch(0.6 0.03 250 / 0.85);
   letter-spacing: 0.04em;
 }
 
 /* ━━ Notification Dot ━━ */
 
 .hud-notification-dot {
-  width: 7px;
-  height: 7px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
-  background: oklch(0.65 0.2 15);
+  background: oklch(0.7 0.2 15);
+  box-shadow: 0 0 6px oklch(0.7 0.2 15 / 0.5);
   animation: notification-pulse 1s ease-in-out infinite;
   flex-shrink: 0;
 }
@@ -808,8 +814,8 @@ h3.hud-md-heading {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 10px;
-  border-bottom: 1px solid oklch(0.72 0.14 192 / 0.08);
+  padding: 10px 12px;
+  border-bottom: 1px solid oklch(0.72 0.14 192 / 0.1);
   position: relative;
   z-index: 7;
   flex-shrink: 0;
@@ -822,9 +828,9 @@ h3.hud-md-heading {
 .hud-icon-btn {
   background: transparent;
   border: none;
-  padding: 5px;
+  padding: 6px;
   cursor: pointer;
-  color: oklch(0.55 0.03 250 / 0.55);
+  color: oklch(0.55 0.03 250 / 0.6);
   display: flex;
   align-items: center;
   justify-content: center;

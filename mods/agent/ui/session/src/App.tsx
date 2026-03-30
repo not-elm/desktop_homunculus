@@ -252,10 +252,10 @@ function PillMicIcon() {
 
 function MicIcon() {
   return (
-    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-      <rect x="4" y="1" width="4" height="6" rx="2" fill="oklch(0.75 0.18 30)" />
-      <path d="M2.5 5.5V6a3.5 3.5 0 0 0 7 0V5.5" stroke="oklch(0.75 0.18 30)" strokeWidth="1.1" strokeLinecap="round" />
-      <path d="M6 9.5V11" stroke="oklch(0.75 0.18 30)" strokeWidth="1.1" strokeLinecap="round" />
+    <svg width="14" height="14" viewBox="0 0 12 12" fill="none">
+      <rect x="4" y="1" width="4" height="6" rx="2" fill="oklch(0.8 0.18 30)" />
+      <path d="M2.5 5.5V6a3.5 3.5 0 0 0 7 0V5.5" stroke="oklch(0.8 0.18 30)" strokeWidth="1.1" strokeLinecap="round" />
+      <path d="M6 9.5V11" stroke="oklch(0.8 0.18 30)" strokeWidth="1.1" strokeLinecap="round" />
     </svg>
   );
 }
