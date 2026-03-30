@@ -16,26 +16,27 @@ export function App() {
   const session = useAgentSession();
   const settingsHook = useAgentSettings();
 
-  if (collapsed) {
-    return (
-      <CollapsedPill
-        state={session.state}
-        elapsedMs={session.elapsedMs}
-        hasPending={session.hasPending}
-        isRecording={session.isRecording}
-        onExpand={() => setCollapsed(false)}
-      />
-    );
-  }
-
   return (
-    <AgentPanel
-      session={session}
-      settingsHook={settingsHook}
-      view={view}
-      onViewChange={setView}
-      onCollapse={() => setCollapsed(true)}
-    />
+    <div className="hud-root">
+      <div className="hud-collapse-wrapper" data-visible={collapsed}>
+        <CollapsedPill
+          state={session.state}
+          elapsedMs={session.elapsedMs}
+          hasPending={session.hasPending}
+          isRecording={session.isRecording}
+          onExpand={() => setCollapsed(false)}
+        />
+      </div>
+      <div className="hud-collapse-wrapper" data-visible={!collapsed}>
+        <AgentPanel
+          session={session}
+          settingsHook={settingsHook}
+          view={view}
+          onViewChange={setView}
+          onCollapse={() => setCollapsed(true)}
+        />
+      </div>
+    </div>
   );
 }
 
