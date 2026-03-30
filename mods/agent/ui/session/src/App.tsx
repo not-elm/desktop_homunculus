@@ -118,14 +118,6 @@ function PanelHeader({
 
   return (
     <div className="hud-header">
-      <button
-        className={`hud-session-toggle${isActive ? " hud-session-toggle--active" : ""}`}
-        onClick={onToggleSession}
-        title={isActive ? "Stop Session" : "Start Session"}
-      >
-        {isActive ? <StopSquare /> : <PlayTriangle />}
-      </button>
-
       {showBack && expanded && (
         <button className="hud-icon-btn" onClick={onBack} title="Back">
           <BackArrow />
@@ -146,6 +138,13 @@ function PanelHeader({
           <InterruptIcon />
         </button>
       )}
+      <button
+        className={`hud-session-toggle${isActive ? " hud-session-toggle--active" : ""}`}
+        onClick={onToggleSession}
+        title={isActive ? "Stop Session" : "Start Session"}
+      >
+        {isActive ? <StopSquare /> : <PlayTriangle />}
+      </button>
       {expanded && (
         <button className="hud-icon-btn" onClick={onToggleView} title="Settings">
           <GearIcon />
