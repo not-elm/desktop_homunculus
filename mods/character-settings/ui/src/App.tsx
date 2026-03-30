@@ -8,6 +8,7 @@ export function App() {
     loading,
     name,
     displayName,
+    setDisplayName,
     tab,
     setTab,
     scale,
@@ -16,6 +17,14 @@ export function App() {
     setProfile,
     personality,
     setPersonality,
+    age,
+    setAge,
+    ageUnknown,
+    setAgeUnknown,
+    gender,
+    setGender,
+    firstPersonPronoun,
+    setFirstPersonPronoun,
     ocean,
     setOcean,
     saving,
@@ -72,6 +81,17 @@ export function App() {
       <div className={`settings-content${tab === "persona" ? " settings-content--visible" : ""}`}>
         {tab === "persona" && (
           <PersonaTab
+            name={name}
+            displayName={displayName}
+            onDisplayNameChange={setDisplayName}
+            age={age}
+            ageUnknown={ageUnknown}
+            onAgeChange={setAge}
+            onAgeUnknownChange={setAgeUnknown}
+            gender={gender}
+            onGenderChange={setGender}
+            firstPersonPronoun={firstPersonPronoun}
+            onFirstPersonPronounChange={setFirstPersonPronoun}
             profile={profile}
             personality={personality}
             onProfileChange={setProfile}
