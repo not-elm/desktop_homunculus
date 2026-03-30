@@ -11,113 +11,55 @@ import type { AgentState } from "./hooks/useAgentSession";
 type View = "session" | "settings";
 
 export function App() {
-  const [collapsed, setCollapsed] = useState(false);
+  const [expanded, setExpanded] = useState(true);
   const [view, setView] = useState<View>("session");
   const session = useAgentSession();
   const settingsHook = useAgentSettings();
-
-  return (
-    <div className="hud-root">
-      <div className="hud-collapse-wrapper" data-visible={collapsed}>
-        <CollapsedPill
-          state={session.state}
-          elapsedMs={session.elapsedMs}
-          hasPending={session.hasPending}
-          isRecording={session.isRecording}
-          onExpand={() => setCollapsed(false)}
-        />
-      </div>
-      <div className="hud-collapse-wrapper" data-visible={!collapsed}>
-        <AgentPanel
-          session={session}
-          settingsHook={settingsHook}
-          view={view}
-          onViewChange={setView}
-          onCollapse={() => setCollapsed(true)}
-        />
-      </div>
-    </div>
-  );
-}
-
-/* ━━ Collapsed Pill ━━ */
-
-interface CollapsedPillProps {
-  state: AgentState;
-  elapsedMs: number;
-  hasPending: boolean;
-  isRecording?: boolean;
-  onExpand: () => void;
-}
-
-function CollapsedPill({ state, elapsedMs, hasPending, isRecording, onExpand }: CollapsedPillProps) {
-  return (
-    <div className="hud-pill" onClick={onExpand}>
-      <PillIndicator state={state} isRecording={isRecording} />
-      <span className={`hud-status-label hud-status-label--${isRecording ? "listening" : state}`}>
-        {isRecording ? "Listening..." : stateLabel(state)}
-      </span>
-      {state !== "idle" && <span className="hud-timer">{formatElapsed(elapsedMs)}</span>}
-      {hasPending && <span className="hud-notification-dot" />}
-      <ExpandArrow />
-    </div>
-  );
-}
-
-/* ━━ Agent Panel (Expanded) ━━ */
-
-interface AgentPanelProps {
-  session: ReturnType<typeof useAgentSession>;
-  settingsHook: ReturnType<typeof useAgentSettings>;
-  view: View;
-  onViewChange: (v: View) => void;
-  onCollapse: () => void;
-}
-
-function AgentPanel({ session, settingsHook, view, onViewChange, onCollapse }: AgentPanelProps) {
   const isActive = session.state !== "idle";
   const showBack = view === "settings";
 
-  function toggleView() {
-    onViewChange(view === "session" ? "settings" : "session");
-  }
-
   return (
-    <div className="hud-panel">
+    <div className="hud-container" data-expanded={expanded}>
       <HudDecorations />
       <PanelHeader
         state={session.state}
         elapsedMs={session.elapsedMs}
         isRecording={session.isRecording}
         isActive={isActive}
+        expanded={expanded}
         showBack={showBack}
+        hasPending={session.hasPending}
         onToggleSession={isActive ? session.stopSession : session.startSession}
         onInterrupt={session.interruptSession}
-        onToggleView={toggleView}
-        onBack={() => onViewChange("session")}
-        onCollapse={onCollapse}
+        onToggleView={() => setView(view === "session" ? "settings" : "session")}
+        onBack={() => setView("session")}
+        onToggleExpand={() => setExpanded(!expanded)}
         onClose={session.closePanel}
       />
-      <InlineSettingsBar
-        settings={settingsHook.settings}
-        onSettingsChange={settingsHook.setAndSaveSettings}
-        apiKey={settingsHook.apiKey}
-      />
-      <div className="hud-view-slider" data-view={view}>
-        <div className="hud-view-slide">
-          <SessionContent session={session} />
-        </div>
-        <div className="hud-view-slide">
-          <SettingsView
+      <div className="hud-body">
+        <div className="hud-body-inner">
+          <InlineSettingsBar
             settings={settingsHook.settings}
-            onSettingsChange={settingsHook.setSettings}
-            saving={settingsHook.saving}
-            onSave={settingsHook.saveSettings}
+            onSettingsChange={settingsHook.setAndSaveSettings}
             apiKey={settingsHook.apiKey}
-            onApiKeyChange={settingsHook.setApiKey}
-            savingApiKey={settingsHook.savingApiKey}
-            onApiKeySave={settingsHook.saveApiKey}
           />
+          <div className="hud-view-slider" data-view={view}>
+            <div className="hud-view-slide">
+              <SessionContent session={session} />
+            </div>
+            <div className="hud-view-slide">
+              <SettingsView
+                settings={settingsHook.settings}
+                onSettingsChange={settingsHook.setSettings}
+                saving={settingsHook.saving}
+                onSave={settingsHook.saveSettings}
+                apiKey={settingsHook.apiKey}
+                onApiKeyChange={settingsHook.setApiKey}
+                savingApiKey={settingsHook.savingApiKey}
+                onApiKeySave={settingsHook.saveApiKey}
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -149,18 +91,20 @@ interface PanelHeaderProps {
   elapsedMs: number;
   isRecording?: boolean;
   isActive: boolean;
+  expanded: boolean;
   showBack: boolean;
+  hasPending: boolean;
   onToggleSession: () => void;
   onInterrupt: () => void;
   onToggleView: () => void;
   onBack: () => void;
-  onCollapse: () => void;
+  onToggleExpand: () => void;
   onClose: () => void;
 }
 
 function PanelHeader({
-  state, elapsedMs, isRecording, isActive, showBack,
-  onToggleSession, onInterrupt, onToggleView, onBack, onCollapse, onClose,
+  state, elapsedMs, isRecording, isActive, expanded, showBack, hasPending,
+  onToggleSession, onInterrupt, onToggleView, onBack, onToggleExpand, onClose,
 }: PanelHeaderProps) {
   const interruptible = isActive && (state === "thinking" || state === "executing");
 
@@ -174,7 +118,7 @@ function PanelHeader({
         {isActive ? <StopSquare /> : <PlayTriangle />}
       </button>
 
-      {showBack && (
+      {showBack && expanded && (
         <button className="hud-icon-btn" onClick={onBack} title="Back">
           <BackArrow />
         </button>
@@ -185,23 +129,28 @@ function PanelHeader({
         {isRecording ? "Listening..." : stateLabel(state)}
       </span>
       {isActive && <span className="hud-timer">{formatElapsed(elapsedMs)}</span>}
+      {!expanded && hasPending && <span className="hud-notification-dot" />}
 
       <div className="hud-header-spacer" />
 
-      {interruptible && (
+      {expanded && interruptible && (
         <button className="hud-interrupt-btn" onClick={onInterrupt} title="Interrupt">
           <InterruptIcon />
         </button>
       )}
-      <button className="hud-icon-btn" onClick={onToggleView} title="Settings">
-        <GearIcon />
+      {expanded && (
+        <button className="hud-icon-btn" onClick={onToggleView} title="Settings">
+          <GearIcon />
+        </button>
+      )}
+      <button className="hud-icon-btn" onClick={onToggleExpand} title={expanded ? "Minimize" : "Expand"}>
+        <ExpandCollapseChevron expanded={expanded} />
       </button>
-      <button className="hud-icon-btn" onClick={onCollapse} title="Minimize">
-        <CollapseChevron />
-      </button>
-      <button className="hud-icon-btn hud-icon-btn--close" onClick={onClose} title="Close">
-        <CloseIcon />
-      </button>
+      {expanded && (
+        <button className="hud-icon-btn hud-icon-btn--close" onClick={onClose} title="Close">
+          <CloseIcon />
+        </button>
+      )}
     </div>
   );
 }
@@ -236,21 +185,6 @@ function RecordingIndicator() {
 
 /* ━━ Icons ━━ */
 
-function PillIndicator({ state, isRecording }: { state: AgentState; isRecording?: boolean }) {
-  if (isRecording) return <PillMicIcon />;
-  return <span className={`hud-status-dot hud-status-dot--${state}`} />;
-}
-
-function PillMicIcon() {
-  return (
-    <svg width="10" height="10" viewBox="0 0 12 12" fill="none" style={{ flexShrink: 0 }}>
-      <rect x="4" y="1" width="4" height="6" rx="2" fill="oklch(0.75 0.18 30)" />
-      <path d="M2.5 5.5V6a3.5 3.5 0 0 0 7 0V5.5" stroke="oklch(0.75 0.18 30)" strokeWidth="1.1" strokeLinecap="round" />
-      <path d="M6 9.5V11" stroke="oklch(0.75 0.18 30)" strokeWidth="1.1" strokeLinecap="round" />
-    </svg>
-  );
-}
-
 function MicIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 12 12" fill="none">
@@ -261,10 +195,13 @@ function MicIcon() {
   );
 }
 
-function ExpandArrow() {
+function ExpandCollapseChevron({ expanded }: { expanded: boolean }) {
   return (
-    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ flexShrink: 0 }}>
-      <path d="M2 3L5 6.5L8 3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+    <svg
+      width="12" height="12" viewBox="0 0 12 12" fill="none"
+      style={{ transition: "transform 250ms ease", transform: expanded ? "rotate(0)" : "rotate(180deg)" }}
+    >
+      <path d="M3 8L6 5L9 8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -297,14 +234,6 @@ function BackArrow() {
   return (
     <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
       <path d="M7 3L4 6L7 9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function CollapseChevron() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-      <path d="M3 8L6 5L9 8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
