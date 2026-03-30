@@ -153,11 +153,9 @@ function PanelHeader({
       <button className="hud-icon-btn" onClick={onToggleExpand} title={expanded ? "Minimize" : "Expand"}>
         <ExpandCollapseChevron expanded={expanded} />
       </button>
-      {expanded && (
-        <button className="hud-icon-btn hud-icon-btn--close" onClick={onClose} title="Close">
-          <CloseIcon />
-        </button>
-      )}
+      <button className="hud-icon-btn hud-icon-btn--close" onClick={onClose} title="Close">
+        <CloseIcon />
+      </button>
     </div>
   );
 }
