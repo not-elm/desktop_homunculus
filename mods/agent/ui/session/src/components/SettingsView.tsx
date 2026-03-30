@@ -36,6 +36,8 @@ export function SettingsView({
         )}
         {tab === "claude" && (
           <ClaudeSettingsTab
+            settings={settings}
+            onSettingsChange={onSettingsChange}
             apiKey={apiKey}
             onApiKeyChange={onApiKeyChange}
             onApiKeySave={onApiKeySave}

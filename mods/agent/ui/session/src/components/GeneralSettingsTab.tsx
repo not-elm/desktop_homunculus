@@ -13,14 +13,14 @@ export function GeneralSettingsTab({ settings, onSettingsChange }: GeneralSettin
   }
 
   function addToList(
-    key: keyof Pick<AgentSettings, "approvalPhrases" | "denyPhrases" | "allowList" | "disallowedTools">,
+    key: keyof Pick<AgentSettings, "approvalPhrases" | "denyPhrases">,
     item: string,
   ) {
     onSettingsChange({ ...settings, [key]: [...settings[key], item] });
   }
 
   function removeFromList(
-    key: keyof Pick<AgentSettings, "approvalPhrases" | "denyPhrases" | "allowList" | "disallowedTools">,
+    key: keyof Pick<AgentSettings, "approvalPhrases" | "denyPhrases">,
     index: number,
   ) {
     onSettingsChange({ ...settings, [key]: settings[key].filter((_: string, i: number) => i !== index) });
@@ -74,25 +74,6 @@ export function GeneralSettingsTab({ settings, onSettingsChange }: GeneralSettin
         badgeVariant="rose"
       />
 
-      <div className="agent-divider" />
-
-      <PhraseListField
-        label="Default Allow List"
-        description="Tools always permitted without asking"
-        phrases={settings.allowList}
-        onAdd={(p) => addToList("allowList", p)}
-        onRemove={(i) => removeFromList("allowList", i)}
-        badgeVariant="green"
-      />
-
-      <PhraseListField
-        label="Disallowed Tools"
-        description="Tools the agent is never permitted to use"
-        phrases={settings.disallowedTools}
-        onAdd={(p) => addToList("disallowedTools", p)}
-        onRemove={(i) => removeFromList("disallowedTools", i)}
-        badgeVariant="rose"
-      />
     </div>
   );
 }
