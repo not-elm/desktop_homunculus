@@ -11,7 +11,7 @@ try {
     size: [0.6, 0.8],
     viewportSize: [400, 500],
     linkedVrm: vrm.entity,
-    offset: [-0.8, 0],
+    offset: [-0.8, -0.4],
   });
   await audio.se.play("se:open");
   output.succeed();
