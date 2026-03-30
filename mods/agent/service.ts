@@ -148,7 +148,13 @@ function validatePttKey(settings: AgentSettings): ResolvedPttKey {
 async function loadPersona(characterId: string): Promise<Persona> {
   const vrm = await Vrm.findByName(characterId);
   const sdkPersona = await vrm.persona();
-  return { name: sdkPersona.displayName || characterId, personality: sdkPersona.personality ?? "" };
+  return {
+    name: sdkPersona.displayName || characterId,
+    age: sdkPersona.age ?? null,
+    gender: sdkPersona.gender ?? "unknown",
+    firstPersonPronoun: sdkPersona.firstPersonPronoun ?? null,
+    personality: sdkPersona.personality ?? "",
+  };
 }
 
 function resolveWorkingDirectory(

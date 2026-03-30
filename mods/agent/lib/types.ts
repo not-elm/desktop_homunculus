@@ -1,3 +1,5 @@
+import type { Gender } from "@hmcs/sdk";
+
 /** PTT key configuration. */
 export interface PttKey {
   code: string;
@@ -52,6 +54,9 @@ export interface LogEntry {
 /** Character persona information. */
 export interface Persona {
   name: string;
+  age: number | null;
+  gender: Gender;
+  firstPersonPronoun: string | null;
   personality: string;
 }
 
