@@ -55,8 +55,8 @@ async-channel = "2.5.0"
 tokio = { workspace = true }
 
 [workspace.dependencies]
-bevy_cef = { version = "0.5.2" }
-bevy_cef_core = {version = "0.5.2" }
+bevy_cef = { version = "0.5.3" }
+bevy_cef_core = { version = "0.5.3" }
 bevy_flurx = { version = "0.14.1", features = [
     "side-effect",
     "state",
