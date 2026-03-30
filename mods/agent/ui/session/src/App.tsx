@@ -43,11 +43,14 @@ export function App() {
       />
       <div className="hud-body">
         <div className="hud-body-inner">
-          <InlineSettingsBar
-            settings={settingsHook.settings}
-            onSettingsChange={settingsHook.setAndSaveSettings}
-            apiKey={settingsHook.apiKey}
-          />
+          {settingsHook.loading
+            ? <div className="hud-inline-settings" style={{ visibility: "hidden" }} />
+            : <InlineSettingsBar
+                settings={settingsHook.settings}
+                onSettingsChange={settingsHook.setAndSaveSettings}
+                apiKey={settingsHook.apiKey}
+              />
+          }
           <div className="hud-view-slider" data-view={view}>
             <div className="hud-view-slide">
               <SessionContent session={session} />
