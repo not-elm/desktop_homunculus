@@ -1,14 +1,47 @@
+import type { Ocean } from "@hmcs/sdk";
 import type { Persona } from "./types.ts";
 
-/** Builds the system prompt with spoken-style instructions and personality. */
+const OCEAN_DESCRIPTORS: Record<keyof Ocean, [string, string]> = {
+  extraversion: [
+    "語尾は「かな」「けど」で控えめに終え、自分から話を始めることは少ない",
+    "語尾に「よ」「ね」を多用し、「ほら」「あのさ」で話を切り出す。積極的に話題を広げる",
+  ],
+  agreeableness: [
+    "「別に」「どうでもいいけど」など率直で素っ気ない表現を使う",
+    "「そうですよね」「わかります」など共感や同意を積極的に示す",
+  ],
+  neuroticism: [
+    "落ち着いた断定的な語調で話す。迷いや不安を見せない",
+    "「かもしれない」「えっと」「かな」「ちょっと」など控えめで慎重な表現を多く使う",
+  ],
+  openness: [
+    "具体的で実用的な話題を好み、抽象的な話は避ける",
+    "好奇心旺盛で話題を広く展開し、新しい視点や発想を積極的に共有する",
+  ],
+  conscientiousness: [
+    "思いついたことから自由に話し、話題が飛びやすい",
+    "話を順序立てて整理し、要点をまとめてから話す",
+  ],
+};
+
+const GENDER_LABEL: Record<string, string> = {
+  male: "男性",
+  female: "女性",
+  other: "その他",
+};
+
+const LOW_THRESHOLD = 0.35;
+const HIGH_THRESHOLD = 0.65;
+
+/** Builds the system prompt with spoken-style instructions and OCEAN-based speech patterns. */
 export function buildCharacterPrompt(persona: Persona): string {
   const lines = [
-    `あなたの名前は「${persona.name}」です。名前を聞かれたら必ずこの名前で答えてください。`,
+    buildNameLine(persona.name),
     buildAgeLine(persona.age),
     buildGenderLine(persona.gender),
     buildFirstPersonPronounLine(persona.firstPersonPronoun),
-    persona.personality && buildPersonalityInstruction(persona.personality),
-    "",
+    buildProfileLine(persona.profile),
+    buildOceanSection(persona.ocean),
     buildSpokenStyleSection(),
     "",
     buildFewShotSection(),
@@ -18,38 +51,54 @@ export function buildCharacterPrompt(persona: Persona): string {
   return lines.filter(Boolean).join("\n");
 }
 
-/** Builds personality-driven speech style instructions. */
-function buildPersonalityInstruction(personality: string): string {
-  return [
-    `性格: ${personality}`,
-    "この性格に合った話し方をしてください。語尾やトーンを性格から自然に推論し、",
-    "一貫して使ってください。ただし、必ず口語体を保ってください。",
-  ].join("\n");
+function buildNameLine(name: string): string {
+  return `あなたの名前は「${name}」です。名前を聞かれたら必ずこの名前で答えてください。`;
 }
 
-/** Builds the age line for the system prompt. Returns "年齢: 不詳" if age is null. */
 function buildAgeLine(age: number | null): string {
   if (age == null) return "年齢: 不詳";
   return `年齢: ${age}歳`;
 }
 
-const GENDER_LABEL: Record<string, string> = {
-  male: "男性",
-  female: "女性",
-  other: "その他",
-};
-
-/** Builds the gender line for the system prompt. Returns empty string if unknown. */
 function buildGenderLine(gender: string): string {
   const label = GENDER_LABEL[gender];
   if (!label) return "";
   return `性別: ${label}`;
 }
 
-/** Builds the first-person pronoun instruction. Returns empty string if null. */
 function buildFirstPersonPronounLine(pronoun: string | null): string {
   if (!pronoun) return "";
   return `一人称は必ず「${pronoun}」を使ってください。`;
+}
+
+function buildProfileLine(profile: string): string {
+  if (!profile) return "";
+  return `プロフィール: ${profile}`;
+}
+
+function buildOceanSection(ocean: Ocean): string {
+  const descriptors = collectNonNeutralDescriptors(ocean);
+  if (descriptors.length === 0) return "";
+
+  return [
+    "",
+    "## 話し方の傾向",
+    "以下の話し方の傾向を組み合わせて、一貫した人物像として表現してください:",
+    "",
+    ...descriptors.map((d) => `- ${d}`),
+    "",
+  ].join("\n");
+}
+
+function collectNonNeutralDescriptors(ocean: Ocean): string[] {
+  const descriptors: string[] = [];
+  for (const [trait, [low, high]] of Object.entries(OCEAN_DESCRIPTORS)) {
+    const value = ocean[trait as keyof Ocean];
+    if (value == null) continue;
+    if (value < LOW_THRESHOLD) descriptors.push(low);
+    else if (value > HIGH_THRESHOLD) descriptors.push(high);
+  }
+  return descriptors;
 }
 
 function buildSpokenStyleSection(): string {

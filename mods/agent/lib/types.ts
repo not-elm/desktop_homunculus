@@ -1,4 +1,4 @@
-import type { Gender } from "@hmcs/sdk";
+import type { Gender, Ocean } from "@hmcs/sdk";
 
 /** PTT key configuration. */
 export interface PttKey {
@@ -57,7 +57,8 @@ export interface Persona {
   age: number | null;
   gender: Gender;
   firstPersonPronoun: string | null;
-  personality: string;
+  profile: string;
+  ocean: Ocean;
 }
 
 export const DEFAULT_SETTINGS: AgentSettings = {
