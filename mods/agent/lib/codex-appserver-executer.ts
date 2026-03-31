@@ -99,7 +99,7 @@ export class CodexAppServerExecuter implements AIAgentExecuter {
     let turnId: string | undefined;
 
     const abortHandler = () => {
-      this.handleAbort(threadId, turnId, queue);
+      this.handleAbort(threadId, turnId, queue, signal);
     };
     signal.addEventListener("abort", abortHandler, { once: true });
 
@@ -359,8 +359,10 @@ export class CodexAppServerExecuter implements AIAgentExecuter {
     if (status === "failed") {
       return [{ type: "error", message: error?.message ?? "Turn failed" }];
     }
-    // "interrupted" — abort handler already manages this
-    return [];
+    // "interrupted" — emit error event so the event loop terminates cleanly
+    // even for server-initiated interruptions (e.g. context exhaustion, rate limits).
+    console.warn(`[codex-appserver-executer] Turn interrupted by server (status: ${status})`);
+    return [{ type: "error", message: "Turn was interrupted by the server" }];
   }
 
   private handleItemStarted(params: ItemStartedNotification): AgentEvent[] {
@@ -598,8 +600,9 @@ export class CodexAppServerExecuter implements AIAgentExecuter {
     threadId: string,
     turnId: string | undefined,
     queue: AsyncQueue<QueueMessage>,
+    signal: AbortSignal,
   ): void {
-    queue.rejectAll(new Error("Aborted"));
+    queue.rejectAll(signal.reason);
 
     if (turnId) {
       this.process

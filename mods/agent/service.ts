@@ -129,7 +129,7 @@ function handleSessionCrash(
     emitLog(characterId, "error", extractErrorMessage(err));
   }
   activeSessions.delete(characterId);
-  emitStatus(characterId, "idle");
+  emitStatus(characterId, "idle", isAbortError(err) ? "stopped" : "crashed");
 }
 
 function validatePttKey(settings: AgentSettings): ResolvedPttKey {
@@ -190,7 +190,7 @@ async function stopSession(characterId: string): Promise<void> {
   if (!controller) return;
   controller.abort();
   activeSessions.delete(characterId);
-  emitStatus(characterId, "idle");
+  emitStatus(characterId, "idle", "stopped");
 
   if (appServerProcess && appServerProcess.refCount === 0) {
     appServerProcess.shutdown();
@@ -272,7 +272,7 @@ async function runSession(
     if (!isAbortError(e)) throw e;
   } finally {
     activeSessions.delete(characterId);
-    emitStatus(characterId, "idle");
+    emitStatus(characterId, "idle", "session-ended");
   }
 }
 
@@ -382,12 +382,16 @@ async function raceInterrupt(
   nextResult: Promise<IteratorResult<AgentEvent, void>>,
   interruptPromise: Promise<"ptt" | "ui">,
 ): Promise<RaceResult> {
+  const executorSide = nextResult.then((r): RaceResultDone | RaceResultEvent =>
+    r.done
+      ? { interrupted: false, done: true, value: undefined }
+      : { interrupted: false, done: false, value: r.value as AgentEvent },
+  );
+  // Suppress unhandled rejection on the losing side of the race.
+  executorSide.catch(() => {});
+
   return Promise.race([
-    nextResult.then((r): RaceResultDone | RaceResultEvent =>
-      r.done
-        ? { interrupted: false, done: true, value: undefined }
-        : { interrupted: false, done: false, value: r.value as AgentEvent },
-    ),
+    executorSide,
     interruptPromise.then(
       (source): RaceResultInterrupted => ({ interrupted: true, source }),
     ),
@@ -456,7 +460,7 @@ function handleCompleted(
   sessionId: string,
   settings: AgentSettings,
 ): undefined {
-  emitStatus(characterId, "idle");
+  emitStatus(characterId, "idle", "turn-completed");
   saveSession(characterId, settings.executor, sessionId);
   return undefined;
 }
@@ -466,6 +470,7 @@ function handleError(
   message: string,
   settings: AgentSettings,
 ): undefined {
+  console.error(`[agent] ${characterId}: error — ${message}`);
   emitLog(characterId, "error", message);
   return undefined;
 }
@@ -691,8 +696,9 @@ function waitForComboPress(
   });
 }
 
-function emitStatus(characterId: string, state: AgentStatus): void {
-  signals.send("agent:status", { characterId, state });
+function emitStatus(characterId: string, state: AgentStatus, reason?: string): void {
+  signals.send("agent:status", { characterId, state, reason });
+  console.debug(`[agent] ${characterId}: ${state}${reason ? ` (${reason})` : ""}`);
 }
 
 function emitLog(characterId: string, type: string, message: string): void {
