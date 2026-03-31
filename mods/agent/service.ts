@@ -233,6 +233,11 @@ function saveSession(
   );
 }
 
+interface UserInput {
+  text: string;
+  source: "voice" | "text";
+}
+
 async function runSession(
   characterId: string,
   executer: AIAgentExecuter,
@@ -244,33 +249,22 @@ async function runSession(
   const signal = sessionAbort.signal;
 
   try {
-    let pendingText: string | null = null;
-
     while (!signal.aborted) {
-      let text: string | null;
+      emitStatus(characterId, "listening");
+      const input = await waitForUserInput(characterId, resolvedKey, signal);
+      if (input === null) continue;
 
-      if (pendingText) {
-        text = pendingText;
-        pendingText = null;
-      } else {
-        emitStatus(characterId, "listening");
-        text = await recognizeOneSentence(characterId, resolvedKey, signal);
-      }
-
-      if (text === null) continue;
-
-      emitUserLog(characterId, text, "voice");
+      emitUserLog(characterId, input.text, input.source);
       const result = await executeOneRound(
         characterId,
         executer,
-        text,
+        input.text,
         sessionId,
         settings,
         resolvedKey,
         signal,
       );
       sessionId = result.sessionId;
-      pendingText = result.nextText;
     }
   } catch (e) {
     if (!isAbortError(e)) throw e;
@@ -282,7 +276,6 @@ async function runSession(
 
 interface RoundResult {
   sessionId: string | null;
-  nextText: string | null;
 }
 
 async function executeOneRound(
@@ -311,7 +304,7 @@ async function executeOneRound(
     );
   } catch (e) {
     if (!isAbortError(e)) throw e;
-    return { sessionId, nextText: null };
+    return { sessionId };
   }
 }
 
@@ -335,11 +328,17 @@ async function driveExecutor(
       lastSessionId = await abortExecution(characterId, executorGen, interruptAbort, lastSessionId);
 
       if (raceResult.source === "ptt" && resolvedKey) {
-        const nextText = await recognizeWhileHeld(characterId, resolvedKey, sessionSignal);
-        return { sessionId: lastSessionId, nextText };
+        const voiceText = await recognizeWhileHeld(characterId, resolvedKey, sessionSignal);
+        if (voiceText) {
+          const queue = textQueues.get(characterId);
+          if (queue) {
+            queue.clear();
+            queue.push(voiceText);
+          }
+        }
       }
 
-      return { sessionId: lastSessionId, nextText: null };
+      return { sessionId: lastSessionId };
     }
     if (raceResult.done) break;
 
@@ -348,7 +347,7 @@ async function driveExecutor(
     if (event.type === "completed") lastSessionId = event.sessionId;
   }
 
-  return { sessionId: lastSessionId, nextText: null };
+  return { sessionId: lastSessionId };
 }
 
 async function abortExecution(
@@ -636,13 +635,47 @@ async function waitForInterruptRpc(
   }
 }
 
-async function recognizeOneSentence(
+async function waitForUserInput(
+  characterId: string,
+  resolvedKey: ResolvedPttKey | null,
+  signal: AbortSignal,
+): Promise<UserInput | null> {
+  const queue = textQueues.get(characterId);
+  if (!queue) return null;
+
+  if (!resolvedKey) {
+    const text = await queue.shift(signal);
+    return { text, source: "text" };
+  }
+
+  const inputAbort = new AbortController();
+  const combined = AbortSignal.any([signal, inputAbort.signal]);
+
+  const voicePromise = recognizeOneSentenceVoice(characterId, resolvedKey, combined)
+    .then((text): UserInput | null => text ? { text, source: "voice" } : null);
+  const textPromise = queue.shift(combined)
+    .then((text): UserInput => ({ text, source: "text" }));
+
+  try {
+    return await Promise.race([voicePromise, textPromise]);
+  } finally {
+    inputAbort.abort();
+    suppressRejection(voicePromise);
+    suppressRejection(textPromise);
+  }
+}
+
+async function recognizeOneSentenceVoice(
   characterId: string,
   resolvedKey: ResolvedPttKey,
   signal: AbortSignal,
 ): Promise<string | null> {
   await waitForComboPress(resolvedKey, signal);
   return await recognizeWhileHeld(characterId, resolvedKey, signal);
+}
+
+function suppressRejection(promise: Promise<unknown>): void {
+  promise.catch(() => {});
 }
 
 async function recognizeWhileHeld(
