@@ -344,9 +344,13 @@ async function driveExecutor(
 
     const event = raceResult.value as AgentEvent;
     response = await handleAgentEvent(characterId, event, settings, sessionSignal);
-    if (event.type === "completed") lastSessionId = event.sessionId;
+    if (event.type === "completed" || event.type === "error") {
+      if (event.type === "completed") lastSessionId = event.sessionId;
+      break;
+    }
   }
 
+  await executorGen.return(undefined);
   return { sessionId: lastSessionId };
 }
 
