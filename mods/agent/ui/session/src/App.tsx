@@ -4,6 +4,7 @@ import { useAgentSettings } from "./hooks/useAgentSettings";
 import { ActivityLog } from "./components/ActivityLog";
 import { PermissionDialog } from "./components/PermissionDialog";
 import { QuestionDialog } from "./components/QuestionDialog";
+import { TextInput } from "./components/TextInput";
 import { InlineSettingsBar } from "./components/InlineSettingsBar";
 import { SettingsView } from "./components/SettingsView";
 import type { AgentState } from "./hooks/useAgentSession";
@@ -75,6 +76,9 @@ export function App() {
 }
 
 function SessionContent({ session }: { session: ReturnType<typeof useAgentSession> }) {
+  const isActive = session.state !== "idle";
+  const hasDialog = session.permission !== null || session.question !== null;
+
   return (
     <>
       {session.error && <div className="hud-error">{session.error}</div>}
@@ -88,6 +92,9 @@ function SessionContent({ session }: { session: ReturnType<typeof useAgentSessio
         question={session.question}
         onAnswer={session.answerQuestion}
       />
+      {isActive && !hasDialog && (
+        <TextInput onSend={session.sendMessage} />
+      )}
     </>
   );
 }
