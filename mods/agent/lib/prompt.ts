@@ -27,9 +27,9 @@ function buildPersonalityInstruction(personality: string): string {
   ].join("\n");
 }
 
-/** Builds the age line for the system prompt. Returns empty string if age is null. */
+/** Builds the age line for the system prompt. Returns "年齢: 不詳" if age is null. */
 function buildAgeLine(age: number | null): string {
-  if (age == null) return "";
+  if (age == null) return "年齢: 不詳";
   return `年齢: ${age}歳`;
 }
 
