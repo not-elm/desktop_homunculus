@@ -7,7 +7,7 @@ import { ClaudeAgentExecuter } from "./lib/claude-agent-executer.ts";
 import { CodexAppServerExecuter } from "./lib/codex-appserver-executer.ts";
 import { CodexAppServerProcess } from "./lib/codex-appserver-process.ts";
 import type { AIAgentExecuter } from "./lib/ai-agent-executer.ts";
-import { Deferred } from "./lib/async-queue.ts";
+import { AsyncQueue, Deferred } from "./lib/async-queue.ts";
 import type { AgentEvent, AgentResponse } from "./lib/ai-agent-executer.ts";
 import {
   type AgentSettings,
@@ -26,6 +26,7 @@ const activeSessions = new Map<string, AbortController>();
 const pendingApprovals = new Map<string, Deferred<{ approved: boolean; message?: string; decision?: string | Record<string, unknown> }>>();
 const pendingQuestions = new Map<string, Deferred<Record<string, string>>>();
 const pendingInterrupts = new Map<string, Deferred<void>>();
+const textQueues = new Map<string, AsyncQueue<string>>();
 
 let appServerProcess: CodexAppServerProcess | null = null;
 
@@ -89,6 +90,7 @@ async function startSession(characterId: string): Promise<void> {
 
   const sessionAbort = new AbortController();
   activeSessions.set(characterId, sessionAbort);
+  textQueues.set(characterId, new AsyncQueue<string>());
 
   launchSessionLoop(characterId, executer, sessionAbort, settings, resolvedKey);
 }
@@ -127,6 +129,11 @@ function handleSessionCrash(
   if (!isAbortError(err)) {
     console.error(`[agent] Session error for ${characterId}:`, err);
     emitLog(characterId, "error", extractErrorMessage(err));
+  }
+  const queue = textQueues.get(characterId);
+  if (queue) {
+    queue.rejectAll(new DOMException("Session crashed", "AbortError"));
+    textQueues.delete(characterId);
   }
   activeSessions.delete(characterId);
   emitStatus(characterId, "idle", isAbortError(err) ? "stopped" : "crashed");
@@ -181,6 +188,11 @@ async function stopSession(characterId: string): Promise<void> {
   const controller = activeSessions.get(characterId);
   if (!controller) return;
   controller.abort();
+  const queue = textQueues.get(characterId);
+  if (queue) {
+    queue.rejectAll(new DOMException("Session stopped", "AbortError"));
+    textQueues.delete(characterId);
+  }
   activeSessions.delete(characterId);
   emitStatus(characterId, "idle", "stopped");
 
@@ -759,6 +771,26 @@ function buildRpcMethods() {
         if (deferred) {
           deferred.resolve(answers);
         }
+        return { success: true as const };
+      },
+    }),
+    "send-message": rpc.method({
+      description: "Send a text message to the agent",
+      input: z.object({
+        characterId: z.string(),
+        text: z.string().min(1),
+      }),
+      handler: async ({ characterId, text }) => {
+        if (!activeSessions.has(characterId)) {
+          return { success: false as const, error: "No active session" };
+        }
+        const queue = textQueues.get(characterId);
+        if (!queue) {
+          return { success: false as const, error: "No active session" };
+        }
+        await interruptSession(characterId);
+        queue.clear();
+        queue.push(text);
         return { success: true as const };
       },
     }),
