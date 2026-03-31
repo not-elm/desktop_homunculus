@@ -2582,10 +2582,6 @@ components:
             type: string
         ocean:
           $ref: '#/components/schemas/Ocean'
-        personality:
-          type:
-          - string
-          - 'null'
         profile:
           type: string
     PickFileRequest:

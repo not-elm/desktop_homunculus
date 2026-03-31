@@ -74,7 +74,6 @@ mod tests {
 
         let persona = Persona {
             profile: "A cheerful assistant".to_string(),
-            personality: Some("Friendly and helpful".to_string()),
             ..Default::default()
         };
 
@@ -103,7 +102,6 @@ mod tests {
         let persona = Persona {
             display_name: Some("エルマー".to_string()),
             profile: "A cheerful assistant".to_string(),
-            personality: Some("Friendly".to_string()),
             ..Default::default()
         };
 
@@ -142,7 +140,6 @@ mod tests {
             gender: Gender::Female,
             first_person_pronoun: Some("わたし".to_string()),
             profile: "Test profile".to_string(),
-            personality: Some("Cheerful".to_string()),
             ..Default::default()
         };
 

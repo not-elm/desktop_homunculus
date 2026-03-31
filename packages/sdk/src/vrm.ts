@@ -49,7 +49,6 @@ export type Gender = "male" | "female" | "other" | "unknown";
  *   gender: "female",
  *   firstPersonPronoun: "わたし",
  *   profile: "A cheerful virtual assistant",
- *   personality: "Friendly and helpful",
  *   ocean: { openness: 0.8, extraversion: 0.7 },
  *   metadata: {},
  * };
@@ -66,8 +65,6 @@ export interface Persona {
     firstPersonPronoun?: string | null;
     /** Character profile/background description. */
     profile: string;
-    /** Personality description in natural language. */
-    personality?: string | null;
     /** Big Five personality parameters. */
     ocean: Ocean;
     /** Extension metadata for MODs. */
