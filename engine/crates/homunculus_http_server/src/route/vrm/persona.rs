@@ -107,20 +107,18 @@ mod tests {
             ..Default::default()
         };
 
-        let put_request =
-            axum::http::Request::put(format!("/vrm/{}/persona", entity.to_bits()))
-                .header("Content-Type", "application/json")
-                .body(axum::body::Body::from(
-                    serde_json::to_string(&persona).unwrap(),
-                ))
-                .unwrap();
+        let put_request = axum::http::Request::put(format!("/vrm/{}/persona", entity.to_bits()))
+            .header("Content-Type", "application/json")
+            .body(axum::body::Body::from(
+                serde_json::to_string(&persona).unwrap(),
+            ))
+            .unwrap();
         let response = call(&mut app, router.clone(), put_request).await;
         assert_eq!(response.status(), StatusCode::OK);
 
-        let get_request =
-            axum::http::Request::get(format!("/vrm/{}/persona", entity.to_bits()))
-                .body(axum::body::Body::empty())
-                .unwrap();
+        let get_request = axum::http::Request::get(format!("/vrm/{}/persona", entity.to_bits()))
+            .body(axum::body::Body::empty())
+            .unwrap();
         assert_response(&mut app, router, get_request, persona).await;
     }
 
@@ -146,20 +144,18 @@ mod tests {
             ..Default::default()
         };
 
-        let put_request =
-            axum::http::Request::put(format!("/vrm/{}/persona", entity.to_bits()))
-                .header("Content-Type", "application/json")
-                .body(axum::body::Body::from(
-                    serde_json::to_string(&persona).unwrap(),
-                ))
-                .unwrap();
+        let put_request = axum::http::Request::put(format!("/vrm/{}/persona", entity.to_bits()))
+            .header("Content-Type", "application/json")
+            .body(axum::body::Body::from(
+                serde_json::to_string(&persona).unwrap(),
+            ))
+            .unwrap();
         let response = call(&mut app, router.clone(), put_request).await;
         assert_eq!(response.status(), StatusCode::OK);
 
-        let get_request =
-            axum::http::Request::get(format!("/vrm/{}/persona", entity.to_bits()))
-                .body(axum::body::Body::empty())
-                .unwrap();
+        let get_request = axum::http::Request::get(format!("/vrm/{}/persona", entity.to_bits()))
+            .body(axum::body::Body::empty())
+            .unwrap();
         assert_response(&mut app, router, get_request, persona).await;
     }
 }
