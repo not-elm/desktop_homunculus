@@ -41,6 +41,11 @@ export class AsyncQueue<T> {
     }
   }
 
+  /** Remove all queued items without notifying waiters. */
+  clear(): void {
+    this.items = [];
+  }
+
   /** Dequeue the next item. If the queue is empty, wait until one arrives. */
   shift(signal: AbortSignal): Promise<T> {
     const queued = this.items.shift();
