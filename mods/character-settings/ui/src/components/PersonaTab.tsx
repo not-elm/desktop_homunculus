@@ -22,10 +22,10 @@ interface PersonaTabProps {
 }
 
 const GENDER_OPTIONS: { value: Gender; label: string }[] = [
-  { value: "unknown", label: "不明" },
-  { value: "male", label: "男" },
-  { value: "female", label: "女" },
-  { value: "other", label: "その他" },
+  { value: "unknown", label: "Unknown" },
+  { value: "male", label: "Male" },
+  { value: "female", label: "Female" },
+  { value: "other", label: "Other" },
 ];
 
 export function PersonaTab({
@@ -80,7 +80,7 @@ export function PersonaTab({
           type="text"
           className="settings-input"
           value={firstPersonPronoun}
-          placeholder="例: わたし、僕、俺"
+          placeholder="e.g. watashi, boku, ore"
           onChange={(e) => onFirstPersonPronounChange(e.target.value)}
         />
       </label>
@@ -154,18 +154,18 @@ function AgeField({ value, onChange }: AgeFieldProps) {
         <RadioGroupPrimitive.Item
           value="specify"
           className="settings-age-segment"
-          aria-label="年齢を指定"
+          aria-label="Specify age"
           data-mode="specify"
         >
-          指定
+          Specify
         </RadioGroupPrimitive.Item>
         <RadioGroupPrimitive.Item
           value="unknown"
           className="settings-age-segment"
-          aria-label="年齢不詳"
+          aria-label="Age unknown"
           data-mode="unknown"
         >
-          不詳
+          Unknown
         </RadioGroupPrimitive.Item>
       </RadioGroupPrimitive.Root>
       <div
@@ -175,7 +175,7 @@ function AgeField({ value, onChange }: AgeFieldProps) {
         data-mode={radioValue === "unknown" ? "unknown" : "specify"}
       >
         {radioValue === "unknown" ? (
-          <span className="settings-age-unknown-readout">不詳</span>
+          <span className="settings-age-unknown-readout">Unknown</span>
         ) : (
           <>
             <input
@@ -187,12 +187,8 @@ function AgeField({ value, onChange }: AgeFieldProps) {
               value={value ?? ""}
               onChange={(e) => handleInput(e.target.value)}
               aria-label="Age value"
-              aria-describedby="age-suffix"
               placeholder="—"
             />
-            <span id="age-suffix" className="settings-age-suffix" aria-hidden="true">
-              歳
-            </span>
           </>
         )}
       </div>
