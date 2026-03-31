@@ -80,7 +80,7 @@ async function startSession(characterId: string): Promise<void> {
   const settings = await loadCharacterSettings(characterId);
   assertCanStartSession(characterId, settings);
 
-  const resolvedKey = validatePttKey(settings);
+  const resolvedKey = resolvePttKeyOptional(settings);
   const persona = await loadPersona(characterId);
   const workDir = resolveWorkingDirectory(characterId, settings);
   mkdirSync(workDir, { recursive: true });
@@ -112,7 +112,7 @@ function launchSessionLoop(
   executer: AIAgentExecuter,
   sessionAbort: AbortController,
   settings: AgentSettings,
-  resolvedKey: ResolvedPttKey,
+  resolvedKey: ResolvedPttKey | null,
 ): void {
   runSession(characterId, executer, sessionAbort, settings, resolvedKey).catch(
     (err) => handleSessionCrash(characterId, err, settings),
@@ -132,17 +132,9 @@ function handleSessionCrash(
   emitStatus(characterId, "idle", isAbortError(err) ? "stopped" : "crashed");
 }
 
-function validatePttKey(settings: AgentSettings): ResolvedPttKey {
-  if (!settings.pttKey) {
-    throw new Error(
-      "PTT key not configured. Open Agent Settings to set a push-to-talk key.",
-    );
-  }
-  const resolved = resolvePttKeycodes(settings.pttKey);
-  if (!resolved) {
-    throw new Error("PTT key could not be resolved.");
-  }
-  return resolved;
+function resolvePttKeyOptional(settings: AgentSettings): ResolvedPttKey | null {
+  if (!settings.pttKey) return null;
+  return resolvePttKeycodes(settings.pttKey) ?? null;
 }
 
 async function loadPersona(characterId: string): Promise<Persona> {
@@ -234,7 +226,7 @@ async function runSession(
   executer: AIAgentExecuter,
   sessionAbort: AbortController,
   settings: AgentSettings,
-  resolvedKey: ResolvedPttKey,
+  resolvedKey: ResolvedPttKey | null,
 ): Promise<void> {
   let sessionId = await loadSavedSession(characterId, settings.executor);
   const signal = sessionAbort.signal;
@@ -287,7 +279,7 @@ async function executeOneRound(
   text: string,
   sessionId: string | null,
   settings: AgentSettings,
-  resolvedKey: ResolvedPttKey,
+  resolvedKey: ResolvedPttKey | null,
   sessionSignal: AbortSignal,
 ): Promise<RoundResult> {
   const interruptAbort = new AbortController();
@@ -318,7 +310,7 @@ async function driveExecutor(
   interruptAbort: AbortController,
   sessionId: string | null,
   settings: AgentSettings,
-  resolvedKey: ResolvedPttKey,
+  resolvedKey: ResolvedPttKey | null,
   sessionSignal: AbortSignal,
 ): Promise<RoundResult> {
   let lastSessionId = sessionId;
@@ -330,7 +322,7 @@ async function driveExecutor(
     if (raceResult.interrupted) {
       lastSessionId = await abortExecution(characterId, executorGen, interruptAbort, lastSessionId);
 
-      if (raceResult.source === "ptt") {
+      if (raceResult.source === "ptt" && resolvedKey) {
         const nextText = await recognizeWhileHeld(characterId, resolvedKey, sessionSignal);
         return { sessionId: lastSessionId, nextText };
       }
