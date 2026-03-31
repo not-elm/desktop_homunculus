@@ -1,22 +1,14 @@
-interface BasicTabProps {
-  name: string;
+interface AppearanceTabProps {
   scale: number;
   onScaleChange: (scale: number) => void;
 }
 
-export function BasicTab({ name, scale, onScaleChange }: BasicTabProps) {
+export function AppearanceTab({
+  scale,
+  onScaleChange,
+}: AppearanceTabProps) {
   return (
     <div className="settings-section">
-      <label className="settings-label">
-        Name
-        <input
-          type="text"
-          className="settings-input"
-          value={name}
-          readOnly
-        />
-      </label>
-
       <label className="settings-label">
         Scale
         <div className="settings-slider-row">
