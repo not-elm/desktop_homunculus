@@ -255,7 +255,7 @@ async function runSession(
 
       if (text === null) continue;
 
-      emitUserLog(characterId, text);
+      emitUserLog(characterId, text, "voice");
       const result = await executeOneRound(
         characterId,
         executer,
@@ -710,8 +710,14 @@ function emitLog(characterId: string, type: string, message: string): void {
   });
 }
 
-function emitUserLog(characterId: string, text: string): void {
-  emitLog(characterId, "user", text);
+function emitUserLog(characterId: string, text: string, source: "voice" | "text"): void {
+  signals.send("agent:log", {
+    characterId,
+    type: "user",
+    message: text,
+    source,
+    timestamp: Date.now(),
+  });
 }
 
 function emitInterruptLog(characterId: string): void {
