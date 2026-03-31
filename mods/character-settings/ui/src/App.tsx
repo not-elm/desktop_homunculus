@@ -19,8 +19,6 @@ export function App() {
     setPersonality,
     age,
     setAge,
-    ageUnknown,
-    setAgeUnknown,
     gender,
     setGender,
     firstPersonPronoun,
@@ -85,9 +83,7 @@ export function App() {
             displayName={displayName}
             onDisplayNameChange={setDisplayName}
             age={age}
-            ageUnknown={ageUnknown}
             onAgeChange={setAge}
-            onAgeUnknownChange={setAgeUnknown}
             gender={gender}
             onGenderChange={setGender}
             firstPersonPronoun={firstPersonPronoun}

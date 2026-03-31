@@ -1,14 +1,16 @@
 import type { Gender } from "@hmcs/sdk";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@hmcs/ui";
+import { useRef } from "react";
+import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@hmcs/ui";
 
 interface PersonaTabProps {
   name: string;
   displayName: string;
   onDisplayNameChange: (displayName: string) => void;
   age: number | null;
-  ageUnknown: boolean;
   onAgeChange: (age: number | null) => void;
-  onAgeUnknownChange: (unknown: boolean) => void;
   gender: Gender;
   onGenderChange: (gender: Gender) => void;
   firstPersonPronoun: string;
@@ -31,9 +33,7 @@ export function PersonaTab({
   displayName,
   onDisplayNameChange,
   age,
-  ageUnknown,
   onAgeChange,
-  onAgeUnknownChange,
   gender,
   onGenderChange,
   firstPersonPronoun,
@@ -56,12 +56,7 @@ export function PersonaTab({
         />
       </label>
 
-      <AgeField
-        age={age}
-        ageUnknown={ageUnknown}
-        onAgeChange={onAgeChange}
-        onAgeUnknownChange={onAgeUnknownChange}
-      />
+      <AgeField value={age} onChange={onAgeChange} />
 
       <div className="settings-label">
         Gender
@@ -116,46 +111,91 @@ export function PersonaTab({
 }
 
 interface AgeFieldProps {
-  age: number | null;
-  ageUnknown: boolean;
-  onAgeChange: (age: number | null) => void;
-  onAgeUnknownChange: (unknown: boolean) => void;
+  value: number | null;
+  onChange: (age: number | null) => void;
 }
 
-function AgeField({ age, ageUnknown, onAgeChange, onAgeUnknownChange }: AgeFieldProps) {
-  function handleUnknownToggle(checked: boolean) {
-    onAgeUnknownChange(checked);
-    if (checked) onAgeChange(null);
+function AgeField({ value, onChange }: AgeFieldProps) {
+  const preservedAge = useRef<number | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const isUnknown = value == null && preservedAge.current != null;
+  const radioValue = isUnknown ? "unknown" : "specify";
+
+  function handleModeChange(newMode: string) {
+    if (newMode === "unknown") {
+      if (value != null) preservedAge.current = value;
+      onChange(null);
+    } else {
+      const restored = preservedAge.current;
+      if (restored != null) onChange(restored);
+      requestAnimationFrame(() => inputRef.current?.focus());
+    }
   }
 
-  function handleAgeInput(value: string) {
-    const num = parseInt(value, 10);
-    onAgeChange(isNaN(num) ? null : Math.min(Math.max(num, 0), 999));
+  function handleInput(raw: string) {
+    const digits = raw.replace(/[^0-9]/g, "");
+    if (digits === "") {
+      onChange(null);
+      return;
+    }
+    onChange(Math.min(parseInt(digits, 10), 999));
   }
 
   return (
-    <div className="settings-label">
-      Age
-      <div className="settings-age-row">
-        <input
-          type="number"
-          className="settings-input settings-age-input"
-          min={0}
-          max={999}
-          value={ageUnknown ? "" : (age ?? "")}
-          disabled={ageUnknown}
-          onChange={(e) => handleAgeInput(e.target.value)}
-          placeholder="—"
-        />
-        <label className="settings-checkbox-label">
-          <input
-            type="checkbox"
-            checked={ageUnknown}
-            onChange={(e) => handleUnknownToggle(e.target.checked)}
-          />
-          年齢不詳
-        </label>
+    <fieldset className="settings-label settings-age-field">
+      <legend className="settings-age-legend">Age</legend>
+      <RadioGroupPrimitive.Root
+        className="settings-age-segments"
+        value={radioValue}
+        onValueChange={handleModeChange}
+        data-mode={radioValue === "unknown" ? "unknown" : "specify"}
+      >
+        <RadioGroupPrimitive.Item
+          value="specify"
+          className="settings-age-segment"
+          aria-label="年齢を指定"
+          data-mode="specify"
+        >
+          指定
+        </RadioGroupPrimitive.Item>
+        <RadioGroupPrimitive.Item
+          value="unknown"
+          className="settings-age-segment"
+          aria-label="年齢不詳"
+          data-mode="unknown"
+        >
+          不詳
+        </RadioGroupPrimitive.Item>
+      </RadioGroupPrimitive.Root>
+      <div
+        className="settings-age-value-area"
+        role="status"
+        aria-live="polite"
+        data-mode={radioValue === "unknown" ? "unknown" : "specify"}
+      >
+        {radioValue === "unknown" ? (
+          <span className="settings-age-unknown-readout">不詳</span>
+        ) : (
+          <>
+            <input
+              ref={inputRef}
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              className="settings-age-input"
+              value={value ?? ""}
+              onChange={(e) => handleInput(e.target.value)}
+              aria-label="Age value"
+              aria-describedby="age-suffix"
+              placeholder="—"
+            />
+            <span id="age-suffix" className="settings-age-suffix" aria-hidden="true">
+              歳
+            </span>
+          </>
+        )}
       </div>
-    </div>
+    </fieldset>
   );
 }

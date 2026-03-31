@@ -13,7 +13,6 @@ export function useCharacterSettings() {
   const [profile, setProfile] = useState("");
   const [personality, setPersonality] = useState("");
   const [age, setAge] = useState<number | null>(null);
-  const [ageUnknown, setAgeUnknown] = useState(true);
   const [gender, setGender] = useState<Gender>("unknown");
   const [firstPersonPronoun, setFirstPersonPronoun] = useState("");
   const [ocean, setOcean] = useState<Ocean>({});
@@ -45,7 +44,6 @@ export function useCharacterSettings() {
       setProfile(persona.profile);
       setPersonality(persona.personality ?? "");
       setAge(persona.age ?? null);
-      setAgeUnknown(persona.age == null);
       setGender(persona.gender ?? "unknown");
       setFirstPersonPronoun(persona.firstPersonPronoun ?? "");
       setOcean(persona.ocean);
@@ -68,7 +66,7 @@ export function useCharacterSettings() {
     try {
       await vrm.setPersona({
         displayName: displayName || null,
-        age: ageUnknown ? null : age,
+        age,
         gender,
         firstPersonPronoun: firstPersonPronoun || null,
         profile,
@@ -89,7 +87,7 @@ export function useCharacterSettings() {
     } finally {
       setSaving(false);
     }
-  }, [vrm, entity, displayName, age, ageUnknown, gender, firstPersonPronoun, profile, personality, ocean, scale, saving]);
+  }, [vrm, entity, displayName, age, gender, firstPersonPronoun, profile, personality, ocean, scale, saving]);
 
   return {
     loading,
@@ -106,8 +104,6 @@ export function useCharacterSettings() {
     setPersonality,
     age,
     setAge,
-    ageUnknown,
-    setAgeUnknown,
     gender,
     setGender,
     firstPersonPronoun,
