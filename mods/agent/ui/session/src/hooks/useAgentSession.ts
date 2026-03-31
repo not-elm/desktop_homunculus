@@ -13,6 +13,7 @@ export interface LogEntry {
   id: string;
   type: LogType;
   message: string;
+  source?: "voice" | "text";
   timestamp: number;
 }
 
@@ -142,6 +143,11 @@ export function useAgentSession() {
     }
   }, [characterId]);
 
+  const sendMessage = useCallback(async (text: string) => {
+    if (!characterId || !text.trim()) return;
+    await callRpc("send-message", { characterId, text: text.trim() });
+  }, [characterId]);
+
   const closePanel = useCallback(async () => {
     if (characterId && state !== "idle") {
       await callRpc("stop-session", { characterId }).catch(() => {});
@@ -165,6 +171,7 @@ export function useAgentSession() {
     interruptSession,
     startSession,
     stopSession,
+    sendMessage,
     closePanel,
   };
 }
@@ -191,11 +198,11 @@ function subscribeToStatus(id: string, onState: (state: AgentState) => void) {
 }
 
 function subscribeToLog(id: string, onEntry: (entry: LogEntry) => void) {
-  return signals.stream<{ characterId: string; type: string; message: string; timestamp: number }>(
+  return signals.stream<{ characterId: string; type: string; message: string; source?: "voice" | "text"; timestamp: number }>(
     "agent:log",
     (p) => {
       if (p.characterId === id) {
-        onEntry({ id: crypto.randomUUID(), type: p.type as LogType, message: p.message, timestamp: p.timestamp });
+        onEntry({ id: crypto.randomUUID(), type: p.type as LogType, message: p.message, source: p.source, timestamp: p.timestamp });
       }
     },
   );
