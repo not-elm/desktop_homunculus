@@ -39,7 +39,7 @@ function UserBubble({ entry }: { entry: LogEntry }) {
     <div className="hud-log-entry hud-log-entry--user" style={{ animation: "fade-in 300ms ease both" }}>
       <span className="hud-log-text hud-log-text--user">{entry.message}</span>
       <span className="hud-log-icon">
-        <MicIcon />
+        {entry.source === "text" ? <KeyboardIcon /> : <MicIcon />}
       </span>
     </div>
   );
@@ -109,6 +109,15 @@ function MicIcon() {
       <rect x="4" y="1" width="4" height="6" rx="2" fill="oklch(0.75 0.18 30)" />
       <path d="M2.5 5.5V6a3.5 3.5 0 0 0 7 0V5.5" stroke="oklch(0.75 0.18 30)" strokeWidth="1.1" strokeLinecap="round" />
       <path d="M6 9.5V11" stroke="oklch(0.75 0.18 30)" strokeWidth="1.1" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function KeyboardIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+      <rect x="1" y="3" width="10" height="7" rx="1" stroke="oklch(0.72 0.18 250)" strokeWidth="1.1" />
+      <path d="M3 5.5h1M5.5 5.5h1M8 5.5h1M4 7.5h4" stroke="oklch(0.72 0.18 250)" strokeWidth="0.8" strokeLinecap="round" />
     </svg>
   );
 }
