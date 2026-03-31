@@ -1,5 +1,5 @@
 import { useCharacterSettings, type Tab } from "./hooks/useCharacterSettings";
-import { BasicTab } from "./components/BasicTab";
+import { AppearanceTab } from "./components/AppearanceTab";
 import { PersonaTab } from "./components/PersonaTab";
 import { OceanTab } from "./components/OceanTab";
 
@@ -7,6 +7,8 @@ export function App() {
   const {
     loading,
     name,
+    displayName,
+    setDisplayName,
     tab,
     setTab,
     scale,
@@ -15,6 +17,12 @@ export function App() {
     setProfile,
     personality,
     setPersonality,
+    age,
+    setAge,
+    gender,
+    setGender,
+    firstPersonPronoun,
+    setFirstPersonPronoun,
     ocean,
     setOcean,
     saving,
@@ -32,9 +40,9 @@ export function App() {
   }
 
   const tabs: { id: Tab; label: string }[] = [
-    { id: "basic", label: "Basic" },
     { id: "persona", label: "Persona" },
     { id: "ocean", label: "OCEAN" },
+    { id: "appearance", label: "Appearance" },
   ];
 
   return (
@@ -51,7 +59,7 @@ export function App() {
       {/* Header */}
       <div className="settings-header">
         <h1 className="settings-title">Settings</h1>
-        <span className="settings-entity-name">{name}</span>
+        <span className="settings-entity-name">{displayName || name}</span>
       </div>
 
       {/* Tabs */}
@@ -68,12 +76,18 @@ export function App() {
       </div>
 
       {/* Content */}
-      <div className={`settings-content${tab === "basic" ? " settings-content--visible" : ""}`}>
-        {tab === "basic" && (
-          <BasicTab name={name} scale={scale} onScaleChange={setScale} />
-        )}
+      <div className={`settings-content${tab === "persona" ? " settings-content--visible" : ""}`}>
         {tab === "persona" && (
           <PersonaTab
+            name={name}
+            displayName={displayName}
+            onDisplayNameChange={setDisplayName}
+            age={age}
+            onAgeChange={setAge}
+            gender={gender}
+            onGenderChange={setGender}
+            firstPersonPronoun={firstPersonPronoun}
+            onFirstPersonPronounChange={setFirstPersonPronoun}
             profile={profile}
             personality={personality}
             onProfileChange={setProfile}
@@ -81,6 +95,12 @@ export function App() {
           />
         )}
         {tab === "ocean" && <OceanTab ocean={ocean} onChange={setOcean} />}
+        {tab === "appearance" && (
+          <AppearanceTab
+            scale={scale}
+            onScaleChange={setScale}
+          />
+        )}
       </div>
 
       {/* Footer */}

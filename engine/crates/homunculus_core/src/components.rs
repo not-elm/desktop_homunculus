@@ -76,11 +76,31 @@ pub struct Ocean {
     pub neuroticism: Option<f64>,
 }
 
+/// Gender identity for a VRM character.
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
+#[serde(rename_all = "camelCase")]
+pub enum Gender {
+    Male,
+    Female,
+    Other,
+    #[default]
+    Unknown,
+}
+
 /// Persona data for a VRM character.
 #[derive(Component, Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct Persona {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub display_name: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub age: Option<u32>,
+    #[serde(default)]
+    pub gender: Gender,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub first_person_pronoun: Option<String>,
     #[serde(default)]
     pub profile: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
