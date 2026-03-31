@@ -360,6 +360,177 @@ body {
   color: oklch(0.55 0.02 250 / 0.5);
 }
 
+/* ━━ Age Field — Segmented Control + Value Area ━━ */
+
+.settings-age-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.settings-age-legend {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.settings-age-segments {
+  display: flex;
+  gap: 2px;
+  background: oklch(0.12 0.01 250 / 0.8);
+  border: 1px solid oklch(0.72 0.14 192 / 0.2);
+  border-radius: 6px;
+  overflow: hidden;
+  height: 32px;
+}
+
+.settings-age-segments[data-mode="unknown"] {
+  border-color: oklch(0.65 0.18 285 / 0.2);
+}
+
+.settings-age-segment {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  padding: 6px 0;
+  color: oklch(0.58 0.02 250);
+  transition: color 180ms ease, background 180ms ease, text-shadow 180ms ease,
+              border-color 180ms ease;
+  border-bottom: 2px solid transparent;
+  font-family: inherit;
+  outline: none;
+}
+
+.settings-age-segment:hover {
+  color: oklch(0.78 0.10 192);
+}
+
+.settings-age-segment[data-mode="unknown"]:hover {
+  color: oklch(0.72 0.14 285);
+}
+
+.settings-age-segment[data-state="checked"][data-mode="specify"] {
+  color: oklch(0.72 0.14 192);
+  border-bottom-color: oklch(0.72 0.14 192 / 0.8);
+  text-shadow: 0 0 12px oklch(0.72 0.14 192 / 0.3);
+  background: oklch(0.18 0.02 250 / 0.5);
+}
+
+.settings-age-segment[data-state="checked"][data-mode="unknown"] {
+  color: oklch(0.65 0.18 285);
+  border-bottom-color: oklch(0.65 0.18 285 / 0.8);
+  text-shadow: 0 0 12px oklch(0.65 0.18 285 / 0.3);
+  background: oklch(0.18 0.02 250 / 0.5);
+}
+
+.settings-age-segment:focus-visible {
+  outline: 2px solid oklch(0.72 0.14 192);
+  outline-offset: 2px;
+}
+
+.settings-age-value-area {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  min-inline-size: 8ch;
+  background: oklch(0.12 0.01 250 / 0.8);
+  border: 1px solid oklch(0.72 0.14 192 / 0.2);
+  border-radius: 6px;
+  padding: 8px 12px;
+  transition: border-color 200ms ease-out, box-shadow 200ms ease-out;
+}
+
+.settings-age-value-area[data-mode="unknown"] {
+  border-color: oklch(0.65 0.18 285 / 0.2);
+}
+
+.settings-age-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: oklch(0.92 0.01 250);
+  font-family: monospace;
+  font-size: 0.95rem;
+  font-weight: 400;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  padding: 0;
+}
+
+.settings-age-input::placeholder {
+  color: oklch(0.55 0.02 250 / 0.5);
+}
+
+.settings-age-input::-webkit-inner-spin-button,
+.settings-age-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.settings-age-suffix {
+  font-size: 0.75rem;
+  color: oklch(0.72 0.14 192 / 0.5);
+  margin-left: 2px;
+  font-family: monospace;
+}
+
+.settings-age-unknown-readout {
+  font-family: monospace;
+  font-size: 0.95rem;
+  font-weight: 400;
+  text-align: center;
+  color: oklch(0.65 0.18 285);
+  font-variant-numeric: tabular-nums;
+}
+
+.settings-age-value-area:focus-within {
+  border-color: oklch(0.72 0.14 192 / 0.5);
+  box-shadow: 0 0 8px oklch(0.72 0.14 192 / 0.15),
+              inset 0 0 4px oklch(0.72 0.14 192 / 0.05);
+}
+
+.settings-age-value-area[data-mode="unknown"]:focus-within {
+  border-color: oklch(0.65 0.18 285 / 0.5);
+  box-shadow: 0 0 8px oklch(0.65 0.18 285 / 0.15),
+              inset 0 0 4px oklch(0.65 0.18 285 / 0.05);
+}
+
+@media (forced-colors: active) {
+  .settings-age-segment {
+    color: GrayText;
+  }
+  .settings-age-segment[data-state="checked"] {
+    color: CanvasText;
+    border-bottom-color: CanvasText;
+  }
+  .settings-age-segment[data-state="checked"][data-mode="unknown"] {
+    color: LinkText;
+    border-bottom-color: LinkText;
+  }
+  .settings-age-unknown-readout {
+    color: LinkText;
+  }
+  .settings-age-suffix {
+    color: CanvasText;
+  }
+}
+
 /* ━━ Slider ━━ */
 
 .settings-slider-row {
@@ -634,5 +805,10 @@ body {
   .settings-loading-text {
     animation: none;
     opacity: 0.5;
+  }
+
+  .settings-age-segment,
+  .settings-age-value-area {
+    transition-duration: 0ms;
   }
 }
