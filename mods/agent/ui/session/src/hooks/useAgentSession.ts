@@ -145,7 +145,11 @@ export function useAgentSession() {
 
   const sendMessage = useCallback(async (text: string) => {
     if (!characterId || !text.trim()) return;
-    await callRpc("send-message", { characterId, text: text.trim() });
+    try {
+      await callRpc("send-message", { characterId, text: text.trim() });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
   }, [characterId]);
 
   const closePanel = useCallback(async () => {
