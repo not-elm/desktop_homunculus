@@ -1,4 +1,5 @@
 import type { Gender } from "@hmcs/sdk";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@hmcs/ui";
 
 interface PersonaTabProps {
   name: string;
@@ -62,20 +63,21 @@ export function PersonaTab({
         onAgeUnknownChange={onAgeUnknownChange}
       />
 
-      <label className="settings-label">
+      <div className="settings-label">
         Gender
-        <select
-          className="settings-input"
-          value={gender}
-          onChange={(e) => onGenderChange(e.target.value as Gender)}
-        >
-          {GENDER_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-      </label>
+        <Select value={gender} onValueChange={(v) => onGenderChange(v as Gender)}>
+          <SelectTrigger className="settings-input">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {GENDER_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
       <label className="settings-label">
         First Person Pronoun
