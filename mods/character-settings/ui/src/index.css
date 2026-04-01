@@ -74,7 +74,7 @@ body {
   max-height: 100vh;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--hud-space-xl);
   animation: settings-in 400ms cubic-bezier(0.16, 1, 0.3, 1) both;
   box-sizing: border-box;
 }
@@ -234,7 +234,7 @@ body {
 }
 
 .settings-title {
-  font-size: 0.85rem;
+  font-size: var(--hud-font-size-base);
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: oklch(0.72 0.14 192 / 0.9);
@@ -243,7 +243,7 @@ body {
 }
 
 .settings-entity-name {
-  font-size: 0.75rem;
+  font-size: var(--hud-font-size-sm);
   color: oklch(0.72 0.14 192 / 0.5);
   font-family: monospace;
 }
@@ -253,7 +253,7 @@ body {
 .settings-tabs {
   display: flex;
   flex-direction: row;
-  gap: 4px;
+  gap: var(--hud-space-xs);
   position: relative;
   z-index: 7;
   border-bottom: 1px solid oklch(0.72 0.14 192 / 0.1);
@@ -265,12 +265,12 @@ body {
   border: none;
   border-bottom: 2px solid transparent;
   color: oklch(0.75 0.02 250 / 0.6);
-  font-size: 0.75rem;
+  font-size: var(--hud-font-size-sm);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  padding: 8px 16px;
+  padding: var(--hud-space-md) var(--hud-space-xl);
   cursor: pointer;
-  transition: color 180ms ease, border-color 180ms ease, text-shadow 180ms ease;
+  transition: color var(--hud-duration-content) ease, border-color var(--hud-duration-content) ease, text-shadow var(--hud-duration-content) ease;
   font-family: inherit;
 }
 
@@ -302,7 +302,7 @@ body {
 .settings-section {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--hud-space-xl);
 }
 
 /* ━━ Form Elements ━━ */
@@ -310,8 +310,8 @@ body {
 .settings-label {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  font-size: 0.8rem;
+  gap: var(--hud-space-sm);
+  font-size: var(--hud-font-size-sm);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: oklch(0.72 0.14 192 / 0.7);
@@ -321,12 +321,12 @@ body {
   background: oklch(0.12 0.01 250 / 0.8);
   border: 1px solid oklch(0.72 0.14 192 / 0.2);
   border-radius: 6px;
-  padding: 8px 12px;
+  padding: var(--hud-space-md) var(--hud-space-lg);
   color: oklch(0.92 0.01 250);
-  font-size: 0.85rem;
+  font-size: var(--hud-font-size-base);
   font-family: inherit;
   outline: none;
-  transition: border-color 180ms ease, box-shadow 180ms ease;
+  transition: border-color var(--hud-duration-content) ease, box-shadow var(--hud-duration-content) ease;
 }
 
 .settings-input:focus {
@@ -339,14 +339,14 @@ body {
   background: oklch(0.12 0.01 250 / 0.8);
   border: 1px solid oklch(0.72 0.14 192 / 0.2);
   border-radius: 6px;
-  padding: 8px 12px;
+  padding: var(--hud-space-md) var(--hud-space-lg);
   color: oklch(0.92 0.01 250);
-  font-size: 0.85rem;
+  font-size: var(--hud-font-size-base);
   font-family: inherit;
   outline: none;
   resize: vertical;
   min-height: 60px;
-  transition: border-color 180ms ease, box-shadow 180ms ease;
+  transition: border-color var(--hud-duration-content) ease, box-shadow var(--hud-duration-content) ease;
 }
 
 .settings-textarea:focus {
@@ -365,7 +365,7 @@ body {
 .settings-age-field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--hud-space-sm);
 }
 
 .settings-age-legend {
@@ -399,17 +399,17 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.75rem;
+  font-size: var(--hud-font-size-sm);
   font-weight: 500;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
   border: none;
   background: transparent;
-  padding: 6px 0;
+  padding: var(--hud-space-sm) 0;
   color: oklch(0.58 0.02 250);
-  transition: color 180ms ease, background 180ms ease, text-shadow 180ms ease,
-              border-color 180ms ease;
+  transition: color var(--hud-duration-content) ease, background var(--hud-duration-content) ease, text-shadow var(--hud-duration-content) ease,
+              border-color var(--hud-duration-content) ease;
   border-bottom: 2px solid transparent;
   font-family: inherit;
   outline: none;
@@ -438,8 +438,8 @@ body {
 }
 
 .settings-age-segment:focus-visible {
-  outline: 2px solid oklch(0.72 0.14 192);
-  outline-offset: 2px;
+  outline: var(--hud-focus-ring-width) solid oklch(0.72 0.14 192);
+  outline-offset: var(--hud-focus-offset);
 }
 
 .settings-age-value-area {
@@ -451,8 +451,8 @@ body {
   background: oklch(0.12 0.01 250 / 0.8);
   border: 1px solid oklch(0.72 0.14 192 / 0.2);
   border-radius: 6px;
-  padding: 8px 12px;
-  transition: border-color 200ms ease-out, box-shadow 200ms ease-out;
+  padding: var(--hud-space-md) var(--hud-space-lg);
+  transition: border-color var(--hud-duration-content) ease-out, box-shadow var(--hud-duration-content) ease-out;
 }
 
 .settings-age-value-area[data-mode="unknown"] {
@@ -484,7 +484,7 @@ body {
 }
 
 .settings-age-suffix {
-  font-size: 0.75rem;
+  font-size: var(--hud-font-size-sm);
   color: oklch(0.72 0.14 192 / 0.5);
   margin-left: 2px;
   font-family: monospace;
@@ -537,7 +537,7 @@ body {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 12px;
+  gap: var(--hud-space-lg);
 }
 
 .settings-slider {
@@ -563,7 +563,7 @@ body {
   border: 2px solid oklch(0.72 0.14 192 / 0.5);
   box-shadow: 0 0 8px oklch(0.72 0.14 192 / 0.4);
   cursor: pointer;
-  transition: box-shadow 180ms ease, transform 120ms ease;
+  transition: box-shadow var(--hud-duration-content) ease, transform var(--hud-duration-micro) ease;
 }
 
 .settings-slider::-webkit-slider-thumb:hover {
@@ -603,7 +603,7 @@ body {
 
 .settings-slider-value {
   font-family: monospace;
-  font-size: 0.8rem;
+  font-size: var(--hud-font-size-sm);
   color: oklch(0.72 0.14 192);
   min-width: 3.5em;
   text-align: right;
@@ -635,7 +635,7 @@ body {
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 6px;
+  margin-bottom: var(--hud-space-sm);
 }
 
 .settings-ocean-label {
@@ -647,7 +647,7 @@ body {
 
 .settings-ocean-value {
   font-family: monospace;
-  font-size: 0.75rem;
+  font-size: var(--hud-font-size-sm);
   color: oklch(0.72 0.14 192);
 }
 
@@ -687,8 +687,8 @@ body {
 .settings-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
-  padding-top: 8px;
+  gap: var(--hud-space-md);
+  padding-top: var(--hud-space-md);
   position: relative;
   z-index: 7;
 }
@@ -699,14 +699,14 @@ body {
   background: transparent;
   border: 1px solid oklch(0.4 0.02 250 / 0.25);
   border-radius: 6px;
-  padding: 8px 24px;
+  padding: var(--hud-space-md) var(--hud-space-2xl);
   color: oklch(0.75 0.04 250 / 0.75);
-  font-size: 0.8rem;
+  font-size: var(--hud-font-size-sm);
   font-family: inherit;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: color 180ms ease, border-color 180ms ease, text-shadow 180ms ease;
+  transition: color var(--hud-duration-content) ease, border-color var(--hud-duration-content) ease, text-shadow var(--hud-duration-content) ease;
 }
 
 .settings-close:hover {
@@ -725,15 +725,15 @@ body {
   background: oklch(0.72 0.14 192 / 0.15);
   border: 1px solid oklch(0.72 0.14 192 / 0.3);
   border-radius: 6px;
-  padding: 8px 24px;
+  padding: var(--hud-space-md) var(--hud-space-2xl);
   color: oklch(0.72 0.14 192);
-  font-size: 0.8rem;
+  font-size: var(--hud-font-size-sm);
   font-family: inherit;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: background 180ms ease, border-color 180ms ease, box-shadow 180ms ease,
-              color 180ms ease;
+  transition: background var(--hud-duration-content) ease, border-color var(--hud-duration-content) ease, box-shadow var(--hud-duration-content) ease,
+              color var(--hud-duration-content) ease;
 }
 
 .settings-save:hover {
@@ -774,7 +774,7 @@ body {
 }
 
 .settings-loading-text {
-  font-size: 0.8rem;
+  font-size: var(--hud-font-size-sm);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: oklch(0.72 0.14 192 / 0.5);
