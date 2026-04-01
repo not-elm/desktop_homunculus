@@ -493,15 +493,17 @@ async function resolvePermission(
   const combined = AbortSignal.any([signal, permAbort.signal]);
 
   pendingApprovals.set(event.requestId, deferred);
-  console.log(`[agent] resolvePermission: ${event.tool} (${event.requestId})`);
 
-  signals.send("agent:permission", {
+  const permissionPayload = {
     characterId,
     requestId: event.requestId,
     action: event.tool,
     target: JSON.stringify(event.input),
     availableDecisions: event.availableDecisions,
-  });
+  };
+  console.log(`[agent] resolvePermission: ${event.tool} (${event.requestId})`, JSON.stringify(permissionPayload, null, 2));
+
+  signals.send("agent:permission", permissionPayload);
 
   const timer = setTimeout(
     () => deferred.resolve({ approved: false, message: "Permission request timed out" }),

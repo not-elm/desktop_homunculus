@@ -15,7 +15,10 @@ import type {
   AgentEvent,
   AgentResponse,
 } from "./ai-agent-executer.ts";
-import type { CodexAppServerProcess, ThreadHandler } from "./codex-appserver-process.ts";
+import type {
+  CodexAppServerProcess,
+  ThreadHandler,
+} from "./codex-appserver-process.ts";
 import type {
   RequestId,
   ThreadStartParams,
@@ -177,7 +180,10 @@ export class CodexAppServerExecuter implements AIAgentExecuter {
   }
 
   /** Register a {@link ThreadHandler} that pushes messages into the queue. */
-  private registerHandler(threadId: string, queue: AsyncQueue<QueueMessage>): () => void {
+  private registerHandler(
+    threadId: string,
+    queue: AsyncQueue<QueueMessage>,
+  ): () => void {
     const handler: ThreadHandler = {
       onServerRequest(method, id, params) {
         queue.push({ kind: "server_request", method, id, params });
@@ -225,7 +231,12 @@ export class CodexAppServerExecuter implements AIAgentExecuter {
       }
 
       if (msg.kind === "notification") {
-        const events = this.handleNotification(msg.method, msg.params, threadId, onTurnId);
+        const events = this.handleNotification(
+          msg.method,
+          msg.params,
+          threadId,
+          onTurnId,
+        );
         for (const event of events) {
           if (event.type === "completed" || event.type === "error") {
             done = true;
@@ -292,7 +303,11 @@ export class CodexAppServerExecuter implements AIAgentExecuter {
     pendingRequests: Map<string, string>,
   ): AsyncGenerator<AgentEvent, void, AgentResponse | undefined> {
     const cmdParams = params as CommandExecutionRequestApprovalParams;
-    yield { type: "tool_use", tool: "bash", summary: `[auto] $ ${cmdParams.command ?? ""}` };
+    yield {
+      type: "tool_use",
+      tool: "bash",
+      summary: `[auto] $ ${cmdParams.command ?? ""}`,
+    };
 
     this.process.sendResponse(id, { decision: "accept" });
     pendingRequests.delete(String(id));
@@ -304,7 +319,11 @@ export class CodexAppServerExecuter implements AIAgentExecuter {
     method: string,
     pendingRequests: Map<string, string>,
   ): void {
-    this.process.sendErrorResponse(id, -32000, `Unsupported request: ${method}`);
+    this.process.sendErrorResponse(
+      id,
+      -32000,
+      `Unsupported request: ${method}`,
+    );
     pendingRequests.delete(String(id));
   }
 
@@ -321,9 +340,15 @@ export class CodexAppServerExecuter implements AIAgentExecuter {
   ): AgentEvent[] {
     switch (method) {
       case "turn/started":
-        return this.handleTurnStarted(params as TurnStartedNotification, onTurnId);
+        return this.handleTurnStarted(
+          params as TurnStartedNotification,
+          onTurnId,
+        );
       case "turn/completed":
-        return this.handleTurnCompleted(params as TurnCompletedNotification, threadId);
+        return this.handleTurnCompleted(
+          params as TurnCompletedNotification,
+          threadId,
+        );
       case "item/started":
         return this.handleItemStarted(params as ItemStartedNotification);
       case "item/completed":
@@ -361,16 +386,30 @@ export class CodexAppServerExecuter implements AIAgentExecuter {
     }
     // "interrupted" — emit error event so the event loop terminates cleanly
     // even for server-initiated interruptions (e.g. context exhaustion, rate limits).
-    console.warn(`[codex-appserver-executer] Turn interrupted by server (status: ${status})`);
+    console.warn(
+      `[codex-appserver-executer] Turn interrupted by server (status: ${status})`,
+    );
     return [{ type: "error", message: "Turn was interrupted by the server" }];
   }
 
   private handleItemStarted(params: ItemStartedNotification): AgentEvent[] {
     switch (params.item.type) {
       case "commandExecution":
-        return [{ type: "tool_use", tool: "bash", summary: `$ ${params.item.command}` }];
+        return [
+          {
+            type: "tool_use",
+            tool: "bash",
+            summary: `$ ${params.item.command}`,
+          },
+        ];
       case "fileChange":
-        return [{ type: "tool_use", tool: "file_change", summary: extractFileChangeSummaryFromItem(params.item) }];
+        return [
+          {
+            type: "tool_use",
+            tool: "file_change",
+            summary: extractFileChangeSummaryFromItem(params.item),
+          },
+        ];
       default:
         return [];
     }
@@ -381,9 +420,21 @@ export class CodexAppServerExecuter implements AIAgentExecuter {
       case "agentMessage":
         return [{ type: "assistant_message", text: params.item.text }];
       case "commandExecution":
-        return [{ type: "tool_use", tool: "bash", summary: `$ ${params.item.command}` }];
+        return [
+          {
+            type: "tool_use",
+            tool: "bash",
+            summary: `$ ${params.item.command}`,
+          },
+        ];
       case "fileChange":
-        return [{ type: "tool_use", tool: "file_change", summary: extractFileChangeSummaryFromItem(params.item) }];
+        return [
+          {
+            type: "tool_use",
+            tool: "file_change",
+            summary: extractFileChangeSummaryFromItem(params.item),
+          },
+        ];
       default:
         return [];
     }
@@ -403,13 +454,28 @@ export class CodexAppServerExecuter implements AIAgentExecuter {
   ): AgentEvent | null {
     switch (method) {
       case "item/commandExecution/requestApproval":
-        return this.mapCommandApproval(id, params as CommandExecutionRequestApprovalParams, method);
+        return this.mapCommandApproval(
+          id,
+          params as CommandExecutionRequestApprovalParams,
+          method,
+        );
       case "item/fileChange/requestApproval":
-        return this.mapFileChangeApproval(id, params as FileChangeRequestApprovalParams, method);
+        return this.mapFileChangeApproval(
+          id,
+          params as FileChangeRequestApprovalParams,
+          method,
+        );
       case "item/permissions/requestApproval":
-        return this.mapPermissionsApproval(id, params as PermissionsRequestApprovalParams, method);
+        return this.mapPermissionsApproval(
+          id,
+          params as PermissionsRequestApprovalParams,
+          method,
+        );
       case "mcpServer/elicitation/request":
-        return this.mapMcpElicitation(id, params as McpServerElicitationRequestParams);
+        return this.mapMcpElicitation(
+          id,
+          params as McpServerElicitationRequestParams,
+        );
       case "item/tool/requestUserInput":
         return this.mapToolUserInput(id, params as ToolRequestUserInputParams);
       case "item/tool/call":
@@ -429,7 +495,12 @@ export class CodexAppServerExecuter implements AIAgentExecuter {
     params: CommandExecutionRequestApprovalParams,
     method: string,
   ): AgentEvent {
-    const defaultDecisions = ["accept", "acceptForSession", "decline", "cancel"];
+    const defaultDecisions = [
+      "accept",
+      "acceptForSession",
+      "decline",
+      "cancel",
+    ];
     return {
       type: "permission_request",
       requestId: String(id),
@@ -480,12 +551,34 @@ export class CodexAppServerExecuter implements AIAgentExecuter {
     id: RequestId,
     params: McpServerElicitationRequestParams,
   ): AgentEvent {
+    if (isMcpToolCallApproval(params)) {
+      return this.mapMcpToolCallApproval(id, params);
+    }
     return {
       type: "elicitation_request",
       requestId: String(id),
       serverName: params.serverName,
       message: params.message,
       schema: params.mode === "form" ? params.requestedSchema : undefined,
+    };
+  }
+
+  private mapMcpToolCallApproval(
+    id: RequestId,
+    params: McpServerElicitationRequestParams,
+  ): AgentEvent {
+    const meta = params._meta as Record<string, unknown> | null;
+    const toolDescription = (meta?.tool_description as string) ?? "";
+    const toolParams = meta?.tool_params as Record<string, unknown> | undefined;
+    return {
+      type: "permission_request",
+      requestId: String(id),
+      tool: "mcp",
+      input: toolParams ?? {},
+      title: params.message,
+      description: toolDescription,
+      requestMethod: "mcpServer/elicitation/request",
+      availableDecisions: ["accept", "acceptForSession", "decline", "cancel"],
     };
   }
 
@@ -552,7 +645,14 @@ export class CodexAppServerExecuter implements AIAgentExecuter {
       return;
     }
 
-    const decision = response.decision ?? (response.approved ? "accept" : "decline");
+    if (method === "mcpServer/elicitation/request") {
+      const action = response.approved ? "accept" : "decline";
+      this.process.sendResponse(id, { action, content: null, _meta: null });
+      return;
+    }
+
+    const decision =
+      response.decision ?? (response.approved ? "accept" : "decline");
     this.process.sendResponse(id, { decision });
   }
 
@@ -631,6 +731,12 @@ export class CodexAppServerExecuter implements AIAgentExecuter {
     }
     pendingRequests.clear();
   }
+}
+
+/** Check if an MCP elicitation request is actually a tool call approval. */
+function isMcpToolCallApproval(params: McpServerElicitationRequestParams): boolean {
+  const meta = params._meta as Record<string, unknown> | null;
+  return meta?.codex_approval_kind === "mcp_tool_call";
 }
 
 /** Build a summary string from a fileChange ThreadItem. */

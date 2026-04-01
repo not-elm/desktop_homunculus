@@ -13,6 +13,8 @@ export function PermissionDialog({
 }: PermissionDialogProps) {
   if (!permission) return null;
 
+  console.log("[PermissionDialog] rendering:", JSON.stringify(permission));
+
   return (
     <div className="hud-dialog">
       <ToolHeader action={permission.action} />

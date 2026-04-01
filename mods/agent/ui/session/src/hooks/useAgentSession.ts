@@ -81,6 +81,7 @@ export function useAgentSession() {
         setEntries((prev) => [...prev.slice(-99), entry]);
       }),
       subscribeToPermission(characterId, (perm) => {
+        console.log("[useAgentSession] permission received:", JSON.stringify(perm));
         setPermission(perm);
         setState("waiting");
       }),
