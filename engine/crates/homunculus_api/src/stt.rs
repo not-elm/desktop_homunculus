@@ -325,7 +325,13 @@ impl SttApi {
         let inference_timeout = std::time::Duration::from_secs(30);
         let result = tokio::time::timeout(
             inference_timeout,
-            run_whisper_inference(ctx, resampled, language.clone(), started_at, inference_config),
+            run_whisper_inference(
+                ctx,
+                resampled,
+                language.clone(),
+                started_at,
+                inference_config,
+            ),
         )
         .await
         .map_err(|_| SttError::PipelineFailed("Inference timed out".to_string()))?;
@@ -560,7 +566,6 @@ fn resample_if_needed(buffer: Vec<f32>, sample_rate: u32, needs_resample: bool) 
     }
     resampled
 }
-
 
 fn validate_language(language: String) -> Result<String, SttError> {
     if !WHISPER_SUPPORTED_LANGUAGES.contains(&language.as_str()) {
