@@ -74,7 +74,7 @@ body {
   max-height: 100vh;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--hud-space-xl);
   animation: settings-in 400ms cubic-bezier(0.16, 1, 0.3, 1) both;
   box-sizing: border-box;
 }
@@ -234,7 +234,7 @@ body {
 }
 
 .settings-title {
-  font-size: 0.85rem;
+  font-size: var(--hud-font-size-base);
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: oklch(0.72 0.14 192 / 0.9);
@@ -260,7 +260,7 @@ body {
 .settings-section {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--hud-space-xl);
 }
 
 /* ━━ Form Elements ━━ */
@@ -268,8 +268,8 @@ body {
 .settings-label {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  font-size: 0.8rem;
+  gap: var(--hud-space-sm);
+  font-size: var(--hud-font-size-sm);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: oklch(0.72 0.14 192 / 0.7);
@@ -281,7 +281,7 @@ body {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 12px;
+  gap: var(--hud-space-lg);
 }
 
 .settings-slider {
@@ -307,7 +307,7 @@ body {
   border: 2px solid oklch(0.72 0.14 192 / 0.5);
   box-shadow: 0 0 8px oklch(0.72 0.14 192 / 0.4);
   cursor: pointer;
-  transition: box-shadow 180ms ease, transform 120ms ease;
+  transition: box-shadow var(--hud-duration-content) ease, transform var(--hud-duration-micro) ease;
 }
 
 .settings-slider::-webkit-slider-thumb:hover {
@@ -347,7 +347,7 @@ body {
 
 .settings-slider-value {
   font-family: monospace;
-  font-size: 0.8rem;
+  font-size: var(--hud-font-size-sm);
   color: oklch(0.72 0.14 192);
   min-width: 3.5em;
   text-align: right;
@@ -368,8 +368,8 @@ body {
 .settings-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
-  padding-top: 8px;
+  gap: var(--hud-space-md);
+  padding-top: var(--hud-space-md);
   position: relative;
   z-index: 7;
 }
@@ -380,14 +380,14 @@ body {
   background: transparent;
   border: 1px solid oklch(0.4 0.02 250 / 0.25);
   border-radius: 6px;
-  padding: 8px 24px;
+  padding: var(--hud-space-md) var(--hud-space-2xl);
   color: oklch(0.75 0.04 250 / 0.75);
-  font-size: 0.8rem;
+  font-size: var(--hud-font-size-sm);
   font-family: inherit;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: color 180ms ease, border-color 180ms ease, text-shadow 180ms ease;
+  transition: color var(--hud-duration-content) ease, border-color var(--hud-duration-content) ease, text-shadow var(--hud-duration-content) ease;
 }
 
 .settings-close:hover {
@@ -406,15 +406,15 @@ body {
   background: oklch(0.72 0.14 192 / 0.15);
   border: 1px solid oklch(0.72 0.14 192 / 0.3);
   border-radius: 6px;
-  padding: 8px 24px;
+  padding: var(--hud-space-md) var(--hud-space-2xl);
   color: oklch(0.72 0.14 192);
-  font-size: 0.8rem;
+  font-size: var(--hud-font-size-sm);
   font-family: inherit;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: background 180ms ease, border-color 180ms ease, box-shadow 180ms ease,
-              color 180ms ease;
+  transition: background var(--hud-duration-content) ease, border-color var(--hud-duration-content) ease, box-shadow var(--hud-duration-content) ease,
+              color var(--hud-duration-content) ease;
 }
 
 .settings-save:hover {
@@ -455,7 +455,7 @@ body {
 }
 
 .settings-loading-text {
-  font-size: 0.8rem;
+  font-size: var(--hud-font-size-sm);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: oklch(0.72 0.14 192 / 0.5);
