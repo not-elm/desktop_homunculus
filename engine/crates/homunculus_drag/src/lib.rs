@@ -51,12 +51,17 @@
 //! operation ends, providing visual feedback to the user.
 
 use bevy::camera::NormalizedRenderTarget;
+use bevy::image::Image;
+use bevy::pbr::MeshMaterial3d;
+use bevy::picking::mesh_picking::ray_cast::RayMeshHit;
 use bevy::prelude::*;
+use bevy_cef::prelude::WebviewExtendStandardMaterial;
 use bevy_vrm1::prelude::Initialized;
 use bevy_vrm1::vrm::Vrm;
 use homunculus_core::prelude::{
     AppWindows, BoneOffsets, Coordinate, MascotTracker, VrmMeshRayCast, VrmState, global_cursor_pos,
 };
+use homunculus_core::texture::{TRANSPARENT_ALPHA_THRESHOLD, sample_texture_alpha};
 use homunculus_screen::prelude::GlobalWindows;
 use homunculus_sitting::SittingWindow;
 
@@ -129,11 +134,17 @@ fn on_drag_start(
     mut commands: Commands,
     mut vrm_ray_cast: VrmMeshRayCast,
     bone_offsets: BoneOffsets,
+    webview_materials: Query<&MeshMaterial3d<WebviewExtendStandardMaterial>>,
+    webview_assets: Res<Assets<WebviewExtendStandardMaterial>>,
+    images: Res<Assets<Image>>,
 ) {
     if !matches!(trigger.event.button, PointerButton::Primary) {
         return;
     }
-    if !vrm_ray_cast.is_frontmost_hit(&trigger.pointer_location, |_, _| false) {
+    let should_skip = |entity: Entity, hit: &RayMeshHit| -> bool {
+        is_webview_transparent(entity, hit, &webview_materials, &webview_assets, &images)
+    };
+    if !vrm_ray_cast.is_frontmost_hit(&trigger.pointer_location, should_skip) {
         return;
     }
     let vrm_entity = trigger.entity;
@@ -145,6 +156,32 @@ fn on_drag_start(
         .entity(vrm_entity)
         .try_insert(DragHipsOffset(initial_offset))
         .try_insert(VrmState::from("drag"));
+}
+
+/// Returns `true` if the hit is on a transparent WebView pixel that should be skipped.
+fn is_webview_transparent(
+    entity: Entity,
+    hit: &RayMeshHit,
+    webview_materials: &Query<&MeshMaterial3d<WebviewExtendStandardMaterial>>,
+    webview_assets: &Res<Assets<WebviewExtendStandardMaterial>>,
+    images: &Res<Assets<Image>>,
+) -> bool {
+    let Ok(mat_handle) = webview_materials.get(entity) else {
+        return false;
+    };
+    let Some(material) = webview_assets.get(&mat_handle.0) else {
+        return false;
+    };
+    let Some(ref surface_handle) = material.extension.surface else {
+        return false;
+    };
+    let Some(image) = images.get(surface_handle) else {
+        return false;
+    };
+    let Some(uv) = hit.uv else {
+        return false;
+    };
+    sample_texture_alpha(image, uv) <= TRANSPARENT_ALPHA_THRESHOLD
 }
 
 fn on_drag_move(

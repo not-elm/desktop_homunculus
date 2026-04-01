@@ -103,8 +103,6 @@ pub struct Persona {
     pub first_person_pronoun: Option<String>,
     #[serde(default)]
     pub profile: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub personality: Option<String>,
     #[serde(default)]
     pub ocean: Ocean,
     #[serde(default, skip_serializing_if = "HashMap::is_empty")]

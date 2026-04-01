@@ -1,18 +1,31 @@
-import { Vrm, Webview, audio, signals, isWebviewSourceInfoLocal, webviewSource } from "@hmcs/sdk";
+import {
+  Vrm,
+  Webview,
+  audio,
+  signals,
+  isWebviewSourceInfoLocal,
+  webviewSource,
+  type WebviewSourceInfo,
+} from "@hmcs/sdk";
 const menuUIAssetId = "menu:ui";
 let isProcessing = false;
 const eventSources = new Map();
 
+const NON_BLOCKING_SOURCES = new Set(["agent:session-ui"]);
+
 const existsLinkedWebview = async (vrmEntity: number) => {
   const webviews = await Webview.list();
-  for (let webview of webviews) {
-    const linked = webview.linkedVrm;
-    if (linked === vrmEntity) {
-      return true;
-    }
+  for (const webview of webviews) {
+    if (webview.linkedVrm !== vrmEntity) continue;
+    if (isNonBlockingSource(webview.source)) continue;
+    return true;
   }
   return false;
 };
+
+function isNonBlockingSource(source: WebviewSourceInfo): boolean {
+  return isWebviewSourceInfoLocal(source) && NON_BLOCKING_SOURCES.has(source.id);
+}
 
 const openedMenu = async () => {
   const webviews = await Webview.list();

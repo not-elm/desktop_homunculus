@@ -4,9 +4,7 @@ const elmerId = "vrm:elmer";
 const transform = await preferences.load<TransformArgs>(
     `transform::${elmerId}`,
 );
-const elmer = await Vrm.spawn(elmerId, {
-    transform,
-});
+const elmer = await Vrm.spawn(elmerId);
 const option = {
     repeat: repeat.forever(),
     transitionSecs: 0.5,

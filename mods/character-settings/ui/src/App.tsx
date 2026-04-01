@@ -15,8 +15,6 @@ export function App() {
     setScale,
     profile,
     setProfile,
-    personality,
-    setPersonality,
     age,
     setAge,
     gender,
@@ -89,9 +87,7 @@ export function App() {
             firstPersonPronoun={firstPersonPronoun}
             onFirstPersonPronounChange={setFirstPersonPronoun}
             profile={profile}
-            personality={personality}
             onProfileChange={setProfile}
-            onPersonalityChange={setPersonality}
           />
         )}
         {tab === "ocean" && <OceanTab ocean={ocean} onChange={setOcean} />}

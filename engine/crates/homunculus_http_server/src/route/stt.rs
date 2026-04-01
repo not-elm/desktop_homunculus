@@ -359,6 +359,9 @@ fn error_to_status_code(err: &SttError) -> (StatusCode, &'static str) {
         SttError::DownloadCancelled => (StatusCode::CONFLICT, "download_cancelled"),
         SttError::InvalidLanguage(_) => (StatusCode::UNPROCESSABLE_ENTITY, "invalid_language"),
         SttError::InvalidModelSize => (StatusCode::UNPROCESSABLE_ENTITY, "invalid_model_size"),
+        SttError::BelowEnergyThreshold => {
+            (StatusCode::UNPROCESSABLE_ENTITY, "below_energy_threshold")
+        }
         SttError::SessionNotFound(_) => (StatusCode::NOT_FOUND, "session_not_found"),
         SttError::SessionExpired(_) => (StatusCode::GONE, "session_expired"),
     }

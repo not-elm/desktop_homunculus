@@ -981,76 +981,90 @@ paths:
           description: Download already in progress
         '422':
           description: Invalid model size
-  /stt/start:
+  /stt/ptt/start:
     post:
       tags:
       - stt
-      summary: Start an STT session.
-      operationId: start
+      summary: Start a PTT recording session.
+      description: |-
+        Returns a session ID that must be passed to the stop endpoint.
+        If an active session exists, it is automatically cancelled.
+      operationId: ptt_start
       requestBody:
         content:
           application/json:
             schema:
-              oneOf:
-              - type: 'null'
-              - $ref: '#/components/schemas/SttStartOptions'
+              $ref: '#/components/schemas/PttStartOptions'
+        required: true
       responses:
         '200':
           description: Session started
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SttStartResponse'
-        '409':
-          description: Session already active or loading
-        '412':
-          description: Model not available
+                $ref: '#/components/schemas/PttStartResponse'
         '422':
-          description: Invalid language
-        '500':
-          description: Internal server error
+          description: Invalid language or model size
         '503':
-          description: Microphone unavailable
-  /stt/status:
-    get:
-      tags:
-      - stt
-      summary: Get the current STT session status.
-      operationId: status
-      responses:
-        '200':
-          description: Current session state
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SttState'
-  /stt/stop:
+          description: Model not available or microphone error
+  /stt/ptt/{session_id}/stop:
     post:
       tags:
       - stt
-      summary: Stop the current STT session. Idempotent.
-      operationId: stop
+      summary: Stop a PTT recording session and return the recognition result.
+      description: |-
+        Stops recording, runs Whisper inference on the captured audio,
+        and returns the transcription.
+      operationId: ptt_stop
+      parameters:
+      - name: session_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
       responses:
         '200':
-          description: Session stopped
+          description: Recognition result
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SttState'
-  /stt/stream:
-    get:
+                $ref: '#/components/schemas/SttResult'
+        '404':
+          description: Session not found
+        '410':
+          description: Session expired (timed out)
+        '500':
+          description: Inference failed
+  /stt/recognize:
+    post:
       tags:
       - stt
-      summary: Stream STT events via SSE.
+      summary: Recognize a single sentence from the microphone.
       description: |-
-        Events: `status`, `result`, `session_error`, `stopped`.
-        Sends current status on connect (late-join sync).
-      operationId: stream
+        Starts a cpal capture -> VAD -> Whisper pipeline, returns the first
+        recognized sentence, then destroys the pipeline. Long-polls until
+        speech is detected or timeout (60s).
+      operationId: recognize
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecognizeOptions'
+        required: true
       responses:
         '200':
-          description: SSE event stream
+          description: Recognized text
           content:
-            text/event-stream: {}
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SttResult'
+        '408':
+          description: Timeout — no speech detected
+        '422':
+          description: Invalid language or model size
+        '503':
+          description: Model not available or microphone error
   /vrm:
     get:
       tags:
@@ -2274,6 +2288,14 @@ components:
         name:
           type: string
           description: Display name for the filter (e.g. "Images").
+    Gender:
+      type: string
+      description: Gender identity for a VRM character.
+      enum:
+      - male
+      - female
+      - other
+      - unknown
     GlobalDisplay:
       type: object
       required:
@@ -2536,10 +2558,22 @@ components:
       type: object
       description: Persona data for a VRM character.
       properties:
+        age:
+          type:
+          - integer
+          - 'null'
+          format: int32
+          minimum: 0
         displayName:
           type:
           - string
           - 'null'
+        firstPersonPronoun:
+          type:
+          - string
+          - 'null'
+        gender:
+          $ref: '#/components/schemas/Gender'
         metadata:
           type: object
           additionalProperties:
@@ -2548,10 +2582,6 @@ components:
             type: string
         ocean:
           $ref: '#/components/schemas/Ocean'
-        personality:
-          type:
-          - string
-          - 'null'
         profile:
           type: string
     PickFileRequest:
@@ -2671,6 +2701,27 @@ components:
           items:
             type: number
             format: float
+    PttStartOptions:
+      type: object
+      description: Request options for starting a PTT session.
+      properties:
+        language:
+          type: string
+        modelSize:
+          $ref: '#/components/schemas/SttModelSize'
+        timeoutSecs:
+          type: integer
+          format: int64
+          minimum: 0
+    PttStartResponse:
+      type: object
+      description: Response for a successful PTT start.
+      required:
+      - sessionId
+      properties:
+        sessionId:
+          type: string
+          format: uuid
     PutBody:
       type: object
       required:
@@ -2678,6 +2729,14 @@ components:
       properties:
         state:
           type: object
+    RecognizeOptions:
+      type: object
+      description: Request options for a stateless recognition call.
+      properties:
+        language:
+          type: string
+        modelSize:
+          $ref: '#/components/schemas/SttModelSize'
     RegisterRequest:
       type: object
       description: Body for `POST /rpc/register`.
@@ -2939,78 +2998,24 @@ components:
       - medium
       - large-v3-turbo
       - large-v3
-    SttStartOptions:
+    SttResult:
       type: object
-      description: Session start options.
+      description: Result of a single speech recognition.
+      required:
+      - text
+      - timestamp
+      - language
       properties:
         language:
           type: string
-        modelSize:
-          $ref: '#/components/schemas/SttModelSize'
-    SttStartResponse:
-      allOf:
-      - $ref: '#/components/schemas/SttState'
-      - type: object
-        required:
-        - restarted
-        properties:
-          restarted:
-            type: boolean
-            description: True if an existing Listening session was implicitly stopped.
-      description: Response from the start endpoint, includes restart indicator.
-    SttState:
-      oneOf:
-      - type: object
-        required:
-        - state
-        properties:
-          state:
-            type: string
-            enum:
-            - idle
-      - type: object
-        required:
-        - language
-        - modelSize
-        - state
-        properties:
-          language:
-            type: string
-          modelSize:
-            $ref: '#/components/schemas/SttModelSize'
-          state:
-            type: string
-            enum:
-            - loading
-      - type: object
-        required:
-        - language
-        - modelSize
-        - state
-        properties:
-          language:
-            type: string
-          modelSize:
-            $ref: '#/components/schemas/SttModelSize'
-          state:
-            type: string
-            enum:
-            - listening
-      - type: object
-        required:
-        - error
-        - message
-        - state
-        properties:
-          error:
-            type: string
-          message:
-            type: string
-          state:
-            type: string
-            enum:
-            - error
-      description: STT session state.
+          description: Detected or specified language code.
+        text:
+          type: string
+          description: The recognized text.
+        timestamp:
+          type: number
+          format: double
+          description: Timestamp offset from request start (seconds, f64).
     TimelineBody:
       allOf:
       - type:
