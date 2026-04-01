@@ -1,6 +1,100 @@
 @import "tailwindcss";
 @import "@hmcs/ui/dist/index.css";
 
+:root {
+  /* Text tiers */
+  --hud-text-primary: oklch(0.92 0 0);
+  --hud-text-secondary: oklch(0.80 0.02 250);
+  --hud-text-tertiary: oklch(0.73 0.02 250);
+  --hud-text-muted: oklch(0.58 0.02 250);
+  --hud-text-placeholder: oklch(0.65 0.03 250);
+
+  /* Semantic status colors */
+  --hud-status-error: oklch(0.78 0.14 15);
+  --hud-status-success: oklch(0.78 0.14 155);
+  --hud-status-warning: oklch(0.78 0.14 75);
+  --hud-status-info: oklch(0.78 0.14 192);
+  --hud-status-accent: oklch(0.78 0.14 30);
+
+  /* Surface tokens */
+  --hud-surface-base: oklch(0.13 0.015 250 / 0.93);
+  --hud-surface-raised: oklch(0.15 0.015 250);
+  --hud-surface-input: oklch(0.14 0.018 250);
+  --hud-surface-dialog: oklch(0.11 0.015 250);
+  --hud-surface-user: oklch(0.16 0.03 30);
+
+  /* Border tokens */
+  --hud-border-decorative: oklch(0.72 0.14 192 / 0.18);
+  --hud-border-interactive: oklch(0.72 0.14 192 / 0.38);
+  --hud-border-hover: oklch(0.72 0.14 192 / 0.55);
+  --hud-border-focus: oklch(0.78 0.16 192 / 0.55);
+
+  /* Typography tokens */
+  --hud-font-family: system-ui, -apple-system, sans-serif;
+  --hud-font-size-xs: 0.6875rem;
+  --hud-font-size-sm: 0.75rem;
+  --hud-font-size-base: 0.875rem;
+  --hud-line-height-tight: 1.3;
+  --hud-line-height-normal: 1.5;
+
+  /* Spacing tokens */
+  --hud-space-unit: 4px;
+  --hud-space-xs: 4px;
+  --hud-space-sm: 6px;
+  --hud-space-md: 8px;
+  --hud-space-lg: 12px;
+  --hud-space-xl: 16px;
+  --hud-space-2xl: 24px;
+
+  /* Zone application */
+  --hud-header-padding: var(--hud-space-md) var(--hud-space-lg);
+  --hud-log-padding: 0 var(--hud-space-xl);
+  --hud-input-padding: var(--hud-space-md) var(--hud-space-lg);
+  --hud-dialog-padding: var(--hud-space-lg);
+  --hud-log-entry-padding: var(--hud-space-md) var(--hud-space-lg);
+  --hud-log-entry-gap: 5px;
+  --hud-system-entry-padding: var(--hud-space-xs) var(--hud-space-lg);
+
+  /* Layout tokens */
+  --hud-body-max-height: min(500px, 72vh);
+  --hud-header-height: 40px;
+  --hud-input-height: 49px;
+  --hud-settings-height-expanded: 38px;
+  --hud-settings-height-collapsed: 0px;
+  --hud-log-min-height: 80px;
+  --hud-dialog-max-height: 48px;
+
+  /* Motion tokens */
+  --hud-duration-entry: 280ms;
+  --hud-easing-entry: cubic-bezier(0.16, 1, 0.3, 1);
+  --hud-duration-micro: 150ms;
+  --hud-easing-micro: ease-out;
+  --hud-duration-layout: 280ms;
+  --hud-easing-layout: cubic-bezier(0.16, 1, 0.3, 1);
+  --hud-duration-content: 200ms;
+  --hud-easing-content: ease-in-out;
+
+  /* Ambient motion */
+  --hud-scanline-duration: 5s;
+  --hud-scanline-opacity: 0.07;
+  --hud-pulse-thinking: 1s;
+  --hud-pulse-executing: 0.7s;
+  --hud-pulse-waiting: 0.8s;
+  --hud-corner-pulse-duration: 3s;
+  --hud-highlight-sweep-duration: 3s;
+
+  /* Elevation tokens */
+  --hud-shadow-glow-sm: 0 0 4px oklch(0.72 0.14 192 / 0.15);
+  --hud-shadow-glow-md: 0 0 8px oklch(0.72 0.14 192 / 0.2);
+  --hud-shadow-glow-lg: 0 0 12px oklch(0.72 0.14 192 / 0.3);
+
+  /* Focus ring tokens */
+  --hud-focus-offset: 2px;
+  --hud-focus-ring-width: 2px;
+  --hud-focus-ring-color: oklch(0.78 0.16 192 / 0.55);
+  --hud-focus-glow: 0 0 6px oklch(0.72 0.14 192 / 0.35);
+}
+
 body {
   background: transparent;
   overflow: hidden;
@@ -19,8 +113,8 @@ body {
   max-width: 400px;
   max-height: 100vh;
   box-sizing: border-box;
-  background: oklch(0.13 0.015 250 / 0.93);
-  border: 1px solid oklch(0.72 0.14 192 / 0.18);
+  background: var(--hud-surface-base);
+  border: 1px solid var(--hud-border-decorative);
   border-radius: 12px;
   display: flex;
   flex-direction: column;
@@ -32,11 +126,11 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  max-height: 500px;
+  max-height: var(--hud-body-max-height);
 }
 
 .hud-container--ready .hud-body {
-  transition: max-height 280ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: max-height var(--hud-duration-layout) cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .hud-container[data-expanded="false"] .hud-body {
@@ -52,7 +146,7 @@ body {
 }
 
 .hud-container--ready .hud-body-inner {
-  transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity var(--hud-duration-content) cubic-bezier(0.4, 0, 0.2, 1);
   transition-delay: 80ms;
 }
 
@@ -162,25 +256,25 @@ body {
 .hud-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--hud-space-sm);
   padding: 0 14px;
   height: 36px;
   min-width: 120px;
-  background: oklch(0.13 0.015 250 / 0.95);
-  border: 1px solid oklch(0.72 0.14 192 / 0.3);
+  background: var(--hud-surface-base);
+  border: 1px solid var(--hud-border-interactive);
   border-radius: 16px;
   cursor: pointer;
   user-select: none;
-  animation: pill-in 200ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: pill-in var(--hud-duration-content) var(--hud-easing-entry) both;
   backdrop-filter: blur(8px);
   position: relative;
   overflow: hidden;
-  transition: border-color 180ms ease, background 180ms ease;
+  transition: border-color var(--hud-duration-micro) ease, background var(--hud-duration-micro) ease;
 }
 
 .hud-pill:hover {
   background: oklch(0.16 0.02 250 / 0.96);
-  border-color: oklch(0.72 0.14 192 / 0.5);
+  border-color: var(--hud-border-hover);
 }
 
 .hud-pill:active {
@@ -195,13 +289,13 @@ body {
   max-width: 400px;
   max-height: 100vh;
   box-sizing: border-box;
-  background: oklch(0.13 0.015 250 / 0.93);
-  border: 1px solid oklch(0.72 0.14 192 / 0.18);
+  background: var(--hud-surface-base);
+  border: 1px solid var(--hud-border-decorative);
   border-radius: 12px;
   display: flex;
   flex-direction: column;
   overflow: hidden auto;
-  animation: hud-in 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: hud-in var(--hud-duration-entry) var(--hud-easing-entry) both;
   backdrop-filter: blur(12px);
 }
 
@@ -213,7 +307,7 @@ body {
   height: 10px;
   pointer-events: none;
   z-index: 10;
-  animation: holo-corner-pulse 3s ease-in-out infinite;
+  animation: holo-corner-pulse var(--hud-corner-pulse-duration) ease-in-out infinite;
 }
 
 .hud-corner--tl {
@@ -282,7 +376,7 @@ body {
     transparent 100%
   );
   background-size: 200% 100%;
-  animation: holo-highlight-sweep 3s ease-in-out infinite;
+  animation: holo-highlight-sweep var(--hud-highlight-sweep-duration) ease-in-out infinite;
   animation-delay: 1s;
 }
 
@@ -309,7 +403,7 @@ body {
     oklch(0.72 0.14 192 / 0.025) 60%,
     transparent
   );
-  animation: holo-scanline 5s linear infinite;
+  animation: holo-scanline var(--hud-scanline-duration) linear infinite;
 }
 
 /* ━━ Recording Indicator ━━ */
@@ -317,7 +411,7 @@ body {
 .hud-recording-indicator {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--hud-space-xs);
   flex-shrink: 0;
 }
 
@@ -331,7 +425,7 @@ body {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: oklch(0.8 0.18 30);
+  background: var(--hud-status-accent);
   animation: dot-pulse 1.5s ease-in-out infinite;
 }
 
@@ -350,70 +444,70 @@ body {
 }
 
 .hud-status-dot--idle {
-  background: oklch(0.55 0.02 250);
-  box-shadow: 0 0 4px oklch(0.55 0.02 250 / 0.3);
+  background: var(--hud-text-muted);
+  box-shadow: var(--hud-shadow-glow-sm);
 }
 
 .hud-status-dot--thinking {
-  background: oklch(0.72 0.18 192);
-  box-shadow: 0 0 8px oklch(0.72 0.18 192 / 0.5);
-  animation: status-pulse 1s ease-in-out infinite;
+  background: var(--hud-status-info);
+  box-shadow: var(--hud-shadow-glow-md);
+  animation: status-pulse var(--hud-pulse-thinking) ease-in-out infinite;
 }
 
 .hud-status-dot--executing {
-  background: oklch(0.78 0.16 75);
-  box-shadow: 0 0 8px oklch(0.78 0.16 75 / 0.5);
-  animation: status-pulse 0.7s ease-in-out infinite;
+  background: var(--hud-status-warning);
+  box-shadow: var(--hud-shadow-glow-md);
+  animation: status-pulse var(--hud-pulse-executing) ease-in-out infinite;
 }
 
 .hud-status-dot--waiting {
-  background: oklch(0.65 0.2 15);
-  box-shadow: 0 0 8px oklch(0.65 0.2 15 / 0.5);
-  animation: status-pulse 0.8s ease-in-out infinite;
+  background: var(--hud-status-error);
+  box-shadow: var(--hud-shadow-glow-md);
+  animation: status-pulse var(--hud-pulse-waiting) ease-in-out infinite;
 }
 
 .hud-status-dot--listening {
-  background: oklch(0.75 0.18 30);
-  box-shadow: 0 0 8px oklch(0.75 0.18 30 / 0.5);
-  animation: status-pulse 1s ease-in-out infinite;
+  background: var(--hud-status-accent);
+  box-shadow: var(--hud-shadow-glow-md);
+  animation: status-pulse var(--hud-pulse-thinking) ease-in-out infinite;
 }
 
 /* ━━ Status Label ━━ */
 
 .hud-status-label {
-  font-size: 0.75rem;
+  font-size: var(--hud-font-size-sm);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   font-weight: 600;
-  color: oklch(0.8 0.06 250 / 0.9);
+  color: var(--hud-text-secondary);
 }
 
 .hud-status-label--idle {
-  color: oklch(0.65 0.03 250 / 0.8);
+  color: var(--hud-text-tertiary);
 }
 
 .hud-status-label--thinking {
-  color: oklch(0.78 0.18 192);
+  color: var(--hud-status-info);
 }
 
 .hud-status-label--executing {
-  color: oklch(0.82 0.16 75);
+  color: var(--hud-status-warning);
 }
 
 .hud-status-label--waiting {
-  color: oklch(0.72 0.2 15);
+  color: var(--hud-status-error);
 }
 
 .hud-status-label--listening {
-  color: oklch(0.8 0.18 30);
+  color: var(--hud-status-accent);
 }
 
 /* ━━ Timer ━━ */
 
 .hud-timer {
   font-family: monospace;
-  font-size: 0.75rem;
-  color: oklch(0.6 0.03 250 / 0.85);
+  font-size: var(--hud-font-size-sm);
+  color: var(--hud-text-tertiary);
   letter-spacing: 0.04em;
 }
 
@@ -423,8 +517,8 @@ body {
   width: 9px;
   height: 9px;
   border-radius: 50%;
-  background: oklch(0.7 0.2 15);
-  box-shadow: 0 0 6px oklch(0.7 0.2 15 / 0.5);
+  background: var(--hud-status-error);
+  box-shadow: var(--hud-shadow-glow-sm);
   animation: notification-pulse 1s ease-in-out infinite;
   flex-shrink: 0;
 }
@@ -436,15 +530,15 @@ body {
   border: none;
   padding: 0;
   cursor: pointer;
-  color: oklch(0.55 0.03 250 / 0.6);
+  color: var(--hud-text-muted);
   display: flex;
   align-items: center;
-  transition: color 150ms ease;
+  transition: color var(--hud-duration-micro) ease;
   line-height: 1;
 }
 
 .hud-toggle-btn:hover {
-  color: oklch(0.72 0.14 192 / 0.9);
+  color: var(--hud-border-hover);
 }
 
 /* ━━ Interrupt Button ━━ */
@@ -458,14 +552,14 @@ body {
   color: oklch(0.8 0.15 55);
   display: flex;
   align-items: center;
-  transition: background 150ms ease, border-color 150ms ease;
+  transition: background var(--hud-duration-micro) ease, border-color var(--hud-duration-micro) ease;
   line-height: 1;
   flex-shrink: 0;
 }
 
 .hud-interrupt-btn:hover {
   background: oklch(0.75 0.15 55 / 0.25);
-  border-color: oklch(0.75 0.15 55 / 0.55);
+  border-color: var(--hud-border-hover);
 }
 
 .hud-interrupt-btn:active {
@@ -477,9 +571,9 @@ body {
 .hud-statusbar {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
-  border-bottom: 1px solid oklch(0.72 0.14 192 / 0.08);
+  gap: var(--hud-space-md);
+  padding: var(--hud-header-padding);
+  border-bottom: 1px solid var(--hud-border-decorative);
   position: relative;
   z-index: 7;
   flex-shrink: 0;
@@ -494,10 +588,10 @@ body {
 .hud-log {
   flex: 1;
   overflow-y: auto;
-  padding: 12px 16px;
+  padding: var(--hud-space-lg) var(--hud-space-xl);
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: var(--hud-log-entry-gap);
   min-height: 60px;
   max-height: 360px;
   position: relative;
@@ -510,35 +604,36 @@ body {
 }
 
 .hud-log-empty {
-  color: oklch(0.45 0.02 250 / 0.5);
-  font-size: 0.72rem;
+  color: var(--hud-text-muted);
+  font-size: var(--hud-font-size-xs);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   text-align: center;
-  padding: 16px 0;
+  padding: var(--hud-space-xl) 0;
 }
 
 .hud-log-entry {
   display: flex;
   align-items: flex-start;
-  gap: 7px;
-  font-size: 0.85rem;
-  line-height: 1.5;
-  background: oklch(0 0 0 / 0.3);
+  gap: var(--hud-log-entry-gap);
+  font-size: var(--hud-font-size-base);
+  line-height: var(--hud-line-height-normal);
+  background: var(--hud-surface-raised);
   border-radius: 6px;
-  padding: 6px 10px;
+  padding: var(--hud-log-entry-padding);
 }
 
 .hud-log-entry--user {
   flex-direction: row-reverse;
-  background: oklch(0.75 0.18 30 / 0.12);
+  background: var(--hud-surface-user);
   border: 1px solid oklch(0.75 0.18 30 / 0.25);
   border-radius: 12px 12px 4px 12px;
 }
 
 .hud-log-entry--system {
-  font-size: 0.75rem;
+  font-size: var(--hud-font-size-sm);
   font-weight: 300;
+  padding: var(--hud-system-entry-padding);
 }
 
 .hud-log-icon {
@@ -553,34 +648,34 @@ body {
 
 .hud-log-text {
   flex: 1;
-  color: oklch(0.75 0.03 250 / 0.85);
+  color: var(--hud-text-secondary);
   overflow-wrap: break-word;
   word-break: break-all;
 }
 
 .hud-log-text--assistant {
-  color: oklch(0.72 0.14 192 / 0.9);
+  color: var(--hud-status-info);
   word-break: normal;
 }
 
 .hud-log-text--done {
-  color: oklch(0.65 0.18 145 / 0.9);
+  color: var(--hud-status-success);
 }
 
 .hud-log-text--error {
-  color: oklch(0.65 0.2 20 / 0.9);
+  color: var(--hud-status-error);
 }
 
 .hud-log-text--interrupt {
-  color: oklch(0.75 0.15 55 / 0.9);
+  color: var(--hud-status-warning);
 }
 
 .hud-log-text--user {
-  color: oklch(0.88 0.06 30 / 0.95);
+  color: var(--hud-text-primary);
 }
 
 .hud-log-text--system {
-  color: oklch(0.65 0.02 250 / 0.7);
+  color: var(--hud-text-tertiary);
 }
 
 /* ━━ Markdown (assistant) ━━ */
@@ -596,7 +691,7 @@ body {
 .hud-md-heading {
   font-weight: 600;
   margin: 0.5em 0 0.3em;
-  color: oklch(0.78 0.14 192 / 0.95);
+  color: var(--hud-status-info);
 }
 
 h1.hud-md-heading {
@@ -614,8 +709,8 @@ h3.hud-md-heading {
 .hud-md-code-inline {
   font-family: monospace;
   font-size: 0.88em;
-  background: oklch(0.1 0.01 250 / 0.6);
-  border: 1px solid oklch(0.4 0.02 250 / 0.2);
+  background: var(--hud-surface-dialog);
+  border: 1px solid var(--hud-border-decorative);
   border-radius: 3px;
   padding: 0.1em 0.35em;
 }
@@ -624,10 +719,10 @@ h3.hud-md-heading {
   display: block;
   font-family: monospace;
   font-size: 0.82em;
-  background: oklch(0.1 0.01 250 / 0.6);
-  border: 1px solid oklch(0.4 0.02 250 / 0.2);
+  background: var(--hud-surface-dialog);
+  border: 1px solid var(--hud-border-decorative);
   border-radius: 4px;
-  padding: 8px 10px;
+  padding: var(--hud-space-md) 10px;
   margin: 0.4em 0;
   white-space: pre-wrap;
   word-break: break-all;
@@ -643,28 +738,28 @@ h3.hud-md-heading {
 .hud-md-blockquote {
   margin: 0.4em 0;
   padding: 0.3em 0 0.3em 0.8em;
-  border-left: 2px solid oklch(0.72 0.14 192 / 0.3);
+  border-left: 2px solid var(--hud-border-interactive);
   background: oklch(0.72 0.14 192 / 0.05);
   border-radius: 0 4px 4px 0;
 }
 
 .hud-md-link {
-  color: oklch(0.78 0.14 192 / 0.95);
+  color: var(--hud-status-info);
   text-decoration: underline;
-  text-decoration-color: oklch(0.72 0.14 192 / 0.4);
+  text-decoration-color: var(--hud-border-interactive);
   text-underline-offset: 2px;
   cursor: pointer;
-  transition: text-decoration-color 150ms ease;
+  transition: text-decoration-color var(--hud-duration-micro) ease;
 }
 
 .hud-md-link:hover {
-  text-decoration-color: oklch(0.72 0.14 192 / 0.8);
+  text-decoration-color: var(--hud-border-hover);
 }
 
 .hud-md-link--disabled {
   cursor: default;
   text-decoration: none;
-  color: oklch(0.72 0.14 192 / 0.6);
+  color: var(--hud-text-tertiary);
 }
 
 .hud-md-list {
@@ -687,52 +782,52 @@ h3.hud-md-heading {
 .hud-log-ts {
   flex-shrink: 0;
   font-family: monospace;
-  font-size: 0.72rem;
-  color: oklch(0.4 0.02 250 / 0.5);
+  font-size: var(--hud-font-size-xs);
+  color: var(--hud-text-muted);
   margin-top: 2px;
 }
 
 /* ━━ Permission / Question Dialog ━━ */
 
 .hud-dialog {
-  border-top: 1px solid oklch(0.72 0.14 192 / 0.12);
-  padding: 14px 16px;
+  border-top: 1px solid var(--hud-border-decorative);
+  padding: var(--hud-dialog-padding) var(--hud-space-xl);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
   gap: 10px;
   position: relative;
   z-index: 7;
-  animation: slide-up 200ms cubic-bezier(0.16, 1, 0.3, 1) both;
-  background: oklch(0.11 0.015 250 / 0.5);
+  animation: slide-up var(--hud-duration-content) var(--hud-easing-entry) both;
+  background: var(--hud-surface-dialog);
 }
 
 .hud-dialog-tool-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--hud-space-md);
 }
 
 .hud-dialog-tool-badge {
-  font-size: 0.68rem;
+  font-size: var(--hud-font-size-xs);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   font-weight: 700;
-  padding: 2px 8px;
+  padding: 2px var(--hud-space-md);
   border-radius: 4px;
   background: oklch(0.65 0.2 15 / 0.15);
   border: 1px solid oklch(0.65 0.2 15 / 0.35);
-  color: oklch(0.65 0.2 15);
+  color: var(--hud-status-error);
 }
 
 .hud-dialog-target {
   font-family: monospace;
-  font-size: 0.7rem;
-  color: oklch(0.72 0.06 250 / 0.75);
-  background: oklch(0.1 0.01 250 / 0.6);
-  border: 1px solid oklch(0.4 0.02 250 / 0.2);
+  font-size: var(--hud-font-size-xs);
+  color: var(--hud-text-tertiary);
+  background: var(--hud-surface-dialog);
+  border: 1px solid var(--hud-border-decorative);
   border-radius: 4px;
-  padding: 6px 10px;
+  padding: var(--hud-space-sm) 10px;
   overflow-wrap: break-word;
   word-break: break-all;
   max-height: 60px;
@@ -747,13 +842,13 @@ h3.hud-md-heading {
 .hud-dialog-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--hud-space-md);
 }
 
 .hud-btn {
   flex: 1 1 calc(50% - 4px);
   padding: 7px 0;
-  font-size: 0.72rem;
+  font-size: var(--hud-font-size-xs);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   font-weight: 600;
@@ -761,25 +856,25 @@ h3.hud-md-heading {
   border-radius: 6px;
   cursor: pointer;
   border: 1px solid transparent;
-  transition: background 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+  transition: background var(--hud-duration-micro) ease, border-color var(--hud-duration-micro) ease, box-shadow var(--hud-duration-micro) ease;
 }
 
 .hud-btn--approve {
   background: oklch(0.65 0.18 145 / 0.15);
   border-color: oklch(0.65 0.18 145 / 0.35);
-  color: oklch(0.65 0.18 145);
+  color: var(--hud-status-success);
 }
 
 .hud-btn--approve:hover {
   background: oklch(0.65 0.18 145 / 0.25);
   border-color: oklch(0.65 0.18 145 / 0.55);
-  box-shadow: 0 0 10px oklch(0.65 0.18 145 / 0.15);
+  box-shadow: var(--hud-shadow-glow-lg);
 }
 
 .hud-btn--deny {
   background: oklch(0.65 0.2 15 / 0.12);
   border-color: oklch(0.65 0.2 15 / 0.3);
-  color: oklch(0.65 0.2 15 / 0.85);
+  color: var(--hud-status-error);
 }
 
 .hud-btn--deny:hover {
@@ -825,22 +920,22 @@ h3.hud-md-heading {
 /* ━━ Question Dialog ━━ */
 
 .hud-question-text {
-  font-size: 0.78rem;
-  color: oklch(0.82 0.04 250 / 0.9);
-  line-height: 1.5;
+  font-size: var(--hud-font-size-sm);
+  color: var(--hud-text-secondary);
+  line-height: var(--hud-line-height-normal);
 }
 
 .hud-question-options {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--hud-space-sm);
 }
 
 .hud-btn--option {
   width: 100%;
   text-align: left;
-  padding: 7px 12px;
-  font-size: 0.75rem;
+  padding: 7px var(--hud-space-lg);
+  font-size: var(--hud-font-size-sm);
   letter-spacing: 0.03em;
   text-transform: none;
   font-weight: 500;
@@ -848,14 +943,14 @@ h3.hud-md-heading {
   border-radius: 6px;
   cursor: pointer;
   background: oklch(0.72 0.14 192 / 0.08);
-  border: 1px solid oklch(0.72 0.14 192 / 0.2);
-  color: oklch(0.78 0.08 192 / 0.9);
-  transition: background 150ms ease, border-color 150ms ease;
+  border: 1px solid var(--hud-border-decorative);
+  color: var(--hud-status-info);
+  transition: background var(--hud-duration-micro) ease, border-color var(--hud-duration-micro) ease;
 }
 
 .hud-btn--option:hover {
   background: oklch(0.72 0.14 192 / 0.18);
-  border-color: oklch(0.72 0.14 192 / 0.4);
+  border-color: var(--hud-border-interactive);
 }
 
 /* ━━ Panel Header ━━ */
@@ -863,9 +958,9 @@ h3.hud-md-heading {
 .hud-header {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 10px 12px;
-  border-bottom: 1px solid oklch(0.72 0.14 192 / 0.1);
+  gap: var(--hud-space-sm);
+  padding: var(--hud-header-padding);
+  border-bottom: 1px solid var(--hud-border-decorative);
   position: relative;
   z-index: 7;
   flex-shrink: 0;
@@ -880,24 +975,24 @@ h3.hud-md-heading {
   border: 1px solid oklch(1 0 0 / 0.08);
   padding: 5px;
   cursor: pointer;
-  color: oklch(0.72 0.04 250 / 0.85);
+  color: var(--hud-text-tertiary);
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 5px;
-  transition: color 150ms ease, background 150ms ease, border-color 150ms ease;
+  transition: color var(--hud-duration-micro) ease, background var(--hud-duration-micro) ease, border-color var(--hud-duration-micro) ease;
   line-height: 1;
   flex-shrink: 0;
 }
 
 .hud-icon-btn:hover {
-  color: oklch(0.85 0.1 192);
+  color: var(--hud-status-info);
   background: oklch(0.72 0.14 192 / 0.12);
-  border-color: oklch(0.72 0.14 192 / 0.25);
+  border-color: var(--hud-border-decorative);
 }
 
 .hud-icon-btn--close:hover {
-  color: oklch(0.78 0.18 15);
+  color: var(--hud-status-error);
   background: oklch(0.65 0.2 15 / 0.12);
   border-color: oklch(0.65 0.2 15 / 0.25);
 }
@@ -906,23 +1001,23 @@ h3.hud-md-heading {
 
 .hud-session-toggle {
   background: oklch(0.72 0.14 192 / 0.1);
-  border: 1px solid oklch(0.72 0.14 192 / 0.3);
+  border: 1px solid var(--hud-border-interactive);
   border-radius: 5px;
-  padding: 4px 6px;
+  padding: var(--hud-space-xs) var(--hud-space-sm);
   cursor: pointer;
-  color: oklch(0.72 0.14 192);
+  color: var(--hud-status-info);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
+  transition: background var(--hud-duration-micro) ease, border-color var(--hud-duration-micro) ease, color var(--hud-duration-micro) ease, box-shadow var(--hud-duration-micro) ease;
   line-height: 1;
   flex-shrink: 0;
 }
 
 .hud-session-toggle:hover {
   background: oklch(0.72 0.14 192 / 0.2);
-  border-color: oklch(0.72 0.14 192 / 0.5);
-  box-shadow: 0 0 10px oklch(0.72 0.14 192 / 0.12);
+  border-color: var(--hud-border-hover);
+  box-shadow: var(--hud-shadow-glow-lg);
 }
 
 .hud-session-toggle:active {
@@ -946,9 +1041,9 @@ h3.hud-md-heading {
 .hud-inline-settings {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-bottom: 1px solid oklch(0.72 0.14 192 / 0.06);
+  gap: var(--hud-space-sm);
+  padding: var(--hud-space-sm) var(--hud-space-lg);
+  border-bottom: 1px solid var(--hud-border-decorative);
   position: relative;
   z-index: 7;
   flex-shrink: 0;
@@ -957,7 +1052,7 @@ h3.hud-md-heading {
 .hud-inline-sep {
   width: 1px;
   height: 16px;
-  background: oklch(0.72 0.14 192 / 0.12);
+  background: var(--hud-border-decorative);
   flex-shrink: 0;
 }
 
@@ -972,18 +1067,18 @@ h3.hud-md-heading {
 }
 
 .hud-inline-ptt .agent-key-capture {
-  padding: 4px 8px;
-  gap: 6px;
-  border-color: oklch(0.72 0.14 192 / 0.12);
+  padding: var(--hud-space-xs) var(--hud-space-md);
+  gap: var(--hud-space-sm);
+  border-color: var(--hud-border-decorative);
 }
 
 .hud-inline-ptt .agent-key-badge {
-  font-size: 0.68rem;
+  font-size: var(--hud-font-size-xs);
   padding: 1px 5px;
 }
 
 .hud-inline-ptt .agent-key-hint {
-  font-size: 0.65rem;
+  font-size: var(--hud-font-size-xs);
 }
 
 .hud-inline-ptt .agent-key-warning {
@@ -997,20 +1092,20 @@ h3.hud-md-heading {
 
 .hud-inline-select-trigger {
   height: 26px !important;
-  font-size: 0.68rem !important;
-  padding: 0 8px !important;
+  font-size: var(--hud-font-size-xs) !important;
+  padding: 0 var(--hud-space-md) !important;
   min-width: 70px;
-  border-color: oklch(0.72 0.14 192 / 0.12) !important;
+  border-color: var(--hud-border-decorative) !important;
 }
 
 /* ━━ Error Display ━━ */
 
 .hud-error {
-  font-size: 0.72rem;
-  color: oklch(0.65 0.2 20 / 0.85);
+  font-size: var(--hud-font-size-xs);
+  color: var(--hud-status-error);
   text-align: center;
   line-height: 1.4;
-  padding: 6px 16px;
+  padding: var(--hud-space-sm) var(--hud-space-xl);
   position: relative;
   z-index: 7;
   flex-shrink: 0;
@@ -1032,7 +1127,7 @@ h3.hud-md-heading {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform var(--hud-duration-layout) var(--hud-easing-layout);
 }
 
 .hud-view-slider[data-view="settings"] .hud-view-slide {
@@ -1050,10 +1145,10 @@ h3.hud-md-heading {
   top: 0;
   bottom: 0;
   width: 1px;
-  background: oklch(0.72 0.14 192 / 0.3);
-  box-shadow: 0 0 8px oklch(0.72 0.14 192 / 0.15);
+  background: var(--hud-border-interactive);
+  box-shadow: var(--hud-shadow-glow-md);
   opacity: 0;
-  transition: opacity 280ms ease;
+  transition: opacity var(--hud-duration-layout) ease;
   z-index: 1;
   pointer-events: none;
 }
@@ -1074,8 +1169,8 @@ h3.hud-md-heading {
 .hud-settings-tabs {
   display: flex;
   gap: 2px;
-  padding: 0 12px;
-  border-bottom: 1px solid oklch(0.72 0.14 192 / 0.1);
+  padding: 0 var(--hud-space-lg);
+  border-bottom: 1px solid var(--hud-border-decorative);
   flex-shrink: 0;
 }
 
@@ -1083,29 +1178,29 @@ h3.hud-md-heading {
   background: transparent;
   border: none;
   border-bottom: 2px solid transparent;
-  color: oklch(0.75 0.02 250 / 0.6);
-  font-size: 0.7rem;
+  color: var(--hud-text-tertiary);
+  font-size: var(--hud-font-size-xs);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  padding: 6px 12px;
+  padding: var(--hud-space-sm) var(--hud-space-lg);
   cursor: pointer;
-  transition: color 180ms ease, border-color 180ms ease;
+  transition: color var(--hud-duration-micro) ease, border-color var(--hud-duration-micro) ease;
   font-family: inherit;
 }
 
 .hud-settings-tab:hover {
-  color: oklch(0.85 0.06 192 / 0.8);
+  color: var(--hud-text-secondary);
 }
 
 .hud-settings-tab--active {
-  color: oklch(0.72 0.14 192);
-  border-bottom-color: oklch(0.72 0.14 192 / 0.8);
+  color: var(--hud-status-info);
+  border-bottom-color: var(--hud-border-hover);
 }
 
 .hud-settings-content {
   flex: 1;
   overflow-y: auto;
-  padding: 12px 14px;
+  padding: var(--hud-space-lg) 14px;
   min-height: 0;
   scrollbar-width: none;
 }
@@ -1117,28 +1212,28 @@ h3.hud-md-heading {
 .hud-settings-footer {
   display: flex;
   justify-content: flex-end;
-  padding: 8px 14px;
-  border-top: 1px solid oklch(0.72 0.14 192 / 0.06);
+  padding: var(--hud-space-md) 14px;
+  border-top: 1px solid var(--hud-border-decorative);
   flex-shrink: 0;
 }
 
 .hud-settings-save {
   background: oklch(0.72 0.14 192 / 0.12);
-  border: 1px solid oklch(0.72 0.14 192 / 0.25);
+  border: 1px solid var(--hud-border-decorative);
   border-radius: 5px;
-  padding: 5px 16px;
-  color: oklch(0.72 0.14 192);
-  font-size: 0.72rem;
+  padding: 5px var(--hud-space-xl);
+  color: var(--hud-status-info);
+  font-size: var(--hud-font-size-xs);
   font-family: inherit;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
+  transition: background var(--hud-duration-micro) ease, border-color var(--hud-duration-micro) ease, color var(--hud-duration-micro) ease;
 }
 
 .hud-settings-save:hover {
   background: oklch(0.72 0.14 192 / 0.22);
-  border-color: oklch(0.72 0.14 192 / 0.45);
+  border-color: var(--hud-border-interactive);
 }
 
 .hud-settings-save:active {
@@ -1153,7 +1248,7 @@ h3.hud-md-heading {
 .hud-settings-save--done {
   background: oklch(0.65 0.18 145 / 0.12);
   border-color: oklch(0.65 0.18 145 / 0.35);
-  color: oklch(0.65 0.18 145);
+  color: var(--hud-status-success);
 }
 
 /* ━━ Settings Components (shared) ━━ */
@@ -1167,24 +1262,24 @@ h3.hud-md-heading {
 .settings-label {
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  font-size: 0.75rem;
+  gap: var(--hud-log-entry-gap);
+  font-size: var(--hud-font-size-sm);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: oklch(0.72 0.14 192 / 0.7);
+  color: var(--hud-text-tertiary);
 }
 
 .settings-label-desc {
-  font-size: 0.68rem;
+  font-size: var(--hud-font-size-xs);
   letter-spacing: 0.03em;
   text-transform: none;
-  color: oklch(0.65 0.04 250 / 0.55);
+  color: var(--hud-text-muted);
   font-weight: 400;
 }
 
 .agent-divider {
   height: 1px;
-  background: oklch(0.72 0.14 192 / 0.06);
+  background: var(--hud-border-decorative);
   margin: 2px 0;
 }
 
@@ -1192,7 +1287,7 @@ h3.hud-md-heading {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  padding: 1px 6px;
+  padding: 1px var(--hud-space-sm);
   border-radius: 16px;
   font-size: 0.7rem;
   font-weight: 500;
@@ -1254,41 +1349,41 @@ h3.hud-md-heading {
 
 .agent-add-input {
   flex: 1;
-  background: oklch(0.12 0.01 250 / 0.7);
-  border: 1px solid oklch(0.72 0.14 192 / 0.15);
+  background: var(--hud-surface-input);
+  border: 1px solid var(--hud-border-decorative);
   border-radius: 5px;
-  padding: 4px 8px;
-  color: oklch(0.92 0.01 250);
-  font-size: 0.75rem;
+  padding: var(--hud-space-xs) var(--hud-space-md);
+  color: var(--hud-text-primary);
+  font-size: var(--hud-font-size-sm);
   font-family: inherit;
   outline: none;
-  transition: border-color 150ms ease;
+  transition: border-color var(--hud-duration-micro) ease;
 }
 
 .agent-add-input:focus {
-  border-color: oklch(0.72 0.14 192 / 0.4);
+  border-color: var(--hud-border-interactive);
 }
 
 .agent-add-input::placeholder {
-  color: oklch(0.55 0.02 250 / 0.45);
+  color: var(--hud-text-placeholder);
 }
 
 .agent-add-btn {
   background: oklch(0.72 0.14 192 / 0.1);
-  border: 1px solid oklch(0.72 0.14 192 / 0.2);
+  border: 1px solid var(--hud-border-decorative);
   border-radius: 5px;
-  padding: 4px 10px;
-  color: oklch(0.72 0.14 192 / 0.8);
-  font-size: 0.72rem;
+  padding: var(--hud-space-xs) 10px;
+  color: var(--hud-status-info);
+  font-size: var(--hud-font-size-xs);
   font-family: inherit;
   cursor: pointer;
-  transition: background 150ms ease, border-color 150ms ease;
+  transition: background var(--hud-duration-micro) ease, border-color var(--hud-duration-micro) ease;
   white-space: nowrap;
 }
 
 .agent-add-btn:hover {
   background: oklch(0.72 0.14 192 / 0.18);
-  border-color: oklch(0.72 0.14 192 / 0.35);
+  border-color: var(--hud-border-interactive);
 }
 
 .agent-dir-list {
@@ -1300,10 +1395,10 @@ h3.hud-md-heading {
 .agent-dir-item {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 8px;
-  background: oklch(0.12 0.01 250 / 0.5);
-  border: 1px solid oklch(0.72 0.14 192 / 0.08);
+  gap: var(--hud-space-sm);
+  padding: var(--hud-space-xs) var(--hud-space-md);
+  background: var(--hud-surface-input);
+  border: 1px solid var(--hud-border-decorative);
   border-radius: 5px;
 }
 
@@ -1316,8 +1411,8 @@ h3.hud-md-heading {
 .agent-dir-path {
   flex: 1;
   font-family: monospace;
-  font-size: 0.72rem;
-  color: oklch(0.82 0.04 250 / 0.8);
+  font-size: var(--hud-font-size-xs);
+  color: var(--hud-text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1343,13 +1438,13 @@ h3.hud-md-heading {
 .agent-key-capture {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  background: oklch(0.12 0.01 250 / 0.7);
-  border: 1px solid oklch(0.72 0.14 192 / 0.15);
+  gap: var(--hud-space-md);
+  padding: var(--hud-space-sm) 10px;
+  background: var(--hud-surface-input);
+  border: 1px solid var(--hud-border-decorative);
   border-radius: 5px;
   cursor: pointer;
-  transition: border-color 150ms ease, box-shadow 150ms ease;
+  transition: border-color var(--hud-duration-micro) ease, box-shadow var(--hud-duration-micro) ease;
 }
 
 .agent-key-capture:focus {
@@ -1357,29 +1452,29 @@ h3.hud-md-heading {
 }
 
 .agent-key-capture--capturing {
-  border-color: oklch(0.72 0.14 192 / 0.5);
-  box-shadow: 0 0 8px oklch(0.72 0.14 192 / 0.15);
+  border-color: var(--hud-border-hover);
+  box-shadow: var(--hud-shadow-glow-md);
 }
 
 .agent-key-badge {
   font-family: monospace;
-  font-size: 0.75rem;
-  padding: 1px 6px;
+  font-size: var(--hud-font-size-sm);
+  padding: 1px var(--hud-space-sm);
   border-radius: 3px;
   background: oklch(0.72 0.14 192 / 0.12);
-  border: 1px solid oklch(0.72 0.14 192 / 0.25);
-  color: oklch(0.72 0.14 192);
+  border: 1px solid var(--hud-border-decorative);
+  color: var(--hud-status-info);
 }
 
 .agent-key-hint {
-  font-size: 0.7rem;
-  color: oklch(0.65 0.04 250 / 0.5);
+  font-size: var(--hud-font-size-xs);
+  color: var(--hud-text-muted);
   margin-left: auto;
 }
 
 .agent-key-warning {
-  font-size: 0.65rem;
-  color: oklch(0.75 0.14 60 / 0.8);
+  font-size: var(--hud-font-size-xs);
+  color: var(--hud-status-warning);
   letter-spacing: 0.02em;
   text-transform: none;
 }
@@ -1392,42 +1487,42 @@ h3.hud-md-heading {
 
 .agent-pw-input {
   width: 100%;
-  background: oklch(0.12 0.01 250 / 0.7);
-  border: 1px solid oklch(0.72 0.14 192 / 0.15);
+  background: var(--hud-surface-input);
+  border: 1px solid var(--hud-border-decorative);
   border-radius: 5px;
-  padding: 6px 36px 6px 10px;
-  color: oklch(0.92 0.01 250);
-  font-size: 0.78rem;
+  padding: var(--hud-space-sm) 36px var(--hud-space-sm) 10px;
+  color: var(--hud-text-primary);
+  font-size: var(--hud-font-size-sm);
   font-family: monospace;
   outline: none;
-  transition: border-color 150ms ease;
+  transition: border-color var(--hud-duration-micro) ease;
 }
 
 .agent-pw-input:focus {
-  border-color: oklch(0.72 0.14 192 / 0.4);
+  border-color: var(--hud-border-interactive);
 }
 
 .agent-pw-input::placeholder {
-  color: oklch(0.55 0.02 250 / 0.45);
+  color: var(--hud-text-placeholder);
   font-family: inherit;
 }
 
 .agent-pw-toggle {
   position: absolute;
-  right: 8px;
+  right: var(--hud-space-md);
   background: none;
   border: none;
   cursor: pointer;
-  color: oklch(0.65 0.04 250 / 0.55);
+  color: var(--hud-text-muted);
   display: flex;
   align-items: center;
   padding: 2px;
-  font-size: 0.68rem;
+  font-size: var(--hud-font-size-xs);
   transition: color 120ms ease;
 }
 
 .agent-pw-toggle:hover {
-  color: oklch(0.85 0.08 250 / 0.9);
+  color: var(--hud-text-secondary);
 }
 
 /* ── Text Input ── */
@@ -1435,29 +1530,29 @@ h3.hud-md-heading {
 .hud-text-input {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  border-top: 1px solid oklch(0.72 0.14 192 / 0.12);
+  gap: var(--hud-space-sm);
+  padding: var(--hud-input-padding);
+  border-top: 1px solid var(--hud-border-decorative);
 }
 
 .hud-text-input-field {
   flex: 1;
-  background: oklch(0.15 0.02 250 / 0.5);
-  border: 1px solid oklch(1 0 0 / 0.12);
+  background: var(--hud-surface-input);
+  border: 1px solid var(--hud-border-interactive);
   border-radius: 6px;
-  padding: 6px 10px;
-  font-size: 0.75rem;
-  color: oklch(0.92 0 0);
+  padding: var(--hud-space-sm) 10px;
+  font-size: var(--hud-font-size-sm);
+  color: var(--hud-text-primary);
   outline: none;
   font-family: inherit;
 }
 
 .hud-text-input-field::placeholder {
-  color: oklch(0.55 0.02 250 / 0.5);
+  color: var(--hud-text-placeholder);
 }
 
 .hud-text-input-field:focus {
-  border-color: oklch(0.72 0.14 192 / 0.4);
+  border-color: var(--hud-border-focus);
 }
 
 .hud-text-input-field:disabled {
@@ -1471,11 +1566,11 @@ h3.hud-md-heading {
   width: 26px;
   height: 26px;
   border-radius: 6px;
-  border: 1px solid oklch(0.72 0.14 192 / 0.25);
+  border: 1px solid var(--hud-border-interactive);
   background: oklch(0.72 0.14 192 / 0.15);
-  color: oklch(0.72 0.14 192);
+  color: var(--hud-status-info);
   cursor: pointer;
-  transition: background 150ms ease, opacity 150ms ease;
+  transition: background var(--hud-duration-micro) ease, opacity var(--hud-duration-micro) ease;
 }
 
 .hud-text-input-send:hover:not(:disabled) {
@@ -1490,6 +1585,16 @@ h3.hud-md-heading {
 /* ━━ Reduced Motion ━━ */
 
 @media (prefers-reduced-motion: reduce) {
+  :root {
+    --hud-duration-entry: 0ms;
+    --hud-duration-micro: 0ms;
+    --hud-duration-layout: 0ms;
+    --hud-duration-content: 0ms;
+    --hud-scanline-duration: 0s;
+    --hud-corner-pulse-duration: 0s;
+    --hud-highlight-sweep-duration: 0s;
+  }
+
   .hud-panel,
   .hud-pill {
     animation: none;
@@ -1529,5 +1634,23 @@ h3.hud-md-heading {
 
   .hud-view-slide:nth-child(2)::before {
     transition: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --hud-text-tertiary: oklch(0.82 0.02 250);
+    --hud-text-placeholder: oklch(0.78 0.03 250);
+    --hud-border-interactive: oklch(0.85 0.14 192 / 0.7);
+  }
+}
+
+@media (forced-colors: active) {
+  .hud-text-input-field:focus,
+  .agent-add-input:focus,
+  .agent-pw-input:focus,
+  .agent-key-capture:focus {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
   }
 }
