@@ -92,7 +92,7 @@ function SessionContent({ session }: { session: ReturnType<typeof useAgentSessio
         question={session.question}
         onAnswer={session.answerQuestion}
       />
-      {isActive && !hasDialog && (
+      {!hasDialog && (
         <TextInput onSend={session.sendMessage} />
       )}
     </>

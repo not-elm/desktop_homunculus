@@ -1,4 +1,4 @@
-import { useState, useCallback, type KeyboardEvent } from "react";
+import { useState, useCallback, useRef, type KeyboardEvent, type ChangeEvent, type CompositionEvent } from "react";
 
 interface TextInputProps {
   onSend: (text: string) => Promise<void>;
@@ -7,21 +7,41 @@ interface TextInputProps {
 export function TextInput({ onSend }: TextInputProps) {
   const [value, setValue] = useState("");
   const [sending, setSending] = useState(false);
+  const valueRef = useRef("");
+  const isComposingRef = useRef(false);
+
+  const syncValue = (v: string) => {
+    valueRef.current = v;
+    setValue(v);
+  };
+
+  const handleChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    syncValue(e.target.value);
+  }, []);
+
+  const handleCompositionStart = useCallback(() => {
+    isComposingRef.current = true;
+  }, []);
+
+  const handleCompositionEnd = useCallback((e: CompositionEvent<HTMLInputElement>) => {
+    isComposingRef.current = false;
+    syncValue(e.currentTarget.value);
+  }, []);
 
   const handleSend = useCallback(async () => {
-    const text = value.trim();
+    const text = valueRef.current.trim();
     if (!text || sending) return;
     setSending(true);
     try {
       await onSend(text);
-      setValue("");
+      syncValue("");
     } finally {
       setSending(false);
     }
-  }, [value, sending, onSend]);
+  }, [sending, onSend]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey && !isComposingRef.current) {
       e.preventDefault();
       handleSend();
     }
@@ -34,8 +54,10 @@ export function TextInput({ onSend }: TextInputProps) {
         className="hud-text-input-field"
         placeholder="Type a message..."
         value={value}
-        onChange={(e) => setValue(e.target.value)}
+        onChange={handleChange}
         onKeyDown={handleKeyDown}
+        onCompositionStart={handleCompositionStart}
+        onCompositionEnd={handleCompositionEnd}
         disabled={sending}
       />
       <button
