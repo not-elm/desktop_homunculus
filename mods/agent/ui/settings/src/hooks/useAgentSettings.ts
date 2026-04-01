@@ -23,7 +23,7 @@ export interface AgentSettings {
 }
 
 const DEFAULT_SETTINGS: AgentSettings = {
-  executor: "sdk",
+  executor: "codex",
   workingDirectories: { paths: [], default: 0 },
   pttKey: null,
   approvalPhrases: [],

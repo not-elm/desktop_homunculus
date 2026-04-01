@@ -88,7 +88,5 @@ function CompactSelect({ value, onChange, options, loading }: {
 }
 
 const EXECUTOR_OPTIONS: SelectOption[] = [
-  { value: "sdk", label: "Claude SDK" },
-  { value: "cli", label: "Claude CLI" },
   { value: "codex", label: "Codex" },
 ];

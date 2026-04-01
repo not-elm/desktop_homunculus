@@ -62,7 +62,7 @@ export interface Persona {
 }
 
 export const DEFAULT_SETTINGS: AgentSettings = {
-  executor: "sdk",
+  executor: "codex",
   pttKey: null,
   approvalPhrases: ["はい", "yes", "ok", "allow"],
   denyPhrases: ["いいえ", "no", "deny", "cancel"],

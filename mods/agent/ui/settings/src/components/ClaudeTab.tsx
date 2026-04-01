@@ -65,8 +65,6 @@ export function ClaudeTab({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="sdk">Claude SDK</SelectItem>
-            <SelectItem value="cli">Claude CLI</SelectItem>
             <SelectItem value="codex">Codex</SelectItem>
           </SelectContent>
         </Select>
