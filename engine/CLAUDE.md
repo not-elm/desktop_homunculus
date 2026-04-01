@@ -148,9 +148,12 @@ Each monitor gets its own Bevy window with an isolated render layer. The primary
 
 ## Build Profiles
 
-- **`dev`**: `opt-level = 1` for faster iteration.
-- **`release`**: Full LTO enabled.
-- **`dist`** (for distribution): `opt-level = 2`, `lto = "thin"`, `strip = true`. Used by `make release-macos` and `make release-windows`.
+| Profile | `opt-level` | LTO | Strip | Usage |
+|---------|-------------|-----|-------|-------|
+| `dev` | 1 (deps: 3) | no | no | Local development (`make debug`) |
+| `ci` | 1 (all) | no | no | CI lint + test (`--profile ci`) |
+| `release` | `"s"` | full | yes | Not typically used directly |
+| `dist` | 2 | thin | yes | Distribution builds (`make release-*`) |
 
 ## Build Scripts (`scripts/`)
 
