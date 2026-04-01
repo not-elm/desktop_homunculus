@@ -592,8 +592,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: var(--hud-log-entry-gap);
-  min-height: 60px;
-  max-height: 360px;
+  min-height: 40px;
   position: relative;
   z-index: 7;
   scrollbar-width: none;
@@ -794,12 +793,16 @@ h3.hud-md-heading {
   padding: var(--hud-dialog-padding) var(--hud-space-xl);
   display: flex;
   flex-direction: column;
-  flex-shrink: 0;
   gap: 10px;
-  position: relative;
-  z-index: 7;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
   animation: slide-up var(--hud-duration-content) var(--hud-easing-entry) both;
   background: var(--hud-surface-dialog);
+  max-height: 60%;
+  overflow-y: auto;
 }
 
 .hud-dialog-tool-row {
@@ -1125,8 +1128,12 @@ h3.hud-md-heading {
 .hud-view-slide {
   flex: 0 0 100%;
   min-width: 0;
+  min-height: 0;
+  max-height: 100%;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  position: relative;
   transition: transform var(--hud-duration-layout) var(--hud-easing-layout);
 }
 
@@ -1135,7 +1142,7 @@ h3.hud-md-heading {
 }
 
 .hud-view-slide:nth-child(2) {
-  position: relative;
+  /* position: relative is now on .hud-view-slide base */
 }
 
 .hud-view-slide:nth-child(2)::before {
