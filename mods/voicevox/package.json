@@ -10,7 +10,7 @@
     "dev": "pnpm exec vite dev ui"
   },
   "bin": {
-    "open-settings": "commands/open-settings.ts"
+    "voicevox-open-settings": "commands/open-settings.ts"
   },
   "homunculus": {
     "service": "service.ts",
@@ -18,7 +18,7 @@
       {
         "id": "open-voicevox-settings",
         "text": "VOICEVOX Settings",
-        "command": "open-settings"
+        "command": "voicevox-open-settings"
       }
     ],
     "assets": {

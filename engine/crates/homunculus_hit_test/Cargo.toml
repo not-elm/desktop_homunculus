@@ -12,6 +12,7 @@ bevy = { workspace = true, features = ["bevy_render"] }
 bevy_vrm1 = { workspace = true }
 bevy_egui = { workspace = true, optional = true }
 bevy_cef = { workspace = true }
+homunculus_core = { workspace = true }
 
 [target.'cfg(target_os="windows")'.dependencies]
 windows = { workspace = true, features = [

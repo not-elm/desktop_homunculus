@@ -11,7 +11,6 @@ export function useCharacterSettings() {
   const [displayName, setDisplayName] = useState("");
   const [scale, setScale] = useState(1);
   const [profile, setProfile] = useState("");
-  const [personality, setPersonality] = useState("");
   const [age, setAge] = useState<number | null>(null);
   const [gender, setGender] = useState<Gender>("unknown");
   const [firstPersonPronoun, setFirstPersonPronoun] = useState("");
@@ -42,7 +41,6 @@ export function useCharacterSettings() {
       setDisplayName(persona.displayName ?? "");
       setScale(transform.scale[0]);
       setProfile(persona.profile);
-      setPersonality(persona.personality ?? "");
       setAge(persona.age ?? null);
       setGender(persona.gender ?? "unknown");
       setFirstPersonPronoun(persona.firstPersonPronoun ?? "");
@@ -70,7 +68,6 @@ export function useCharacterSettings() {
         gender,
         firstPersonPronoun: firstPersonPronoun || null,
         profile,
-        personality: personality || null,
         ocean,
         metadata: {},
       });
@@ -87,7 +84,7 @@ export function useCharacterSettings() {
     } finally {
       setSaving(false);
     }
-  }, [vrm, entity, displayName, age, gender, firstPersonPronoun, profile, personality, ocean, scale, saving]);
+  }, [vrm, entity, displayName, age, gender, firstPersonPronoun, profile, ocean, scale, saving]);
 
   return {
     loading,
@@ -100,8 +97,6 @@ export function useCharacterSettings() {
     setScale,
     profile,
     setProfile,
-    personality,
-    setPersonality,
     age,
     setAge,
     gender,
