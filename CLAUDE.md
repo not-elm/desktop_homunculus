@@ -18,7 +18,7 @@ desktop-homunculus/
 │   ├── ui/              # @hmcs/ui — Shared React component library (Radix + Tailwind)
 │   ├── cli/             # @hmcs/cli — Node CLI wrapper (distributes platform-specific Rust binary)
 │   └── cli-platform/    # Platform-specific binary packages for hmcs CLI
-├── mods/                # Mods (NPM packages): elmer/, settings/, menu/, assets/, voicevox/, character-settings/
+├── mods/                # Mods (NPM packages): elmer/, settings/, menu/, assets/, voicevox/, character-settings/, agent/
 ├── docs/website/        # Docusaurus documentation site
 └── sandbox/             # Dev sandbox — aggregates all mods for workspace linking validation
 ```
@@ -36,7 +36,8 @@ pnpm dev              # Start all dev watchers (turbo)
 pnpm check-types      # Type-check all packages (turbo)
 pnpm test             # Run all TypeScript tests (turbo)
 make setup            # pnpm install + engine tooling setup + CEF framework download
-make debug            # pnpm build + cargo run (debug with inspector)
+make debug            # pnpm build (excl. docs) + cargo run (debug with inspector)
+make debug-cuda       # Same as debug but with CUDA STT support
 make test             # pnpm test (TS) + cargo test --workspace (Rust)
 make fix-lint         # cargo clippy --fix + cargo fmt (Rust only, no TS lint)
 make gen-open-api     # Regenerate OpenAPI spec + pnpm build (rebuilds SDK types)
@@ -157,13 +158,16 @@ The `hmcs` binary is a Rust CLI built with `clap`. Current subcommands:
 
 ## CI
 
-- **Rust CI** (`ci-rust.yml`): Runs on `macos-14` (Apple Silicon). Checks `cargo fmt --all --check`, `cargo clippy --workspace -- -Dwarnings`, and `cargo test --workspace --locked`. The `--locked` flag means `Cargo.lock` must be kept committed and up to date.
-- **TypeScript CI** (`ci-ts.yml`): Runs on `ubuntu-latest`. Runs `pnpm install --frozen-lockfile` → `pnpm build` → `pnpm check-types` → `pnpm test` → `pnpm lint` in sequence.
+- **Rust CI** (`ci-rust.yml`): fmt on `ubuntu-latest`, clippy + test on `{windows-latest, macos-latest}` matrix. Uses `--profile ci` and sccache. `--locked` flag means `Cargo.lock` must be kept committed and up to date.
+  - `cargo fmt --all --check`
+  - `cargo clippy --workspace --profile ci -- -Dwarnings`
+  - `cargo test --workspace --locked --profile ci`
+- **TypeScript CI** (`ci-ts.yml`): Runs on `ubuntu-latest`. `pnpm install --frozen-lockfile` → `pnpm build` → `pnpm check-types` → `pnpm test` → `pnpm lint`.
 
 ## Platform Notes
 
 - **macOS**: Primary development platform. Default Bevy rendering backend.
-- **Windows**: In progress (`support-windows` branch). Known issue: black window background on Windows 11 with RTX GPUs.
+- **Windows**: Supported. Known issue: black window background on Windows 11 with RTX GPUs.
 - **Linux**: Planned, not yet supported.
 
 ## Requirements
@@ -194,4 +198,24 @@ Additional conventions:
 - Application settings are stored in `~/.homunculus/config.toml` (TOML, snake_case keys: `port`, `mods_dir`).
 - Logs are written to `~/.homunculus/Logs/log.txt` (daily rolling). Debug builds log at INFO level, release builds at ERROR.
 - Preferences stored in SQLite at `~/.homunculus/preferences.db` (JSON key-value pairs).
-- Workspace version: see `version.toml`. License: MIT/Apache-2.0 (Rust), MIT (TypeScript), CC-BY-4.0 (docs/assets).
+- Workspace version: see `version.toml`. Bump with `make bump-version` (`scripts/bump_version.py`), verify with `make check-version`. Targets: `engine/Cargo.toml`, `packages/*/package.json`, `mods/*/package.json`.
+- License: MIT/Apache-2.0 (Rust), MIT (TypeScript), CC-BY-4.0 (docs/assets).
+
+## Build Profiles (Rust)
+
+| Profile | `opt-level` | LTO | Strip | Usage |
+|---------|-------------|-----|-------|-------|
+| `dev` | 1 (deps: 3) | no | no | Local development (`make debug`) |
+| `ci` | 1 (all) | no | no | CI lint + test |
+| `release` | `"s"` | full | yes | Not typically used directly |
+| `dist` | 2 | thin | yes | Distribution builds (`make release-*`) |
+
+## Feature Flags (Rust)
+
+- `develop` — Enables `bevy_egui` inspector + CEF debug mode
+- `stt-cuda` — CUDA support for speech-to-text (`make debug-cuda`)
+- `stt-metal` — Metal support for speech-to-text (macOS GPU acceleration)
+
+## Workspace Lints
+
+Clippy `type_complexity` and `result_large_err` are allowed workspace-wide.
