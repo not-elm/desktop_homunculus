@@ -138,7 +138,6 @@ mod tests {
             gender: Gender::Female,
             first_person_pronoun: Some("わたし".to_string()),
             profile: "Test profile".to_string(),
-            personality: Some("Cheerful".to_string()),
             ..Default::default()
         };
 
