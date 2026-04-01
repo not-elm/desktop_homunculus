@@ -4,7 +4,7 @@
 :root {
   /* Text tiers */
   --hud-text-primary: oklch(0.92 0 0);
-  --hud-text-secondary: oklch(0.80 0.02 250);
+  --hud-text-secondary: oklch(0.8 0.02 250);
   --hud-text-tertiary: oklch(0.73 0.02 250);
   --hud-text-muted: oklch(0.58 0.02 250);
   --hud-text-placeholder: oklch(0.65 0.03 250);
@@ -196,7 +196,8 @@ body {
 }
 
 @keyframes holo-corner-pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.4;
   }
   50% {
@@ -214,7 +215,8 @@ body {
 }
 
 @keyframes status-pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
     box-shadow: 0 0 4px currentColor;
   }
@@ -225,7 +227,8 @@ body {
 }
 
 @keyframes notification-pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
     transform: scale(1);
   }
@@ -236,8 +239,12 @@ body {
 }
 
 @keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slide-up {
@@ -269,7 +276,9 @@ body {
   backdrop-filter: blur(8px);
   position: relative;
   overflow: hidden;
-  transition: border-color var(--hud-duration-micro) ease, background var(--hud-duration-micro) ease;
+  transition:
+    border-color var(--hud-duration-micro) ease,
+    background var(--hud-duration-micro) ease;
 }
 
 .hud-pill:hover {
@@ -307,7 +316,8 @@ body {
   height: 10px;
   pointer-events: none;
   z-index: 10;
-  animation: holo-corner-pulse var(--hud-corner-pulse-duration) ease-in-out infinite;
+  animation: holo-corner-pulse var(--hud-corner-pulse-duration) ease-in-out
+    infinite;
 }
 
 .hud-corner--tl {
@@ -364,7 +374,7 @@ body {
 }
 
 .hud-highlight::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   background: linear-gradient(
@@ -376,7 +386,8 @@ body {
     transparent 100%
   );
   background-size: 200% 100%;
-  animation: holo-highlight-sweep var(--hud-highlight-sweep-duration) ease-in-out infinite;
+  animation: holo-highlight-sweep var(--hud-highlight-sweep-duration)
+    ease-in-out infinite;
   animation-delay: 1s;
 }
 
@@ -390,7 +401,7 @@ body {
 }
 
 .hud-scanline::after {
-  content: '';
+  content: "";
   position: absolute;
   left: 0;
   right: 0;
@@ -430,8 +441,13 @@ body {
 }
 
 @keyframes dot-pulse {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 1; }
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 /* ━━ Status Dot ━━ */
@@ -552,7 +568,9 @@ body {
   color: oklch(0.8 0.15 55);
   display: flex;
   align-items: center;
-  transition: background var(--hud-duration-micro) ease, border-color var(--hud-duration-micro) ease;
+  transition:
+    background var(--hud-duration-micro) ease,
+    border-color var(--hud-duration-micro) ease;
   line-height: 1;
   flex-shrink: 0;
 }
@@ -859,7 +877,10 @@ h3.hud-md-heading {
   border-radius: 6px;
   cursor: pointer;
   border: 1px solid transparent;
-  transition: background var(--hud-duration-micro) ease, border-color var(--hud-duration-micro) ease, box-shadow var(--hud-duration-micro) ease;
+  transition:
+    background var(--hud-duration-micro) ease,
+    border-color var(--hud-duration-micro) ease,
+    box-shadow var(--hud-duration-micro) ease;
 }
 
 .hud-btn--approve {
@@ -948,7 +969,9 @@ h3.hud-md-heading {
   background: oklch(0.72 0.14 192 / 0.08);
   border: 1px solid var(--hud-border-decorative);
   color: var(--hud-status-info);
-  transition: background var(--hud-duration-micro) ease, border-color var(--hud-duration-micro) ease;
+  transition:
+    background var(--hud-duration-micro) ease,
+    border-color var(--hud-duration-micro) ease;
 }
 
 .hud-btn--option:hover {
@@ -983,7 +1006,10 @@ h3.hud-md-heading {
   align-items: center;
   justify-content: center;
   border-radius: 5px;
-  transition: color var(--hud-duration-micro) ease, background var(--hud-duration-micro) ease, border-color var(--hud-duration-micro) ease;
+  transition:
+    color var(--hud-duration-micro) ease,
+    background var(--hud-duration-micro) ease,
+    border-color var(--hud-duration-micro) ease;
   line-height: 1;
   flex-shrink: 0;
 }
@@ -1012,7 +1038,11 @@ h3.hud-md-heading {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background var(--hud-duration-micro) ease, border-color var(--hud-duration-micro) ease, color var(--hud-duration-micro) ease, box-shadow var(--hud-duration-micro) ease;
+  transition:
+    background var(--hud-duration-micro) ease,
+    border-color var(--hud-duration-micro) ease,
+    color var(--hud-duration-micro) ease,
+    box-shadow var(--hud-duration-micro) ease;
   line-height: 1;
   flex-shrink: 0;
 }
@@ -1146,7 +1176,7 @@ h3.hud-md-heading {
 }
 
 .hud-view-slide:nth-child(2)::before {
-  content: '';
+  content: "";
   position: absolute;
   left: 0;
   top: 0;
@@ -1191,7 +1221,9 @@ h3.hud-md-heading {
   text-transform: uppercase;
   padding: var(--hud-space-sm) var(--hud-space-lg);
   cursor: pointer;
-  transition: color var(--hud-duration-micro) ease, border-color var(--hud-duration-micro) ease;
+  transition:
+    color var(--hud-duration-micro) ease,
+    border-color var(--hud-duration-micro) ease;
   font-family: inherit;
 }
 
@@ -1235,7 +1267,10 @@ h3.hud-md-heading {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: background var(--hud-duration-micro) ease, border-color var(--hud-duration-micro) ease, color var(--hud-duration-micro) ease;
+  transition:
+    background var(--hud-duration-micro) ease,
+    border-color var(--hud-duration-micro) ease,
+    color var(--hud-duration-micro) ease;
 }
 
 .hud-settings-save:hover {
@@ -1384,7 +1419,9 @@ h3.hud-md-heading {
   font-size: var(--hud-font-size-xs);
   font-family: inherit;
   cursor: pointer;
-  transition: background var(--hud-duration-micro) ease, border-color var(--hud-duration-micro) ease;
+  transition:
+    background var(--hud-duration-micro) ease,
+    border-color var(--hud-duration-micro) ease;
   white-space: nowrap;
 }
 
@@ -1451,7 +1488,9 @@ h3.hud-md-heading {
   border: 1px solid var(--hud-border-decorative);
   border-radius: 5px;
   cursor: pointer;
-  transition: border-color var(--hud-duration-micro) ease, box-shadow var(--hud-duration-micro) ease;
+  transition:
+    border-color var(--hud-duration-micro) ease,
+    box-shadow var(--hud-duration-micro) ease;
 }
 
 .agent-key-capture:focus {
@@ -1577,7 +1616,9 @@ h3.hud-md-heading {
   background: oklch(0.72 0.14 192 / 0.15);
   color: var(--hud-status-info);
   cursor: pointer;
-  transition: background var(--hud-duration-micro) ease, opacity var(--hud-duration-micro) ease;
+  transition:
+    background var(--hud-duration-micro) ease,
+    opacity var(--hud-duration-micro) ease;
 }
 
 .hud-text-input-send:hover:not(:disabled) {
