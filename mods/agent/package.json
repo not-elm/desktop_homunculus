@@ -6,8 +6,8 @@
   "author": "notelm",
   "type": "module",
   "scripts": {
-    "build": "pnpm exec vite build ui/settings && pnpm exec vite build ui/session",
-    "dev": "concurrently \"pnpm exec vite dev ui/settings\" \"pnpm exec vite dev ui/session\"",
+    "build": "pnpm exec vite build ui/session",
+    "dev": "pnpm exec vite dev ui/session",
     "test": "vitest run"
   },
   "homunculus": {
@@ -20,11 +20,6 @@
       }
     ],
     "assets": {
-      "agent:settings-ui": {
-        "path": "ui/settings/dist/index.html",
-        "type": "html",
-        "description": "Agent settings panel"
-      },
       "agent:session-ui": {
         "path": "ui/session/dist/index.html",
         "type": "html",
@@ -34,7 +29,6 @@
   },
   "bin": {
     "agent-open-agent": "commands/open-agent.ts",
-    "agent-open-settings": "commands/open-settings.ts",
     "agent-start-session": "commands/start-session.ts",
     "agent-stop-session": "commands/stop-session.ts"
   },
@@ -57,7 +51,6 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react-swc": "^4.2.3",
-    "concurrently": "^9",
     "tailwindcss": "^4.2.1",
     "typescript": "^5.9.3",
     "vite": "^6.4.1",
