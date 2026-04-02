@@ -673,6 +673,134 @@ body {
   color: oklch(0.85 0.08 250 / 0.9);
 }
 
+/* Workspace tree */
+.agent-workspace-node {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.agent-worktree-indent {
+  margin-left: 24px;
+}
+
+.agent-add-btn--small {
+  padding: 2px 8px;
+  font-size: 0.72rem;
+}
+
+/* Worktree add form */
+.agent-worktree-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  background: oklch(0.12 0.01 250 / 0.8);
+  border: 1px solid oklch(0.72 0.14 192 / 0.15);
+  border-radius: 6px;
+}
+
+.agent-worktree-form-input {
+  padding: 6px 10px;
+  font-size: 0.82rem;
+}
+
+.agent-worktree-form-select {
+  padding: 6px 10px;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.agent-worktree-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+/* Dialog overlay */
+.agent-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: oklch(0 0 0 / 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  backdrop-filter: blur(2px);
+}
+
+.agent-dialog {
+  background: oklch(0.15 0.01 250 / 0.95);
+  border: 1px solid oklch(0.72 0.14 192 / 0.2);
+  border-radius: 10px;
+  padding: 20px;
+  max-width: 400px;
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.agent-dialog-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: oklch(0.92 0.01 250);
+  letter-spacing: 0.04em;
+  margin: 0;
+}
+
+.agent-dialog-path {
+  font-family: monospace;
+  font-size: 0.78rem;
+  color: oklch(0.72 0.14 192 / 0.8);
+  word-break: break-all;
+  margin: 0;
+}
+
+.agent-dialog-detail {
+  font-size: 0.78rem;
+  color: oklch(0.75 0.04 250 / 0.8);
+  margin: 0;
+}
+
+.agent-dialog-insertions {
+  color: oklch(0.65 0.18 145 / 0.9);
+}
+
+.agent-dialog-deletions {
+  color: oklch(0.7 0.16 350 / 0.9);
+}
+
+.agent-dialog-warning {
+  font-size: 0.75rem;
+  color: oklch(0.75 0.14 60 / 0.85);
+  margin: 0;
+}
+
+.agent-dialog-error {
+  font-size: 0.75rem;
+  color: oklch(0.7 0.16 350 / 0.9);
+  margin: 0;
+}
+
+.agent-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.agent-dialog-danger {
+  background: oklch(0.7 0.16 350 / 0.15);
+  border-color: oklch(0.7 0.16 350 / 0.3);
+  color: oklch(0.7 0.16 350);
+}
+
+.agent-dialog-danger:hover {
+  background: oklch(0.7 0.16 350 / 0.25);
+  border-color: oklch(0.7 0.16 350 / 0.5);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .settings-panel {
     animation: none;

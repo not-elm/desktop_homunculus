@@ -1,6 +1,6 @@
 import type { AgentSettings } from "../hooks/useAgentSettings";
 import { PhraseListField } from "./PhraseListField";
-import { DirectoryListField } from "./DirectoryListField";
+import { WorkspaceTree } from "./WorkspaceTree.tsx";
 import { KeyCaptureField } from "./KeyCaptureField";
 
 interface GeneralTabProps {
@@ -30,25 +30,23 @@ export function GeneralTab({ settings, onSettingsChange }: GeneralTabProps) {
     onSettingsChange({ ...settings, [key]: settings[key].filter((_: string, i: number) => i !== index) });
   }
 
-  function addDirectory(path: string) {
-    const { paths, selection } = settings.workspaces;
-    update("workspaces", { paths: [...paths, path], selection });
-  }
-
-  function removeDirectory(index: number) {
-    const { paths, selection } = settings.workspaces;
-    const newPaths = paths.filter((_, i) => i !== index);
-    const newIndex = selection.workspaceIndex >= newPaths.length
-      ? Math.max(0, newPaths.length - 1)
-      : selection.workspaceIndex;
-    update("workspaces", { paths: newPaths, selection: { ...selection, workspaceIndex: newIndex } });
-  }
-
-  function setDefaultDirectory(index: number) {
+  function addWorkspace(path: string) {
     update("workspaces", {
       ...settings.workspaces,
-      selection: { ...settings.workspaces.selection, workspaceIndex: index },
+      paths: [...settings.workspaces.paths, path],
     });
+  }
+
+  function removeWorkspace(index: number) {
+    const newPaths = settings.workspaces.paths.filter((_, i) => i !== index);
+    const sel = settings.workspaces.selection;
+    const newSelection =
+      sel.workspaceIndex >= newPaths.length
+        ? { workspaceIndex: Math.max(0, newPaths.length - 1), worktreeName: null }
+        : sel.workspaceIndex > index
+          ? { ...sel, workspaceIndex: sel.workspaceIndex - 1 }
+          : sel;
+    update("workspaces", { paths: newPaths, selection: newSelection });
   }
 
   return (
@@ -62,14 +60,14 @@ export function GeneralTab({ settings, onSettingsChange }: GeneralTabProps) {
 
       <div className="agent-divider" />
 
-      <DirectoryListField
-        label="Working Directories"
-        description="Directories available to the agent. Select default with radio button."
+      <WorkspaceTree
         paths={settings.workspaces.paths}
-        defaultIndex={settings.workspaces.selection.workspaceIndex}
-        onAdd={addDirectory}
-        onRemove={removeDirectory}
-        onSetDefault={setDefaultDirectory}
+        selection={settings.workspaces.selection}
+        onSelectionChange={(selection) =>
+          update("workspaces", { ...settings.workspaces, selection })
+        }
+        onAddWorkspace={addWorkspace}
+        onRemoveWorkspace={removeWorkspace}
       />
 
       <div className="agent-divider" />
