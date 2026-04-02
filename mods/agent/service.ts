@@ -15,6 +15,8 @@ import {
   type Persona,
   DEFAULT_SETTINGS,
 } from "./lib/types.ts";
+import { WorktreeManager } from "./lib/worktree-manager.ts";
+import { isGitRepo, currentBranch, listBranches } from "./lib/git.ts";
 import { sanitizeForTts } from "./lib/tts.ts";
 import { mkdirSync } from "node:fs";
 import { homedir } from "node:os";
@@ -85,6 +87,16 @@ async function startSession(characterId: string): Promise<void> {
   const persona = await loadPersona(characterId);
   const workDir = resolveWorkingDirectory(characterId, settings);
   mkdirSync(workDir, { recursive: true });
+
+  const selection = settings.workspaces.selection;
+  if (selection.worktreeName) {
+    await signals.send("agent:worktree", {
+      characterId,
+      state: "created",
+      worktreeName: selection.worktreeName,
+      workspacePath: settings.workspaces.paths[selection.workspaceIndex],
+    });
+  }
 
   const executer = createExecuter(settings, persona, currentApiKey, workDir);
 
@@ -867,6 +879,71 @@ function buildRpcMethods() {
       handler: async ({ characterId }) => {
         await interruptSession(characterId);
         return { success: true as const };
+      },
+    }),
+    "list-worktrees": rpc.method({
+      description: "List worktrees for a workspace",
+      input: z.object({ workspacePath: z.string() }),
+      handler: async ({ workspacePath }) => {
+        const manager = new WorktreeManager(workspacePath);
+        const worktrees = await manager.list();
+        const results = await Promise.all(
+          worktrees.map(async (wt) => {
+            const status = await manager.status(wt.name);
+            return { ...wt, ...status };
+          }),
+        );
+        return { worktrees: results };
+      },
+    }),
+    "add-worktree": rpc.method({
+      description: "Create a new worktree in a workspace",
+      input: z.object({
+        workspacePath: z.string(),
+        name: z.string().min(1),
+        branch: z.string().min(1),
+      }),
+      handler: async ({ workspacePath, name, branch }) => {
+        const manager = new WorktreeManager(workspacePath);
+        const info = await manager.create(name, branch);
+        return { worktree: info };
+      },
+    }),
+    "remove-worktree": rpc.method({
+      description: "Remove a worktree (optionally merge first)",
+      input: z.object({
+        workspacePath: z.string(),
+        name: z.string(),
+        action: z.enum(["remove", "merge"]),
+      }),
+      handler: async ({ workspacePath, name, action }) => {
+        const manager = new WorktreeManager(workspacePath);
+        if (action === "merge") {
+          const result = await manager.merge(name);
+          if (!result.success) {
+            return { success: false, error: result.error };
+          }
+          return { success: true };
+        }
+        await manager.remove(name);
+        return { success: true };
+      },
+    }),
+    "list-branches": rpc.method({
+      description: "List git branches for a workspace",
+      input: z.object({ workspacePath: z.string() }),
+      handler: async ({ workspacePath }) => {
+        const branches = await listBranches(workspacePath);
+        const current = await currentBranch(workspacePath);
+        return { branches, current };
+      },
+    }),
+    "worktree-status": rpc.method({
+      description: "Get status of a specific worktree",
+      input: z.object({ workspacePath: z.string(), name: z.string() }),
+      handler: async ({ workspacePath, name }) => {
+        const manager = new WorktreeManager(workspacePath);
+        return await manager.status(name);
       },
     }),
   };
