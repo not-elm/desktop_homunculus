@@ -93,6 +93,35 @@ async function startKeyboardHook(): Promise<void> {
   }
 }
 
+async function scanOrphanedWorktrees(): Promise<void> {
+  const snapshots = await Vrm.findAllDetailed();
+  for (const snapshot of snapshots) {
+    const characterId = snapshot.name;
+    const settings = await loadCharacterSettings(characterId);
+    for (const wsPath of settings.workspaces.paths) {
+      try {
+        if (!(await isGitRepo(wsPath))) continue;
+        const manager = new WorktreeManager(wsPath);
+        const worktrees = await manager.list();
+        for (const wt of worktrees) {
+          const hasChanges = await manager.hasUncommittedChanges(wt.name);
+          if (hasChanges) {
+            await signals.send("agent:worktree", {
+              characterId,
+              state: "orphaned",
+              worktreeName: wt.name,
+              workspacePath: wsPath,
+            });
+            emitLog(characterId, "warning", `Orphaned worktree detected: ${wt.name} in ${wsPath} (has uncommitted changes)`);
+          }
+        }
+      } catch {
+        // Skip workspaces that can't be scanned
+      }
+    }
+  }
+}
+
 async function startSession(characterId: string): Promise<void> {
   const settings = await loadCharacterSettings(characterId);
   assertCanStartSession(characterId, settings);
@@ -1002,6 +1031,7 @@ async function main(): Promise<void> {
   }
 
   await startKeyboardHook();
+  await scanOrphanedWorktrees();
   await rpc.serve({ methods: buildRpcMethods() });
 }
 
