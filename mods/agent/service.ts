@@ -15,6 +15,7 @@ import {
   type Persona,
   DEFAULT_SETTINGS,
 } from "./lib/types.ts";
+import type { WorktreeContext } from "./lib/prompt.ts";
 import { WorktreeManager } from "./lib/worktree-manager.ts";
 import { isGitRepo, currentBranch, listBranches } from "./lib/git.ts";
 import { sanitizeForTts } from "./lib/tts.ts";
@@ -98,7 +99,8 @@ async function startSession(characterId: string): Promise<void> {
     });
   }
 
-  const executer = createExecuter(settings, persona, currentApiKey, workDir);
+  const worktreeCtx = buildWorktreeContext(settings, workDir);
+  const executer = createExecuter(settings, persona, currentApiKey, workDir, worktreeCtx);
 
   const sessionAbort = new AbortController();
   activeSessions.set(characterId, sessionAbort);
@@ -182,17 +184,31 @@ function resolveWorkingDirectory(
   return basePath;
 }
 
+function buildWorktreeContext(
+  settings: AgentSettings,
+  workDir: string,
+): WorktreeContext | undefined {
+  const { selection } = settings.workspaces;
+  if (!selection.worktreeName) return undefined;
+  return {
+    worktreeName: selection.worktreeName,
+    baseBranch: "main",
+    worktreePath: workDir,
+  };
+}
+
 function createExecuter(
   settings: AgentSettings,
   persona: Persona,
   apiKey: string | null,
   workDir: string,
+  worktree?: WorktreeContext,
 ): AIAgentExecuter {
   switch (settings.executor) {
     case "codex":
-      return new CodexAppServerExecuter(persona, settings, workDir, getAppServerProcess());
+      return new CodexAppServerExecuter(persona, settings, workDir, getAppServerProcess(), worktree);
     case "sdk":
-      return new ClaudeAgentExecuter(persona, settings, apiKey!, workDir);
+      return new ClaudeAgentExecuter(persona, settings, apiKey!, workDir, worktree);
     default:
       throw new Error(`Executor "${settings.executor}" is not yet implemented.`);
   }

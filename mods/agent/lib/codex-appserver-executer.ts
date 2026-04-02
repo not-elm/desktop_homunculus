@@ -37,7 +37,7 @@ import type {
   ToolRequestUserInputParams,
   ErrorNotification,
 } from "./codex-appserver-types.ts";
-import { buildCharacterPrompt } from "./prompt.ts";
+import { buildCharacterPrompt, type WorktreeContext } from "./prompt.ts";
 import type { AgentSettings, Persona } from "./types.ts";
 
 /** Internal message pushed into the event queue by the ThreadHandler. */
@@ -59,17 +59,20 @@ export class CodexAppServerExecuter implements AIAgentExecuter {
   private readonly settings: AgentSettings;
   private readonly workDir: string;
   private readonly process: CodexAppServerProcess;
+  private readonly worktree?: WorktreeContext;
 
   constructor(
     persona: Persona,
     settings: AgentSettings,
     workDir: string,
     process: CodexAppServerProcess,
+    worktree?: WorktreeContext,
   ) {
     this.persona = persona;
     this.settings = settings;
     this.workDir = workDir;
     this.process = process;
+    this.worktree = worktree;
   }
 
   /**
@@ -127,7 +130,7 @@ export class CodexAppServerExecuter implements AIAgentExecuter {
   private async startThread(): Promise<string> {
     const params: ThreadStartParams = {
       cwd: this.workDir,
-      baseInstructions: buildCharacterPrompt(this.persona),
+      baseInstructions: buildCharacterPrompt(this.persona, this.worktree),
       personality: "none",
       sandbox: "workspace-write",
       experimentalRawEvents: false,
@@ -156,7 +159,7 @@ export class CodexAppServerExecuter implements AIAgentExecuter {
     const params: ThreadResumeParams = {
       threadId: sessionId,
       cwd: this.workDir,
-      baseInstructions: buildCharacterPrompt(this.persona),
+      baseInstructions: buildCharacterPrompt(this.persona, this.worktree),
       personality: "none",
       sandbox: "workspace-write",
       persistExtendedHistory: false,
