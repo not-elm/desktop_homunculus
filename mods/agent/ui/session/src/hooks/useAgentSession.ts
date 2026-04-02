@@ -50,6 +50,7 @@ export function useAgentSession() {
   const [question, setQuestion] = useState<PendingQuestion | null>(null);
   const [elapsedMs, setElapsedMs] = useState(0);
   const [isRecording, setIsRecording] = useState(false);
+  const [worktreeInfo, setWorktreeInfo] = useState<{ name: string; branch: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const startTimeRef = useRef<number | null>(null);
 
@@ -90,6 +91,7 @@ export function useAgentSession() {
         setState("waiting");
       }),
       subscribeToRecording(characterId, setIsRecording),
+      subscribeToWorktree(characterId, setWorktreeInfo),
     ];
     return () => sources.forEach((s) => s.close());
   }, [characterId]);
@@ -172,6 +174,7 @@ export function useAgentSession() {
     question,
     hasPending: permission !== null || question !== null,
     isRecording,
+    worktreeInfo,
     error,
     approvePermission,
     denyPermission,
@@ -243,5 +246,17 @@ function subscribeToRecording(id: string, onRecording: (recording: boolean) => v
   return signals.stream<{ characterId: string; recording: boolean }>(
     "agent:recording",
     (p) => { if (p.characterId === id) onRecording(p.recording); },
+  );
+}
+
+function subscribeToWorktree(id: string, onWorktree: (info: { name: string; branch: string } | null) => void) {
+  return signals.stream<{ characterId: string; state: string; worktreeName?: string }>(
+    "agent:worktree",
+    (p) => {
+      if (p.characterId !== id) return;
+      if (p.state === "created" && p.worktreeName) {
+        onWorktree({ name: p.worktreeName, branch: p.worktreeName });
+      }
+    },
   );
 }

@@ -35,6 +35,7 @@ export function App() {
         expanded={expanded}
         showBack={showBack}
         hasPending={session.hasPending}
+        worktreeInfo={session.worktreeInfo}
         onToggleSession={isActive ? session.stopSession : session.startSession}
         onInterrupt={session.interruptSession}
         onToggleView={() => setView(view === "session" ? "settings" : "session")}
@@ -50,6 +51,7 @@ export function App() {
                 settings={settingsHook.settings}
                 onSettingsChange={settingsHook.setAndSaveSettings}
                 apiKey={settingsHook.apiKey}
+                worktreeActive={session.worktreeInfo !== null}
               />
           }
           <div className="hud-view-slider" data-view={view}>
@@ -109,6 +111,7 @@ interface PanelHeaderProps {
   expanded: boolean;
   showBack: boolean;
   hasPending: boolean;
+  worktreeInfo: { name: string; branch: string } | null;
   onToggleSession: () => void;
   onInterrupt: () => void;
   onToggleView: () => void;
@@ -118,7 +121,7 @@ interface PanelHeaderProps {
 }
 
 function PanelHeader({
-  state, elapsedMs, isRecording, isActive, expanded, showBack, hasPending,
+  state, elapsedMs, isRecording, isActive, expanded, showBack, hasPending, worktreeInfo,
   onToggleSession, onInterrupt, onToggleView, onBack, onToggleExpand, onClose,
 }: PanelHeaderProps) {
   const interruptible = isActive && (state === "thinking" || state === "executing");
@@ -136,6 +139,11 @@ function PanelHeader({
         {isRecording ? "Listening..." : stateLabel(state)}
       </span>
       {isActive && <span className="hud-timer">{formatElapsed(elapsedMs)}</span>}
+      {worktreeInfo && (
+        <span className="agent-badge agent-badge--violet" style={{ fontSize: "0.68rem", fontFamily: "monospace" }}>
+          {worktreeInfo.branch}
+        </span>
+      )}
       {!expanded && hasPending && <span className="hud-notification-dot" />}
 
       <div className="hud-header-spacer" />

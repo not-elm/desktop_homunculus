@@ -14,9 +14,10 @@ interface InlineSettingsBarProps {
   settings: AgentSettings;
   onSettingsChange: (settings: AgentSettings) => void;
   apiKey: string;
+  worktreeActive: boolean;
 }
 
-export function InlineSettingsBar({ settings, onSettingsChange, apiKey }: InlineSettingsBarProps) {
+export function InlineSettingsBar({ settings, onSettingsChange, apiKey, worktreeActive }: InlineSettingsBarProps) {
   const { options: modelOptions, loading: modelsLoading } = useModelOptions(settings.executor, apiKey);
   const showModelSelector = settings.executor !== "codex";
 
@@ -48,6 +49,12 @@ export function InlineSettingsBar({ settings, onSettingsChange, apiKey }: Inline
             loading={modelsLoading}
           />
         </>
+      )}
+      {worktreeActive && (
+        <span className="agent-badge agent-badge--green" style={{ fontSize: "0.68rem" }}>
+          <span style={{ width: 5, height: 5, borderRadius: "50%", background: "rgba(100,180,100,0.6)", display: "inline-block" }} />
+          {" "}Worktree
+        </span>
       )}
     </div>
   );
