@@ -4,16 +4,11 @@
 use axum::Json;
 use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
 use axum::extract::{Path, State};
-use axum::response::Sse;
-use axum::response::sse::{Event, KeepAlive};
 use bevy::platform::collections::HashMap;
-use bevy::tasks::futures_lite::Stream;
 use futures::SinkExt as _;
 use homunculus_api::prelude::axum::{HttpResult, IntoHttpResult};
 use homunculus_api::prelude::{ApiError, SignalInfo, SignalsApi};
 use serde::{Deserialize, Serialize};
-use std::convert::Infallible;
-use std::time::Duration;
 use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
 
@@ -28,33 +23,6 @@ use tokio::task::JoinHandle;
 )]
 pub async fn list(State(api): State<SignalsApi>) -> HttpResult<Vec<SignalInfo>> {
     api.list().await.into_http_result()
-}
-
-/// Stream events for a specific signal via SSE.
-///
-/// The signals are sent via `POST /signals/{signal}` API.
-#[utoipa::path(
-    get,
-    path = "/{signal}",
-    tag = "signals",
-    params(
-        ("signal" = String, Path, description = "Signal channel name"),
-    ),
-    responses(
-        (status = 200, description = "SSE event stream", content_type = "text/event-stream"),
-    ),
-)]
-pub async fn stream(
-    State(api): State<SignalsApi>,
-    Path(signal): Path<String>,
-) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>> + Send + Sync>, ApiError> {
-    use bevy::tasks::futures_lite::StreamExt;
-    let stream = api.clone().stream(signal).await?;
-    let stream = stream.map(|value| {
-        let event = Event::default().data(serde_json::to_string(&value).unwrap());
-        Ok(event)
-    });
-    Ok(Sse::new(stream).keep_alive(KeepAlive::new().interval(Duration::from_secs(30))))
 }
 
 /// Send a signal to all subscribers.
