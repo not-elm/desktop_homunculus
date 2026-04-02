@@ -207,12 +207,10 @@ export class WorktreeManager {
 
   private async parseManagedWorktrees(porcelainOutput: string): Promise<WorktreeInfo[]> {
     const entries = porcelainOutput.trim().split("\n\n");
-    const managedPrefix = normalizePath(
-      join(this.repoDir, WORKTREE_DIR),
-    );
+    const mainPath = normalizePath(this.repoDir);
 
     const parsed = entries
-      .map((entry) => this.parseWorktreeEntry(entry, managedPrefix))
+      .map((entry) => this.parseWorktreeEntry(entry, mainPath))
       .filter((info): info is Omit<WorktreeInfo, "baseBranch"> & { path: string } => info !== null);
 
     return Promise.all(
@@ -225,15 +223,20 @@ export class WorktreeManager {
 
   private parseWorktreeEntry(
     entry: string,
-    managedPrefix: string,
+    mainPath: string,
   ): Omit<WorktreeInfo, "baseBranch"> | null {
     const lines = entry.split("\n");
     const pathLine = lines.find((l) => l.startsWith("worktree "));
     const branchLine = lines.find((l) => l.startsWith("branch "));
     if (!pathLine || !branchLine) return null;
 
+    // Skip bare worktrees and detached HEAD entries
+    if (lines.some((l) => l === "bare" || l === "detached")) return null;
+
     const wtPath = normalizePath(pathLine.replace("worktree ", ""));
-    if (!wtPath.startsWith(managedPrefix)) return null;
+
+    // Skip the main worktree (the repository root itself)
+    if (wtPath === mainPath) return null;
 
     const branch = branchLine.replace("branch refs/heads/", "");
     const name = wtPath.split("/").pop() ?? branch;
