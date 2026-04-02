@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { rpc } from "@hmcs/sdk/rpc";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@hmcs/ui";
 import type { BranchData } from "./WorkspaceTree.tsx";
 
 interface AddWorktreeFormProps {
@@ -14,6 +15,7 @@ export function AddWorktreeForm({
   onCancel,
 }: AddWorktreeFormProps) {
   const [branches, setBranches] = useState<string[]>([]);
+  const [currentBranch, setCurrentBranch] = useState<string | null>(null);
   const [selectedBranch, setSelectedBranch] = useState("");
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -27,6 +29,7 @@ export function AddWorktreeForm({
         body: { workspacePath },
       });
       setBranches(data.branches);
+      setCurrentBranch(data.current);
       setSelectedBranch(data.current ?? data.branches[0] ?? "");
     } catch {
       setBranches([]);
@@ -61,39 +64,46 @@ export function AddWorktreeForm({
   }
 
   return (
-    <div className="agent-worktree-form">
-      <input
-        className="settings-input agent-worktree-form-input"
-        type="text"
-        placeholder="Worktree name..."
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        onKeyDown={handleKeyDown}
-        autoFocus
-      />
-      <select
-        className="settings-input agent-worktree-form-select"
-        value={selectedBranch}
-        onChange={(e) => setSelectedBranch(e.target.value)}
-      >
-        {branches.map((b) => (
-          <option key={b} value={b}>
-            {b}
-          </option>
-        ))}
-      </select>
-      {error && <p className="agent-dialog-error">{error}</p>}
-      <div className="agent-worktree-form-actions">
-        <button className="settings-close" type="button" onClick={onCancel}>
+    <div className="awt-form">
+      <div className="awt-row">
+        <div className="awt-label">Name</div>
+        <input
+          className="awt-input"
+          type="text"
+          placeholder="feature-name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          onKeyDown={handleKeyDown}
+          autoFocus
+        />
+      </div>
+      <div className="awt-row">
+        <div className="awt-label">Branch</div>
+        <Select value={selectedBranch} onValueChange={setSelectedBranch}>
+          <SelectTrigger className="awt-select-trigger">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {branches.map((b) => (
+              <SelectItem key={b} value={b}>
+                {b}{b === currentBranch ? " (current)" : ""}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      {error && <p className="awt-error">{error}</p>}
+      <div className="awt-actions">
+        <button className="awt-btn awt-btn-cancel" type="button" onClick={onCancel}>
           Cancel
         </button>
         <button
-          className="settings-save"
+          className="awt-btn awt-btn-create"
           type="button"
           disabled={busy || !name.trim() || !selectedBranch}
           onClick={handleCreate}
         >
-          Create
+          Create Worktree
         </button>
       </div>
     </div>

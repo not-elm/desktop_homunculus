@@ -99,10 +99,14 @@ export function WorkspaceTree({
   }, [refreshAll]);
 
   async function handleAddWorkspace() {
-    const path = await dialog.pickFolder({
-      title: "Select workspace directory",
-    });
-    if (path) onAddWorkspace(path);
+    try {
+      const path = await dialog.pickFolder({
+        title: "Select workspace directory",
+      });
+      if (path) onAddWorkspace(path);
+    } catch (e) {
+      console.error("pickFolder failed:", e);
+    }
   }
 
   function handleSelectWorkspace(index: number) {
@@ -142,12 +146,20 @@ export function WorkspaceTree({
   }
 
   return (
-    <label className="settings-label">
-      Workspaces
-      <span className="settings-label-desc">
-        Select a workspace or worktree for the agent to work in.
-      </span>
-      <div className="agent-dir-list">
+    <div className="ws-section">
+      <div className="ws-header">
+        <div>
+          <div className="ws-label">Workspaces</div>
+          <div className="ws-desc">
+            Select a workspace or worktree for the agent to work in.
+          </div>
+        </div>
+        <button className="ws-add-btn" type="button" onClick={handleAddWorkspace}>
+          <span className="ws-add-icon">+</span> Add Workspace
+        </button>
+      </div>
+
+      <div className="ws-tree">
         {paths.map((path, index) => (
           <WorkspaceNode
             key={path}
@@ -158,9 +170,7 @@ export function WorkspaceTree({
               selection.worktreeName === null
             }
             selectedWorktree={
-              selection.workspaceIndex === index
-                ? selection.worktreeName
-                : null
+              selection.workspaceIndex === index ? selection.worktreeName : null
             }
             onSelectWorkspace={() => handleSelectWorkspace(index)}
             onSelectWorktree={(name) => handleSelectWorktree(index, name)}
@@ -186,15 +196,7 @@ export function WorkspaceTree({
           />
         ))}
       </div>
-      <div className="agent-add-row">
-        <button
-          className="agent-add-btn"
-          type="button"
-          onClick={handleAddWorkspace}
-        >
-          + Add Workspace
-        </button>
-      </div>
+
       {dialogState.type === "removeWorkspace" && (
         <RemoveWorkspaceDialog
           path={paths[dialogState.index]}
@@ -213,7 +215,7 @@ export function WorkspaceTree({
           onCancel={() => setDialogState({ type: "none" })}
         />
       )}
-    </label>
+    </div>
   );
 }
 
@@ -247,48 +249,62 @@ function WorkspaceNode({
   onFormCancelled,
 }: WorkspaceNodeProps) {
   return (
-    <div className="agent-workspace-node">
-      <div className="agent-dir-item">
+    <div className="ws-node">
+      <div className={`ws-dir-item${isSelected ? " ws-dir-item--selected" : ""}`}>
         <input
-          className="agent-dir-radio"
+          className="ws-radio"
           type="radio"
           checked={isSelected}
           onChange={onSelectWorkspace}
           aria-label={`Select workspace ${path}`}
         />
-        <span className="agent-dir-path" title={path}>
-          {path}
-        </span>
-        {data?.isGit && <span className="agent-badge agent-badge--green">git</span>}
+        <span className="ws-icon">📁</span>
+        <div className="ws-info">
+          <span className="ws-name" title={path}>{path}</span>
+          {data?.isGit && data.currentBranch && (
+            <span className="ws-meta">{data.currentBranch}</span>
+          )}
+        </div>
         {data?.isGit && (
-          <button
-            className="agent-add-btn agent-add-btn--small"
-            type="button"
-            onClick={onAddWorktree}
-          >
-            + Worktree
-          </button>
+          <span className="agent-badge agent-badge--green">git</span>
         )}
-        <button
-          className="agent-dir-remove"
-          type="button"
-          onClick={onRemoveWorkspace}
-          aria-label={`Remove ${path}`}
-        >
-          &times;
-        </button>
+        <div className="ws-actions">
+          {data?.isGit && (
+            <button
+              className="ws-action-btn ws-action-add"
+              type="button"
+              onClick={onAddWorktree}
+            >
+              + Worktree
+            </button>
+          )}
+          <button
+            className="ws-action-btn ws-action-remove"
+            type="button"
+            onClick={onRemoveWorkspace}
+            aria-label={`Remove ${path}`}
+          >
+            &times;
+          </button>
+        </div>
       </div>
-      {data?.worktrees.map((wt) => (
-        <WorktreeNode
-          key={wt.name}
-          worktree={wt}
-          isSelected={selectedWorktree === wt.name}
-          onSelect={() => onSelectWorktree(wt.name)}
-          onRemove={() => onRemoveWorktree(wt)}
-        />
-      ))}
+
+      {data && data.worktrees.length > 0 && (
+        <div className="ws-tree-connector">
+          {data.worktrees.map((wt) => (
+            <WorktreeNode
+              key={wt.name}
+              worktree={wt}
+              isSelected={selectedWorktree === wt.name}
+              onSelect={() => onSelectWorktree(wt.name)}
+              onRemove={() => onRemoveWorktree(wt)}
+            />
+          ))}
+        </div>
+      )}
+
       {showAddForm && (
-        <div className="agent-worktree-indent">
+        <div className="ws-tree-connector">
           <AddWorktreeForm
             workspacePath={path}
             onCreated={onFormCreated}
@@ -314,31 +330,42 @@ function WorktreeNode({
   onRemove,
 }: WorktreeNodeProps) {
   return (
-    <div className="agent-dir-item agent-worktree-indent">
+    <div className={`ws-dir-item ws-wt-item${isSelected ? " ws-dir-item--selected" : ""}`}>
       <input
-        className="agent-dir-radio"
+        className="ws-radio"
         type="radio"
         checked={isSelected}
         onChange={onSelect}
         aria-label={`Select worktree ${worktree.name}`}
       />
-      <span className="agent-dir-path" title={worktree.name}>
-        {worktree.name}
-      </span>
-      <span className="agent-badge agent-badge--violet">{worktree.branch}</span>
-      {worktree.canMerge && (
-        <span className="agent-badge agent-badge--cyan" title="Can fast-forward merge">
-          ff
+      <span className="ws-icon">🌿</span>
+      <div className="ws-info">
+        <span className="ws-name">{worktree.name}</span>
+        <span className="ws-meta">
+          from {worktree.baseBranch}
+          {worktree.commits > 0 && ` · ${worktree.commits} commit${worktree.commits !== 1 ? "s" : ""}`}
         </span>
-      )}
-      <button
-        className="agent-dir-remove"
-        type="button"
-        onClick={onRemove}
-        aria-label={`Remove worktree ${worktree.name}`}
-      >
-        &times;
-      </button>
+      </div>
+      <span className="agent-badge agent-badge--violet">{worktree.branch}</span>
+      <div className="ws-actions">
+        {worktree.canMerge && (
+          <button
+            className="ws-action-btn ws-action-merge"
+            type="button"
+            title="Fast-forward merge"
+          >
+            ↗ Merge
+          </button>
+        )}
+        <button
+          className="ws-action-btn ws-action-remove"
+          type="button"
+          onClick={onRemove}
+          aria-label={`Remove worktree ${worktree.name}`}
+        >
+          &times;
+        </button>
+      </div>
     </div>
   );
 }

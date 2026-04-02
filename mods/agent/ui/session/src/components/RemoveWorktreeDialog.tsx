@@ -51,38 +51,46 @@ export function RemoveWorktreeDialog({
   const actionsDisabled = busy || worktree.hasUncommittedChanges;
 
   return (
-    <div className="agent-dialog-overlay">
-      <div className="agent-dialog">
-        <p className="agent-dialog-title">Remove worktree "{worktree.name}"?</p>
+    <div className="wt-dialog-overlay">
+      <div className="wt-dialog">
+        <div className="wt-dialog-title">
+          Remove worktree &ldquo;{worktree.name}&rdquo;?
+        </div>
         <ChangeSummary worktree={worktree} />
         {worktree.hasUncommittedChanges && (
-          <p className="agent-dialog-warning">
+          <p className="wt-dialog-warning">
             Cannot remove: worktree has uncommitted changes. Commit or stash
             them first.
           </p>
         )}
-        {error && <p className="agent-dialog-error">{error}</p>}
-        <div className="agent-dialog-actions">
-          <button className="settings-close" type="button" onClick={onCancel}>
-            Cancel
-          </button>
+        {error && <p className="wt-dialog-error">{error}</p>}
+        <div className="wt-dialog-buttons">
           {worktree.canMerge && (
             <button
-              className="settings-save"
+              className="wt-btn wt-btn-merge"
               type="button"
               disabled={actionsDisabled}
               onClick={() => handleAction("merge")}
             >
-              Merge & Remove
+              Merge &amp; Remove
+              <span className="wt-btn-hint">Merge into base, then remove</span>
             </button>
           )}
           <button
-            className="settings-save agent-dialog-danger"
+            className="wt-btn wt-btn-remove"
             type="button"
             disabled={actionsDisabled}
             onClick={() => handleAction("remove")}
           >
             Remove
+            <span className="wt-btn-hint">Discard changes and remove</span>
+          </button>
+          <button
+            className="wt-btn wt-btn-cancel"
+            type="button"
+            onClick={onCancel}
+          >
+            Cancel
           </button>
         </div>
       </div>
@@ -92,18 +100,16 @@ export function RemoveWorktreeDialog({
 
 function ChangeSummary({ worktree }: { worktree: WorktreeDetails }) {
   if (worktree.commits === 0 && worktree.filesChanged === 0) {
-    return <p className="agent-dialog-detail">No changes from base branch.</p>;
+    return <div className="wt-dialog-info">No changes from base branch.</div>;
   }
 
   return (
-    <p className="agent-dialog-detail">
-      {worktree.commits} commit{worktree.commits !== 1 ? "s" : ""},{" "}
+    <div className="wt-dialog-info">
+      {worktree.commits} commit{worktree.commits !== 1 ? "s" : ""} &middot;{" "}
       {worktree.filesChanged} file{worktree.filesChanged !== 1 ? "s" : ""}{" "}
       changed{" "}
-      <span className="agent-dialog-insertions">
-        +{worktree.insertions}
-      </span>{" "}
-      <span className="agent-dialog-deletions">-{worktree.deletions}</span>
-    </p>
+      <span className="wt-stat-add">+{worktree.insertions}</span>{" / "}
+      <span className="wt-stat-del">-{worktree.deletions}</span>
+    </div>
   );
 }
