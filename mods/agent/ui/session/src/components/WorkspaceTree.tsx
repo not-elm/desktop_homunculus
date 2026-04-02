@@ -260,7 +260,8 @@ function WorkspaceNode({
         />
         <span className="ws-icon">📁</span>
         <div className="ws-info">
-          <span className="ws-name" title={path}>{path}</span>
+          <span className="ws-name" title={path}>{path.split(/[/\\]/).pop() || path}</span>
+          <span className="ws-meta ws-meta-path" title={path}>{path}</span>
           {data?.isGit && data.currentBranch && (
             <span className="ws-meta">{data.currentBranch}</span>
           )}

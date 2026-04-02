@@ -1,3 +1,14 @@
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@hmcs/ui";
+
 interface RemoveWorkspaceDialogProps {
   path: string;
   worktreeCount: number;
@@ -12,30 +23,32 @@ export function RemoveWorkspaceDialog({
   onCancel,
 }: RemoveWorkspaceDialogProps) {
   return (
-    <div className="agent-dialog-overlay">
-      <div className="agent-dialog">
-        <p className="agent-dialog-title">Remove workspace from list?</p>
-        <p className="agent-dialog-path">{path}</p>
-        {worktreeCount > 0 && (
-          <p className="agent-dialog-warning">
-            This will also remove {worktreeCount} associated worktree
-            {worktreeCount > 1 ? "s" : ""} from the list. Files on disk are not
-            deleted.
-          </p>
-        )}
-        <div className="agent-dialog-actions">
-          <button className="settings-close" type="button" onClick={onCancel}>
-            Cancel
-          </button>
-          <button
-            className="settings-save agent-dialog-danger"
-            type="button"
+    <AlertDialog open onOpenChange={(open) => { if (!open) onCancel(); }}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Remove workspace from list?</AlertDialogTitle>
+          <AlertDialogDescription>
+            <span className="font-mono text-xs">{path}</span>
+            {worktreeCount > 0 && (
+              <>
+                <br />
+                This will also remove {worktreeCount} associated worktree
+                {worktreeCount > 1 ? "s" : ""} from the list. Files on disk are
+                not deleted.
+              </>
+            )}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={onCancel}>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             onClick={onConfirm}
           >
             Remove from list
-          </button>
-        </div>
-      </div>
-    </div>
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

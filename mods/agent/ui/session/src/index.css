@@ -1553,6 +1553,7 @@ h3.hud-md-heading {
   background: var(--hud-surface-input);
   border: 1px solid var(--hud-border-decorative);
   border-radius: 6px;
+  position: relative;
   transition:
     background var(--hud-duration-micro) ease,
     border-color var(--hud-duration-micro) ease;
@@ -1597,11 +1598,37 @@ h3.hud-md-heading {
   color: var(--hud-text-placeholder);
 }
 
+.ws-meta-path {
+  font-family: monospace;
+  font-size: 0.62rem;
+  opacity: 0.5;
+}
+
 .ws-actions {
   display: flex;
   align-items: center;
   gap: 4px;
   flex-shrink: 0;
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  visibility: hidden;
+  opacity: 0;
+  transition:
+    visibility var(--hud-duration-micro) ease,
+    opacity var(--hud-duration-micro) ease;
+}
+
+.ws-dir-item:hover .ws-actions,
+.ws-dir-item:focus-within .ws-actions {
+  visibility: visible;
+  opacity: 1;
+}
+
+.ws-dir-item--selected .ws-actions {
+  visibility: visible;
+  opacity: 1;
 }
 
 .ws-action-btn {
@@ -1612,6 +1639,11 @@ h3.hud-md-heading {
   font-size: 0.7rem;
   font-family: inherit;
   cursor: pointer;
+  min-width: 24px;
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   transition:
     background var(--hud-duration-micro) ease,
     border-color var(--hud-duration-micro) ease,
@@ -1637,7 +1669,7 @@ h3.hud-md-heading {
 }
 
 .ws-action-remove {
-  color: oklch(0.7 0.16 350 / 0.4);
+  color: oklch(0.7 0.16 350 / 0.7);
   font-size: 0.85rem;
   padding: 0 4px;
   line-height: 1;
@@ -1659,137 +1691,6 @@ h3.hud-md-heading {
 
 .ws-wt-item {
   background: oklch(0.12 0.01 250 / 0.6);
-}
-
-/* Worktree remove dialog */
-.wt-dialog-overlay {
-  position: fixed;
-  inset: 0;
-  background: oklch(0 0 0 / 0.55);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-  backdrop-filter: blur(2px);
-}
-
-.wt-dialog {
-  background: oklch(0.14 0.015 250 / 0.95);
-  border: 1px solid var(--hud-border-decorative);
-  border-radius: 8px;
-  padding: 16px;
-  min-width: 280px;
-  max-width: 360px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  box-shadow: 0 8px 32px oklch(0 0 0 / 0.5);
-}
-
-.wt-dialog-title {
-  font-size: var(--hud-font-size-base);
-  font-weight: 500;
-  color: var(--hud-text-primary);
-}
-
-.wt-dialog-info {
-  font-size: var(--hud-font-size-xs);
-  color: var(--hud-text-secondary);
-  font-family: monospace;
-}
-
-.wt-stat-add {
-  color: oklch(0.65 0.18 145 / 0.9);
-}
-
-.wt-stat-del {
-  color: oklch(0.7 0.16 350 / 0.9);
-}
-
-.wt-dialog-warning {
-  font-size: var(--hud-font-size-xs);
-  color: oklch(0.8 0.16 65);
-  background: oklch(0.8 0.16 65 / 0.08);
-  border: 1px solid oklch(0.8 0.16 65 / 0.2);
-  border-radius: 5px;
-  padding: 6px 10px;
-  margin: 0;
-}
-
-.wt-dialog-error {
-  font-size: var(--hud-font-size-xs);
-  color: oklch(0.7 0.16 350 / 0.9);
-  background: oklch(0.7 0.16 350 / 0.08);
-  border: 1px solid oklch(0.7 0.16 350 / 0.2);
-  border-radius: 5px;
-  padding: 6px 10px;
-  margin: 0;
-}
-
-.wt-dialog-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-top: 4px;
-}
-
-.wt-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: var(--hud-font-size-xs);
-  font-family: inherit;
-  font-weight: 500;
-  cursor: pointer;
-  border: 1px solid transparent;
-  transition:
-    background var(--hud-duration-micro) ease,
-    border-color var(--hud-duration-micro) ease;
-}
-
-.wt-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.wt-btn-hint {
-  font-size: 0.68rem;
-  font-weight: 400;
-  opacity: 0.6;
-}
-
-.wt-btn-merge {
-  background: oklch(0.72 0.14 192 / 0.12);
-  color: oklch(0.72 0.14 192 / 0.9);
-  border-color: oklch(0.72 0.14 192 / 0.2);
-}
-
-.wt-btn-merge:hover:not(:disabled) {
-  background: oklch(0.72 0.14 192 / 0.2);
-  border-color: oklch(0.72 0.14 192 / 0.35);
-}
-
-.wt-btn-remove {
-  background: oklch(0.7 0.16 350 / 0.1);
-  color: oklch(0.7 0.16 350 / 0.9);
-  border-color: oklch(0.7 0.16 350 / 0.2);
-}
-
-.wt-btn-remove:hover:not(:disabled) {
-  background: oklch(0.7 0.16 350 / 0.18);
-  border-color: oklch(0.7 0.16 350 / 0.35);
-}
-
-.wt-btn-cancel {
-  background: oklch(0.5 0 0 / 0.08);
-  color: var(--hud-text-secondary);
-}
-
-.wt-btn-cancel:hover {
-  background: oklch(0.5 0 0 / 0.15);
 }
 
 /* Add worktree form */

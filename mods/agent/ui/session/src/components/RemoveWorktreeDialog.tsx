@@ -1,5 +1,14 @@
 import { useState } from "react";
 import { rpc } from "@hmcs/sdk/rpc";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogCancel,
+} from "@hmcs/ui";
 
 interface WorktreeDetails {
   name: string;
@@ -51,65 +60,65 @@ export function RemoveWorktreeDialog({
   const actionsDisabled = busy || worktree.hasUncommittedChanges;
 
   return (
-    <div className="wt-dialog-overlay">
-      <div className="wt-dialog">
-        <div className="wt-dialog-title">
-          Remove worktree &ldquo;{worktree.name}&rdquo;?
-        </div>
-        <ChangeSummary worktree={worktree} />
-        {worktree.hasUncommittedChanges && (
-          <p className="wt-dialog-warning">
-            Cannot remove: worktree has uncommitted changes. Commit or stash
-            them first.
-          </p>
-        )}
-        {error && <p className="wt-dialog-error">{error}</p>}
-        <div className="wt-dialog-buttons">
+    <AlertDialog open onOpenChange={(open) => { if (!open) onCancel(); }}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>
+            Remove worktree &ldquo;{worktree.name}&rdquo;?
+          </AlertDialogTitle>
+          <AlertDialogDescription asChild>
+            <div>
+              <ChangeSummary worktree={worktree} />
+              {worktree.hasUncommittedChanges && (
+                <p className="mt-2 text-amber-400 text-xs">
+                  Cannot remove: worktree has uncommitted changes. Commit or
+                  stash them first.
+                </p>
+              )}
+              {error && (
+                <p className="mt-2 text-destructive text-xs">{error}</p>
+              )}
+            </div>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={onCancel}>Cancel</AlertDialogCancel>
           {worktree.canMerge && (
             <button
-              className="wt-btn wt-btn-merge"
+              className="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-4 py-2 bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 disabled:opacity-40 disabled:cursor-not-allowed"
               type="button"
               disabled={actionsDisabled}
               onClick={() => handleAction("merge")}
             >
               Merge &amp; Remove
-              <span className="wt-btn-hint">Merge into base, then remove</span>
             </button>
           )}
           <button
-            className="wt-btn wt-btn-remove"
+            className="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-4 py-2 bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-40 disabled:cursor-not-allowed"
             type="button"
             disabled={actionsDisabled}
             onClick={() => handleAction("remove")}
           >
             Remove
-            <span className="wt-btn-hint">Discard changes and remove</span>
           </button>
-          <button
-            className="wt-btn wt-btn-cancel"
-            type="button"
-            onClick={onCancel}
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    </div>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
 
 function ChangeSummary({ worktree }: { worktree: WorktreeDetails }) {
   if (worktree.commits === 0 && worktree.filesChanged === 0) {
-    return <div className="wt-dialog-info">No changes from base branch.</div>;
+    return <span className="text-muted-foreground text-xs">No changes from base branch.</span>;
   }
 
   return (
-    <div className="wt-dialog-info">
+    <span className="font-mono text-xs">
       {worktree.commits} commit{worktree.commits !== 1 ? "s" : ""} &middot;{" "}
       {worktree.filesChanged} file{worktree.filesChanged !== 1 ? "s" : ""}{" "}
       changed{" "}
-      <span className="wt-stat-add">+{worktree.insertions}</span>{" / "}
-      <span className="wt-stat-del">-{worktree.deletions}</span>
-    </div>
+      <span className="text-green-400">+{worktree.insertions}</span>{" / "}
+      <span className="text-red-400">-{worktree.deletions}</span>
+    </span>
   );
 }
