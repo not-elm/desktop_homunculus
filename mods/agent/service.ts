@@ -16,8 +16,8 @@ import {
   DEFAULT_SETTINGS,
 } from "./lib/types.ts";
 import type { WorktreeContext } from "./lib/prompt.ts";
-import { WorktreeManager } from "./lib/worktree-manager.ts";
-import { isGitRepo, currentBranch, listBranches } from "./lib/git.ts";
+import { WorktreeManager, WORKTREE_NAME_PATTERN } from "./lib/worktree-manager.ts";
+import { gitExec, isGitRepo, currentBranch, listBranches } from "./lib/git.ts";
 import { sanitizeForTts } from "./lib/tts.ts";
 import { mkdirSync } from "node:fs";
 import { homedir } from "node:os";
@@ -97,6 +97,7 @@ async function scanOrphanedWorktrees(): Promise<void> {
   const snapshots = await Vrm.findAllDetailed();
   for (const snapshot of snapshots) {
     const characterId = snapshot.name;
+    if (activeSessions.has(characterId)) continue;
     const settings = await loadCharacterSettings(characterId);
     for (const wsPath of settings.workspaces.paths) {
       try {
@@ -141,7 +142,7 @@ async function startSession(characterId: string): Promise<void> {
     });
   }
 
-  const worktreeCtx = buildWorktreeContext(settings, workDir);
+  const worktreeCtx = await buildWorktreeContext(settings, workDir);
   const executer = createExecuter(settings, persona, currentApiKey, workDir, worktreeCtx);
 
   const sessionAbort = new AbortController();
@@ -226,17 +227,27 @@ function resolveWorkingDirectory(
   return basePath;
 }
 
-function buildWorktreeContext(
+async function buildWorktreeContext(
   settings: AgentSettings,
   workDir: string,
-): WorktreeContext | undefined {
+): Promise<WorktreeContext | undefined> {
   const { selection } = settings.workspaces;
   if (!selection.worktreeName) return undefined;
+  const baseBranch = await readWorktreeBaseBranch(workDir);
   return {
     worktreeName: selection.worktreeName,
-    baseBranch: "main",
+    baseBranch,
     worktreePath: workDir,
   };
+}
+
+async function readWorktreeBaseBranch(worktreePath: string): Promise<string> {
+  try {
+    const result = await gitExec(worktreePath, ["config", "hmcs.baseBranch"]);
+    return result.trim() || "main";
+  } catch {
+    return "main";
+  }
 }
 
 function createExecuter(
@@ -958,7 +969,7 @@ function buildRpcMethods() {
       description: "Create a new worktree in a workspace",
       input: z.object({
         workspacePath: z.string(),
-        name: z.string().min(1),
+        name: z.string().min(1).regex(WORKTREE_NAME_PATTERN, "Name must contain only alphanumeric characters, hyphens, underscores, and dots"),
         branch: z.string().min(1),
       }),
       handler: async ({ workspacePath, name, branch }) => {

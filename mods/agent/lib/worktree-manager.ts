@@ -28,12 +28,25 @@ export interface MergeResult {
 
 const WORKTREE_DIR = ".hmcs/worktrees";
 
+/** Pattern for valid worktree names: alphanumeric start, then alphanumeric, hyphens, underscores, dots. */
+export const WORKTREE_NAME_PATTERN = /^[a-zA-Z0-9][a-zA-Z0-9_\-.]*$/;
+
+/** Validate that a worktree name is safe for use as a directory name. */
+function validateWorktreeName(name: string): void {
+  if (!WORKTREE_NAME_PATTERN.test(name)) {
+    throw new Error(
+      `Invalid worktree name "${name}": must start with an alphanumeric character and contain only alphanumeric characters, hyphens, underscores, and dots.`,
+    );
+  }
+}
+
 /** Manages git worktrees within a repository. */
 export class WorktreeManager {
   constructor(private readonly repoDir: string) {}
 
   /** Create a new worktree branching from the given base branch. */
   async create(name: string, baseBranch: string): Promise<WorktreeInfo> {
+    validateWorktreeName(name);
     const worktreePath = this.worktreePath(name);
     await gitExec(this.repoDir, [
       "worktree",
@@ -43,6 +56,7 @@ export class WorktreeManager {
       worktreePath,
       baseBranch,
     ]);
+    await this.storeBaseBranch(worktreePath, baseBranch);
     return {
       name,
       path: worktreePath,
@@ -86,7 +100,7 @@ export class WorktreeManager {
       "list",
       "--porcelain",
     ]);
-    return this.parseManagedWorktrees(raw);
+    return await this.parseManagedWorktrees(raw);
   }
 
   /** Get diff statistics for a worktree relative to its base branch. */
@@ -113,6 +127,23 @@ export class WorktreeManager {
 
   private worktreePath(name: string): string {
     return join(this.repoDir, WORKTREE_DIR, name);
+  }
+
+  private async storeBaseBranch(worktreePath: string, baseBranch: string): Promise<void> {
+    try {
+      await gitExec(worktreePath, ["config", "hmcs.baseBranch", baseBranch]);
+    } catch {
+      // Non-critical: baseBranch metadata will fallback to "main"
+    }
+  }
+
+  private async readBaseBranch(worktreePath: string): Promise<string> {
+    try {
+      const result = await gitExec(worktreePath, ["config", "hmcs.baseBranch"]);
+      return result.trim() || "main";
+    } catch {
+      return "main";
+    }
   }
 
   private async findByName(name: string): Promise<WorktreeInfo | null> {
@@ -174,21 +205,28 @@ export class WorktreeManager {
     }
   }
 
-  private parseManagedWorktrees(porcelainOutput: string): WorktreeInfo[] {
+  private async parseManagedWorktrees(porcelainOutput: string): Promise<WorktreeInfo[]> {
     const entries = porcelainOutput.trim().split("\n\n");
     const managedPrefix = normalizePath(
       join(this.repoDir, WORKTREE_DIR),
     );
 
-    return entries
+    const parsed = entries
       .map((entry) => this.parseWorktreeEntry(entry, managedPrefix))
-      .filter((info): info is WorktreeInfo => info !== null);
+      .filter((info): info is Omit<WorktreeInfo, "baseBranch"> & { path: string } => info !== null);
+
+    return Promise.all(
+      parsed.map(async (entry) => {
+        const baseBranch = await this.readBaseBranch(entry.path);
+        return { ...entry, baseBranch };
+      }),
+    );
   }
 
   private parseWorktreeEntry(
     entry: string,
     managedPrefix: string,
-  ): WorktreeInfo | null {
+  ): Omit<WorktreeInfo, "baseBranch"> | null {
     const lines = entry.split("\n");
     const pathLine = lines.find((l) => l.startsWith("worktree "));
     const branchLine = lines.find((l) => l.startsWith("branch "));
@@ -204,7 +242,6 @@ export class WorktreeManager {
       name,
       path: wtPath,
       branch,
-      baseBranch: "main", // Stored separately in preferences; default fallback
       repoDir: this.repoDir,
     };
   }

@@ -76,6 +76,7 @@ export function useAgentSession() {
         } else {
           startTimeRef.current = null;
           setElapsedMs(0);
+          setWorktreeInfo(null);
         }
       }),
       subscribeToLog(characterId, (entry) => {

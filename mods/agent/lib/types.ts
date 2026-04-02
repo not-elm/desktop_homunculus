@@ -62,21 +62,6 @@ export interface Persona {
   ocean: Ocean;
 }
 
-/** A workspace entry — either a root directory or a worktree within it. */
-export interface WorkspaceEntry {
-  /** Absolute path to the root workspace directory. */
-  path: string;
-  /** Worktrees managed under this workspace (populated at runtime from git). */
-  worktrees: WorktreeEntry[];
-}
-
-/** A worktree entry under a workspace. */
-export interface WorktreeEntry {
-  name: string;
-  branch: string;
-  baseBranch: string;
-}
-
 /** Selection state: which workspace/worktree is active. */
 export interface WorkspaceSelection {
   /** Index into the workspaces array. */

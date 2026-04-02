@@ -44,9 +44,3 @@ export async function listBranches(cwd: string): Promise<string[]> {
   ]);
   return result.trim().split("\n").filter(Boolean);
 }
-
-/** Get the git toplevel directory for a path. */
-export async function gitToplevel(cwd: string): Promise<string> {
-  const result = await gitExec(cwd, ["rev-parse", "--show-toplevel"]);
-  return result.trim();
-}
