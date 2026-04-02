@@ -12,7 +12,8 @@ export interface AgentSettings {
   pttKey: PttKey | null;
   approvalPhrases: string[];
   denyPhrases: string[];
-  workingDirectories: { paths: string[]; default: number };
+  /** Workspace paths and the current selection. */
+  workspaces: { paths: string[]; selection: WorkspaceSelection };
   allowList: string[];
   disallowedTools: string[];
   /** Shell command patterns auto-approved by the Codex executor (regex strings). */
@@ -61,12 +62,47 @@ export interface Persona {
   ocean: Ocean;
 }
 
+/** A workspace entry — either a root directory or a worktree within it. */
+export interface WorkspaceEntry {
+  /** Absolute path to the root workspace directory. */
+  path: string;
+  /** Worktrees managed under this workspace (populated at runtime from git). */
+  worktrees: WorktreeEntry[];
+}
+
+/** A worktree entry under a workspace. */
+export interface WorktreeEntry {
+  name: string;
+  branch: string;
+  baseBranch: string;
+}
+
+/** Selection state: which workspace/worktree is active. */
+export interface WorkspaceSelection {
+  /** Index into the workspaces array. */
+  workspaceIndex: number;
+  /** If set, the selected worktree name within that workspace. Null = root workspace selected. */
+  worktreeName: string | null;
+}
+
+/** Worktree lifecycle state for the agent:worktree signal. */
+export type WorktreeState = "created" | "orphaned" | "error";
+
+/** Payload for the agent:worktree signal. */
+export interface WorktreeSignalPayload {
+  characterId: string;
+  state: WorktreeState;
+  worktreeName?: string;
+  workspacePath?: string;
+  error?: string;
+}
+
 export const DEFAULT_SETTINGS: AgentSettings = {
   executor: "codex",
   pttKey: null,
   approvalPhrases: ["はい", "yes", "ok", "allow"],
   denyPhrases: ["いいえ", "no", "deny", "cancel"],
-  workingDirectories: { paths: [], default: 0 },
+  workspaces: { paths: [], selection: { workspaceIndex: 0, worktreeName: null } },
   allowList: [],
   disallowedTools: [],
   commandAutoApprovePatterns: ["^(cat|head|tail|less|more)\\s", "^ls\\b", "^pwd$", "^echo\\s", "^wc\\s", "^find\\s", "^grep\\s", "^rg\\s"],

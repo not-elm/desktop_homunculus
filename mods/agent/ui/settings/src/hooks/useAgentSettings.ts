@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { preferences, audio, Webview } from "@hmcs/sdk";
 
-export interface WorkingDirectories {
-  paths: string[];
-  default: number;
+export interface WorkspaceSelection {
+  workspaceIndex: number;
+  worktreeName: string | null;
 }
 
 export interface PttKey {
@@ -13,7 +13,7 @@ export interface PttKey {
 
 export interface AgentSettings {
   executor: "sdk" | "cli" | "codex";
-  workingDirectories: WorkingDirectories;
+  workspaces: { paths: string[]; selection: WorkspaceSelection };
   pttKey: PttKey | null;
   approvalPhrases: string[];
   denyPhrases: string[];
@@ -24,7 +24,7 @@ export interface AgentSettings {
 
 const DEFAULT_SETTINGS: AgentSettings = {
   executor: "codex",
-  workingDirectories: { paths: [], default: 0 },
+  workspaces: { paths: [], selection: { workspaceIndex: 0, worktreeName: null } },
   pttKey: null,
   approvalPhrases: [],
   denyPhrases: [],

@@ -161,11 +161,13 @@ function resolveWorkingDirectory(
   characterId: string,
   settings: AgentSettings,
 ): string {
-  const dirs = settings.workingDirectories;
-  return (
-    dirs.paths[dirs.default] ??
-    path.join(homedir(), ".homunculus", "agents", characterId)
-  );
+  const { paths, selection } = settings.workspaces;
+  const basePath = paths[selection.workspaceIndex];
+  if (!basePath) return path.join(homedir(), ".homunculus", "agents", characterId);
+  if (selection.worktreeName) {
+    return path.join(basePath, ".hmcs/worktrees", selection.worktreeName);
+  }
+  return basePath;
 }
 
 function createExecuter(

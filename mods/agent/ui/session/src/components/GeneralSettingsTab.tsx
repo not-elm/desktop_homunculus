@@ -27,19 +27,21 @@ export function GeneralSettingsTab({ settings, onSettingsChange }: GeneralSettin
   }
 
   function addDirectory(path: string) {
-    const { paths, default: def } = settings.workingDirectories;
-    update("workingDirectories", { paths: [...paths, path], default: def });
+    const { paths, selection } = settings.workspaces;
+    update("workspaces", { paths: [...paths, path], selection });
   }
 
   function removeDirectory(index: number) {
-    const { paths, default: def } = settings.workingDirectories;
+    const { paths, selection } = settings.workspaces;
     const newPaths = paths.filter((_, i) => i !== index);
-    const newDefault = def >= newPaths.length ? Math.max(0, newPaths.length - 1) : def;
-    update("workingDirectories", { paths: newPaths, default: newDefault });
+    const newIndex = selection.workspaceIndex >= newPaths.length
+      ? Math.max(0, newPaths.length - 1)
+      : selection.workspaceIndex;
+    update("workspaces", { paths: newPaths, selection: { ...selection, workspaceIndex: newIndex } });
   }
 
   function setDefaultDirectory(index: number) {
-    update("workingDirectories", { ...settings.workingDirectories, default: index });
+    update("workspaces", { ...settings.workspaces, selection: { ...settings.workspaces.selection, workspaceIndex: index } });
   }
 
   return (
@@ -47,8 +49,8 @@ export function GeneralSettingsTab({ settings, onSettingsChange }: GeneralSettin
       <DirectoryListField
         label="Working Directories"
         description="Directories available to the agent"
-        paths={settings.workingDirectories.paths}
-        defaultIndex={settings.workingDirectories.default}
+        paths={settings.workspaces.paths}
+        defaultIndex={settings.workspaces.selection.workspaceIndex}
         onAdd={addDirectory}
         onRemove={removeDirectory}
         onSetDefault={setDefaultDirectory}
