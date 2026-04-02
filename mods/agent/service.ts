@@ -54,8 +54,21 @@ async function loadApiKey(): Promise<string> {
 async function loadCharacterSettings(
   characterId: string,
 ): Promise<AgentSettings> {
-  const saved = await preferences.load<AgentSettings>("agent::" + characterId);
-  return saved ? { ...DEFAULT_SETTINGS, ...saved } : { ...DEFAULT_SETTINGS };
+  const saved = await preferences.load<Record<string, unknown>>("agent::" + characterId);
+  if (!saved) return { ...DEFAULT_SETTINGS };
+
+  // Migrate workingDirectories → workspaces
+  if ("workingDirectories" in saved && !("workspaces" in saved)) {
+    const wd = saved.workingDirectories as { paths: string[]; default: number };
+    saved.workspaces = {
+      paths: wd.paths,
+      selection: { workspaceIndex: wd.default, worktreeName: null },
+    };
+    delete saved.workingDirectories;
+    await preferences.save("agent::" + characterId, { ...DEFAULT_SETTINGS, ...saved });
+  }
+
+  return { ...DEFAULT_SETTINGS, ...(saved as Partial<AgentSettings>) };
 }
 
 function speakText(characterId: string, text: string): void {
