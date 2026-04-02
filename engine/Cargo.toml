@@ -77,7 +77,7 @@ async-channel = "2.5"
 async-broadcast = "0.7"
 dirs = "6"
 tokio = { version = "1", features = ["rt-multi-thread", "rt", "macros"] }
-axum = { version = "0.8" }
+axum = { version = "0.8", features = ["ws"] }
 homunculus_core = { path = "crates/homunculus_core" }
 homunculus_drag = { path = "crates/homunculus_drag" }
 homunculus_effects = { path = "crates/homunculus_effects" }
