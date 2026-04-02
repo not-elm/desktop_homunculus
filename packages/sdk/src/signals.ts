@@ -1,166 +1,258 @@
-import {host} from "./host";
-import {EventSource} from 'eventsource'
-
 /**
- * Signals API namespace for cross-process communication.
+ * Signal pub/sub namespace for real-time event streaming.
  *
- * Provides a pub/sub mechanism that allows external processes to communicate
- * with the Desktop Homunculus application and its mods through event streaming.
- *
- * Key features:
- * - Real-time event streaming via Server-Sent Events (SSE)
- * - Signal broadcasting to multiple subscribers
- * - Type-safe payload handling
+ * Provides multiplexed WebSocket-based signal streaming. Each JS runtime
+ * (WebView or Node.js process) maintains a single WebSocket connection
+ * to the server, with all channel subscriptions multiplexed over it.
  *
  * @example
  * ```typescript
- * // Listen for custom events from external processes
- * const eventSource = signals.stream<{action: string, data: any}>(
- *   "my-custom-signal",
- *   (payload) => {
- *     console.log("Received signal:", payload.action, payload.data);
- *   }
- * );
+ * import { signals } from "@hmcs/sdk";
  *
- * // Send signals to all listeners
- * await signals.send("my-custom-signal", {
- *   action: "update",
- *   data: { message: "Hello from external app!" }
+ * // Subscribe to a channel
+ * const sub = signals.stream<{ state: string }>("agent:status", (data) => {
+ *   console.log("State:", data.state);
  * });
  *
- * // Clean up when done
- * eventSource.close();
+ * // Later, unsubscribe
+ * sub.close();
+ *
+ * // Send a signal (uses HTTP POST, not WebSocket)
+ * await signals.send("agent:status", { state: "idle" });
  * ```
+ *
+ * @packageDocumentation
  */
+
+import { host } from "./host";
+
+/** Information about an active signal channel. */
+export interface SignalChannelInfo {
+  /** The signal channel name. */
+  signal: string;
+  /** The number of active subscribers. */
+  subscribers: number;
+}
+
+/** A handle to an active signal subscription. Call `.close()` to unsubscribe. */
+export interface Subscription {
+  /** Unsubscribe from the channel and stop receiving events. */
+  close(): void;
+}
+
 export namespace signals {
-    /**
-     * Information about an active signal channel.
-     */
-    export interface SignalChannelInfo {
-        /** The signal channel name. */
-        signal: string;
-        /** The number of active subscribers. */
-        subscribers: number;
+  // --- Connection state ---
+
+  type Callback = (payload: unknown) => void | Promise<void>;
+
+  let ws: WebSocket | null = null;
+  let connectPromise: Promise<void> | null = null;
+  const listeners = new Map<string, Set<Callback>>();
+  const pendingSubscribes: string[] = [];
+  let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  let reconnectDelay = 1000;
+  const MAX_RECONNECT_DELAY = 5000;
+
+  function wsUrl(): string {
+    const base = host.base().replace(/^http/, "ws");
+    return `${base}/signals/ws`;
+  }
+
+  function ensureConnection(): void {
+    if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
+      return;
+    }
+    connect();
+  }
+
+  function connect(): void {
+    if (connectPromise) return;
+
+    const url = wsUrl();
+
+    // Node.js: use `ws` package; Browser: use native WebSocket
+    const WS = typeof globalThis.WebSocket !== "undefined"
+      ? globalThis.WebSocket
+      : (require("ws") as typeof WebSocket);
+
+    ws = new WS(url);
+
+    connectPromise = new Promise<void>((resolve) => {
+      ws!.addEventListener("open", () => {
+        reconnectDelay = 1000;
+        connectPromise = null;
+
+        // Flush pending subscribes
+        for (const ch of pendingSubscribes) {
+          sendFrame({ type: "subscribe", channel: ch });
+        }
+        pendingSubscribes.length = 0;
+
+        // Re-subscribe all active channels
+        for (const channel of listeners.keys()) {
+          sendFrame({ type: "subscribe", channel });
+        }
+
+        resolve();
+      });
+    });
+
+    ws.addEventListener("message", (event: MessageEvent) => {
+      try {
+        const msg = JSON.parse(typeof event.data === "string" ? event.data : event.data.toString());
+        if (msg.channel && "data" in msg) {
+          dispatch(msg.channel, msg.data);
+        }
+      } catch (e) {
+        console.error("signals: failed to parse WS message", e);
+      }
+    });
+
+    ws.addEventListener("close", () => {
+      ws = null;
+      connectPromise = null;
+      scheduleReconnect();
+    });
+
+    ws.addEventListener("error", () => {
+      // Error is followed by close event, which handles reconnection
+    });
+  }
+
+  function scheduleReconnect(): void {
+    if (listeners.size === 0) return;
+    if (reconnectTimer) return;
+
+    const jitter = Math.random() * 500;
+    reconnectTimer = setTimeout(() => {
+      reconnectTimer = null;
+      reconnectDelay = Math.min(reconnectDelay * 2, MAX_RECONNECT_DELAY);
+      connect();
+    }, reconnectDelay + jitter);
+  }
+
+  function sendFrame(msg: object): void {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify(msg));
+    }
+  }
+
+  function dispatch(channel: string, data: unknown): void {
+    const cbs = listeners.get(channel);
+    if (!cbs) return;
+    for (const cb of cbs) {
+      try {
+        const result = cb(data);
+        if (result instanceof Promise) {
+          result.catch((e) =>
+            console.error(`Error processing signal ${channel}:`, e),
+          );
+        }
+      } catch (e) {
+        console.error(`Error processing signal ${channel}:`, e);
+      }
+    }
+  }
+
+  // --- Public API ---
+
+  /**
+   * List all active signal channels.
+   *
+   * @returns Array of active signal channels with subscriber counts
+   *
+   * @example
+   * ```typescript
+   * const channels = await signals.list();
+   * for (const ch of channels) {
+   *   console.log(`${ch.signal}: ${ch.subscribers} subscribers`);
+   * }
+   * ```
+   */
+  export async function list(): Promise<SignalChannelInfo[]> {
+    const response = await host.get(host.createUrl("signals"));
+    return (await response.json()) as SignalChannelInfo[];
+  }
+
+  /**
+   * Subscribe to a signal channel.
+   *
+   * Returns a {@link Subscription} handle. Call `.close()` to unsubscribe.
+   * Internally multiplexed over a single WebSocket connection per JS runtime.
+   *
+   * @typeParam V - Expected payload type (documentation-level safety)
+   * @param signal - Signal channel name to subscribe to
+   * @param f - Callback invoked for each received event
+   * @returns A subscription handle with `.close()` method
+   *
+   * @example
+   * ```typescript
+   * const sub = signals.stream<{ state: string }>("agent:status", (data) => {
+   *   console.log("State:", data.state);
+   * });
+   *
+   * // Later, unsubscribe
+   * sub.close();
+   * ```
+   */
+  export function stream<V>(
+    signal: string,
+    f: (payload: V) => void | Promise<void>,
+  ): Subscription {
+    const callback = f as Callback;
+    let closed = false;
+
+    // Add callback to listeners
+    let cbs = listeners.get(signal);
+    const isNewChannel = !cbs || cbs.size === 0;
+    if (!cbs) {
+      cbs = new Set();
+      listeners.set(signal, cbs);
+    }
+    cbs.add(callback);
+
+    // Subscribe on server if this is a new channel
+    if (isNewChannel) {
+      ensureConnection();
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        sendFrame({ type: "subscribe", channel: signal });
+      } else {
+        pendingSubscribes.push(signal);
+      }
     }
 
-    /**
-     * Lists all active signal channels and their subscriber counts.
-     *
-     * Returns information about every signal channel that has been created.
-     * Useful for debugging, monitoring, and discovering available channels.
-     *
-     * @returns Array of active signal channel information
-     *
-     * @example
-     * ```typescript
-     * // List all active signal channels
-     * const channels = await signals.list();
-     * for (const ch of channels) {
-     *   console.log(`${ch.signal}: ${ch.subscribers} subscribers`);
-     * }
-     *
-     * // Check if a specific signal has listeners before sending
-     * const channels = await signals.list();
-     * const target = channels.find(ch => ch.signal === "my-signal");
-     * if (target && target.subscribers > 0) {
-     *   await signals.send("my-signal", { data: "hello" });
-     * }
-     * ```
-     */
-    export async function list(): Promise<SignalChannelInfo[]> {
-        const response = await host.get(host.createUrl("signals"));
-        return await response.json() as SignalChannelInfo[];
-    }
+    return {
+      close() {
+        if (closed) return;
+        closed = true;
 
-    /**
-     * Creates a persistent connection to stream signal events of a specific type.
-     *
-     * This establishes a Server-Sent Events (SSE) connection that will receive
-     * all signals sent to the specified signal channel. The connection remains
-     * open until explicitly closed.
-     *
-     * @template V - The type of the payload that will be received
-     * @param signal - The signal channel name to subscribe to
-     * @param f - Callback function to handle received payloads
-     * @returns EventSource instance for managing the connection
-     *
-     * @example
-     * ```typescript
-     * // Listen for user interaction events
-     * interface UserAction {
-     *   type: 'click' | 'hover' | 'scroll';
-     *   position: [number, number];
-     *   timestamp: number;
-     * }
-     *
-     * const userEventStream = signals.stream<UserAction>(
-     *   "user-interactions",
-     *   async (action) => {
-     *     console.log(`User ${action.type} at`, action.position);
-     *     // Process the user action...
-     *   }
-     * );
-     *
-     * // Later, close the stream
-     * userEventStream.close();
-     * ```
-     */
-    export function stream<V>(
-        signal: string,
-        f: (payload: V) => (void | Promise<void>),
-    ): EventSource {
-        const url = host.createUrl(`signals/${signal}`);
-        const es = new EventSource(url);
-        es.addEventListener("message", async (event: MessageEvent) => {
-            try {
-                const payload: V = JSON.parse(event.data);
-                await f(payload);
-            } catch (error) {
-                console.error(`Error processing signal ${signal}:`, error);
-            }
-        });
-        return es;
-    }
+        const channelCbs = listeners.get(signal);
+        if (channelCbs) {
+          channelCbs.delete(callback);
+          if (channelCbs.size === 0) {
+            listeners.delete(signal);
+            sendFrame({ type: "unsubscribe", channel: signal });
+          }
+        }
+      },
+    };
+  }
 
-    /**
-     * Sends a signal payload to all subscribers listening to the specified signal channel.
-     *
-     * This broadcasts the payload to all active EventSource connections that are
-     * streaming the same signal type. The operation is asynchronous and will
-     * complete once the signal has been distributed to all subscribers.
-     *
-     * @template V - The type of the payload being sent
-     * @param signal - The signal channel name to broadcast to
-     * @param payload - The data to send to all subscribers
-     *
-     * @throws Will throw an error if the signal broadcast fails
-     *
-     * @example
-     * ```typescript
-     * // Send a notification to all mod windows
-     * await signals.send("notifications", {
-     *   type: "info",
-     *   title: "Update Available",
-     *   message: "A new version of the character is available",
-     *   timestamp: Date.now()
-     * });
-     *
-     * // Send real-time data updates
-     * await signals.send("data-update", {
-     *   source: "weather-api",
-     *   temperature: 72,
-     *   conditions: "sunny"
-     * });
-     *
-     * // Trigger actions in mods
-     * await signals.send("vrm-action", {
-     *   action: "wave",
-     *   target: vrmEntity,
-     *   duration: 2000
-     * });
-     * ```
-     */
-    export async function send<V>(signal: string, payload: V): Promise<void> {
-        await host.post(host.createUrl(`signals/${signal}`), payload);
-    }
+  /**
+   * Send a signal to all subscribers.
+   *
+   * Uses HTTP POST (not WebSocket) for request-response semantics.
+   *
+   * @typeParam V - Payload type to send
+   * @param signal - Signal channel name
+   * @param payload - Data to broadcast to all subscribers
+   *
+   * @example
+   * ```typescript
+   * await signals.send("agent:status", { state: "thinking" });
+   * ```
+   */
+  export async function send<V>(signal: string, payload: V): Promise<void> {
+    await host.post(host.createUrl(`signals/${signal}`), payload);
+  }
 }

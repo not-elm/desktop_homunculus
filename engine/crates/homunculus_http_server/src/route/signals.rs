@@ -203,7 +203,11 @@ async fn handle_subscribe(
         use bevy::tasks::futures_lite::StreamExt;
         let mut stream = std::pin::pin!(rx);
         while let Some(value) = stream.next().await {
-            if tx.send(WsServerMessage::event(ch.clone(), value)).await.is_err() {
+            if tx
+                .send(WsServerMessage::event(ch.clone(), value))
+                .await
+                .is_err()
+            {
                 break;
             }
         }
@@ -212,10 +216,7 @@ async fn handle_subscribe(
     forwarding_tasks.insert(channel, handle);
 }
 
-fn handle_unsubscribe(
-    channel: String,
-    forwarding_tasks: &mut HashMap<String, JoinHandle<()>>,
-) {
+fn handle_unsubscribe(channel: String, forwarding_tasks: &mut HashMap<String, JoinHandle<()>>) {
     if let Some(handle) = forwarding_tasks.remove(&channel) {
         handle.abort();
     }
