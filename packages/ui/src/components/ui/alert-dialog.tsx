@@ -52,8 +52,9 @@ function AlertDialogContent({
       {/* Tier 2-Overlay: holo-glass + border-gradient (not Tier 1 refract/shimmer like Dialog) */}
       <AlertDialogPrimitive.Content
         data-slot="alert-dialog-content"
+        style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)" }}
         className={cn(
-          "holo-glass holo-border-gradient text-popover-foreground fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-xl p-6 shadow-holo-lg sm:max-w-lg",
+          "holo-glass holo-border-gradient text-popover-foreground z-50 grid w-full max-w-[calc(100%-2rem)] gap-4 rounded-xl p-6 shadow-holo-lg sm:max-w-lg",
           "data-[state=open]:[animation:holo-dialog-in_300ms_ease-out] data-[state=closed]:[animation:holo-dialog-out_200ms_ease-in]",
           className
         )}

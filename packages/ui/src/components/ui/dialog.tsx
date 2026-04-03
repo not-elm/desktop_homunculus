@@ -59,8 +59,9 @@ function DialogContent({
       <DialogOverlay />
       <DialogPrimitive.Content
         data-slot="dialog-content"
+        style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)" }}
         className={cn(
-          "holo-shimmer holo-refract-border holo-noise [--holo-refract-fill:var(--popover)] bg-popover text-popover-foreground fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-xl p-6 shadow-holo-lg backdrop-blur-xl sm:max-w-lg",
+          "holo-shimmer holo-refract-border holo-noise [--holo-refract-fill:var(--popover)] bg-popover text-popover-foreground z-50 grid w-full max-w-[calc(100%-2rem)] gap-4 rounded-xl p-6 shadow-holo-lg backdrop-blur-xl sm:max-w-lg",
           "data-[state=open]:[animation:holo-dialog-in_300ms_ease-out] data-[state=closed]:[animation:holo-dialog-out_200ms_ease-in]",
           className
         )}
