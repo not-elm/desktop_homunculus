@@ -1,5 +1,8 @@
+import { useState } from "react";
 import { GitBranch } from "lucide-react";
+import { Popover, PopoverAnchor } from "@hmcs/ui";
 import { TreeOverflowMenu } from "./TreeOverflowMenu.tsx";
+import { WorktreeDetailPopover } from "./WorktreeDetailPopover.tsx";
 
 export interface WorktreeData {
   name: string;
@@ -30,32 +33,37 @@ export function WorktreeNode({
   onRemove,
   onKeyDown,
 }: WorktreeNodeProps) {
-  const rowClass = `ws-row ws-row--worktree${isSelected ? " ws-row--selected" : ""}`;
+  const [showDetail, setShowDetail] = useState(false);
+
+  const overflowItems = buildOverflowItems(() => setShowDetail(true), onRemove);
 
   return (
-    <div
-      className={rowClass}
-      role="treeitem"
-      aria-level={2}
-      aria-selected={isSelected}
-      tabIndex={tabIndex}
-      data-wt-name={worktree.name}
-      onClick={onSelect}
-      onKeyDown={onKeyDown}
-    >
-      <div className="ws-row-content">
-        <GitBranch className="ws-icon" />
-        <span className="ws-name">{worktree.name}</span>
-        <StatusBadge worktree={worktree} />
-        {worktree.canMerge && (
-          <span className="ws-badge ws-badge--mergeable">mergeable</span>
-        )}
-        <TreeOverflowMenu items={[
-          { label: "Remove Worktree", onClick: onRemove, destructive: true },
-        ]} />
-      </div>
-      {isSelected && <MetaTier2 worktree={worktree} />}
-    </div>
+    <Popover open={showDetail} onOpenChange={setShowDetail}>
+      <PopoverAnchor asChild>
+        <div
+          className="ws-row ws-row--worktree"
+          role="treeitem"
+          aria-level={2}
+          aria-selected={isSelected}
+          tabIndex={tabIndex}
+          data-wt-name={worktree.name}
+          onClick={onSelect}
+          onKeyDown={onKeyDown}
+        >
+          <span className="ws-radio" aria-hidden="true" aria-checked={isSelected}>
+            {isSelected && <span className="ws-radio-dot" />}
+          </span>
+          <GitBranch className="ws-icon" />
+          <span className="ws-name">{worktree.name}</span>
+          <StatusBadge worktree={worktree} />
+          {worktree.canMerge && (
+            <span className="ws-badge ws-badge--mergeable">mergeable</span>
+          )}
+          <TreeOverflowMenu items={overflowItems} />
+        </div>
+      </PopoverAnchor>
+      <WorktreeDetailPopover worktree={worktree} />
+    </Popover>
   );
 }
 
@@ -68,21 +76,9 @@ function StatusBadge({ worktree }: { worktree: WorktreeData }) {
   );
 }
 
-function MetaTier2({ worktree }: { worktree: WorktreeData }) {
-  return (
-    <div className="ws-meta-t2">
-      <span className="ws-meta-label">base</span>
-      <span className="ws-meta-value">{worktree.baseBranch}</span>
-      <span className="ws-meta-label">commits</span>
-      <span className="ws-meta-value">{worktree.commits}</span>
-      <span className="ws-meta-label">files</span>
-      <span className="ws-meta-value">{worktree.filesChanged}</span>
-      <span className="ws-meta-label">diff</span>
-      <span className="ws-meta-value">
-        <span className="ws-meta-plus">+{worktree.insertions}</span>
-        {" / "}
-        <span className="ws-meta-minus">-{worktree.deletions}</span>
-      </span>
-    </div>
-  );
+function buildOverflowItems(onShowDetails: () => void, onRemove: () => void) {
+  return [
+    { label: "Details", onClick: onShowDetails },
+    { label: "Remove Worktree", onClick: onRemove, destructive: true },
+  ];
 }
