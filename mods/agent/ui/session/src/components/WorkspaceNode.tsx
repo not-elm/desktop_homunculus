@@ -2,7 +2,6 @@ import { useState } from "react";
 import { FolderGit2, Folder, ChevronRight } from "lucide-react";
 import { WorktreeNode, type WorktreeData } from "./WorktreeNode.tsx";
 import { TreeOverflowMenu } from "./TreeOverflowMenu.tsx";
-import { AddWorktreeForm } from "./AddWorktreeForm.tsx";
 
 export interface WorkspaceData {
   isGit: boolean;
@@ -23,9 +22,6 @@ interface WorkspaceNodeProps {
   onAddWorktree: () => void;
   onRemoveWorktree: (wt: WorktreeData) => void;
   onKeyDown: (e: React.KeyboardEvent) => void;
-  showAddForm: boolean;
-  onFormCreated: () => void;
-  onFormCancelled: () => void;
 }
 
 export function WorkspaceNode({
@@ -41,13 +37,10 @@ export function WorkspaceNode({
   onAddWorktree,
   onRemoveWorktree,
   onKeyDown,
-  showAddForm,
-  onFormCreated,
-  onFormCancelled,
 }: WorkspaceNodeProps) {
   const [expanded, setExpanded] = useState(true);
   const hasWorktrees = (data?.worktrees.length ?? 0) > 0;
-  const hasChildren = hasWorktrees || showAddForm;
+  const hasChildren = hasWorktrees;
   const FolderIcon = data?.isGit ? FolderGit2 : Folder;
   const dirName = path.split(/[/\\]/).pop() || path;
 
@@ -110,13 +103,7 @@ export function WorkspaceNode({
                   onKeyDown={onKeyDown}
                 />
               ))}
-              {showAddForm && (
-                <AddWorktreeForm
-                  workspacePath={path}
-                  onCreated={onFormCreated}
-                  onCancel={onFormCancelled}
-                />
-              )}
+
             </div>
           </div>
         </div>
