@@ -195,10 +195,10 @@ fn build_grouped_menu_items(
     let mut last_group: Option<u8> = None;
 
     for (group, mod_name, tray_item) in entries {
-        if let Some(prev) = last_group {
-            if *group != prev {
-                menu_items.push(MenuItem::separator());
-            }
+        if let Some(prev) = last_group
+            && *group != prev
+        {
+            menu_items.push(MenuItem::separator());
         }
         last_group = Some(*group);
 
