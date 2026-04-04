@@ -1,4 +1,4 @@
-import { WorkspaceTree } from "../../../session/src/components/WorkspaceTree";
+import { WorkspaceTree } from "./WorkspaceTree";
 import { SettingsNav } from "./SettingsNav";
 import type { SettingsCategory } from "../types";
 import type { WorkspaceSelection } from "../hooks/useSettingsDraft";

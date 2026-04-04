@@ -36,9 +36,7 @@ const DEFAULT_SETTINGS: AgentSettings = {
 export function useAgentSettings() {
   const [loading, setLoading] = useState(true);
   const [settings, setSettings] = useState<AgentSettings>(DEFAULT_SETTINGS);
-  const [saving, setSaving] = useState(false);
   const [apiKey, setApiKey] = useState("");
-  const [savingApiKey, setSavingApiKey] = useState(false);
   const [characterId, setCharacterId] = useState<string | null>(null);
   const saveVersionRef = useRef(0);
 
@@ -72,41 +70,12 @@ export function useAgentSettings() {
     }
   }, [characterId]);
 
-  const saveSettings = useCallback(async () => {
-    if (saving || !characterId) return;
-    setSaving(true);
-    try {
-      await preferences.save(`agent::${characterId}`, settings);
-    } catch (err) {
-      console.error("Failed to save agent settings:", err);
-    } finally {
-      setSaving(false);
-    }
-  }, [saving, characterId, settings]);
-
-  const saveApiKey = useCallback(async () => {
-    if (savingApiKey) return;
-    setSavingApiKey(true);
-    try {
-      await preferences.save("agent::api-key", apiKey);
-    } catch (err) {
-      console.error("Failed to save API key:", err);
-    } finally {
-      setSavingApiKey(false);
-    }
-  }, [savingApiKey, apiKey]);
-
   return {
     loading,
     settings,
     setSettings,
     setAndSaveSettings,
-    saving,
-    saveSettings,
     apiKey,
-    setApiKey,
-    savingApiKey,
-    saveApiKey,
   };
 }
 

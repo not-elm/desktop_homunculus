@@ -1,8 +1,7 @@
 import type { AgentSettings } from "../hooks/useSettingsDraft";
 import type { SettingsCategory } from "../types";
 
-// Import shared components from session entry — viteSingleFile will inline them
-import { PhraseListField } from "../../../session/src/components/PhraseListField";
+import { PhraseListField } from "./PhraseListField";
 
 interface SettingsFormViewProps {
   category: SettingsCategory;

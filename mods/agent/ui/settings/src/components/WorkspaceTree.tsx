@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { dialog } from "@hmcs/sdk";
 import { rpc } from "@hmcs/sdk/rpc";
-import type { WorkspaceSelection } from "../hooks/useAgentSettings";
+import type { WorkspaceSelection } from "../hooks/useSettingsDraft";
 import { useTreeKeyboard } from "../hooks/useTreeKeyboard.ts";
 import { WorkspaceNode, type WorkspaceData } from "./WorkspaceNode.tsx";
 import { RemoveWorktreeDialog } from "./RemoveWorktreeDialog.tsx";
