@@ -2,9 +2,11 @@ import { useCallback, useEffect, useState } from "react";
 import { dialog } from "@hmcs/sdk";
 import { rpc } from "@hmcs/sdk/rpc";
 import type { WorkspaceSelection } from "../hooks/useAgentSettings";
-import { AddWorktreeForm } from "./AddWorktreeForm.tsx";
+import { useTreeKeyboard } from "../hooks/useTreeKeyboard.ts";
+import { WorkspaceNode } from "./WorkspaceNode.tsx";
 import { RemoveWorktreeDialog } from "./RemoveWorktreeDialog.tsx";
 import { RemoveWorkspaceDialog } from "./RemoveWorkspaceDialog.tsx";
+import type { WorktreeData } from "./WorktreeNode.tsx";
 
 interface WorkspaceTreeProps {
   paths: string[];
@@ -12,18 +14,6 @@ interface WorkspaceTreeProps {
   onSelectionChange: (selection: WorkspaceSelection) => void;
   onAddWorkspace: (path: string) => void;
   onRemoveWorkspace: (index: number) => void;
-}
-
-interface WorktreeData {
-  name: string;
-  branch: string;
-  baseBranch: string;
-  commits: number;
-  filesChanged: number;
-  insertions: number;
-  deletions: number;
-  hasUncommittedChanges: boolean;
-  canMerge: boolean;
 }
 
 interface WorkspaceData {
@@ -54,9 +44,7 @@ export function WorkspaceTree({
   onAddWorkspace,
   onRemoveWorkspace,
 }: WorkspaceTreeProps) {
-  const [workspaceData, setWorkspaceData] = useState<
-    Map<string, WorkspaceData>
-  >(new Map());
+  const [workspaceData, setWorkspaceData] = useState<Map<string, WorkspaceData>>(new Map());
   const [dialogState, setDialogState] = useState<DialogState>({ type: "none" });
 
   const fetchWorkspaceData = useCallback(
@@ -98,11 +86,19 @@ export function WorkspaceTree({
     refreshAll();
   }, [refreshAll]);
 
+  function handleSelect(element: HTMLElement) {
+    const wsIndex = readWorkspaceIndex(element);
+    const wtName = element.getAttribute("data-wt-name");
+    if (wsIndex != null) {
+      onSelectionChange({ workspaceIndex: wsIndex, worktreeName: wtName });
+    }
+  }
+
+  const { treeRef, handleKeyDown } = useTreeKeyboard({ onSelect: handleSelect });
+
   async function handleAddWorkspace() {
     try {
-      const path = await dialog.pickFolder({
-        title: "Select workspace directory",
-      });
+      const path = await dialog.pickFolder({ title: "Select workspace directory" });
       if (path) onAddWorkspace(path);
     } catch (e) {
       console.error("pickFolder failed:", e);
@@ -159,38 +155,25 @@ export function WorkspaceTree({
         </button>
       </div>
 
-      <div className="ws-tree">
+      <div className="ws-tree" role="tree" aria-label="Workspaces" ref={treeRef} onKeyDown={handleKeyDown}>
         {paths.map((path, index) => (
           <WorkspaceNode
             key={path}
+            index={index}
             path={path}
             data={workspaceData.get(path)}
-            isSelected={
-              selection.workspaceIndex === index &&
-              selection.worktreeName === null
-            }
-            selectedWorktree={
-              selection.workspaceIndex === index ? selection.worktreeName : null
-            }
+            isSelected={selection.workspaceIndex === index && selection.worktreeName === null}
+            selectedWorktree={selection.workspaceIndex === index ? selection.worktreeName : null}
+            tabIndex={index === 0 ? 0 : -1}
             onSelectWorkspace={() => handleSelectWorkspace(index)}
             onSelectWorktree={(name) => handleSelectWorktree(index, name)}
-            onRemoveWorkspace={() =>
-              setDialogState({ type: "removeWorkspace", index })
-            }
-            onAddWorktree={() =>
-              setDialogState({ type: "addWorktree", workspaceIndex: index })
-            }
+            onRemoveWorkspace={() => setDialogState({ type: "removeWorkspace", index })}
+            onAddWorktree={() => setDialogState({ type: "addWorktree", workspaceIndex: index })}
             onRemoveWorktree={(wt) =>
-              setDialogState({
-                type: "removeWorktree",
-                workspaceIndex: index,
-                worktree: wt,
-              })
+              setDialogState({ type: "removeWorktree", workspaceIndex: index, worktree: wt })
             }
-            showAddForm={
-              dialogState.type === "addWorktree" &&
-              dialogState.workspaceIndex === index
-            }
+            onKeyDown={handleKeyDown}
+            showAddForm={dialogState.type === "addWorktree" && dialogState.workspaceIndex === index}
             onFormCreated={handleWorktreeCreated}
             onFormCancelled={() => setDialogState({ type: "none" })}
           />
@@ -200,9 +183,7 @@ export function WorkspaceTree({
       {dialogState.type === "removeWorkspace" && (
         <RemoveWorkspaceDialog
           path={paths[dialogState.index]}
-          worktreeCount={
-            workspaceData.get(paths[dialogState.index])?.worktrees.length ?? 0
-          }
+          worktreeCount={workspaceData.get(paths[dialogState.index])?.worktrees.length ?? 0}
           onConfirm={handleRemoveWorkspaceConfirmed}
           onCancel={() => setDialogState({ type: "none" })}
         />
@@ -219,154 +200,10 @@ export function WorkspaceTree({
   );
 }
 
-interface WorkspaceNodeProps {
-  path: string;
-  data: WorkspaceData | undefined;
-  isSelected: boolean;
-  selectedWorktree: string | null;
-  onSelectWorkspace: () => void;
-  onSelectWorktree: (name: string) => void;
-  onRemoveWorkspace: () => void;
-  onAddWorktree: () => void;
-  onRemoveWorktree: (wt: WorktreeData) => void;
-  showAddForm: boolean;
-  onFormCreated: () => void;
-  onFormCancelled: () => void;
-}
-
-function WorkspaceNode({
-  path,
-  data,
-  isSelected,
-  selectedWorktree,
-  onSelectWorkspace,
-  onSelectWorktree,
-  onRemoveWorkspace,
-  onAddWorktree,
-  onRemoveWorktree,
-  showAddForm,
-  onFormCreated,
-  onFormCancelled,
-}: WorkspaceNodeProps) {
-  return (
-    <div className="ws-node">
-      <div className={`ws-dir-item${isSelected ? " ws-dir-item--selected" : ""}`}>
-        <input
-          className="ws-radio"
-          type="radio"
-          checked={isSelected}
-          onChange={onSelectWorkspace}
-          aria-label={`Select workspace ${path}`}
-        />
-        <span className="ws-icon">📁</span>
-        <div className="ws-info">
-          <span className="ws-name" title={path}>{path.split(/[/\\]/).pop() || path}</span>
-          <span className="ws-meta ws-meta-path" title={path}>{path}</span>
-          {data?.isGit && data.currentBranch && (
-            <span className="ws-meta">{data.currentBranch}</span>
-          )}
-        </div>
-        {data?.isGit && (
-          <span className="agent-badge agent-badge--green">git</span>
-        )}
-        <div className="ws-actions">
-          {data?.isGit && (
-            <button
-              className="ws-action-btn ws-action-add"
-              type="button"
-              onClick={onAddWorktree}
-            >
-              + Worktree
-            </button>
-          )}
-          <button
-            className="ws-action-btn ws-action-remove"
-            type="button"
-            onClick={onRemoveWorkspace}
-            aria-label={`Remove ${path}`}
-          >
-            &times;
-          </button>
-        </div>
-      </div>
-
-      {data && data.worktrees.length > 0 && (
-        <div className="ws-tree-connector">
-          {data.worktrees.map((wt) => (
-            <WorktreeNode
-              key={wt.name}
-              worktree={wt}
-              isSelected={selectedWorktree === wt.name}
-              onSelect={() => onSelectWorktree(wt.name)}
-              onRemove={() => onRemoveWorktree(wt)}
-            />
-          ))}
-        </div>
-      )}
-
-      {showAddForm && (
-        <div className="ws-tree-connector">
-          <AddWorktreeForm
-            workspacePath={path}
-            onCreated={onFormCreated}
-            onCancel={onFormCancelled}
-          />
-        </div>
-      )}
-    </div>
-  );
-}
-
-interface WorktreeNodeProps {
-  worktree: WorktreeData;
-  isSelected: boolean;
-  onSelect: () => void;
-  onRemove: () => void;
-}
-
-function WorktreeNode({
-  worktree,
-  isSelected,
-  onSelect,
-  onRemove,
-}: WorktreeNodeProps) {
-  return (
-    <div className={`ws-dir-item ws-wt-item${isSelected ? " ws-dir-item--selected" : ""}`}>
-      <input
-        className="ws-radio"
-        type="radio"
-        checked={isSelected}
-        onChange={onSelect}
-        aria-label={`Select worktree ${worktree.name}`}
-      />
-      <span className="ws-icon">🌿</span>
-      <div className="ws-info">
-        <span className="ws-name">{worktree.name}</span>
-        <span className="ws-meta">
-          from {worktree.baseBranch}
-          {worktree.commits > 0 && ` · ${worktree.commits} commit${worktree.commits !== 1 ? "s" : ""}`}
-        </span>
-      </div>
-      <span className="agent-badge agent-badge--violet">{worktree.branch}</span>
-      <div className="ws-actions">
-        {worktree.canMerge && (
-          <button
-            className="ws-action-btn ws-action-merge"
-            type="button"
-            title="Fast-forward merge"
-          >
-            ↗ Merge
-          </button>
-        )}
-        <button
-          className="ws-action-btn ws-action-remove"
-          type="button"
-          onClick={onRemove}
-          aria-label={`Remove worktree ${worktree.name}`}
-        >
-          &times;
-        </button>
-      </div>
-    </div>
-  );
+function readWorkspaceIndex(element: HTMLElement): number | null {
+  const wsAttr = element.getAttribute("data-ws-index");
+  if (wsAttr != null) return Number(wsAttr);
+  const parent = element.closest("[data-ws-index]");
+  if (parent) return Number(parent.getAttribute("data-ws-index"));
+  return null;
 }
