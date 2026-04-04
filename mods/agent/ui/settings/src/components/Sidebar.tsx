@@ -11,11 +11,12 @@ interface SidebarProps {
   onRemoveWorkspace: (index: number) => void;
   activeCategory: SettingsCategory | null;
   onCategorySelect: (category: SettingsCategory) => void;
+  refreshKey?: number;
 }
 
 export function Sidebar({
   paths, selection, onSelectionChange, onAddWorkspace, onRemoveWorkspace,
-  activeCategory, onCategorySelect,
+  activeCategory, onCategorySelect, refreshKey,
 }: SidebarProps) {
   return (
     <aside className="stg-sidebar">
@@ -26,6 +27,7 @@ export function Sidebar({
           onSelectionChange={onSelectionChange}
           onAddWorkspace={onAddWorkspace}
           onRemoveWorkspace={onRemoveWorkspace}
+          refreshKey={refreshKey}
         />
       </div>
       <div className="stg-sidebar-divider" />

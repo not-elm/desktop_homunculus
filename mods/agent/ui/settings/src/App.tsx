@@ -7,6 +7,7 @@ import type { WorkspaceSelection } from "./hooks/useSettingsDraft";
 import type { WorktreeData } from "./hooks/useWorktreeDetail";
 import { Sidebar } from "./components/Sidebar";
 import { MainPanel } from "./components/MainPanel";
+import { AddWorktreeDialog } from "./components/AddWorktreeDialog";
 import type { WorkspaceData } from "./components/WorkspaceOverview";
 import type { MainPanelContent, SettingsCategory } from "./types";
 
@@ -24,6 +25,8 @@ export function App() {
   const [content, setContent] = useState<MainPanelContent>({ kind: "empty" });
   const [activeCategory, setActiveCategory] = useState<SettingsCategory | null>(null);
   const [workspaceDataMap, setWorkspaceDataMap] = useState<Map<string, WorkspaceData>>(new Map());
+  const [addWorktreeForPath, setAddWorktreeForPath] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const paths = draft.settings.workspaces.paths;
   const selection = draft.settings.workspaces.selection;
@@ -147,6 +150,7 @@ export function App() {
         onRemoveWorkspace={handleRemoveWorkspace}
         activeCategory={activeCategory}
         onCategorySelect={handleCategorySelect}
+        refreshKey={refreshKey}
       />
       <div className="stg-divider" />
       <MainPanel
@@ -160,9 +164,20 @@ export function App() {
         onApiKeyChange={draft.setApiKey}
         onApiKeySave={draft.saveApiKey}
         savingApiKey={draft.savingApiKey}
-        onAddWorktree={() => {}}
+        onAddWorktree={() => workspacePath && setAddWorktreeForPath(workspacePath)}
         onAddWorkspace={handleAddWorkspaceFromPanel}
       />
+      {addWorktreeForPath && (
+        <AddWorktreeDialog
+          workspacePath={addWorktreeForPath}
+          onCreated={() => {
+            setAddWorktreeForPath(null);
+            refreshWorkspaceData();
+            setRefreshKey(k => k + 1);
+          }}
+          onCancel={() => setAddWorktreeForPath(null)}
+        />
+      )}
       {draft.isDirty && (
         <div className="stg-save-bar">
           <button className="stg-action-btn stg-action-btn--primary" type="button"

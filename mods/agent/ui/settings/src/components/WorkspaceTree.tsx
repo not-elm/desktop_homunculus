@@ -15,6 +15,7 @@ interface WorkspaceTreeProps {
   onSelectionChange: (selection: WorkspaceSelection) => void;
   onAddWorkspace: (path: string) => void;
   onRemoveWorkspace: (index: number) => void;
+  refreshKey?: number;
 }
 
 export interface BranchData {
@@ -38,6 +39,7 @@ export function WorkspaceTree({
   onSelectionChange,
   onAddWorkspace,
   onRemoveWorkspace,
+  refreshKey,
 }: WorkspaceTreeProps) {
   const [workspaceData, setWorkspaceData] = useState<Map<string, WorkspaceData>>(new Map());
   const [dialogState, setDialogState] = useState<DialogState>({ type: "none" });
@@ -79,7 +81,7 @@ export function WorkspaceTree({
 
   useEffect(() => {
     refreshAll();
-  }, [refreshAll]);
+  }, [refreshAll, refreshKey]);
 
   function handleSelect(element: HTMLElement) {
     const wsIndex = readWorkspaceIndex(element);
@@ -139,14 +141,9 @@ export function WorkspaceTree({
   return (
     <div className="ws-section">
       <div className="ws-header">
-        <div>
-          <div className="ws-label">Workspaces</div>
-          <div className="ws-desc">
-            Select a workspace or worktree for the agent to work in.
-          </div>
-        </div>
-        <button className="ws-add-btn" type="button" onClick={handleAddWorkspace}>
-          <span className="ws-add-icon">+</span> Add Workspace
+        <div className="ws-label">Workspaces</div>
+        <button className="ws-add-icon-btn" type="button" onClick={handleAddWorkspace} title="Add Workspace">
+          +
         </button>
       </div>
 
