@@ -63,6 +63,7 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 0;
+  height: var(--hud-body-max-height);
   max-height: var(--hud-body-max-height);
 }
 
