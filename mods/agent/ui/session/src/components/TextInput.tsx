@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, type KeyboardEvent, type ChangeEvent, type CompositionEvent } from "react";
+import { TextareaAutosize } from "@hmcs/ui";
 
 interface TextInputProps {
   onSend: (text: string) => Promise<void>;
@@ -15,7 +16,7 @@ export function TextInput({ onSend }: TextInputProps) {
     setValue(v);
   };
 
-  const handleChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+  const handleChange = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
     syncValue(e.target.value);
   }, []);
 
@@ -23,7 +24,7 @@ export function TextInput({ onSend }: TextInputProps) {
     isComposingRef.current = true;
   }, []);
 
-  const handleCompositionEnd = useCallback((e: CompositionEvent<HTMLInputElement>) => {
+  const handleCompositionEnd = useCallback((e: CompositionEvent<HTMLTextAreaElement>) => {
     isComposingRef.current = false;
     syncValue(e.currentTarget.value);
   }, []);
@@ -40,7 +41,7 @@ export function TextInput({ onSend }: TextInputProps) {
     }
   }, [sending, onSend]);
 
-  const handleKeyDown = useCallback((e: KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = useCallback((e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey && !isComposingRef.current) {
       e.preventDefault();
       handleSend();
@@ -49,9 +50,10 @@ export function TextInput({ onSend }: TextInputProps) {
 
   return (
     <div className="hud-text-input">
-      <input
-        type="text"
-        className="hud-text-input-field"
+      <TextareaAutosize
+        className="hud-text-input-field min-h-0 bg-transparent border-0 shadow-none ring-0 backdrop-blur-none p-0 focus-visible:ring-0 focus-visible:shadow-none"
+        minRows={1}
+        maxRows={5}
         placeholder="Type a message..."
         value={value}
         onChange={handleChange}
