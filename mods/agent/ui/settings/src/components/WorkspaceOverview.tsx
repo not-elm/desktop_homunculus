@@ -1,4 +1,4 @@
-import { FolderGit2, Folder } from "lucide-react";
+import { FolderGit2, Folder, Trash2 } from "lucide-react";
 import type { WorktreeData } from "../hooks/useWorktreeDetail";
 
 export interface WorkspaceData {
@@ -11,9 +11,10 @@ interface WorkspaceOverviewProps {
   path: string;
   data: WorkspaceData | undefined;
   onAddWorktree: () => void;
+  onRemoveWorktree: (wt: WorktreeData) => void;
 }
 
-export function WorkspaceOverview({ path, data, onAddWorktree }: WorkspaceOverviewProps) {
+export function WorkspaceOverview({ path, data, onAddWorktree, onRemoveWorktree }: WorkspaceOverviewProps) {
   const dirName = path.split(/[/\\]/).pop() || path;
   const FolderIcon = data?.isGit ? FolderGit2 : Folder;
 
@@ -47,6 +48,9 @@ export function WorkspaceOverview({ path, data, onAddWorktree }: WorkspaceOvervi
                   <span className="stg-wt-summary-name">{wt.name}</span>
                   <span className="stg-wt-summary-branch">{wt.branch}</span>
                   <span className="stg-wt-summary-commits">{wt.commits} commits</span>
+                  <button className="stg-wt-remove-btn" type="button" onClick={() => onRemoveWorktree(wt)} title="Remove Worktree">
+                    <Trash2 size={14} />
+                  </button>
                 </div>
               ))}
             </div>

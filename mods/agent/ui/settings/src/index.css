@@ -800,6 +800,30 @@ body {
 }
 .stg-wt-summary-commits { font-size: var(--hud-font-size-xs); color: var(--hud-settings-text-muted); }
 
+.stg-wt-remove-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  background: none;
+  border: none;
+  color: oklch(0.55 0.02 250);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all var(--hud-settings-hover-duration) var(--hud-settings-hover-easing);
+}
+
+.stg-wt-summary-row:hover .stg-wt-remove-btn {
+  display: flex;
+}
+
+.stg-wt-remove-btn:hover {
+  background: oklch(0.78 0.14 15 / 0.15);
+  color: oklch(0.78 0.14 15);
+}
+
 /* Forms */
 .stg-form { display: flex; flex-direction: column; gap: var(--hud-settings-field-gap); }
 .stg-form-header { margin-bottom: 12px; }

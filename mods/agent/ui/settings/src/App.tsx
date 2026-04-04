@@ -8,6 +8,7 @@ import type { WorktreeData } from "./hooks/useWorktreeDetail";
 import { Sidebar } from "./components/Sidebar";
 import { MainPanel } from "./components/MainPanel";
 import { AddWorktreeDialog } from "./components/AddWorktreeDialog";
+import { RemoveWorktreeDialog } from "./components/RemoveWorktreeDialog";
 import type { WorkspaceData } from "./components/WorkspaceOverview";
 import type { MainPanelContent, SettingsCategory } from "./types";
 
@@ -26,6 +27,7 @@ export function App() {
   const [activeCategory, setActiveCategory] = useState<SettingsCategory | null>(null);
   const [workspaceDataMap, setWorkspaceDataMap] = useState<Map<string, WorkspaceData>>(new Map());
   const [addWorktreeForPath, setAddWorktreeForPath] = useState<string | null>(null);
+  const [removeWorktreeState, setRemoveWorktreeState] = useState<{ workspacePath: string; worktree: WorktreeData } | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const paths = draft.settings.workspaces.paths;
@@ -165,6 +167,7 @@ export function App() {
         onApiKeySave={draft.saveApiKey}
         savingApiKey={draft.savingApiKey}
         onAddWorktree={() => workspacePath && setAddWorktreeForPath(workspacePath)}
+        onRemoveWorktree={(wt) => workspacePath && setRemoveWorktreeState({ workspacePath, worktree: wt })}
         onAddWorkspace={handleAddWorkspaceFromPanel}
       />
       {addWorktreeForPath && (
@@ -176,6 +179,18 @@ export function App() {
             setRefreshKey(k => k + 1);
           }}
           onCancel={() => setAddWorktreeForPath(null)}
+        />
+      )}
+      {removeWorktreeState && (
+        <RemoveWorktreeDialog
+          workspacePath={removeWorktreeState.workspacePath}
+          worktree={removeWorktreeState.worktree}
+          onRemoved={() => {
+            setRemoveWorktreeState(null);
+            refreshWorkspaceData();
+            setRefreshKey(k => k + 1);
+          }}
+          onCancel={() => setRemoveWorktreeState(null)}
         />
       )}
       {draft.isDirty && (

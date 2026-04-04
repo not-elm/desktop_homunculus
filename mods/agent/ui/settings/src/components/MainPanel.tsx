@@ -18,13 +18,14 @@ interface MainPanelProps {
   onApiKeySave: () => void;
   savingApiKey: boolean;
   onAddWorktree: () => void;
+  onRemoveWorktree: (wt: WorktreeData) => void;
   onAddWorkspace: () => void;
 }
 
 export function MainPanel({
   content, worktreeData, workspacePath, workspaceData,
   settings, onSettingsChange, apiKey, onApiKeyChange, onApiKeySave, savingApiKey,
-  onAddWorktree, onAddWorkspace,
+  onAddWorktree, onRemoveWorktree, onAddWorkspace,
 }: MainPanelProps) {
   return (
     <main className="stg-main" role="main">
@@ -33,7 +34,7 @@ export function MainPanel({
           <WorktreeDetailView worktree={worktreeData} />
         )}
         {content.kind === "workspaceOverview" && workspacePath && (
-          <WorkspaceOverview path={workspacePath} data={workspaceData} onAddWorktree={onAddWorktree} />
+          <WorkspaceOverview path={workspacePath} data={workspaceData} onAddWorktree={onAddWorktree} onRemoveWorktree={onRemoveWorktree} />
         )}
         {content.kind === "settingsForm" && (
           <SettingsFormView
