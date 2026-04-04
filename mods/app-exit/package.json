@@ -10,7 +10,8 @@
     "tray": {
       "id": "exit-app",
       "text": "Exit",
-      "command": "app-exit"
+      "command": "app-exit",
+      "position": "bottom"
     }
   },
   "bin": {
