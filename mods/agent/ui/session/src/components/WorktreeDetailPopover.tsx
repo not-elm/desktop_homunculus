@@ -1,3 +1,4 @@
+import { GitBranch } from "lucide-react";
 import { PopoverContent } from "@hmcs/ui";
 import type { WorktreeData } from "./WorktreeNode.tsx";
 
@@ -8,6 +9,10 @@ interface WorktreeDetailPopoverProps {
 export function WorktreeDetailPopover({ worktree }: WorktreeDetailPopoverProps) {
   return (
     <PopoverContent align="end" sideOffset={8} className="w-auto min-w-[220px]">
+      <div className="ws-detail-title">
+        <GitBranch className="ws-icon" />
+        {worktree.name}
+      </div>
       <div className="ws-detail-popover">
         <span className="ws-detail-label">Branch</span>
         <span className="ws-detail-value">{worktree.branch}</span>
@@ -31,12 +36,12 @@ export function WorktreeDetailPopover({ worktree }: WorktreeDetailPopoverProps) 
 
 function StatusSection({ worktree }: { worktree: WorktreeData }) {
   return (
-    <div style={{ marginTop: 8, borderTop: "1px solid oklch(1 0 0 / 0.08)", paddingTop: 8 }}>
+    <div className="ws-detail-separator">
       <div className="ws-detail-status">
         <span
           className={`ws-dot ${worktree.hasUncommittedChanges ? "ws-dot--dirty" : "ws-dot--clean"}`}
         />
-        <span style={{ color: "oklch(0.70 0 0)" }}>
+        <span className="ws-detail-status-text">
           {worktree.hasUncommittedChanges ? "Uncommitted changes" : "Clean — no uncommitted changes"}
         </span>
       </div>
@@ -49,15 +54,15 @@ function MergeStatus({ canMerge }: { canMerge: boolean }) {
   if (canMerge) {
     return (
       <div className="ws-detail-status">
-        <span style={{ fontSize: 10, color: "oklch(0.60 0.14 155)" }}>✓</span>
-        <span style={{ color: "oklch(0.60 0.14 155)" }}>Can fast-forward merge</span>
+        <span className="ws-detail-merge-icon ws-detail-merge-icon--ok">✓</span>
+        <span className="ws-detail-merge-icon--ok">Can fast-forward merge</span>
       </div>
     );
   }
   return (
     <div className="ws-detail-status">
-      <span style={{ fontSize: 10, color: "oklch(0.50 0 0)" }}>✗</span>
-      <span style={{ color: "oklch(0.50 0 0)" }}>Cannot fast-forward merge</span>
+      <span className="ws-detail-merge-icon ws-detail-merge-icon--no">✗</span>
+      <span className="ws-detail-merge-icon--no">Cannot fast-forward merge</span>
     </div>
   );
 }
