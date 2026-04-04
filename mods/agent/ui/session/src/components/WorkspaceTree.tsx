@@ -6,6 +6,7 @@ import { useTreeKeyboard } from "../hooks/useTreeKeyboard.ts";
 import { WorkspaceNode, type WorkspaceData } from "./WorkspaceNode.tsx";
 import { RemoveWorktreeDialog } from "./RemoveWorktreeDialog.tsx";
 import { RemoveWorkspaceDialog } from "./RemoveWorkspaceDialog.tsx";
+import { AddWorktreeDialog } from "./AddWorktreeDialog.tsx";
 import type { WorktreeData } from "./WorktreeNode.tsx";
 
 interface WorkspaceTreeProps {
@@ -167,9 +168,6 @@ export function WorkspaceTree({
               setDialogState({ type: "removeWorktree", workspaceIndex: index, worktree: wt })
             }
             onKeyDown={handleKeyDown}
-            showAddForm={dialogState.type === "addWorktree" && dialogState.workspaceIndex === index}
-            onFormCreated={handleWorktreeCreated}
-            onFormCancelled={() => setDialogState({ type: "none" })}
           />
         ))}
       </div>
@@ -187,6 +185,13 @@ export function WorkspaceTree({
           workspacePath={paths[dialogState.workspaceIndex]}
           worktree={dialogState.worktree}
           onRemoved={handleWorktreeRemoved}
+          onCancel={() => setDialogState({ type: "none" })}
+        />
+      )}
+      {dialogState.type === "addWorktree" && (
+        <AddWorktreeDialog
+          workspacePath={paths[dialogState.workspaceIndex]}
+          onCreated={handleWorktreeCreated}
           onCancel={() => setDialogState({ type: "none" })}
         />
       )}
