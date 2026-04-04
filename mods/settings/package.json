@@ -13,7 +13,8 @@
     "tray": {
       "id": "open-settings",
       "text": "Settings",
-      "command": "settings-open-ui"
+      "command": "settings-open-ui",
+      "position": "top"
     },
     "assets": {
       "settings:ui": {

@@ -140,29 +140,73 @@ async fn execute_command(mods_dir: PathBuf, command: String) {
     }
 }
 
+/// Resolve the tray position string to a sort-order group index.
+///
+/// Returns 0 for `"top"`, 1 for `"middle"` (default), 2 for `"bottom"`.
+/// Unknown values are treated as `"middle"` with a warning log.
+fn resolve_position(position: Option<&str>, mod_name: &str) -> u8 {
+    match position {
+        Some("top") => 0,
+        Some("bottom") => 2,
+        Some("middle") | None => 1,
+        Some(unknown) => {
+            tracing::warn!(
+                "MOD {mod_name}: unknown tray position \"{unknown}\", falling back to \"middle\""
+            );
+            1
+        }
+    }
+}
+
 /// Build the tray menu and registry from all mods in the `ModRegistry`.
 ///
-/// Each mod that declares a `tray` field contributes one top-level item
-/// (or submenu). Mods are separated by `MenuItem::Separator`.
+/// Items are grouped by position (`top` → `middle` → `bottom`) and sorted
+/// alphabetically by mod name within each group. Groups are separated by
+/// `MenuItem::Separator`.
 fn build_menu(mod_registry: &ModRegistry) -> (Menu, TrayMenuRegistry) {
-    let mut menu_items: Vec<MenuItem> = Vec::new();
     let mut registry = TrayMenuRegistry::default();
-    let mut first = true;
-    for mod_info in mod_registry.all() {
-        let Some(ref tray_item) = mod_info.tray else {
-            continue;
-        };
 
-        if !first {
+    let mut entries = collect_tray_entries(mod_registry);
+    entries.sort_by(|a, b| a.0.cmp(&b.0).then_with(|| a.1.cmp(&b.1)));
+
+    let menu_items = build_grouped_menu_items(&entries, &mut registry);
+    (Menu::new(menu_items), registry)
+}
+
+/// Collect (position_key, mod_name, tray_item) tuples from all mods.
+fn collect_tray_entries(mod_registry: &ModRegistry) -> Vec<(u8, String, TrayMenuItem)> {
+    mod_registry
+        .all()
+        .iter()
+        .filter_map(|mod_info| {
+            let tray_item = mod_info.tray.as_ref()?;
+            let pos = resolve_position(tray_item.position.as_deref(), &mod_info.name);
+            Some((pos, mod_info.name.clone(), tray_item.clone()))
+        })
+        .collect()
+}
+
+/// Build the flat `Vec<MenuItem>` with separators between position groups.
+fn build_grouped_menu_items(
+    entries: &[(u8, String, TrayMenuItem)],
+    registry: &mut TrayMenuRegistry,
+) -> Vec<MenuItem> {
+    let mut menu_items: Vec<MenuItem> = Vec::new();
+    let mut last_group: Option<u8> = None;
+
+    for (group, mod_name, tray_item) in entries {
+        if let Some(prev) = last_group
+            && *group != prev
+        {
             menu_items.push(MenuItem::separator());
         }
-        first = false;
+        last_group = Some(*group);
 
-        menu_items.push(to_bevy_menu_item(&mod_info.name, tray_item));
-        registry.register_item(&mod_info.name, tray_item);
+        menu_items.push(to_bevy_menu_item(mod_name, tray_item));
+        registry.register_item(mod_name, tray_item);
     }
 
-    (Menu::new(menu_items), registry)
+    menu_items
 }
 
 /// Convert a `TrayMenuItem` to a `bevy_tray_icon` `MenuItem`.
@@ -196,6 +240,7 @@ mod tests {
             text: "Settings".to_string(),
             command: Some("open-ui".to_string()),
             items: None,
+            position: None,
         };
         registry.register_item("my-mod", &item);
 
@@ -219,14 +264,17 @@ mod tests {
                     text: "Tool A".to_string(),
                     command: Some("run-a".to_string()),
                     items: None,
+                    position: None,
                 },
                 TrayMenuItem {
                     id: "tool-b".to_string(),
                     text: "Tool B".to_string(),
                     command: Some("run-b".to_string()),
                     items: None,
+                    position: None,
                 },
             ]),
+            position: None,
         };
         registry.register_item("my-mod", &item);
 
@@ -256,6 +304,7 @@ mod tests {
             text: "Open".to_string(),
             command: Some("do-open".to_string()),
             items: None,
+            position: None,
         };
         let bevy_item = to_bevy_menu_item("test-mod", &item);
         match bevy_item {
@@ -281,7 +330,9 @@ mod tests {
                 text: "Child".to_string(),
                 command: Some("run-child".to_string()),
                 items: None,
+                position: None,
             }]),
+            position: None,
         };
         let bevy_item = to_bevy_menu_item("test-mod", &item);
         match bevy_item {
@@ -305,5 +356,117 @@ mod tests {
             }
             other => panic!("expected SubMenu, got {other:?}"),
         }
+    }
+
+    #[test]
+    fn build_menu_orders_by_position_then_mod_name() {
+        use homunculus_core::prelude::ModInfo;
+        use std::collections::HashMap;
+        use std::path::PathBuf;
+
+        let mut mod_registry = ModRegistry::default();
+
+        let mods = vec![
+            ("@hmcs/voicevox", Some("middle")),
+            ("@hmcs/app-exit", Some("bottom")),
+            ("@hmcs/settings", Some("top")),
+            ("@hmcs/agent", None),
+        ];
+        for (name, position) in mods {
+            mod_registry.register(ModInfo {
+                name: name.to_string(),
+                version: "0.1.0".to_string(),
+                description: None,
+                author: None,
+                license: None,
+                service_script_path: None,
+                commands: vec![],
+                assets: HashMap::new(),
+                menus: vec![],
+                tray: Some(TrayMenuItem {
+                    id: format!("{name}-tray"),
+                    text: name.to_string(),
+                    command: Some(format!("{name}-cmd")),
+                    items: None,
+                    position: position.map(|s| s.to_string()),
+                }),
+                mod_dir: PathBuf::from("/tmp"),
+            });
+        }
+
+        let (menu, _registry) = build_menu(&mod_registry);
+
+        let texts: Vec<&str> = menu
+            .iter()
+            .filter_map(|item| match item {
+                MenuItem::Common { text, .. } => Some(text.as_str()),
+                MenuItem::SubMenu { text, .. } => Some(text.as_str()),
+                _ => None,
+            })
+            .collect();
+
+        assert_eq!(
+            texts,
+            vec![
+                "@hmcs/settings",
+                "@hmcs/agent",
+                "@hmcs/voicevox",
+                "@hmcs/app-exit"
+            ]
+        );
+
+        let separator_count = menu
+            .iter()
+            .filter(|item| matches!(item, MenuItem::Separator))
+            .count();
+        assert_eq!(separator_count, 2);
+    }
+
+    #[test]
+    fn build_menu_skips_separator_for_empty_groups() {
+        use homunculus_core::prelude::ModInfo;
+        use std::collections::HashMap;
+        use std::path::PathBuf;
+
+        let mut mod_registry = ModRegistry::default();
+
+        for (name, position) in [("@hmcs/settings", "top"), ("@hmcs/app-exit", "bottom")] {
+            mod_registry.register(ModInfo {
+                name: name.to_string(),
+                version: "0.1.0".to_string(),
+                description: None,
+                author: None,
+                license: None,
+                service_script_path: None,
+                commands: vec![],
+                assets: HashMap::new(),
+                menus: vec![],
+                tray: Some(TrayMenuItem {
+                    id: format!("{name}-tray"),
+                    text: name.to_string(),
+                    command: Some(format!("{name}-cmd")),
+                    items: None,
+                    position: Some(position.to_string()),
+                }),
+                mod_dir: PathBuf::from("/tmp"),
+            });
+        }
+
+        let (menu, _) = build_menu(&mod_registry);
+
+        let separator_count = menu
+            .iter()
+            .filter(|item| matches!(item, MenuItem::Separator))
+            .count();
+        assert_eq!(separator_count, 1);
+
+        let texts: Vec<&str> = menu
+            .iter()
+            .filter_map(|item| match item {
+                MenuItem::Common { text, .. } => Some(text.as_str()),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(texts, vec!["@hmcs/settings", "@hmcs/app-exit"]);
     }
 }
