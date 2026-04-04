@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { dialog } from "@hmcs/sdk";
+import { audio, dialog, Webview } from "@hmcs/sdk";
 import { rpc } from "@hmcs/sdk/rpc";
 import { useSettingsDraft } from "./hooks/useSettingsDraft";
 import { useWorktreeDetail } from "./hooks/useWorktreeDetail";
@@ -130,8 +130,15 @@ export function App() {
 
   if (draft.loading) return null;
 
+  async function closeWindow() {
+    await audio.se.play("se:close");
+    await Webview.current()?.close();
+  }
+
   return (
     <div className="stg-chrome">
+      <SettingsHeader onClose={closeWindow} />
+      <div className="stg-body">
       <Sidebar
         paths={paths}
         selection={selection}
@@ -164,6 +171,21 @@ export function App() {
           </button>
         </div>
       )}
+      </div>
+    </div>
+  );
+}
+
+function SettingsHeader({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="stg-header">
+      <span className="stg-header-title">Agent Settings</span>
+      <div className="stg-header-spacer" />
+      <button className="stg-header-close" type="button" onClick={onClose} title="Close">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <path d="M3 3L9 9M9 3L3 9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+        </svg>
+      </button>
     </div>
   );
 }

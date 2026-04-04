@@ -17,11 +17,6 @@
         "id": "open-agent",
         "text": "Agent",
         "command": "agent-open-agent"
-      },
-      {
-        "id": "open-agent-settings",
-        "text": "Agent Settings",
-        "command": "agent-open-agent-settings"
       }
     ],
     "assets": {

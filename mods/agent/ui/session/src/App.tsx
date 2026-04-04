@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { audio, Webview, webviewSource } from "@hmcs/sdk";
 import { useAgentSession } from "./hooks/useAgentSession";
 import { useAgentSettings } from "./hooks/useAgentSettings";
 import { ActivityLog } from "./components/ActivityLog";
@@ -6,23 +7,30 @@ import { PermissionDialog } from "./components/PermissionDialog";
 import { QuestionDialog } from "./components/QuestionDialog";
 import { TextInput } from "./components/TextInput";
 import { InlineSettingsBar } from "./components/InlineSettingsBar";
-import { SettingsView } from "./components/SettingsView";
 import type { AgentState } from "./hooks/useAgentSession";
-
-type View = "session" | "settings";
 
 export function App() {
   const [expanded, setExpanded] = useState(true);
   const [mounted, setMounted] = useState(false);
-  const [view, setView] = useState<View>("session");
   const session = useAgentSession();
   const settingsHook = useAgentSettings();
   const isActive = session.state !== "idle";
-  const showBack = view === "settings";
 
   useEffect(() => {
     requestAnimationFrame(() => setMounted(true));
   }, []);
+
+  async function openSettingsWindow() {
+    const vrm = await Webview.current()?.linkedVrm();
+    await Webview.open({
+      source: webviewSource.local("agent:settings-ui"),
+      size: [0.9, 0.9],
+      viewportSize: [1200, 800],
+      linkedVrm: vrm?.entity,
+      offset: [-0.5, -0.3],
+    });
+    await audio.se.play("se:open");
+  }
 
   return (
     <div className={`hud-container${mounted ? " hud-container--ready" : ""}`} data-expanded={expanded}>
@@ -33,13 +41,11 @@ export function App() {
         isRecording={session.isRecording}
         isActive={isActive}
         expanded={expanded}
-        showBack={showBack}
         hasPending={session.hasPending}
         worktreeInfo={session.worktreeInfo}
         onToggleSession={isActive ? session.stopSession : session.startSession}
         onInterrupt={session.interruptSession}
-        onToggleView={() => setView(view === "session" ? "settings" : "session")}
-        onBack={() => setView("session")}
+        onOpenSettings={openSettingsWindow}
         onToggleExpand={() => setExpanded(!expanded)}
         onClose={session.closePanel}
       />
@@ -54,21 +60,9 @@ export function App() {
                 worktreeActive={session.worktreeInfo !== null}
               />
           }
-          <div className="hud-view-slider" data-view={view}>
+          <div className="hud-view-slider" data-view="session">
             <div className="hud-view-slide">
               <SessionContent session={session} />
-            </div>
-            <div className="hud-view-slide">
-              <SettingsView
-                settings={settingsHook.settings}
-                onSettingsChange={settingsHook.setSettings}
-                saving={settingsHook.saving}
-                onSave={settingsHook.saveSettings}
-                apiKey={settingsHook.apiKey}
-                onApiKeyChange={settingsHook.setApiKey}
-                savingApiKey={settingsHook.savingApiKey}
-                onApiKeySave={settingsHook.saveApiKey}
-              />
             </div>
           </div>
         </div>
@@ -109,31 +103,23 @@ interface PanelHeaderProps {
   isRecording?: boolean;
   isActive: boolean;
   expanded: boolean;
-  showBack: boolean;
   hasPending: boolean;
   worktreeInfo: { name: string; branch: string } | null;
   onToggleSession: () => void;
   onInterrupt: () => void;
-  onToggleView: () => void;
-  onBack: () => void;
+  onOpenSettings: () => void;
   onToggleExpand: () => void;
   onClose: () => void;
 }
 
 function PanelHeader({
-  state, elapsedMs, isRecording, isActive, expanded, showBack, hasPending, worktreeInfo,
-  onToggleSession, onInterrupt, onToggleView, onBack, onToggleExpand, onClose,
+  state, elapsedMs, isRecording, isActive, expanded, hasPending, worktreeInfo,
+  onToggleSession, onInterrupt, onOpenSettings, onToggleExpand, onClose,
 }: PanelHeaderProps) {
   const interruptible = isActive && (state === "thinking" || state === "executing");
 
   return (
     <div className="hud-header">
-      {showBack && expanded && (
-        <button className="hud-icon-btn" onClick={onBack} title="Back">
-          <BackArrow />
-        </button>
-      )}
-
       {isRecording ? <RecordingIndicator /> : <span className={`hud-status-dot hud-status-dot--${state}`} />}
       <span className={`hud-status-label hud-status-label--${isRecording ? "listening" : state}`}>
         {isRecording ? "Listening..." : stateLabel(state)}
@@ -161,7 +147,7 @@ function PanelHeader({
         {isActive ? <StopSquare /> : <PlayTriangle />}
       </button>
       {expanded && (
-        <button className="hud-icon-btn" onClick={onToggleView} title="Settings">
+        <button className="hud-icon-btn" onClick={onOpenSettings} title="Settings">
           <GearIcon />
         </button>
       )}
@@ -246,14 +232,6 @@ function InterruptIcon() {
   return (
     <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
       <rect x="2" y="2" width="6" height="6" rx="1" fill="currentColor" />
-    </svg>
-  );
-}
-
-function BackArrow() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-      <path d="M7 3L4 6L7 9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

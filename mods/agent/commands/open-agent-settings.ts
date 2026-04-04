@@ -8,8 +8,8 @@ try {
   const vrm = await input.parseMenu();
   await Webview.open({
     source: webviewSource.local("agent:settings-ui"),
-    size: [0.55, 0.75],
-    viewportSize: [800, 600],
+    size: [0.9, 0.9],
+    viewportSize: [1200, 800],
     linkedVrm: vrm.entity,
     offset: [-0.6, -0.3],
   });
