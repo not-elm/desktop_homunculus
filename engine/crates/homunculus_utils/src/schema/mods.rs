@@ -137,7 +137,8 @@ mod tests {
 
     #[test]
     fn deserialize_tray_item_with_position() {
-        let json = r#"{"id":"open-settings","text":"Settings","command":"open-ui","position":"top"}"#;
+        let json =
+            r#"{"id":"open-settings","text":"Settings","command":"open-ui","position":"top"}"#;
         let item: TrayMenuItem = serde_json::from_str(json).unwrap();
         assert_eq!(item.position, Some("top".to_string()));
     }
