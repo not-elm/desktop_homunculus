@@ -407,10 +407,18 @@ mod tests {
 
         assert_eq!(
             texts,
-            vec!["@hmcs/settings", "@hmcs/agent", "@hmcs/voicevox", "@hmcs/app-exit"]
+            vec![
+                "@hmcs/settings",
+                "@hmcs/agent",
+                "@hmcs/voicevox",
+                "@hmcs/app-exit"
+            ]
         );
 
-        let separator_count = menu.iter().filter(|item| matches!(item, MenuItem::Separator)).count();
+        let separator_count = menu
+            .iter()
+            .filter(|item| matches!(item, MenuItem::Separator))
+            .count();
         assert_eq!(separator_count, 2);
     }
 
@@ -446,7 +454,10 @@ mod tests {
 
         let (menu, _) = build_menu(&mod_registry);
 
-        let separator_count = menu.iter().filter(|item| matches!(item, MenuItem::Separator)).count();
+        let separator_count = menu
+            .iter()
+            .filter(|item| matches!(item, MenuItem::Separator))
+            .count();
         assert_eq!(separator_count, 1);
 
         let texts: Vec<&str> = menu
