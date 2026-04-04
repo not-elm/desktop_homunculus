@@ -1590,13 +1590,6 @@ h3.hud-md-heading {
   transition: background var(--hud-duration-micro) var(--hud-easing-micro);
 }
 
-.ws-row-content {
-  display: flex;
-  align-items: center;
-  gap: var(--hud-ws-row-gap);
-  flex: 1;
-  min-width: 0;
-}
 
 .ws-row--workspace { background: var(--hud-ws-surface-workspace); }
 .ws-row--worktree {
