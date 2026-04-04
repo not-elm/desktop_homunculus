@@ -78,7 +78,15 @@ function StatusBadge({ worktree }: { worktree: WorktreeData }) {
 
 function buildOverflowItems(onShowDetails: () => void, onRemove: () => void) {
   return [
-    { label: "Details", onClick: onShowDetails },
+    {
+      label: "Details",
+      onClick: () => {
+        // Delay opening so the DropdownMenu fully closes first.
+        // Without this, the menu's dismiss events immediately close
+        // the Popover that just opened.
+        requestAnimationFrame(onShowDetails);
+      },
+    },
     { label: "Remove Worktree", onClick: onRemove, destructive: true },
   ];
 }
