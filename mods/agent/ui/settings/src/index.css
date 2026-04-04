@@ -610,6 +610,36 @@ body {
   overflow-y: auto;
 }
 
+/* === Sidebar-adapted workspace tree overrides === */
+.stg-sidebar-tree .ws-header {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+}
+
+.stg-sidebar-tree .ws-desc {
+  -webkit-line-clamp: 1;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.stg-sidebar-tree .ws-add-btn {
+  align-self: flex-start;
+  font-size: var(--hud-settings-cmd-size);
+  padding: 3px 8px;
+}
+
+/* Reduce indent depth for narrow sidebar */
+.stg-sidebar-tree .ws-row--worktree {
+  margin-left: 16px;
+}
+
+.stg-sidebar-tree .ws-connector {
+  margin-left: 12px;
+  padding-left: 8px;
+}
+
 .stg-sidebar-divider {
   height: 1px;
   background: linear-gradient(90deg, transparent, oklch(0.72 0.14 192 / 0.25), transparent);

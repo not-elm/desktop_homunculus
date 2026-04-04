@@ -24,8 +24,8 @@ export function App() {
     const vrm = await Webview.current()?.linkedVrm();
     await Webview.open({
       source: webviewSource.local("agent:settings-ui"),
-      size: [0.9, 0.9],
-      viewportSize: [1200, 800],
+      size: [1.3333, 1.0],
+      viewportSize: [1200, 900],
       linkedVrm: vrm?.entity,
       offset: [-0.5, -0.3],
     });
