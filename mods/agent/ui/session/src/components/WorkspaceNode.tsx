@@ -45,7 +45,7 @@ export function WorkspaceNode({
   onFormCreated,
   onFormCancelled,
 }: WorkspaceNodeProps) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
   const hasWorktrees = (data?.worktrees.length ?? 0) > 0;
   const hasChildren = hasWorktrees || showAddForm;
   const FolderIcon = data?.isGit ? FolderGit2 : Folder;
@@ -53,7 +53,6 @@ export function WorkspaceNode({
 
   function handleRowClick() {
     onSelectWorkspace();
-    if (hasWorktrees && !expanded) setExpanded(true);
   }
 
   function handleChevronClick(e: React.MouseEvent) {
@@ -63,7 +62,7 @@ export function WorkspaceNode({
 
   const overflowItems = buildOverflowItems(data?.isGit ?? false, onAddWorktree, onRemoveWorkspace);
   const collapsedHint = buildCollapsedHint(expanded, hasWorktrees, selectedWorktree, data);
-  const rowClass = `ws-row ws-row--workspace${isSelected ? " ws-row--selected" : ""}`;
+  const rowClass = "ws-row ws-row--workspace";
 
   return (
     <div
@@ -76,6 +75,9 @@ export function WorkspaceNode({
       onKeyDown={onKeyDown}
     >
       <div className={rowClass} onClick={handleRowClick}>
+        <span className="ws-radio" aria-hidden="true" aria-checked={isSelected}>
+          {isSelected && <span className="ws-radio-dot" />}
+        </span>
         {hasChildren ? (
           <ChevronRight
             className={`ws-chevron${expanded ? " ws-chevron--expanded" : ""}`}
