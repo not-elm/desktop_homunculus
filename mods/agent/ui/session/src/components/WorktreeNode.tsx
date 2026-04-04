@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { GitBranch } from "lucide-react";
 import { Popover, PopoverAnchor } from "@hmcs/ui";
 import { TreeOverflowMenu } from "./TreeOverflowMenu.tsx";
@@ -34,6 +34,7 @@ export function WorktreeNode({
   onKeyDown,
 }: WorktreeNodeProps) {
   const [showDetail, setShowDetail] = useState(false);
+  const anchorRef = useRef<HTMLDivElement>(null);
 
   const overflowItems = buildOverflowItems(() => setShowDetail(true), onRemove);
 
@@ -41,6 +42,7 @@ export function WorktreeNode({
     <Popover open={showDetail} onOpenChange={setShowDetail}>
       <PopoverAnchor asChild>
         <div
+          ref={anchorRef}
           className="ws-row ws-row--worktree"
           role="treeitem"
           aria-level={2}
@@ -62,7 +64,7 @@ export function WorktreeNode({
           <TreeOverflowMenu items={overflowItems} />
         </div>
       </PopoverAnchor>
-      <WorktreeDetailPopover worktree={worktree} />
+      <WorktreeDetailPopover worktree={worktree} anchorRef={anchorRef} />
     </Popover>
   );
 }
@@ -78,15 +80,7 @@ function StatusBadge({ worktree }: { worktree: WorktreeData }) {
 
 function buildOverflowItems(onShowDetails: () => void, onRemove: () => void) {
   return [
-    {
-      label: "Details",
-      onClick: () => {
-        // Delay opening so the DropdownMenu fully closes first.
-        // Without this, the menu's dismiss events immediately close
-        // the Popover that just opened.
-        requestAnimationFrame(onShowDetails);
-      },
-    },
+    { label: "Details", onClick: onShowDetails },
     { label: "Remove Worktree", onClick: onRemove, destructive: true },
   ];
 }
