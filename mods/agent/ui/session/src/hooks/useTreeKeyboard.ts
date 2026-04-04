@@ -64,6 +64,8 @@ export function useTreeKeyboard({ onSelect }: UseTreeKeyboardOptions): UseTreeKe
         break;
       }
       case " ": {
+        const target = e.target as HTMLElement;
+        if (target.getAttribute("role") !== "treeitem") break;
         e.preventDefault();
         if (current.getAttribute("aria-expanded") != null) {
           current.click();
@@ -111,6 +113,7 @@ export function useTreeKeyboard({ onSelect }: UseTreeKeyboardOptions): UseTreeKe
   return { treeRef, handleKeyDown, focusItem };
 }
 
+// Supports 2-level tree (workspace > worktree). For deeper nesting, walk all ancestor groups.
 function isVisible(el: HTMLElement): boolean {
   const group = el.closest('[role="group"]');
   if (!group) return true;

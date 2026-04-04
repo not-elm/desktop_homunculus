@@ -4,7 +4,7 @@ import { WorktreeNode, type WorktreeData } from "./WorktreeNode.tsx";
 import { TreeOverflowMenu } from "./TreeOverflowMenu.tsx";
 import { AddWorktreeForm } from "./AddWorktreeForm.tsx";
 
-interface WorkspaceData {
+export interface WorkspaceData {
   isGit: boolean;
   currentBranch: string | null;
   worktrees: WorktreeData[];
@@ -78,7 +78,7 @@ export function WorkspaceNode({
       <div className={rowClass} onClick={handleRowClick}>
         {hasChildren ? (
           <ChevronRight
-            className={`ws-chevron${expanded ? "" : " ws-chevron--collapsed"}`}
+            className={`ws-chevron${expanded ? " ws-chevron--expanded" : ""}`}
             onClick={handleChevronClick}
           />
         ) : (

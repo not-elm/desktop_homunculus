@@ -1590,10 +1590,20 @@ h3.hud-md-heading {
   transition: background var(--hud-duration-micro) var(--hud-easing-micro);
 }
 
+.ws-row-content {
+  display: flex;
+  align-items: center;
+  gap: var(--hud-ws-row-gap);
+  flex: 1;
+  min-width: 0;
+}
+
 .ws-row--workspace { background: var(--hud-ws-surface-workspace); }
 .ws-row--worktree {
   background: var(--hud-ws-surface-worktree);
   margin-left: var(--hud-ws-indent-unit);
+  flex-direction: column;
+  align-items: stretch;
 }
 
 .ws-row:hover { background: var(--hud-ws-surface-hover); }
@@ -1616,7 +1626,7 @@ h3.hud-md-heading {
   transition: transform var(--hud-ws-duration-layout) var(--hud-easing-content);
 }
 
-.ws-chevron--collapsed { transform: rotate(-90deg); }
+.ws-chevron--expanded { transform: rotate(90deg); }
 
 .ws-icon {
   width: var(--hud-ws-icon-size);

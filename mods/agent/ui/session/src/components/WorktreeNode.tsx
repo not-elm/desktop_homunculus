@@ -1,4 +1,5 @@
 import { GitBranch } from "lucide-react";
+import { TreeOverflowMenu } from "./TreeOverflowMenu.tsx";
 
 export interface WorktreeData {
   name: string;
@@ -32,37 +33,29 @@ export function WorktreeNode({
   const rowClass = `ws-row ws-row--worktree${isSelected ? " ws-row--selected" : ""}`;
 
   return (
-    <>
-      <div
-        className={rowClass}
-        role="treeitem"
-        aria-level={2}
-        aria-selected={isSelected}
-        tabIndex={tabIndex}
-        data-wt-name={worktree.name}
-        onClick={onSelect}
-        onKeyDown={onKeyDown}
-      >
+    <div
+      className={rowClass}
+      role="treeitem"
+      aria-level={2}
+      aria-selected={isSelected}
+      tabIndex={tabIndex}
+      data-wt-name={worktree.name}
+      onClick={onSelect}
+      onKeyDown={onKeyDown}
+    >
+      <div className="ws-row-content">
         <GitBranch className="ws-icon" />
         <span className="ws-name">{worktree.name}</span>
         <StatusBadge worktree={worktree} />
         {worktree.canMerge && (
           <span className="ws-badge ws-badge--mergeable">mergeable</span>
         )}
-        <button
-          className="ws-overflow"
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onRemove();
-          }}
-          aria-label={`Remove worktree ${worktree.name}`}
-        >
-          &times;
-        </button>
+        <TreeOverflowMenu items={[
+          { label: "Remove Worktree", onClick: onRemove, destructive: true },
+        ]} />
       </div>
       {isSelected && <MetaTier2 worktree={worktree} />}
-    </>
+    </div>
   );
 }
 

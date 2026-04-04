@@ -3,7 +3,7 @@ import { dialog } from "@hmcs/sdk";
 import { rpc } from "@hmcs/sdk/rpc";
 import type { WorkspaceSelection } from "../hooks/useAgentSettings";
 import { useTreeKeyboard } from "../hooks/useTreeKeyboard.ts";
-import { WorkspaceNode } from "./WorkspaceNode.tsx";
+import { WorkspaceNode, type WorkspaceData } from "./WorkspaceNode.tsx";
 import { RemoveWorktreeDialog } from "./RemoveWorktreeDialog.tsx";
 import { RemoveWorkspaceDialog } from "./RemoveWorkspaceDialog.tsx";
 import type { WorktreeData } from "./WorktreeNode.tsx";
@@ -14,12 +14,6 @@ interface WorkspaceTreeProps {
   onSelectionChange: (selection: WorkspaceSelection) => void;
   onAddWorkspace: (path: string) => void;
   onRemoveWorkspace: (index: number) => void;
-}
-
-interface WorkspaceData {
-  isGit: boolean;
-  currentBranch: string | null;
-  worktrees: WorktreeData[];
 }
 
 export interface BranchData {
