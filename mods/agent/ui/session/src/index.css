@@ -1,52 +1,10 @@
 @import "tailwindcss";
 @import "@hmcs/ui/dist/index.css";
 
+@import "../../shared/tokens.css";
+
 :root {
-  /* Text tiers */
-  --hud-text-primary: oklch(0.92 0 0);
-  --hud-text-secondary: oklch(0.8 0.02 250);
-  --hud-text-tertiary: oklch(0.73 0.02 250);
-  --hud-text-muted: oklch(0.58 0.02 250);
-  --hud-text-placeholder: oklch(0.65 0.03 250);
-
-  /* Semantic status colors */
-  --hud-status-error: oklch(0.78 0.14 15);
-  --hud-status-success: oklch(0.78 0.14 155);
-  --hud-status-warning: oklch(0.78 0.14 75);
-  --hud-status-info: oklch(0.78 0.14 192);
-  --hud-status-accent: oklch(0.78 0.14 30);
-
-  /* Surface tokens */
-  --hud-surface-base: oklch(0.13 0.015 250 / 0.93);
-  --hud-surface-raised: oklch(0.15 0.015 250);
-  --hud-surface-input: oklch(0.14 0.018 250);
-  --hud-surface-dialog: oklch(0.11 0.015 250);
-  --hud-surface-user: oklch(0.16 0.03 30);
-
-  /* Border tokens */
-  --hud-border-decorative: oklch(0.72 0.14 192 / 0.18);
-  --hud-border-interactive: oklch(0.72 0.14 192 / 0.38);
-  --hud-border-hover: oklch(0.72 0.14 192 / 0.55);
-  --hud-border-focus: oklch(0.78 0.16 192 / 0.55);
-
-  /* Typography tokens */
-  --hud-font-family: system-ui, -apple-system, sans-serif;
-  --hud-font-size-xs: 0.6875rem;
-  --hud-font-size-sm: 0.75rem;
-  --hud-font-size-base: 0.875rem;
-  --hud-line-height-tight: 1.3;
-  --hud-line-height-normal: 1.5;
-
-  /* Spacing tokens */
-  --hud-space-unit: 4px;
-  --hud-space-xs: 4px;
-  --hud-space-sm: 6px;
-  --hud-space-md: 8px;
-  --hud-space-lg: 12px;
-  --hud-space-xl: 16px;
-  --hud-space-2xl: 24px;
-
-  /* Zone application */
+  /* Zone application tokens */
   --hud-header-padding: var(--hud-space-md) var(--hud-space-lg);
   --hud-log-padding: 0 var(--hud-space-xl);
   --hud-input-padding: var(--hud-space-md) var(--hud-space-lg);
@@ -55,7 +13,7 @@
   --hud-log-entry-gap: 5px;
   --hud-system-entry-padding: var(--hud-space-xs) var(--hud-space-lg);
 
-  /* Layout tokens */
+  /* Session HUD layout tokens */
   --hud-body-max-height: min(500px, 72vh);
   --hud-header-height: 40px;
   --hud-input-height: 49px;
@@ -64,72 +22,14 @@
   --hud-log-min-height: 80px;
   --hud-dialog-max-height: 48px;
 
-  /* Motion tokens */
-  --hud-duration-entry: 280ms;
-  --hud-easing-entry: cubic-bezier(0.16, 1, 0.3, 1);
-  --hud-duration-micro: 150ms;
-  --hud-easing-micro: ease-out;
-  --hud-duration-layout: 280ms;
-  --hud-easing-layout: cubic-bezier(0.16, 1, 0.3, 1);
-  --hud-duration-content: 200ms;
-  --hud-easing-content: ease-in-out;
-
-  /* Ambient motion */
+  /* Ambient motion tokens */
   --hud-scanline-duration: 5s;
   --hud-scanline-opacity: 0.07;
   --hud-pulse-thinking: 1s;
-
-  /* Workspace tree tokens */
-  --hud-ws-surface-workspace: oklch(0.15 0.015 250);
-  --hud-ws-surface-worktree: oklch(0.12 0.015 250);
-  --hud-ws-surface-hover: oklch(0.18 0.015 250);
-  --hud-ws-hover-glow: 0 0 4px oklch(0.72 0.14 192 / 0.10);
-  --hud-ws-badge-bg-branch: oklch(0.55 0.12 192 / 0.28);
-  --hud-ws-badge-bg-status: oklch(0.55 0.10 285 / 0.28);
-  --hud-ws-badge-bg-changes: oklch(0.60 0.14 80 / 0.28);
-  --hud-ws-badge-bg-mergeable: oklch(0.60 0.12 155 / 0.28);
-  --hud-ws-badge-text: oklch(0.92 0.01 250);
-  --hud-ws-connector: oklch(0.45 0.01 250 / 0.40);
-  --hud-ws-overflow-idle: oklch(0.60 0.02 250 / 0.40);
-  --hud-ws-overflow-hover: oklch(0.80 0.02 250 / 0.90);
-  --hud-ws-indent-unit: 24px;
-  --hud-ws-row-height-min: 36px;
-  --hud-ws-row-padding-x: 12px;
-  --hud-ws-row-padding-y: 6px;
-  --hud-ws-row-gap: 8px;
-  --hud-ws-row-border-radius: 6px;
-  --hud-ws-badge-padding-x: 6px;
-  --hud-ws-badge-max-width: 120px;
-  --hud-ws-icon-size: 16px;
-  --hud-ws-overflow-size: 24px;
-  --hud-ws-dot-size: 8px;
-  --hud-ws-radio-size: 14px;
-  --hud-ws-radio-border: 2px;
-  --hud-ws-radio-dot: 6px;
-  --hud-ws-radio-off: oklch(0.45 0 0);
-  --hud-ws-radio-on: oklch(0.72 0.14 192);
-  --hud-ws-connector-width: 1px;
-  --hud-ws-duration-layout: 180ms;
-  --hud-ws-stagger-delay: 30ms;
-  --hud-ws-font-label: var(--hud-font-size-base);
-  --hud-ws-font-badge: 0.625rem;
-  --hud-ws-font-meta: var(--hud-font-size-xs);
-
   --hud-pulse-executing: 0.7s;
   --hud-pulse-waiting: 0.8s;
   --hud-corner-pulse-duration: 3s;
   --hud-highlight-sweep-duration: 3s;
-
-  /* Elevation tokens */
-  --hud-shadow-glow-sm: 0 0 4px oklch(0.72 0.14 192 / 0.15);
-  --hud-shadow-glow-md: 0 0 8px oklch(0.72 0.14 192 / 0.2);
-  --hud-shadow-glow-lg: 0 0 12px oklch(0.72 0.14 192 / 0.3);
-
-  /* Focus ring tokens */
-  --hud-focus-offset: 2px;
-  --hud-focus-ring-width: 2px;
-  --hud-focus-ring-color: oklch(0.78 0.16 192 / 0.55);
-  --hud-focus-glow: 0 0 6px oklch(0.72 0.14 192 / 0.35);
 }
 
 body {
