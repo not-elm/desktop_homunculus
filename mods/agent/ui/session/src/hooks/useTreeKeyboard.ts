@@ -67,9 +67,7 @@ export function useTreeKeyboard({ onSelect }: UseTreeKeyboardOptions): UseTreeKe
         const target = e.target as HTMLElement;
         if (target.getAttribute("role") !== "treeitem") break;
         e.preventDefault();
-        if (current.getAttribute("aria-expanded") != null) {
-          current.click();
-        }
+        onSelect(current);
         break;
       }
       case "Home": {
@@ -88,7 +86,8 @@ export function useTreeKeyboard({ onSelect }: UseTreeKeyboardOptions): UseTreeKe
   function handleArrowRight(current: HTMLElement, items: HTMLElement[]) {
     const expanded = current.getAttribute("aria-expanded");
     if (expanded === "false") {
-      current.click();
+      const chevron = current.querySelector<HTMLElement>(".ws-chevron");
+      if (chevron) chevron.click();
       return;
     }
     if (expanded === "true") {
@@ -103,7 +102,8 @@ export function useTreeKeyboard({ onSelect }: UseTreeKeyboardOptions): UseTreeKe
   function handleArrowLeft(current: HTMLElement) {
     const expanded = current.getAttribute("aria-expanded");
     if (expanded === "true") {
-      current.click();
+      const chevron = current.querySelector<HTMLElement>(".ws-chevron");
+      if (chevron) chevron.click();
       return;
     }
     const parent = findParentTreeItem(current);
