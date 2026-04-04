@@ -1979,7 +1979,7 @@ h3.hud-md-heading {
 
 .hud-text-input {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: var(--hud-space-sm);
   padding: var(--hud-input-padding);
   border-top: 1px solid var(--hud-border-decorative);
@@ -1995,6 +1995,8 @@ h3.hud-md-heading {
   color: var(--hud-text-primary);
   outline: none;
   font-family: inherit;
+  resize: none;
+  line-height: var(--hud-line-height-normal);
 }
 
 .hud-text-input-field::placeholder {
