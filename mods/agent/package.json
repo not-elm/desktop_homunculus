@@ -6,7 +6,7 @@
   "author": "notelm",
   "type": "module",
   "scripts": {
-    "build": "pnpm exec vite build ui/session",
+    "build": "pnpm exec vite build ui/session && pnpm exec vite build ui/settings",
     "dev": "pnpm exec vite dev ui/session",
     "test": "vitest run"
   },
@@ -17,6 +17,11 @@
         "id": "open-agent",
         "text": "Agent",
         "command": "agent-open-agent"
+      },
+      {
+        "id": "open-agent-settings",
+        "text": "Agent Settings",
+        "command": "agent-open-agent-settings"
       }
     ],
     "assets": {
@@ -24,11 +29,17 @@
         "path": "ui/session/dist/index.html",
         "type": "html",
         "description": "Agent session HUD"
+      },
+      "agent:settings-ui": {
+        "path": "ui/settings/dist/index.html",
+        "type": "html",
+        "description": "Agent settings window"
       }
     }
   },
   "bin": {
     "agent-open-agent": "commands/open-agent.ts",
+    "agent-open-agent-settings": "commands/open-agent-settings.ts",
     "agent-start-session": "commands/start-session.ts",
     "agent-stop-session": "commands/stop-session.ts"
   },
