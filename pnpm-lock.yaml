@@ -87,6 +87,9 @@ importers:
       '@openai/codex':
         specifier: ^0.117.0
         version: 0.117.0
+      lucide-react:
+        specifier: ^0.525.0
+        version: 0.525.0(react@19.2.4)
       react:
         specifier: ^19.2.4
         version: 19.2.4

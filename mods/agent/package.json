@@ -37,6 +37,7 @@
     "@hmcs/sdk": "workspace:*",
     "@hmcs/ui": "workspace:*",
     "@openai/codex": "^0.117.0",
+    "lucide-react": "^0.525.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-markdown": "^10.1.0",
@@ -46,7 +47,6 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.2.1",
-    "vitest": "^3.2.3",
     "@types/node": "^25.3.3",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
@@ -54,6 +54,7 @@
     "tailwindcss": "^4.2.1",
     "typescript": "^5.9.3",
     "vite": "^6.4.1",
-    "vite-plugin-singlefile": "^2.3.0"
+    "vite-plugin-singlefile": "^2.3.0",
+    "vitest": "^3.2.3"
   }
 }
