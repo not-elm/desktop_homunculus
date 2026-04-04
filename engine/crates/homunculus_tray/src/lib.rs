@@ -196,6 +196,7 @@ mod tests {
             text: "Settings".to_string(),
             command: Some("open-ui".to_string()),
             items: None,
+            position: None,
         };
         registry.register_item("my-mod", &item);
 
@@ -219,14 +220,17 @@ mod tests {
                     text: "Tool A".to_string(),
                     command: Some("run-a".to_string()),
                     items: None,
+                    position: None,
                 },
                 TrayMenuItem {
                     id: "tool-b".to_string(),
                     text: "Tool B".to_string(),
                     command: Some("run-b".to_string()),
                     items: None,
+                    position: None,
                 },
             ]),
+            position: None,
         };
         registry.register_item("my-mod", &item);
 
@@ -256,6 +260,7 @@ mod tests {
             text: "Open".to_string(),
             command: Some("do-open".to_string()),
             items: None,
+            position: None,
         };
         let bevy_item = to_bevy_menu_item("test-mod", &item);
         match bevy_item {
@@ -281,7 +286,9 @@ mod tests {
                 text: "Child".to_string(),
                 command: Some("run-child".to_string()),
                 items: None,
+                position: None,
             }]),
+            position: None,
         };
         let bevy_item = to_bevy_menu_item("test-mod", &item);
         match bevy_item {
