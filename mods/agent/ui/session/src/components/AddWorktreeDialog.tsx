@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { rpc } from "@hmcs/sdk/rpc";
 import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogFooter,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogCancel,
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+  buttonVariants,
   Select,
   SelectContent,
   SelectItem,
@@ -77,11 +78,11 @@ export function AddWorktreeDialog({
   }
 
   return (
-    <AlertDialog open onOpenChange={(open) => { if (!open) onCancel(); }}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Add Worktree</AlertDialogTitle>
-          <AlertDialogDescription asChild>
+    <Dialog open onOpenChange={(open) => { if (!open) onCancel(); }}>
+      <DialogContent showCloseButton={false}>
+        <DialogHeader>
+          <DialogTitle>Add Worktree</DialogTitle>
+          <DialogDescription asChild>
             <div className="space-y-3">
               <p>Create a new worktree from an existing branch.</p>
               <div className="space-y-1">
@@ -115,10 +116,12 @@ export function AddWorktreeDialog({
                 <p className="text-destructive text-xs">{error}</p>
               )}
             </div>
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel onClick={onCancel}>Cancel</AlertDialogCancel>
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <DialogClose className={buttonVariants({ variant: "outline" })} onClick={onCancel}>
+            Cancel
+          </DialogClose>
           <button
             className="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-4 py-2 bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 disabled:opacity-40 disabled:cursor-not-allowed"
             type="button"
@@ -127,8 +130,8 @@ export function AddWorktreeDialog({
           >
             Create Worktree
           </button>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
