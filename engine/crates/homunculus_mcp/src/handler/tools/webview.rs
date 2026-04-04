@@ -1,7 +1,7 @@
 //! Webview tool implementations for the MCP handler.
 
 use super::super::HomunculusMcpHandler;
-use bevy::math::Vec2;
+use bevy::math::{Vec2, Vec3};
 use bevy::prelude::Entity;
 use homunculus_core::prelude::{WebviewOffset, WebviewOpenOptions, WebviewSource};
 use rmcp::handler::server::wrapper::Parameters;
@@ -131,7 +131,7 @@ impl HomunculusMcpHandler {
             source,
             size: Some(Vec2::new(size_x, size_y)),
             viewport_size: Some(Vec2::new(viewport_width as f32, viewport_height as f32)),
-            offset: Some(WebviewOffset(Vec2::new(offset_x, offset_y))),
+            offset: Some(WebviewOffset(Vec3::new(offset_x, offset_y, 10.0))),
             linked_vrm,
         };
 

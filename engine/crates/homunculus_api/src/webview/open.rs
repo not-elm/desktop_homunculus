@@ -185,7 +185,7 @@ fn track_for_linked_vrm(
                 return;
             };
             let mut new_tf = *tf;
-            new_tf.translation = p.translation() + offset.0.extend(10.0);
+            new_tf.translation = p.translation() + offset.0;
             par_commands.command_scope(|mut commands| {
                 commands.entity(entity).try_insert(new_tf);
             });
