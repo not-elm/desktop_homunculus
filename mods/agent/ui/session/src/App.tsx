@@ -27,7 +27,7 @@ export function App() {
       size: [1.3333, 1.0],
       viewportSize: [1200, 900],
       linkedVrm: vrm?.entity,
-      offset: [-0.5, -0.3],
+      offset: [-0.5, -0.3, 12.0],
     });
     await audio.se.play("se:open");
   }
