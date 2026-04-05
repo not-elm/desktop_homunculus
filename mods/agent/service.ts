@@ -622,7 +622,7 @@ function runVoiceApproval(
 ): void {
   (async () => {
     try {
-      await waitForComboPress(resolvedKey, signal);
+      await waitForComboPress(characterId, resolvedKey, signal);
       const text = await recognizeWhileHeld(characterId, resolvedKey, signal);
       if (text === null) {
         deferred.resolve({ approved: false, message: "No speech detected" });
@@ -701,7 +701,7 @@ async function waitForInterrupt(
   sessionSignal: AbortSignal,
 ): Promise<"ptt" | "ui"> {
   const pttPromise = resolvedKey
-    ? waitForComboPress(resolvedKey, sessionSignal).then(() => "ptt" as const)
+    ? waitForComboPress(characterId, resolvedKey, sessionSignal).then(() => "ptt" as const)
     : new Promise<never>(() => {});
 
   return Promise.race([
@@ -759,7 +759,7 @@ async function recognizeOneSentenceVoice(
   resolvedKey: ResolvedPttKey,
   signal: AbortSignal,
 ): Promise<string | null> {
-  await waitForComboPress(resolvedKey, signal);
+  await waitForComboPress(characterId, resolvedKey, signal);
   return await recognizeWhileHeld(characterId, resolvedKey, signal);
 }
 
@@ -791,6 +791,7 @@ async function recognizeWhileHeld(
 }
 
 function waitForComboPress(
+  characterId: string,
   resolvedKey: ResolvedPttKey,
   signal: AbortSignal,
 ): Promise<void> {
@@ -802,6 +803,7 @@ function waitForComboPress(
 
     const unsubscribe = keyboardHook.subscribeCombo({
       onKeyEvent(pressedKeys) {
+        if (textFocusedCharacters.has(characterId)) return;
         if (isComboHeld(pressedKeys, resolvedKey)) {
           cleanup();
           resolve();
