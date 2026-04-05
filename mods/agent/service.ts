@@ -30,6 +30,7 @@ const pendingApprovals = new Map<string, Deferred<{ approved: boolean; message?:
 const pendingQuestions = new Map<string, Deferred<Record<string, string>>>();
 const pendingInterrupts = new Map<string, Deferred<void>>();
 const textQueues = new Map<string, AsyncQueue<string>>();
+const textFocusedCharacters = new Set<string>();
 
 let appServerProcess: CodexAppServerProcess | null = null;
 
@@ -912,6 +913,21 @@ function buildRpcMethods() {
         await interruptSession(characterId);
         queue.clear();
         queue.push(text);
+        return { success: true as const };
+      },
+    }),
+    "set-text-focus": rpc.method({
+      description: "Report whether an editable element currently has focus in the WebView",
+      input: z.object({
+        characterId: z.string(),
+        focused: z.boolean(),
+      }),
+      handler: async ({ characterId, focused }) => {
+        if (focused) {
+          textFocusedCharacters.add(characterId);
+        } else {
+          textFocusedCharacters.delete(characterId);
+        }
         return { success: true as const };
       },
     }),
