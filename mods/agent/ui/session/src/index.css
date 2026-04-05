@@ -93,7 +93,7 @@
   --hud-settings-nav-icon-size: 16px;
   --hud-settings-nav-icon-gap: 10px;
 
-  /* Motion — no ambient (for settings mode; overridden per-mode by data-mode attribute) */
+  /* Motion — settings panel transition tokens (ambient suppression applied via :root[data-mode="settings"]) */
   --hud-settings-fade-duration: var(--hud-duration-content);
   --hud-settings-fade-easing: var(--hud-easing-content);
   --hud-settings-hover-duration: var(--hud-duration-micro);
@@ -2244,6 +2244,12 @@ h3.hud-md-heading {
 .sr-only {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border-width: 0;
+}
+
+/* Settings mode: suppress ambient HUD animations */
+:root[data-mode="settings"] {
+  --hud-scanline-duration: 0s;
+  --hud-pulse-thinking: 0s;
 }
 
 @media (prefers-contrast: more) {
