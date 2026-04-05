@@ -19,7 +19,7 @@ export function Sidebar({
   activeCategory, onCategorySelect, refreshKey,
 }: SidebarProps) {
   return (
-    <aside className="stg-sidebar">
+    <aside className="stg-sidebar h-full">
       <div className="stg-sidebar-tree">
         <WorkspaceTree
           paths={paths}
