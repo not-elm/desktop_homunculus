@@ -354,6 +354,7 @@ async function runSession(
     if (!isAbortError(e)) throw e;
   } finally {
     activeSessions.delete(characterId);
+    textFocusedCharacters.delete(characterId);
     emitStatus(characterId, "idle", "session-ended");
   }
 }
