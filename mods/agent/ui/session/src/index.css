@@ -56,6 +56,7 @@ body {
   display: flex;
   flex-direction: column;
   backdrop-filter: blur(12px);
+  transform-origin: 16px 16px;
 }
 
 .hud-body {
@@ -67,12 +68,26 @@ body {
   max-height: var(--hud-body-max-height);
 }
 
+.hud-container--ready {
+  transition:
+    width var(--hud-duration-layout) var(--hud-easing-layout),
+    max-width var(--hud-duration-layout) var(--hud-easing-layout),
+    border-radius var(--hud-duration-layout) var(--hud-easing-layout);
+}
+
 .hud-container--ready .hud-body {
   transition: max-height var(--hud-duration-layout) cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.hud-container[data-expanded="false"] {
+  width: 32px;
+  max-width: 32px;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
 .hud-container[data-expanded="false"] .hud-body {
-  max-height: 0;
+  display: none;
 }
 
 .hud-body-inner {
@@ -88,10 +103,6 @@ body {
   transition-delay: 80ms;
 }
 
-.hud-container[data-expanded="false"] .hud-body-inner {
-  opacity: 0;
-  transition-delay: 0ms;
-}
 
 /* ━━ Keyframes ━━ */
 
@@ -194,6 +205,74 @@ body {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* ━━ Collapsed Icon ━━ */
+
+.hud-collapsed-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: all var(--hud-duration-micro) var(--hud-easing-micro);
+}
+
+.hud-collapsed-icon:hover {
+  box-shadow: var(--hud-shadow-glow-sm);
+  transform: scale(1.1);
+}
+
+.hud-collapsed-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.hud-collapsed-dot--idle {
+  background: var(--hud-status-success);
+  box-shadow: 0 0 4px var(--hud-status-success);
+}
+
+.hud-collapsed-dot--thinking {
+  background: var(--hud-status-info);
+  box-shadow: 0 0 6px var(--hud-status-info);
+  animation: hud-dot-pulse 1s infinite;
+}
+
+.hud-collapsed-dot--executing {
+  background: var(--hud-status-info);
+  box-shadow: 0 0 4px var(--hud-status-info);
+}
+
+.hud-collapsed-dot--waiting {
+  background: var(--hud-status-warning);
+  box-shadow: 0 0 4px var(--hud-status-warning);
+}
+
+.hud-collapsed-dot--listening {
+  background: var(--hud-status-accent);
+  box-shadow: 0 0 4px var(--hud-status-accent);
+  animation: hud-dot-pulse 1s infinite;
+}
+
+@keyframes hud-dot-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.hud-collapsed-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--hud-status-error);
+  border: 2px solid oklch(0.13 0.015 250);
 }
 
 /* ━━ HUD Pill (collapsed) ━━ */
@@ -1333,6 +1412,10 @@ h3.hud-md-heading {
   }
 
   .hud-view-slide {
+    transition: none;
+  }
+
+  .hud-container--ready {
     transition: none;
   }
 }

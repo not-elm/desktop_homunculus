@@ -34,39 +34,49 @@ export function App() {
 
   return (
     <div className={`hud-container${mounted ? " hud-container--ready" : ""}`} data-expanded={expanded}>
-      <HudDecorations />
-      <PanelHeader
-        state={session.state}
-        elapsedMs={session.elapsedMs}
-        isRecording={session.isRecording}
-        isActive={isActive}
-        expanded={expanded}
-        hasPending={session.hasPending}
-        worktreeInfo={session.worktreeInfo}
-        onToggleSession={isActive ? session.stopSession : session.startSession}
-        onInterrupt={session.interruptSession}
-        onOpenSettings={openSettingsWindow}
-        onToggleExpand={() => setExpanded(!expanded)}
-        onClose={session.closePanel}
-      />
-      <div className="hud-body">
-        <div className="hud-body-inner">
-          {settingsHook.loading
-            ? <div className="hud-inline-settings" style={{ visibility: "hidden" }} />
-            : <InlineSettingsBar
-                settings={settingsHook.settings}
-                onSettingsChange={settingsHook.setAndSaveSettings}
-                apiKey={settingsHook.apiKey}
-                worktreeActive={session.worktreeInfo !== null}
-              />
-          }
-          <div className="hud-view-slider" data-view="session">
-            <div className="hud-view-slide">
-              <SessionContent session={session} />
+      {!expanded ? (
+        <CollapsedIcon
+          state={session.state}
+          hasPending={session.hasPending}
+          onClick={() => setExpanded(true)}
+        />
+      ) : (
+        <>
+          <HudDecorations />
+          <PanelHeader
+            state={session.state}
+            elapsedMs={session.elapsedMs}
+            isRecording={session.isRecording}
+            isActive={isActive}
+            expanded={expanded}
+            hasPending={session.hasPending}
+            worktreeInfo={session.worktreeInfo}
+            onToggleSession={isActive ? session.stopSession : session.startSession}
+            onInterrupt={session.interruptSession}
+            onOpenSettings={openSettingsWindow}
+            onToggleExpand={() => setExpanded(false)}
+            onClose={session.closePanel}
+          />
+          <div className="hud-body">
+            <div className="hud-body-inner">
+              {settingsHook.loading
+                ? <div className="hud-inline-settings" style={{ visibility: "hidden" }} />
+                : <InlineSettingsBar
+                    settings={settingsHook.settings}
+                    onSettingsChange={settingsHook.setAndSaveSettings}
+                    apiKey={settingsHook.apiKey}
+                    worktreeActive={session.worktreeInfo !== null}
+                  />
+              }
+              <div className="hud-view-slider" data-view="session">
+                <div className="hud-view-slide">
+                  <SessionContent session={session} />
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 }
@@ -250,6 +260,23 @@ function GearIcon() {
       <circle cx="6" cy="6" r="2" stroke="currentColor" strokeWidth="1.2" />
       <path d="M6 1v1.5M6 9.5V11M1 6h1.5M9.5 6H11M2.4 2.4l1.1 1.1M8.5 8.5l1.1 1.1M9.6 2.4L8.5 3.5M3.5 8.5L2.4 9.6" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
     </svg>
+  );
+}
+
+/* ━━ Collapsed Icon ━━ */
+
+interface CollapsedIconProps {
+  state: AgentState;
+  hasPending: boolean;
+  onClick: () => void;
+}
+
+function CollapsedIcon({ state, hasPending, onClick }: CollapsedIconProps) {
+  return (
+    <div className="hud-collapsed-icon" onClick={onClick} role="button" tabIndex={0} aria-label="Expand session panel">
+      <span className={`hud-collapsed-dot hud-collapsed-dot--${state}`} />
+      {hasPending && <span className="hud-collapsed-badge" />}
+    </div>
   );
 }
 
