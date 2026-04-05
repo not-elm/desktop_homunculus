@@ -550,7 +550,6 @@ function handleCompleted(
   sessionId: string,
   settings: AgentSettings,
 ): undefined {
-  emitStatus(characterId, "idle", "turn-completed");
   saveSession(characterId, settings.executor, sessionId);
   return undefined;
 }
