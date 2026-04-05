@@ -8,19 +8,27 @@ import { rpc } from "@hmcs/sdk/rpc";
 try {
   const vrm = await input.parseMenu();
 
+  // Skip if WebView already open for this character
   const existing = await Webview.list();
   const alreadyOpen = existing.some((wv) => wv.linkedVrm === vrm.entity);
   if (alreadyOpen) {
     output.succeed();
+    throw new Error("unreachable");
   }
 
-  const characterId = await vrm.name();
-  const { status } = await rpc.call<{ status: string }>({
-    modName: "@hmcs/agent",
-    method: "get-session-status",
-    body: { characterId },
-  });
-  const isSession = status !== "idle";
+  // Determine initial geometry from session status
+  let isSession = false;
+  try {
+    const characterId = await vrm.name();
+    const { status } = await rpc.call<{ status: string }>({
+      modName: "@hmcs/agent",
+      method: "get-session-status",
+      body: { characterId },
+    });
+    isSession = status !== "idle";
+  } catch {
+    // If RPC fails (service not ready), default to settings mode
+  }
 
   await Webview.open({
     source: webviewSource.local("agent:session-ui"),
