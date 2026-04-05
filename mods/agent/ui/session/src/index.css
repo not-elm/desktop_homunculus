@@ -233,8 +233,8 @@ body {
 }
 
 .hud-collapsed-dot--idle {
-  background: var(--hud-status-success);
-  box-shadow: 0 0 4px var(--hud-status-success);
+  background: var(--hud-text-muted);
+  box-shadow: 0 0 4px var(--hud-text-muted);
 }
 
 .hud-collapsed-dot--thinking {
@@ -244,13 +244,15 @@ body {
 }
 
 .hud-collapsed-dot--executing {
-  background: var(--hud-status-info);
-  box-shadow: 0 0 4px var(--hud-status-info);
+  background: var(--hud-status-warning);
+  box-shadow: 0 0 4px var(--hud-status-warning);
+  animation: hud-dot-pulse 1s infinite;
 }
 
 .hud-collapsed-dot--waiting {
-  background: var(--hud-status-warning);
-  box-shadow: 0 0 4px var(--hud-status-warning);
+  background: var(--hud-status-error);
+  box-shadow: 0 0 4px var(--hud-status-error);
+  animation: hud-dot-pulse 1s infinite;
 }
 
 .hud-collapsed-dot--listening {
