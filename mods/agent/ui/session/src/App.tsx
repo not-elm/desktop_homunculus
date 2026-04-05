@@ -27,6 +27,11 @@ export function App() {
     function reportFocus() {
       const el = document.activeElement;
       const focused = el instanceof HTMLElement && el.matches('textarea, input, [contenteditable="true"]');
+      if (focused) {
+        document.documentElement.setAttribute("data-input-focus", "true");
+      } else {
+        document.documentElement.removeAttribute("data-input-focus");
+      }
       rpc.call({
         modName: "@hmcs/agent",
         method: "set-text-focus",
@@ -43,6 +48,7 @@ export function App() {
     return () => {
       document.removeEventListener("focusin", reportFocus);
       document.removeEventListener("focusout", reportFocus);
+      document.documentElement.removeAttribute("data-input-focus");
     };
   }, [session.characterId]);
 

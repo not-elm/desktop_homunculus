@@ -1369,6 +1369,36 @@ h3.hud-md-heading {
 
 /* ━━ Reduced Motion ━━ */
 
+/* 入力中は点滅を控えめにする */
+:root[data-input-focus="true"] .hud-scanline::after {
+  animation-duration: 14s;
+  opacity: 0.3;
+}
+
+:root[data-input-focus="true"] .hud-highlight::after {
+  animation-duration: 10s;
+  opacity: 0.4;
+}
+
+:root[data-input-focus="true"] .hud-corner {
+  animation-duration: 8s;
+  opacity: 0.35;
+}
+
+:root[data-input-focus="true"] .hud-status-dot--thinking,
+:root[data-input-focus="true"] .hud-status-dot--executing,
+:root[data-input-focus="true"] .hud-status-dot--waiting,
+:root[data-input-focus="true"] .hud-status-dot--listening {
+  animation-duration: 1.9s;
+}
+
+:root[data-input-focus="true"] .hud-notification-dot,
+:root[data-input-focus="true"] .hud-staggered-dot,
+:root[data-input-focus="true"] .hud-collapsed-dot--thinking,
+:root[data-input-focus="true"] .hud-collapsed-dot--listening {
+  animation-duration: 2.4s;
+}
+
 @media (prefers-reduced-motion: reduce) {
   :root {
     --hud-duration-entry: 0ms;
