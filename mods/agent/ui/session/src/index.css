@@ -1314,6 +1314,8 @@ h3.hud-md-heading {
   gap: var(--hud-space-sm);
   padding: var(--hud-input-padding);
   border-top: 1px solid var(--hud-border-decorative);
+  position: relative;
+  z-index: 7;
 }
 
 .hud-text-input-field {
@@ -1336,6 +1338,7 @@ h3.hud-md-heading {
 
 .hud-text-input-field:focus {
   border-color: var(--hud-border-focus);
+  animation: none;
 }
 
 .hud-text-input-field:disabled {
@@ -1369,7 +1372,7 @@ h3.hud-md-heading {
 
 /* ━━ Reduced Motion ━━ */
 
-/* 入力中は点滅を控えめにする */
+/* 入力中はスキャンラインを停止し、装飾を控えめにする */
 :root[data-input-focus="true"] .hud-scanline::after {
   animation-duration: 14s;
   opacity: 0.3;

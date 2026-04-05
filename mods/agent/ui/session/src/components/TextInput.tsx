@@ -51,7 +51,7 @@ export function TextInput({ onSend }: TextInputProps) {
   return (
     <div className="hud-text-input">
       <TextareaAutosize
-        className="hud-text-input-field min-h-0 bg-transparent border-0 shadow-none ring-0 backdrop-blur-none p-0 focus-visible:ring-0 focus-visible:shadow-none"
+        className="hud-text-input-field min-h-0 bg-transparent border-0 shadow-none ring-0 backdrop-blur-none p-0 focus-visible:ring-0 focus-visible:shadow-none focus-visible:animate-none"
         minRows={1}
         maxRows={5}
         placeholder="Type a message..."
