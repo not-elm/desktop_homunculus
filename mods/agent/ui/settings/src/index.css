@@ -50,8 +50,7 @@
   /* Layout */
   --hud-settings-width: 100vw;
   --hud-settings-height: 100vh;
-  --hud-settings-sidebar-width: 228px;
-  --hud-settings-main-width: calc(100vw - 228px - 1px);
+  --hud-settings-sidebar-min-width: 160px;
   --hud-settings-nav-zone-height: 152px;
   --hud-settings-tree-min-height: 160px;
   --hud-settings-tree-row-height: 36px;
@@ -595,12 +594,16 @@ body {
   min-height: 0;
 }
 
+.stg-body [data-slot="resizable-panel-group"] {
+  flex: 1;
+  min-height: 0;
+}
+
 /* === Sidebar === */
 .stg-sidebar {
-  width: var(--hud-settings-sidebar-width);
   display: flex;
   flex-direction: column;
-  flex-shrink: 0;
+  overflow: hidden;
 }
 
 .stg-sidebar-tree {
@@ -663,12 +666,31 @@ body {
   flex-shrink: 0;
 }
 
-/* === Sidebar divider === */
-.stg-divider {
-  width: var(--hud-settings-divider-width);
+/* === Resize handle === */
+.stg-resize-handle {
+  width: 1px !important;
   background: var(--hud-settings-divider-color);
   box-shadow: var(--hud-settings-divider-shadow);
-  flex-shrink: 0;
+  transition: all var(--hud-settings-hover-duration) var(--hud-settings-hover-easing);
+  position: relative;
+}
+
+.stg-resize-handle::after {
+  content: "";
+  position: absolute;
+  inset: 0 -3px;
+  cursor: col-resize;
+}
+
+.stg-resize-handle:hover,
+.stg-resize-handle[data-resize-handle-active] {
+  width: 2px !important;
+  background: oklch(0.72 0.14 192 / 0.5);
+}
+
+.stg-resize-handle[data-resize-handle-active] {
+  background: oklch(0.72 0.14 192 / 0.8);
+  box-shadow: 0 0 4px oklch(0.72 0.14 192 / 0.3);
 }
 
 /* === Settings nav === */
@@ -701,8 +723,9 @@ body {
 
 /* === Main panel === */
 .stg-main {
-  flex: 1; background: var(--hud-settings-main);
+  background: var(--hud-settings-main);
   display: flex; flex-direction: column; overflow: hidden;
+  height: 100%;
 }
 .stg-main-content {
   flex: 1; padding: var(--hud-settings-content-padding);
