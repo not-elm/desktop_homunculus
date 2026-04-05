@@ -47,9 +47,15 @@ export function App() {
     setViewOverride("settings");
   }, []);
 
-  const handleStartSession = useCallback(() => {
-    setViewOverride(null);
-  }, []);
+  const handleStartSession = useCallback(async () => {
+    if (!characterId) return;
+    await rpc.call({
+      modName: "@hmcs/agent",
+      method: "start-session",
+      body: { characterId },
+    });
+    // Session status will update via agent:status signal → mode auto-switches to "session"
+  }, [characterId]);
 
   const handleBack = useCallback(() => {
     setViewOverride(null);
