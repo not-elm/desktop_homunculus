@@ -15,7 +15,6 @@
   --hud-settings-main: oklch(0.16 0.015 250);
   --hud-settings-hover: oklch(0.20 0.015 250);
 
-  --hud-settings-divider-width: 1px;
   --hud-settings-divider-color: var(--hud-border-decorative);
   --hud-settings-divider-shadow: inset 1px 0 0 oklch(0.72 0.14 192 / 0.08);
 
@@ -50,7 +49,6 @@
   /* Layout */
   --hud-settings-width: 100vw;
   --hud-settings-height: 100vh;
-  --hud-settings-sidebar-min-width: 160px;
   --hud-settings-nav-zone-height: 152px;
   --hud-settings-tree-min-height: 160px;
   --hud-settings-tree-row-height: 36px;
