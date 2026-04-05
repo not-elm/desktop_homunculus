@@ -188,6 +188,7 @@ export function useAgentSession(options: UseAgentSessionOptions = {}) {
   }, [characterId, state]);
 
   return {
+    characterId,
     state,
     elapsedMs,
     entries,
