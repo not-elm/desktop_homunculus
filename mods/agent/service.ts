@@ -944,6 +944,14 @@ function buildRpcMethods() {
         return result;
       },
     }),
+    "get-session-status": rpc.method({
+      description: "Get the session status for a specific character",
+      input: z.object({ characterId: z.string() }),
+      handler: async ({ characterId }) => {
+        const status = activeSessions.has(characterId) ? "active" : "idle";
+        return { status } as const;
+      },
+    }),
     "start-session": rpc.method({
       description: "Manually start an agent session for a character",
       input: z.object({ characterId: z.string() }),
