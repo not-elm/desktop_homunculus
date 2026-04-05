@@ -1990,6 +1990,21 @@ h3.hud-md-heading {
   background: oklch(0.72 0.18 285 / 0.25);
 }
 
+.stg-header-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: oklch(0.78 0.14 192);
+  margin-left: 6px;
+  flex-shrink: 0;
+  animation: stg-status-pulse 2s ease-in-out infinite;
+}
+
+@keyframes stg-status-pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
 .stg-body {
   flex: 1;
   display: flex;

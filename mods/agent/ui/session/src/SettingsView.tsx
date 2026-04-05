@@ -242,6 +242,7 @@ function SettingsHeader({
   return (
     <div className="stg-header">
       <span className="stg-header-title">Agent Settings</span>
+      {sessionActive && <span className="stg-header-status-dot" />}
       {workspacePath && (
         <SelectionSummary workspacePath={workspacePath} worktreeName={worktreeName} />
       )}

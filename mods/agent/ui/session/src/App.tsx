@@ -61,10 +61,13 @@ export function App() {
     setViewOverride(null);
   }, []);
 
-  const mode: WebviewMode = viewOverride ?? (sessionStatus === "idle" ? "settings" : "session");
+  const mode: WebviewMode | null =
+    sessionStatus === null ? null :
+    viewOverride ?? (sessionStatus === "idle" ? "settings" : "session");
+
   useWebviewMode(mode);
 
-  if (sessionStatus === null) return null;
+  if (mode === null) return null;
 
   if (mode === "settings") {
     return (

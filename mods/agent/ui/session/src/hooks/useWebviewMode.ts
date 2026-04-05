@@ -15,8 +15,9 @@ const SESSION_GEOMETRY = {
   offset: [0.8, -0.5] as [number, number],
 };
 
-export function useWebviewMode(mode: WebviewMode): void {
+export function useWebviewMode(mode: WebviewMode | null): void {
   useEffect(() => {
+    if (!mode) return;
     document.documentElement.dataset.mode = mode;
 
     const wv = Webview.current();
