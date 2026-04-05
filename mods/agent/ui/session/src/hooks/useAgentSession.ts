@@ -30,7 +30,11 @@ export interface PendingQuestion {
   questions: unknown;
 }
 
-export function useAgentSession() {
+interface UseAgentSessionOptions {
+  autoStart?: boolean;
+}
+
+export function useAgentSession(options: UseAgentSessionOptions = {}) {
   const [characterId, setCharacterId] = useState("");
 
   useEffect(() => {
@@ -65,6 +69,22 @@ export function useAgentSession() {
     });
     return () => { cancelled = true; };
   }, [characterId]);
+
+  useEffect(() => {
+    if (!characterId || !options.autoStart) return;
+    let autoStartCancelled = false;
+    checkInitialStatus(characterId).then(async (active) => {
+      if (autoStartCancelled || active) return;
+      try {
+        setError(null);
+        setEntries([]);
+        await callRpc("start-session", { characterId });
+      } catch (e) {
+        if (!autoStartCancelled) setError(e instanceof Error ? e.message : String(e));
+      }
+    });
+    return () => { autoStartCancelled = true; };
+  }, [characterId, options.autoStart]);
 
   useEffect(() => {
     if (!characterId) return;

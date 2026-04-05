@@ -12,7 +12,7 @@ import type { AgentState } from "./hooks/useAgentSession";
 export function App() {
   const [expanded, setExpanded] = useState(true);
   const [mounted, setMounted] = useState(false);
-  const session = useAgentSession();
+  const session = useAgentSession({ autoStart: true });
   const settingsHook = useAgentSettings();
   const isActive = session.state !== "idle";
 
