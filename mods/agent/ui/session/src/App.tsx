@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { audio, Webview, webviewSource } from "@hmcs/sdk";
+import { rpc } from "@hmcs/sdk/rpc";
 import { useAgentSession } from "./hooks/useAgentSession";
 import { useAgentSettings } from "./hooks/useAgentSettings";
 import { ActivityLog } from "./components/ActivityLog";
@@ -19,6 +20,31 @@ export function App() {
   useEffect(() => {
     requestAnimationFrame(() => setMounted(true));
   }, []);
+
+  useEffect(() => {
+    if (!session.characterId) return;
+
+    function reportFocus() {
+      const el = document.activeElement;
+      const focused = el instanceof HTMLElement && el.matches('textarea, input, [contenteditable="true"]');
+      rpc.call({
+        modName: "@hmcs/agent",
+        method: "set-text-focus",
+        body: { characterId: session.characterId, focused },
+      }).catch(() => {
+        // fail-open; next focus change will resync state
+      });
+    }
+
+    reportFocus();
+
+    document.addEventListener("focusin", reportFocus);
+    document.addEventListener("focusout", reportFocus);
+    return () => {
+      document.removeEventListener("focusin", reportFocus);
+      document.removeEventListener("focusout", reportFocus);
+    };
+  }, [session.characterId]);
 
   async function openSettingsWindow() {
     const vrm = await Webview.current()?.linkedVrm();
