@@ -5,6 +5,7 @@ import { useSettingsDraft } from "./hooks/useSettingsDraft";
 import { useWorktreeDetail } from "./hooks/useWorktreeDetail";
 import type { WorkspaceSelection } from "./hooks/useSettingsDraft";
 import type { WorktreeData } from "./hooks/useWorktreeDetail";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@hmcs/ui";
 import { Sidebar } from "./components/Sidebar";
 import { MainPanel } from "./components/MainPanel";
 import { AddWorktreeDialog } from "./components/AddWorktreeDialog";
@@ -144,32 +145,38 @@ export function App() {
     <div className="stg-chrome">
       <SettingsHeader onClose={closeWindow} />
       <div className="stg-body">
-      <Sidebar
-        paths={paths}
-        selection={selection}
-        onSelectionChange={handleSelectionChange}
-        onAddWorkspace={handleAddWorkspaceFromTree}
-        onRemoveWorkspace={handleRemoveWorkspace}
-        activeCategory={activeCategory}
-        onCategorySelect={handleCategorySelect}
-        refreshKey={refreshKey}
-      />
-      <div className="stg-divider" />
-      <MainPanel
-        content={content}
-        worktreeData={worktreeDetail.data}
-        workspacePath={workspacePath}
-        workspaceData={workspacePath ? workspaceDataMap.get(workspacePath) : undefined}
-        settings={draft.settings}
-        onSettingsChange={draft.setSettings}
-        apiKey={draft.apiKey}
-        onApiKeyChange={draft.setApiKey}
-        onApiKeySave={draft.saveApiKey}
-        savingApiKey={draft.savingApiKey}
-        onAddWorktree={() => workspacePath && setAddWorktreeForPath(workspacePath)}
-        onRemoveWorktree={(wt) => workspacePath && setRemoveWorktreeState({ workspacePath, worktree: wt })}
-        onAddWorkspace={handleAddWorkspaceFromPanel}
-      />
+      <ResizablePanelGroup direction="horizontal">
+        <ResizablePanel defaultSize={20} minSize={14} maxSize={50}>
+          <Sidebar
+            paths={paths}
+            selection={selection}
+            onSelectionChange={handleSelectionChange}
+            onAddWorkspace={handleAddWorkspaceFromTree}
+            onRemoveWorkspace={handleRemoveWorkspace}
+            activeCategory={activeCategory}
+            onCategorySelect={handleCategorySelect}
+            refreshKey={refreshKey}
+          />
+        </ResizablePanel>
+        <ResizableHandle className="stg-resize-handle" />
+        <ResizablePanel defaultSize={80}>
+          <MainPanel
+            content={content}
+            worktreeData={worktreeDetail.data}
+            workspacePath={workspacePath}
+            workspaceData={workspacePath ? workspaceDataMap.get(workspacePath) : undefined}
+            settings={draft.settings}
+            onSettingsChange={draft.setSettings}
+            apiKey={draft.apiKey}
+            onApiKeyChange={draft.setApiKey}
+            onApiKeySave={draft.saveApiKey}
+            savingApiKey={draft.savingApiKey}
+            onAddWorktree={() => workspacePath && setAddWorktreeForPath(workspacePath)}
+            onRemoveWorktree={(wt) => workspacePath && setRemoveWorktreeState({ workspacePath, worktree: wt })}
+            onAddWorkspace={handleAddWorkspaceFromPanel}
+          />
+        </ResizablePanel>
+      </ResizablePanelGroup>
       {addWorktreeForPath && (
         <AddWorktreeDialog
           workspacePath={addWorktreeForPath}
