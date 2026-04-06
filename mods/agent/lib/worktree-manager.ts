@@ -1,4 +1,5 @@
 import { join } from "node:path";
+import { existsSync } from "node:fs";
 import { gitExec } from "./git.ts";
 
 /** Information about a git worktree. */
@@ -121,6 +122,7 @@ export class WorktreeManager {
   /** Check if a worktree has uncommitted changes. */
   async hasUncommittedChanges(name: string): Promise<boolean> {
     const worktreePath = this.worktreePath(name);
+    if (!existsSync(worktreePath)) return false;
     const result = await gitExec(worktreePath, ["status", "--porcelain"]);
     return result.trim().length > 0;
   }

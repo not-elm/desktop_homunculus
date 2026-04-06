@@ -62,7 +62,8 @@ export function WorkspaceTree({
           currentBranch: branchData.current,
           worktrees: worktreeData.worktrees,
         };
-      } catch {
+      } catch (e) {
+        console.error("[WorkspaceTree] fetchWorkspaceData failed for", path, e);
         return { isGit: false, currentBranch: null, worktrees: [] };
       }
     },
