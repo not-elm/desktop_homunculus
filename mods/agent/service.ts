@@ -3,12 +3,12 @@ import { Vrm, preferences, signals, stt } from "@hmcs/sdk";
 import { rpc } from "@hmcs/sdk/rpc";
 import { KeyboardHookService, waitForComboRelease, isComboHeld } from "./lib/keyboard-hook.ts";
 import { resolvePttKeycodes, type ResolvedPttKey } from "./lib/key-mapping.ts";
-import { ClaudeAgentExecuter } from "./lib/claude-agent-executer.ts";
-import { CodexAppServerExecuter } from "./lib/codex-appserver-executer.ts";
+import { ClaudeAgentRuntime } from "./lib/claude-agent-runtime.ts";
+import { CodexAppServerRuntime } from "./lib/codex-appserver-runtime.ts";
 import { CodexAppServerProcess } from "./lib/codex-appserver-process.ts";
-import type { AIAgentExecuter } from "./lib/ai-agent-executer.ts";
+import type { AgentRuntime } from "./lib/agent-runtime.ts";
 import { AsyncQueue, Deferred } from "./lib/async-queue.ts";
-import type { AgentEvent, AgentResponse } from "./lib/ai-agent-executer.ts";
+import type { AgentEvent, AgentResponse } from "./lib/agent-runtime.ts";
 import {
   type AgentSettings,
   type AgentStatus,
@@ -144,20 +144,20 @@ async function startSession(characterId: string): Promise<void> {
   }
 
   const worktreeCtx = await buildWorktreeContext(settings, workDir);
-  const executer = createExecuter(settings, persona, currentApiKey, workDir, worktreeCtx);
+  const runtime = createRuntime(settings, persona, currentApiKey, workDir, worktreeCtx);
 
   const sessionAbort = new AbortController();
   activeSessions.set(characterId, sessionAbort);
   textQueues.set(characterId, new AsyncQueue<string>());
 
-  launchSessionLoop(characterId, executer, sessionAbort, settings, resolvedKey);
+  launchSessionLoop(characterId, runtime, sessionAbort, settings, resolvedKey);
 }
 
 function assertCanStartSession(
   characterId: string,
   settings: AgentSettings,
 ): void {
-  if (settings.executor === "sdk" && !currentApiKey) {
+  if (settings.runtime === "sdk" && !currentApiKey) {
     throw new Error(
       "API key not configured. Open Agent Settings to set your Anthropic API key.",
     );
@@ -169,12 +169,12 @@ function assertCanStartSession(
 
 function launchSessionLoop(
   characterId: string,
-  executer: AIAgentExecuter,
+  runtime: AgentRuntime,
   sessionAbort: AbortController,
   settings: AgentSettings,
   resolvedKey: ResolvedPttKey | null,
 ): void {
-  runSession(characterId, executer, sessionAbort, settings, resolvedKey).catch(
+  runSession(characterId, runtime, sessionAbort, settings, resolvedKey).catch(
     (err) => handleSessionCrash(characterId, err, settings),
   );
 }
@@ -251,20 +251,20 @@ async function readWorktreeBaseBranch(worktreePath: string): Promise<string> {
   }
 }
 
-function createExecuter(
+function createRuntime(
   settings: AgentSettings,
   persona: Persona,
   apiKey: string | null,
   workDir: string,
   worktree?: WorktreeContext,
-): AIAgentExecuter {
-  switch (settings.executor) {
+): AgentRuntime {
+  switch (settings.runtime) {
     case "codex":
-      return new CodexAppServerExecuter(persona, settings, workDir, getAppServerProcess(), worktree);
+      return new CodexAppServerRuntime(persona, settings, workDir, getAppServerProcess(), worktree);
     case "sdk":
-      return new ClaudeAgentExecuter(persona, settings, apiKey!, workDir, worktree);
+      return new ClaudeAgentRuntime(persona, settings, apiKey!, workDir, worktree);
     default:
-      throw new Error(`Executor "${settings.executor}" is not yet implemented.`);
+      throw new Error(`Runtime "${settings.runtime}" is not yet implemented.`);
   }
 }
 
@@ -297,22 +297,22 @@ const SESSION_PREF_PREFIX = "agent::session::";
 
 async function loadSavedSession(
   characterId: string,
-  executor: AgentSettings["executor"],
+  runtime: AgentSettings["runtime"],
 ): Promise<string | null> {
   return (
     (await preferences.load<string>(
-      `${SESSION_PREF_PREFIX}${executor}::${characterId}`,
+      `${SESSION_PREF_PREFIX}${runtime}::${characterId}`,
     )) ?? null
   );
 }
 
 function saveSession(
   characterId: string,
-  executor: AgentSettings["executor"],
+  runtime: AgentSettings["runtime"],
   sessionId: string | null,
 ): void {
   preferences.save(
-    `${SESSION_PREF_PREFIX}${executor}::${characterId}`,
+    `${SESSION_PREF_PREFIX}${runtime}::${characterId}`,
     sessionId,
   );
 }
@@ -324,12 +324,12 @@ interface UserInput {
 
 async function runSession(
   characterId: string,
-  executer: AIAgentExecuter,
+  runtime: AgentRuntime,
   sessionAbort: AbortController,
   settings: AgentSettings,
   resolvedKey: ResolvedPttKey | null,
 ): Promise<void> {
-  let sessionId = await loadSavedSession(characterId, settings.executor);
+  let sessionId = await loadSavedSession(characterId, settings.runtime);
   const signal = sessionAbort.signal;
 
   try {
@@ -342,7 +342,7 @@ async function runSession(
       emitStatus(characterId, "thinking");
       const result = await executeOneRound(
         characterId,
-        executer,
+        runtime,
         input.text,
         sessionId,
         settings,
@@ -366,7 +366,7 @@ interface RoundResult {
 
 async function executeOneRound(
   characterId: string,
-  executer: AIAgentExecuter,
+  runtime: AgentRuntime,
   text: string,
   sessionId: string | null,
   settings: AgentSettings,
@@ -374,13 +374,13 @@ async function executeOneRound(
   sessionSignal: AbortSignal,
 ): Promise<RoundResult> {
   const interruptAbort = new AbortController();
-  const executorGen = executer.execute(text, sessionId, interruptAbort.signal);
+  const runtimeGen = runtime.execute(text, sessionId, interruptAbort.signal);
   const interruptPromise = waitForInterrupt(characterId, resolvedKey, sessionSignal);
 
   try {
-    return await driveExecutor(
+    return await driveRuntime(
       characterId,
-      executorGen,
+      runtimeGen,
       interruptPromise,
       interruptAbort,
       sessionId,
@@ -394,9 +394,9 @@ async function executeOneRound(
   }
 }
 
-async function driveExecutor(
+async function driveRuntime(
   characterId: string,
-  executorGen: AsyncGenerator<AgentEvent, void, AgentResponse | undefined>,
+  runtimeGen: AsyncGenerator<AgentEvent, void, AgentResponse | undefined>,
   interruptPromise: Promise<"ptt" | "ui">,
   interruptAbort: AbortController,
   sessionId: string | null,
@@ -408,10 +408,10 @@ async function driveExecutor(
   let response: AgentResponse | undefined = undefined;
 
   while (true) {
-    const raceResult = await raceInterrupt(executorGen.next(response), interruptPromise);
+    const raceResult = await raceInterrupt(runtimeGen.next(response), interruptPromise);
 
     if (raceResult.interrupted) {
-      lastSessionId = await abortExecution(characterId, executorGen, interruptAbort, lastSessionId);
+      lastSessionId = await abortExecution(characterId, runtimeGen, interruptAbort, lastSessionId);
 
       if (raceResult.source === "ptt" && resolvedKey) {
         const voiceText = await recognizeWhileHeld(characterId, resolvedKey, sessionSignal);
@@ -436,18 +436,18 @@ async function driveExecutor(
     }
   }
 
-  await executorGen.return(undefined);
+  await runtimeGen.return(undefined);
   return { sessionId: lastSessionId };
 }
 
 async function abortExecution(
   characterId: string,
-  executorGen: AsyncGenerator<AgentEvent, void, AgentResponse | undefined>,
+  runtimeGen: AsyncGenerator<AgentEvent, void, AgentResponse | undefined>,
   interruptAbort: AbortController,
   lastSessionId: string | null,
 ): Promise<string | null> {
   interruptAbort.abort();
-  await executorGen.return(undefined);
+  await runtimeGen.return(undefined);
   emitInterruptLog(characterId);
   return lastSessionId;
 }
@@ -475,16 +475,16 @@ async function raceInterrupt(
   nextResult: Promise<IteratorResult<AgentEvent, void>>,
   interruptPromise: Promise<"ptt" | "ui">,
 ): Promise<RaceResult> {
-  const executorSide = nextResult.then((r): RaceResultDone | RaceResultEvent =>
+  const runtimeSide = nextResult.then((r): RaceResultDone | RaceResultEvent =>
     r.done
       ? { interrupted: false, done: true, value: undefined }
       : { interrupted: false, done: false, value: r.value as AgentEvent },
   );
   // Suppress unhandled rejection on the losing side of the race.
-  executorSide.catch(() => {});
+  runtimeSide.catch(() => {});
 
   return Promise.race([
-    executorSide,
+    runtimeSide,
     interruptPromise.then(
       (source): RaceResultInterrupted => ({ interrupted: true, source }),
     ),
@@ -553,7 +553,7 @@ function handleCompleted(
   sessionId: string,
   settings: AgentSettings,
 ): undefined {
-  saveSession(characterId, settings.executor, sessionId);
+  saveSession(characterId, settings.runtime, sessionId);
   return undefined;
 }
 
