@@ -15,7 +15,7 @@ export interface PttKey {
 }
 
 export interface AgentSettings {
-  executor: "sdk" | "cli" | "codex";
+  runtime: "sdk" | "cli" | "codex";
   workspaces: { paths: string[]; selection: WorkspaceSelection };
   pttKey: PttKey | null;
   approvalPhrases: string[];
@@ -26,7 +26,7 @@ export interface AgentSettings {
 }
 
 const DEFAULT_SETTINGS: AgentSettings = {
-  executor: "codex",
+  runtime: "codex",
   workspaces: { paths: [], selection: { workspaceIndex: 0, worktreeName: null } },
   pttKey: null,
   approvalPhrases: [],

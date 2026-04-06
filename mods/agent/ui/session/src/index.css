@@ -1346,7 +1346,7 @@ h3.hud-md-heading {
   text-transform: none;
 }
 
-.stg-executor-trigger {
+.stg-backend-trigger {
   height: 32px !important;
   min-height: 32px !important;
   font-size: var(--hud-font-size-sm) !important;
@@ -2345,7 +2345,7 @@ h3.hud-md-heading {
   color: var(--hud-settings-text-command);
 }
 
-.uv-executor-label {
+.uv-runtime-label {
   font-size: 0.6rem;
   color: oklch(0.50 0.02 250);
   letter-spacing: 0.04em;

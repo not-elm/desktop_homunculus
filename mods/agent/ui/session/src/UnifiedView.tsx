@@ -208,7 +208,7 @@ export function UnifiedView() {
       style={{ width: sidebarOpen ? 640 : 340 }}
     >
       <TitleBar
-        executor={draft.settings.executor}
+        runtime={draft.settings.runtime}
         isActive={isActive}
         onToggleSidebar={handleSidebarToggle}
         onToggleSession={isActive ? session.stopSession : session.startSession}
@@ -295,8 +295,8 @@ function BodyPanel({
           <span className="uv-form-title">
             {content.category === "phrases"
               ? "Phrases"
-              : content.category === "executor"
-                ? "Executor"
+              : content.category === "backend"
+                ? "Backend"
                 : "Permissions"}
           </span>
         </div>
@@ -338,7 +338,7 @@ function BodyPanel({
 }
 
 interface TitleBarProps {
-  executor: string;
+  runtime: string;
   isActive: boolean;
   onToggleSidebar: () => void;
   onToggleSession: () => void;
@@ -346,7 +346,7 @@ interface TitleBarProps {
 }
 
 function TitleBar({
-  executor,
+  runtime,
   isActive,
   onToggleSidebar,
   onToggleSession,
@@ -363,7 +363,7 @@ function TitleBar({
         <HamburgerIcon />
       </button>
       <span className="uv-title">Agent</span>
-      <span className="uv-executor-label">/ {executorDisplayName(executor)}</span>
+      <span className="uv-runtime-label">/ {runtimeDisplayName(runtime)}</span>
       <div className="uv-header-spacer" />
       <button
         className={`hud-session-toggle${isActive ? " hud-session-toggle--active" : ""}`}
@@ -383,8 +383,8 @@ function TitleBar({
   );
 }
 
-function executorDisplayName(executor: string): string {
-  return executor.charAt(0).toUpperCase() + executor.slice(1);
+function runtimeDisplayName(runtime: string): string {
+  return runtime.charAt(0).toUpperCase() + runtime.slice(1);
 }
 
 interface StatusStripProps {

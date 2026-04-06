@@ -31,8 +31,8 @@ export function SettingsFormView({
       {category === "permissions" && (
         <PermissionsForm settings={settings} onSettingsChange={onSettingsChange} />
       )}
-      {category === "executor" && (
-        <ExecutorForm settings={settings} onSettingsChange={onSettingsChange} />
+      {category === "backend" && (
+        <BackendForm settings={settings} onSettingsChange={onSettingsChange} />
       )}
     </div>
   );
@@ -89,23 +89,23 @@ function PermissionsForm({ settings, onSettingsChange }: { settings: AgentSettin
   );
 }
 
-const EXECUTOR_OPTIONS = [{ value: "codex", label: "Codex" }];
+const BACKEND_OPTIONS = [{ value: "codex", label: "Codex" }];
 
-function ExecutorForm({ settings, onSettingsChange }: { settings: AgentSettings; onSettingsChange: (s: AgentSettings) => void }) {
+function BackendForm({ settings, onSettingsChange }: { settings: AgentSettings; onSettingsChange: (s: AgentSettings) => void }) {
   function handleChange(value: string) {
-    onSettingsChange({ ...settings, executor: value as AgentSettings["executor"] });
+    onSettingsChange({ ...settings, runtime: value as AgentSettings["runtime"] });
   }
 
   return (
     <div className="settings-label">
-      Executor
-      <span className="settings-label-desc">Backend engine for agent sessions</span>
-      <Select value={settings.executor} onValueChange={handleChange}>
-        <SelectTrigger className="stg-executor-trigger">
+      Backend
+      <span className="settings-label-desc">Runtime engine for agent sessions</span>
+      <Select value={settings.runtime} onValueChange={handleChange}>
+        <SelectTrigger className="stg-backend-trigger">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          {EXECUTOR_OPTIONS.map((o) => (
+          {BACKEND_OPTIONS.map((o) => (
             <SelectItem key={o.value} value={o.value}>
               {o.label}
             </SelectItem>
