@@ -56,25 +56,12 @@ export function WorktreeNode({
             {isSelected && <span className="ws-radio-dot" />}
           </span>
           <GitBranch className="ws-icon" />
-          <span className="ws-name">{worktree.name}</span>
-          <StatusBadge worktree={worktree} />
-          {worktree.canMerge && (
-            <span className="ws-badge ws-badge--mergeable">mergeable</span>
-          )}
+          <span className="ws-name">{worktree.branch}</span>
           <TreeOverflowMenu items={overflowItems} />
         </div>
       </PopoverAnchor>
       <WorktreeDetailPopover worktree={worktree} anchorRef={anchorRef} />
     </Popover>
-  );
-}
-
-function StatusBadge({ worktree }: { worktree: WorktreeData }) {
-  return (
-    <span className="ws-badge ws-badge--status">
-      <span className={`ws-dot ${worktree.hasUncommittedChanges ? "ws-dot--dirty" : "ws-dot--clean"}`} />
-      {worktree.branch}
-    </span>
   );
 }
 
