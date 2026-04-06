@@ -277,25 +277,6 @@ body {
 
 /* ━━ Collapsed Icon ━━ */
 
-.hud-collapsed-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  position: relative;
-  background: var(--hud-surface-base);
-  border: 1px solid var(--hud-border-decorative);
-  backdrop-filter: blur(12px);
-  transition: all var(--hud-duration-micro) var(--hud-easing-micro);
-}
-
-.hud-collapsed-icon:hover {
-  box-shadow: var(--hud-shadow-glow-sm);
-  transform: scale(1.1);
-}
 
 .hud-collapsed-dot {
   width: 10px;
@@ -1908,7 +1889,14 @@ h3.hud-md-heading {
   font-family: var(--hud-font-family);
   color: var(--hud-text-primary);
   position: relative;
-  transition: width var(--hud-duration-layout) var(--hud-easing-layout);
+  transition:
+    width var(--hud-duration-layout) var(--hud-easing-layout),
+    height var(--hud-duration-layout) var(--hud-easing-layout),
+    border-radius var(--hud-duration-layout) var(--hud-easing-layout);
+}
+
+.stg-chrome:not([data-mounted]) {
+  transition: none;
 }
 
 .stg-chrome[data-resizing] {
@@ -1917,6 +1905,47 @@ h3.hud-md-heading {
 
 .stg-chrome[data-resizing] .uv-sidebar {
   transition: none;
+}
+
+.stg-chrome[data-minimized] {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.stg-chrome[data-minimized]:hover {
+  box-shadow: var(--hud-shadow-glow-sm);
+  transform: scale(1.1);
+}
+
+.stg-chrome[data-minimized] > .uv-header,
+.stg-chrome[data-minimized] > .uv-status-strip,
+.stg-chrome[data-minimized] > .uv-body {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--hud-duration-content) var(--hud-easing-content);
+}
+
+.stg-chrome:not([data-minimized]) > .uv-header,
+.stg-chrome:not([data-minimized]) > .uv-status-strip,
+.stg-chrome:not([data-minimized]) > .uv-body {
+  transition: opacity var(--hud-duration-content) var(--hud-easing-content);
+  transition-delay: 80ms;
+}
+
+.stg-chrome > .hud-collapsed-dot {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: opacity var(--hud-duration-content) var(--hud-easing-content);
+  pointer-events: none;
+}
+
+.stg-chrome[data-minimized] > .hud-collapsed-dot {
+  opacity: 1;
 }
 
 .stg-header {
