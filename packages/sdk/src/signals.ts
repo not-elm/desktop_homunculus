@@ -73,6 +73,7 @@ export namespace signals {
     // Node.js: use `ws` package; Browser: use native WebSocket
     const WS = typeof globalThis.WebSocket !== "undefined"
       ? globalThis.WebSocket
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       : (require("ws") as typeof WebSocket);
 
     ws = new WS(url);
