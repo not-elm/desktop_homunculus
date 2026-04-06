@@ -21,7 +21,7 @@ export interface PendingPermission {
   requestId: string;
   action: string;
   target: string;
-  /** Available decision options from AppServer. Undefined for Claude executor. */
+  /** Available decision options from AppServer. Undefined for Claude runtime. */
   availableDecisions?: Decision[];
 }
 
