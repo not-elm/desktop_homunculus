@@ -1914,6 +1914,14 @@ h3.hud-md-heading {
   transition: width var(--hud-duration-layout) var(--hud-easing-layout);
 }
 
+.stg-chrome[data-resizing] {
+  transition: none;
+}
+
+.stg-chrome[data-resizing] .uv-sidebar {
+  transition: none;
+}
+
 .stg-header {
   display: flex;
   align-items: center;

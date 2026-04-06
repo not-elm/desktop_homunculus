@@ -30,6 +30,7 @@ export function UnifiedView() {
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [sidebarWidth, setSidebarWidth] = useState(300);
+  const [resizing, setResizing] = useState(false);
   const [bodyContent, setBodyContent] = useState<BodyContent>({ kind: "sessionLog" });
   const [activeCategory, setActiveCategory] = useState<SettingsCategory | null>(null);
   const [prevActive, setPrevActive] = useState(false);
@@ -191,6 +192,7 @@ export function UnifiedView() {
   function handleResizeStart(e: React.MouseEvent) {
     e.preventDefault();
     dragRef.current = { startX: e.clientX, startWidth: sidebarWidth };
+    setResizing(true);
     document.body.style.userSelect = "none";
 
     function onMouseMove(ev: MouseEvent) {
@@ -202,6 +204,7 @@ export function UnifiedView() {
 
     function onMouseUp() {
       dragRef.current = null;
+      setResizing(false);
       document.body.style.userSelect = "";
       document.removeEventListener("mousemove", onMouseMove);
       document.removeEventListener("mouseup", onMouseUp);
@@ -217,6 +220,7 @@ export function UnifiedView() {
     <div
       className="stg-chrome"
       data-sidebar={sidebarOpen ? "open" : "closed"}
+      data-resizing={resizing || undefined}
       style={{ width: sidebarOpen ? 640 : 640 - sidebarWidth }}
     >
       <UnifiedHeader
