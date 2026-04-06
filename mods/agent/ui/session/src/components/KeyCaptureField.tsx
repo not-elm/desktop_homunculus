@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { PttKey } from "../hooks/useAgentSettings";
+import type { PttKey } from "../settings/hooks/useSettingsDraft";
 
 interface KeyCaptureFieldProps {
   label: string;
