@@ -77,7 +77,7 @@
   /* Layout */
   --hud-settings-width: 100vw;
   --hud-settings-height: 100vh;
-  --hud-settings-nav-zone-height: 152px;
+  --hud-settings-nav-zone-height: 116px;
   --hud-settings-tree-min-height: 160px;
   --hud-settings-tree-row-height: 36px;
   --hud-settings-nav-row-height: 36px;
@@ -2304,16 +2304,176 @@ h3.hud-md-heading {
   outline-offset: var(--hud-focus-offset);
 }
 
+/* ━━ Unified View (.uv-*) ━━ */
+
+.uv-header {
+  display: flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 10px;
+  gap: 6px;
+  border-bottom: 1px solid var(--hud-settings-divider-color);
+  flex-shrink: 0;
+  -webkit-app-region: drag;
+}
+
+.uv-hamburger {
+  -webkit-app-region: no-drag;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  background: none;
+  border: none;
+  color: var(--hud-text-secondary);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all var(--hud-settings-hover-duration) var(--hud-settings-hover-easing);
+}
+
+.uv-hamburger:hover {
+  background: var(--hud-settings-hover);
+  color: var(--hud-text-primary);
+}
+
+.uv-title {
+  font-size: var(--hud-settings-cmd-size);
+  font-weight: var(--hud-settings-cmd-weight);
+  letter-spacing: var(--hud-settings-cmd-spacing);
+  text-transform: var(--hud-settings-cmd-transform);
+  color: var(--hud-settings-text-command);
+}
+
+.uv-status-label {
+  font-size: var(--hud-font-size-xs);
+  color: var(--hud-text-secondary);
+}
+
+.uv-status-label--thinking { color: oklch(0.80 0.14 85); }
+.uv-status-label--executing { color: oklch(0.78 0.14 155); }
+.uv-status-label--waiting { color: oklch(0.80 0.14 65); }
+.uv-status-label--listening { color: oklch(0.80 0.18 30); }
+
+.uv-timer {
+  font-size: var(--hud-font-size-xs);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  color: var(--hud-text-secondary);
+  opacity: 0.6;
+}
+
+.uv-worktree-badge {
+  font-size: 0.6rem;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+.uv-header-spacer { flex: 1; }
+
+.uv-executor-select {
+  -webkit-app-region: no-drag;
+  flex-shrink: 0;
+}
+
+.uv-executor-trigger {
+  height: 24px !important;
+  min-height: 24px !important;
+  padding: 0 8px !important;
+  font-size: 0.65rem !important;
+  background: oklch(0.18 0.015 250) !important;
+  border-color: var(--hud-border-decorative) !important;
+  gap: 4px !important;
+}
+
+.uv-body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+.uv-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--hud-settings-divider-color);
+  overflow: hidden;
+}
+
+.uv-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  position: relative;
+  background: var(--hud-settings-main);
+}
+
+.uv-session {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.uv-form-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.uv-form-subheader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--hud-settings-divider-color);
+  flex-shrink: 0;
+}
+
+.uv-back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  background: none;
+  border: none;
+  color: var(--hud-text-secondary);
+  cursor: pointer;
+  font-size: 14px;
+  transition: all var(--hud-settings-hover-duration) var(--hud-settings-hover-easing);
+}
+
+.uv-back-btn:hover {
+  background: var(--hud-settings-hover);
+  color: var(--hud-text-primary);
+}
+
+.uv-form-title {
+  font-size: var(--hud-settings-cmd-size);
+  font-weight: var(--hud-settings-cmd-weight);
+  letter-spacing: var(--hud-settings-cmd-spacing);
+  text-transform: var(--hud-settings-cmd-transform);
+  color: var(--hud-settings-text-command);
+}
+
+.uv-form-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 16px;
+}
+
 /* sr-only utility */
 .sr-only {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border-width: 0;
 }
 
-/* Settings mode: suppress ambient HUD animations */
-:root[data-mode="settings"] {
+/* Unified view: suppress ambient HUD animations */
+:root[data-mode="expanded"],
+:root[data-mode="collapsed"] {
   --hud-scanline-duration: 0s;
-  --hud-pulse-thinking: 0s;
 }
 
 @media (prefers-contrast: more) {
