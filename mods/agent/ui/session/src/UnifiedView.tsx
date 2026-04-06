@@ -29,7 +29,7 @@ export function UnifiedView() {
   const isActive = session.state !== "idle";
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [sidebarWidth, setSidebarWidth] = useState(240);
+  const [sidebarWidth, setSidebarWidth] = useState(300);
   const [bodyContent, setBodyContent] = useState<BodyContent>({ kind: "sessionLog" });
   const [activeCategory, setActiveCategory] = useState<SettingsCategory | null>(null);
   const [prevActive, setPrevActive] = useState(false);
@@ -196,7 +196,7 @@ export function UnifiedView() {
     function onMouseMove(ev: MouseEvent) {
       if (!dragRef.current) return;
       const delta = ev.clientX - dragRef.current.startX;
-      const newWidth = Math.max(160, Math.min(320, dragRef.current.startWidth + delta));
+      const newWidth = Math.max(200, Math.min(400, dragRef.current.startWidth + delta));
       setSidebarWidth(newWidth);
     }
 

@@ -4,8 +4,8 @@ import { Webview } from "@hmcs/sdk";
 export type WebviewMode = "expanded" | "collapsed";
 
 const VIEW_GEOMETRY = {
-  size: [0.85, 0.8] as [number, number],
-  viewportSize: [640, 500] as [number, number],
+  size: [1.07, 0.8] as [number, number],
+  viewportSize: [800, 500] as [number, number],
   offset: [1.2, -0.3] as [number, number],
 };
 

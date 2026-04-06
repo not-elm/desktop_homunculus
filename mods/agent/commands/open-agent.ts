@@ -9,8 +9,8 @@ try {
 
   await Webview.open({
     source: webviewSource.local("agent:session-ui"),
-    size: [0.85, 0.8],
-    viewportSize: [640, 500],
+    size: [1.07, 0.8],
+    viewportSize: [800, 500],
     offset: [1.2, -0.3],
     linkedVrm: vrm.entity,
   });
