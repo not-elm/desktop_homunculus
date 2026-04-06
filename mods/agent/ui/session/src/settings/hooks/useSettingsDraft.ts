@@ -96,6 +96,17 @@ export function useSettingsDraft() {
     }
   }, [savingApiKey, apiKey]);
 
+  const autoSave = useCallback(async (newSettings: AgentSettings) => {
+    setSettings(newSettings);
+    setSavedSettings(newSettings);
+    if (!characterId) return;
+    try {
+      await preferences.save(`agent::${characterId}`, newSettings);
+    } catch (err) {
+      console.error("Failed to auto-save settings:", err);
+    }
+  }, [characterId]);
+
   return {
     loading,
     settings,
@@ -108,5 +119,6 @@ export function useSettingsDraft() {
     setApiKey,
     savingApiKey,
     saveApiKey,
+    autoSave,
   };
 }
