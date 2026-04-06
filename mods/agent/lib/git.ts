@@ -3,7 +3,10 @@ import { resolve as resolvePath } from "node:path";
 
 /** Strip the `\\?\` verbatim path prefix that Windows file dialogs may return. */
 function normalizeWindowsCwd(cwd: string): string {
-  return resolvePath(cwd.replace(/^\\\\\?\\/, ""));
+  const stripped = cwd.startsWith("\\\\?\\UNC\\")
+    ? `\\\\${cwd.slice(8)}`
+    : cwd.replace(/^\\\\\?\\/, "");
+  return resolvePath(stripped);
 }
 
 /** Execute a git command in the given directory. */
