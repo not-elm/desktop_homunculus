@@ -339,6 +339,7 @@ async function runSession(
       if (input === null) continue;
 
       emitUserLog(characterId, input.text, input.source);
+      emitStatus(characterId, "thinking");
       const result = await executeOneRound(
         characterId,
         executer,
