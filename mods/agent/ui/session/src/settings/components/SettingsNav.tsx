@@ -1,4 +1,4 @@
-import { MessageSquareText, ShieldCheck, Cpu } from "lucide-react";
+import { MessageSquareText, ShieldCheck } from "lucide-react";
 import type { SettingsCategory } from "../types";
 
 interface SettingsNavProps {
@@ -9,7 +9,6 @@ interface SettingsNavProps {
 const NAV_ITEMS: { category: SettingsCategory; label: string; icon: React.ElementType }[] = [
   { category: "phrases", label: "Phrases", icon: MessageSquareText },
   { category: "permissions", label: "Permissions", icon: ShieldCheck },
-  { category: "api-model", label: "API / Model", icon: Cpu },
 ];
 
 export function SettingsNav({ activeCategory, onSelect }: SettingsNavProps) {
