@@ -644,33 +644,6 @@ body {
   color: var(--hud-border-hover);
 }
 
-/* ━━ Interrupt Button ━━ */
-
-.hud-interrupt-btn {
-  background: oklch(0.75 0.15 55 / 0.15);
-  border: 1px solid oklch(0.75 0.15 55 / 0.35);
-  border-radius: 5px;
-  padding: 3px 5px;
-  cursor: pointer;
-  color: oklch(0.8 0.15 55);
-  display: flex;
-  align-items: center;
-  transition:
-    background var(--hud-duration-micro) ease,
-    border-color var(--hud-duration-micro) ease;
-  line-height: 1;
-  flex-shrink: 0;
-}
-
-.hud-interrupt-btn:hover {
-  background: oklch(0.75 0.15 55 / 0.25);
-  border-color: var(--hud-border-hover);
-}
-
-.hud-interrupt-btn:active {
-  transform: scale(0.92);
-}
-
 /* ━━ Status Bar (panel header) ━━ */
 
 .hud-statusbar {
@@ -2372,6 +2345,12 @@ h3.hud-md-heading {
   color: var(--hud-settings-text-command);
 }
 
+.uv-executor-label {
+  font-size: 0.6rem;
+  color: oklch(0.50 0.02 250);
+  letter-spacing: 0.04em;
+}
+
 .uv-status-label {
   font-size: var(--hud-font-size-xs);
   color: var(--hud-text-secondary);
@@ -2396,19 +2375,46 @@ h3.hud-md-heading {
 
 .uv-header-spacer { flex: 1; }
 
-.uv-executor-select {
-  -webkit-app-region: no-drag;
+/* ━━ Status Strip (session-only) ━━ */
+
+.uv-status-strip {
+  display: flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 10px;
+  gap: 6px;
+  background: oklch(0.09 0.015 250 / 0.6);
+  border-bottom: 1px solid var(--hud-settings-divider-color);
   flex-shrink: 0;
 }
 
-.uv-executor-trigger {
-  height: 24px !important;
-  min-height: 24px !important;
-  padding: 0 8px !important;
-  font-size: 0.65rem !important;
-  background: oklch(0.18 0.015 250) !important;
-  border-color: var(--hud-border-decorative) !important;
-  gap: 4px !important;
+.uv-status-strip .hud-status-dot {
+  width: 6px;
+  height: 6px;
+}
+
+.uv-strip-sep {
+  width: 1px;
+  height: 14px;
+  background: oklch(0.72 0.14 192 / 0.12);
+  flex-shrink: 0;
+}
+
+.uv-ptt-badge {
+  font-size: 0.6rem;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  padding: 1px 5px;
+  border-radius: 3px;
+  border: 1px solid oklch(0.72 0.14 192 / 0.2);
+  color: oklch(0.72 0.14 192 / 0.7);
+  background: oklch(0.72 0.14 192 / 0.06);
+  white-space: nowrap;
+}
+
+.uv-ptt-badge--active {
+  border-color: oklch(0.80 0.18 30 / 0.4);
+  color: oklch(0.80 0.18 30);
+  background: oklch(0.80 0.18 30 / 0.08);
 }
 
 .uv-body {
