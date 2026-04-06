@@ -1447,6 +1447,19 @@ h3.hud-md-heading {
   cursor: default;
 }
 
+.hud-text-input-send--interrupt {
+  background: oklch(0.7 0.18 25 / 0.15);
+  border-color: oklch(0.7 0.18 25 / 0.3);
+  color: oklch(0.8 0.18 25);
+  opacity: 1;
+  cursor: pointer;
+}
+
+.hud-text-input-send--interrupt:hover {
+  background: oklch(0.7 0.18 25 / 0.25);
+  border-color: oklch(0.7 0.18 25 / 0.5);
+}
+
 /* ━━ Reduced Motion ━━ */
 
 /* 入力中はスキャンラインを停止し、装飾を控えめにする */
