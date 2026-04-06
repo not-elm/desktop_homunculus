@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { PttKey } from "../hooks/useAgentSettings";
+import type { PttKey } from "../settings/hooks/useSettingsDraft";
+import { formatPttKeyName } from "../utils/format-ptt-key";
 
 interface KeyCaptureFieldProps {
   label: string;
@@ -110,25 +111,4 @@ function collectModifiers(e: React.KeyboardEvent): string[] {
   if (e.altKey) mods.push("alt");
   if (e.metaKey) mods.push("meta");
   return mods;
-}
-
-const MODIFIER_DISPLAY: Record<string, string> = {
-  ctrl: "Ctrl",
-  shift: "Shift",
-  alt: "Alt",
-  meta: "Cmd",
-};
-
-/** Formats a PttKey for display, e.g. "Ctrl + Space". */
-function formatPttKeyName(key: PttKey): string {
-  const modLabels = key.modifiers.map((m) => MODIFIER_DISPLAY[m] ?? m);
-  const keyLabel = formatKeyCode(key.code);
-  return [...modLabels, keyLabel].join(" + ");
-}
-
-/** Converts a browser KeyboardEvent.code to a user-friendly display name. */
-function formatKeyCode(code: string): string {
-  if (code.startsWith("Key")) return code.slice(3);
-  if (code.startsWith("Digit")) return code.slice(5);
-  return code.replace(/(Left|Right)$/, " ($1)");
 }

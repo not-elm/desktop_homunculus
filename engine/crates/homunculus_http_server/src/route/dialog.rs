@@ -82,7 +82,7 @@ pub async fn pick_folder(body: Option<Json<PickFolderRequest>>) -> Json<PickFold
         req.default_path.as_deref(),
     );
     let handle = dialog.pick_folder().await;
-    let path = handle.map(|h| h.path().to_string_lossy().to_string());
+    let path = handle.map(|h| normalize_dialog_path(h.path()));
     Json(PickFolderResponse { path })
 }
 
@@ -108,7 +108,7 @@ pub async fn pick_file(body: Option<Json<PickFileRequest>>) -> Json<PickFileResp
         req.default_path.as_deref(),
     );
     let handle = dialog.pick_file().await;
-    let path = handle.map(|h| h.path().to_string_lossy().to_string());
+    let path = handle.map(|h| normalize_dialog_path(h.path()));
     Json(PickFileResponse { path })
 }
 
@@ -137,9 +137,21 @@ pub async fn pick_files(body: Option<Json<PickFileRequest>>) -> Json<PickFilesRe
     let paths = handles
         .unwrap_or_default()
         .iter()
-        .map(|h| h.path().to_string_lossy().to_string())
+        .map(|h| normalize_dialog_path(h.path()))
         .collect();
     Json(PickFilesResponse { paths })
+}
+
+/// Strip the `\\?\` verbatim path prefix that Windows file dialogs may return.
+///
+/// Handles both local paths (`\\?\C:\...` → `C:\...`) and UNC paths
+/// (`\\?\UNC\server\share` → `\\server\share`).
+fn normalize_dialog_path(path: &std::path::Path) -> String {
+    let s = path.to_string_lossy();
+    if let Some(rest) = s.strip_prefix(r"\\?\UNC\") {
+        return format!(r"\\{rest}");
+    }
+    s.strip_prefix(r"\\?\").unwrap_or(&s).to_string()
 }
 
 /// Build an `AsyncFileDialog` with optional title, filters, and default path.
@@ -239,5 +251,29 @@ mod tests {
         let resp = PickFilesResponse { paths: vec![] };
         let json = serde_json::to_value(&resp).unwrap();
         assert_eq!(json["paths"], serde_json::json!([]));
+    }
+
+    #[test]
+    fn normalize_dialog_path_strips_verbatim_prefix() {
+        let path = std::path::Path::new(r"\\?\C:\Users\test");
+        assert_eq!(normalize_dialog_path(path), r"C:\Users\test");
+    }
+
+    #[test]
+    fn normalize_dialog_path_converts_unc_prefix() {
+        let path = std::path::Path::new(r"\\?\UNC\server\share\dir");
+        assert_eq!(normalize_dialog_path(path), r"\\server\share\dir");
+    }
+
+    #[test]
+    fn normalize_dialog_path_preserves_normal_windows_path() {
+        let path = std::path::Path::new(r"C:\normal\path");
+        assert_eq!(normalize_dialog_path(path), r"C:\normal\path");
+    }
+
+    #[test]
+    fn normalize_dialog_path_preserves_unix_path() {
+        let path = std::path::Path::new("/unix/path");
+        assert_eq!(normalize_dialog_path(path), "/unix/path");
     }
 }

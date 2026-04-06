@@ -2,7 +2,7 @@
 export type Decision = string | Record<string, unknown>;
 
 /**
- * Events yielded by an AIAgentExecuter during execution.
+ * Events yielded by an AgentRuntime during execution.
  *
  * The generator yields these events to communicate progress, permission/elicitation
  * requests, completion, and errors back to the caller.
@@ -59,14 +59,14 @@ export type AgentResponse =
   | undefined;
 
 /**
- * Abstract interface for AI agent execution backends.
+ * Abstract interface for agent runtime backends.
  *
  * Implementations wrap a specific AI SDK (e.g. Claude Agent SDK) and expose
  * a uniform AsyncGenerator-based streaming interface. The caller drives
  * execution by iterating events and sending back responses for interactive
  * requests (permission, elicitation).
  */
-export interface AIAgentExecuter {
+export interface AgentRuntime {
   /**
    * Execute an agent turn.
    *

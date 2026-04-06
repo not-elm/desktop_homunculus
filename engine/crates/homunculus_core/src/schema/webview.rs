@@ -1,5 +1,5 @@
 use super::asset::AssetId;
-use bevy::math::Vec2;
+use bevy::math::{Vec2, Vec3};
 use bevy::prelude::{Component, Entity, Reflect};
 use serde::{Deserialize, Serialize};
 
@@ -59,10 +59,32 @@ pub struct WebviewOpenOptions {
     pub linked_vrm: Option<Entity>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Component, Default, Copy)]
+#[derive(Debug, Serialize, Clone, PartialEq, Component, Copy)]
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
-#[cfg_attr(feature = "openapi", schema(value_type = [f32; 2]))]
-pub struct WebviewOffset(pub Vec2);
+#[cfg_attr(feature = "openapi", schema(value_type = [f32; 3]))]
+pub struct WebviewOffset(pub Vec3);
+
+impl Default for WebviewOffset {
+    fn default() -> Self {
+        Self(Vec3::new(0.0, 0.0, 10.0))
+    }
+}
+
+impl<'de> Deserialize<'de> for WebviewOffset {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let arr: Vec<f32> = Vec::deserialize(deserializer)?;
+        match arr.len() {
+            2 => Ok(WebviewOffset(Vec3::new(arr[0], arr[1], 10.0))),
+            3 => Ok(WebviewOffset(Vec3::new(arr[0], arr[1], arr[2]))),
+            _ => Err(serde::de::Error::custom(
+                "offset must be [x, y] or [x, y, z]",
+            )),
+        }
+    }
+}
 
 /// Tracks the mesh size of a webview in world units.
 /// Inserted when a webview is created, updated when size changes.
@@ -98,9 +120,8 @@ pub struct WebviewInfo {
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct WebviewPatchRequest {
-    #[cfg_attr(feature = "openapi", schema(value_type = Option<[f32; 2]>))]
     #[serde(default)]
-    pub offset: Option<Vec2>,
+    pub offset: Option<WebviewOffset>,
     #[serde(default)]
     #[cfg_attr(feature = "openapi", schema(value_type = Option<[f32; 2]>))]
     pub size: Option<Vec2>,

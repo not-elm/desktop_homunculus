@@ -8,14 +8,15 @@ export interface PttKey {
 
 /** Agent settings stored in preferences. */
 export interface AgentSettings {
-  executor: "sdk" | "cli" | "codex";
+  runtime: "sdk" | "cli" | "codex";
   pttKey: PttKey | null;
   approvalPhrases: string[];
   denyPhrases: string[];
-  workingDirectories: { paths: string[]; default: number };
+  /** Workspace paths and the current selection. */
+  workspaces: { paths: string[]; selection: WorkspaceSelection };
   allowList: string[];
   disallowedTools: string[];
-  /** Shell command patterns auto-approved by the Codex executor (regex strings). */
+  /** Shell command patterns auto-approved by the Codex runtime (regex strings). */
   commandAutoApprovePatterns: string[];
   claudeModel: string;
 }
@@ -61,16 +62,36 @@ export interface Persona {
   ocean: Ocean;
 }
 
+/** Selection state: which workspace/worktree is active. */
+export interface WorkspaceSelection {
+  /** Index into the workspaces array. */
+  workspaceIndex: number;
+  /** If set, the selected worktree name within that workspace. Null = root workspace selected. */
+  worktreeName: string | null;
+}
+
+/** Worktree lifecycle state for the agent:worktree signal. */
+export type WorktreeState = "created" | "orphaned" | "error";
+
+/** Payload for the agent:worktree signal. */
+export interface WorktreeSignalPayload {
+  characterId: string;
+  state: WorktreeState;
+  worktreeName?: string;
+  workspacePath?: string;
+  error?: string;
+}
+
 export const DEFAULT_SETTINGS: AgentSettings = {
-  executor: "codex",
+  runtime: "codex",
   pttKey: null,
   approvalPhrases: ["はい", "yes", "ok", "allow"],
   denyPhrases: ["いいえ", "no", "deny", "cancel"],
-  workingDirectories: { paths: [], default: 0 },
+  workspaces: { paths: [], selection: { workspaceIndex: 0, worktreeName: null } },
   allowList: [],
   disallowedTools: [],
   commandAutoApprovePatterns: ["^(cat|head|tail|less|more)\\s", "^ls\\b", "^pwd$", "^echo\\s", "^wc\\s", "^find\\s", "^grep\\s", "^rg\\s"],
   claudeModel: "",
 };
 
-export type { AgentEvent, AgentResponse, AIAgentExecuter } from "./ai-agent-executer.ts";
+export type { AgentEvent, AgentResponse, AgentRuntime } from "./agent-runtime.ts";

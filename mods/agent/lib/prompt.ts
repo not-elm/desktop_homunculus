@@ -33,8 +33,28 @@ const GENDER_LABEL: Record<string, string> = {
 const LOW_THRESHOLD = 0.35;
 const HIGH_THRESHOLD = 0.65;
 
+/** Context about the worktree environment for agent awareness. */
+export interface WorktreeContext {
+  worktreeName: string;
+  baseBranch: string;
+  worktreePath: string;
+}
+
+/** Builds a worktree awareness section for the system prompt. */
+export function buildWorktreeSection(ctx: WorktreeContext): string {
+  return [
+    "",
+    "## 作業環境",
+    `あなたは現在、メインリポジトリから隔離された git worktree「${ctx.worktreeName}」で作業しています。`,
+    `ベースブランチ: ${ctx.baseBranch}`,
+    `作業ディレクトリ: ${ctx.worktreePath}`,
+    "この環境で行った変更はメインブランチに直接影響しません。",
+    "安心してコードの変更やコミットを行ってください。",
+  ].join("\n");
+}
+
 /** Builds the system prompt with spoken-style instructions and OCEAN-based speech patterns. */
-export function buildCharacterPrompt(persona: Persona): string {
+export function buildCharacterPrompt(persona: Persona, worktree?: WorktreeContext): string {
   const lines = [
     buildNameLine(persona.name),
     buildAgeLine(persona.age),
@@ -48,6 +68,9 @@ export function buildCharacterPrompt(persona: Persona): string {
     "",
     buildWebviewSection(),
   ];
+  if (worktree) {
+    lines.push(buildWorktreeSection(worktree));
+  }
   return lines.filter(Boolean).join("\n");
 }
 
