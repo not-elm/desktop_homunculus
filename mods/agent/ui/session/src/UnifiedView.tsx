@@ -27,6 +27,7 @@ export function UnifiedView() {
   const [activeCategory, setActiveCategory] = useState<SettingsCategory | null>(null);
   const [prevActive, setPrevActive] = useState(false);
   const [minimized, setMinimized] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const dragRef = useRef<{ startX: number; startWidth: number } | null>(null);
 
   const paths = draft.settings.workspaces.paths;
@@ -97,8 +98,21 @@ export function UnifiedView() {
     }
   }, [minimized, session.permission, session.question]);
 
+  useEffect(() => {
+    requestAnimationFrame(() => setMounted(true));
+  }, []);
+
   function handleSidebarToggle() {
     setSidebarOpen((prev) => !prev);
+  }
+
+  function handleMinimize() {
+    setResizing(false);
+    setMinimized(true);
+  }
+
+  function handleRestore() {
+    setMinimized(false);
   }
 
   function handleSelectionChange(newSelection: WorkspaceSelection) {
@@ -208,24 +222,29 @@ export function UnifiedView() {
 
   if (draft.loading) return null;
 
-  if (minimized) {
-    return <CollapsedIcon state={session.state} onClick={() => setMinimized(false)} />;
-  }
-
   return (
     <div
       className="stg-chrome"
       data-sidebar={sidebarOpen ? "open" : "closed"}
       data-resizing={resizing || undefined}
-      style={{ width: sidebarOpen ? 700 : 400 }}
+      data-minimized={minimized || undefined}
+      data-mounted={mounted || undefined}
+      style={minimized ? undefined : { width: sidebarOpen ? 700 : 400 }}
+      onClick={minimized ? handleRestore : undefined}
+      onKeyDown={minimized ? (e: React.KeyboardEvent) => { if (e.key === "Enter") handleRestore(); } : undefined}
+      role={minimized ? "button" : undefined}
+      tabIndex={minimized ? 0 : undefined}
+      aria-label={minimized ? "Restore window" : undefined}
     >
+      <span className={`hud-collapsed-dot hud-collapsed-dot--${session.state}`} />
       <TitleBar
         runtime={draft.settings.runtime}
         isActive={isActive}
         onToggleSidebar={handleSidebarToggle}
         onToggleSession={isActive ? session.stopSession : session.startSession}
-        onMinimize={() => setMinimized(true)}
+        onMinimize={handleMinimize}
         onClose={handleClose}
+        inert={minimized}
       />
       <StatusStrip
         state={session.state}
@@ -234,8 +253,9 @@ export function UnifiedView() {
         isRecording={session.isRecording}
         worktreeInfo={session.worktreeInfo}
         pttKey={draft.settings.pttKey}
+        inert={minimized}
       />
-      <div className="uv-body">
+      <div className="uv-body" inert={minimized || undefined}>
         <div
           className="uv-sidebar"
           inert={!sidebarOpen || undefined}
@@ -357,6 +377,7 @@ interface TitleBarProps {
   onToggleSession: () => void;
   onMinimize: () => void;
   onClose: () => void;
+  inert?: boolean;
 }
 
 function TitleBar({
@@ -366,9 +387,10 @@ function TitleBar({
   onToggleSession,
   onMinimize,
   onClose,
+  inert,
 }: TitleBarProps) {
   return (
-    <div className="uv-header">
+    <div className="uv-header" inert={inert || undefined}>
       <button
         className="uv-hamburger"
         type="button"
@@ -416,6 +438,7 @@ interface StatusStripProps {
   isRecording?: boolean;
   worktreeInfo: { name: string; branch: string } | null;
   pttKey: PttKey | null;
+  inert?: boolean;
 }
 
 function StatusStrip({
@@ -425,11 +448,12 @@ function StatusStrip({
   isRecording,
   worktreeInfo,
   pttKey,
+  inert,
 }: StatusStripProps) {
   if (!isActive) return null;
 
   return (
-    <div className="uv-status-strip">
+    <div className="uv-status-strip" inert={inert || undefined}>
       {isRecording ? (
         <RecordingIndicator />
       ) : (
@@ -571,19 +595,5 @@ function MinimizeIcon() {
     <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
       <path d="M2.5 6h7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
     </svg>
-  );
-}
-
-function CollapsedIcon({ state, onClick }: { state: AgentState; onClick: () => void }) {
-  return (
-    <button
-      className="hud-collapsed-icon"
-      type="button"
-      onClick={onClick}
-      title="Restore window"
-      aria-label="Restore window"
-    >
-      <span className={`hud-collapsed-dot hud-collapsed-dot--${state}`} />
-    </button>
   );
 }
