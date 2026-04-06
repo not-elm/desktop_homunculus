@@ -76,7 +76,6 @@
 
   /* Layout */
   --hud-settings-height: 100vh;
-  --hud-settings-nav-zone-height: 116px;
   --hud-settings-tree-min-height: 160px;
   --hud-settings-tree-row-height: 36px;
   --hud-settings-nav-row-height: 36px;
@@ -2083,7 +2082,7 @@ h3.hud-md-heading {
 }
 
 .stg-sidebar-nav {
-  height: var(--hud-settings-nav-zone-height);
+  height: auto;
   background: var(--hud-settings-sidebar-nav);
   flex-shrink: 0;
 }
