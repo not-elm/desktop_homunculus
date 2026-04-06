@@ -5,7 +5,7 @@ description: Use when starting work on a GitHub Issue to fetch issue content and
 
 # Brainstorm Issue
 
-Fetch a GitHub Issue (proposal template), structure its content, and delegate to `superpowers:brainstorming` for design work. This skill handles Issue retrieval and structuring only. All design decisions, code generation, and implementation are the responsibility of the brainstorming skill.
+Fetch a GitHub Issue (proposal template), structure its content, and delegate to `superpowers:brainstorming`. This skill handles retrieval and structuring only — all design work is the brainstorming skill's responsibility.
 
 ## Flow
 
@@ -33,112 +33,52 @@ User: /brainstorm-issue #123 (or URL)
 
 ## Argument Parsing
 
-Parse the skill argument to determine the issue number and repository.
-
-**Input formats:**
-
 | Input | Interpretation |
 |-------|---------------|
-| `123` | Current repo Issue #123 |
-| `#123` | Same as above (`#` prefix allowed) |
-| `https://github.com/owner/repo/issues/123` | Extract owner/repo and number from URL |
+| `123` or `#123` | Current repo issue (`gh issue view <number> --json title,labels,body`) |
+| `https://github.com/owner/repo/issues/123` | Extract owner/repo (`gh issue view <number> -R <owner/repo> --json title,labels,body`) |
+| (none) | Display "Please provide an issue number or URL." and stop |
 
-**Parsing steps:**
-
-1. If no argument is provided, display "Issue番号またはURLを指定してください" and stop.
-2. If the argument starts with `https://github.com/`:
-   - Extract `owner/repo` and the issue number from the URL path.
-   - Use: `gh issue view <number> -R <owner/repo> --json title,labels,body`
-3. Otherwise:
-   - Strip leading `#` if present and extract the number.
-   - Use: `gh issue view <number> --json title,labels,body`
-   - This uses `gh`'s default behavior, which resolves the repo from the cwd's git remote origin.
-
-If `gh` returns an error (issue not found, auth failure, CLI not installed), display the error output as-is and stop.
+If `gh` returns an error, display the error output as-is and stop.
 
 ## Non-Proposal Detection
 
-After fetching the issue, check its labels to determine if it was filed using the proposal template.
+Check issue labels after fetching:
 
-| Label | Verdict | Action |
-|-------|---------|--------|
-| `enhancement` | Proposal | Continue |
-| `bug` | Non-proposal | Warn: "This issue has the `bug` label and may not be a proposal. Continue anyway?" If the user declines, stop. |
-| `documentation` | Non-proposal | Warn: "This issue has the `documentation` label and may not be a proposal. Continue anyway?" If the user declines, stop. |
-| No labels | Unknown | Continue without warning |
+| Label | Action |
+|-------|--------|
+| `enhancement` | Continue |
+| `bug` or `documentation` | Warn user this may not be a proposal and ask to confirm. Decline → stop. |
+| No labels | Continue without warning |
 
-If the issue has multiple labels, the presence of `bug` or `documentation` triggers the warning regardless of other labels.
+Multiple labels: `bug` or `documentation` triggers the warning regardless of other labels.
 
 ## Content Structuring
 
-### Target headings
+Extract content under these five `##`-level headings (case-sensitive, exact match):
+`## Type`, `## Problem / Current Behavior`, `## Proposed Solution`, `## Affected Area`, `## Alternatives Considered`
 
-Extract content under these five `##`-level headings (case-sensitive):
+### Rules
 
-1. `## Type`
-2. `## Problem / Current Behavior`
-3. `## Proposed Solution`
-4. `## Affected Area`
-5. `## Alternatives Considered`
-
-### Extraction rules
-
-- For each heading found, capture all text between it and the next `##` heading (or end of body).
-- If a heading is not found, omit that section from the output entirely.
-- If **none** of the five headings are found (non-template issue), use the full issue body as a single `### Issue Body` section (fallback).
-- Remove checklist lines at the top of the body that match the template boilerplate (`- [ ] I searched existing issues...`).
-- Remove HTML comments (`<!-- ... -->`).
-- Keep all other checklists in the body (they may contain useful information).
+- Capture text between each heading and the next `##` heading (or end of body). Omit missing sections.
+- If **none** of the five headings are found, use the full body as a `### Issue Body` fallback.
+- Remove boilerplate checklists (`- [ ] I searched existing issues...`) and HTML comments (`<!-- -->`).
+- Keep other checklists (may contain useful information).
 
 ### Output format
 
-Assemble the structured markdown block as follows:
+Assemble a markdown block with this structure:
 
-```
-## Issue Context: #<number> — <title>
-
-**Labels**: <comma-separated labels>
-**URL**: <issue URL>
-
-### Type
-<extracted content>
-
-### Problem / Current Behavior
-<extracted content>
-
-### Proposed Solution
-<extracted content>
-
-### Affected Area
-<extracted content>
-
-### Alternatives Considered
-<extracted content>
-```
-
-Omit any `###` section whose heading was not found in the issue body.
-
-Fallback format (when none of the five headings are found):
-
-```
-## Issue Context: #<number> — <title>
-
-**Labels**: <comma-separated labels>
-**URL**: <issue URL>
-
-### Issue Body
-<full issue body>
-```
+- Header: `## Issue Context: #<number> — <title>`
+- Metadata lines: `**Labels**: <labels>` and `**URL**: <url>`
+- Each extracted section as `### <heading name>` followed by its content
+- Omit any `###` section whose heading was not found in the issue body
+- Fallback (none of the five headings found): use a single `### Issue Body` section with the full issue body
 
 ## Delegation to brainstorming
 
-After structuring the issue content, invoke the brainstorming skill:
+Invoke `superpowers:brainstorming` via the Skill tool. Pass the structured Issue Context block as `args`, prefixed with:
 
-1. Call the Skill tool with `skill: "superpowers:brainstorming"`.
-2. Pass the structured Issue Context block (from the previous step) as the `args` value, prefixed with: "Design a solution for the following GitHub Issue. The issue content is provided below as prior context — use it to inform your brainstorming process rather than re-asking questions the issue already answers."
+> Design a solution for the following GitHub Issue. The issue content is provided below as prior context — use it to inform your brainstorming process rather than re-asking questions the issue already answers.
 
-**Important:**
-
-- Do NOT modify the `superpowers:brainstorming` skill itself.
-- The issue context is provided as **prior information**. How brainstorming uses it (skipping questions, asking for deeper detail, etc.) is up to the brainstorming skill's own flow.
-- All brainstorming steps (explore project context, clarifying questions, propose approaches, etc.) proceed as normal.
+The issue context is **prior information** only. All brainstorming steps (explore context, clarifying questions, propose approaches, etc.) proceed as normal — the brainstorming skill decides how to use the context.
