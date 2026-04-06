@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { audio, dialog, Webview } from "@hmcs/sdk";
 import { rpc } from "@hmcs/sdk/rpc";
 import {
@@ -29,9 +29,11 @@ export function UnifiedView() {
   const isActive = session.state !== "idle";
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarWidth, setSidebarWidth] = useState(240);
   const [bodyContent, setBodyContent] = useState<BodyContent>({ kind: "sessionLog" });
   const [activeCategory, setActiveCategory] = useState<SettingsCategory | null>(null);
   const [prevActive, setPrevActive] = useState(false);
+  const dragRef = useRef<{ startX: number; startWidth: number } | null>(null);
 
   const paths = draft.settings.workspaces.paths;
   const selection = draft.settings.workspaces.selection;
@@ -186,10 +188,37 @@ export function UnifiedView() {
     await Webview.current()?.close();
   }
 
+  function handleResizeStart(e: React.MouseEvent) {
+    e.preventDefault();
+    dragRef.current = { startX: e.clientX, startWidth: sidebarWidth };
+    document.body.style.userSelect = "none";
+
+    function onMouseMove(ev: MouseEvent) {
+      if (!dragRef.current) return;
+      const delta = ev.clientX - dragRef.current.startX;
+      const newWidth = Math.max(160, Math.min(320, dragRef.current.startWidth + delta));
+      setSidebarWidth(newWidth);
+    }
+
+    function onMouseUp() {
+      dragRef.current = null;
+      document.body.style.userSelect = "";
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+    }
+
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+  }
+
   if (draft.loading) return null;
 
   return (
-    <div className="stg-chrome" data-sidebar={sidebarOpen ? "open" : "closed"}>
+    <div
+      className="stg-chrome"
+      data-sidebar={sidebarOpen ? "open" : "closed"}
+      style={{ width: sidebarOpen ? 640 : 640 - sidebarWidth }}
+    >
       <UnifiedHeader
         state={session.state}
         isActive={isActive}
@@ -204,7 +233,11 @@ export function UnifiedView() {
         onClose={handleClose}
       />
       <div className="uv-body">
-        <div className="uv-sidebar" inert={!sidebarOpen || undefined}>
+        <div
+          className="uv-sidebar"
+          inert={!sidebarOpen || undefined}
+          style={sidebarOpen ? { width: sidebarWidth } : undefined}
+        >
           <Sidebar
             paths={paths}
             selection={selection}
@@ -216,6 +249,7 @@ export function UnifiedView() {
             refreshKey={0}
           />
         </div>
+        <div className="uv-resize-handle" onMouseDown={handleResizeStart} />
         <div className="uv-main">
           <BodyPanel
             content={bodyContent}
