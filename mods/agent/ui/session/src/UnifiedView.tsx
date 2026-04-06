@@ -205,7 +205,7 @@ export function UnifiedView() {
       className="stg-chrome"
       data-sidebar={sidebarOpen ? "open" : "closed"}
       data-resizing={resizing || undefined}
-      style={{ width: sidebarOpen ? 640 : 340 }}
+      style={{ width: sidebarOpen ? 700 : 400 }}
     >
       <TitleBar
         runtime={draft.settings.runtime}
