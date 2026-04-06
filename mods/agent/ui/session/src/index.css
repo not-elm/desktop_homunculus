@@ -286,6 +286,9 @@ body {
   justify-content: center;
   cursor: pointer;
   position: relative;
+  background: var(--hud-surface-base);
+  border: 1px solid var(--hud-border-decorative);
+  backdrop-filter: blur(12px);
   transition: all var(--hud-duration-micro) var(--hud-easing-micro);
 }
 
