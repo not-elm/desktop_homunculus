@@ -8,14 +8,6 @@ import { rpc } from "@hmcs/sdk/rpc";
 try {
   const vrm = await input.parseMenu();
 
-  // Skip if WebView already open for this character
-  const existing = await Webview.list();
-  const alreadyOpen = existing.some((wv) => wv.linkedVrm === vrm.entity);
-  if (alreadyOpen) {
-    output.succeed();
-    throw new Error("unreachable");
-  }
-
   // Determine initial geometry from session status
   let isSession = false;
   try {
