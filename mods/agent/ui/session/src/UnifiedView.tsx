@@ -107,7 +107,7 @@ export function UnifiedView() {
   }
 
   function updateSelection(newSelection: WorkspaceSelection) {
-    draft.setSettings({
+    void draft.autoSave({
       ...draft.settings,
       workspaces: { ...draft.settings.workspaces, selection: newSelection },
     });
@@ -126,7 +126,7 @@ export function UnifiedView() {
   function handleAddWorkspace(path: string) {
     const newPaths = [...paths, path];
     const newIndex = newPaths.length - 1;
-    draft.setSettings({
+    void draft.autoSave({
       ...draft.settings,
       workspaces: {
         paths: newPaths,
@@ -158,7 +158,7 @@ export function UnifiedView() {
         : sel.workspaceIndex > index
           ? { ...sel, workspaceIndex: sel.workspaceIndex - 1 }
           : sel;
-    draft.setSettings({
+    void draft.autoSave({
       ...draft.settings,
       workspaces: { paths: newPaths, selection: newSelection },
     });
