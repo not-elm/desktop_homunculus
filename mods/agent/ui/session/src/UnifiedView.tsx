@@ -26,6 +26,7 @@ export function UnifiedView() {
   const [bodyContent, setBodyContent] = useState<BodyContent>({ kind: "sessionLog" });
   const [activeCategory, setActiveCategory] = useState<SettingsCategory | null>(null);
   const [prevActive, setPrevActive] = useState(false);
+  const [minimized, setMinimized] = useState(false);
   const dragRef = useRef<{ startX: number; startWidth: number } | null>(null);
 
   const paths = draft.settings.workspaces.paths;
@@ -88,6 +89,13 @@ export function UnifiedView() {
       setBodyContent({ kind: "empty" });
     }
   }, [draft.loading, paths.length]);
+
+  // Auto-restore when permission or question dialog arrives
+  useEffect(() => {
+    if (minimized && (session.permission !== null || session.question !== null)) {
+      setMinimized(false);
+    }
+  }, [minimized, session.permission, session.question]);
 
   function handleSidebarToggle() {
     setSidebarOpen((prev) => !prev);
@@ -200,6 +208,10 @@ export function UnifiedView() {
 
   if (draft.loading) return null;
 
+  if (minimized) {
+    return <CollapsedIcon state={session.state} onClick={() => setMinimized(false)} />;
+  }
+
   return (
     <div
       className="stg-chrome"
@@ -212,6 +224,7 @@ export function UnifiedView() {
         isActive={isActive}
         onToggleSidebar={handleSidebarToggle}
         onToggleSession={isActive ? session.stopSession : session.startSession}
+        onMinimize={() => setMinimized(true)}
         onClose={handleClose}
       />
       <StatusStrip
@@ -342,6 +355,7 @@ interface TitleBarProps {
   isActive: boolean;
   onToggleSidebar: () => void;
   onToggleSession: () => void;
+  onMinimize: () => void;
   onClose: () => void;
 }
 
@@ -350,6 +364,7 @@ function TitleBar({
   isActive,
   onToggleSidebar,
   onToggleSession,
+  onMinimize,
   onClose,
 }: TitleBarProps) {
   return (
@@ -371,6 +386,13 @@ function TitleBar({
         title={isActive ? "Stop Session" : "Start Session"}
       >
         {isActive ? <StopSquare /> : <PlayTriangle />}
+      </button>
+      <button
+        className="hud-icon-btn"
+        onClick={onMinimize}
+        title="Minimize"
+      >
+        <MinimizeIcon />
       </button>
       <button
         className="hud-icon-btn hud-icon-btn--close"
@@ -541,5 +563,27 @@ function RecordingIndicator() {
         />
       </span>
     </span>
+  );
+}
+
+function MinimizeIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+      <path d="M2.5 6h7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function CollapsedIcon({ state, onClick }: { state: AgentState; onClick: () => void }) {
+  return (
+    <button
+      className="hud-collapsed-icon"
+      type="button"
+      onClick={onClick}
+      title="Restore window"
+      aria-label="Restore window"
+    >
+      <span className={`hud-collapsed-dot hud-collapsed-dot--${state}`} />
+    </button>
   );
 }
