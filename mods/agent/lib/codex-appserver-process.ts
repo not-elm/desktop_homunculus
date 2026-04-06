@@ -2,8 +2,8 @@
  * Singleton child process wrapper for `codex --app-server` over stdio.
  *
  * Manages the Codex AppServer process lifecycle, JSON-RPC 2.0 message routing,
- * request/response correlation, and per-thread handler dispatch. The executor
- * class ({@link CodexAppServerExecuter}) registers thread handlers and sends
+ * request/response correlation, and per-thread handler dispatch. The runtime
+ * class ({@link CodexAppServerRuntime}) registers thread handlers and sends
  * requests through this shared process.
  *
  * @module
@@ -26,7 +26,7 @@ import type {
  *
  * Each active thread registers a handler so that server-initiated requests
  * (approval, elicitation) and notifications (turn events) are routed to the
- * correct executor instance.
+ * correct runtime instance.
  */
 export interface ThreadHandler {
   /** Called when the server sends a request requiring a response (approval/elicitation). */
@@ -41,7 +41,7 @@ export interface ThreadHandler {
  * Manages a single `codex --app-server` child process over stdio JSON-RPC 2.0.
  *
  * This class is designed to be used as a singleton shared across multiple
- * concurrent threads (executor instances). It handles:
+ * concurrent threads (runtime instances). It handles:
  * - Lazy, idempotent process startup with initialize/initialized handshake
  * - Client request/response correlation via pending promise map
  * - Per-thread handler dispatch for server-initiated requests and notifications

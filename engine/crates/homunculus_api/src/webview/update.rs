@@ -8,7 +8,7 @@ use homunculus_effects::{Entity, Update};
 
 impl WebviewApi {
     /// Updates the offset of a webview entity.
-    pub async fn set_offset(&self, webview: Entity, offset: Vec2) -> ApiResult<()> {
+    pub async fn set_offset(&self, webview: Entity, offset: WebviewOffset) -> ApiResult<()> {
         self.0
             .schedule(move |task| async move {
                 task.will(Update, once::run(set_offset).with((webview, offset)))
@@ -50,12 +50,12 @@ impl WebviewApi {
 }
 
 fn set_offset(
-    In((webview, offset)): In<(Entity, Vec2)>,
+    In((webview, offset)): In<(Entity, WebviewOffset)>,
     mut commands: Commands,
     webviews: Query<Entity, With<bevy_cef::prelude::WebviewSource>>,
 ) -> ApiResult<()> {
     if webviews.contains(webview) {
-        commands.entity(webview).try_insert(WebviewOffset(offset));
+        commands.entity(webview).try_insert(offset);
         Ok(())
     } else {
         Err(ApiError::WebviewNotFound(webview))
@@ -105,7 +105,7 @@ fn patch(
     let mut entity_commands = commands.entity(webview);
 
     if let Some(offset) = request.offset {
-        entity_commands.try_insert(WebviewOffset(offset));
+        entity_commands.try_insert(offset);
     }
 
     if let Some(size) = request.size {

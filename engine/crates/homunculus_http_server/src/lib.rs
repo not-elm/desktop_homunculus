@@ -415,7 +415,8 @@ fn display_router() -> OpenApiRouter<HttpState> {
 fn signals_router() -> OpenApiRouter<HttpState> {
     OpenApiRouter::new()
         .routes(routes!(route::signals::list))
-        .routes(routes!(route::signals::stream, route::signals::send))
+        .routes(routes!(route::signals::send))
+        .route("/ws", axum::routing::get(route::signals::ws_handler))
 }
 
 #[cfg(test)]
