@@ -1,15 +1,15 @@
 import { useEffect } from "react";
 import { Webview } from "@hmcs/sdk";
 
-export type WebviewMode = "settings" | "session";
+export type WebviewMode = "expanded" | "collapsed";
 
-const SETTINGS_GEOMETRY = {
-  size: [1.3333, 1.0] as [number, number],
-  viewportSize: [1200, 900] as [number, number],
-  offset: [-0.6, -0.3, -10.0] as [number, number, number],
+const EXPANDED_GEOMETRY = {
+  size: [0.85, 0.8] as [number, number],
+  viewportSize: [640, 500] as [number, number],
+  offset: [1.2, -0.3] as [number, number],
 };
 
-const SESSION_GEOMETRY = {
+const COLLAPSED_GEOMETRY = {
   size: [0.6, 0.8] as [number, number],
   viewportSize: [400, 500] as [number, number],
   offset: [0.8, -0.5] as [number, number],
@@ -22,7 +22,7 @@ export function useWebviewMode(mode: WebviewMode | null): void {
 
     const wv = Webview.current();
     if (!wv) return;
-    const geom = mode === "settings" ? SETTINGS_GEOMETRY : SESSION_GEOMETRY;
+    const geom = mode === "expanded" ? EXPANDED_GEOMETRY : COLLAPSED_GEOMETRY;
     void applyGeometry(wv, geom);
   }, [mode]);
 }
@@ -32,7 +32,7 @@ async function applyGeometry(
   geom: {
     size: [number, number];
     viewportSize: [number, number];
-    offset: [number, number] | [number, number, number];
+    offset: [number, number];
   },
 ): Promise<void> {
   await wv.setSize(geom.size);
