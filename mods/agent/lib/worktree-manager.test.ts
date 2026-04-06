@@ -7,7 +7,7 @@ import { WorktreeManager } from "./worktree-manager.ts";
 
 function createTempGitRepo(): string {
   const dir = mkdtempSync(join(tmpdir(), "wt-test-"));
-  execSync("git init", { cwd: dir });
+  execSync("git init -b main", { cwd: dir });
   execSync("git config user.email test@test.com", { cwd: dir });
   execSync("git config user.name Test", { cwd: dir });
   writeFileSync(join(dir, "README.md"), "# Test");
