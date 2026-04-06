@@ -8,7 +8,7 @@ export interface PttKey {
 
 /** Agent settings stored in preferences. */
 export interface AgentSettings {
-  executor: "sdk" | "cli" | "codex";
+  runtime: "sdk" | "cli" | "codex";
   pttKey: PttKey | null;
   approvalPhrases: string[];
   denyPhrases: string[];
@@ -16,7 +16,7 @@ export interface AgentSettings {
   workspaces: { paths: string[]; selection: WorkspaceSelection };
   allowList: string[];
   disallowedTools: string[];
-  /** Shell command patterns auto-approved by the Codex executor (regex strings). */
+  /** Shell command patterns auto-approved by the Codex runtime (regex strings). */
   commandAutoApprovePatterns: string[];
   claudeModel: string;
 }
@@ -83,7 +83,7 @@ export interface WorktreeSignalPayload {
 }
 
 export const DEFAULT_SETTINGS: AgentSettings = {
-  executor: "codex",
+  runtime: "codex",
   pttKey: null,
   approvalPhrases: ["はい", "yes", "ok", "allow"],
   denyPhrases: ["いいえ", "no", "deny", "cancel"],
@@ -94,4 +94,4 @@ export const DEFAULT_SETTINGS: AgentSettings = {
   claudeModel: "",
 };
 
-export type { AgentEvent, AgentResponse, AIAgentExecuter } from "./ai-agent-executer.ts";
+export type { AgentEvent, AgentResponse, AgentRuntime } from "./agent-runtime.ts";

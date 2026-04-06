@@ -6,7 +6,7 @@ import type {
   PermissionResult,
   PermissionUpdate,
 } from "@anthropic-ai/claude-agent-sdk";
-import type { AIAgentExecuter, AgentEvent, AgentResponse } from "./ai-agent-executer.ts";
+import type { AgentRuntime, AgentEvent, AgentResponse } from "./agent-runtime.ts";
 import { AsyncQueue, Deferred } from "./async-queue.ts";
 import type { AgentSettings, Persona } from "./types.ts";
 import { buildCharacterPrompt, type WorktreeContext } from "./prompt.ts";
@@ -30,12 +30,12 @@ type RaceResult =
   | { tag: typeof PERMISSION_TAG; value: PermissionQueueItem };
 
 /**
- * Wraps the Claude Agent SDK `query()` in the AIAgentExecuter interface.
+ * Wraps the Claude Agent SDK `query()` in the AgentRuntime interface.
  *
  * Bridges the SDK's `canUseTool` callback into the async generator event stream
  * so the caller can approve or deny tool use via `generator.next(response)`.
  */
-export class ClaudeAgentExecuter implements AIAgentExecuter {
+export class ClaudeAgentRuntime implements AgentRuntime {
   constructor(
     private readonly persona: Persona,
     private readonly settings: AgentSettings,
