@@ -189,7 +189,7 @@ export function UnifiedView() {
   if (draft.loading) return null;
 
   return (
-    <div className="stg-chrome">
+    <div className="stg-chrome" data-sidebar={sidebarOpen ? "open" : "closed"}>
       <UnifiedHeader
         state={session.state}
         isActive={isActive}
@@ -204,20 +204,18 @@ export function UnifiedView() {
         onClose={handleClose}
       />
       <div className="uv-body">
-        {sidebarOpen && (
-          <div className="uv-sidebar">
-            <Sidebar
-              paths={paths}
-              selection={selection}
-              onSelectionChange={handleSelectionChange}
-              onAddWorkspace={handleAddWorkspace}
-              onRemoveWorkspace={handleRemoveWorkspace}
-              activeCategory={activeCategory}
-              onCategorySelect={handleCategorySelect}
-              refreshKey={0}
-            />
-          </div>
-        )}
+        <div className="uv-sidebar" inert={!sidebarOpen || undefined}>
+          <Sidebar
+            paths={paths}
+            selection={selection}
+            onSelectionChange={handleSelectionChange}
+            onAddWorkspace={handleAddWorkspace}
+            onRemoveWorkspace={handleRemoveWorkspace}
+            activeCategory={activeCategory}
+            onCategorySelect={handleCategorySelect}
+            refreshKey={0}
+          />
+        </div>
         <div className="uv-main">
           <BodyPanel
             content={bodyContent}

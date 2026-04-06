@@ -75,7 +75,6 @@
   --hud-settings-stat-label-color: var(--hud-settings-text-muted);
 
   /* Layout */
-  --hud-settings-width: 100vw;
   --hud-settings-height: 100vh;
   --hud-settings-nav-zone-height: 116px;
   --hud-settings-tree-min-height: 160px;
@@ -1899,7 +1898,7 @@ h3.hud-md-heading {
 /* ━━ Settings Chrome (.stg-*) ━━ */
 
 .stg-chrome {
-  width: var(--hud-settings-width);
+  width: 640px;
   height: var(--hud-settings-height);
   display: flex;
   flex-direction: column;
@@ -1912,6 +1911,11 @@ h3.hud-md-heading {
   font-family: var(--hud-font-family);
   color: var(--hud-text-primary);
   position: relative;
+  transition: width var(--hud-duration-layout) var(--hud-easing-layout);
+}
+
+.stg-chrome[data-sidebar="closed"] {
+  width: 400px;
 }
 
 .stg-header {
@@ -2396,10 +2400,17 @@ h3.hud-md-heading {
   flex-shrink: 0;
   border-right: 1px solid var(--hud-settings-divider-color);
   overflow: hidden;
+  transition: width var(--hud-duration-layout) var(--hud-easing-layout), border-right-width var(--hud-duration-layout) var(--hud-easing-layout);
+}
+
+.stg-chrome[data-sidebar="closed"] .uv-sidebar {
+  width: 0;
+  border-right-width: 0;
 }
 
 .uv-main {
-  flex: 1;
+  width: 400px;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   min-height: 0;
