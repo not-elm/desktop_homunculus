@@ -79,7 +79,7 @@
   --hud-ws-dot-size: 8px;
   --hud-ws-radio-size: 12px;
   --hud-ws-radio-border: 2px;
-  --hud-ws-radio-dot: 5px;
+  --hud-ws-radio-dot: 6px;
   --hud-ws-radio-off: oklch(0.45 0 0);
   --hud-ws-radio-on: oklch(0.72 0.14 192);
   --hud-ws-connector-width: 1px;
