@@ -307,7 +307,11 @@ function BodyPanel({
             ←
           </button>
           <span className="uv-form-title">
-            {content.category === "phrases" ? "Phrases" : "Permissions"}
+            {content.category === "phrases"
+              ? "Phrases"
+              : content.category === "executor"
+                ? "Executor"
+                : "Permissions"}
           </span>
         </div>
         <div className="uv-form-scroll">

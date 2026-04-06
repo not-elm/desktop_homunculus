@@ -3,6 +3,13 @@ import type { SettingsCategory } from "../types";
 
 import { PhraseListField } from "./PhraseListField";
 import { KeyCaptureField } from "../../components/KeyCaptureField";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@hmcs/ui";
 
 interface SettingsFormViewProps {
   category: SettingsCategory;
@@ -23,6 +30,9 @@ export function SettingsFormView({
       )}
       {category === "permissions" && (
         <PermissionsForm settings={settings} onSettingsChange={onSettingsChange} />
+      )}
+      {category === "executor" && (
+        <ExecutorForm settings={settings} onSettingsChange={onSettingsChange} />
       )}
     </div>
   );
@@ -76,5 +86,32 @@ function PermissionsForm({ settings, onSettingsChange }: { settings: AgentSettin
       <PhraseListField label="Disallowed Tools" description="Tools the agent is never permitted to use"
         phrases={settings.disallowedTools} onAdd={(p) => addToList("disallowedTools", p)} onRemove={(i) => removeFromList("disallowedTools", i)} badgeVariant="rose" />
     </>
+  );
+}
+
+const EXECUTOR_OPTIONS = [{ value: "codex", label: "Codex" }];
+
+function ExecutorForm({ settings, onSettingsChange }: { settings: AgentSettings; onSettingsChange: (s: AgentSettings) => void }) {
+  function handleChange(value: string) {
+    onSettingsChange({ ...settings, executor: value as AgentSettings["executor"] });
+  }
+
+  return (
+    <div className="settings-label">
+      Executor
+      <span className="settings-label-desc">Backend engine for agent sessions</span>
+      <Select value={settings.executor} onValueChange={handleChange}>
+        <SelectTrigger className="stg-executor-trigger">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {EXECUTOR_OPTIONS.map((o) => (
+            <SelectItem key={o.value} value={o.value}>
+              {o.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
   );
 }

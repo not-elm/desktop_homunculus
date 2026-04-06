@@ -1373,6 +1373,15 @@ h3.hud-md-heading {
   text-transform: none;
 }
 
+.stg-executor-trigger {
+  height: 32px !important;
+  min-height: 32px !important;
+  font-size: var(--hud-font-size-sm) !important;
+  background: var(--hud-settings-main) !important;
+  border-color: var(--hud-border-decorative) !important;
+  margin-top: var(--hud-space-sm);
+}
+
 
 /* ── Text Input ── */
 
