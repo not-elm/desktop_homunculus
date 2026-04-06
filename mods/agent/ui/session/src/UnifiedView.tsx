@@ -1,17 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { audio, dialog, Webview } from "@hmcs/sdk";
 import { rpc } from "@hmcs/sdk/rpc";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@hmcs/ui";
 import { useAgentSession } from "./hooks/useAgentSession";
 import { useWebviewMode } from "./hooks/useWebviewMode";
 import { useSettingsDraft } from "./settings/hooks/useSettingsDraft";
-import type { WorkspaceSelection, AgentSettings } from "./settings/hooks/useSettingsDraft";
+import type { WorkspaceSelection, PttKey } from "./settings/hooks/useSettingsDraft";
+import { formatPttKeyName } from "./utils/format-ptt-key";
 import { Sidebar } from "./settings/components/Sidebar";
 import { SettingsFormView } from "./settings/components/SettingsFormView";
 import { ActivityLog } from "./components/ActivityLog";
@@ -20,8 +14,6 @@ import { QuestionDialog } from "./components/QuestionDialog";
 import { TextInput } from "./components/TextInput";
 import type { SettingsCategory, BodyContent } from "./settings/types";
 import type { AgentState } from "./hooks/useAgentSession";
-
-const EXECUTOR_OPTIONS = [{ value: "codex", label: "Codex" }];
 
 export function UnifiedView() {
   const draft = useSettingsDraft();
@@ -176,14 +168,6 @@ export function UnifiedView() {
     }
   }
 
-  function handleExecutorChange(value: string) {
-    const newSettings = {
-      ...draft.settings,
-      executor: value as AgentSettings["executor"],
-    };
-    void draft.autoSave(newSettings);
-  }
-
   async function handleClose() {
     await audio.se.play("se:close");
     await Webview.current()?.close();
@@ -221,20 +205,22 @@ export function UnifiedView() {
       className="stg-chrome"
       data-sidebar={sidebarOpen ? "open" : "closed"}
       data-resizing={resizing || undefined}
-      style={{ width: sidebarOpen ? 640 : 640 - sidebarWidth }}
+      style={{ width: sidebarOpen ? 640 : 340 }}
     >
-      <UnifiedHeader
+      <TitleBar
+        executor={draft.settings.executor}
+        isActive={isActive}
+        onToggleSidebar={handleSidebarToggle}
+        onToggleSession={isActive ? session.stopSession : session.startSession}
+        onClose={handleClose}
+      />
+      <StatusStrip
         state={session.state}
         isActive={isActive}
         elapsedMs={session.elapsedMs}
         isRecording={session.isRecording}
         worktreeInfo={session.worktreeInfo}
-        executor={draft.settings.executor}
-        onExecutorChange={handleExecutorChange}
-        onToggleSidebar={handleSidebarToggle}
-        onToggleSession={isActive ? session.stopSession : session.startSession}
-        onInterrupt={session.interruptSession}
-        onClose={handleClose}
+        pttKey={draft.settings.pttKey}
       />
       <div className="uv-body">
         <div
@@ -340,40 +326,32 @@ function BodyPanel({
         question={session.question}
         onAnswer={session.answerQuestion}
       />
-      {!hasDialog && <TextInput onSend={session.sendMessage} />}
+      {!hasDialog && (
+        <TextInput
+          onSend={session.sendMessage}
+          isInterruptible={isActive && (session.state === "thinking" || session.state === "executing")}
+          onInterrupt={session.interruptSession}
+        />
+      )}
     </div>
   );
 }
 
-interface UnifiedHeaderProps {
-  state: AgentState;
-  isActive: boolean;
-  elapsedMs: number;
-  isRecording?: boolean;
-  worktreeInfo: { name: string; branch: string } | null;
+interface TitleBarProps {
   executor: string;
-  onExecutorChange: (value: string) => void;
+  isActive: boolean;
   onToggleSidebar: () => void;
   onToggleSession: () => void;
-  onInterrupt: () => void;
   onClose: () => void;
 }
 
-function UnifiedHeader({
-  state,
-  isActive,
-  elapsedMs,
-  isRecording,
-  worktreeInfo,
+function TitleBar({
   executor,
-  onExecutorChange,
+  isActive,
   onToggleSidebar,
   onToggleSession,
-  onInterrupt,
   onClose,
-}: UnifiedHeaderProps) {
-  const interruptible = isActive && (state === "thinking" || state === "executing");
-
+}: TitleBarProps) {
   return (
     <div className="uv-header">
       <button
@@ -385,48 +363,8 @@ function UnifiedHeader({
         <HamburgerIcon />
       </button>
       <span className="uv-title">Agent</span>
-      {isRecording ? (
-        <RecordingIndicator />
-      ) : (
-        <span className={`hud-status-dot hud-status-dot--${state}`} />
-      )}
-      <span
-        className={`uv-status-label uv-status-label--${isRecording ? "listening" : state}`}
-      >
-        {isRecording ? "Listening..." : stateLabel(state)}
-      </span>
-      {isActive && (
-        <span className="uv-timer">{formatElapsed(elapsedMs)}</span>
-      )}
-      {worktreeInfo && (
-        <span className="agent-badge agent-badge--violet uv-worktree-badge">
-          {worktreeInfo.branch}
-        </span>
-      )}
+      <span className="uv-executor-label">/ {executorDisplayName(executor)}</span>
       <div className="uv-header-spacer" />
-      <div className="uv-executor-select">
-        <Select value={executor} onValueChange={onExecutorChange}>
-          <SelectTrigger className="uv-executor-trigger">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {EXECUTOR_OPTIONS.map((o) => (
-              <SelectItem key={o.value} value={o.value}>
-                {o.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      {interruptible && (
-        <button
-          className="hud-interrupt-btn"
-          onClick={onInterrupt}
-          title="Interrupt"
-        >
-          <InterruptIcon />
-        </button>
-      )}
       <button
         className={`hud-session-toggle${isActive ? " hud-session-toggle--active" : ""}`}
         onClick={onToggleSession}
@@ -441,6 +379,60 @@ function UnifiedHeader({
       >
         <CloseIcon />
       </button>
+    </div>
+  );
+}
+
+function executorDisplayName(executor: string): string {
+  return executor.charAt(0).toUpperCase() + executor.slice(1);
+}
+
+interface StatusStripProps {
+  state: AgentState;
+  isActive: boolean;
+  elapsedMs: number;
+  isRecording?: boolean;
+  worktreeInfo: { name: string; branch: string } | null;
+  pttKey: PttKey | null;
+}
+
+function StatusStrip({
+  state,
+  isActive,
+  elapsedMs,
+  isRecording,
+  worktreeInfo,
+  pttKey,
+}: StatusStripProps) {
+  if (!isActive) return null;
+
+  return (
+    <div className="uv-status-strip">
+      {isRecording ? (
+        <RecordingIndicator />
+      ) : (
+        <span className={`hud-status-dot hud-status-dot--${state}`} />
+      )}
+      <span
+        className={`uv-status-label uv-status-label--${isRecording ? "listening" : state}`}
+      >
+        {isRecording ? "Listening..." : stateLabel(state)}
+      </span>
+      <span className="uv-timer">{formatElapsed(elapsedMs)}</span>
+      {pttKey && (
+        <>
+          <span className="uv-strip-sep" />
+          <span className={`uv-ptt-badge${isRecording ? " uv-ptt-badge--active" : ""}`}>
+            ⌨ {formatPttKeyName(pttKey)}
+          </span>
+        </>
+      )}
+      <div className="uv-header-spacer" />
+      {worktreeInfo && (
+        <span className="agent-badge agent-badge--violet uv-worktree-badge">
+          {worktreeInfo.branch}
+        </span>
+      )}
     </div>
   );
 }
@@ -502,14 +494,6 @@ function StopSquare() {
   return (
     <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
       <rect x="2.5" y="2.5" width="7" height="7" rx="1" fill="currentColor" />
-    </svg>
-  );
-}
-
-function InterruptIcon() {
-  return (
-    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-      <rect x="2" y="2" width="6" height="6" rx="1" fill="currentColor" />
     </svg>
   );
 }
