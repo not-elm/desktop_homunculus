@@ -2127,7 +2127,7 @@ h3.hud-md-heading {
   display: flex; align-items: center; gap: var(--hud-settings-nav-icon-gap);
   padding: 4px 8px; min-height: var(--hud-settings-nav-row-height);
   border-radius: 4px; border: none; background: none; width: 100%;
-  font-size: var(--hud-settings-data-size); color: var(--hud-settings-text-muted);
+  font-size: var(--hud-settings-data-size); line-height: 1; color: var(--hud-settings-text-muted);
   cursor: pointer; border-left: var(--hud-settings-nav-accent-width) solid transparent;
   transition: all var(--hud-settings-hover-duration) var(--hud-settings-hover-easing);
   font-family: inherit; text-align: left;
@@ -2137,7 +2137,7 @@ h3.hud-md-heading {
   border-left-color: var(--hud-settings-nav-accent);
   color: var(--hud-text-primary); background: var(--hud-settings-nav-selected-bg);
 }
-.stg-nav-icon { width: var(--hud-settings-nav-icon-size); height: var(--hud-settings-nav-icon-size); opacity: 0.5; }
+.stg-nav-icon { width: var(--hud-settings-nav-icon-size); height: var(--hud-settings-nav-icon-size); opacity: 0.5; display: block; flex-shrink: 0; }
 .stg-nav-item--active .stg-nav-icon { opacity: 0.8; }
 
 .stg-main {
