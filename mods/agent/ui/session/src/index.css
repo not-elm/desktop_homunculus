@@ -78,7 +78,7 @@
   --hud-settings-height: 100vh;
   --hud-settings-tree-min-height: 160px;
   --hud-settings-tree-row-height: 36px;
-  --hud-settings-nav-row-height: 36px;
+  --hud-settings-nav-row-height: 30px;
   --hud-settings-header-height: 48px;
   --hud-settings-content-padding: 20px;
   --hud-settings-detail-label-width: 100px;
@@ -88,8 +88,8 @@
   --hud-settings-stats-gap: 12px;
   --hud-settings-section-gap: 24px;
   --hud-settings-field-gap: 12px;
-  --hud-settings-nav-icon-size: 16px;
-  --hud-settings-nav-icon-gap: 10px;
+  --hud-settings-nav-icon-size: 14px;
+  --hud-settings-nav-icon-gap: 8px;
 
   /* Motion — settings panel transition tokens (ambient suppression applied via :root[data-mode="settings"]) */
   --hud-settings-fade-duration: var(--hud-duration-content);
