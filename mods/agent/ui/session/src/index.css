@@ -2295,9 +2295,6 @@ h3.hud-md-heading {
 }
 .stg-empty-text { color: var(--hud-settings-text-muted); font-size: var(--hud-settings-data-size); }
 
-.stg-save-bar {
-  position: absolute; bottom: 16px; right: 16px;
-}
 
 .stg-chrome :focus-visible {
   outline: 2px solid var(--hud-settings-focus-ring);

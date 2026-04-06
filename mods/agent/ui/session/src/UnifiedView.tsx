@@ -259,18 +259,6 @@ export function UnifiedView() {
             onBack={handleBack}
             onAddWorkspace={handleAddWorkspaceFromPanel}
           />
-          {draft.isDirty && (
-            <div className="stg-save-bar">
-              <button
-                className="stg-action-btn stg-action-btn--primary"
-                type="button"
-                onClick={draft.saveSettings}
-                disabled={draft.saving}
-              >
-                {draft.saving ? "Saving..." : "Save Changes"}
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </div>
@@ -322,7 +310,7 @@ function BodyPanel({
           <SettingsFormView
             category={content.category}
             settings={draft.settings}
-            onSettingsChange={draft.setSettings}
+            onSettingsChange={draft.autoSave}
           />
         </div>
       </div>
