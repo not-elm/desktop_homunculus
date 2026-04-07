@@ -114,7 +114,7 @@ Asset path resolution: dev mode uses `assets/` relative to `CARGO_MANIFEST_DIR`;
 
 ### WebView Integration (bevy_cef)
 
-UI components (settings, right-click menu) are React apps embedded via Chromium Embedded Framework (`bevy_cef`). They communicate with the Rust backend through the HTTP API and SSE-based pub/sub (`signals` module in the SDK). CEF runs with `disable-web-security` to allow cross-origin requests from WebViews to `localhost:3100`. A `CefFetchPlugin` proxies JavaScript `fetch` calls from WebViews through native `reqwest`.
+UI components (settings, right-click menu) are React apps embedded via Chromium Embedded Framework (`bevy_cef`). They communicate with the Rust backend through the HTTP API and SSE-based pub/sub (`signals` module in the SDK). CEF runs with `disable-web-security` to allow cross-origin requests from WebViews to `localhost:3100`. A `CefFetchPlugin` proxies JavaScript `fetch` calls from WebViews through native `reqwest`. Transparent areas of a WebView do not capture mouse events — clicks pass through to the 3D scene beneath. This means CSS-only visibility changes (e.g., collapsing UI to a small icon) do not require resizing the WebView itself.
 
 WebView keyboard shortcuts: `F1`/`F2` open/close DevTools, `Cmd+[`/`Cmd+]` navigate back/forward.
 

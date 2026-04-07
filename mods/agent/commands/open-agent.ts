@@ -6,12 +6,13 @@ import { input, output } from "@hmcs/sdk/commands";
 
 try {
   const vrm = await input.parseMenu();
+
   await Webview.open({
     source: webviewSource.local("agent:session-ui"),
-    size: [0.6, 0.8],
-    viewportSize: [400, 500],
+    size: [1.07, 0.8],
+    viewportSize: [800, 500],
+    offset: [1.3, -0.5],
     linkedVrm: vrm.entity,
-    offset: [-0.8, -0.4],
   });
   await audio.se.play("se:open");
   output.succeed();

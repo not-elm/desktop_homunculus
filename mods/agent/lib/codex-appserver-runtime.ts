@@ -1,6 +1,6 @@
 /**
- * AsyncGenerator-based executor bridging the Codex AppServer JSON-RPC protocol
- * to the unified {@link AIAgentExecuter} interface.
+ * AsyncGenerator-based runtime bridging the Codex AppServer JSON-RPC protocol
+ * to the unified {@link AgentRuntime} interface.
  *
  * Communicates with the shared {@link CodexAppServerProcess} to start/resume
  * threads, handle server requests (approval, elicitation), and map server
@@ -11,10 +11,10 @@
 
 import { AsyncQueue } from "./async-queue.ts";
 import type {
-  AIAgentExecuter,
+  AgentRuntime,
   AgentEvent,
   AgentResponse,
-} from "./ai-agent-executer.ts";
+} from "./agent-runtime.ts";
 import type {
   CodexAppServerProcess,
   ThreadHandler,
@@ -37,7 +37,7 @@ import type {
   ToolRequestUserInputParams,
   ErrorNotification,
 } from "./codex-appserver-types.ts";
-import { buildCharacterPrompt } from "./prompt.ts";
+import { buildCharacterPrompt, type WorktreeContext } from "./prompt.ts";
 import type { AgentSettings, Persona } from "./types.ts";
 
 /** Internal message pushed into the event queue by the ThreadHandler. */
@@ -54,22 +54,25 @@ type QueueMessage =
  * an event loop that maps server notifications and requests to
  * {@link AgentEvent} values yielded through an AsyncGenerator.
  */
-export class CodexAppServerExecuter implements AIAgentExecuter {
+export class CodexAppServerRuntime implements AgentRuntime {
   private readonly persona: Persona;
   private readonly settings: AgentSettings;
   private readonly workDir: string;
   private readonly process: CodexAppServerProcess;
+  private readonly worktree?: WorktreeContext;
 
   constructor(
     persona: Persona,
     settings: AgentSettings,
     workDir: string,
     process: CodexAppServerProcess,
+    worktree?: WorktreeContext,
   ) {
     this.persona = persona;
     this.settings = settings;
     this.workDir = workDir;
     this.process = process;
+    this.worktree = worktree;
   }
 
   /**
@@ -127,7 +130,7 @@ export class CodexAppServerExecuter implements AIAgentExecuter {
   private async startThread(): Promise<string> {
     const params: ThreadStartParams = {
       cwd: this.workDir,
-      baseInstructions: buildCharacterPrompt(this.persona),
+      baseInstructions: buildCharacterPrompt(this.persona, this.worktree),
       personality: "none",
       sandbox: "workspace-write",
       experimentalRawEvents: false,
@@ -156,7 +159,7 @@ export class CodexAppServerExecuter implements AIAgentExecuter {
     const params: ThreadResumeParams = {
       threadId: sessionId,
       cwd: this.workDir,
-      baseInstructions: buildCharacterPrompt(this.persona),
+      baseInstructions: buildCharacterPrompt(this.persona, this.worktree),
       personality: "none",
       sandbox: "workspace-write",
       persistExtendedHistory: false,
@@ -172,7 +175,7 @@ export class CodexAppServerExecuter implements AIAgentExecuter {
       return sessionId;
     } catch (e) {
       console.warn(
-        `[codex-appserver-executer] Failed to resume thread ${sessionId}, starting fresh:`,
+        `[codex-appserver-runtime] Failed to resume thread ${sessionId}, starting fresh:`,
         e instanceof Error ? e.message : e,
       );
       return this.startThread();
@@ -313,7 +316,7 @@ export class CodexAppServerExecuter implements AIAgentExecuter {
     pendingRequests.delete(String(id));
   }
 
-  /** Auto-decline a request the executor does not handle. */
+  /** Auto-decline a request the runtime does not handle. */
   private autoDeclineRequest(
     id: RequestId,
     method: string,
@@ -387,7 +390,7 @@ export class CodexAppServerExecuter implements AIAgentExecuter {
     // "interrupted" — emit error event so the event loop terminates cleanly
     // even for server-initiated interruptions (e.g. context exhaustion, rate limits).
     console.warn(
-      `[codex-appserver-executer] Turn interrupted by server (status: ${status})`,
+      `[codex-appserver-runtime] Turn interrupted by server (status: ${status})`,
     );
     return [{ type: "error", message: "Turn was interrupted by the server" }];
   }
@@ -709,7 +712,7 @@ export class CodexAppServerExecuter implements AIAgentExecuter {
         .sendRequest("turn/interrupt", { threadId, turnId })
         .catch((e) => {
           console.warn(
-            "[codex-appserver-executer] Failed to interrupt turn:",
+            "[codex-appserver-runtime] Failed to interrupt turn:",
             e instanceof Error ? e.message : e,
           );
         });

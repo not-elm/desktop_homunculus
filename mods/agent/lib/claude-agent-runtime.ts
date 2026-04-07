@@ -6,10 +6,10 @@ import type {
   PermissionResult,
   PermissionUpdate,
 } from "@anthropic-ai/claude-agent-sdk";
-import type { AIAgentExecuter, AgentEvent, AgentResponse } from "./ai-agent-executer.ts";
+import type { AgentRuntime, AgentEvent, AgentResponse } from "./agent-runtime.ts";
 import { AsyncQueue, Deferred } from "./async-queue.ts";
 import type { AgentSettings, Persona } from "./types.ts";
-import { buildCharacterPrompt } from "./prompt.ts";
+import { buildCharacterPrompt, type WorktreeContext } from "./prompt.ts";
 
 /** Item enqueued by canUseTool; awaited by mergeStreams. */
 interface PermissionQueueItem {
@@ -30,17 +30,18 @@ type RaceResult =
   | { tag: typeof PERMISSION_TAG; value: PermissionQueueItem };
 
 /**
- * Wraps the Claude Agent SDK `query()` in the AIAgentExecuter interface.
+ * Wraps the Claude Agent SDK `query()` in the AgentRuntime interface.
  *
  * Bridges the SDK's `canUseTool` callback into the async generator event stream
  * so the caller can approve or deny tool use via `generator.next(response)`.
  */
-export class ClaudeAgentExecuter implements AIAgentExecuter {
+export class ClaudeAgentRuntime implements AgentRuntime {
   constructor(
     private readonly persona: Persona,
     private readonly settings: AgentSettings,
     private readonly apiKey: string,
     private readonly workDir: string,
+    private readonly worktree?: WorktreeContext,
   ) {}
 
   async *execute(
@@ -50,7 +51,7 @@ export class ClaudeAgentExecuter implements AIAgentExecuter {
   ): AsyncGenerator<AgentEvent, void, AgentResponse | undefined> {
     const permQueue = new AsyncQueue<PermissionQueueItem>();
     const canUseTool = createCanUseToolHandler(permQueue);
-    const options = buildQueryOptions(this.persona, this.settings, this.apiKey, this.workDir, sessionId, canUseTool);
+    const options = buildQueryOptions(this.persona, this.settings, this.apiKey, this.workDir, sessionId, canUseTool, this.worktree);
     const handle = query({ prompt: text, options });
 
     const onAbort = () => handle.close();
@@ -226,9 +227,10 @@ function buildQueryOptions(
   workDir: string,
   sessionId: string | null,
   canUseTool: Options["canUseTool"],
+  worktree?: WorktreeContext,
 ): Options {
   const options: Options = {
-    systemPrompt: buildCharacterPrompt(persona),
+    systemPrompt: buildCharacterPrompt(persona, worktree),
     cwd: workDir,
     mcpServers: {
       homunculus: { type: "http", url: "http://localhost:3100/mcp" },

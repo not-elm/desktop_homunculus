@@ -88,6 +88,10 @@ pub struct TrayMenuItem {
     pub command: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub items: Option<Vec<TrayMenuItem>>,
+    /// Display position in the tray menu: `"top"`, `"middle"`, or `"bottom"`.
+    /// Defaults to `"middle"` when omitted or invalid.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub position: Option<String>,
 }
 
 #[cfg(test)]
@@ -129,5 +133,27 @@ mod tests {
         let json = r#"{}"#;
         let manifest: ModManifest = serde_json::from_str(json).unwrap();
         assert!(manifest.tray.is_none());
+    }
+
+    #[test]
+    fn deserialize_tray_item_with_position() {
+        let json =
+            r#"{"id":"open-settings","text":"Settings","command":"open-ui","position":"top"}"#;
+        let item: TrayMenuItem = serde_json::from_str(json).unwrap();
+        assert_eq!(item.position, Some("top".to_string()));
+    }
+
+    #[test]
+    fn deserialize_tray_item_without_position() {
+        let json = r#"{"id":"x","text":"X","command":"do-x"}"#;
+        let item: TrayMenuItem = serde_json::from_str(json).unwrap();
+        assert_eq!(item.position, None);
+    }
+
+    #[test]
+    fn deserialize_tray_item_with_unknown_position() {
+        let json = r#"{"id":"x","text":"X","command":"do-x","position":"invalid"}"#;
+        let item: TrayMenuItem = serde_json::from_str(json).unwrap();
+        assert_eq!(item.position, Some("invalid".to_string()));
     }
 }

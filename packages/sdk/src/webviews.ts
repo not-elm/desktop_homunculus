@@ -1,5 +1,5 @@
 import { host } from "./host";
-import { type Vec2 } from "./math";
+import { type Vec2, type Vec3 } from "./math";
 import { Vrm } from "./vrm";
 
 // --- Webview types ---
@@ -178,7 +178,7 @@ export interface WebviewInfo {
     source: WebviewSourceInfo;
     size: Vec2;
     viewportSize: Vec2;
-    offset: Vec2;
+    offset: Vec2 | Vec3;
     linkedVrm?: number | null;
 }
 
@@ -199,13 +199,13 @@ export interface WebviewOpenOptions {
     source: WebviewSource;
     size?: Vec2;
     viewportSize?: Vec2;
-    offset?: Vec2;
+    offset?: Vec2 | Vec3;
     linkedVrm?: number;
 }
 
 /** Request body for patching webview properties. */
 export interface WebviewPatchRequest {
-    offset?: Vec2;
+    offset?: Vec2 | Vec3;
     size?: Vec2;
     viewportSize?: Vec2;
 }
@@ -290,7 +290,7 @@ export class Webview {
      *
      * @param offset - The new offset
      */
-    async setOffset(offset: Vec2): Promise<void> {
+    async setOffset(offset: Vec2 | Vec3): Promise<void> {
         await this.patch({ offset });
     }
 
