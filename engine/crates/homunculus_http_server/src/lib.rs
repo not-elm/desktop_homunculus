@@ -343,6 +343,7 @@ fn persona_router() -> OpenApiRouter<HttpState> {
     OpenApiRouter::new()
         .routes(routes!(persona::get::list, persona::create::create))
         .routes(routes!(persona::snapshot::snapshot))
+        .routes(routes!(persona::stream::stream))
         .nest("/{id}", persona_id_router())
 }
 

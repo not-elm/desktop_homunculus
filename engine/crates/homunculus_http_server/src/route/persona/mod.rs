@@ -7,6 +7,7 @@ pub(crate) mod fields;
 pub(crate) mod get;
 pub(crate) mod snapshot;
 pub(crate) mod state;
+pub(crate) mod stream;
 pub(crate) mod update;
 pub(crate) mod vrm;
 pub(crate) mod vrm_ops;

@@ -676,6 +676,20 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Persona'
+  /personas/stream:
+    get:
+      tags:
+      - personas
+      summary: Subscribe to a combined SSE stream of events from ALL personas.
+      description: |-
+        Each event is wrapped in `PersonaEvent<E>` containing the source `personaId`.
+        Includes `persona-deleted` events that are not available on per-persona streams.
+      operationId: stream
+      responses:
+        '200':
+          description: Combined SSE stream of all persona events
+          content:
+            text/event-stream: {}
   /personas/{id}:
     get:
       tags:
