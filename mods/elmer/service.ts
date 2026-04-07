@@ -1,10 +1,10 @@
-import { persona, repeat, sleep } from "@hmcs/sdk";
+import { Persona, repeat, sleep } from "@hmcs/sdk";
 
 let elmer;
 try {
-    elmer = await persona.create({ id: "elmer", name: "Elmer" });
+    elmer = await Persona.create({ id: "elmer", name: "Elmer" });
 } catch {
-    elmer = await persona.load("elmer");
+    elmer = await Persona.load("elmer");
 }
 
 const vrm = await elmer.attachVrm("vrm:elmer");

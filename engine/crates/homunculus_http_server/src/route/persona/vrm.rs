@@ -1,3 +1,11 @@
+pub(crate) mod bone;
+pub(crate) mod expressions;
+pub(crate) mod look;
+pub(crate) mod position;
+pub(crate) mod speech;
+pub(crate) mod spring_bones;
+pub(crate) mod vrma;
+
 use axum::Json;
 use axum::extract::State;
 use axum::http::StatusCode;

@@ -25,7 +25,7 @@ export interface TimelineKeyframe {
  *   [null, 0.05],
  *   ["oh", 0.12],
  * ]);
- * const p = await persona.load("alice");
+ * const p = await Persona.load("alice");
  * await p.vrm().speakWithTimeline(wavData, keyframes);
  * ```
  */

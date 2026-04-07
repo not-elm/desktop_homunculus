@@ -62,7 +62,7 @@ bevy_flurx = { version = "0.14.1", features = [
     "state",
     "tokio",
 ] }
-bevy_vrm1 = { version = "0.6.3", features = ["serde", "log"] }
+bevy_vrm1 = { version = "0.6.4", features = ["serde", "log"] }
 bevy_tray_icon = { version = "0.3" }
 url = { version = "2", features = ["serde"] }
 uuid = { version = "1", features = ["v4", "serde"] }
