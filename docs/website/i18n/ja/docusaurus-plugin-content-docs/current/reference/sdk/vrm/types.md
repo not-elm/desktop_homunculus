@@ -97,22 +97,8 @@ interface Persona {
   profile: string;
   /** 自然言語による性格の説明。 */
   personality?: string | null;
-  /** ビッグファイブ性格パラメータ。 */
-  ocean: Ocean;
   /** MOD 用の拡張メタデータ。 */
   metadata: Record<string, unknown>;
-}
-```
-
-### `Ocean`
-
-```typescript
-interface Ocean {
-  openness?: number;
-  conscientiousness?: number;
-  extraversion?: number;
-  agreeableness?: number;
-  neuroticism?: number;
 }
 ```
 

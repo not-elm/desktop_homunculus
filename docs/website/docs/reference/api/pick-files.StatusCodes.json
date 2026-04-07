@@ -1,0 +1,1 @@
+{"responses":{"200":{"description":"Multi-file selection result","content":{"application/json":{"schema":{"type":"object","description":"Response from the multi-file picker dialog.","required":["paths"],"properties":{"paths":{"type":"array","items":{"type":"string"},"description":"The selected file paths. Empty if the user cancelled."}},"title":"PickFilesResponse"}}}}}}

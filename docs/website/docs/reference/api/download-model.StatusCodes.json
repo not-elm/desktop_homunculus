@@ -1,0 +1,1 @@
+{"responses":{"200":{"description":"Download result"},"422":{"description":"Invalid model size"},"500":{"description":"Download failed"}}}
