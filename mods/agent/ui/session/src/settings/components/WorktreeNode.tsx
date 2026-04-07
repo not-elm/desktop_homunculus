@@ -37,11 +37,17 @@ export function WorktreeNode({
   const anchorRef = useRef<HTMLDivElement>(null);
 
   const overflowItems = buildOverflowItems(() => {
-    requestAnimationFrame(() => setShowDetail(true));
+    console.log("[Details] onClick fired");
+    setShowDetail(true);
   }, onRemove);
 
+  console.log("[Details] render, showDetail =", showDetail);
+
   return (
-    <Popover open={showDetail} onOpenChange={setShowDetail}>
+    <Popover open={showDetail} onOpenChange={(open) => {
+      console.log("[Details] onOpenChange:", open, new Error().stack?.split("\n").slice(1, 4).join(" <- "));
+      setShowDetail(open);
+    }}>
       <PopoverAnchor asChild>
         <div
           ref={anchorRef}
