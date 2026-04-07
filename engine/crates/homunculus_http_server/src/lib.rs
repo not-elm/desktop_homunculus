@@ -27,15 +27,20 @@
 //! ### Application Control
 //! - `POST /app/exit` - Exit the application
 //!
-//! ### VRM Management
-//! - `GET /vrm` - List VRM models (optional `?name=` filter)
-//! - `POST /vrm` - Spawn new VRM model
-//! - `GET /vrm/stream` - SSE stream of VRM load events
-//! - `DELETE /vrm/{entity}` - Remove VRM model
+//! ### Persona Management
+//! - `POST /personas` - Create a new persona
+//! - `GET /personas` - List all personas
+//! - `GET /personas/{id}` - Get persona details
+//! - `PATCH /personas/{id}` - Partial update persona
+//! - `DELETE /personas/{id}` - Delete persona
+//! - `GET /personas/{id}/events` - SSE event stream
+//! - `GET /personas/stream` - Combined SSE stream for all personas
 //!
-//! ### Animation Control
-//! - `POST /vrm/{entity}/vrma/play` - Play VRMA animation
-//! - `POST /vrm/{entity}/vrma/stop` - Stop VRMA animation
+//! ### VRM Operations (via persona)
+//! - `POST /personas/{id}/vrm` - Attach VRM model
+//! - `DELETE /personas/{id}/vrm` - Detach VRM model
+//! - `POST /personas/{id}/vrm/vrma/play` - Play VRMA animation
+//! - `POST /personas/{id}/vrm/vrma/stop` - Stop VRMA animation
 //!
 //! ### Effects
 //! - `POST /effects/stamps` - Display visual stamp effect

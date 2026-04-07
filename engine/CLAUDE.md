@@ -97,7 +97,7 @@ Custom `SystemParam` types available in `homunculus_core::system_param::prelude`
 - `homunculus_http_server` — Axum routes organized by domain in `src/route/`. `HttpState` holds all API resources. Test utilities: `test_app()`, `call()`, `assert_response()`. Includes command execution endpoint (`POST /commands/execute`) with NDJSON streaming output.
 - `homunculus_mod` — MOD system: NPM package discovery, Node.js child processes
 - `homunculus_speech` — Mora-based lip-sync for VRM models. Provides speech queue, vowel animation, and expression keyframe control. TTS audio is provided externally (e.g. via the Timeline API or MODs).
-- `homunculus_prefs` — SQLite-backed preferences (`~/.homunculus/preferences.db`). Auto-persists VRM transforms. Key format: `"{asset_id}:transform"`, `"persona::{asset_id}"`
+- `homunculus_prefs` — SQLite-backed preferences and persona persistence (`~/.homunculus/preferences.db`). Manages `personas` and `persona_metadata` tables with CRUD methods. Transform persistence uses `persona_metadata` key `"transform"`.
 - `homunculus_utils` — Bevy-independent utilities shared across engine, CLI, and MCP: config loading (`~/.homunculus/config.toml`), path helpers (`homunculus_dir()`, `mod_dir()`), shared schema types, camera order constants
 - Other plugins: `drag`, `effects`, `windows`, `hit_test`, `screen`, `sitting`, `shadow_panel`, `power_saver`, `audio`
 
