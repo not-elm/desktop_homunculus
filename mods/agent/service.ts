@@ -15,7 +15,7 @@ import {
   type Persona,
   DEFAULT_SETTINGS,
 } from "./lib/types.ts";
-import { buildPersonaPrompt, type WorktreeContext } from "./lib/prompt.ts";
+import { buildPersonaPrompt, buildSessionContext, type WorktreeContext } from "./lib/prompt.ts";
 import { WorktreeManager, WORKTREE_NAME_PATTERN } from "./lib/worktree-manager.ts";
 import { gitExec, isGitRepo, currentBranch, listBranches } from "./lib/git.ts";
 import { sanitizeForTts } from "./lib/tts.ts";
@@ -128,7 +128,7 @@ async function scanOrphanedWorktrees(): Promise<void> {
   }
 }
 
-async function startSession(personaId: string): Promise<void> {
+async function startSession(personaId: string, contextSessionUuid?: string): Promise<void> {
   const settings = await loadPersonaSettings(personaId);
   assertCanStartSession(personaId, settings);
 
@@ -148,13 +148,27 @@ async function startSession(personaId: string): Promise<void> {
   }
 
   const worktreeCtx = await buildWorktreeContext(settings, workDir);
-  const prompt = buildPersonaPrompt(persona, worktreeCtx);
-  const runtime = createRuntime(settings, prompt, currentApiKey, workDir);
 
   const basePath = settings.workspaces.paths[selection.workspaceIndex];
   const branchName = basePath
     ? await resolveCurrentBranch(basePath, selection.worktreeName)
     : null;
+
+  // Read previous session context for prompt injection
+  let sessionContext: string | undefined;
+  if (basePath && branchName) {
+    const contextUuid = contextSessionUuid
+      ?? await persistence.findLatestSessionUuid(basePath, personaId, branchName);
+    if (contextUuid) {
+      const entries = await persistence.read(basePath, personaId, branchName, contextUuid);
+      if (entries.length > 0) {
+        sessionContext = buildSessionContext(entries);
+      }
+    }
+  }
+
+  const prompt = buildPersonaPrompt(persona, worktreeCtx, sessionContext);
+  const runtime = createRuntime(settings, prompt, currentApiKey, workDir);
 
   if (basePath && branchName) {
     const handle = await persistence.create({
@@ -560,7 +574,7 @@ async function handleAgentEvent(
     case "elicitation_request":
       return await handleElicitationRequest(personaId, event, signal);
     case "completed":
-      return handleCompleted(personaId, event.sessionId, settings);
+      return handleCompleted(personaId, event.sessionId);
     case "error":
       return handleError(personaId, event.message, settings);
   }
@@ -604,9 +618,7 @@ async function handleElicitationRequest(
 function handleCompleted(
   personaId: string,
   sessionId: string,
-  settings: AgentSettings,
 ): undefined {
-  saveSession(personaId, settings.runtime, sessionId);
   return undefined;
 }
 
