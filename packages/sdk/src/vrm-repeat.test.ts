@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { repeat } from "./vrm";
+import { repeat } from "./persona";
 
 describe("vrm repeat helper", () => {
   it("creates forever repeat", () => {

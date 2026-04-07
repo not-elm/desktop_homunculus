@@ -33,7 +33,7 @@
 
 import { writeFileSync } from "node:fs";
 import { z, type ZodType } from "zod";
-import { Vrm } from "./vrm";
+import { Persona } from "./persona";
 
 /**
  * Safely serialize a value to JSON. Returns a fallback error JSON string
@@ -176,28 +176,28 @@ export namespace input {
   }
 
   /**
-   * Parse menu command stdin and return the linked VRM instance.
+   * Parse menu command stdin and return the linked Persona instance.
    *
-   * Menu commands receive `{ "linkedVrm": <entityId> }` on stdin from the
+   * Menu commands receive `{ "linkedPersona": "<personaId>" }` on stdin from the
    * menu UI. This helper validates the input and returns a ready-to-use
-   * {@link Vrm} instance.
+   * {@link Persona} instance.
    *
-   * @returns A {@link Vrm} instance for the linked entity
+   * @returns A {@link Persona} instance for the linked persona
    * @throws {StdinParseError} With `code: "EMPTY_STDIN"` if stdin is empty
    * @throws {StdinParseError} With `code: "INVALID_JSON"` if stdin is not valid JSON
-   * @throws {StdinParseError} With `code: "VALIDATION_ERROR"` if `linkedVrm` is missing or not a number
+   * @throws {StdinParseError} With `code: "VALIDATION_ERROR"` if `linkedPersona` is missing or not a string
    *
    * @example
    * ```typescript
    * import { input } from "@hmcs/sdk/commands";
    *
-   * const vrm = await input.parseMenu();
-   * await vrm.setExpressions({ happy: 1.0 });
+   * const persona = await input.parseMenu();
+   * await persona.vrm().setExpressions({ happy: 1.0 });
    * ```
    */
-  export async function parseMenu(): Promise<Vrm> {
-    const parsed = await parse(z.object({ linkedVrm: z.number() }));
-    return new Vrm(parsed.linkedVrm);
+  export async function parseMenu(): Promise<Persona> {
+    const parsed = await parse(z.object({ linkedPersona: z.string() }));
+    return new Persona(parsed.linkedPersona);
   }
 }
 

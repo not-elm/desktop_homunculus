@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { audio, preferences, Vrm, Webview } from "@hmcs/sdk";
+import { audio, preferences, Webview } from "@hmcs/sdk";
 
 const VOICEVOX_HOST = "http://localhost:50021";
 
@@ -52,22 +52,21 @@ export function useVoicevoxSettings() {
     let cancelled = false;
     (async () => {
       try {
-        const linked = await resolveLinkedVrm();
+        const linked = await resolveLinkedPersona();
         if (cancelled) return;
 
         const resolvedAssetId = linked?.assetId ?? null;
         setAssetId(resolvedAssetId);
 
-        const [speakersResult, savedSettings, name] = await Promise.all([
+        const [speakersResult, savedSettings] = await Promise.all([
           fetchSpeakers(),
           resolvedAssetId
             ? preferences.load<VoicevoxSettings>(`voicevox::${resolvedAssetId}`)
             : undefined,
-          linked?.vrm.name() ?? Promise.resolve(""),
         ]);
         if (cancelled) return;
 
-        setCharacterName(name);
+        setCharacterName(linked?.name ?? "");
 
         if (speakersResult) {
           setConnected(true);
@@ -154,18 +153,17 @@ export function useVoicevoxSettings() {
   };
 }
 
-/** Resolves the linked VRM's asset ID via VrmSnapshot. */
-async function resolveLinkedVrm(): Promise<{
-  vrm: Vrm;
+/** Resolves the linked persona's VRM asset ID. */
+async function resolveLinkedPersona(): Promise<{
+  name: string;
   assetId: string | null;
 } | null> {
   const webview = Webview.current();
   if (!webview) return null;
-  const linked = await webview.linkedVrm();
+  const linked = await webview.linkedPersona();
   if (!linked) return null;
-  const snapshots = await Vrm.findAllDetailed();
-  const snapshot = snapshots.find((s) => s.entity === linked.entity);
-  return { vrm: linked, assetId: snapshot?.assetId ?? null };
+  const snapshot = await linked.snapshot();
+  return { name: snapshot.name ?? "", assetId: snapshot.vrmAssetId ?? null };
 }
 
 async function fetchSpeakers(): Promise<VoicevoxSpeaker[] | null> {

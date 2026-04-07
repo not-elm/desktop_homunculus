@@ -41,7 +41,7 @@ export function useSettingsDraft() {
   const [settings, setSettings] = useState<AgentSettings>(DEFAULT_SETTINGS);
   const [savedSettings, setSavedSettings] = useState<AgentSettings>(DEFAULT_SETTINGS);
   const [saving, setSaving] = useState(false);
-  const [characterId, setCharacterId] = useState<string | null>(null);
+  const [personaId, setPersonaId] = useState<string | null>(null);
   const [apiKey, setApiKey] = useState("");
   const [savingApiKey, setSavingApiKey] = useState(false);
 
@@ -50,11 +50,11 @@ export function useSettingsDraft() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const vrm = await Webview.current()?.linkedVrm();
+      const p = await Webview.current()?.linkedPersona();
       if (cancelled) return;
-      const id = vrm ? await vrm.name() : null;
+      const id = p ? p.id : null;
       if (cancelled) return;
-      setCharacterId(id);
+      setPersonaId(id);
       const [loaded, loadedApiKey] = await Promise.all([
         id ? preferences.load<AgentSettings>(`agent::${id}`) : undefined,
         preferences.load<string>("agent::api-key"),
@@ -72,17 +72,17 @@ export function useSettingsDraft() {
   }, []);
 
   const saveSettings = useCallback(async () => {
-    if (saving || !characterId) return;
+    if (saving || !personaId) return;
     setSaving(true);
     try {
-      await preferences.save(`agent::${characterId}`, settings);
+      await preferences.save(`agent::${personaId}`, settings);
       setSavedSettings(settings);
     } catch (err) {
       console.error("Failed to save settings:", err);
     } finally {
       setSaving(false);
     }
-  }, [saving, characterId, settings]);
+  }, [saving, personaId, settings]);
 
   const saveApiKey = useCallback(async () => {
     if (savingApiKey) return;
@@ -99,13 +99,13 @@ export function useSettingsDraft() {
   const autoSave = useCallback(async (newSettings: AgentSettings) => {
     setSettings(newSettings);
     setSavedSettings(newSettings);
-    if (!characterId) return;
+    if (!personaId) return;
     try {
-      await preferences.save(`agent::${characterId}`, newSettings);
+      await preferences.save(`agent::${personaId}`, newSettings);
     } catch (err) {
       console.error("Failed to auto-save settings:", err);
     }
-  }, [characterId]);
+  }, [personaId]);
 
   return {
     loading,

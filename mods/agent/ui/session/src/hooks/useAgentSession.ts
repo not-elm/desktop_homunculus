@@ -31,15 +31,15 @@ export interface PendingQuestion {
 }
 
 export function useAgentSession() {
-  const [characterId, setCharacterId] = useState("");
+  const [personaId, setPersonaId] = useState("");
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const vrm = await Webview.current()?.linkedVrm();
+      const p = await Webview.current()?.linkedPersona();
       if (cancelled) return;
-      const name = vrm ? await vrm.name() : "";
-      if (!cancelled) setCharacterId(name);
+      const id = p ? p.id : "";
+      if (!cancelled) setPersonaId(id);
     })();
     return () => { cancelled = true; };
   }, []);
@@ -55,21 +55,21 @@ export function useAgentSession() {
   const startTimeRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (!characterId) return;
+    if (!personaId) return;
     let cancelled = false;
-    checkInitialStatus(characterId).then((active) => {
+    checkInitialStatus(personaId).then((active) => {
       if (!cancelled && active) {
         setState((prev) => (prev === "idle" ? "listening" : prev));
         startTimeRef.current ??= Date.now();
       }
     });
     return () => { cancelled = true; };
-  }, [characterId]);
+  }, [personaId]);
 
   useEffect(() => {
-    if (!characterId) return;
+    if (!personaId) return;
     const sources = [
-      subscribeToStatus(characterId, (newState) => {
+      subscribeToStatus(personaId, (newState) => {
         setState(newState);
         if (newState !== "idle") {
           startTimeRef.current ??= Date.now();
@@ -79,23 +79,23 @@ export function useAgentSession() {
           setWorktreeInfo(null);
         }
       }),
-      subscribeToLog(characterId, (entry) => {
+      subscribeToLog(personaId, (entry) => {
         setEntries((prev) => [...prev.slice(-99), entry]);
       }),
-      subscribeToPermission(characterId, (perm) => {
+      subscribeToPermission(personaId, (perm) => {
         console.log("[useAgentSession] permission received:", JSON.stringify(perm));
         setPermission(perm);
         setState("waiting");
       }),
-      subscribeToQuestion(characterId, (q) => {
+      subscribeToQuestion(personaId, (q) => {
         setQuestion(q);
         setState("waiting");
       }),
-      subscribeToRecording(characterId, setIsRecording),
-      subscribeToWorktree(characterId, setWorktreeInfo),
+      subscribeToRecording(personaId, setIsRecording),
+      subscribeToWorktree(personaId, setWorktreeInfo),
     ];
     return () => sources.forEach((s) => s.close());
-  }, [characterId]);
+  }, [personaId]);
 
   useEffect(() => {
     if (state === "idle") return;
@@ -123,52 +123,52 @@ export function useAgentSession() {
   }, []);
 
   const interruptSession = useCallback(async () => {
-    if (characterId) await callRpc("interrupt-session", { characterId });
-  }, [characterId]);
+    if (personaId) await callRpc("interrupt-session", { personaId });
+  }, [personaId]);
 
   const startSession = useCallback(async () => {
-    if (!characterId) return;
+    if (!personaId) return;
     setError(null);
     setEntries([]);
     try {
-      await callRpc("start-session", { characterId });
+      await callRpc("start-session", { personaId });
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
-  }, [characterId]);
+  }, [personaId]);
 
   const stopSession = useCallback(async () => {
-    if (!characterId) return;
+    if (!personaId) return;
     setError(null);
     try {
-      await callRpc("stop-session", { characterId });
+      await callRpc("stop-session", { personaId });
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
-  }, [characterId]);
+  }, [personaId]);
 
   const sendMessage = useCallback(async (text: string) => {
-    if (!characterId || !text.trim()) return;
+    if (!personaId || !text.trim()) return;
     try {
       if (state === "idle") {
-        await callRpc("start-session", { characterId });
+        await callRpc("start-session", { personaId });
       }
-      await callRpc("send-message", { characterId, text: text.trim() });
+      await callRpc("send-message", { personaId, text: text.trim() });
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
-  }, [characterId, state]);
+  }, [personaId, state]);
 
   const closePanel = useCallback(async () => {
-    if (characterId && state !== "idle") {
-      await callRpc("stop-session", { characterId }).catch(() => {});
+    if (personaId && state !== "idle") {
+      await callRpc("stop-session", { personaId }).catch(() => {});
     }
     audio.se.play("se:close").catch(() => {});
     await Webview.current()?.close();
-  }, [characterId, state]);
+  }, [personaId, state]);
 
   return {
-    characterId,
+    personaId,
     state,
     elapsedMs,
     entries,
@@ -189,11 +189,11 @@ export function useAgentSession() {
   };
 }
 
-async function checkInitialStatus(characterId: string): Promise<boolean> {
+async function checkInitialStatus(personaId: string): Promise<boolean> {
   try {
     const result = await callRpc("status", {});
     if (result && typeof result === "object") {
-      return characterId in (result as Record<string, string>);
+      return personaId in (result as Record<string, string>);
     }
   } catch { /* ignore */ }
   return false;
@@ -204,17 +204,17 @@ function callRpc(method: string, body: Record<string, unknown>) {
 }
 
 function subscribeToStatus(id: string, onState: (state: AgentState) => void) {
-  return signals.stream<{ characterId: string; state: string }>(
+  return signals.stream<{ personaId: string; state: string }>(
     "agent:status",
-    (p) => { if (p.characterId === id) onState(p.state as AgentState); },
+    (p) => { if (p.personaId === id) onState(p.state as AgentState); },
   );
 }
 
 function subscribeToLog(id: string, onEntry: (entry: LogEntry) => void) {
-  return signals.stream<{ characterId: string; type: string; message: string; source?: "voice" | "text"; timestamp: number }>(
+  return signals.stream<{ personaId: string; type: string; message: string; source?: "voice" | "text"; timestamp: number }>(
     "agent:log",
     (p) => {
-      if (p.characterId === id) {
+      if (p.personaId === id) {
         onEntry({ id: crypto.randomUUID(), type: p.type as LogType, message: p.message, source: p.source, timestamp: p.timestamp });
       }
     },
@@ -222,10 +222,10 @@ function subscribeToLog(id: string, onEntry: (entry: LogEntry) => void) {
 }
 
 function subscribeToPermission(id: string, onPermission: (perm: PendingPermission) => void) {
-  return signals.stream<{ characterId: string; requestId: string; action: string; target: string; availableDecisions?: Decision[] }>(
+  return signals.stream<{ personaId: string; requestId: string; action: string; target: string; availableDecisions?: Decision[] }>(
     "agent:permission",
     (p) => {
-      if (p.characterId === id) {
+      if (p.personaId === id) {
         onPermission({
           requestId: p.requestId,
           action: p.action,
@@ -238,24 +238,24 @@ function subscribeToPermission(id: string, onPermission: (perm: PendingPermissio
 }
 
 function subscribeToQuestion(id: string, onQuestion: (q: PendingQuestion) => void) {
-  return signals.stream<{ characterId: string; requestId: string; questions: unknown }>(
+  return signals.stream<{ personaId: string; requestId: string; questions: unknown }>(
     "agent:question",
-    (p) => { if (p.characterId === id) onQuestion({ requestId: p.requestId, questions: p.questions }); },
+    (p) => { if (p.personaId === id) onQuestion({ requestId: p.requestId, questions: p.questions }); },
   );
 }
 
 function subscribeToRecording(id: string, onRecording: (recording: boolean) => void) {
-  return signals.stream<{ characterId: string; recording: boolean }>(
+  return signals.stream<{ personaId: string; recording: boolean }>(
     "agent:recording",
-    (p) => { if (p.characterId === id) onRecording(p.recording); },
+    (p) => { if (p.personaId === id) onRecording(p.recording); },
   );
 }
 
 function subscribeToWorktree(id: string, onWorktree: (info: { name: string; branch: string } | null) => void) {
-  return signals.stream<{ characterId: string; state: string; worktreeName?: string }>(
+  return signals.stream<{ personaId: string; state: string; worktreeName?: string }>(
     "agent:worktree",
     (p) => {
-      if (p.characterId !== id) return;
+      if (p.personaId !== id) return;
       if (p.state === "created" && p.worktreeName) {
         onWorktree({ name: p.worktreeName, branch: p.worktreeName });
       }

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Vrm, preferences } from "@hmcs/sdk";
+import { Persona, type PersonaVrm, preferences } from "@hmcs/sdk";
 import { rpc } from "@hmcs/sdk/rpc";
 import { voicevoxToTimeline } from "./lib/timeline.ts";
 import { fetchWithTimeout } from "./lib/utils.ts";
@@ -31,12 +31,12 @@ interface VoicevoxSettings {
 
 const characterLocks = new Map<string, Promise<unknown>>();
 
-function withCharacterLock<T>(name: string, fn: () => Promise<T>): Promise<T> {
-  const prev = characterLocks.get(name) ?? Promise.resolve();
+function withCharacterLock<T>(personaId: string, fn: () => Promise<T>): Promise<T> {
+  const prev = characterLocks.get(personaId) ?? Promise.resolve();
   const result = prev.then(fn, fn);
-  characterLocks.set(name, result);
+  characterLocks.set(personaId, result);
   result.finally(() => {
-    if (characterLocks.get(name) === result) characterLocks.delete(name);
+    if (characterLocks.get(personaId) === result) characterLocks.delete(personaId);
   });
   return result;
 }
@@ -81,16 +81,10 @@ function clearInitializedSpeakers(): void {
   initializedSpeakers.clear();
 }
 
-async function resolveAssetId(
-  name: string,
-  entity: number,
-): Promise<string | null> {
-  const snapshots = await Vrm.findAllDetailed();
-  const snapshot = snapshots.find((s) => s.entity === entity);
-  if (!snapshot) {
-    throw new Error(`Failed to resolve character snapshot for "${name}"`);
-  }
-  return snapshot.assetId;
+async function resolveAssetId(personaId: string): Promise<string | null> {
+  const p = await Persona.load(personaId);
+  const snapshot = await p.snapshot();
+  return snapshot.vrmAssetId ?? null;
 }
 
 async function loadSettings(assetId: string | null): Promise<VoicevoxSettings> {
@@ -102,7 +96,7 @@ async function loadSettings(assetId: string | null): Promise<VoicevoxSettings> {
 }
 
 async function speakSentence(
-  vrm: Vrm,
+  vrm: PersonaVrm,
   sentence: string,
   settings: VoicevoxSettings,
 ): Promise<void> {
@@ -195,13 +189,14 @@ await rpc.serve({
         "Make a character speak text with lip-synced audio via VoiceVox TTS",
       timeout: 300_000,
       input: z.object({
-        name: z.string().min(1),
+        personaId: z.string().min(1),
         text: z.union([z.string().min(1), z.array(z.string().min(1)).min(1)]),
       }),
-      handler: async ({ name, text }) => {
-        return withCharacterLock(name, async () => {
-          const vrm = await Vrm.findByName(name);
-          const assetId = await resolveAssetId(name, vrm.entity);
+      handler: async ({ personaId, text }) => {
+        return withCharacterLock(personaId, async () => {
+          const p = await Persona.load(personaId);
+          const vrm = p.vrm();
+          const assetId = await resolveAssetId(personaId);
           const settings = await loadSettings(assetId);
 
           await ensureSpeakerInitialized(settings.speakerId);
