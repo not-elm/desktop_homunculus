@@ -6,7 +6,7 @@ use bevy_cef::prelude::{PreloadScripts, WebviewExtendStandardMaterial, WebviewSi
 use bevy_flurx::action::once;
 use bevy_vrm1::prelude::{Cameras, HeadBoneEntity};
 use homunculus_core::prelude::{
-    AssetResolver, AssetType, LinkedPersona, Persona, PersonaIndex, WebviewMeshSize, WebviewOffset,
+    AssetResolver, AssetType, LinkedPersona, PersonaIndex, WebviewMeshSize, WebviewOffset,
     WebviewOpenOptions, WebviewSource, WebviewSourceInfo,
 };
 use homunculus_effects::{Entity, Update};
@@ -60,7 +60,6 @@ fn create_global_webview(
     mut materials: ResMut<Assets<WebviewExtendStandardMaterial>>,
     cameras: Cameras,
     asset_resolver: AssetResolver,
-    personas: Query<&Persona>,
 ) -> ApiResult<Entity> {
     let webview_source = source_to_webview_source(&options.source, &asset_resolver)?;
 
@@ -78,12 +77,10 @@ fn create_global_webview(
         .try_insert(OriginalWebviewSource(options.source.clone()));
     insert_preload_scripts(&mut commands, webview);
 
-    if let Some(vrm) = options.linked_vrm
-        && let Ok(persona) = personas.get(vrm)
-    {
+    if let Some(persona_id) = options.linked_persona {
         commands
             .entity(webview)
-            .try_insert(LinkedPersona(persona.id.clone()));
+            .try_insert(LinkedPersona(persona_id));
     }
     Ok(webview)
 }

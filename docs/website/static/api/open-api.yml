@@ -2787,12 +2787,12 @@ paths:
             text/plain:
               schema:
                 type: boolean
-  /webviews/{entity}/linked-vrm:
+  /webviews/{entity}/linked-persona:
     get:
       tags:
       - webviews
-      summary: Get the linked VRM for a webview.
-      operationId: get_linked_vrm
+      summary: Get the linked persona for a webview.
+      operationId: get_linked_persona
       parameters:
       - name: entity
         in: path
@@ -2802,18 +2802,18 @@ paths:
           type: string
       responses:
         '200':
-          description: Linked VRM entity ID
+          description: Linked persona ID
           content:
             application/json:
               schema:
-                type:
-                - string
-                - 'null'
+                oneOf:
+                - type: 'null'
+                - $ref: '#/components/schemas/PersonaId'
     put:
       tags:
       - webviews
-      summary: Set the linked VRM for a webview.
-      operationId: set_linked_vrm
+      summary: Set the linked persona for a webview.
+      operationId: set_linked_persona
       parameters:
       - name: entity
         in: path
@@ -2825,16 +2825,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SetLinkedVrmRequest'
+              $ref: '#/components/schemas/SetLinkedPersonaRequest'
         required: true
       responses:
         '200':
-          description: VRM linked to webview
+          description: Persona linked to webview
     delete:
       tags:
       - webviews
-      summary: Remove the linked VRM from a webview.
-      operationId: unlink_vrm
+      summary: Remove the linked persona from a webview.
+      operationId: unlink_persona
       parameters:
       - name: entity
         in: path
@@ -2844,7 +2844,7 @@ paths:
           type: string
       responses:
         '200':
-          description: VRM unlinked from webview
+          description: Persona unlinked from webview
   /webviews/{entity}/navigate:
     post:
       tags:
@@ -3910,13 +3910,15 @@ components:
           type: number
           format: double
           description: Frame rate in frames per second.
-    SetLinkedVrmRequest:
+    SetLinkedPersonaRequest:
       type: object
+      description: Request body for setting the linked persona on a webview.
       required:
-      - vrm
+      - personaId
       properties:
-        vrm:
-          type: string
+        personaId:
+          $ref: '#/components/schemas/PersonaId'
+          description: The persona ID to link to this webview.
     ShadowPanelPutBody:
       type: object
       required:
@@ -4332,10 +4334,10 @@ components:
       properties:
         entity:
           type: string
-        linkedVrm:
-          type:
-          - string
-          - 'null'
+        linkedPersona:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/PersonaId'
         offset:
           $ref: '#/components/schemas/WebviewOffset'
         size:
@@ -4369,11 +4371,11 @@ components:
       required:
       - source
       properties:
-        linkedVrm:
-          type:
-          - string
-          - 'null'
-          description: VRM entity to link to this webview (optional).
+        linkedPersona:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/PersonaId'
+            description: Persona to link to this webview (optional).
         offset:
           oneOf:
           - type: 'null'

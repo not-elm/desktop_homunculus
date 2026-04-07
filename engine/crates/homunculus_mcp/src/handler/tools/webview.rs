@@ -111,12 +111,9 @@ impl HomunculusMcpHandler {
             Err(e) => return format!("Error: {e}"),
         };
 
-        let linked_vrm = if let Some(name) = &args.character_name {
+        let linked_persona = if let Some(name) = &args.character_name {
             match self.resolve_persona_by_name(name).await {
-                Ok(persona) => match self.persona_api.resolve(persona.id).await {
-                    Ok(entity) => Some(entity),
-                    Err(e) => return format!("Error resolving character '{name}': {e}"),
-                },
+                Ok(persona) => Some(persona.id),
                 Err(e) => return format!("Error: {e}"),
             }
         } else {
@@ -135,7 +132,7 @@ impl HomunculusMcpHandler {
             size: Some(Vec2::new(size_x, size_y)),
             viewport_size: Some(Vec2::new(viewport_width as f32, viewport_height as f32)),
             offset: Some(WebviewOffset(Vec3::new(offset_x, offset_y, 10.0))),
-            linked_vrm,
+            linked_persona,
         };
 
         match self.webview_api.open(options).await {

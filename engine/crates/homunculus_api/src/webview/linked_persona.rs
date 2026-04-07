@@ -2,67 +2,72 @@ use crate::error::{ApiError, ApiResult};
 use crate::prelude::WebviewApi;
 use bevy::prelude::*;
 use bevy_flurx::action::once;
-use homunculus_core::prelude::{LinkedPersona, Persona, PersonaIndex};
+use homunculus_core::prelude::{LinkedPersona, PersonaId};
 
 impl WebviewApi {
-    /// Gets the linked VRM entity for a webview.
-    pub async fn linked_vrm(&self, webview: Entity) -> ApiResult<Option<Entity>> {
+    /// Gets the linked persona ID for a webview.
+    pub async fn linked_persona(&self, webview: Entity) -> ApiResult<Option<PersonaId>> {
         self.0
             .schedule(move |task| async move {
-                task.will(Update, once::run(get_linked_vrm).with(webview))
+                task.will(Update, once::run(get_linked_persona).with(webview))
                     .await
             })
             .await?
     }
 
-    /// Sets the linked VRM entity for a webview.
-    pub async fn set_linked_vrm(&self, webview: Entity, vrm: Entity) -> ApiResult<()> {
+    /// Sets the linked persona for a webview.
+    pub async fn set_linked_persona(
+        &self,
+        webview: Entity,
+        persona_id: PersonaId,
+    ) -> ApiResult<()> {
         self.0
             .schedule(move |task| async move {
-                task.will(Update, once::run(set_linked_vrm).with((webview, vrm)))
-                    .await
+                task.will(
+                    Update,
+                    once::run(set_linked_persona).with((webview, persona_id)),
+                )
+                .await
             })
             .await?
     }
 
-    /// Removes the linked VRM from a webview.
-    pub async fn unlink_vrm(&self, webview: Entity) -> ApiResult<()> {
+    /// Removes the linked persona from a webview.
+    pub async fn unlink_persona(&self, webview: Entity) -> ApiResult<()> {
         self.0
             .schedule(move |task| async move {
-                task.will(Update, once::run(unlink_vrm).with(webview)).await
+                task.will(Update, once::run(unlink_persona).with(webview))
+                    .await
             })
             .await?
     }
 }
 
-fn get_linked_vrm(
+fn get_linked_persona(
     In(webview): In<Entity>,
     webviews: Query<Option<&LinkedPersona>, With<bevy_cef::prelude::WebviewSource>>,
-    index: Res<PersonaIndex>,
-) -> ApiResult<Option<Entity>> {
+) -> ApiResult<Option<PersonaId>> {
     match webviews.get(webview) {
-        Ok(linked) => Ok(linked.and_then(|l| index.get(&l.0))),
+        Ok(linked) => Ok(linked.map(|l| l.0.clone())),
         Err(_) => Err(ApiError::WebviewNotFound(webview)),
     }
 }
 
-fn set_linked_vrm(
-    In((webview, vrm)): In<(Entity, Entity)>,
+fn set_linked_persona(
+    In((webview, persona_id)): In<(Entity, PersonaId)>,
     mut commands: Commands,
     webviews: Query<Entity, With<bevy_cef::prelude::WebviewSource>>,
-    personas: Query<&Persona>,
 ) -> ApiResult<()> {
     if !webviews.contains(webview) {
         return Err(ApiError::WebviewNotFound(webview));
     }
-    let persona = personas.get(vrm).map_err(|_| ApiError::EntityNotFound)?;
     commands
         .entity(webview)
-        .try_insert(LinkedPersona(persona.id.clone()));
+        .try_insert(LinkedPersona(persona_id));
     Ok(())
 }
 
-fn unlink_vrm(
+fn unlink_persona(
     In(webview): In<Entity>,
     mut commands: Commands,
     webviews: Query<Entity, With<bevy_cef::prelude::WebviewSource>>,
