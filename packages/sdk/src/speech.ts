@@ -1,19 +1,32 @@
-import {type TimelineKeyframe} from "./vrm";
+/**
+ * A single keyframe in a speech timeline.
+ */
+export interface TimelineKeyframe {
+    /**
+     * Duration of this keyframe in seconds.
+     */
+    duration: number;
+    /**
+     * Expression targets to set during this keyframe.
+     * Keys are expression names (e.g. "aa", "ih", "happy"), values are weights (0.0-1.0).
+     */
+    targets?: Record<string, number>;
+}
 
 /**
  * Speech utilities for converting phoneme data to Timeline keyframes.
  *
  * @example
  * ```typescript
- * import { speech, Vrm } from "@hmcs/sdk";
+ * import { speech, persona } from "@hmcs/sdk";
  *
  * const keyframes = speech.fromPhonemes([
  *   ["aa", 0.1],
  *   [null, 0.05],
  *   ["oh", 0.12],
  * ]);
- * const vrm = await Vrm.findByName("MyAvatar");
- * await vrm.speakWithTimeline(wavData, keyframes);
+ * const p = await persona.load("alice");
+ * await p.vrm().speakWithTimeline(wavData, keyframes);
  * ```
  */
 export namespace speech {

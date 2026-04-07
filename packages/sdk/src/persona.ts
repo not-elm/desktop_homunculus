@@ -842,6 +842,59 @@ export class Persona {
     }
 }
 
+// --- VrmaRepeat & repeat helpers ---
+
+/** Repeat settings for VRMA playback. */
+export interface VrmaRepeat {
+    type: "forever" | "never" | "count";
+    count?: number;
+}
+
+/**
+ * Helper functions for building {@link VrmaRepeat} values.
+ *
+ * @example
+ * ```typescript
+ * await vrm.playVrma({
+ *   asset: "vrma:idle-maid",
+ *   repeat: repeat.forever(),
+ * });
+ *
+ * await vrm.playVrma({
+ *   asset: "vrma:grabbed",
+ *   repeat: repeat.count(3),
+ * });
+ * ```
+ */
+export namespace repeat {
+    /**
+     * Repeat the animation forever.
+     */
+    export function forever(): VrmaRepeat {
+        return { type: "forever" };
+    }
+
+    /**
+     * Play the animation once (no repeat).
+     */
+    export function never(): VrmaRepeat {
+        return { type: "never" };
+    }
+
+    /**
+     * Repeat the animation a fixed number of times.
+     *
+     * @param n Positive integer repeat count.
+     * @throws {RangeError} If `n` is not a positive integer.
+     */
+    export function count(n: number): VrmaRepeat {
+        if (!Number.isInteger(n) || !Number.isFinite(n) || n <= 0) {
+            throw new RangeError("repeat.count(n) requires a positive integer");
+        }
+        return { type: "count", count: n };
+    }
+}
+
 // --- persona namespace ---
 
 /**
