@@ -114,11 +114,11 @@ impl HomunculusMcpHandler {
             ..Default::default()
         };
 
-        let persona = match self.persona_api.create(create_args).await {
+        let snap = match self.persona_api.create(create_args).await {
             Ok(p) => p,
             Err(e) => return format!("Error creating persona: {e}"),
         };
-        let persona_id = persona.id.clone();
+        let persona_id = snap.persona.id.clone();
 
         let result = self
             .persona_api
@@ -127,7 +127,11 @@ impl HomunculusMcpHandler {
 
         match result {
             Ok(updated) => {
-                let display = updated.name.as_deref().unwrap_or(updated.id.as_ref());
+                let display = updated
+                    .persona
+                    .name
+                    .as_deref()
+                    .unwrap_or(updated.persona.id.as_ref());
 
                 // Optionally move to viewport position.
                 if let (Some(x), Some(y)) = (args.x, args.y)

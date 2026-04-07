@@ -1,9 +1,9 @@
 use axum::Json;
 use axum::extract::State;
-use homunculus_api::persona::PersonaApi;
+use homunculus_api::persona::{PersonaApi, PersonaSnapshot};
 use homunculus_api::prelude::axum::{HttpResult, IntoHttpResult};
 use homunculus_api::vrm::OptionalTransform;
-use homunculus_core::prelude::{Gender, Persona};
+use homunculus_core::prelude::Gender;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use utoipa::ToSchema;
@@ -21,8 +21,10 @@ use super::PersonaPath;
     responses((status = 200, body = NameBody), (status = 404)),
 )]
 pub async fn get_name(State(api): State<PersonaApi>, path: PersonaPath) -> HttpResult<NameBody> {
-    let persona = api.get(path.persona_id).await?;
-    Ok(Json(NameBody { name: persona.name }))
+    let snap = api.get(path.persona_id).await?;
+    Ok(Json(NameBody {
+        name: snap.persona.name,
+    }))
 }
 
 /// Set the display name of a persona.
@@ -30,13 +32,13 @@ pub async fn get_name(State(api): State<PersonaApi>, path: PersonaPath) -> HttpR
     put, path = "/name", tag = "personas",
     params(("id" = String, Path, description = "Persona ID")),
     request_body = NameBody,
-    responses((status = 200, body = Persona), (status = 404)),
+    responses((status = 200, body = PersonaSnapshot), (status = 404)),
 )]
 pub async fn put_name(
     State(api): State<PersonaApi>,
     path: PersonaPath,
     Json(body): Json<NameBody>,
-) -> HttpResult<Persona> {
+) -> HttpResult<PersonaSnapshot> {
     api.set_name(path.persona_id, body.name.unwrap_or_default())
         .await
         .into_http_result()
@@ -58,8 +60,10 @@ pub struct NameBody {
     responses((status = 200, body = AgeBody), (status = 404)),
 )]
 pub async fn get_age(State(api): State<PersonaApi>, path: PersonaPath) -> HttpResult<AgeBody> {
-    let persona = api.get(path.persona_id).await?;
-    Ok(Json(AgeBody { age: persona.age }))
+    let snap = api.get(path.persona_id).await?;
+    Ok(Json(AgeBody {
+        age: snap.persona.age,
+    }))
 }
 
 /// Set the age of a persona.
@@ -67,13 +71,13 @@ pub async fn get_age(State(api): State<PersonaApi>, path: PersonaPath) -> HttpRe
     put, path = "/age", tag = "personas",
     params(("id" = String, Path, description = "Persona ID")),
     request_body = AgeBody,
-    responses((status = 200, body = Persona), (status = 404)),
+    responses((status = 200, body = PersonaSnapshot), (status = 404)),
 )]
 pub async fn put_age(
     State(api): State<PersonaApi>,
     path: PersonaPath,
     Json(body): Json<AgeBody>,
-) -> HttpResult<Persona> {
+) -> HttpResult<PersonaSnapshot> {
     api.set_age(path.persona_id, body.age.unwrap_or_default())
         .await
         .into_http_result()
@@ -98,9 +102,9 @@ pub async fn get_gender(
     State(api): State<PersonaApi>,
     path: PersonaPath,
 ) -> HttpResult<GenderBody> {
-    let persona = api.get(path.persona_id).await?;
+    let snap = api.get(path.persona_id).await?;
     Ok(Json(GenderBody {
-        gender: persona.gender,
+        gender: snap.persona.gender,
     }))
 }
 
@@ -109,13 +113,13 @@ pub async fn get_gender(
     put, path = "/gender", tag = "personas",
     params(("id" = String, Path, description = "Persona ID")),
     request_body = GenderBody,
-    responses((status = 200, body = Persona), (status = 404)),
+    responses((status = 200, body = PersonaSnapshot), (status = 404)),
 )]
 pub async fn put_gender(
     State(api): State<PersonaApi>,
     path: PersonaPath,
     Json(body): Json<GenderBody>,
-) -> HttpResult<Persona> {
+) -> HttpResult<PersonaSnapshot> {
     api.set_gender(path.persona_id, body.gender)
         .await
         .into_http_result()
@@ -140,9 +144,9 @@ pub async fn get_first_person_pronoun(
     State(api): State<PersonaApi>,
     path: PersonaPath,
 ) -> HttpResult<PronounBody> {
-    let persona = api.get(path.persona_id).await?;
+    let snap = api.get(path.persona_id).await?;
     Ok(Json(PronounBody {
-        first_person_pronoun: persona.first_person_pronoun,
+        first_person_pronoun: snap.persona.first_person_pronoun,
     }))
 }
 
@@ -151,13 +155,13 @@ pub async fn get_first_person_pronoun(
     put, path = "/first-person-pronoun", tag = "personas",
     params(("id" = String, Path, description = "Persona ID")),
     request_body = PronounBody,
-    responses((status = 200, body = Persona), (status = 404)),
+    responses((status = 200, body = PersonaSnapshot), (status = 404)),
 )]
 pub async fn put_first_person_pronoun(
     State(api): State<PersonaApi>,
     path: PersonaPath,
     Json(body): Json<PronounBody>,
-) -> HttpResult<Persona> {
+) -> HttpResult<PersonaSnapshot> {
     api.set_first_person_pronoun(
         path.persona_id,
         body.first_person_pronoun.unwrap_or_default(),
@@ -186,9 +190,9 @@ pub async fn get_profile(
     State(api): State<PersonaApi>,
     path: PersonaPath,
 ) -> HttpResult<ProfileBody> {
-    let persona = api.get(path.persona_id).await?;
+    let snap = api.get(path.persona_id).await?;
     Ok(Json(ProfileBody {
-        profile: persona.profile,
+        profile: snap.persona.profile,
     }))
 }
 
@@ -197,13 +201,13 @@ pub async fn get_profile(
     put, path = "/profile", tag = "personas",
     params(("id" = String, Path, description = "Persona ID")),
     request_body = ProfileBody,
-    responses((status = 200, body = Persona), (status = 404)),
+    responses((status = 200, body = PersonaSnapshot), (status = 404)),
 )]
 pub async fn put_profile(
     State(api): State<PersonaApi>,
     path: PersonaPath,
     Json(body): Json<ProfileBody>,
-) -> HttpResult<Persona> {
+) -> HttpResult<PersonaSnapshot> {
     api.set_profile(path.persona_id, body.profile)
         .await
         .into_http_result()
@@ -228,9 +232,9 @@ pub async fn get_personality(
     State(api): State<PersonaApi>,
     path: PersonaPath,
 ) -> HttpResult<PersonalityBody> {
-    let persona = api.get(path.persona_id).await?;
+    let snap = api.get(path.persona_id).await?;
     Ok(Json(PersonalityBody {
-        personality: persona.personality,
+        personality: snap.persona.personality,
     }))
 }
 
@@ -239,13 +243,13 @@ pub async fn get_personality(
     put, path = "/personality", tag = "personas",
     params(("id" = String, Path, description = "Persona ID")),
     request_body = PersonalityBody,
-    responses((status = 200, body = Persona), (status = 404)),
+    responses((status = 200, body = PersonaSnapshot), (status = 404)),
 )]
 pub async fn put_personality(
     State(api): State<PersonaApi>,
     path: PersonaPath,
     Json(body): Json<PersonalityBody>,
-) -> HttpResult<Persona> {
+) -> HttpResult<PersonaSnapshot> {
     api.set_personality(path.persona_id, body.personality.unwrap_or_default())
         .await
         .into_http_result()
@@ -270,9 +274,9 @@ pub async fn get_metadata(
     State(api): State<PersonaApi>,
     path: PersonaPath,
 ) -> HttpResult<MetadataBody> {
-    let persona = api.get(path.persona_id).await?;
+    let snap = api.get(path.persona_id).await?;
     Ok(Json(MetadataBody {
-        metadata: persona.metadata,
+        metadata: snap.persona.metadata,
     }))
 }
 
@@ -281,13 +285,13 @@ pub async fn get_metadata(
     put, path = "/metadata", tag = "personas",
     params(("id" = String, Path, description = "Persona ID")),
     request_body = MetadataBody,
-    responses((status = 200, body = Persona), (status = 404)),
+    responses((status = 200, body = PersonaSnapshot), (status = 404)),
 )]
 pub async fn put_metadata(
     State(api): State<PersonaApi>,
     path: PersonaPath,
     Json(body): Json<MetadataBody>,
-) -> HttpResult<Persona> {
+) -> HttpResult<PersonaSnapshot> {
     api.set_metadata(path.persona_id, body.metadata)
         .await
         .into_http_result()

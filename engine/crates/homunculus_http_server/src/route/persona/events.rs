@@ -9,8 +9,8 @@ use homunculus_api::prelude::{ApiError, ApiReactor};
 use homunculus_core::prelude::{
     ExpressionChangeEvent, OnClickEvent, OnDragEndEvent, OnDragEvent, OnDragStartEvent,
     OnPointerCancelEvent, OnPointerMoveEvent, OnPointerOutEvent, OnPointerOverEvent,
-    OnPointerPressedEvent, OnPointerReleasedEvent, PersonaStateChangeEvent, VrmEventReceiver,
-    VrmaFinishEvent, VrmaPlayEvent,
+    OnPointerPressedEvent, OnPointerReleasedEvent, PersonaChangeEvent, PersonaStateChangeEvent,
+    VrmAttachedEvent, VrmDetachedEvent, VrmEventReceiver, VrmaFinishEvent, VrmaPlayEvent,
 };
 use serde::Serialize;
 use std::convert::Infallible;
@@ -21,9 +21,10 @@ use super::PersonaPath;
 
 /// Subscribe to persona events via SSE.
 ///
-/// Events include: drag-start, drag, drag-end, pointer-press, pointer-click,
-/// pointer-move, pointer-release, pointer-over, pointer-out, pointer-cancel,
-/// state-change, expression-change, vrma-play, vrma-finish.
+/// Always delivered: persona-change, state-change, vrm-attached, vrm-detached.
+/// Delivered only when VRM is attached: drag-start, drag, drag-end, pointer-press,
+/// pointer-click, pointer-move, pointer-release, pointer-over, pointer-out,
+/// pointer-cancel, expression-change, vrma-play, vrma-finish.
 #[utoipa::path(
     get,
     path = "/events",
@@ -41,6 +42,25 @@ pub async fn events(
 
     let stream = reactor
         .schedule(move |task| async move {
+            let persona_change = task
+                .will(
+                    Update,
+                    once::run(observe_stream::<PersonaChangeEvent>)
+                        .with(("persona-change", entity)),
+                )
+                .await;
+            let vrm_attached = task
+                .will(
+                    Update,
+                    once::run(observe_stream::<VrmAttachedEvent>).with(("vrm-attached", entity)),
+                )
+                .await;
+            let vrm_detached = task
+                .will(
+                    Update,
+                    once::run(observe_stream::<VrmDetachedEvent>).with(("vrm-detached", entity)),
+                )
+                .await;
             let drag_start = task
                 .will(
                     Update,
@@ -131,6 +151,9 @@ pub async fn events(
                 )
                 .await;
             select_all([
+                persona_change,
+                vrm_attached,
+                vrm_detached,
                 drag_start,
                 drag,
                 drag_end,

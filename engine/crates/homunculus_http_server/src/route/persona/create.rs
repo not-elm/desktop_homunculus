@@ -2,8 +2,7 @@ use axum::Json;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use homunculus_api::persona::{CreatePersona, PersonaApi};
-use homunculus_core::prelude::Persona;
+use homunculus_api::persona::{CreatePersona, PersonaApi, PersonaSnapshot};
 
 /// Create a new persona.
 #[utoipa::path(
@@ -12,7 +11,7 @@ use homunculus_core::prelude::Persona;
     tag = "personas",
     request_body = CreatePersona,
     responses(
-        (status = 201, description = "Persona created", body = Persona),
+        (status = 201, description = "Persona created", body = PersonaSnapshot),
         (status = 400, description = "Invalid input"),
         (status = 409, description = "Persona already exists"),
     ),
@@ -29,6 +28,7 @@ mod tests {
     use crate::tests::{call_any_status, test_app};
     use axum::body::Body;
     use axum::http::{Request, StatusCode};
+    use homunculus_api::persona::PersonaSnapshot;
     use homunculus_core::prelude::Persona;
     use http_body_util::BodyExt;
 
@@ -44,9 +44,10 @@ mod tests {
         assert_eq!(response.status(), StatusCode::CREATED);
 
         let body = response.into_body().collect().await.unwrap().to_bytes();
-        let persona: Persona = serde_json::from_slice(&body).unwrap();
-        assert_eq!(persona.id.0, "alice");
-        assert_eq!(persona.name, Some("Alice".to_string()));
+        let snap: PersonaSnapshot = serde_json::from_slice(&body).unwrap();
+        assert_eq!(snap.persona.id.0, "alice");
+        assert_eq!(snap.persona.name, Some("Alice".to_string()));
+        assert_eq!(snap.state, "idle");
     }
 
     #[tokio::test]
@@ -84,9 +85,10 @@ mod tests {
         assert_eq!(response.status(), StatusCode::OK);
 
         let body = response.into_body().collect().await.unwrap().to_bytes();
-        let persona: Persona = serde_json::from_slice(&body).unwrap();
-        assert_eq!(persona.id.0, "bob");
-        assert_eq!(persona.name, Some("Bob".to_string()));
+        let snap: PersonaSnapshot = serde_json::from_slice(&body).unwrap();
+        assert_eq!(snap.persona.id.0, "bob");
+        assert_eq!(snap.persona.name, Some("Bob".to_string()));
+        assert_eq!(snap.state, "idle");
     }
 
     #[tokio::test]
@@ -98,7 +100,7 @@ mod tests {
         assert_eq!(response.status(), StatusCode::OK);
 
         let body = response.into_body().collect().await.unwrap().to_bytes();
-        let personas: Vec<Persona> = serde_json::from_slice(&body).unwrap();
+        let personas: Vec<PersonaSnapshot> = serde_json::from_slice(&body).unwrap();
         assert!(personas.is_empty());
 
         let request = Request::post("/personas")
@@ -112,9 +114,9 @@ mod tests {
         assert_eq!(response.status(), StatusCode::OK);
 
         let body = response.into_body().collect().await.unwrap().to_bytes();
-        let personas: Vec<Persona> = serde_json::from_slice(&body).unwrap();
+        let personas: Vec<PersonaSnapshot> = serde_json::from_slice(&body).unwrap();
         assert_eq!(personas.len(), 1);
-        assert_eq!(personas[0].id.0, "list-test");
+        assert_eq!(personas[0].persona.id.0, "list-test");
     }
 
     #[tokio::test]
@@ -160,8 +162,8 @@ mod tests {
         assert_eq!(response.status(), StatusCode::OK);
 
         let body = response.into_body().collect().await.unwrap().to_bytes();
-        let persona: Persona = serde_json::from_slice(&body).unwrap();
-        assert_eq!(persona.name, Some("After".to_string()));
+        let snap: PersonaSnapshot = serde_json::from_slice(&body).unwrap();
+        assert_eq!(snap.persona.name, Some("After".to_string()));
     }
 
     #[tokio::test]

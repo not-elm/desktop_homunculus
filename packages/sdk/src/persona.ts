@@ -33,6 +33,8 @@ export interface PersonaSnapshot {
     profile: string;
     /** Free-text personality description for agent prompts. */
     personality?: string | null;
+    /** Current ephemeral state (e.g. "idle", "sitting", "drag"). */
+    state: string;
     /** The asset ID of the currently attached VRM, or null. */
     vrmAssetId?: string | null;
     /** Extension metadata for MODs. */
@@ -70,11 +72,13 @@ export interface PatchPersona {
 /**
  * Full snapshot of a persona including transform and VRM state.
  *
+ * Returned by the `GET /personas/snapshot` bulk endpoint.
+ *
  * @example
  * ```typescript
- * const p = await persona.load("alice");
- * const snap = await p.fullSnapshot();
- * console.log(`Position: ${snap.transform.translation}`);
+ * // Full snapshots are returned by the bulk snapshot endpoint
+ * const response = await host.get(host.createUrl("/personas/snapshot"));
+ * const snapshots = await response.json() as PersonaFullSnapshot[];
  * ```
  */
 export interface PersonaFullSnapshot {
@@ -118,6 +122,10 @@ export type PersonaEventMap = {
     "persona-change": { persona: PersonaSnapshot };
     /** Fired when the persona state changes. */
     "state-change": { state: string };
+    /** A VRM model was attached to this persona. */
+    "vrm-attached": { assetId: string };
+    /** A VRM model was detached from this persona. */
+    "vrm-detached": { assetId: string };
     /** Drag started on the VRM. */
     "drag-start": unknown;
     /** VRM is being dragged. */

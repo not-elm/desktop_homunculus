@@ -1,7 +1,6 @@
 use axum::extract::State;
-use homunculus_api::persona::PersonaApi;
+use homunculus_api::persona::{PersonaApi, PersonaSnapshot};
 use homunculus_api::prelude::axum::{HttpResult, IntoHttpResult};
-use homunculus_core::prelude::Persona;
 
 use super::PersonaPath;
 
@@ -11,10 +10,10 @@ use super::PersonaPath;
     path = "/",
     tag = "personas",
     responses(
-        (status = 200, description = "List of personas", body = Vec<Persona>),
+        (status = 200, description = "List of personas", body = Vec<PersonaSnapshot>),
     ),
 )]
-pub async fn list(State(api): State<PersonaApi>) -> HttpResult<Vec<Persona>> {
+pub async fn list(State(api): State<PersonaApi>) -> HttpResult<Vec<PersonaSnapshot>> {
     api.list().await.into_http_result()
 }
 
@@ -25,10 +24,10 @@ pub async fn list(State(api): State<PersonaApi>) -> HttpResult<Vec<Persona>> {
     tag = "personas",
     params(("id" = String, Path, description = "Persona ID")),
     responses(
-        (status = 200, description = "Persona details", body = Persona),
+        (status = 200, description = "Persona details", body = PersonaSnapshot),
         (status = 404, description = "Persona not found"),
     ),
 )]
-pub async fn get(State(api): State<PersonaApi>, path: PersonaPath) -> HttpResult<Persona> {
+pub async fn get(State(api): State<PersonaApi>, path: PersonaPath) -> HttpResult<PersonaSnapshot> {
     api.get(path.persona_id).await.into_http_result()
 }

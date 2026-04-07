@@ -2,8 +2,7 @@ use axum::Json;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use homunculus_api::persona::PersonaApi;
-use homunculus_core::prelude::Persona;
+use homunculus_api::persona::{PersonaApi, PersonaSnapshot};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
@@ -17,7 +16,7 @@ use super::PersonaPath;
     params(("id" = String, Path, description = "Persona ID")),
     request_body = AttachVrmBody,
     responses(
-        (status = 200, description = "VRM attached, returns updated persona", body = Persona),
+        (status = 200, description = "VRM attached, returns updated persona", body = PersonaSnapshot),
         (status = 404, description = "Persona or asset not found"),
         (status = 409, description = "VRM already attached"),
     ),

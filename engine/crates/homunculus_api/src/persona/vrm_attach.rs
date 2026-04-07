@@ -1,27 +1,31 @@
 use crate::error::{ApiError, ApiResult};
-use crate::persona::PersonaApi;
+use crate::persona::{PersonaApi, PersonaSnapshot};
 use crate::prelude::initialized;
 use bevy::prelude::*;
 use bevy_flurx::prelude::*;
 use bevy_vrm1::prelude::{BodyTracking, Cameras, LookAt, VrmHandle};
 use homunculus_core::prelude::{
-    AssetResolver, Persona, PersonaChangeEvent, PersonaId, PersonaIndex, VrmAttachedEvent,
-    VrmEvent, VrmEventSender,
+    AssetResolver, Persona, PersonaChangeEvent, PersonaId, PersonaIndex, PersonaState,
+    VrmAttachedEvent, VrmEvent, VrmEventSender,
 };
 use homunculus_prefs::prelude::PrefsDatabase;
 
 impl PersonaApi {
     /// Attaches a VRM model to an existing persona entity.
-    pub async fn attach_vrm(&self, persona_id: PersonaId, asset_id: String) -> ApiResult<Persona> {
+    pub async fn attach_vrm(
+        &self,
+        persona_id: PersonaId,
+        asset_id: String,
+    ) -> ApiResult<PersonaSnapshot> {
         self.0
             .schedule(move |task| async move {
-                let (persona, entity) = task
+                let (snapshot, entity) = task
                     .will(Update, once::run(attach).with((persona_id, asset_id)))
                     .await
                     .ok()?;
                 task.will(Update, wait::until(initialized).with(entity))
                     .await;
-                Some(persona)
+                Some(snapshot)
             })
             .await?
             .ok_or(ApiError::EntityNotFound)
@@ -33,14 +37,14 @@ fn attach(
     In((persona_id, asset_id)): In<(PersonaId, String)>,
     mut commands: Commands,
     index: Res<PersonaIndex>,
-    mut personas: Query<&mut Persona>,
+    mut personas: Query<(&mut Persona, &PersonaState)>,
     vrm_handles: Query<&VrmHandle>,
     asset_resolver: AssetResolver,
     cameras: Cameras,
     prefs: NonSend<PrefsDatabase>,
     tx_attached: Option<Res<VrmEventSender<VrmAttachedEvent>>>,
     tx_change: Option<Res<VrmEventSender<PersonaChangeEvent>>>,
-) -> ApiResult<(Persona, Entity)> {
+) -> ApiResult<(PersonaSnapshot, Entity)> {
     let entity = index.get(&persona_id).ok_or(ApiError::EntityNotFound)?;
 
     if vrm_handles.get(entity).is_ok() {
@@ -60,11 +64,12 @@ fn attach(
         cameras.all_layers(),
     ));
 
-    let mut persona = personas
+    let (mut persona, state) = personas
         .get_mut(entity)
         .map_err(|_| ApiError::EntityNotFound)?;
     persona.vrm_asset_id = Some(asset_id.clone());
     let updated = persona.clone();
+    let state_str = state.0.clone();
 
     persist_and_broadcast(
         &prefs,
@@ -75,7 +80,13 @@ fn attach(
         &asset_id,
     );
 
-    Ok((updated, entity))
+    Ok((
+        PersonaSnapshot {
+            persona: updated,
+            state: state_str,
+        },
+        entity,
+    ))
 }
 
 /// Persists persona to DB and broadcasts attach/change events.

@@ -1,13 +1,13 @@
 mod bone;
 mod despawn;
-mod expressions;
+pub(crate) mod expressions;
 mod fetch_all;
 mod find_by_name;
 mod look;
 mod observer;
 mod persona;
 mod position;
-mod snapshot;
+pub(crate) mod snapshot;
 mod spawn;
 mod spring_bones;
 mod state;

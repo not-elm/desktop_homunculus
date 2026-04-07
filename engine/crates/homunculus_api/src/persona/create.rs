@@ -1,5 +1,5 @@
 use crate::error::{ApiError, ApiResult};
-use crate::persona::PersonaApi;
+use crate::persona::{PersonaApi, PersonaSnapshot};
 use bevy::prelude::*;
 use bevy_flurx::prelude::*;
 use homunculus_core::prelude::{Gender, Persona, PersonaId, PersonaIndex, PersonaState};
@@ -32,7 +32,7 @@ pub struct CreatePersona {
 
 impl PersonaApi {
     /// Creates a new persona entity and persists it to the database.
-    pub async fn create(&self, args: CreatePersona) -> ApiResult<Persona> {
+    pub async fn create(&self, args: CreatePersona) -> ApiResult<PersonaSnapshot> {
         let persona_id = PersonaId::validate(&args.id).map_err(ApiError::InvalidInput)?;
 
         self.0
@@ -49,7 +49,7 @@ fn create(
     mut commands: Commands,
     mut index: ResMut<PersonaIndex>,
     prefs: NonSend<PrefsDatabase>,
-) -> ApiResult<Persona> {
+) -> ApiResult<PersonaSnapshot> {
     if index.get(&persona_id).is_some() {
         return Err(ApiError::Conflict(format!(
             "Persona already exists: {}",
@@ -59,11 +59,12 @@ fn create(
 
     let persona = build_persona(&persona_id, &args);
     let display_name = persona.name.clone().unwrap_or_else(|| persona_id.0.clone());
+    let state = PersonaState::default();
 
     let entity = commands
         .spawn((
             persona.clone(),
-            PersonaState::default(),
+            state.clone(),
             Name::new(display_name),
             Transform::default(),
         ))
@@ -72,7 +73,10 @@ fn create(
     index.insert(persona_id.clone(), entity);
     persist_persona(&prefs, &persona);
 
-    Ok(persona)
+    Ok(PersonaSnapshot {
+        persona,
+        state: state.0,
+    })
 }
 
 /// Builds a [`Persona`] component from the validated ID and creation arguments.

@@ -1,9 +1,10 @@
 use crate::error::{ApiError, ApiResult};
-use crate::persona::PersonaApi;
+use crate::persona::{PersonaApi, PersonaSnapshot};
 use bevy::prelude::*;
 use bevy_flurx::prelude::*;
 use homunculus_core::prelude::{
-    Gender, Persona, PersonaChangeEvent, PersonaId, PersonaIndex, VrmEvent, VrmEventSender,
+    Gender, Persona, PersonaChangeEvent, PersonaId, PersonaIndex, PersonaState, VrmEvent,
+    VrmEventSender,
 };
 use homunculus_prefs::prelude::PrefsDatabase;
 use serde::{Deserialize, Serialize};
@@ -33,7 +34,7 @@ pub struct PatchPersona {
 
 impl PersonaApi {
     /// Applies a partial update to a persona.
-    pub async fn patch(&self, persona_id: PersonaId, patch: PatchPersona) -> ApiResult<Persona> {
+    pub async fn patch(&self, persona_id: PersonaId, patch: PatchPersona) -> ApiResult<PersonaSnapshot> {
         self.0
             .schedule(move |task| async move {
                 task.will(Update, once::run(patch_persona).with((persona_id, patch)))
@@ -43,7 +44,7 @@ impl PersonaApi {
     }
 
     /// Updates the display name of a persona.
-    pub async fn set_name(&self, persona_id: PersonaId, name: String) -> ApiResult<Persona> {
+    pub async fn set_name(&self, persona_id: PersonaId, name: String) -> ApiResult<PersonaSnapshot> {
         self.patch(
             persona_id,
             PatchPersona {
@@ -55,7 +56,7 @@ impl PersonaApi {
     }
 
     /// Updates the age of a persona.
-    pub async fn set_age(&self, persona_id: PersonaId, age: u32) -> ApiResult<Persona> {
+    pub async fn set_age(&self, persona_id: PersonaId, age: u32) -> ApiResult<PersonaSnapshot> {
         self.patch(
             persona_id,
             PatchPersona {
@@ -67,7 +68,7 @@ impl PersonaApi {
     }
 
     /// Updates the gender of a persona.
-    pub async fn set_gender(&self, persona_id: PersonaId, gender: Gender) -> ApiResult<Persona> {
+    pub async fn set_gender(&self, persona_id: PersonaId, gender: Gender) -> ApiResult<PersonaSnapshot> {
         self.patch(
             persona_id,
             PatchPersona {
@@ -83,7 +84,7 @@ impl PersonaApi {
         &self,
         persona_id: PersonaId,
         pronoun: String,
-    ) -> ApiResult<Persona> {
+    ) -> ApiResult<PersonaSnapshot> {
         self.patch(
             persona_id,
             PatchPersona {
@@ -95,7 +96,7 @@ impl PersonaApi {
     }
 
     /// Updates the profile of a persona.
-    pub async fn set_profile(&self, persona_id: PersonaId, profile: String) -> ApiResult<Persona> {
+    pub async fn set_profile(&self, persona_id: PersonaId, profile: String) -> ApiResult<PersonaSnapshot> {
         self.patch(
             persona_id,
             PatchPersona {
@@ -111,7 +112,7 @@ impl PersonaApi {
         &self,
         persona_id: PersonaId,
         personality: String,
-    ) -> ApiResult<Persona> {
+    ) -> ApiResult<PersonaSnapshot> {
         self.patch(
             persona_id,
             PatchPersona {
@@ -127,7 +128,7 @@ impl PersonaApi {
         &self,
         persona_id: PersonaId,
         metadata: HashMap<String, serde_json::Value>,
-    ) -> ApiResult<Persona> {
+    ) -> ApiResult<PersonaSnapshot> {
         self.patch(
             persona_id,
             PatchPersona {
@@ -143,13 +144,13 @@ fn patch_persona(
     In((persona_id, patch)): In<(PersonaId, PatchPersona)>,
     mut commands: Commands,
     index: Res<PersonaIndex>,
-    mut personas: Query<&mut Persona>,
+    mut personas: Query<(&mut Persona, &PersonaState)>,
     prefs: NonSend<PrefsDatabase>,
     tx: Option<Res<VrmEventSender<PersonaChangeEvent>>>,
-) -> ApiResult<Persona> {
+) -> ApiResult<PersonaSnapshot> {
     let entity = index.get(&persona_id).ok_or(ApiError::EntityNotFound)?;
 
-    let mut persona = personas
+    let (mut persona, state) = personas
         .get_mut(entity)
         .map_err(|_| ApiError::EntityNotFound)?;
 
@@ -159,9 +160,13 @@ fn patch_persona(
     commands.entity(entity).try_insert(Name::new(display_name));
 
     let updated = persona.clone();
+    let state_str = state.0.clone();
     persist_and_broadcast(&prefs, &tx, entity, &updated);
 
-    Ok(updated)
+    Ok(PersonaSnapshot {
+        persona: updated,
+        state: state_str,
+    })
 }
 
 /// Merges non-`None` patch fields into the existing persona.
