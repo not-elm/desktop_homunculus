@@ -1,16 +1,16 @@
 #!/usr/bin/env tsx
 /// <reference types="node" />
 
+import { z } from "zod";
 import { rpc } from "@hmcs/sdk/rpc";
 import { input, output } from "@hmcs/sdk/commands";
 
 try {
-  const vrm = await input.parseMenu();
-  const characterId = await vrm.name();
+  const { linkedPersona: personaId } = await input.parse(z.object({ linkedPersona: z.string() }));
   await rpc.call({
     modName: "@hmcs/agent",
     method: "stop-session",
-    body: { characterId },
+    body: { personaId },
   });
   output.succeed();
 } catch (e) {
