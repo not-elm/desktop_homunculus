@@ -221,13 +221,13 @@ Webview.open({ source: webviewSource.local("my-mod:ui") });
 
 ### WebView 内での SDK へのアクセス
 
-`Webview.current()` を使って React アプリ内から WebView のハンドルを取得し、`linkedVrm()` で関連付けられたキャラクターにアクセスします：
+`Webview.current()` を使って React アプリ内から WebView のハンドルを取得し、`linkedPersona()` で関連付けられたキャラクターにアクセスします：
 
 ```typescript
 import { Webview } from "@hmcs/sdk";
 
 const webview = Webview.current();
-const vrm = await webview?.linkedVrm();
+const p = await webview?.linkedPersona();
 ```
 
 `Webview.current()` は CEF がすべての WebView コンテキストに注入する `window.WEBVIEW_ENTITY` 値を読み取ります。
@@ -247,14 +247,14 @@ import { input } from "@hmcs/sdk/commands";
 
 try {
   const data = await input.parse(
-    z.object({ linkedVrm: z.number() })
+    z.object({ linkedPersona: z.string() })
   );
   await Webview.open({
     source: webviewSource.local("my-mod:ui"),
     size: [1, 0.9],
     viewportSize: [900, 700],
     offset: [1.1, 0],
-    linkedVrm: data.linkedVrm,
+    linkedPersona: data.linkedPersona,
   });
 } catch (e) {
   console.error(e);

@@ -49,13 +49,13 @@ Desktop Homunculus が起動すると、インストール済みのすべての 
 
 ## メニューコマンドの処理 {#handling-menu-commands}
 
-ユーザーがメニュー項目を選択すると、対応する MOD コマンドが実行され、右クリックされたキャラクターのエンティティ ID を含む JSON オブジェクトが stdin に渡されます：
+ユーザーがメニュー項目を選択すると、対応する MOD コマンドが実行され、右クリックされたキャラクターのペルソナ ID を含む JSON オブジェクトが stdin に渡されます：
 
 ```json
-{ "linkedVrm": 42 }
+{ "linkedPersona": "alice" }
 ```
 
-`linkedVrm` フィールドは右クリックされた VRM キャラクターの数値エンティティ ID です。この ID を使ってキャラクターを検索し、操作を行えます。
+`linkedPersona` フィールドは右クリックされたペルソナの文字列 ID です。この ID を使ってペルソナを読み込み、操作を行えます。
 
 この入力を解析してキャラクターに操作を行う最小限のコマンドハンドラーです：
 
@@ -68,14 +68,14 @@ import { input } from "@hmcs/sdk/commands";
 
 try {
   const character = await input.parseMenu();
-  await character.setExpressions({ happy: 1.0 });
+  await character.vrm().setExpressions({ happy: 1.0 });
 } catch (e) {
   console.error(e);
   process.exit(1);
 }
 ```
 
-`input.parseMenu()` は stdin から `{ "linkedVrm": ... }` の JSON を読み取り、右クリックされたキャラクターの `Vrm` インスタンスを返します。シバン、`input.parse`、エラー処理、出力規約の詳細は [MOD コマンド](./commands.md)を参照してください。
+`input.parseMenu()` は stdin から `{ "linkedPersona": ... }` の JSON を読み取り、右クリックされたキャラクターの `Persona` インスタンスを返します。シバン、`input.parse`、エラー処理、出力規約の詳細は [MOD コマンド](./commands.md)を参照してください。
 
 ## WebView を開く
 
@@ -120,20 +120,20 @@ import { Webview, webviewSource } from "@hmcs/sdk";
 import { input } from "@hmcs/sdk/commands";
 
 try {
-  const vrm = await input.parseMenu();
+  const character = await input.parseMenu();
   await Webview.open({
     source: webviewSource.local("my-mod:ui"),
     size: [1, 0.9],
     viewportSize: [900, 700],
     offset: [1.1, 0],
-    linkedVrm: vrm.entity,
+    linkedPersona: character.id,
   });
 } catch (e) {
   console.error(e);
 }
 ```
 
-`Webview.open()` の `linkedVrm` オプションは WebView を右クリックされたキャラクターに関連付けます。WebView 内では `Webview.current()` を使用してこの関連付けを取得し、`linkedVrm()` で VRM インスタンスにアクセスできます。
+`Webview.open()` の `linkedPersona` オプションは WebView を右クリックされたキャラクターに関連付けます。WebView 内では `Webview.current()` を使用してこの関連付けを取得し、`linkedPersona()` で `Persona` インスタンスにアクセスできます。
 
 利用可能なすべてのオプションとメソッドについては [Webviews SDK リファレンス](/reference/sdk/webviews)を参照してください。
 
@@ -180,10 +180,10 @@ try {
   const character = await input.parseMenu();
 
   // 嬉しい表情を表示
-  await character.setExpressions({ happy: 1.0 });
+  await character.vrm().setExpressions({ happy: 1.0 });
 
   // アイドルアニメーションを 1 回再生
-  await character.playVrma({
+  await character.vrm().playVrma({
     asset: "vrma:idle-maid",
     repeat: repeat.count(1),
     transitionSecs: 0.3,

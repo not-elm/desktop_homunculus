@@ -5,7 +5,7 @@ sidebar_position: 1
 
 # Webview
 
-3D 空間内に埋め込み HTML インターフェースを作成・制御します。WebView は自由に浮遊させることも、VRM キャラクターにリンクしてキャラクターの移動に追従させることもできます。
+3D 空間内に埋め込み HTML インターフェースを作成・制御します。WebView は自由に浮遊させることも、ペルソナにリンクしてキャラクターの移動に追従させることもできます。
 
 React UI を Vite と `@hmcs/ui` で構築する方法については、[WebView UI セットアップ](/mod-development/webview-ui/setup-and-build)を参照してください。
 
@@ -36,9 +36,9 @@ import { Webview, webviewSource } from "@hmcs/sdk";
 | [`reload()`](./reload) | 現在のコンテンツをリロードする |
 | [`navigateBack()`](./navigateBack) | 履歴を戻る |
 | [`navigateForward()`](./navigateForward) | 履歴を進む |
-| [`linkedVrm()`](./linkedVrm) | この WebView にリンクされた VRM を取得する |
-| [`setLinkedVrm(vrm)`](./setLinkedVrm) | WebView を VRM キャラクターにリンクする |
-| [`unlinkVrm()`](./unlinkVrm) | VRM リンクを解除する |
+| [`linkedPersona()`](./linkedVrm) | この WebView にリンクされたペルソナを取得する |
+| [`setLinkedPersona(personaId)`](./setLinkedVrm) | WebView をペルソナにリンクする |
+| [`unlinkPersona()`](./unlinkVrm) | ペルソナリンクを解除する |
 
 ## ヘルパー
 

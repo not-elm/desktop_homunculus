@@ -49,13 +49,13 @@ The `command` value must exactly match a key in the `bin` field of your `package
 
 ## Handling Menu Commands
 
-When a user selects a menu item, the corresponding MOD command runs with a JSON object on stdin containing the entity ID of the right-clicked character:
+When a user selects a menu item, the corresponding MOD command runs with a JSON object on stdin containing the persona ID of the right-clicked character:
 
 ```json
-{ "linkedVrm": 42 }
+{ "linkedPersona": "alice" }
 ```
 
-The `linkedVrm` field is the numeric entity ID of the VRM character that was right-clicked. You can use this ID to look up the character and perform actions on it.
+The `linkedPersona` field is the string ID of the persona that was right-clicked. You can use this ID to load the persona and perform actions on it.
 
 Here is a minimal command handler that parses this input and acts on the character:
 
@@ -68,14 +68,14 @@ import { input } from "@hmcs/sdk/commands";
 
 try {
   const character = await input.parseMenu();
-  await character.setExpressions({ happy: 1.0 });
+  await character.vrm().setExpressions({ happy: 1.0 });
 } catch (e) {
   console.error(e);
   process.exit(1);
 }
 ```
 
-`input.parseMenu()` reads the `{ "linkedVrm": ... }` JSON from stdin and returns a `Vrm` instance for the right-clicked character. See [MOD Commands](./commands.md) for full details on shebangs, `input.parse`, error handling, and output conventions.
+`input.parseMenu()` reads the `{ "linkedPersona": ... }` JSON from stdin and returns a `Persona` instance for the right-clicked character. See [MOD Commands](./commands.md) for full details on shebangs, `input.parse`, error handling, and output conventions.
 
 ## Opening a Webview
 
@@ -120,20 +120,20 @@ import { Webview, webviewSource } from "@hmcs/sdk";
 import { input } from "@hmcs/sdk/commands";
 
 try {
-  const vrm = await input.parseMenu();
+  const character = await input.parseMenu();
   await Webview.open({
     source: webviewSource.local("my-mod:ui"),
     size: [1, 0.9],
     viewportSize: [900, 700],
     offset: [1.1, 0],
-    linkedVrm: vrm.entity,
+    linkedPersona: character.id,
   });
 } catch (e) {
   console.error(e);
 }
 ```
 
-The `linkedVrm` option in `Webview.open()` associates the webview with the right-clicked character. Inside the webview, you can retrieve this association using `Webview.current()` and then `linkedVrm()` to get the VRM instance.
+The `linkedPersona` option in `Webview.open()` associates the webview with the right-clicked character. Inside the webview, you can retrieve this association using `Webview.current()` and then `linkedPersona()` to get the `Persona` instance.
 
 See the [Webviews SDK reference](/reference/sdk/webviews) for all available options and methods.
 
@@ -180,10 +180,10 @@ try {
   const character = await input.parseMenu();
 
   // Show a happy expression
-  await character.setExpressions({ happy: 1.0 });
+  await character.vrm().setExpressions({ happy: 1.0 });
 
   // Play the idle animation once
-  await character.playVrma({
+  await character.vrm().playVrma({
     asset: "vrma:idle-maid",
     repeat: repeat.count(1),
     transitionSecs: 0.3,

@@ -4,7 +4,7 @@ sidebar_position: 3
 
 # input.parseMenu
 
-Parse menu command stdin and return a `Vrm` instance for the linked character. Menu commands receive `{ "linkedVrm": <entityId> }` on stdin from the menu UI.
+Parse menu command stdin and return a `Persona` instance for the linked character. Menu commands receive `{ "linkedPersona": "<personaId>" }` on stdin from the menu UI.
 
 ## Parameters
 
@@ -12,13 +12,13 @@ None.
 
 ## Returns
 
-`Promise<Vrm>`
+`Promise<Persona>`
 
 ## Example
 
 ```typescript
 import { input } from "@hmcs/sdk/commands";
 
-const vrm = await input.parseMenu();
-await vrm.setExpressions({ happy: 1.0 });
+const persona = await input.parseMenu();
+await persona.vrm().setExpressions({ happy: 1.0 });
 ```
