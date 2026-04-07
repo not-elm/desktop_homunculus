@@ -54,3 +54,5 @@ docs/superpowers/
 docs/investigations/
 
 .claude/skills/ui-ux-pro-max
+
+.env
