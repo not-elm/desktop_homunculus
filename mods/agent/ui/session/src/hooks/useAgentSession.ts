@@ -147,13 +147,17 @@ export function useAgentSession() {
     }
   }, [personaId]);
 
-  const sendMessage = useCallback(async (text: string) => {
+  const sendMessage = useCallback(async (text: string, contextSessionUuid?: string) => {
     if (!personaId || !text.trim()) return;
     try {
       if (state === "idle") {
         await callRpc("start-session", { personaId });
       }
-      await callRpc("send-message", { personaId, text: text.trim() });
+      await callRpc("send-message", {
+        personaId,
+        text: text.trim(),
+        ...(contextSessionUuid && { contextSessionUuid }),
+      });
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
