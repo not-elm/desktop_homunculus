@@ -8,8 +8,7 @@ import type {
 } from "@anthropic-ai/claude-agent-sdk";
 import type { AgentRuntime, AgentEvent, AgentResponse } from "./agent-runtime.ts";
 import { AsyncQueue, Deferred } from "./async-queue.ts";
-import type { AgentSettings, Persona } from "./types.ts";
-import { buildCharacterPrompt, type WorktreeContext } from "./prompt.ts";
+import type { AgentSettings } from "./types.ts";
 
 /** Item enqueued by canUseTool; awaited by mergeStreams. */
 interface PermissionQueueItem {
@@ -37,11 +36,10 @@ type RaceResult =
  */
 export class ClaudeAgentRuntime implements AgentRuntime {
   constructor(
-    private readonly persona: Persona,
+    private readonly prompt: string,
     private readonly settings: AgentSettings,
     private readonly apiKey: string,
     private readonly workDir: string,
-    private readonly worktree?: WorktreeContext,
   ) {}
 
   async *execute(
@@ -51,7 +49,7 @@ export class ClaudeAgentRuntime implements AgentRuntime {
   ): AsyncGenerator<AgentEvent, void, AgentResponse | undefined> {
     const permQueue = new AsyncQueue<PermissionQueueItem>();
     const canUseTool = createCanUseToolHandler(permQueue);
-    const options = buildQueryOptions(this.persona, this.settings, this.apiKey, this.workDir, sessionId, canUseTool, this.worktree);
+    const options = buildQueryOptions(this.prompt, this.settings, this.apiKey, this.workDir, sessionId, canUseTool);
     const handle = query({ prompt: text, options });
 
     const onAbort = () => handle.close();
@@ -221,16 +219,15 @@ function mapResultMessage(msg: { subtype: string; session_id: string; is_error: 
 
 /** Constructs the SDK Options for a query call. */
 function buildQueryOptions(
-  persona: Persona,
+  prompt: string,
   settings: AgentSettings,
   apiKey: string,
   workDir: string,
   sessionId: string | null,
   canUseTool: Options["canUseTool"],
-  worktree?: WorktreeContext,
 ): Options {
   const options: Options = {
-    systemPrompt: buildCharacterPrompt(persona, worktree),
+    systemPrompt: prompt,
     cwd: workDir,
     mcpServers: {
       homunculus: { type: "http", url: "http://localhost:3100/mcp" },

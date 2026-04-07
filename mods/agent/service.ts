@@ -15,7 +15,7 @@ import {
   type Persona,
   DEFAULT_SETTINGS,
 } from "./lib/types.ts";
-import type { WorktreeContext } from "./lib/prompt.ts";
+import { buildPersonaPrompt, type WorktreeContext } from "./lib/prompt.ts";
 import { WorktreeManager, WORKTREE_NAME_PATTERN } from "./lib/worktree-manager.ts";
 import { gitExec, isGitRepo, currentBranch, listBranches } from "./lib/git.ts";
 import { sanitizeForTts } from "./lib/tts.ts";
@@ -144,7 +144,8 @@ async function startSession(personaId: string): Promise<void> {
   }
 
   const worktreeCtx = await buildWorktreeContext(settings, workDir);
-  const runtime = createRuntime(settings, persona, currentApiKey, workDir, worktreeCtx);
+  const prompt = buildPersonaPrompt(persona, worktreeCtx);
+  const runtime = createRuntime(settings, prompt, currentApiKey, workDir);
 
   const sessionAbort = new AbortController();
   activeSessions.set(personaId, sessionAbort);
@@ -253,16 +254,15 @@ async function readWorktreeBaseBranch(worktreePath: string): Promise<string> {
 
 function createRuntime(
   settings: AgentSettings,
-  persona: Persona,
+  prompt: string,
   apiKey: string | null,
   workDir: string,
-  worktree?: WorktreeContext,
 ): AgentRuntime {
   switch (settings.runtime) {
     case "codex":
-      return new CodexAppServerRuntime(persona, settings, workDir, getAppServerProcess(), worktree);
+      return new CodexAppServerRuntime(prompt, settings, workDir, getAppServerProcess());
     case "sdk":
-      return new ClaudeAgentRuntime(persona, settings, apiKey!, workDir, worktree);
+      return new ClaudeAgentRuntime(prompt, settings, apiKey!, workDir);
     default:
       throw new Error(`Runtime "${settings.runtime}" is not yet implemented.`);
   }

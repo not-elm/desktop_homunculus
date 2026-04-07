@@ -185,6 +185,3 @@ export function buildSessionContext(
 
   return `## Prior Session Context\n\n${body}`;
 }
-
-/** @deprecated Use buildPersonaPrompt instead. */
-export const buildCharacterPrompt = buildPersonaPrompt;
