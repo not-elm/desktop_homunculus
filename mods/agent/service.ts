@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { persona, preferences, signals, stt } from "@hmcs/sdk";
+import { Persona, preferences, signals, stt } from "@hmcs/sdk";
 import { rpc } from "@hmcs/sdk/rpc";
 import { KeyboardHookService, waitForComboRelease, isComboHeld } from "./lib/keyboard-hook.ts";
 import { resolvePttKeycodes, type ResolvedPttKey } from "./lib/key-mapping.ts";
@@ -95,7 +95,7 @@ async function startKeyboardHook(): Promise<void> {
 }
 
 async function scanOrphanedWorktrees(): Promise<void> {
-  const snapshots = await persona.list();
+  const snapshots = await Persona.list();
   for (const snapshot of snapshots) {
     const personaId = snapshot.id;
     if (activeSessions.has(personaId)) continue;
@@ -203,7 +203,7 @@ function resolvePttKeyOptional(settings: AgentSettings): ResolvedPttKey | null {
 }
 
 async function loadPersona(personaId: string): Promise<Persona> {
-  const p = await persona.load(personaId);
+  const p = await Persona.load(personaId);
   const snapshot = await p.snapshot();
   return {
     name: snapshot.name || personaId,

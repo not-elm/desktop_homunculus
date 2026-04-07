@@ -12,7 +12,7 @@ export type Gender = "male" | "female" | "other" | "unknown";
  *
  * @example
  * ```typescript
- * const personas = await persona.list();
+ * const personas = await Persona.list();
  * for (const p of personas) {
  *   console.log(`${p.id}: ${p.name ?? "(unnamed)"} — ${p.profile}`);
  * }
@@ -48,7 +48,7 @@ export interface PersonaSnapshot {
  *
  * @example
  * ```typescript
- * const p = await persona.load("alice");
+ * const p = await Persona.load("alice");
  * await p.patch({ name: "Alice v2", personality: "Cheerful and energetic" });
  * ```
  */
@@ -161,7 +161,7 @@ export type PersonaEventMap = {
  *
  * @example
  * ```typescript
- * const p = await persona.load("alice");
+ * const p = await Persona.load("alice");
  * const events = p.events();
  * events.on("state-change", (data) => {
  *   console.log("New state:", data.state);
@@ -220,7 +220,7 @@ export class PersonaEventSource implements Disposable {
  *
  * @example
  * ```typescript
- * const p = await persona.load("alice");
+ * const p = await Persona.load("alice");
  * const vrm = p.vrm();
  * await vrm.setExpressions({ happy: 1.0 });
  * await vrm.playVrma({ asset: "vrma:idle-maid", repeat: { type: "forever" } });
@@ -464,12 +464,12 @@ export class PersonaVrm {
  * Represents a persona instance and provides methods to read/write its fields
  * and manage its attached VRM.
  *
- * Obtain an instance via {@link persona.create}, {@link persona.load}, or
- * from the list returned by {@link persona.list}.
+ * Obtain an instance via {@link Persona.create}, {@link Persona.load}, or
+ * from the list returned by {@link Persona.list}.
  *
  * @example
  * ```typescript
- * const p = await persona.create({ id: "alice", name: "Alice", profile: "A cheerful assistant" });
+ * const p = await Persona.create({ id: "alice", name: "Alice", profile: "A cheerful assistant" });
  * console.log(await p.name()); // "Alice"
  * await p.setPersonality("Friendly and curious");
  * await p.attachVrm("elmer:model");
@@ -489,7 +489,7 @@ export class Persona {
      *
      * @example
      * ```typescript
-     * const p = await persona.load("alice");
+     * const p = await Persona.load("alice");
      * const snap = await p.snapshot();
      * console.log(`${snap.id}: ${snap.name}`);
      * ```
@@ -848,6 +848,77 @@ export class Persona {
     async delete(): Promise<void> {
         await host.deleteMethod(this.url());
     }
+
+    // --- Static factory methods ---
+
+    /**
+     * Creates a new persona and returns a {@link Persona} instance.
+     *
+     * @param params - Creation parameters including ID and optional fields
+     * @returns A new Persona instance
+     *
+     * @example
+     * ```typescript
+     * const p = await Persona.create({
+     *   id: "alice",
+     *   name: "Alice",
+     *   profile: "A cheerful virtual assistant",
+     *   personality: "Friendly and curious",
+     *   gender: "female",
+     * });
+     * ```
+     */
+    static async create(params: {
+        id: string;
+        name?: string;
+        profile?: string;
+        personality?: string;
+        gender?: Gender;
+        age?: number;
+        firstPersonPronoun?: string;
+        metadata?: Record<string, unknown>;
+    }): Promise<Persona> {
+        const response = await host.post(host.createUrl("personas"), params);
+        const snapshot = await response.json() as PersonaSnapshot;
+        return new Persona(snapshot.id);
+    }
+
+    /**
+     * Loads an existing persona by ID.
+     *
+     * @param id - The persona ID to load
+     * @returns A Persona instance
+     * @throws {HomunculusApiError} If the persona does not exist (404)
+     *
+     * @example
+     * ```typescript
+     * const p = await Persona.load("alice");
+     * const name = await p.name();
+     * ```
+     */
+    static async load(id: string): Promise<Persona> {
+        // Verify it exists by fetching it
+        await host.get(host.createUrl(`personas/${encodeURIComponent(id)}`));
+        return new Persona(id);
+    }
+
+    /**
+     * Lists all personas.
+     *
+     * @returns An array of persona snapshots
+     *
+     * @example
+     * ```typescript
+     * const all = await Persona.list();
+     * for (const p of all) {
+     *   console.log(`${p.id}: ${p.name ?? "(unnamed)"}`);
+     * }
+     * ```
+     */
+    static async list(): Promise<PersonaSnapshot[]> {
+        const response = await host.get(host.createUrl("personas"));
+        return await response.json() as PersonaSnapshot[];
+    }
 }
 
 // --- VrmaRepeat & repeat helpers ---
@@ -903,96 +974,3 @@ export namespace repeat {
     }
 }
 
-// --- persona namespace ---
-
-/**
- * Top-level functions for creating, loading, and listing personas.
- *
- * @example
- * ```typescript
- * import { persona } from "@hmcs/sdk";
- *
- * // Create a new persona
- * const p = await persona.create({
- *   id: "alice",
- *   name: "Alice",
- *   profile: "A cheerful virtual assistant",
- * });
- *
- * // List all personas
- * const all = await persona.list();
- *
- * // Load an existing persona by ID
- * const loaded = await persona.load("alice");
- * ```
- */
-export namespace persona {
-    /**
-     * Creates a new persona and returns a {@link Persona} instance.
-     *
-     * @param params - Creation parameters including ID and optional fields
-     * @returns A new Persona instance
-     *
-     * @example
-     * ```typescript
-     * const p = await persona.create({
-     *   id: "alice",
-     *   name: "Alice",
-     *   profile: "A cheerful virtual assistant",
-     *   personality: "Friendly and curious",
-     *   gender: "female",
-     * });
-     * ```
-     */
-    export async function create(params: {
-        id: string;
-        name?: string;
-        profile?: string;
-        personality?: string;
-        gender?: Gender;
-        age?: number;
-        firstPersonPronoun?: string;
-        metadata?: Record<string, unknown>;
-    }): Promise<Persona> {
-        const response = await host.post(host.createUrl("personas"), params);
-        const snapshot = await response.json() as PersonaSnapshot;
-        return new Persona(snapshot.id);
-    }
-
-    /**
-     * Loads an existing persona by ID.
-     *
-     * @param id - The persona ID to load
-     * @returns A Persona instance
-     * @throws {HomunculusApiError} If the persona does not exist (404)
-     *
-     * @example
-     * ```typescript
-     * const p = await persona.load("alice");
-     * const name = await p.name();
-     * ```
-     */
-    export async function load(id: string): Promise<Persona> {
-        // Verify it exists by fetching it
-        await host.get(host.createUrl(`personas/${encodeURIComponent(id)}`));
-        return new Persona(id);
-    }
-
-    /**
-     * Lists all personas.
-     *
-     * @returns An array of persona snapshots
-     *
-     * @example
-     * ```typescript
-     * const all = await persona.list();
-     * for (const p of all) {
-     *   console.log(`${p.id}: ${p.name ?? "(unnamed)"}`);
-     * }
-     * ```
-     */
-    export async function list(): Promise<PersonaSnapshot[]> {
-        const response = await host.get(host.createUrl("personas"));
-        return await response.json() as PersonaSnapshot[];
-    }
-}

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { persona, type PersonaVrm, preferences } from "@hmcs/sdk";
+import { Persona, type PersonaVrm, preferences } from "@hmcs/sdk";
 import { rpc } from "@hmcs/sdk/rpc";
 import { voicevoxToTimeline } from "./lib/timeline.ts";
 import { fetchWithTimeout } from "./lib/utils.ts";
@@ -82,7 +82,7 @@ function clearInitializedSpeakers(): void {
 }
 
 async function resolveAssetId(personaId: string): Promise<string | null> {
-  const p = await persona.load(personaId);
+  const p = await Persona.load(personaId);
   const snapshot = await p.snapshot();
   return snapshot.vrmAssetId ?? null;
 }
@@ -194,7 +194,7 @@ await rpc.serve({
       }),
       handler: async ({ personaId, text }) => {
         return withCharacterLock(personaId, async () => {
-          const p = await persona.load(personaId);
+          const p = await Persona.load(personaId);
           const vrm = p.vrm();
           const assetId = await resolveAssetId(personaId);
           const settings = await loadSettings(assetId);

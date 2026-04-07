@@ -1,5 +1,4 @@
 import {
-  persona,
   Persona,
   Webview,
   audio,
@@ -85,7 +84,7 @@ async function setupPersonaEvents(p: Persona) {
   });
 }
 
-const snapshots = await persona.list();
+const snapshots = await Persona.list();
 for (const snapshot of snapshots) {
   await setupPersonaEvents(new Persona(snapshot.id));
 }
