@@ -5,7 +5,7 @@ sidebar_position: 1
 
 # Webview
 
-Create and control embedded HTML interfaces in 3D space. WebViews can float freely or be linked to a VRM character so they follow as the character moves.
+Create and control embedded HTML interfaces in 3D space. WebViews can float freely or be linked to a persona so they follow as the character moves.
 
 For building a React UI with Vite and `@hmcs/ui`, see [WebView UI Setup](/mod-development/webview-ui/setup-and-build).
 
@@ -36,9 +36,9 @@ import { Webview, webviewSource } from "@hmcs/sdk";
 | [`reload()`](./reload) | Reload the current content |
 | [`navigateBack()`](./navigateBack) | Navigate back in history |
 | [`navigateForward()`](./navigateForward) | Navigate forward in history |
-| [`linkedVrm()`](./linkedVrm) | Get the VRM linked to this webview |
-| [`setLinkedVrm(vrm)`](./setLinkedVrm) | Link this webview to a VRM character |
-| [`unlinkVrm()`](./unlinkVrm) | Remove the VRM link |
+| [`linkedPersona()`](./linkedVrm) | Get the persona linked to this webview |
+| [`setLinkedPersona(personaId)`](./setLinkedVrm) | Link this webview to a persona |
+| [`unlinkPersona()`](./unlinkVrm) | Remove the persona link |
 
 ## Helpers
 

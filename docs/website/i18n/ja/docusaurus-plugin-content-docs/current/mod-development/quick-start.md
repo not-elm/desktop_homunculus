@@ -5,7 +5,7 @@ sidebar_position: 2
 
 # クイックスタート
 
-Desktop Homunculus の最初の MOD をゼロから構築します。このガイドの最後には、VRM キャラクターを生成し、アイドルアニメーションを再生し、ユーザー操作に反応する動作する MOD が完成します。
+Desktop Homunculus の最初の MOD をゼロから構築します。このガイドの最後には、ペルソナを作成し、VRM キャラクターをアタッチし、アイドルアニメーションを再生し、ユーザー操作に反応する動作する MOD が完成します。
 
 ## 前提条件
 
@@ -68,10 +68,11 @@ pnpm add @hmcs/sdk
 プロジェクトルートに `service.ts` を作成します。このスクリプトは Desktop Homunculus の起動時に自動実行されます。
 
 ```typescript
-import { Vrm, repeat } from "@hmcs/sdk";
+import { persona, repeat } from "@hmcs/sdk";
 
-// VRM キャラクターを画面上に生成
-const character = await Vrm.spawn("my-character:vrm");
+// ペルソナを作成し、VRM キャラクターをアタッチ
+const character = await persona.create({ id: "my-character" });
+const vrm = await character.attachVrm("my-character:vrm");
 
 // 組み込みのアイドルアニメーションをループ再生
 const animationOptions = {
@@ -79,42 +80,42 @@ const animationOptions = {
   transitionSecs: 0.5,
 } as const;
 
-await character.playVrma({
+await vrm.playVrma({
   asset: "vrma:idle-maid",
   ...animationOptions,
 });
 
 // キャラクターがカーソルを追従するように設定
-await character.lookAtCursor();
+await vrm.lookAtCursor();
 
 // 状態変化（ドラッグ、アイドル、座り）に反応
 character.events().on("state-change", async (e) => {
   if (e.state === "idle") {
-    await character.playVrma({
+    await vrm.playVrma({
       asset: "vrma:idle-maid",
       ...animationOptions,
     });
-    await character.lookAtCursor();
+    await vrm.lookAtCursor();
   } else if (e.state === "drag") {
-    await character.unlook();
-    await character.playVrma({
+    await vrm.unlook();
+    await vrm.playVrma({
       asset: "vrma:grabbed",
       ...animationOptions,
       resetSpringBones: true,
     });
   } else if (e.state === "sitting") {
-    await character.playVrma({
+    await vrm.playVrma({
       asset: "vrma:idle-sitting",
       ...animationOptions,
     });
-    await character.lookAtCursor();
+    await vrm.lookAtCursor();
   }
 });
 ```
 
 このスクリプトは 3 つのことを行います：
 
-1. `my-character:vrm` として登録された VRM モデルを**生成**
+1. ペルソナを**作成**し、`my-character:vrm` として登録された VRM モデルを**アタッチ**
 2. 組み込みの `vrma:idle-maid` アニメーションをループで**再生**
 3. ユーザーがキャラクターをドラッグ・ドロップした際にアニメーションを切り替えるために状態変化を**監視**
 

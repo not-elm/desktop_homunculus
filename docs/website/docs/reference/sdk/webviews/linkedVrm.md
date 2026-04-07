@@ -1,26 +1,26 @@
 ---
-title: "linkedVrm"
+title: "linkedPersona"
 sidebar_position: 16
 ---
 
-# linkedVrm
+# linkedPersona
 
-Gets the VRM linked to this webview.
+Gets the persona linked to this webview.
 
 ```typescript
-async linkedVrm(): Promise<Vrm | undefined>
+async linkedPersona(): Promise<Persona | undefined>
 ```
 
 ## Returns
 
-A `Promise` that resolves to the linked `Vrm` instance, or `undefined` if no VRM is linked.
+A `Promise` that resolves to the linked `Persona` instance, or `undefined` if no persona is linked.
 
 ## Example
 
 ```typescript
-import { Vrm } from "@hmcs/sdk";
+import { persona } from "@hmcs/sdk";
 
-// Query the linked VRM
-const linked = await webview.linkedVrm();
-// linked is a Vrm instance, or undefined if not linked
+// Query the linked persona
+const linked = await webview.linkedPersona();
+// linked is a Persona instance, or undefined if not linked
 ```

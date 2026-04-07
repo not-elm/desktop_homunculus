@@ -4,7 +4,7 @@ sidebar_position: 3
 
 # input.parseMenu
 
-メニューコマンドの stdin をパースし、リンクされたキャラクターの `Vrm` インスタンスを返します。メニューコマンドはメニュー UI から `{ "linkedVrm": <entityId> }` を stdin で受け取ります。
+メニューコマンドの stdin をパースし、リンクされたキャラクターの `Persona` インスタンスを返します。メニューコマンドはメニュー UI から `{ "linkedPersona": "<personaId>" }` を stdin で受け取ります。
 
 ## パラメーター
 
@@ -12,13 +12,13 @@ sidebar_position: 3
 
 ## 戻り値
 
-`Promise<Vrm>`
+`Promise<Persona>`
 
 ## 例
 
 ```typescript
 import { input } from "@hmcs/sdk/commands";
 
-const vrm = await input.parseMenu();
-await vrm.setExpressions({ happy: 1.0 });
+const persona = await input.parseMenu();
+await persona.vrm().setExpressions({ happy: 1.0 });
 ```

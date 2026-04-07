@@ -221,13 +221,13 @@ Webview.open({ source: webviewSource.local("my-mod:ui") });
 
 ### Accessing the SDK Inside a WebView
 
-Use `Webview.current()` to get a handle to the webview from within your React app, then call `linkedVrm()` to access the associated character:
+Use `Webview.current()` to get a handle to the webview from within your React app, then call `linkedPersona()` to access the associated character:
 
 ```typescript
 import { Webview } from "@hmcs/sdk";
 
 const webview = Webview.current();
-const vrm = await webview?.linkedVrm();
+const p = await webview?.linkedPersona();
 ```
 
 `Webview.current()` reads the `window.WEBVIEW_ENTITY` value that CEF injects into every webview context.
@@ -247,14 +247,14 @@ import { input } from "@hmcs/sdk/commands";
 
 try {
   const data = await input.parse(
-    z.object({ linkedVrm: z.number() })
+    z.object({ linkedPersona: z.string() })
   );
   await Webview.open({
     source: webviewSource.local("my-mod:ui"),
     size: [1, 0.9],
     viewportSize: [900, 700],
     offset: [1.1, 0],
-    linkedVrm: data.linkedVrm,
+    linkedPersona: data.linkedPersona,
   });
 } catch (e) {
   console.error(e);

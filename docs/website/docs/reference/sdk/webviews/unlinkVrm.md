@@ -1,26 +1,26 @@
 ---
-title: "unlinkVrm"
+title: "unlinkPersona"
 sidebar_position: 18
 ---
 
-# unlinkVrm
+# unlinkPersona
 
-Removes the VRM link from this webview, making it free-floating.
+Removes the persona link from this webview, making it free-floating.
 
 ```typescript
-async unlinkVrm(): Promise<void>
+async unlinkPersona(): Promise<void>
 ```
 
 ## Example
 
 ```typescript
-import { Vrm } from "@hmcs/sdk";
+import { persona } from "@hmcs/sdk";
 
-const vrm = await Vrm.findByName("MyAvatar");
+const p = await persona.load("alice");
 
 // Link
-await webview.setLinkedVrm(vrm);
+await webview.setLinkedPersona(p.id);
 
 // Unlink
-await webview.unlinkVrm();
+await webview.unlinkPersona();
 ```
