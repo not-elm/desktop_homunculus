@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
-import { preferences, audio, Webview } from "@hmcs/sdk";
+import { preferences, Webview } from "@hmcs/sdk";
 
-export interface WorkingDirectories {
-  paths: string[];
-  default: number;
+// Re-define the types locally to avoid cross-entry-point import issues.
+// These match the shapes in useAgentSettings.ts from the session HUD.
+
+export interface WorkspaceSelection {
+  workspaceIndex: number;
+  worktreeName: string | null;
 }
 
 export interface PttKey {
@@ -12,8 +15,8 @@ export interface PttKey {
 }
 
 export interface AgentSettings {
-  executor: "sdk" | "cli" | "codex";
-  workingDirectories: WorkingDirectories;
+  runtime: "sdk" | "cli" | "codex";
+  workspaces: { paths: string[]; selection: WorkspaceSelection };
   pttKey: PttKey | null;
   approvalPhrases: string[];
   denyPhrases: string[];
@@ -23,8 +26,8 @@ export interface AgentSettings {
 }
 
 const DEFAULT_SETTINGS: AgentSettings = {
-  executor: "codex",
-  workingDirectories: { paths: [], default: 0 },
+  runtime: "codex",
+  workspaces: { paths: [], selection: { workspaceIndex: 0, worktreeName: null } },
   pttKey: null,
   approvalPhrases: [],
   denyPhrases: [],
@@ -33,13 +36,16 @@ const DEFAULT_SETTINGS: AgentSettings = {
   claudeModel: "",
 };
 
-export function useAgentSettings() {
+export function useSettingsDraft() {
   const [loading, setLoading] = useState(true);
   const [settings, setSettings] = useState<AgentSettings>(DEFAULT_SETTINGS);
+  const [savedSettings, setSavedSettings] = useState<AgentSettings>(DEFAULT_SETTINGS);
   const [saving, setSaving] = useState(false);
+  const [characterId, setCharacterId] = useState<string | null>(null);
   const [apiKey, setApiKey] = useState("");
   const [savingApiKey, setSavingApiKey] = useState(false);
-  const [characterId, setCharacterId] = useState<string | null>(null);
+
+  const isDirty = JSON.stringify(settings) !== JSON.stringify(savedSettings);
 
   useEffect(() => {
     let cancelled = false;
@@ -49,10 +55,15 @@ export function useAgentSettings() {
       const id = vrm ? await vrm.name() : null;
       if (cancelled) return;
       setCharacterId(id);
-      const { settings: s, apiKey: k } = await loadAllPreferences(id);
+      const [loaded, loadedApiKey] = await Promise.all([
+        id ? preferences.load<AgentSettings>(`agent::${id}`) : undefined,
+        preferences.load<string>("agent::api-key"),
+      ]);
       if (cancelled) return;
-      setSettings(s);
-      setApiKey(k);
+      const merged = loaded ? { ...DEFAULT_SETTINGS, ...loaded } : DEFAULT_SETTINGS;
+      setSettings(merged);
+      setSavedSettings(merged);
+      setApiKey(loadedApiKey ?? "");
       setLoading(false);
     })();
     return () => {
@@ -65,8 +76,9 @@ export function useAgentSettings() {
     setSaving(true);
     try {
       await preferences.save(`agent::${characterId}`, settings);
+      setSavedSettings(settings);
     } catch (err) {
-      console.error("Failed to save agent settings:", err);
+      console.error("Failed to save settings:", err);
     } finally {
       setSaving(false);
     }
@@ -84,38 +96,29 @@ export function useAgentSettings() {
     }
   }, [savingApiKey, apiKey]);
 
-  const handleClose = useCallback(() => {
-    audio.se.play("se:close");
-    Webview.current()?.close();
-  }, []);
+  const autoSave = useCallback(async (newSettings: AgentSettings) => {
+    setSettings(newSettings);
+    setSavedSettings(newSettings);
+    if (!characterId) return;
+    try {
+      await preferences.save(`agent::${characterId}`, newSettings);
+    } catch (err) {
+      console.error("Failed to auto-save settings:", err);
+    }
+  }, [characterId]);
 
   return {
     loading,
     settings,
     setSettings,
+    isDirty,
     saving,
     saveSettings,
+    savedSettings,
     apiKey,
     setApiKey,
     savingApiKey,
     saveApiKey,
-    handleClose,
-  };
-}
-
-async function loadAllPreferences(
-  characterId: string | null,
-): Promise<{ settings: AgentSettings; apiKey: string }> {
-  const [savedSettings, savedApiKey] = await Promise.all([
-    characterId
-      ? preferences.load<AgentSettings>(`agent::${characterId}`)
-      : undefined,
-    preferences.load<string>("agent::api-key"),
-  ]);
-  return {
-    settings: savedSettings
-      ? { ...DEFAULT_SETTINGS, ...savedSettings }
-      : DEFAULT_SETTINGS,
-    apiKey: savedApiKey ?? "",
+    autoSave,
   };
 }
