@@ -88,7 +88,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_put_persona_with_display_name() {
+    async fn test_put_persona_with_name() {
         let (mut app, router) = test_app();
         let entity = app
             .world_mut()
@@ -100,7 +100,7 @@ mod tests {
         app.update();
 
         let persona = Persona {
-            display_name: Some("エルマー".to_string()),
+            name: Some("エルマー".to_string()),
             profile: "A cheerful assistant".to_string(),
             ..Default::default()
         };
@@ -133,7 +133,7 @@ mod tests {
         app.update();
 
         let persona = Persona {
-            display_name: Some("テスト".to_string()),
+            name: Some("テスト".to_string()),
             age: Some(25),
             gender: Gender::Female,
             first_person_pronoun: Some("わたし".to_string()),

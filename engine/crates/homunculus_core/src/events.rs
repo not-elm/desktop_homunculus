@@ -118,7 +118,7 @@ fn pointer<E1, E2>(
 
 fn state_change(
     tx: Res<VrmEventSender<VrmStateChangeEvent>>,
-    vrms: Query<(Entity, &VrmState), Changed<VrmState>>,
+    vrms: Query<(Entity, &PersonaState), Changed<PersonaState>>,
 ) {
     for (vrm, state) in vrms.iter() {
         tx.try_broadcast(VrmEvent {

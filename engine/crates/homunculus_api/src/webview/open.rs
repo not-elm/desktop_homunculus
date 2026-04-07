@@ -6,8 +6,8 @@ use bevy_cef::prelude::{PreloadScripts, WebviewExtendStandardMaterial, WebviewSi
 use bevy_flurx::action::once;
 use bevy_vrm1::prelude::{Cameras, HeadBoneEntity};
 use homunculus_core::prelude::{
-    AssetResolver, AssetType, LinkedVrm, WebviewMeshSize, WebviewOffset, WebviewOpenOptions,
-    WebviewSource, WebviewSourceInfo,
+    AssetResolver, AssetType, LinkedPersona, Persona, PersonaIndex, WebviewMeshSize, WebviewOffset,
+    WebviewOpenOptions, WebviewSource, WebviewSourceInfo,
 };
 use homunculus_effects::{Entity, Update};
 
@@ -31,7 +31,7 @@ pub(crate) struct WebviewOpenPlugin;
 
 impl Plugin for WebviewOpenPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (visible, track_for_linked_vrm));
+        app.add_systems(Update, (visible, track_for_linked_persona));
     }
 }
 
@@ -60,6 +60,7 @@ fn create_global_webview(
     mut materials: ResMut<Assets<WebviewExtendStandardMaterial>>,
     cameras: Cameras,
     asset_resolver: AssetResolver,
+    personas: Query<&Persona>,
 ) -> ApiResult<Entity> {
     let webview_source = source_to_webview_source(&options.source, &asset_resolver)?;
 
@@ -78,7 +79,11 @@ fn create_global_webview(
     insert_preload_scripts(&mut commands, webview);
 
     if let Some(vrm) = options.linked_vrm {
-        commands.entity(webview).try_insert(LinkedVrm(vrm));
+        if let Ok(persona) = personas.get(vrm) {
+            commands
+                .entity(webview)
+                .try_insert(LinkedPersona(persona.id.clone()));
+        }
     }
     Ok(webview)
 }
@@ -169,16 +174,20 @@ fn spawn_webview_entity(
     entity_commands.id()
 }
 
-fn track_for_linked_vrm(
+fn track_for_linked_persona(
     par_commands: ParallelCommands,
     head_bones: Query<&HeadBoneEntity>,
     global_transforms: Query<&GlobalTransform>,
-    webviews: Query<(Entity, &LinkedVrm, &WebviewOffset, &Transform)>,
+    webviews: Query<(Entity, &LinkedPersona, &WebviewOffset, &Transform)>,
+    index: Res<PersonaIndex>,
 ) {
     webviews
         .par_iter()
-        .for_each(|(entity, linked_vrm, offset, tf)| {
-            let Ok(head_bone) = head_bones.get(linked_vrm.0) else {
+        .for_each(|(entity, linked_persona, offset, tf)| {
+            let Some(vrm_entity) = index.get(&linked_persona.0) else {
+                return;
+            };
+            let Ok(head_bone) = head_bones.get(vrm_entity) else {
                 return;
             };
             let Ok(p) = global_transforms.get(head_bone.0) else {

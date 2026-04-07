@@ -4,7 +4,9 @@ use crate::webview::open::{OriginalWebviewSource, webview_source_to_info};
 use bevy::prelude::*;
 use bevy_cef::prelude::WebviewSize;
 use bevy_flurx::action::once;
-use homunculus_core::prelude::{LinkedVrm, WebviewInfo, WebviewMeshSize, WebviewOffset};
+use homunculus_core::prelude::{
+    LinkedPersona, PersonaIndex, WebviewInfo, WebviewMeshSize, WebviewOffset,
+};
 
 impl WebviewApi {
     pub async fn list(&self) -> ApiResult<Vec<WebviewInfo>> {
@@ -21,19 +23,20 @@ fn list_webviews(
         Option<&WebviewMeshSize>,
         &WebviewSize,
         &WebviewOffset,
-        Option<&LinkedVrm>,
+        Option<&LinkedPersona>,
     )>,
+    index: Res<PersonaIndex>,
 ) -> Vec<WebviewInfo> {
     webviews
         .iter()
         .map(
-            |(entity, source, mesh_size, viewport_size, offset, linked_vrm)| WebviewInfo {
+            |(entity, source, mesh_size, viewport_size, offset, linked_persona)| WebviewInfo {
                 entity,
                 source: webview_source_to_info(&source.0, false),
                 size: mesh_size.map_or(WebviewMeshSize::default().0, |s| s.0),
                 viewport_size: viewport_size.0,
                 offset: *offset,
-                linked_vrm: linked_vrm.map(|l| l.0),
+                linked_vrm: linked_persona.and_then(|l| index.get(&l.0)),
             },
         )
         .collect()

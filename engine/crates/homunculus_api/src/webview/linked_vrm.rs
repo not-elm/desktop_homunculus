@@ -2,7 +2,7 @@ use crate::error::{ApiError, ApiResult};
 use crate::prelude::WebviewApi;
 use bevy::prelude::*;
 use bevy_flurx::action::once;
-use homunculus_core::prelude::LinkedVrm;
+use homunculus_core::prelude::{LinkedPersona, Persona, PersonaIndex};
 
 impl WebviewApi {
     /// Gets the linked VRM entity for a webview.
@@ -37,10 +37,11 @@ impl WebviewApi {
 
 fn get_linked_vrm(
     In(webview): In<Entity>,
-    webviews: Query<Option<&LinkedVrm>, With<bevy_cef::prelude::WebviewSource>>,
+    webviews: Query<Option<&LinkedPersona>, With<bevy_cef::prelude::WebviewSource>>,
+    index: Res<PersonaIndex>,
 ) -> ApiResult<Option<Entity>> {
     match webviews.get(webview) {
-        Ok(linked) => Ok(linked.map(|l| l.0)),
+        Ok(linked) => Ok(linked.and_then(|l| index.get(&l.0))),
         Err(_) => Err(ApiError::WebviewNotFound(webview)),
     }
 }
@@ -49,13 +50,18 @@ fn set_linked_vrm(
     In((webview, vrm)): In<(Entity, Entity)>,
     mut commands: Commands,
     webviews: Query<Entity, With<bevy_cef::prelude::WebviewSource>>,
+    personas: Query<&Persona>,
 ) -> ApiResult<()> {
-    if webviews.contains(webview) {
-        commands.entity(webview).try_insert(LinkedVrm(vrm));
-        Ok(())
-    } else {
-        Err(ApiError::WebviewNotFound(webview))
+    if !webviews.contains(webview) {
+        return Err(ApiError::WebviewNotFound(webview));
     }
+    let persona = personas
+        .get(vrm)
+        .map_err(|_| ApiError::EntityNotFound)?;
+    commands
+        .entity(webview)
+        .try_insert(LinkedPersona(persona.id.clone()));
+    Ok(())
 }
 
 fn unlink_vrm(
@@ -64,7 +70,7 @@ fn unlink_vrm(
     webviews: Query<Entity, With<bevy_cef::prelude::WebviewSource>>,
 ) -> ApiResult<()> {
     if webviews.contains(webview) {
-        commands.entity(webview).remove::<LinkedVrm>();
+        commands.entity(webview).remove::<LinkedPersona>();
         Ok(())
     } else {
         Err(ApiError::WebviewNotFound(webview))
