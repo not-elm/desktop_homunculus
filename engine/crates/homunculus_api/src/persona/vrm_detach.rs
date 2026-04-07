@@ -1,9 +1,8 @@
 use crate::error::{ApiError, ApiResult};
 use crate::persona::PersonaApi;
-use bevy::camera::visibility::RenderLayers;
 use bevy::prelude::*;
 use bevy_flurx::prelude::*;
-use bevy_vrm1::prelude::{BodyTracking, LookAt, VrmHandle};
+use bevy_vrm1::prelude::RequestDetachVrm;
 use homunculus_core::prelude::{
     Persona, PersonaChangeEvent, PersonaId, PersonaIndex, VrmDetachedEvent, VrmEvent,
     VrmEventSender,
@@ -43,7 +42,7 @@ fn detach(
 
     let updated = persona.clone();
 
-    remove_vrm_components(&mut commands, entity);
+    commands.entity(entity).trigger(RequestDetachVrm);
     persist_and_broadcast(
         &prefs,
         &tx_detached,
@@ -54,16 +53,6 @@ fn detach(
     );
 
     Ok(())
-}
-
-/// Removes VRM-specific components while keeping persona-related components.
-fn remove_vrm_components(commands: &mut Commands, entity: Entity) {
-    commands
-        .entity(entity)
-        .remove::<VrmHandle>()
-        .remove::<LookAt>()
-        .remove::<BodyTracking>()
-        .remove::<RenderLayers>();
 }
 
 /// Persists persona to DB and broadcasts detach/change events.

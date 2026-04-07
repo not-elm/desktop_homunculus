@@ -10,7 +10,6 @@ pub(crate) mod state;
 pub(crate) mod stream;
 pub(crate) mod update;
 pub(crate) mod vrm;
-pub(crate) mod vrm_ops;
 
 use axum::RequestPartsExt;
 use axum::extract::{FromRequestParts, Path};
