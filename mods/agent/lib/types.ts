@@ -1,4 +1,4 @@
-import type { Gender, Ocean } from "@hmcs/sdk";
+import type { Gender } from "@hmcs/sdk";
 
 /** PTT key configuration. */
 export interface PttKey {
@@ -59,7 +59,7 @@ export interface Persona {
   gender: Gender;
   firstPersonPronoun: string | null;
   profile: string;
-  ocean: Ocean;
+  personality: string | null;
 }
 
 /** Selection state: which workspace/worktree is active. */

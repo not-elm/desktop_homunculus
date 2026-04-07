@@ -524,7 +524,7 @@ mod test {
     #[test]
     fn test_json_roundtrip_object() {
         let db = PrefsDatabase::open_in_memory();
-        let obj = serde_json::json!({"profile": "cheerful", "ocean": {"openness": 0.8}});
+        let obj = serde_json::json!({"profile": "cheerful", "personality": "friendly and helpful"});
         db.save_json("persona", &obj).unwrap();
         assert_eq!(db.load_json("persona").unwrap().unwrap(), obj);
     }

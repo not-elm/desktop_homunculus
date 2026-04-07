@@ -60,22 +60,6 @@ impl Default for VrmState {
 #[reflect(Component, Serialize, Deserialize)]
 pub struct LinkedVrm(pub Entity);
 
-/// Big Five personality traits (OCEAN model).
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
-#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
-pub struct Ocean {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub openness: Option<f64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub conscientiousness: Option<f64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub extraversion: Option<f64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub agreeableness: Option<f64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub neuroticism: Option<f64>,
-}
-
 /// Gender identity for a VRM character.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
@@ -103,8 +87,8 @@ pub struct Persona {
     pub first_person_pronoun: Option<String>,
     #[serde(default)]
     pub profile: String,
-    #[serde(default)]
-    pub ocean: Ocean,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub personality: Option<String>,
     #[serde(default, skip_serializing_if = "HashMap::is_empty")]
     #[cfg_attr(feature = "openapi", schema(value_type = std::collections::HashMap<String, Object>))]
     pub metadata: HashMap<String, serde_json::Value>,

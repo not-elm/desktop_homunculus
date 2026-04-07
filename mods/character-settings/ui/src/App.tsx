@@ -1,7 +1,6 @@
 import { useCharacterSettings, type Tab } from "./hooks/useCharacterSettings";
 import { AppearanceTab } from "./components/AppearanceTab";
 import { PersonaTab } from "./components/PersonaTab";
-import { OceanTab } from "./components/OceanTab";
 
 export function App() {
   const {
@@ -15,14 +14,14 @@ export function App() {
     setScale,
     profile,
     setProfile,
+    personality,
+    setPersonality,
     age,
     setAge,
     gender,
     setGender,
     firstPersonPronoun,
     setFirstPersonPronoun,
-    ocean,
-    setOcean,
     saving,
     saved,
     handleSave,
@@ -39,7 +38,6 @@ export function App() {
 
   const tabs: { id: Tab; label: string }[] = [
     { id: "persona", label: "Persona" },
-    { id: "ocean", label: "OCEAN" },
     { id: "appearance", label: "Appearance" },
   ];
 
@@ -88,9 +86,10 @@ export function App() {
             onFirstPersonPronounChange={setFirstPersonPronoun}
             profile={profile}
             onProfileChange={setProfile}
+            personality={personality}
+            onPersonalityChange={setPersonality}
           />
         )}
-        {tab === "ocean" && <OceanTab ocean={ocean} onChange={setOcean} />}
         {tab === "appearance" && (
           <AppearanceTab
             scale={scale}

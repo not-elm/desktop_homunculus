@@ -211,7 +211,7 @@ async function loadPersona(characterId: string): Promise<Persona> {
     gender: sdkPersona.gender ?? "unknown",
     firstPersonPronoun: sdkPersona.firstPersonPronoun ?? null,
     profile: sdkPersona.profile ?? "",
-    ocean: sdkPersona.ocean ?? {},
+    personality: sdkPersona.personality ?? null,
   };
 }
 
