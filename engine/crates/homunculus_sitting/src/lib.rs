@@ -110,10 +110,10 @@ impl Plugin for HomunculusSittingPlugin {
     }
 }
 
-fn any_mascots_sitting(mascots: Query<&VrmState>) -> bool {
+fn any_mascots_sitting(mascots: Query<&PersonaState>) -> bool {
     mascots
         .iter()
-        .any(|state| state.as_str() == VrmState::SITTING)
+        .any(|state| state.as_str() == PersonaState::SITTING)
 }
 
 #[derive(Debug, Default, Clone, Component)]
@@ -198,10 +198,10 @@ fn track_to_sitting_window(
 
 fn remove_sitting_window(
     par_commands: ParallelCommands,
-    mascots: Query<(Entity, &VrmState), (Changed<VrmState>, With<SittingWindow>)>,
+    mascots: Query<(Entity, &PersonaState), (Changed<PersonaState>, With<SittingWindow>)>,
 ) {
     mascots.par_iter().for_each(|(entity, state)| {
-        if state.as_str() != VrmState::SITTING {
+        if state.as_str() != PersonaState::SITTING {
             par_commands.command_scope(|mut commands| {
                 commands.entity(entity).remove::<SittingWindow>();
             });

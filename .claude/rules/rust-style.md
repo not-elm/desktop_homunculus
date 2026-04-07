@@ -6,6 +6,9 @@
 - Do NOT use region-divider comments (e.g. `// ----------- Section Name -----------`). Use the file's natural structure (modules, impl blocks, doc comments) for organization instead.
 - Use `cargo clippy -- -D warnings`. The `type_complexity` lint is allowed workspace-wide.
 - Run `make fix` to apply both: `cargo clippy --workspace --fix --allow-dirty && cargo fmt --all`.
+- Use the non-mod-rs file pattern (RFC 2126, Rust 1.30+) for module declarations. Place the module root in `foo.rs` alongside a `foo/` directory for submodules, instead of using `foo/mod.rs`.
+  - ✅ `route/persona.rs` + `route/persona/create.rs`
+  - ❌ `route/persona/mod.rs` + `route/persona/create.rs`
 
 ## Naming
 
@@ -77,7 +80,7 @@
 
 - Public types and functions MUST have `///` doc comments.
 - Include `# Usage` or `# Example` blocks in doc comments for complex APIs.
-- Use `//!` for module-level documentation at the top of `lib.rs` / `mod.rs`.
+- Use `//!` for module-level documentation at the top of `lib.rs` and module root files.
 
 ## Edition & Workspace
 

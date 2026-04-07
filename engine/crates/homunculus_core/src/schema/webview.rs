@@ -1,4 +1,5 @@
 use super::asset::AssetId;
+use crate::components::PersonaId;
 use bevy::math::{Vec2, Vec3};
 use bevy::prelude::{Component, Entity, Reflect};
 use serde::{Deserialize, Serialize};
@@ -53,10 +54,9 @@ pub struct WebviewOpenOptions {
     pub viewport_size: Option<Vec2>,
     #[serde(default)]
     pub offset: Option<WebviewOffset>,
-    /// VRM entity to link to this webview (optional).
+    /// Persona to link to this webview (optional).
     #[serde(default)]
-    #[cfg_attr(feature = "openapi", schema(value_type = Option<String>))]
-    pub linked_vrm: Option<Entity>,
+    pub linked_persona: Option<PersonaId>,
 }
 
 #[derive(Debug, Serialize, Clone, PartialEq, Component, Copy)]
@@ -111,8 +111,7 @@ pub struct WebviewInfo {
     pub viewport_size: Vec2,
     pub offset: WebviewOffset,
     #[serde(default)]
-    #[cfg_attr(feature = "openapi", schema(value_type = Option<String>))]
-    pub linked_vrm: Option<Entity>,
+    pub linked_persona: Option<PersonaId>,
 }
 
 /// Request for PATCH /webviews/{entity}

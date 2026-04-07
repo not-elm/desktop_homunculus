@@ -16,7 +16,7 @@ pub(super) fn resource_definitions() -> Vec<Resource> {
             .with_mime_type("application/json")
             .no_annotation(),
         RawResource::new("homunculus://characters", "homunculus-characters")
-            .with_description("Detailed snapshot of all loaded VRM characters")
+            .with_description("List of all personas (characters) with their profile, personality, VRM asset, and metadata")
             .with_mime_type("application/json")
             .no_annotation(),
         RawResource::new("homunculus://mods", "homunculus-mods")
@@ -56,8 +56,8 @@ pub(super) async fn read_resource(
             to_json_string(&info)?
         }
         "homunculus://characters" => {
-            let snapshots = handler.vrm_api.snapshot().await.map_err(api_err)?;
-            to_json_string(&snapshots)?
+            let personas = handler.persona_api.list().await.map_err(api_err)?;
+            to_json_string(&personas)?
         }
         "homunculus://mods" => {
             let mods = handler.mods_api.list().await.map_err(api_err)?;
