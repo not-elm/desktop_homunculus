@@ -150,9 +150,6 @@ export function useAgentSession() {
   const sendMessage = useCallback(async (text: string, contextSessionUuid?: string) => {
     if (!personaId || !text.trim()) return;
     try {
-      if (state === "idle") {
-        await callRpc("start-session", { personaId });
-      }
       await callRpc("send-message", {
         personaId,
         text: text.trim(),
@@ -161,7 +158,7 @@ export function useAgentSession() {
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
-  }, [personaId, state]);
+  }, [personaId]);
 
   const closePanel = useCallback(async () => {
     if (personaId && state !== "idle") {

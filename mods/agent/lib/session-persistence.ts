@@ -1,5 +1,5 @@
 import { mkdir, writeFile, appendFile, readdir, readFile, rm } from "node:fs/promises";
-import { join } from "node:path";
+import { join, basename } from "node:path";
 import { randomUUID } from "node:crypto";
 
 /** Opaque handle to an active session file. */
@@ -62,9 +62,11 @@ export class SessionPersistence {
     this._pendingWrites.set(handle.filePath, next);
   }
 
-  /** Close a session. Awaits pending appends, then writes footer. */
+  /** Close a session. Awaits pending appends, then writes footer. Idempotent. */
   async close(handle: SessionHandle): Promise<void> {
-    await this._pendingWrites.get(handle.filePath);
+    const pending = this._pendingWrites.get(handle.filePath);
+    if (!pending) return;
+    await pending;
     const footer = JSON.stringify({ _meta: "footer", endedAt: Date.now() });
     await appendFile(handle.filePath, footer + "\n", "utf-8");
     this._pendingWrites.delete(handle.filePath);
@@ -191,7 +193,7 @@ export class SessionPersistence {
     }
     if (header._meta !== "header" || typeof header.startedAt !== "number") return null;
 
-    const uuid = filePath.split("/").pop()!.replace(".jsonl", "");
+    const uuid = basename(filePath, ".jsonl");
 
     let preview: string | null = null;
     for (let i = 1; i < Math.min(lines.length, 10); i++) {

@@ -222,6 +222,11 @@ function handleSessionCrash(
     console.error(`[agent] Session error for ${personaId}:`, err);
     emitLog(personaId, "error", extractErrorMessage(err));
   }
+  const handle = activeSessionHandles.get(personaId);
+  if (handle) {
+    persistence.close(handle).catch(() => {});
+    activeSessionHandles.delete(personaId);
+  }
   const queue = textQueues.get(personaId);
   if (queue) {
     queue.rejectAll(new DOMException("Session crashed", "AbortError"));
