@@ -19,5 +19,5 @@ async info(): Promise<WebviewInfo>
 
 ```typescript
 const info = await webview.info();
-// info.entity, info.source, info.size, info.viewportSize, info.offset, info.linkedVrm
+// info.entity, info.source, info.size, info.viewportSize, info.offset, info.linkedPersona
 ```

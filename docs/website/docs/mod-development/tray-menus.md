@@ -103,7 +103,7 @@ try {
 |---------|-----------|--------------|
 | Trigger | Click tray icon | Right-click a character |
 | Scope | Application-wide | Per-character |
-| Stdin input | None | `{ "linkedVrm": <entity> }` |
+| Stdin input | None | `{ "linkedPersona": "<persona-id>" }` |
 | Declaration | `homunculus.tray` (single object) | `homunculus.menus` (array) |
 | Submenus | Supported via `items` | Not supported |
 

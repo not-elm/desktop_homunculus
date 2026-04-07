@@ -140,7 +140,7 @@ import { input, output } from "@hmcs/sdk/commands";
 
 try {
   const data = await input.parse(
-    z.object({ linkedVrm: z.number() })
+    z.object({ linkedPersona: z.string() })
   );
   // ... use data ...
 } catch (e) {
@@ -149,7 +149,7 @@ try {
 ```
 
 :::tip
-リンクされた VRM のみが必要なメニューコマンドの場合は、代わりに [`input.parseMenu()`](./menus.md#handling-menu-commands) を使用してください。スキーマの処理を行い、`Vrm` インスタンスを直接返します。
+リンクされたペルソナのみが必要なメニューコマンドの場合は、代わりに [`input.parseMenu()`](./menus.md#handling-menu-commands) を使用してください。スキーマの処理を行い、`Persona` インスタンスを直接返します。
 :::
 
 **パターン 2: デフォルト値へのフォールバック** — 入力がオプションの場合に使用。

@@ -5,7 +5,7 @@ sidebar_position: 3
 
 # アセット ID
 
-アセット ID は、MOD システム全体でファイルを参照するための一意な識別子です。VRM モデルの生成、アニメーションの再生、WebView のオープンなど、エンジンにどのファイルを読み込むかを伝える際にアセット ID を使用します。唯一の必須要件は、すべてのアセット ID が**グローバルに一意**であることです。重複した ID は警告としてログに記録され、スキップされます。
+アセット ID は、MOD システム全体でファイルを参照するための一意な識別子です。ペルソナへの VRM モデルのアタッチ、アニメーションの再生、WebView のオープンなど、エンジンにどのファイルを読み込むかを伝える際にアセット ID を使用します。唯一の必須要件は、すべてのアセット ID が**グローバルに一意**であることです。重複した ID は警告としてログに記録され、スキップされます。
 
 ## 推奨される命名規約
 
@@ -75,12 +75,13 @@ sidebar_position: 3
 
 `@hmcs/sdk` はアセットが必要な場所であればどこでもアセット ID を文字列として受け付けます。
 
-### VRM キャラクターの生成
+### ペルソナへの VRM キャラクターのアタッチ
 
 ```typescript
-import { Vrm } from "@hmcs/sdk";
+import { persona } from "@hmcs/sdk";
 
-const character = await Vrm.spawn("elmer:vrm");
+const p = await persona.create({ id: "elmer" });
+const vrm = await p.attachVrm("elmer:vrm");
 ```
 
 ### VRMA アニメーションの再生
@@ -88,7 +89,7 @@ const character = await Vrm.spawn("elmer:vrm");
 ```typescript
 import { repeat } from "@hmcs/sdk";
 
-await character.playVrma({
+await vrm.playVrma({
   asset: "vrma:idle-maid",
   repeat: repeat.forever(),
   transitionSecs: 0.5,
@@ -111,23 +112,23 @@ await Webview.open({
 
 ## HTTP API でのアセット ID の使用
 
-アセット ID は HTTP API のリクエストボディにも登場します。例えば、API 経由で VRM モデルを直接生成する場合：
+アセット ID は HTTP API のリクエストボディにも登場します。例えば、API 経由でペルソナに VRM モデルをアタッチする場合：
 
 ```bash
-curl -X POST http://localhost:3100/vrm/spawn \
+curl -X POST http://localhost:3100/personas/elmer/vrm \
   -H "Content-Type: application/json" \
-  -d '{"asset": "elmer:vrm"}'
+  -d '{"assetId": "elmer:vrm"}'
 ```
 
 同じアセット ID 文字列が SDK と HTTP API の両方で一貫して使用されます。
 
 ## 他の MOD のアセットの参照
 
-MOD は他のインストール済み MOD のアセットを参照できます。例えば、キャラクターを生成する MOD は `@hmcs/assets` のアニメーションをよく使用します：
+MOD は他のインストール済み MOD のアセットを参照できます。例えば、キャラクターを作成する MOD は `@hmcs/assets` のアニメーションをよく使用します：
 
 ```typescript
 // この MOD は @hmcs/assets のアニメーションを使用
-await character.playVrma({
+await vrm.playVrma({
   asset: "vrma:idle-maid", // この MOD ではなく @hmcs/assets で定義
 });
 ```

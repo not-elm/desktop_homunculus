@@ -23,7 +23,10 @@ The Assets MOD (`@hmcs/assets`) provides the default resources that other MODs d
 These assets are referenced by their asset ID in other MODs and SDK calls. For example, the Elmer MOD spawns the default character with:
 
 ```ts
-const elmer = await Vrm.spawn("vrm:elmer");
+import { persona } from "@hmcs/sdk";
+
+const elmer = await persona.create({ id: "elmer" });
+await elmer.attachVrm("vrm:elmer");
 ```
 
 MOD developers can reference these assets in their own MODs using the same IDs. See the [SDK documentation](/reference/sdk) for details.

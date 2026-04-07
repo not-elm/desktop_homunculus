@@ -5,7 +5,7 @@ sidebar_position: 2
 
 # Quick Start
 
-Build your first Desktop Homunculus MOD from scratch. By the end of this guide, you will have a working MOD that spawns a VRM character, plays an idle animation, and responds to user interactions.
+Build your first Desktop Homunculus MOD from scratch. By the end of this guide, you will have a working MOD that creates a persona, attaches a VRM character, plays an idle animation, and responds to user interactions.
 
 ## Prerequisites
 
@@ -68,10 +68,11 @@ Open `package.json` and add the `homunculus` field along with the `type` field. 
 Create `service.ts` in the project root. This script runs automatically when Desktop Homunculus starts.
 
 ```typescript
-import { Vrm, repeat } from "@hmcs/sdk";
+import { persona, repeat } from "@hmcs/sdk";
 
-// Spawn the VRM character on screen
-const character = await Vrm.spawn("my-character:vrm");
+// Create a persona and attach the VRM character
+const character = await persona.create({ id: "my-character" });
+const vrm = await character.attachVrm("my-character:vrm");
 
 // Play the built-in idle animation on loop
 const animationOptions = {
@@ -79,42 +80,42 @@ const animationOptions = {
   transitionSecs: 0.5,
 } as const;
 
-await character.playVrma({
+await vrm.playVrma({
   asset: "vrma:idle-maid",
   ...animationOptions,
 });
 
 // Make the character follow your cursor
-await character.lookAtCursor();
+await vrm.lookAtCursor();
 
 // React to state changes (drag, idle, sitting)
 character.events().on("state-change", async (e) => {
   if (e.state === "idle") {
-    await character.playVrma({
+    await vrm.playVrma({
       asset: "vrma:idle-maid",
       ...animationOptions,
     });
-    await character.lookAtCursor();
+    await vrm.lookAtCursor();
   } else if (e.state === "drag") {
-    await character.unlook();
-    await character.playVrma({
+    await vrm.unlook();
+    await vrm.playVrma({
       asset: "vrma:grabbed",
       ...animationOptions,
       resetSpringBones: true,
     });
   } else if (e.state === "sitting") {
-    await character.playVrma({
+    await vrm.playVrma({
       asset: "vrma:idle-sitting",
       ...animationOptions,
     });
-    await character.lookAtCursor();
+    await vrm.lookAtCursor();
   }
 });
 ```
 
 This script does three things:
 
-1. **Spawns** the VRM model registered as `my-character:vrm`
+1. **Creates** a persona and **attaches** the VRM model registered as `my-character:vrm`
 2. **Plays** the built-in `vrma:idle-maid` animation on a loop
 3. **Listens** for state changes to switch animations when the user drags or drops the character
 
