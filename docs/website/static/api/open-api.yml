@@ -848,24 +848,6 @@ paths:
                 items:
                   $ref: '#/components/schemas/SignalInfo'
   /signals/{signal}:
-    get:
-      tags:
-      - signals
-      summary: Stream events for a specific signal via SSE.
-      description: The signals are sent via `POST /signals/{signal}` API.
-      operationId: stream
-      parameters:
-      - name: signal
-        in: path
-        description: Signal channel name
-        required: true
-        schema:
-          type: string
-      responses:
-        '200':
-          description: SSE event stream
-          content:
-            text/event-stream: {}
     post:
       tags:
       - signals
@@ -2501,35 +2483,6 @@ components:
           when omitted, the entity's current z-position is preserved.
         - `Viewport`: Set position using global viewport (screen) coordinates,
           which are converted to world coordinates using the active camera.
-    Ocean:
-      type: object
-      description: Big Five personality traits (OCEAN model).
-      properties:
-        agreeableness:
-          type:
-          - number
-          - 'null'
-          format: double
-        conscientiousness:
-          type:
-          - number
-          - 'null'
-          format: double
-        extraversion:
-          type:
-          - number
-          - 'null'
-          format: double
-        neuroticism:
-          type:
-          - number
-          - 'null'
-          format: double
-        openness:
-          type:
-          - number
-          - 'null'
-          format: double
     OptionalTransform:
       type: object
       properties:
@@ -2580,8 +2533,10 @@ components:
             type: object
           propertyNames:
             type: string
-        ocean:
-          $ref: '#/components/schemas/Ocean'
+        personality:
+          type:
+          - string
+          - 'null'
         profile:
           type: string
     PickFileRequest:
@@ -3098,6 +3053,13 @@ components:
           - 'null'
           items:
             $ref: '#/components/schemas/TrayMenuItem'
+        position:
+          type:
+          - string
+          - 'null'
+          description: |-
+            Display position in the tray menu: `"top"`, `"middle"`, or `"bottom"`.
+            Defaults to `"middle"` when omitted or invalid.
         text:
           type: string
     TweenPositionRequest:
@@ -3329,12 +3291,9 @@ components:
       description: Request for PATCH /webviews/{entity}
       properties:
         offset:
-          type:
-          - array
-          - 'null'
-          items:
-            type: number
-            format: float
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/WebviewOffset'
         size:
           type:
           - array
