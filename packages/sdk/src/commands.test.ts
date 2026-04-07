@@ -117,17 +117,17 @@ describe("input.parseMenu", () => {
     StdinParseError = mod.StdinParseError;
   }
 
-  it("returns a Vrm with the correct entity", async () => {
-    await loadWithMockedStdin('{"linkedVrm":42}');
-    const vrm = await input.parseMenu();
-    expect(vrm.entity).toBe(42);
+  it("returns a Persona with the correct id", async () => {
+    await loadWithMockedStdin('{"linkedPersona":"test-persona"}');
+    const p = await input.parseMenu();
+    expect(p.id).toBe("test-persona");
   });
 
-  it("returns an instance of Vrm", async () => {
-    await loadWithMockedStdin('{"linkedVrm":1}');
-    const { Vrm } = await import("./vrm");
-    const vrm = await input.parseMenu();
-    expect(vrm).toBeInstanceOf(Vrm);
+  it("returns an instance of Persona", async () => {
+    await loadWithMockedStdin('{"linkedPersona":"test-persona"}');
+    const { Persona } = await import("./persona");
+    const p = await input.parseMenu();
+    expect(p).toBeInstanceOf(Persona);
   });
 
   it("throws EMPTY_STDIN when stdin is empty", async () => {
@@ -152,8 +152,8 @@ describe("input.parseMenu", () => {
     }
   });
 
-  it("throws VALIDATION_ERROR when linkedVrm is wrong type", async () => {
-    await loadWithMockedStdin('{"linkedVrm":"not-a-number"}');
+  it("throws VALIDATION_ERROR when linkedPersona is wrong type", async () => {
+    await loadWithMockedStdin('{"linkedPersona":42}');
     try {
       await input.parseMenu();
       expect.unreachable("should have thrown");
@@ -163,7 +163,7 @@ describe("input.parseMenu", () => {
     }
   });
 
-  it("throws VALIDATION_ERROR when linkedVrm is missing", async () => {
+  it("throws VALIDATION_ERROR when linkedPersona is missing", async () => {
     await loadWithMockedStdin('{"other":123}');
     try {
       await input.parseMenu();

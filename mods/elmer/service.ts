@@ -1,39 +1,43 @@
-import { type TransformArgs, Vrm, preferences, repeat, sleep } from "@hmcs/sdk";
+import { persona, repeat, sleep } from "@hmcs/sdk";
 
-const elmerId = "vrm:elmer";
-const transform = await preferences.load<TransformArgs>(
-    `transform::${elmerId}`,
-);
-const elmer = await Vrm.spawn(elmerId);
+let elmer;
+try {
+    elmer = await persona.create({ id: "elmer", name: "Elmer" });
+} catch {
+    elmer = await persona.load("elmer");
+}
+
+const vrm = await elmer.attachVrm("vrm:elmer");
 const option = {
     repeat: repeat.forever(),
     transitionSecs: 0.5,
 } as const;
-await elmer.playVrma({
+await vrm.playVrma({
     asset: "vrma:idle-maid",
     ...option,
 });
 elmer.events().on("state-change", async (e) => {
+    const v = elmer.vrm();
     if (e.state === "idle") {
-        await elmer.playVrma({
+        await v.playVrma({
             asset: "vrma:idle-maid",
             ...option,
         });
         await sleep(500);
-        await elmer.lookAtCursor();
+        await v.lookAtCursor();
     } else if (e.state === "drag") {
-        await elmer.unlook();
-        await elmer.playVrma({
+        await v.unlook();
+        await v.playVrma({
             asset: "vrma:grabbed",
             ...option,
             resetSpringBones: true,
         });
     } else if (e.state === "sitting") {
-        await elmer.playVrma({
+        await v.playVrma({
             asset: "vrma:idle-sitting",
             ...option,
         });
         await sleep(500);
-        await elmer.lookAtCursor();
+        await v.lookAtCursor();
     }
 });

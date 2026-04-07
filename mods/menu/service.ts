@@ -1,5 +1,6 @@
 import {
-  Vrm,
+  persona,
+  Persona,
   Webview,
   audio,
   signals,
@@ -9,14 +10,14 @@ import {
 } from "@hmcs/sdk";
 const menuUIAssetId = "menu:ui";
 let isProcessing = false;
-const eventSources = new Map();
+const eventSources = new Map<string, ReturnType<Persona["events"]>>();
 
 const NON_BLOCKING_SOURCES = new Set(["agent:session-ui"]);
 
-const existsLinkedWebview = async (vrmEntity: number) => {
+const existsLinkedWebview = async (personaId: string) => {
   const webviews = await Webview.list();
   for (const webview of webviews) {
-    if (webview.linkedVrm !== vrmEntity) continue;
+    if (webview.linkedPersona !== personaId) continue;
     if (isNonBlockingSource(webview.source)) continue;
     return true;
   }
@@ -46,18 +47,15 @@ signals.stream<{ entity: number }>("menu:close", async (payload) => {
   }
 });
 
-Vrm.stream(async (vrm) => {
-  // Close existing EventSource for this VRM before creating a new one.
-  // Vrm.stream() replays existing VRMs on SSE reconnection, which would
-  // otherwise accumulate duplicate listeners.
-  const oldEs = eventSources.get(vrm.entity);
+async function setupPersonaEvents(p: Persona) {
+  const oldEs = eventSources.get(p.id);
   if (oldEs) oldEs.close();
 
-  const es = vrm.events();
-  eventSources.set(vrm.entity, es);
+  const es = p.events();
+  eventSources.set(p.id, es);
 
   es.on("pointer-click", async (e) => {
-    if (e.button !== "Secondary") return;
+    if ((e as any).button !== "Secondary") return;
     if (isProcessing) return;
     isProcessing = true;
     try {
@@ -67,7 +65,7 @@ Vrm.stream(async (vrm) => {
         await currentMenu.close();
         return;
       }
-      if (await existsLinkedWebview(vrm.entity)) {
+      if (await existsLinkedWebview(p.id)) {
         return;
       }
 
@@ -76,7 +74,7 @@ Vrm.stream(async (vrm) => {
         size: [0.8, 1],
         viewportSize: [500, 600],
         offset: [1, -0.3],
-        linkedVrm: vrm.entity,
+        linkedPersona: p.id,
       });
       await audio.se.play("se:open");
     } catch (err) {
@@ -85,4 +83,9 @@ Vrm.stream(async (vrm) => {
       isProcessing = false;
     }
   });
-});
+}
+
+const snapshots = await persona.list();
+for (const snapshot of snapshots) {
+  await setupPersonaEvents(new Persona(snapshot.id));
+}
