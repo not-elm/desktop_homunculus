@@ -36,18 +36,10 @@ export function WorktreeNode({
   const [showDetail, setShowDetail] = useState(false);
   const anchorRef = useRef<HTMLDivElement>(null);
 
-  const overflowItems = buildOverflowItems(() => {
-    console.log("[Details] onClick fired");
-    setShowDetail(true);
-  }, onRemove);
-
-  console.log("[Details] render, showDetail =", showDetail);
+  const overflowItems = buildOverflowItems(() => setShowDetail(true), onRemove);
 
   return (
-    <Popover open={showDetail} onOpenChange={(open) => {
-      console.log("[Details] onOpenChange:", open, new Error().stack?.split("\n").slice(1, 4).join(" <- "));
-      setShowDetail(open);
-    }}>
+    <Popover open={showDetail} onOpenChange={setShowDetail}>
       <PopoverAnchor asChild>
         <div
           ref={anchorRef}
