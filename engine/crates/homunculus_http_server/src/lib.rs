@@ -387,23 +387,23 @@ fn persona_id_router() -> OpenApiRouter<HttpState> {
         .routes(routes!(persona::events::events))
         .routes(routes!(persona::vrm::attach, persona::vrm::detach))
         .routes(routes!(
-            persona::vrm_ops::list_expressions,
-            persona::vrm_ops::modify_expressions,
-            persona::vrm_ops::clear_expressions
+            persona::vrm::expressions::list_expressions,
+            persona::vrm::expressions::modify_expressions,
+            persona::vrm::expressions::clear_expressions
         ))
-        .routes(routes!(persona::vrm_ops::play_vrma))
-        .routes(routes!(persona::vrm_ops::stop_vrma))
-        .routes(routes!(persona::vrm_ops::get_vrma))
-        .routes(routes!(persona::vrm_ops::get_position))
-        .routes(routes!(persona::vrm_ops::get_bone))
-        .routes(routes!(persona::vrm_ops::look_cursor))
-        .routes(routes!(persona::vrm_ops::look_target))
-        .routes(routes!(persona::vrm_ops::unlook))
+        .routes(routes!(persona::vrm::vrma::play_vrma))
+        .routes(routes!(persona::vrm::vrma::stop_vrma))
+        .routes(routes!(persona::vrm::vrma::get_vrma))
+        .routes(routes!(persona::vrm::position::get_position))
+        .routes(routes!(persona::vrm::bone::get_bone))
+        .routes(routes!(persona::vrm::look::look_cursor))
+        .routes(routes!(persona::vrm::look::look_target))
+        .routes(routes!(persona::vrm::look::unlook))
         .routes(routes!(
-            persona::vrm_ops::list_spring_bones,
-            persona::vrm_ops::patch_spring_bones
+            persona::vrm::spring_bones::list_spring_bones,
+            persona::vrm::spring_bones::patch_spring_bones
         ))
-        .routes(routes!(persona::vrm_ops::speech_timeline))
+        .routes(routes!(persona::vrm::speech::speech_timeline))
         .layer(axum::extract::DefaultBodyLimit::max(20 * 1024 * 1024))
 }
 
