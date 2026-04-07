@@ -1,9 +1,9 @@
 import type { Persona } from "./types.ts";
 
 const GENDER_LABEL: Record<string, string> = {
-  male: "男性",
-  female: "女性",
-  other: "その他",
+  male: "Male",
+  female: "Female",
+  other: "Other",
 };
 
 /** Context about the worktree environment for agent awareness. */
@@ -17,12 +17,12 @@ export interface WorktreeContext {
 export function buildWorktreeSection(ctx: WorktreeContext): string {
   return [
     "",
-    "## 作業環境",
-    `あなたは現在、メインリポジトリから隔離された git worktree「${ctx.worktreeName}」で作業しています。`,
-    `ベースブランチ: ${ctx.baseBranch}`,
-    `作業ディレクトリ: ${ctx.worktreePath}`,
-    "この環境で行った変更はメインブランチに直接影響しません。",
-    "安心してコードの変更やコミットを行ってください。",
+    "## Working Environment",
+    `You are currently working in git worktree "${ctx.worktreeName}", isolated from the main repository.`,
+    `Base branch: ${ctx.baseBranch}`,
+    `Working directory: ${ctx.worktreePath}`,
+    "Changes made in this environment do not affect the main branch directly.",
+    "Feel free to make code changes and commits.",
   ].join("\n");
 }
 
@@ -48,28 +48,28 @@ export function buildCharacterPrompt(persona: Persona, worktree?: WorktreeContex
 }
 
 function buildNameLine(name: string): string {
-  return `あなたの名前は「${name}」です。名前を聞かれたら必ずこの名前で答えてください。`;
+  return `Your name is "${name}". Always use this name when asked.`;
 }
 
 function buildAgeLine(age: number | null): string {
-  if (age == null) return "年齢: 不詳";
-  return `年齢: ${age}歳`;
+  if (age == null) return "Age: Unknown";
+  return `Age: ${age}`;
 }
 
 function buildGenderLine(gender: string): string {
   const label = GENDER_LABEL[gender];
   if (!label) return "";
-  return `性別: ${label}`;
+  return `Gender: ${label}`;
 }
 
 function buildFirstPersonPronounLine(pronoun: string | null): string {
   if (!pronoun) return "";
-  return `一人称は必ず「${pronoun}」を使ってください。`;
+  return `Always use "${pronoun}" as your first-person pronoun.`;
 }
 
 function buildProfileLine(profile: string): string {
   if (!profile) return "";
-  return `プロフィール: ${profile}`;
+  return `Profile: ${profile}`;
 }
 
 function buildPersonalitySection(personality: string | null | undefined): string {
@@ -84,48 +84,48 @@ function buildPersonalitySection(personality: string | null | undefined): string
 
 function buildSpokenStyleSection(): string {
   return [
-    "## 応答スタイル",
-    "あなたの応答は音声合成（VOICEVOX）で読み上げられます。",
-    "聞いて自然な日本語の口語体で話してください。以下を守ってください:",
+    "## Response Style",
+    "Your responses will be read aloud by a text-to-speech engine (VOICEVOX).",
+    "Speak in natural, conversational Japanese. Follow these rules:",
     "",
-    "- 短く簡潔に話す。一度の発言は1〜3文程度にする。",
-    "- 補足情報は括弧（）を使わず、文中に自然に織り込んでください。",
-    "- 記号（+、=、#、*など）は使わず、日本語の言葉で表現してください。",
-    "  例: 「RustとBevy」（× Rust + Bevy）、「イコール」（× =）",
-    "- 箇条書きや羅列ではなく、接続詞（それでね、あとは、ところで）で繋げてください。",
-    "- Markdownの記法（#, *, `, - など）は使わないでください。",
-    "- 技術的な詳細は口頭で長々と説明せず、Webviewに表示して口頭では簡潔に要約する。",
+    "- Keep responses short and concise. Limit each turn to 1-3 sentences.",
+    "- Weave supplementary information naturally into sentences instead of using parentheses.",
+    "- Avoid symbols (+, =, #, *, etc.) — use words instead.",
+    '  Example: "Rust and Bevy" (not Rust + Bevy), "equals" (not =)',
+    "- Use conjunctions (and then, also, by the way) instead of bullet points or lists.",
+    "- Do not use Markdown syntax (#, *, `, -, etc.).",
+    "- For technical details, display them in a Webview and give a brief verbal summary.",
   ].join("\n");
 }
 
 function buildFewShotSection(): string {
   return [
-    "## 応答の例",
+    "## Response Examples",
     "",
-    "悪い例（書き言葉・TTS不適合）:",
-    "「このプロジェクトはRust + Bevy製のエンジンで、CEF WebView（Chromium）で",
-    "設定画面を重ね表示し、ローカルHTTP API（localhost:3100）で連携します。」",
+    "Bad example (written style, not TTS-friendly):",
+    '"This project is an engine built with Rust + Bevy, overlaying settings screens via CEF WebView (Chromium),',
+    'and communicating through a local HTTP API (localhost:3100)."',
     "",
-    "良い例（口語体・TTS向き）:",
-    "「このプロジェクトはね、RustとBevyでエンジンを作ってあって、",
-    "CEFっていう技術でWebViewを重ねて設定画面を出せるようにしてるんです。",
-    "それで、ローカルのHTTP APIで色々連携できるようになってますよ。」",
+    "Good example (conversational, TTS-friendly):",
+    '"So this project uses Rust and Bevy for the engine,',
+    "and there's this technology called CEF that lets us overlay WebView screens for settings.",
+    'Then it all connects through a local HTTP API."',
     "",
-    "悪い例:",
-    "「エラーハンドリングには以下の方法があります:",
-    "1. try-catch 2. Result型 3. エラーバウンダリ」",
+    "Bad example:",
+    '"There are these methods for error handling:',
+    '1. try-catch 2. Result type 3. Error boundaries"',
     "",
-    "良い例:",
-    "「エラーの処理方法はいくつかあってね、まずtry-catchが基本で、",
-    "あとはResult型を使う方法もあるし、エラーバウンダリっていう仕組みもありますよ。」",
+    "Good example:",
+    '"For error handling, the basic approach is try-catch.',
+    "There's also the Result type, and then there's something called error boundaries too.\"",
   ].join("\n");
 }
 
 function buildWebviewSection(): string {
   return [
-    "## 視覚的な説明が必要な場合",
-    "コード、図表、リスト、比較表など、音声だけでは伝わりにくい内容は、",
-    "open_webview MCPツールを使ってHTMLで視覚的に表示してください。",
-    "口頭では「画面に表示したから見てね」のように簡潔に伝えてください。",
+    "## When Visual Explanation Is Needed",
+    "For code, diagrams, lists, comparison tables, or anything hard to convey by voice alone,",
+    "use the open_webview MCP tool to display it as HTML.",
+    'Verbally, just say something brief like "I put it up on screen, take a look."',
   ].join("\n");
 }
