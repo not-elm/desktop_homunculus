@@ -24,8 +24,8 @@ static async open(options: WebviewOpenOptions): Promise<Webview>
 | `source` | [`WebviewSource`](./types#webviewsource) | -- | 表示内容（必須） |
 | `size` | `Vec2` | -- | 3D ワールド空間での寸法（例：`[0.7, 0.7]`） |
 | `viewportSize` | `Vec2` | -- | HTML ピクセル寸法（例：`[800, 600]`） |
-| `offset` | `Vec2` | -- | リンクされた VRM またはワールド原点からの相対位置 |
-| `linkedVrm` | `number` | -- | アタッチする VRM のエンティティ ID |
+| `offset` | `Vec2` | -- | リンクされたペルソナまたはワールド原点からの相対位置 |
+| `linkedPersona` | `string` | -- | アタッチするペルソナ ID |
 
 ## 戻り値
 
@@ -44,15 +44,17 @@ const webview = await Webview.open({
 });
 ```
 
-WebView を VRM キャラクターにリンクして、キャラクターの位置に追従させる：
+WebView をペルソナにリンクして、キャラクターの位置に追従させる：
 
 ```typescript
-const vrm = await Vrm.findByName("MyAvatar");
+import { persona } from "@hmcs/sdk";
+
+const p = await persona.load("alice");
 const webview = await Webview.open({
   source: webviewSource.local("my-mod:ui"),
   size: [1, 0.9],
   viewportSize: [900, 700],
   offset: [1.1, 0],
-  linkedVrm: vrm.entity,
+  linkedPersona: p.id,
 });
 ```

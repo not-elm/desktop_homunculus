@@ -1,31 +1,31 @@
 ---
-title: "setLinkedVrm"
+title: "setLinkedPersona"
 sidebar_position: 17
 ---
 
-# setLinkedVrm
+# setLinkedPersona
 
-Links this webview to a VRM character so it follows the character's position.
+Links this webview to a persona so it follows the persona's character position.
 
 ```typescript
-async setLinkedVrm(vrm: Vrm): Promise<void>
+async setLinkedPersona(personaId: string): Promise<void>
 ```
 
 ## Parameters
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `vrm` | `Vrm` | The VRM instance to link to this webview |
+| `personaId` | `string` | The persona ID to link to this webview |
 
 ## Example
 
 ```typescript
-import { Vrm } from "@hmcs/sdk";
+import { persona } from "@hmcs/sdk";
 
-const vrm = await Vrm.findByName("MyAvatar");
+const p = await persona.load("alice");
 
 // Link
-await webview.setLinkedVrm(vrm);
+await webview.setLinkedPersona(p.id);
 ```
 
-To remove the link, use [`unlinkVrm()`](./unlinkVrm).
+To remove the link, use [`unlinkPersona()`](./unlinkVrm).

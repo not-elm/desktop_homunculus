@@ -23,7 +23,10 @@ Assets MOD（`@hmcs/assets`）は、他の MOD が依存するデフォルトの
 これらのアセットは、他の MOD や SDK の呼び出しでアセット ID を使って参照されます。例えば、Elmer MOD は以下のようにデフォルトキャラクターを生成します：
 
 ```ts
-const elmer = await Vrm.spawn("vrm:elmer");
+import { persona } from "@hmcs/sdk";
+
+const elmer = await persona.create({ id: "elmer" });
+await elmer.attachVrm("vrm:elmer");
 ```
 
 MOD 開発者は同じ ID を使ってこれらのアセットを自分の MOD から参照できます。詳細は [SDK ドキュメント](/reference/sdk)をご覧ください。

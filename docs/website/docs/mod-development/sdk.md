@@ -24,20 +24,21 @@ The SDK requires **Node.js 22 or later**. MOD scripts run directly as TypeScript
 A MOD's service script runs automatically when Desktop Homunculus starts. Create `index.ts` in your MOD's root:
 
 ```typescript
-import { Vrm, repeat } from "@hmcs/sdk";
+import { persona, repeat } from "@hmcs/sdk";
 
-// Spawn a VRM character using an asset declared in package.json
-const character = await Vrm.spawn("my-mod:character");
+// Create a persona and attach a VRM character using an asset declared in package.json
+const character = await persona.create({ id: "my-character" });
+const vrm = await character.attachVrm("my-mod:character");
 
 // Play the built-in idle animation on loop
-await character.playVrma({
+await vrm.playVrma({
   asset: "vrma:idle-maid",
   repeat: repeat.forever(),
   transitionSecs: 0.5,
 });
 
 // Make the character's eyes follow the mouse cursor
-await character.lookAtCursor();
+await vrm.lookAtCursor();
 
 // Listen for state changes (drag, idle, sitting)
 character.events().on("state-change", async (e) => {
@@ -60,13 +61,13 @@ Assets are declared in your MOD's `package.json` under the `homunculus.assets` f
 
 #### HTTP API
 
-The SDK wraps the engine's HTTP REST API running at `localhost:3100`. Each SDK module (`Vrm`, `entities`, `audio`, etc.) translates method calls into HTTP requests. You rarely need to call the API directly, but it is available via the `host` module for advanced use cases.
+The SDK wraps the engine's HTTP REST API running at `localhost:3100`. Each SDK module (`persona`, `entities`, `audio`, etc.) translates method calls into HTTP requests. You rarely need to call the API directly, but it is available via the `host` module for advanced use cases.
 
 #### Event-Driven Patterns
 
 MODs react to real-time events using two mechanisms:
 
-- **VRM events** -- pointer clicks, drag, state changes, animation events (via `vrm.events()`)
+- **Persona events** -- pointer clicks, drag, state changes, animation events (via `persona.events()`)
 - **Signals** -- cross-process pub/sub messaging for communication between MOD scripts and WebViews
 
 ### Commands Entry Point

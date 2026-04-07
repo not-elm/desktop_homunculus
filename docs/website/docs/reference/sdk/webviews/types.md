@@ -72,7 +72,7 @@ Returned by [`Webview.list()`](./list) and [`webview.info()`](./info).
 | `size` | `Vec2` | 3D world space dimensions |
 | `viewportSize` | `Vec2` | HTML pixel dimensions |
 | `offset` | `Vec2` | Position offset |
-| `linkedVrm` | `number \| null` | Linked VRM entity ID, or `null` |
+| `linkedPersona` | `string \| null` | Linked persona ID, or `null` |
 
 ## `WebviewPatchRequest`
 
@@ -93,8 +93,8 @@ Used by [`Webview.open()`](./open).
 | `source` | `WebviewSource` | -- | What to display (required) |
 | `size` | `Vec2` | -- | Dimensions in 3D world space |
 | `viewportSize` | `Vec2` | -- | HTML pixel dimensions |
-| `offset` | `Vec2` | -- | Position relative to linked VRM or world origin |
-| `linkedVrm` | `number` | -- | Entity ID of the VRM to attach to |
+| `offset` | `Vec2` | -- | Position relative to linked persona or world origin |
+| `linkedPersona` | `string` | -- | Persona ID to attach to |
 
 ## `WebviewNavigateRequest`
 
@@ -104,10 +104,10 @@ Used internally by [`navigate()`](./navigate).
 |-------|------|-------------|
 | `source` | `WebviewSource` | The new source to navigate to |
 
-## `SetLinkedVrmRequest`
+## `SetLinkedPersonaRequest`
 
-Used internally by [`setLinkedVrm()`](./setLinkedVrm).
+Used internally by [`setLinkedPersona()`](./setLinkedVrm).
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `vrm` | `number` | Entity ID of the VRM to link |
+| `personaId` | `string` | ID of the persona to link |

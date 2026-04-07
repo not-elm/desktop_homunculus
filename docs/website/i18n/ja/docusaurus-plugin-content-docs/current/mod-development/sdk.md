@@ -24,20 +24,21 @@ SDK は **Node.js 22 以降** が必要です。MOD スクリプトは `tsx` に
 MOD のサービススクリプトは、Desktop Homunculus の起動時に自動的に実行されます。MOD のルートに `index.ts` を作成してください：
 
 ```typescript
-import { Vrm, repeat } from "@hmcs/sdk";
+import { persona, repeat } from "@hmcs/sdk";
 
-// package.json で宣言されたアセットを使用して VRM キャラクターをスポーン
-const character = await Vrm.spawn("my-mod:character");
+// ペルソナを作成し、package.json で宣言されたアセットを使用して VRM キャラクターをアタッチ
+const character = await persona.create({ id: "my-character" });
+const vrm = await character.attachVrm("my-mod:character");
 
 // 組み込みのアイドルアニメーションをループ再生
-await character.playVrma({
+await vrm.playVrma({
   asset: "vrma:idle-maid",
   repeat: repeat.forever(),
   transitionSecs: 0.5,
 });
 
 // キャラクターの目がマウスカーソルを追従するように設定
-await character.lookAtCursor();
+await vrm.lookAtCursor();
 
 // 状態変化を監視（drag、idle、sitting）
 character.events().on("state-change", async (e) => {
@@ -60,13 +61,13 @@ character.events().on("state-change", async (e) => {
 
 #### HTTP API
 
-SDK はエンジンの HTTP REST API（`localhost:3100` で動作）をラップしています。各 SDK モジュール（`Vrm`、`entities`、`audio` など）は、メソッド呼び出しを HTTP リクエストに変換します。API を直接呼び出す必要があることはほとんどありませんが、高度なユースケースでは `host` モジュールを介して利用できます。
+SDK はエンジンの HTTP REST API（`localhost:3100` で動作）をラップしています。各 SDK モジュール（`persona`、`entities`、`audio` など）は、メソッド呼び出しを HTTP リクエストに変換します。API を直接呼び出す必要があることはほとんどありませんが、高度なユースケースでは `host` モジュールを介して利用できます。
 
 #### イベント駆動パターン
 
 MOD は 2 つのメカニズムを使用してリアルタイムイベントに対応します：
 
-- **VRM イベント** -- ポインタークリック、ドラッグ、状態変化、アニメーションイベント（`vrm.events()` 経由）
+- **ペルソナイベント** -- ポインタークリック、ドラッグ、状態変化、アニメーションイベント（`persona.events()` 経由）
 - **Signals** -- MOD スクリプトと WebView 間の通信のためのクロスプロセス pub/sub メッセージング
 
 ### Commands エントリーポイント

@@ -72,7 +72,7 @@ API レスポンスで返される WebView ソース情報。`WebviewSourceInfoL
 | `size` | `Vec2` | 3D ワールド空間の寸法 |
 | `viewportSize` | `Vec2` | HTML ピクセル寸法 |
 | `offset` | `Vec2` | 位置オフセット |
-| `linkedVrm` | `number \| null` | リンクされた VRM のエンティティ ID、または `null` |
+| `linkedPersona` | `string \| null` | リンクされたペルソナ ID、または `null` |
 
 ## `WebviewPatchRequest`
 
@@ -93,8 +93,8 @@ API レスポンスで返される WebView ソース情報。`WebviewSourceInfoL
 | `source` | `WebviewSource` | -- | 表示内容（必須） |
 | `size` | `Vec2` | -- | 3D ワールド空間での寸法 |
 | `viewportSize` | `Vec2` | -- | HTML ピクセル寸法 |
-| `offset` | `Vec2` | -- | リンクされた VRM またはワールド原点からの相対位置 |
-| `linkedVrm` | `number` | -- | アタッチする VRM のエンティティ ID |
+| `offset` | `Vec2` | -- | リンクされたペルソナまたはワールド原点からの相対位置 |
+| `linkedPersona` | `string` | -- | アタッチするペルソナ ID |
 
 ## `WebviewNavigateRequest`
 
@@ -104,10 +104,10 @@ API レスポンスで返される WebView ソース情報。`WebviewSourceInfoL
 |-------|------|-------------|
 | `source` | `WebviewSource` | ナビゲート先の新しいソース |
 
-## `SetLinkedVrmRequest`
+## `SetLinkedPersonaRequest`
 
-[`setLinkedVrm()`](./setLinkedVrm) が内部で使用します。
+[`setLinkedPersona()`](./setLinkedVrm) が内部で使用します。
 
 | フィールド | 型 | 説明 |
 |-------|------|-------------|
-| `vrm` | `number` | リンクする VRM のエンティティ ID |
+| `personaId` | `string` | リンクするペルソナ ID |
