@@ -1,4 +1,4 @@
-import { mkdir, writeFile, appendFile, readdir, readFile } from "node:fs/promises";
+import { mkdir, writeFile, appendFile, readdir, readFile, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 
@@ -114,6 +114,61 @@ export class SessionPersistence {
   ): Promise<string | null> {
     const sessions = await this.list(workspacePath, personaId, branchName);
     return sessions.length > 0 ? sessions[0].uuid : null;
+  }
+
+  /** Delete session files older than ttlDays. Walks persona dirs recursively. */
+  async cleanup(workspacePath: string, personaId: string, ttlDays: number = SESSION_TTL_DAYS): Promise<void> {
+    const personaDir = join(workspacePath, ".hmcs", "sessions", personaId);
+    try {
+      await this.cleanupDir(personaDir, ttlDays);
+    } catch {
+      // personaDir may not exist yet — that's fine
+    }
+  }
+
+  private async cleanupDir(dir: string, ttlDays: number): Promise<void> {
+    let entries: import("node:fs").Dirent[];
+    try {
+      entries = await readdir(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+
+    const cutoff = Date.now() - ttlDays * 24 * 60 * 60 * 1000;
+
+    for (const entry of entries) {
+      const fullPath = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        await this.cleanupDir(fullPath, ttlDays);
+        await this.removeIfEmpty(fullPath);
+      } else if (entry.name.endsWith(".jsonl")) {
+        await this.removeIfExpired(fullPath, cutoff);
+      }
+    }
+  }
+
+  private async removeIfExpired(filePath: string, cutoff: number): Promise<void> {
+    try {
+      const content = await readFile(filePath, "utf-8");
+      const firstLine = content.split("\n")[0];
+      const header = JSON.parse(firstLine);
+      if (header._meta === "header" && header.startedAt < cutoff) {
+        await rm(filePath);
+      }
+    } catch {
+      // corrupt file or read error — skip
+    }
+  }
+
+  private async removeIfEmpty(dir: string): Promise<void> {
+    try {
+      const entries = await readdir(dir);
+      if (entries.length === 0) {
+        await rm(dir, { recursive: true });
+      }
+    } catch {
+      // skip
+    }
   }
 
   /** Read header + scan for first user message as preview. */
