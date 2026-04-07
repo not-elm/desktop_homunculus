@@ -9,8 +9,8 @@ import { useMenuData } from "./hooks/useMenuData";
 import { useMenuActions } from "./hooks/useMenuActions";
 
 export function App() {
-  const { entity, characterName, items } = useMenuData();
-  const { closing, handleClose, handleSelect } = useMenuActions(entity);
+  const { personaId, characterName, items } = useMenuData();
+  const { closing, handleClose, handleSelect } = useMenuActions(personaId);
   const contentRef = useRef<HTMLDivElement>(null);
 
   if (items.length === 0) return null;
