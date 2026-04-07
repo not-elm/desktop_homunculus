@@ -59,6 +59,9 @@ pub struct SetExpressionParams {
 pub struct SetPersonaParams {
     /// The persona profile text.
     pub profile: String,
+    /// Free-text personality description for agent prompts.
+    #[serde(default)]
+    pub personality: Option<String>,
 }
 
 /// Parameters for the `set_look_at` tool.
@@ -259,6 +262,7 @@ impl HomunculusMcpHandler {
         let args = params.0;
         let persona = Persona {
             profile: args.profile,
+            personality: args.personality,
             ..Default::default()
         };
 
