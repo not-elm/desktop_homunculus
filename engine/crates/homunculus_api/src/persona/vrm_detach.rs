@@ -1,0 +1,97 @@
+use crate::error::{ApiError, ApiResult};
+use crate::persona::PersonaApi;
+use bevy::camera::visibility::RenderLayers;
+use bevy::prelude::*;
+use bevy_flurx::prelude::*;
+use bevy_vrm1::prelude::{BodyTracking, LookAt, VrmHandle};
+use homunculus_core::prelude::{
+    Persona, PersonaChangeEvent, PersonaId, PersonaIndex, VrmDetachedEvent, VrmEvent,
+    VrmEventSender,
+};
+use homunculus_prefs::prelude::PrefsDatabase;
+
+impl PersonaApi {
+    /// Detaches the VRM model from a persona, keeping the persona entity intact.
+    pub async fn detach_vrm(&self, persona_id: PersonaId) -> ApiResult {
+        self.0
+            .schedule(move |task| async move {
+                task.will(Update, once::run(detach).with(persona_id)).await
+            })
+            .await?
+    }
+}
+
+fn detach(
+    In(persona_id): In<PersonaId>,
+    mut commands: Commands,
+    index: Res<PersonaIndex>,
+    mut personas: Query<&mut Persona>,
+    prefs: NonSend<PrefsDatabase>,
+    tx_detached: Option<Res<VrmEventSender<VrmDetachedEvent>>>,
+    tx_change: Option<Res<VrmEventSender<PersonaChangeEvent>>>,
+) -> ApiResult {
+    let entity = index.get(&persona_id).ok_or(ApiError::EntityNotFound)?;
+
+    let mut persona = personas
+        .get_mut(entity)
+        .map_err(|_| ApiError::EntityNotFound)?;
+
+    let asset_id = persona
+        .vrm_asset_id
+        .take()
+        .ok_or_else(|| ApiError::Conflict("No VRM attached to this persona".to_string()))?;
+
+    let updated = persona.clone();
+
+    remove_vrm_components(&mut commands, entity);
+    persist_and_broadcast(
+        &prefs,
+        &tx_detached,
+        &tx_change,
+        entity,
+        &updated,
+        &asset_id,
+    );
+
+    Ok(())
+}
+
+/// Removes VRM-specific components while keeping persona-related components.
+fn remove_vrm_components(commands: &mut Commands, entity: Entity) {
+    commands
+        .entity(entity)
+        .remove::<VrmHandle>()
+        .remove::<LookAt>()
+        .remove::<BodyTracking>()
+        .remove::<RenderLayers>();
+}
+
+/// Persists persona to DB and broadcasts detach/change events.
+fn persist_and_broadcast(
+    prefs: &PrefsDatabase,
+    tx_detached: &Option<Res<VrmEventSender<VrmDetachedEvent>>>,
+    tx_change: &Option<Res<VrmEventSender<PersonaChangeEvent>>>,
+    entity: Entity,
+    persona: &Persona,
+    asset_id: &str,
+) {
+    if let Err(e) = prefs.save_persona(persona) {
+        warn!("Failed to persist persona after VRM detach: {e}");
+    }
+    if let Some(tx) = tx_detached {
+        let _ = tx.try_broadcast(VrmEvent {
+            vrm: entity,
+            payload: VrmDetachedEvent {
+                asset_id: asset_id.to_string(),
+            },
+        });
+    }
+    if let Some(tx) = tx_change {
+        let _ = tx.try_broadcast(VrmEvent {
+            vrm: entity,
+            payload: PersonaChangeEvent {
+                persona: persona.clone(),
+            },
+        });
+    }
+}

@@ -1,7 +1,7 @@
 mod close;
 mod get;
 mod is_closed;
-mod linked_vrm;
+mod linked_persona;
 mod list;
 mod navigate;
 pub(super) mod open;

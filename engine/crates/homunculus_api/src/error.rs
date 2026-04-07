@@ -52,6 +52,8 @@ pub enum ApiError {
         expected: AssetType,
         actual: AssetType,
     },
+    #[error("Conflict: {0}")]
+    Conflict(String),
 }
 
 pub trait ApiResultExt {
@@ -98,7 +100,7 @@ pub mod axum {
                 ApiError::InvalidInput(_) | ApiError::AssetTypeMismatch { .. } => {
                     axum::http::StatusCode::BAD_REQUEST
                 }
-                ApiError::BgmNotPlaying | ApiError::BgmNotPaused => {
+                ApiError::BgmNotPlaying | ApiError::BgmNotPaused | ApiError::Conflict(_) => {
                     axum::http::StatusCode::CONFLICT
                 }
                 ApiError::MissingShadowPanel | ApiError::MissingName(_) => {

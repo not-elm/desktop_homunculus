@@ -35,6 +35,10 @@ mod vrm_transform;
 use crate::vrm_transform::PrefsVrmTransformPlugin;
 #[cfg(feature = "bevy")]
 use bevy::prelude::*;
+#[cfg(feature = "bevy")]
+use homunculus_core::prelude::{Gender, Persona, PersonaId};
+
+use std::collections::HashMap;
 
 use homunculus_utils::path::homunculus_dir;
 pub use rusqlite::types::Value as SqlValue;
@@ -251,6 +255,149 @@ impl PrefsDatabase {
     }
 }
 
+#[cfg(feature = "bevy")]
+impl PrefsDatabase {
+    /// Saves a persona to the `personas` table, replacing any existing row with the same ID.
+    ///
+    /// Also saves all metadata entries to `persona_metadata`.
+    pub fn save_persona(&self, persona: &Persona) -> Result<(), rusqlite::Error> {
+        self.0.execute(
+            "INSERT OR REPLACE INTO personas (id, name, age, gender, first_person_pronoun, profile, personality, vrm_asset_id)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+            rusqlite::params![
+                persona.id.0,
+                persona.name,
+                persona.age.map(|v| v as i64),
+                gender_to_str(&persona.gender),
+                persona.first_person_pronoun,
+                persona.profile,
+                persona.personality,
+                persona.vrm_asset_id,
+            ],
+        )?;
+        self.save_all_metadata(&persona.id, &persona.metadata)
+    }
+
+    /// Loads a persona by ID, returning `None` if not found.
+    pub fn load_persona(&self, id: &str) -> Result<Option<Persona>, rusqlite::Error> {
+        let mut stmt = self.0.prepare(
+            "SELECT id, name, age, gender, first_person_pronoun, profile, personality, vrm_asset_id
+             FROM personas WHERE id = ?",
+        )?;
+        let mut rows = stmt.query([id])?;
+        let Some(row) = rows.next()? else {
+            return Ok(None);
+        };
+        let persona = row_to_persona(row)?;
+        let metadata = self.load_persona_metadata(&persona.id)?;
+        Ok(Some(Persona {
+            metadata,
+            ..persona
+        }))
+    }
+
+    /// Lists all personas with their metadata.
+    pub fn list_personas(&self) -> Result<Vec<Persona>, rusqlite::Error> {
+        let mut stmt = self.0.prepare(
+            "SELECT id, name, age, gender, first_person_pronoun, profile, personality, vrm_asset_id
+             FROM personas",
+        )?;
+        let rows = stmt.query_map([], row_to_persona)?;
+        let mut personas = Vec::new();
+        for row_result in rows {
+            let persona = row_result?;
+            let metadata = self.load_persona_metadata(&persona.id)?;
+            personas.push(Persona {
+                metadata,
+                ..persona
+            });
+        }
+        Ok(personas)
+    }
+
+    /// Deletes a persona by ID. Metadata is cascade-deleted by the foreign key constraint.
+    pub fn delete_persona(&self, id: &str) -> Result<(), rusqlite::Error> {
+        self.0.execute("DELETE FROM personas WHERE id = ?", [id])?;
+        Ok(())
+    }
+
+    /// Saves a single metadata key-value pair for a persona.
+    pub fn save_persona_metadata(
+        &self,
+        persona_id: &PersonaId,
+        key: &str,
+        value: &serde_json::Value,
+    ) -> Result<(), rusqlite::Error> {
+        let json_text = serde_json::to_string(value).unwrap_or_default();
+        self.0.execute(
+            "INSERT OR REPLACE INTO persona_metadata (persona_id, key, value) VALUES (?1, ?2, ?3)",
+            rusqlite::params![persona_id.0, key, json_text],
+        )?;
+        Ok(())
+    }
+
+    /// Loads all metadata key-value pairs for a persona.
+    pub fn load_persona_metadata(
+        &self,
+        persona_id: &PersonaId,
+    ) -> Result<HashMap<String, serde_json::Value>, rusqlite::Error> {
+        let mut stmt = self
+            .0
+            .prepare("SELECT key, value FROM persona_metadata WHERE persona_id = ?")?;
+        let rows = stmt.query_map([&persona_id.0], |row| {
+            let key: String = row.get(0)?;
+            let value_text: String = row.get(1)?;
+            Ok((key, value_text))
+        })?;
+        let mut map = HashMap::new();
+        for row_result in rows {
+            let (key, value_text) = row_result?;
+            if let Ok(value) = serde_json::from_str(&value_text) {
+                map.insert(key, value);
+            }
+        }
+        Ok(map)
+    }
+
+    /// Migrates old `persona::*` preference keys to the new `personas` table.
+    ///
+    /// Each old key has the format `persona::{asset_id}`, with the value being
+    /// a JSON object containing `displayName`, `age`, `gender`, etc.
+    /// This function reads them, creates proper `Persona` rows, and deletes
+    /// the old preference keys — all within a single transaction.
+    pub fn migrate_personas(&self) -> Result<(), rusqlite::Error> {
+        let keys = self.list_keys()?;
+        let persona_keys: Vec<String> = keys
+            .into_iter()
+            .filter(|k| k.starts_with("persona::"))
+            .collect();
+        if persona_keys.is_empty() {
+            return Ok(());
+        }
+        let tx = self.0.unchecked_transaction()?;
+        let mut used_ids = std::collections::HashSet::new();
+        for key in &persona_keys {
+            let asset_id = &key["persona::".len()..];
+            let persona_id = derive_unique_persona_id(asset_id, &mut used_ids);
+            let json_value = load_json_from_conn(&tx, key)?;
+            let persona = parse_legacy_persona(&persona_id, asset_id, json_value);
+            save_persona_to_conn(&tx, &persona)?;
+            save_all_metadata_to_conn(&tx, &persona.id, &persona.metadata)?;
+            tx.execute("DELETE FROM preferences WHERE key = ?", [key.as_str()])?;
+        }
+        tx.commit()
+    }
+
+    /// Replaces all metadata for a persona (deletes existing, inserts new).
+    fn save_all_metadata(
+        &self,
+        persona_id: &PersonaId,
+        metadata: &HashMap<String, serde_json::Value>,
+    ) -> Result<(), rusqlite::Error> {
+        save_all_metadata_to_conn(&self.0, persona_id, metadata)
+    }
+}
+
 impl Default for PrefsDatabase {
     fn default() -> Self {
         Self::new(Self::DB_NAME)
@@ -258,6 +405,7 @@ impl Default for PrefsDatabase {
 }
 
 fn create_tables(db: &rusqlite::Connection) -> Result<(), rusqlite::Error> {
+    db.execute_batch("PRAGMA foreign_keys = ON")?;
     db.execute(
         "CREATE TABLE IF NOT EXISTS preferences (
             key TEXT PRIMARY KEY,
@@ -265,6 +413,29 @@ fn create_tables(db: &rusqlite::Connection) -> Result<(), rusqlite::Error> {
             value_type TEXT NOT NULL DEFAULT 'json'
               CHECK (value_type IN ('null', 'bool', 'number', 'string', 'json'))
         ) WITHOUT ROWID",
+        [],
+    )?;
+    db.execute(
+        "CREATE TABLE IF NOT EXISTS personas (
+            id TEXT PRIMARY KEY,
+            name TEXT,
+            age INTEGER,
+            gender TEXT NOT NULL DEFAULT 'unknown',
+            first_person_pronoun TEXT,
+            profile TEXT NOT NULL DEFAULT '',
+            personality TEXT,
+            vrm_asset_id TEXT
+        )",
+        [],
+    )?;
+    db.execute(
+        "CREATE TABLE IF NOT EXISTS persona_metadata (
+            persona_id TEXT NOT NULL,
+            key TEXT NOT NULL,
+            value TEXT NOT NULL,
+            PRIMARY KEY (persona_id, key),
+            FOREIGN KEY (persona_id) REFERENCES personas(id) ON DELETE CASCADE
+        )",
         [],
     )?;
     Ok(())
@@ -344,6 +515,200 @@ fn sql_to_json(value: SqlValue, value_type: &str) -> Option<serde_json::Value> {
         },
         _ => None,
     }
+}
+
+/// Converts a `Gender` enum to a lowercase string for DB storage.
+#[cfg(feature = "bevy")]
+fn gender_to_str(gender: &Gender) -> &'static str {
+    match gender {
+        Gender::Male => "male",
+        Gender::Female => "female",
+        Gender::Other => "other",
+        Gender::Unknown => "unknown",
+    }
+}
+
+/// Parses a gender string from the DB into a `Gender` enum.
+#[cfg(feature = "bevy")]
+fn str_to_gender(s: &str) -> Gender {
+    match s {
+        "male" => Gender::Male,
+        "female" => Gender::Female,
+        "other" => Gender::Other,
+        _ => Gender::Unknown,
+    }
+}
+
+/// Converts a SQLite row (from the `personas` table) into a `Persona` (without metadata).
+#[cfg(feature = "bevy")]
+fn row_to_persona(row: &rusqlite::Row<'_>) -> Result<Persona, rusqlite::Error> {
+    let id: String = row.get(0)?;
+    let name: Option<String> = row.get(1)?;
+    let age: Option<i64> = row.get(2)?;
+    let gender_str: String = row.get(3)?;
+    let first_person_pronoun: Option<String> = row.get(4)?;
+    let profile: String = row.get(5)?;
+    let personality: Option<String> = row.get(6)?;
+    let vrm_asset_id: Option<String> = row.get(7)?;
+    Ok(Persona {
+        id: PersonaId::new(id),
+        name,
+        age: age.map(|v| v as u32),
+        gender: str_to_gender(&gender_str),
+        first_person_pronoun,
+        profile,
+        personality,
+        vrm_asset_id,
+        metadata: HashMap::new(),
+    })
+}
+
+/// Derives a unique `PersonaId` from an asset ID by sanitizing characters and handling collisions.
+#[cfg(feature = "bevy")]
+fn derive_unique_persona_id(
+    asset_id: &str,
+    used_ids: &mut std::collections::HashSet<String>,
+) -> String {
+    let sanitized: String = asset_id
+        .chars()
+        .map(|c| {
+            if c.is_ascii_alphanumeric() || c == '_' || c == '-' {
+                c
+            } else {
+                '-'
+            }
+        })
+        .collect();
+    let truncated = if sanitized.len() > 60 {
+        sanitized[..60].to_string()
+    } else {
+        sanitized
+    };
+    let mut candidate = truncated.clone();
+    let mut suffix = 1u32;
+    while used_ids.contains(&candidate) {
+        candidate = format!("{truncated}-{suffix}");
+        suffix += 1;
+    }
+    used_ids.insert(candidate.clone());
+    candidate
+}
+
+/// Loads a JSON value from the preferences table using a raw connection/transaction.
+#[cfg(feature = "bevy")]
+fn load_json_from_conn(
+    conn: &rusqlite::Connection,
+    key: &str,
+) -> Result<Option<serde_json::Value>, rusqlite::Error> {
+    let mut stmt = conn.prepare("SELECT value, value_type FROM preferences WHERE key = ?")?;
+    let mut rows = stmt.query([key])?;
+    match rows.next()? {
+        Some(row) => {
+            let value: SqlValue = row.get(0)?;
+            let value_type: String = row.get(1)?;
+            Ok(sql_to_json(value, &value_type))
+        }
+        None => Ok(None),
+    }
+}
+
+/// Parses a legacy persona JSON (from the old `persona::*` preferences) into a `Persona`.
+#[cfg(feature = "bevy")]
+fn parse_legacy_persona(
+    persona_id: &str,
+    asset_id: &str,
+    json_value: Option<serde_json::Value>,
+) -> Persona {
+    let obj = json_value
+        .and_then(|v| v.as_object().cloned())
+        .unwrap_or_default();
+    let name = obj
+        .get("displayName")
+        .and_then(|v| v.as_str())
+        .map(String::from);
+    let age = obj.get("age").and_then(|v| v.as_u64()).map(|v| v as u32);
+    let gender_str = obj
+        .get("gender")
+        .and_then(|v| v.as_str())
+        .unwrap_or("unknown");
+    let gender = str_to_gender(gender_str);
+    let first_person_pronoun = obj
+        .get("firstPersonPronoun")
+        .and_then(|v| v.as_str())
+        .map(String::from);
+    let profile = obj
+        .get("profile")
+        .and_then(|v| v.as_str())
+        .unwrap_or("")
+        .to_string();
+    let personality = obj
+        .get("personality")
+        .and_then(|v| v.as_str())
+        .map(String::from);
+    let metadata = obj
+        .get("metadata")
+        .and_then(|v| v.as_object())
+        .map(|m| {
+            m.iter()
+                .map(|(k, v)| (k.clone(), v.clone()))
+                .collect::<HashMap<String, serde_json::Value>>()
+        })
+        .unwrap_or_default();
+    Persona {
+        id: PersonaId::new(persona_id),
+        name,
+        age,
+        gender,
+        first_person_pronoun,
+        profile,
+        personality,
+        vrm_asset_id: Some(asset_id.to_string()),
+        metadata,
+    }
+}
+
+/// Saves a persona row using a raw connection/transaction.
+#[cfg(feature = "bevy")]
+fn save_persona_to_conn(
+    conn: &rusqlite::Connection,
+    persona: &Persona,
+) -> Result<(), rusqlite::Error> {
+    conn.execute(
+        "INSERT OR REPLACE INTO personas (id, name, age, gender, first_person_pronoun, profile, personality, vrm_asset_id)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+        rusqlite::params![
+            persona.id.0,
+            persona.name,
+            persona.age.map(|v| v as i64),
+            gender_to_str(&persona.gender),
+            persona.first_person_pronoun,
+            persona.profile,
+            persona.personality,
+            persona.vrm_asset_id,
+        ],
+    )?;
+    Ok(())
+}
+
+/// Replaces all metadata for a persona using a raw connection/transaction.
+#[cfg(feature = "bevy")]
+fn save_all_metadata_to_conn(
+    conn: &rusqlite::Connection,
+    persona_id: &PersonaId,
+    metadata: &HashMap<String, serde_json::Value>,
+) -> Result<(), rusqlite::Error> {
+    conn.execute(
+        "DELETE FROM persona_metadata WHERE persona_id = ?",
+        [&persona_id.0],
+    )?;
+    for (key, value) in metadata {
+        let json_text = serde_json::to_string(value).unwrap_or_default();
+        conn.execute(
+            "INSERT INTO persona_metadata (persona_id, key, value) VALUES (?1, ?2, ?3)",
+            rusqlite::params![persona_id.0, key, json_text],
+        )?;
+    }
+    Ok(())
 }
 
 #[cfg(test)]
@@ -576,5 +941,304 @@ mod test {
             db.load_json("valid-key_123").unwrap().unwrap(),
             serde_json::json!(42)
         );
+    }
+
+    #[test]
+    fn test_save_and_load_persona() {
+        use homunculus_core::prelude::{Gender, Persona, PersonaId};
+        use std::collections::HashMap;
+
+        let db = PrefsDatabase::open_in_memory();
+        let mut metadata = HashMap::new();
+        metadata.insert("mood".to_string(), serde_json::json!("happy"));
+        let persona = Persona {
+            id: PersonaId::new("elmer"),
+            name: Some("Elmer".to_string()),
+            age: Some(10),
+            gender: Gender::Female,
+            first_person_pronoun: Some("I".to_string()),
+            profile: "A cheerful mascot".to_string(),
+            personality: Some("friendly".to_string()),
+            vrm_asset_id: Some("vrm:elmer".to_string()),
+            metadata,
+        };
+        db.save_persona(&persona).unwrap();
+
+        let loaded = db.load_persona("elmer").unwrap().unwrap();
+        assert_eq!(loaded.id, persona.id);
+        assert_eq!(loaded.name, Some("Elmer".to_string()));
+        assert_eq!(loaded.age, Some(10));
+        assert_eq!(loaded.gender, Gender::Female);
+        assert_eq!(loaded.first_person_pronoun, Some("I".to_string()));
+        assert_eq!(loaded.profile, "A cheerful mascot");
+        assert_eq!(loaded.personality, Some("friendly".to_string()));
+        assert_eq!(loaded.vrm_asset_id, Some("vrm:elmer".to_string()));
+        assert_eq!(
+            loaded.metadata.get("mood"),
+            Some(&serde_json::json!("happy"))
+        );
+    }
+
+    #[test]
+    fn test_save_and_load_persona_minimal() {
+        use homunculus_core::prelude::{Gender, Persona, PersonaId};
+
+        let db = PrefsDatabase::open_in_memory();
+        let persona = Persona {
+            id: PersonaId::new("minimal"),
+            gender: Gender::Unknown,
+            ..Default::default()
+        };
+        db.save_persona(&persona).unwrap();
+
+        let loaded = db.load_persona("minimal").unwrap().unwrap();
+        assert_eq!(loaded.id.0, "minimal");
+        assert_eq!(loaded.name, None);
+        assert_eq!(loaded.age, None);
+        assert_eq!(loaded.gender, Gender::Unknown);
+        assert_eq!(loaded.profile, "");
+        assert!(loaded.metadata.is_empty());
+    }
+
+    #[test]
+    fn test_load_persona_not_found() {
+        let db = PrefsDatabase::open_in_memory();
+        assert!(db.load_persona("nonexistent").unwrap().is_none());
+    }
+
+    #[test]
+    fn test_list_personas() {
+        use homunculus_core::prelude::{Gender, Persona, PersonaId};
+
+        let db = PrefsDatabase::open_in_memory();
+        let p1 = Persona {
+            id: PersonaId::new("alice"),
+            name: Some("Alice".to_string()),
+            gender: Gender::Female,
+            profile: "First persona".to_string(),
+            ..Default::default()
+        };
+        let p2 = Persona {
+            id: PersonaId::new("bob"),
+            name: Some("Bob".to_string()),
+            gender: Gender::Male,
+            profile: "Second persona".to_string(),
+            ..Default::default()
+        };
+        db.save_persona(&p1).unwrap();
+        db.save_persona(&p2).unwrap();
+
+        let mut personas = db.list_personas().unwrap();
+        personas.sort_by(|a, b| a.id.0.cmp(&b.id.0));
+        assert_eq!(personas.len(), 2);
+        assert_eq!(personas[0].id.0, "alice");
+        assert_eq!(personas[0].name, Some("Alice".to_string()));
+        assert_eq!(personas[1].id.0, "bob");
+        assert_eq!(personas[1].name, Some("Bob".to_string()));
+    }
+
+    #[test]
+    fn test_delete_persona_cascades_metadata() {
+        use homunculus_core::prelude::{Gender, Persona, PersonaId};
+        use std::collections::HashMap;
+
+        let db = PrefsDatabase::open_in_memory();
+        let mut metadata = HashMap::new();
+        metadata.insert("key1".to_string(), serde_json::json!("value1"));
+        metadata.insert("key2".to_string(), serde_json::json!(42));
+        let persona = Persona {
+            id: PersonaId::new("to-delete"),
+            gender: Gender::Unknown,
+            profile: String::new(),
+            metadata,
+            ..Default::default()
+        };
+        db.save_persona(&persona).unwrap();
+
+        // Verify metadata exists
+        let md = db
+            .load_persona_metadata(&PersonaId::new("to-delete"))
+            .unwrap();
+        assert_eq!(md.len(), 2);
+
+        // Delete persona
+        db.delete_persona("to-delete").unwrap();
+
+        // Verify persona is gone
+        assert!(db.load_persona("to-delete").unwrap().is_none());
+
+        // Verify metadata is cascade-deleted
+        let md = db
+            .load_persona_metadata(&PersonaId::new("to-delete"))
+            .unwrap();
+        assert!(md.is_empty());
+    }
+
+    #[test]
+    fn test_migration() {
+        use homunculus_core::prelude::Gender;
+
+        let db = PrefsDatabase::open_in_memory();
+
+        // Insert old-style persona preferences
+        let old_persona = serde_json::json!({
+            "displayName": "Elmer",
+            "age": 10,
+            "gender": "female",
+            "firstPersonPronoun": "watashi",
+            "profile": "A cute mascot",
+            "personality": "cheerful and kind",
+            "metadata": {
+                "theme": "pink"
+            }
+        });
+        db.save_json("persona::vrm:elmer", &old_persona).unwrap();
+
+        let old_persona2 = serde_json::json!({
+            "displayName": "Bob",
+            "gender": "male",
+            "profile": "A test character"
+        });
+        db.save_json("persona::vrm:bob", &old_persona2).unwrap();
+
+        // Also save a non-persona key to verify it is untouched
+        db.save_json("transform::vrm:elmer", &serde_json::json!({"x": 0}))
+            .unwrap();
+
+        // Run migration
+        db.migrate_personas().unwrap();
+
+        // Verify old preference keys are deleted
+        assert!(db.load_json("persona::vrm:elmer").unwrap().is_none());
+        assert!(db.load_json("persona::vrm:bob").unwrap().is_none());
+
+        // Verify non-persona key is untouched
+        assert!(db.load_json("transform::vrm:elmer").unwrap().is_some());
+
+        // Verify personas are in the new table
+        let mut personas = db.list_personas().unwrap();
+        personas.sort_by(|a, b| a.id.0.cmp(&b.id.0));
+        assert_eq!(personas.len(), 2);
+
+        // The IDs should be sanitized versions of the asset IDs
+        // "vrm:elmer" -> "vrm-elmer", "vrm:bob" -> "vrm-bob"
+        let elmer = personas
+            .iter()
+            .find(|p| p.name == Some("Elmer".to_string()))
+            .unwrap();
+        assert_eq!(elmer.id.0, "vrm-elmer");
+        assert_eq!(elmer.age, Some(10));
+        assert_eq!(elmer.gender, Gender::Female);
+        assert_eq!(elmer.first_person_pronoun, Some("watashi".to_string()));
+        assert_eq!(elmer.profile, "A cute mascot");
+        assert_eq!(elmer.personality, Some("cheerful and kind".to_string()));
+        assert_eq!(elmer.vrm_asset_id, Some("vrm:elmer".to_string()));
+        assert_eq!(
+            elmer.metadata.get("theme"),
+            Some(&serde_json::json!("pink"))
+        );
+
+        let bob = personas
+            .iter()
+            .find(|p| p.name == Some("Bob".to_string()))
+            .unwrap();
+        assert_eq!(bob.id.0, "vrm-bob");
+        assert_eq!(bob.gender, Gender::Male);
+        assert_eq!(bob.vrm_asset_id, Some("vrm:bob".to_string()));
+    }
+
+    #[test]
+    fn test_migration_empty_is_noop() {
+        let db = PrefsDatabase::open_in_memory();
+        // No persona keys, migration should succeed silently
+        db.migrate_personas().unwrap();
+        assert!(db.list_personas().unwrap().is_empty());
+    }
+
+    #[test]
+    fn test_migration_id_collision() {
+        let db = PrefsDatabase::open_in_memory();
+
+        // Two asset IDs that sanitize to the same persona ID
+        // "vrm:elmer" and "vrm.elmer" both become "vrm-elmer"
+        db.save_json(
+            "persona::vrm:elmer",
+            &serde_json::json!({"displayName": "First", "gender": "unknown", "profile": ""}),
+        )
+        .unwrap();
+        db.save_json(
+            "persona::vrm.elmer",
+            &serde_json::json!({"displayName": "Second", "gender": "unknown", "profile": ""}),
+        )
+        .unwrap();
+
+        db.migrate_personas().unwrap();
+
+        let personas = db.list_personas().unwrap();
+        assert_eq!(personas.len(), 2);
+
+        // One should be "vrm-elmer" and the other "vrm-elmer-1"
+        let mut ids: Vec<String> = personas.iter().map(|p| p.id.0.clone()).collect();
+        ids.sort();
+        assert_eq!(ids, vec!["vrm-elmer", "vrm-elmer-1"]);
+    }
+
+    #[test]
+    fn test_save_persona_metadata_individual() {
+        use homunculus_core::prelude::PersonaId;
+
+        let db = PrefsDatabase::open_in_memory();
+        // First create the persona (needed for FK constraint)
+        let persona = homunculus_core::prelude::Persona {
+            id: PersonaId::new("meta-test"),
+            profile: String::new(),
+            ..Default::default()
+        };
+        db.save_persona(&persona).unwrap();
+
+        db.save_persona_metadata(
+            &PersonaId::new("meta-test"),
+            "key1",
+            &serde_json::json!("val1"),
+        )
+        .unwrap();
+        db.save_persona_metadata(&PersonaId::new("meta-test"), "key2", &serde_json::json!(42))
+            .unwrap();
+
+        let md = db
+            .load_persona_metadata(&PersonaId::new("meta-test"))
+            .unwrap();
+        assert_eq!(md.len(), 2);
+        assert_eq!(md.get("key1"), Some(&serde_json::json!("val1")));
+        assert_eq!(md.get("key2"), Some(&serde_json::json!(42)));
+    }
+
+    #[test]
+    fn test_save_persona_overwrites() {
+        use homunculus_core::prelude::{Gender, Persona, PersonaId};
+
+        let db = PrefsDatabase::open_in_memory();
+        let persona_v1 = Persona {
+            id: PersonaId::new("overwrite-test"),
+            name: Some("V1".to_string()),
+            gender: Gender::Male,
+            profile: "Version 1".to_string(),
+            ..Default::default()
+        };
+        db.save_persona(&persona_v1).unwrap();
+
+        let persona_v2 = Persona {
+            id: PersonaId::new("overwrite-test"),
+            name: Some("V2".to_string()),
+            gender: Gender::Female,
+            profile: "Version 2".to_string(),
+            ..Default::default()
+        };
+        db.save_persona(&persona_v2).unwrap();
+
+        let loaded = db.load_persona("overwrite-test").unwrap().unwrap();
+        assert_eq!(loaded.name, Some("V2".to_string()));
+        assert_eq!(loaded.gender, Gender::Female);
+        assert_eq!(loaded.profile, "Version 2");
     }
 }

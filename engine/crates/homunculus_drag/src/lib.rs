@@ -59,7 +59,8 @@ use bevy_cef::prelude::WebviewExtendStandardMaterial;
 use bevy_vrm1::prelude::Initialized;
 use bevy_vrm1::vrm::Vrm;
 use homunculus_core::prelude::{
-    AppWindows, BoneOffsets, Coordinate, MascotTracker, VrmMeshRayCast, VrmState, global_cursor_pos,
+    AppWindows, BoneOffsets, Coordinate, MascotTracker, PersonaState, VrmMeshRayCast,
+    global_cursor_pos,
 };
 use homunculus_core::texture::{TRANSPARENT_ALPHA_THRESHOLD, sample_texture_alpha};
 use homunculus_screen::prelude::GlobalWindows;
@@ -155,7 +156,7 @@ fn on_drag_start(
     commands
         .entity(vrm_entity)
         .try_insert(DragHipsOffset(initial_offset))
-        .try_insert(VrmState::from("drag"));
+        .try_insert(PersonaState::from("drag"));
 }
 
 /// Returns `true` if the hit is on a transparent WebView pixel that should be skipped.
@@ -258,11 +259,11 @@ fn on_drag_end(
             commands.entity(vrm).try_insert((
                 sitting_window,
                 transform,
-                VrmState::from(VrmState::SITTING),
+                PersonaState::from(PersonaState::SITTING),
             ));
         }
         None => {
-            commands.entity(vrm).try_insert(VrmState::default());
+            commands.entity(vrm).try_insert(PersonaState::default());
         }
     }
 }
