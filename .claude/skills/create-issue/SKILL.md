@@ -92,3 +92,57 @@ This initial structure serves two purposes:
 
 1. Provides keywords for duplicate detection (step 4)
 2. Provides starting material for the brainstorming delegation (step 5)
+
+## Duplicate Detection
+
+### Stage 1 — Keyword Search
+
+Extract 3-5 key terms from the initial structure (English). Run:
+
+```
+gh issue list --search "<keywords> is:open" --json number,title,url,labels --limit 10
+```
+
+| Result | Action |
+|--------|--------|
+| 0 hits | Skip Stage 2, proceed to brainstorming (step 5) |
+| 1+ hits | Proceed to Stage 2 |
+| Command failure | Warn ("Duplicate check failed, skipping"), proceed to brainstorming (step 5) |
+
+### Stage 2 — Semantic Check
+
+Take the first 5 results (search-rank order as returned by `gh`). Fetch each:
+
+```
+gh issue view <number> --json title,body
+```
+
+Classify each via LLM judgment:
+
+- **Likely duplicate** — same problem, similar solution
+- **Related** — overlapping area, different problem or solution
+- **Not duplicate** — superficial keyword match only
+
+| Result | Action |
+|--------|--------|
+| Likely duplicate or related found | Present matches, ask to continue or abort |
+| Only "not duplicate" | Proceed silently |
+| Individual fetch failure | Skip that candidate, continue with remaining |
+
+### Presentation Format
+
+If likely duplicate or related issues are found, present them:
+
+```
+### Potential Duplicates Found
+
+**Likely duplicate:**
+- #42 — Add character switcher to tray menu
+
+**Related:**
+- #87 — System tray integration improvements
+
+Continue creating this issue? (yes / no)
+```
+
+User declines → stop. User continues → proceed to brainstorming (step 5).
