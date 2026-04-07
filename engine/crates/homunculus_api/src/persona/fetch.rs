@@ -41,9 +41,7 @@ fn get(
     personas: Query<(&Persona, &PersonaState)>,
 ) -> ApiResult<PersonaSnapshot> {
     let entity = index.get(&persona_id).ok_or(ApiError::EntityNotFound)?;
-    let (persona, state) = personas
-        .get(entity)
-        .map_err(|_| ApiError::EntityNotFound)?;
+    let (persona, state) = personas.get(entity).map_err(|_| ApiError::EntityNotFound)?;
     Ok(PersonaSnapshot {
         persona: persona.clone(),
         state: state.0.clone(),

@@ -47,9 +47,7 @@ impl PersonaApi {
     /// Returns a full snapshot of all personas with VRM rendering state.
     pub async fn full_snapshot(&self) -> ApiResult<Vec<PersonaFullSnapshot>> {
         self.0
-            .schedule(move |task| async move {
-                task.will(Update, once::run(snapshot_all)).await
-            })
+            .schedule(move |task| async move { task.will(Update, once::run(snapshot_all)).await })
             .await
     }
 }

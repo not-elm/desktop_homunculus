@@ -34,7 +34,11 @@ pub struct PatchPersona {
 
 impl PersonaApi {
     /// Applies a partial update to a persona.
-    pub async fn patch(&self, persona_id: PersonaId, patch: PatchPersona) -> ApiResult<PersonaSnapshot> {
+    pub async fn patch(
+        &self,
+        persona_id: PersonaId,
+        patch: PatchPersona,
+    ) -> ApiResult<PersonaSnapshot> {
         self.0
             .schedule(move |task| async move {
                 task.will(Update, once::run(patch_persona).with((persona_id, patch)))
@@ -44,7 +48,11 @@ impl PersonaApi {
     }
 
     /// Updates the display name of a persona.
-    pub async fn set_name(&self, persona_id: PersonaId, name: String) -> ApiResult<PersonaSnapshot> {
+    pub async fn set_name(
+        &self,
+        persona_id: PersonaId,
+        name: String,
+    ) -> ApiResult<PersonaSnapshot> {
         self.patch(
             persona_id,
             PatchPersona {
@@ -68,7 +76,11 @@ impl PersonaApi {
     }
 
     /// Updates the gender of a persona.
-    pub async fn set_gender(&self, persona_id: PersonaId, gender: Gender) -> ApiResult<PersonaSnapshot> {
+    pub async fn set_gender(
+        &self,
+        persona_id: PersonaId,
+        gender: Gender,
+    ) -> ApiResult<PersonaSnapshot> {
         self.patch(
             persona_id,
             PatchPersona {
@@ -96,7 +108,11 @@ impl PersonaApi {
     }
 
     /// Updates the profile of a persona.
-    pub async fn set_profile(&self, persona_id: PersonaId, profile: String) -> ApiResult<PersonaSnapshot> {
+    pub async fn set_profile(
+        &self,
+        persona_id: PersonaId,
+        profile: String,
+    ) -> ApiResult<PersonaSnapshot> {
         self.patch(
             persona_id,
             PatchPersona {
