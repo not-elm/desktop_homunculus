@@ -1,14 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
-import { Webview, Vrm, entities, type Gender, audio } from "@hmcs/sdk";
+import { Webview, type Persona, type Gender, audio } from "@hmcs/sdk";
 
 export type Tab = "persona" | "appearance";
 
 export function useCharacterSettings() {
-  const [vrm, setVrm] = useState<Vrm | null>(null);
-  const [entity, setEntity] = useState<number | null>(null);
+  const [personaInstance, setPersonaInstance] = useState<Persona | null>(null);
   const [tab, setTab] = useState<Tab>("persona");
   const [name, setName] = useState("");
-  const [displayName, setDisplayName] = useState("");
   const [scale, setScale] = useState(1);
   const [profile, setProfile] = useState("");
   const [personality, setPersonality] = useState("");
@@ -25,26 +23,23 @@ export function useCharacterSettings() {
     let cancelled = false;
 
     (async () => {
-      const linked = await webview.linkedVrm();
+      const linked = await webview.linkedPersona();
       if (cancelled || !linked) return;
-      setVrm(linked);
-      setEntity(linked.entity);
+      setPersonaInstance(linked);
 
-      const [persona, vrmName, transform] = await Promise.all([
-        linked.persona(),
-        linked.name(),
-        entities.transform(linked.entity),
+      const [snapshot, transform] = await Promise.all([
+        linked.snapshot(),
+        linked.transform(),
       ]);
       if (cancelled) return;
 
-      setName(vrmName);
-      setDisplayName(persona.displayName ?? "");
+      setName(snapshot.name ?? "");
       setScale(transform.scale[0]);
-      setProfile(persona.profile);
-      setPersonality(persona.personality ?? "");
-      setAge(persona.age ?? null);
-      setGender(persona.gender ?? "unknown");
-      setFirstPersonPronoun(persona.firstPersonPronoun ?? "");
+      setProfile(snapshot.profile);
+      setPersonality(snapshot.personality ?? "");
+      setAge(snapshot.age ?? null);
+      setGender(snapshot.gender ?? "unknown");
+      setFirstPersonPronoun(snapshot.firstPersonPronoun ?? "");
       setLoading(false);
     })();
 
@@ -59,20 +54,19 @@ export function useCharacterSettings() {
   }, []);
 
   const handleSave = useCallback(async () => {
-    if (!vrm || entity == null || saving) return;
+    if (!personaInstance || saving) return;
     setSaving(true);
     try {
-      await vrm.setPersona({
-        displayName: displayName || null,
-        age,
+      await personaInstance.patch({
+        name: name || undefined,
+        age: age ?? undefined,
         gender,
-        firstPersonPronoun: firstPersonPronoun || null,
+        firstPersonPronoun: firstPersonPronoun || undefined,
         profile,
-        personality: personality || null,
-        metadata: {},
+        personality: personality || undefined,
       });
-      const currentTransform = await entities.transform(entity);
-      await entities.setTransform(entity, {
+      const currentTransform = await personaInstance.transform();
+      await personaInstance.setTransform({
         scale: [scale, scale, scale],
         translation: currentTransform.translation,
         rotation: currentTransform.rotation,
@@ -84,13 +78,12 @@ export function useCharacterSettings() {
     } finally {
       setSaving(false);
     }
-  }, [vrm, entity, displayName, age, gender, firstPersonPronoun, profile, personality, scale, saving]);
+  }, [personaInstance, name, age, gender, firstPersonPronoun, profile, personality, scale, saving]);
 
   return {
     loading,
     name,
-    displayName,
-    setDisplayName,
+    setName,
     tab,
     setTab,
     scale,
