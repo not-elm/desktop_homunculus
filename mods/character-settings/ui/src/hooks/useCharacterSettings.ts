@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import { Webview, Vrm, entities, type Ocean, type Gender, audio } from "@hmcs/sdk";
+import { Webview, Vrm, entities, type Gender, audio } from "@hmcs/sdk";
 
-export type Tab = "persona" | "ocean" | "appearance";
+export type Tab = "persona" | "appearance";
 
 export function useCharacterSettings() {
   const [vrm, setVrm] = useState<Vrm | null>(null);
@@ -11,10 +11,10 @@ export function useCharacterSettings() {
   const [displayName, setDisplayName] = useState("");
   const [scale, setScale] = useState(1);
   const [profile, setProfile] = useState("");
+  const [personality, setPersonality] = useState("");
   const [age, setAge] = useState<number | null>(null);
   const [gender, setGender] = useState<Gender>("unknown");
   const [firstPersonPronoun, setFirstPersonPronoun] = useState("");
-  const [ocean, setOcean] = useState<Ocean>({});
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -41,10 +41,10 @@ export function useCharacterSettings() {
       setDisplayName(persona.displayName ?? "");
       setScale(transform.scale[0]);
       setProfile(persona.profile);
+      setPersonality(persona.personality ?? "");
       setAge(persona.age ?? null);
       setGender(persona.gender ?? "unknown");
       setFirstPersonPronoun(persona.firstPersonPronoun ?? "");
-      setOcean(persona.ocean);
       setLoading(false);
     })();
 
@@ -68,7 +68,7 @@ export function useCharacterSettings() {
         gender,
         firstPersonPronoun: firstPersonPronoun || null,
         profile,
-        ocean,
+        personality: personality || null,
         metadata: {},
       });
       const currentTransform = await entities.transform(entity);
@@ -84,7 +84,7 @@ export function useCharacterSettings() {
     } finally {
       setSaving(false);
     }
-  }, [vrm, entity, displayName, age, gender, firstPersonPronoun, profile, ocean, scale, saving]);
+  }, [vrm, entity, displayName, age, gender, firstPersonPronoun, profile, personality, scale, saving]);
 
   return {
     loading,
@@ -97,14 +97,14 @@ export function useCharacterSettings() {
     setScale,
     profile,
     setProfile,
+    personality,
+    setPersonality,
     age,
     setAge,
     gender,
     setGender,
     firstPersonPronoun,
     setFirstPersonPronoun,
-    ocean,
-    setOcean,
     saving,
     saved,
     handleSave,
