@@ -943,10 +943,12 @@ function buildRpcMethods() {
       input: z.object({
         personaId: z.string(),
         text: z.string().min(1),
+        contextSessionUuid: z.string().optional(),
       }),
-      handler: async ({ personaId, text }) => {
+      handler: async ({ personaId, text, contextSessionUuid }) => {
         if (!activeSessions.has(personaId)) {
-          return { success: false as const, error: "No active session" };
+          // Auto-start session with optional context
+          await startSession(personaId, contextSessionUuid);
         }
         const queue = textQueues.get(personaId);
         if (!queue) {
@@ -1078,6 +1080,45 @@ function buildRpcMethods() {
       handler: async ({ workspacePath, name }) => {
         const manager = new WorktreeManager(workspacePath);
         return await manager.status(name);
+      },
+    }),
+    "get-current-branch": rpc.method({
+      description: "Resolve the current git branch for a workspace",
+      input: z.object({
+        workspacePath: z.string(),
+        worktreeName: z.string().nullable(),
+      }),
+      handler: async ({ workspacePath, worktreeName }) => {
+        const branchName = await resolveCurrentBranch(workspacePath, worktreeName);
+        if (!branchName) {
+          return { success: false as const, error: "Not a git repository or branch could not be resolved" };
+        }
+        return { success: true as const, branchName };
+      },
+    }),
+    "list-sessions": rpc.method({
+      description: "List past sessions for a persona on a branch",
+      input: z.object({
+        workspacePath: z.string(),
+        personaId: z.string(),
+        branchName: z.string(),
+      }),
+      handler: async ({ workspacePath, personaId, branchName }) => {
+        const sessions = await persistence.list(workspacePath, personaId, branchName);
+        return { success: true as const, sessions };
+      },
+    }),
+    "get-session-logs": rpc.method({
+      description: "Read the full log entries for a past session",
+      input: z.object({
+        workspacePath: z.string(),
+        personaId: z.string(),
+        branchName: z.string(),
+        uuid: z.string(),
+      }),
+      handler: async ({ workspacePath, personaId, branchName, uuid }) => {
+        const entries = await persistence.read(workspacePath, personaId, branchName, uuid);
+        return { success: true as const, entries };
       },
     }),
   };
