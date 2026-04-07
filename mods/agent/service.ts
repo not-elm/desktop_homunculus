@@ -351,30 +351,6 @@ async function interruptSession(personaId: string): Promise<void> {
   }
 }
 
-const SESSION_PREF_PREFIX = "agent::session::";
-
-async function loadSavedSession(
-  personaId: string,
-  runtime: AgentSettings["runtime"],
-): Promise<string | null> {
-  return (
-    (await preferences.load<string>(
-      `${SESSION_PREF_PREFIX}${runtime}::${personaId}`,
-    )) ?? null
-  );
-}
-
-function saveSession(
-  personaId: string,
-  runtime: AgentSettings["runtime"],
-  sessionId: string | null,
-): void {
-  preferences.save(
-    `${SESSION_PREF_PREFIX}${runtime}::${personaId}`,
-    sessionId,
-  );
-}
-
 interface UserInput {
   text: string;
   source: "voice" | "text";
@@ -387,7 +363,7 @@ async function runSession(
   settings: AgentSettings,
   resolvedKey: ResolvedPttKey | null,
 ): Promise<void> {
-  let sessionId = await loadSavedSession(personaId, settings.runtime);
+  let sessionId: string | null = null;
   const signal = sessionAbort.signal;
 
   try {
