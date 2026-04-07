@@ -19,6 +19,7 @@ import { buildPersonaPrompt, type WorktreeContext } from "./lib/prompt.ts";
 import { WorktreeManager, WORKTREE_NAME_PATTERN } from "./lib/worktree-manager.ts";
 import { gitExec, isGitRepo, currentBranch, listBranches } from "./lib/git.ts";
 import { sanitizeForTts } from "./lib/tts.ts";
+import { SessionPersistence, type SessionHandle } from "./lib/session-persistence.ts";
 import { mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import path from "node:path";
@@ -31,6 +32,9 @@ const pendingQuestions = new Map<string, Deferred<Record<string, string>>>();
 const pendingInterrupts = new Map<string, Deferred<void>>();
 const textQueues = new Map<string, AsyncQueue<string>>();
 const textFocusedPersonas = new Set<string>();
+
+const persistence = new SessionPersistence();
+const activeSessionHandles = new Map<string, SessionHandle>();
 
 let appServerProcess: CodexAppServerProcess | null = null;
 
@@ -147,6 +151,21 @@ async function startSession(personaId: string): Promise<void> {
   const prompt = buildPersonaPrompt(persona, worktreeCtx);
   const runtime = createRuntime(settings, prompt, currentApiKey, workDir);
 
+  const basePath = settings.workspaces.paths[selection.workspaceIndex];
+  const branchName = basePath
+    ? await resolveCurrentBranch(basePath, selection.worktreeName)
+    : null;
+
+  if (basePath && branchName) {
+    const handle = await persistence.create({
+      workspacePath: basePath,
+      personaId,
+      branchName,
+    });
+    activeSessionHandles.set(personaId, handle);
+    persistence.cleanup(basePath, personaId).catch(() => {});
+  }
+
   const sessionAbort = new AbortController();
   activeSessions.set(personaId, sessionAbort);
   textQueues.set(personaId, new AsyncQueue<string>());
@@ -252,6 +271,24 @@ async function readWorktreeBaseBranch(worktreePath: string): Promise<string> {
   }
 }
 
+/** Resolve the current git branch for session scoping. */
+async function resolveCurrentBranch(
+  workspacePath: string,
+  worktreeName: string | null,
+): Promise<string | null> {
+  try {
+    if (worktreeName) {
+      const manager = new WorktreeManager(workspacePath);
+      const worktrees = await manager.list();
+      const wt = worktrees.find((w) => w.name === worktreeName);
+      return wt?.branch ?? null;
+    }
+    return await currentBranch(workspacePath);
+  } catch {
+    return null;
+  }
+}
+
 function createRuntime(
   settings: AgentSettings,
   prompt: string,
@@ -271,6 +308,13 @@ function createRuntime(
 async function stopSession(personaId: string): Promise<void> {
   const controller = activeSessions.get(personaId);
   if (!controller) return;
+
+  const handle = activeSessionHandles.get(personaId);
+  if (handle) {
+    await persistence.close(handle).catch(() => {});
+    activeSessionHandles.delete(personaId);
+  }
+
   controller.abort();
   const queue = textQueues.get(personaId);
   if (queue) {
@@ -356,6 +400,15 @@ async function runSession(
   } finally {
     activeSessions.delete(personaId);
     textFocusedPersonas.delete(personaId);
+
+    const handle = activeSessionHandles.get(personaId);
+    if (handle) {
+      if (!signal.aborted) {
+        await persistence.close(handle).catch(() => {});
+      }
+      activeSessionHandles.delete(personaId);
+    }
+
     emitStatus(personaId, "idle", "session-ended");
   }
 }
@@ -832,22 +885,19 @@ function emitStatus(personaId: string, state: AgentStatus, reason?: string): voi
 }
 
 function emitLog(personaId: string, type: string, message: string): void {
-  signals.send("agent:log", {
-    personaId,
-    type,
-    message,
-    timestamp: Date.now(),
-  });
+  const entry = { type, message, timestamp: Date.now() };
+  signals.send("agent:log", { personaId, ...entry });
+
+  const handle = activeSessionHandles.get(personaId);
+  if (handle) persistence.append(handle, entry);
 }
 
 function emitUserLog(personaId: string, text: string, source: "voice" | "text"): void {
-  signals.send("agent:log", {
-    personaId,
-    type: "user",
-    message: text,
-    source,
-    timestamp: Date.now(),
-  });
+  const entry = { type: "user" as const, message: text, timestamp: Date.now(), source };
+  signals.send("agent:log", { personaId, ...entry });
+
+  const handle = activeSessionHandles.get(personaId);
+  if (handle) persistence.append(handle, entry);
 }
 
 function emitInterruptLog(personaId: string): void {
