@@ -30,7 +30,7 @@ const character = await Vrm.spawn("my-mod:character", {
   },
   persona: {
     profile: "A cheerful virtual assistant who loves to help.",
-    ocean: { openness: 0.8, extraversion: 0.7 },
+    personality: "Curious and open-minded, speaks with enthusiasm",
     metadata: {},
   },
 });
