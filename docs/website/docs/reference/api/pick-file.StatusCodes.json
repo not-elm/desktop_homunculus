@@ -1,0 +1,1 @@
+{"responses":{"200":{"description":"File selection result","content":{"application/json":{"schema":{"type":"object","description":"Response from the single file picker dialog.","properties":{"path":{"type":["string","null"],"description":"The selected file path, or `null` if the user cancelled."}},"title":"PickFileResponse"}}}}}}

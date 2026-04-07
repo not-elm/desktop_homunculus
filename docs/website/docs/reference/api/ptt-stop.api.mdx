@@ -1,0 +1,70 @@
+---
+id: ptt-stop
+title: "Stop a PTT recording session and return the recognition result."
+description: "Stops recording, runs Whisper inference on the captured audio,"
+sidebar_label: "Stop a PTT recording session and return the recognition result."
+hide_title: true
+hide_table_of_contents: true
+api: eJy1VU1v4zYQ/SuDOSUA13a6aQ86dYEC3QApaiRue0iNBU2OJO5SJJccZTc19N+LkeWvddqeerJFzQxn3rz3tEXWTcHqCQszrhVaKia7xC4GrPCRYyqQycRsXWgU5D4U+KN1JVEGF2rKFAxBDMAtgdGJ+0wWdG9dVH8GHSxk4j6HMgZw1uFQf4YKY6Ks5eHOYoWJ+UPhmFBh0ll3xJSluS0G3RFWWKgUF8MHZ1Ghkw6T5hYVZvrcu0wWK849KSympU5jtUV+SWMmZxcaVFjH3GnGCvveWRyGtSSXFEOhIvHfLRbyc47DA5nYBCdPkKn0nlGhiYEpsETrlLwz4yDzj0VStpctxM1HMpL4bW2pB7EGDcWFxhOURGTaEffp1tnZjE/I9FUqseuosO4EMa9D0+uGZIspC7DsdiMd3rwCx3kvPxGTYbIQszRhXO3Iwj4fTLQ0w0Htrv/PaquW9jP8RRYkaZd96PpYIvTdhvLpfmzsN54ui+6TIdZ1IYY6xw4EGyoMhXVmuCpkYrBFQf3D7fUMh/FS9jRSmneI4zDI+e3i9nLfjzueQYgMdeyDlbZvb15hxj6SvibZDVzJcBZiz9eS8/1rbLo76KbWzpMd++uI2ziKIBYeBcAtVjgvzPPEPN8euT/MJ5EUys97hfTZY4Utc6rmcx+N9m0sXL29WSwuMLyX12DpmXxMnXBYZOBCHceNTEi9j10fTO/7Au+Wd69wpXzimOAk7P1qtZRYqGMGkUeO3rvQwO8Pv4BpddZGFK3gC22eHX0panIKEKPoYqbZpCttRn5Nsg+RyXeokDrtZEzyXcqxybqTpn9s5HhmYieQe2coFDpJv/95ef/m7WzxJgb/IiEC2m6Im9litpAjQb3T4SRLvA80LFerowHCtAQ4Gtvoa/nCH2bf4rU9+sX/b6uTqERx8+S1CzLiyJDtRKyd4SuxXFRYnRnryK61QiGQRG63G13ot+yHQY4/95RfsHpaK3zW2WlRqTDQuiL/LVa19oX+Zf6rh8nKruGfmp0OdXhBucb38oQKP9HL+XdgWA8KW9KW8tjFLuCdMZT4JPXCoYXxB80tf31c4TD8DaJtcqc=
+sidebar_class_name: "post api-method"
+info_path: reference/api/homunculus-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Stop a PTT recording session and return the recognition result."}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/stt/ptt/{session_id}/stop"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Stops recording, runs Whisper inference on the captured audio,
+and returns the transcription.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./ptt-stop.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./ptt-stop.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./ptt-stop.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

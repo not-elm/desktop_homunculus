@@ -1,0 +1,70 @@
+---
+id: ptt-start
+title: "Start a PTT recording session."
+description: "Returns a session ID that must be passed to the stop endpoint."
+sidebar_label: "Start a PTT recording session."
+hide_title: true
+hide_table_of_contents: true
+api: eJzFVU1vGzcQ/SvEnGlJsdMe9tS0KRoBDiJYantwhWLEHWuZ8CvkrGxF2P9ezK5kryKjpwLVRYshZ/j43pvhARi3Bap7KMyw1lBTMdkmtjFABXfEbQ5FoSpUio1Bzd8rbpCVbwurDamEpVCtOCpuSBWOSVGoU7SBJ3+F+YPCoNCw3dFzCXqyhYtWlpUtCluOHtkadG6vDAZDzlE9AQ0xUUZBMq+hgsT8d2HMDBoyfW2p8M+x3kN1ABMDU2D5xJScNX3W9HORSxygmIY8yhfvE0EFcfOZjNT5/rZ9VRX7QFEPMav+RBu2CtVitTrdQdClLPjYUpHKDsO2xS2NTimcbdhCp8HHmtzSfntl9XsMfza2JMqqT1HFfiO1w2wxcJFDKbRe1GIb9qBhg4VAQ/HoHGjwVNvWgwaHeUtXu5srbvMmjgIiMVt2gmDJ/PEZWCdxT7HlJZkywmkD05YyaHiI2SMPoR/fynE2WC94Zl33UnbBvBTSPg0sQieLIpjNVEPFuaU+UFIMZSDvejaTv3Mmlke79ApQDfq/k3k4utcXVWmNoVIeWjcoLMdNYAz5Ho6yz2vh71z4l6VXtH2mrG1tDa+xdAIjNHUa3l5fXzIxDzt0tlYnj6k49odI98Ps5jKtF1eFyAp3aB1u3JBpTY6piYEU5RxzD8sTN7HvsliEsYTcQAXTwjxNzNNT4xXKO8oyMA7QZgcVNMypmk5dNOiaWLi6eTObXXB+K8uqph25mLyI2K01iHJ3L6386xP65Oi8nV7IHHXRyf9nlp11Gmx4iL0QR5o/RN8G07q2qHeL+QWs91S+yMgabfuwWi1kb+8OcVyOzskA+OPuozINZjRMuWj1SJudpceiFba1jVphqJWPmSZHq6LprRrQC5IQmZz0Jnm0Qhw5n3LcZvQC+qethCcmetHTWUNiipf0298Wt1c3k9lVDG4vW0SG4RJvJrPJTEKinccwyuotdhxdmUzMtdxkNMTO6BgN0v958h/7iOmJp8mhDXK93m+HozWHB0vLqyC27O251iAOlMXDQUbj79l1nYS/tpT3UN2vNfTTdCPmuF93GhrCmnLv5y+0hwp+GSi4WgkE2e5agXIxcDp9ynhnDCX+173rUYctPi1XMrqPb5e4GirI+CgzBx+hgv7pG4ZndRhiZx0x1JTfPy7nr6M=
+sidebar_class_name: "post api-method"
+info_path: reference/api/homunculus-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Start a PTT recording session."}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/stt/ptt/start"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Returns a session ID that must be passed to the stop endpoint.
+If an active session exists, it is automatically cancelled.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  parameters={undefined}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./ptt-start.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./ptt-start.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

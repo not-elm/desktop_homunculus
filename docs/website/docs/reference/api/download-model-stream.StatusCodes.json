@@ -1,0 +1,1 @@
+{"responses":{"200":{"description":"NDJSON stream of download progress","content":{"application/x-ndjson":{}}},"409":{"description":"Download already in progress"},"422":{"description":"Invalid model size"}}}
