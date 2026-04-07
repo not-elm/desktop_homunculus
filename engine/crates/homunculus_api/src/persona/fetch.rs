@@ -5,6 +5,15 @@ use bevy_flurx::prelude::*;
 use homunculus_core::prelude::{Persona, PersonaId, PersonaIndex};
 
 impl PersonaApi {
+    /// Resolves a [`PersonaId`] to its ECS entity.
+    pub async fn resolve(&self, persona_id: PersonaId) -> ApiResult<Entity> {
+        self.0
+            .schedule(move |task| async move {
+                task.will(Update, once::run(resolve).with(persona_id)).await
+            })
+            .await?
+    }
+
     /// Retrieves a single persona by its ID.
     pub async fn get(&self, persona_id: PersonaId) -> ApiResult<Persona> {
         self.0
@@ -20,6 +29,10 @@ impl PersonaApi {
             .schedule(move |task| async move { task.will(Update, once::run(list)).await })
             .await
     }
+}
+
+fn resolve(In(persona_id): In<PersonaId>, index: Res<PersonaIndex>) -> ApiResult<Entity> {
+    index.get(&persona_id).ok_or(ApiError::EntityNotFound)
 }
 
 fn get(

@@ -1,6 +1,7 @@
 use axum::extract::FromRef;
 use homunculus_api::assets::AssetsApi;
 use homunculus_api::mods::ModsApi;
+use homunculus_api::persona::PersonaApi;
 use homunculus_api::preferences::PrefsApi;
 use homunculus_api::prelude::{
     ApiReactor, AppApi, AudioBgmApi, AudioSeApi, CameraApi, EffectsApi, EntitiesApi, SettingsApi,
@@ -18,6 +19,7 @@ pub struct HttpState {
     pub app: AppApi,
     pub audio_se: AudioSeApi,
     pub audio_bgm: AudioBgmApi,
+    pub persona: PersonaApi,
     pub vrm: VrmApi,
     pub vrma: VrmAnimationApi,
     pub prefs: PrefsApi,
@@ -48,6 +50,7 @@ impl HttpState {
             app: AppApi::from(reactor.clone()),
             audio_se: AudioSeApi::from(reactor.clone()),
             audio_bgm: AudioBgmApi::from(reactor.clone()),
+            persona: PersonaApi::from(reactor.clone()),
             vrm: VrmApi::from(reactor.clone()),
             vrma: VrmAnimationApi::from(reactor.clone()),
             prefs: PrefsApi::from(reactor.clone()),

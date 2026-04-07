@@ -69,8 +69,8 @@ pub mod prelude {
 }
 
 use crate::route::{
-    assets, audio, coordinates, displays, info, preferences, settings, shadow_panel, stt, vrm,
-    webviews,
+    assets, audio, coordinates, displays, info, persona, preferences, settings, shadow_panel, stt,
+    vrm, webviews,
 };
 use crate::state::HttpState;
 use axum::Router;
@@ -97,6 +97,7 @@ use utoipa_axum::{router::OpenApiRouter, routes};
     tags(
         (name = "app", description = "Application lifecycle"),
         (name = "audio", description = "Sound effects and background music"),
+        (name = "personas", description = "Persona management"),
         (name = "vrm", description = "VRM model management"),
         (name = "entities", description = "Entity transform and tween control"),
         (name = "webviews", description = "WebView management"),
@@ -215,6 +216,7 @@ fn build_openapi_router() -> OpenApiRouter<HttpState> {
         .nest("/settings", settings_router())
         .nest("/shadow-panel", shadow_panel_router())
         .nest("/entities", entities_router())
+        .nest("/personas", persona_router())
         .nest("/vrm", vrm_router())
         .nest("/coordinates", coordinates_router())
         .nest("/preferences", preferences_router())
@@ -332,6 +334,70 @@ fn entities_id_router() -> OpenApiRouter<HttpState> {
         .routes(routes!(entities::tween::tween_position))
         .routes(routes!(entities::tween::tween_rotation))
         .routes(routes!(entities::tween::tween_scale))
+}
+
+fn persona_router() -> OpenApiRouter<HttpState> {
+    OpenApiRouter::new()
+        .routes(routes!(persona::get::list, persona::create::create))
+        .routes(routes!(persona::snapshot::snapshot))
+        .nest("/{id}", persona_id_router())
+}
+
+fn persona_id_router() -> OpenApiRouter<HttpState> {
+    OpenApiRouter::new()
+        .routes(routes!(
+            persona::get::get,
+            persona::update::patch,
+            persona::delete::delete
+        ))
+        .routes(routes!(persona::fields::get_name, persona::fields::put_name))
+        .routes(routes!(persona::fields::get_age, persona::fields::put_age))
+        .routes(routes!(
+            persona::fields::get_gender,
+            persona::fields::put_gender
+        ))
+        .routes(routes!(
+            persona::fields::get_first_person_pronoun,
+            persona::fields::put_first_person_pronoun
+        ))
+        .routes(routes!(
+            persona::fields::get_profile,
+            persona::fields::put_profile
+        ))
+        .routes(routes!(
+            persona::fields::get_personality,
+            persona::fields::put_personality
+        ))
+        .routes(routes!(persona::state::get, persona::state::put))
+        .routes(routes!(
+            persona::fields::get_metadata,
+            persona::fields::put_metadata
+        ))
+        .routes(routes!(
+            persona::fields::get_transform,
+            persona::fields::put_transform
+        ))
+        .routes(routes!(persona::events::events))
+        .routes(routes!(persona::vrm::attach, persona::vrm::detach))
+        .routes(routes!(
+            persona::vrm_ops::list_expressions,
+            persona::vrm_ops::modify_expressions,
+            persona::vrm_ops::clear_expressions
+        ))
+        .routes(routes!(persona::vrm_ops::play_vrma))
+        .routes(routes!(persona::vrm_ops::stop_vrma))
+        .routes(routes!(persona::vrm_ops::get_vrma))
+        .routes(routes!(persona::vrm_ops::get_position))
+        .routes(routes!(persona::vrm_ops::get_bone))
+        .routes(routes!(persona::vrm_ops::look_cursor))
+        .routes(routes!(persona::vrm_ops::look_target))
+        .routes(routes!(persona::vrm_ops::unlook))
+        .routes(routes!(
+            persona::vrm_ops::list_spring_bones,
+            persona::vrm_ops::patch_spring_bones
+        ))
+        .routes(routes!(persona::vrm_ops::speech_timeline))
+        .layer(axum::extract::DefaultBodyLimit::max(20 * 1024 * 1024))
 }
 
 fn vrm_router() -> OpenApiRouter<HttpState> {
@@ -463,6 +529,7 @@ mod tests {
         app.insert_non_send_resource(PrefsDatabase::open_in_memory());
         app.init_resource::<ModRegistry>();
         app.init_resource::<ModMenuMetadataList>();
+        app.init_resource::<homunculus_core::prelude::PersonaIndex>();
         let config = HomunculusConfig::default();
         let rpc_registry = Arc::new(RwLock::new(RpcRegistry::default()));
         let router = create_router(
