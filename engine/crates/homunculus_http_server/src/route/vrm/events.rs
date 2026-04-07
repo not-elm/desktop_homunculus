@@ -10,7 +10,7 @@ use homunculus_api::prelude::{ApiError, ApiReactor};
 use homunculus_core::prelude::{
     ExpressionChangeEvent, OnClickEvent, OnDragEndEvent, OnDragEvent, OnDragStartEvent,
     OnPointerCancelEvent, OnPointerMoveEvent, OnPointerOutEvent, OnPointerOverEvent,
-    OnPointerPressedEvent, OnPointerReleasedEvent, VrmEventReceiver, VrmStateChangeEvent,
+    OnPointerPressedEvent, OnPointerReleasedEvent, PersonaStateChangeEvent, VrmEventReceiver,
     VrmaFinishEvent, VrmaPlayEvent,
 };
 use serde::Serialize;
@@ -104,7 +104,7 @@ pub async fn events(
             let state_change = task
                 .will(
                     Update,
-                    once::run(observe_stream::<VrmStateChangeEvent>).with(("state-change", entity)),
+                    once::run(observe_stream::<PersonaStateChangeEvent>).with(("state-change", entity)),
                 )
                 .await;
             let expression_change = task

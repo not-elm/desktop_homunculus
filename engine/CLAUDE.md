@@ -74,7 +74,7 @@ This is the central pattern for bridging async HTTP handlers with Bevy's single-
 Events use async broadcast channels (`async-broadcast`, capacity 256 with overflow):
 - `VrmEventSender<E>` / `VrmEventReceiver<E>` — typed broadcast resources
 - `VrmEvent<E>` — wraps entity + payload
-- Event types include: `OnClickEvent`, `OnDragStartEvent`, `OnDragEvent`, `OnDragEndEvent`, `OnPointerPressedEvent`, `VrmStateChangeEvent`, `ExpressionChangeEvent`, `VrmaPlayEvent`, `VrmaFinishEvent`, `PersonaChangeEvent`
+- Event types include: `OnClickEvent`, `OnDragStartEvent`, `OnDragEvent`, `OnDragEndEvent`, `OnPointerPressedEvent`, `PersonaStateChangeEvent`, `VrmAttachedEvent`, `VrmDetachedEvent`, `PersonaDeletedEvent`, `ExpressionChangeEvent`, `VrmaPlayEvent`, `VrmaFinishEvent`, `PersonaChangeEvent`
 
 ### Core System Parameters
 

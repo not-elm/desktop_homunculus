@@ -11,8 +11,9 @@ mod vrm;
 
 pub mod prelude {
     pub use crate::events::{
-        PersonaChangeEvent, VrmEvent, VrmEventReceiver, VrmEventSender, VrmMetadata,
-        VrmStateChangeEvent, vrm::*,
+        PersonaChangeEvent, PersonaDeletedEvent, PersonaEvent, PersonaStateChangeEvent,
+        VrmAttachedEvent, VrmDetachedEvent, VrmEvent, VrmEventReceiver, VrmEventSender,
+        VrmMetadata, vrm::*,
     };
 }
 
@@ -30,8 +31,36 @@ pub struct VrmEvent<E> {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub struct VrmStateChangeEvent {
+#[serde(rename_all = "camelCase")]
+pub struct PersonaStateChangeEvent {
     pub state: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct VrmAttachedEvent {
+    pub asset_id: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct VrmDetachedEvent {
+    pub asset_id: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct PersonaDeletedEvent {
+    pub persona_id: PersonaId,
+}
+
+/// Wrapper for combined persona stream — includes source persona identity.
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct PersonaEvent<E> {
+    pub persona_id: PersonaId,
+    #[serde(flatten)]
+    pub payload: E,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -59,7 +88,10 @@ impl Plugin for HomunculusEventsPlugin {
         setup_channel::<OnPointerOverEvent>(app);
         setup_channel::<OnPointerOutEvent>(app);
         setup_channel::<OnPointerCancelEvent>(app);
-        setup_channel::<VrmStateChangeEvent>(app);
+        setup_channel::<PersonaStateChangeEvent>(app);
+        setup_channel::<VrmAttachedEvent>(app);
+        setup_channel::<VrmDetachedEvent>(app);
+        setup_channel::<PersonaDeletedEvent>(app);
         setup_channel::<VrmMetadata>(app);
         setup_channel::<ExpressionChangeEvent>(app);
         setup_channel::<VrmaPlayEvent>(app);
@@ -117,17 +149,17 @@ fn pointer<E1, E2>(
 }
 
 fn state_change(
-    tx: Res<VrmEventSender<VrmStateChangeEvent>>,
+    tx: Res<VrmEventSender<PersonaStateChangeEvent>>,
     vrms: Query<(Entity, &PersonaState), Changed<PersonaState>>,
 ) {
     for (vrm, state) in vrms.iter() {
         tx.try_broadcast(VrmEvent {
             vrm,
-            payload: VrmStateChangeEvent {
+            payload: PersonaStateChangeEvent {
                 state: state.to_string(),
             },
         })
-        .output_log_if_error("Failed to broadcast VrmStateChangeEvent");
+        .output_log_if_error("Failed to broadcast PersonaStateChangeEvent");
     }
 }
 
