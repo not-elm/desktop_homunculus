@@ -146,3 +146,28 @@ Continue creating this issue? (yes / no)
 ```
 
 User declines → stop. User continues → proceed to brainstorming (step 5).
+
+## Spec-Level Brainstorming
+
+Delegate to `superpowers:brainstorming` via the Skill tool. Pass the initial structure as args, prefixed with:
+
+> Refine this proposal at the specification level. Focus on clarifying the problem, sharpening the proposed solution, and identifying the correct scope. Do NOT design implementation — this is about what the feature should do, not how to build it. The output should be a refined version of the proposal fields (Type, Problem, Proposed Solution, Affected Area, Alternatives Considered).
+
+The brainstorming skill runs its normal process:
+
+1. Explore project context
+2. Ask clarifying questions (one at a time)
+3. Propose 2-3 approaches (for the feature itself, not implementation)
+4. Present refined spec, get user approval
+5. Write spec to `docs/superpowers/specs/`
+
+### Scoping Boundary
+
+| In scope | Out of scope |
+|----------|-------------|
+| What problem does this solve? | Which crate implements it? |
+| What should the user experience be? | What data structures are needed? |
+| What are the constraints/edge cases? | How do we test it? |
+| What alternatives were considered? | What's the implementation plan? |
+
+After brainstorming completes, resume at step 6 — building the final issue draft from the refined spec.
