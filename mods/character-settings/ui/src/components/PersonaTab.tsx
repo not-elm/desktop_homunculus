@@ -17,6 +17,8 @@ interface PersonaTabProps {
   onFirstPersonPronounChange: (pronoun: string) => void;
   profile: string;
   onProfileChange: (profile: string) => void;
+  personality: string;
+  onPersonalityChange: (personality: string) => void;
 }
 
 const GENDER_OPTIONS: { value: Gender; label: string }[] = [
@@ -38,6 +40,8 @@ export function PersonaTab({
   onFirstPersonPronounChange,
   profile,
   onProfileChange,
+  personality,
+  onPersonalityChange,
 }: PersonaTabProps) {
   return (
     <div className="settings-section">
@@ -89,6 +93,17 @@ export function PersonaTab({
           value={profile}
           onChange={(e) => onProfileChange(e.target.value)}
           placeholder="Character background and profile description..."
+        />
+      </label>
+
+      <label className="settings-label">
+        Personality
+        <textarea
+          className="settings-textarea"
+          rows={3}
+          value={personality}
+          onChange={(e) => onPersonalityChange(e.target.value)}
+          placeholder="e.g. Sarcastic but caring, uses formal speech"
         />
       </label>
 

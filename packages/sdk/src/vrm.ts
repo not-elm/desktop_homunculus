@@ -10,31 +10,6 @@ import {entities} from "./entities";
 
 // --- Persona types ---
 
-/**
- * Big Five personality traits (OCEAN model).
- *
- * @example
- * ```typescript
- * const ocean: Ocean = {
- *   openness: 0.8,
- *   conscientiousness: 0.6,
- *   extraversion: 0.7,
- * };
- * ```
- */
-export interface Ocean {
-    /** Openness (0.0=conservative, 1.0=curious) */
-    openness?: number;
-    /** Conscientiousness (0.0=spontaneous, 1.0=organized) */
-    conscientiousness?: number;
-    /** Extraversion (0.0=introverted, 1.0=extroverted) */
-    extraversion?: number;
-    /** Agreeableness (0.0=independent, 1.0=cooperative) */
-    agreeableness?: number;
-    /** Neuroticism (0.0=stable, 1.0=sensitive) */
-    neuroticism?: number;
-}
-
 /** Gender identity for a VRM character. */
 export type Gender = "male" | "female" | "other" | "unknown";
 
@@ -49,7 +24,7 @@ export type Gender = "male" | "female" | "other" | "unknown";
  *   gender: "female",
  *   firstPersonPronoun: "わたし",
  *   profile: "A cheerful virtual assistant",
- *   ocean: { openness: 0.8, extraversion: 0.7 },
+ *   personality: "Friendly and curious, speaks politely but with enthusiasm",
  *   metadata: {},
  * };
  * ```
@@ -65,8 +40,8 @@ export interface Persona {
     firstPersonPronoun?: string | null;
     /** Character profile/background description. */
     profile: string;
-    /** Big Five personality parameters. */
-    ocean: Ocean;
+    /** Free-text personality description for agent prompts. */
+    personality?: string | null;
     /** Extension metadata for MODs. */
     metadata: Record<string, unknown>;
 }
@@ -474,7 +449,7 @@ export class Vrm {
      * const vrm = await Vrm.findByName("MyAvatar");
      * await vrm.setPersona({
      *   profile: "A cheerful assistant",
-     *   ocean: { openness: 0.8, extraversion: 0.7 },
+     *   personality: "Friendly and curious, uses polite language",
      *   metadata: {},
      * });
      * ```
