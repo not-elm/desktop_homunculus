@@ -17,8 +17,7 @@ const persona = await character.persona();
 
 console.log("Profile:", persona.profile);
 console.log("Personality:", persona.personality);
-console.log("Openness:", persona.ocean.openness);
 console.log("Metadata:", persona.metadata);
 ```
 
-Returns a [`Persona`](./types#persona) object containing the profile description, personality string, OCEAN trait values, and extension metadata. Use [`setPersona`](./setPersona) to update it.
+Returns a [`Persona`](./types#persona) object containing the profile description, personality text, and extension metadata. Use [`setPersona`](./setPersona) to update it.
