@@ -65,3 +65,30 @@ Run checks in order. Abort on first failure:
 |-------|---------|---------|
 | Git repository | `git rev-parse --git-dir` | Abort: "Not a git repository." |
 | `gh` authenticated | `gh auth status` | Abort: "Not authenticated. Run `gh auth login`." |
+
+## Initial Structuring
+
+Take the user's free-form input (any language) and produce a best-effort English draft.
+
+**Title**: Generate a concise English title. Priority: meaning preservation > imperative mood > under 80 characters.
+
+**Body fields**:
+
+| Field | Required | Output format |
+|-------|----------|---------------|
+| `## Type` | Yes | Exact literal: `New feature` or `Improvement to existing feature` |
+| `## Problem / Current Behavior` | Yes | Free-form English prose |
+| `## Proposed Solution` | Yes | Free-form English prose |
+| `## Affected Area` | Yes | Multi-select, slash-separated from: `engine / packages / mods / docs / website / ci/build / other` |
+| `## Alternatives Considered` | No | Include if user mentioned alternatives. Otherwise omit section entirely |
+
+### Rules
+
+- Do NOT include boilerplate checklists (`- [ ] I searched existing issues...`).
+- Do NOT include HTML comments.
+- If input is too vague to fill a required field meaningfully, produce a best-effort draft. The brainstorming phase (step 5) will refine it.
+
+This initial structure serves two purposes:
+
+1. Provides keywords for duplicate detection (step 4)
+2. Provides starting material for the brainstorming delegation (step 5)
