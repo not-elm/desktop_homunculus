@@ -36,7 +36,9 @@ export function WorktreeNode({
   const [showDetail, setShowDetail] = useState(false);
   const anchorRef = useRef<HTMLDivElement>(null);
 
-  const overflowItems = buildOverflowItems(() => setShowDetail(true), onRemove);
+  const overflowItems = buildOverflowItems(() => {
+    requestAnimationFrame(() => setShowDetail(true));
+  }, onRemove);
 
   return (
     <Popover open={showDetail} onOpenChange={setShowDetail}>
