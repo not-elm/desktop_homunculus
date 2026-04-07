@@ -3,10 +3,10 @@ import { buildCharacterPrompt } from "./prompt.ts";
 import type { Persona } from "./types.ts";
 
 const basePersona: Persona = {
-  name: "テスト",
+  name: "TestChar",
   age: 25,
   gender: "female",
-  firstPersonPronoun: "わたし",
+  firstPersonPronoun: "watashi",
   profile: "",
   personality: null,
 };
@@ -15,27 +15,27 @@ describe("buildCharacterPrompt", () => {
   describe("basic persona fields", () => {
     it("includes character name", () => {
       const prompt = buildCharacterPrompt(basePersona);
-      expect(prompt).toContain("「テスト」");
+      expect(prompt).toContain('"TestChar"');
     });
 
     it("includes age", () => {
       const prompt = buildCharacterPrompt(basePersona);
-      expect(prompt).toContain("年齢: 25歳");
+      expect(prompt).toContain("Age: 25");
     });
 
-    it("shows 不詳 when age is null", () => {
+    it("shows Unknown when age is null", () => {
       const prompt = buildCharacterPrompt({ ...basePersona, age: null });
-      expect(prompt).toContain("年齢: 不詳");
+      expect(prompt).toContain("Age: Unknown");
     });
 
     it("includes gender label", () => {
       const prompt = buildCharacterPrompt(basePersona);
-      expect(prompt).toContain("性別: 女性");
+      expect(prompt).toContain("Gender: Female");
     });
 
     it("includes first-person pronoun instruction", () => {
       const prompt = buildCharacterPrompt(basePersona);
-      expect(prompt).toContain("「わたし」");
+      expect(prompt).toContain('"watashi"');
     });
 
     it("omits pronoun line when null", () => {
@@ -43,7 +43,7 @@ describe("buildCharacterPrompt", () => {
         ...basePersona,
         firstPersonPronoun: null,
       });
-      expect(prompt).not.toContain("一人称");
+      expect(prompt).not.toContain("first-person pronoun");
     });
   });
 
@@ -51,14 +51,14 @@ describe("buildCharacterPrompt", () => {
     it("includes profile when non-empty", () => {
       const prompt = buildCharacterPrompt({
         ...basePersona,
-        profile: "明るくて元気な女の子",
+        profile: "A cheerful girl",
       });
-      expect(prompt).toContain("プロフィール: 明るくて元気な女の子");
+      expect(prompt).toContain("Profile: A cheerful girl");
     });
 
     it("omits profile when empty string", () => {
       const prompt = buildCharacterPrompt({ ...basePersona, profile: "" });
-      expect(prompt).not.toContain("プロフィール:");
+      expect(prompt).not.toContain("Profile:");
     });
   });
 
@@ -82,43 +82,43 @@ describe("buildCharacterPrompt", () => {
     it("includes personality text under ## Personality header", () => {
       const prompt = buildCharacterPrompt({
         ...basePersona,
-        personality: "皮肉っぽいが思いやりがある",
+        personality: "Sarcastic but caring",
       });
       expect(prompt).toContain("## Personality");
-      expect(prompt).toContain("皮肉っぽいが思いやりがある");
+      expect(prompt).toContain("Sarcastic but caring");
     });
 
-    it("places personality before spoken style section", () => {
+    it("places personality before response style section", () => {
       const prompt = buildCharacterPrompt({
         ...basePersona,
-        personality: "元気で明るい",
+        personality: "Cheerful and bright",
       });
       const personalityIdx = prompt.indexOf("## Personality");
-      const styleIdx = prompt.indexOf("## 応答スタイル");
+      const styleIdx = prompt.indexOf("## Response Style");
       expect(personalityIdx).toBeLessThan(styleIdx);
     });
 
     it("places profile before personality", () => {
       const prompt = buildCharacterPrompt({
         ...basePersona,
-        profile: "魔法使いの見習い",
-        personality: "好奇心旺盛で話好き",
+        profile: "An apprentice wizard",
+        personality: "Curious and talkative",
       });
-      const profileIdx = prompt.indexOf("プロフィール:");
+      const profileIdx = prompt.indexOf("Profile:");
       const personalityIdx = prompt.indexOf("## Personality");
       expect(profileIdx).toBeLessThan(personalityIdx);
     });
   });
 
   describe("existing sections", () => {
-    it("includes spoken style section", () => {
+    it("includes response style section", () => {
       const prompt = buildCharacterPrompt(basePersona);
-      expect(prompt).toContain("## 応答スタイル");
+      expect(prompt).toContain("## Response Style");
     });
 
-    it("includes few-shot section", () => {
+    it("includes response examples section", () => {
       const prompt = buildCharacterPrompt(basePersona);
-      expect(prompt).toContain("## 応答の例");
+      expect(prompt).toContain("## Response Examples");
     });
 
     it("includes webview section", () => {
