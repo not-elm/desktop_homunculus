@@ -42,6 +42,7 @@ mod effects;
 pub mod entities;
 mod error;
 pub mod mods;
+pub mod persona;
 pub mod preferences;
 mod reactor;
 mod settings;
@@ -71,6 +72,7 @@ pub mod prelude {
         entities::*,
         error::*,
         mods::ModsApi,
+        persona::PersonaApi,
         preferences::*,
         reactor::*,
         settings::*,

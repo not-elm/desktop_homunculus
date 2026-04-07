@@ -290,7 +290,10 @@ impl PrefsDatabase {
         };
         let persona = row_to_persona(row)?;
         let metadata = self.load_persona_metadata(&persona.id)?;
-        Ok(Some(Persona { metadata, ..persona }))
+        Ok(Some(Persona {
+            metadata,
+            ..persona
+        }))
     }
 
     /// Lists all personas with their metadata.
@@ -304,15 +307,17 @@ impl PrefsDatabase {
         for row_result in rows {
             let persona = row_result?;
             let metadata = self.load_persona_metadata(&persona.id)?;
-            personas.push(Persona { metadata, ..persona });
+            personas.push(Persona {
+                metadata,
+                ..persona
+            });
         }
         Ok(personas)
     }
 
     /// Deletes a persona by ID. Metadata is cascade-deleted by the foreign key constraint.
     pub fn delete_persona(&self, id: &str) -> Result<(), rusqlite::Error> {
-        self.0
-            .execute("DELETE FROM personas WHERE id = ?", [id])?;
+        self.0.execute("DELETE FROM personas WHERE id = ?", [id])?;
         Ok(())
     }
 
@@ -968,7 +973,10 @@ mod test {
         assert_eq!(loaded.profile, "A cheerful mascot");
         assert_eq!(loaded.personality, Some("friendly".to_string()));
         assert_eq!(loaded.vrm_asset_id, Some("vrm:elmer".to_string()));
-        assert_eq!(loaded.metadata.get("mood"), Some(&serde_json::json!("happy")));
+        assert_eq!(
+            loaded.metadata.get("mood"),
+            Some(&serde_json::json!("happy"))
+        );
     }
 
     #[test]
@@ -1114,7 +1122,10 @@ mod test {
 
         // The IDs should be sanitized versions of the asset IDs
         // "vrm:elmer" -> "vrm-elmer", "vrm:bob" -> "vrm-bob"
-        let elmer = personas.iter().find(|p| p.name == Some("Elmer".to_string())).unwrap();
+        let elmer = personas
+            .iter()
+            .find(|p| p.name == Some("Elmer".to_string()))
+            .unwrap();
         assert_eq!(elmer.id.0, "vrm-elmer");
         assert_eq!(elmer.age, Some(10));
         assert_eq!(elmer.gender, Gender::Female);
@@ -1122,9 +1133,15 @@ mod test {
         assert_eq!(elmer.profile, "A cute mascot");
         assert_eq!(elmer.personality, Some("cheerful and kind".to_string()));
         assert_eq!(elmer.vrm_asset_id, Some("vrm:elmer".to_string()));
-        assert_eq!(elmer.metadata.get("theme"), Some(&serde_json::json!("pink")));
+        assert_eq!(
+            elmer.metadata.get("theme"),
+            Some(&serde_json::json!("pink"))
+        );
 
-        let bob = personas.iter().find(|p| p.name == Some("Bob".to_string())).unwrap();
+        let bob = personas
+            .iter()
+            .find(|p| p.name == Some("Bob".to_string()))
+            .unwrap();
         assert_eq!(bob.id.0, "vrm-bob");
         assert_eq!(bob.gender, Gender::Male);
         assert_eq!(bob.vrm_asset_id, Some("vrm:bob".to_string()));
@@ -1179,8 +1196,12 @@ mod test {
         };
         db.save_persona(&persona).unwrap();
 
-        db.save_persona_metadata(&PersonaId::new("meta-test"), "key1", &serde_json::json!("val1"))
-            .unwrap();
+        db.save_persona_metadata(
+            &PersonaId::new("meta-test"),
+            "key1",
+            &serde_json::json!("val1"),
+        )
+        .unwrap();
         db.save_persona_metadata(&PersonaId::new("meta-test"), "key2", &serde_json::json!(42))
             .unwrap();
 

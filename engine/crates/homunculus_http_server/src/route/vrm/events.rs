@@ -104,7 +104,8 @@ pub async fn events(
             let state_change = task
                 .will(
                     Update,
-                    once::run(observe_stream::<PersonaStateChangeEvent>).with(("state-change", entity)),
+                    once::run(observe_stream::<PersonaStateChangeEvent>)
+                        .with(("state-change", entity)),
                 )
                 .await;
             let expression_change = task

@@ -55,9 +55,7 @@ fn set_linked_vrm(
     if !webviews.contains(webview) {
         return Err(ApiError::WebviewNotFound(webview));
     }
-    let persona = personas
-        .get(vrm)
-        .map_err(|_| ApiError::EntityNotFound)?;
+    let persona = personas.get(vrm).map_err(|_| ApiError::EntityNotFound)?;
     commands
         .entity(webview)
         .try_insert(LinkedPersona(persona.id.clone()));
