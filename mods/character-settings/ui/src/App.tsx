@@ -6,8 +6,7 @@ export function App() {
   const {
     loading,
     name,
-    displayName,
-    setDisplayName,
+    setName,
     tab,
     setTab,
     scale,
@@ -55,7 +54,7 @@ export function App() {
       {/* Header */}
       <div className="settings-header">
         <h1 className="settings-title">Settings</h1>
-        <span className="settings-entity-name">{displayName || name}</span>
+        <span className="settings-entity-name">{name}</span>
       </div>
 
       {/* Tabs */}
@@ -76,8 +75,7 @@ export function App() {
         {tab === "persona" && (
           <PersonaTab
             name={name}
-            displayName={displayName}
-            onDisplayNameChange={setDisplayName}
+            onNameChange={setName}
             age={age}
             onAgeChange={setAge}
             gender={gender}

@@ -2,17 +2,18 @@
 
 /// <reference types="node" />
 
+import { z } from "zod";
 import { audio, Webview, webviewSource } from "@hmcs/sdk";
 import { input, output } from "@hmcs/sdk/commands";
 
 try {
-  const vrm = await input.parseMenu();
+  const { linkedPersona: personaId } = await input.parse(z.object({ linkedPersona: z.string() }));
   await Webview.open({
     source: webviewSource.local("character-settings:ui"),
     size: [1, 0.9],
     viewportSize: [900, 700],
     offset: [1.1, 0],
-    linkedVrm: vrm.entity,
+    linkedPersona: personaId,
   });
   await audio.se.play("se:open");
   output.succeed();

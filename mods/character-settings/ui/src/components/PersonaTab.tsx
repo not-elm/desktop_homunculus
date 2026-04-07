@@ -7,8 +7,7 @@ import {
 
 interface PersonaTabProps {
   name: string;
-  displayName: string;
-  onDisplayNameChange: (displayName: string) => void;
+  onNameChange: (name: string) => void;
   age: number | null;
   onAgeChange: (age: number | null) => void;
   gender: Gender;
@@ -30,8 +29,7 @@ const GENDER_OPTIONS: { value: Gender; label: string }[] = [
 
 export function PersonaTab({
   name,
-  displayName,
-  onDisplayNameChange,
+  onNameChange,
   age,
   onAgeChange,
   gender,
@@ -46,13 +44,13 @@ export function PersonaTab({
   return (
     <div className="settings-section">
       <label className="settings-label">
-        Display Name
+        Name
         <input
           type="text"
           className="settings-input"
-          value={displayName}
-          placeholder={name}
-          onChange={(e) => onDisplayNameChange(e.target.value)}
+          value={name}
+          placeholder="Name"
+          onChange={(e) => onNameChange(e.target.value)}
         />
       </label>
 

@@ -75,7 +75,7 @@ export type WorktreeState = "created" | "orphaned" | "error";
 
 /** Payload for the agent:worktree signal. */
 export interface WorktreeSignalPayload {
-  characterId: string;
+  personaId: string;
   state: WorktreeState;
   worktreeName?: string;
   workspacePath?: string;

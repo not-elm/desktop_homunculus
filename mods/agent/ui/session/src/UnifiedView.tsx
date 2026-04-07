@@ -53,7 +53,7 @@ export function UnifiedView() {
 
   // Focus reporting for PTT
   useEffect(() => {
-    if (!session.characterId) return;
+    if (!session.personaId) return;
 
     function reportFocus() {
       const el = document.activeElement;
@@ -69,7 +69,7 @@ export function UnifiedView() {
         .call({
           modName: "@hmcs/agent",
           method: "set-text-focus",
-          body: { characterId: session.characterId, focused },
+          body: { personaId: session.personaId, focused },
         })
         .catch(() => {});
     }
@@ -82,7 +82,7 @@ export function UnifiedView() {
       document.removeEventListener("focusout", reportFocus);
       document.documentElement.removeAttribute("data-input-focus");
     };
-  }, [session.characterId]);
+  }, [session.personaId]);
 
   // Empty state when no workspaces
   useEffect(() => {
