@@ -112,9 +112,12 @@ impl HomunculusMcpHandler {
         };
 
         let linked_vrm = if let Some(name) = &args.character_name {
-            match self.vrm_api.find_by_name(name.clone()).await {
-                Ok(entity) => Some(entity),
-                Err(e) => return format!("Error finding character '{name}': {e}"),
+            match self.resolve_persona_by_name(name).await {
+                Ok(persona) => match self.persona_api.resolve(persona.id).await {
+                    Ok(entity) => Some(entity),
+                    Err(e) => return format!("Error resolving character '{name}': {e}"),
+                },
+                Err(e) => return format!("Error: {e}"),
             }
         } else {
             None

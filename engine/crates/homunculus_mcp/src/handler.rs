@@ -12,8 +12,10 @@ use bevy::prelude::Entity;
 use homunculus_api::assets::AssetsApi;
 use homunculus_api::mods::ModsApi;
 use homunculus_api::prelude::{
-    ApiReactor, AudioBgmApi, AudioSeApi, EntitiesApi, VrmAnimationApi, VrmApi, WebviewApi,
+    ApiReactor, AudioBgmApi, AudioSeApi, EntitiesApi, PersonaApi, VrmAnimationApi, VrmApi,
+    WebviewApi,
 };
+use homunculus_core::prelude::{Persona, PersonaId};
 use homunculus_core::rpc_registry::RpcRegistry;
 use homunculus_utils::config::HomunculusConfig;
 use rmcp::handler::server::router::tool::ToolRouter;
@@ -56,8 +58,9 @@ pub struct HomunculusMcpHandler {
     pub(crate) audio_bgm_api: AudioBgmApi,
     pub(crate) entities_api: EntitiesApi,
     pub(crate) vrma_api: VrmAnimationApi,
-    /// Stores `Entity` as `u64` bits because `Entity` is not `Send`/`Sync`.
-    pub(crate) active_character: Arc<Mutex<Option<u64>>>,
+    pub(crate) persona_api: PersonaApi,
+    /// Stores the active persona's [`PersonaId`] for character resolution.
+    pub(crate) active_character: Arc<Mutex<Option<PersonaId>>>,
     pub(crate) config: HomunculusConfig,
     /// Tracks open webview IDs so they can be cleaned up when the MCP session ends.
     pub(crate) open_webviews: Arc<Mutex<Vec<u64>>>,
@@ -80,6 +83,7 @@ impl HomunculusMcpHandler {
             audio_bgm_api: AudioBgmApi::from(reactor.clone()),
             entities_api: EntitiesApi::from(reactor.clone()),
             vrma_api: VrmAnimationApi::from(reactor.clone()),
+            persona_api: PersonaApi::from(reactor.clone()),
             assets_api: AssetsApi::from(reactor),
             active_character: Arc::new(Mutex::new(None)),
             config,
@@ -89,39 +93,81 @@ impl HomunculusMcpHandler {
         }
     }
 
-    /// Resolves the active character entity, falling back to the first character in snapshot.
+    /// Resolves the active character entity, falling back to the first persona.
     pub(crate) async fn resolve_character(&self) -> Result<Entity, String> {
-        let current = self
-            .active_character
+        let current = self.active_persona_id();
+
+        if let Some(persona_id) = current {
+            return self
+                .persona_api
+                .resolve(persona_id)
+                .await
+                .map_err(|e| e.to_string());
+        }
+
+        let personas = self
+            .persona_api
+            .list()
+            .await
+            .map_err(|e| e.to_string())?;
+        let first = personas
+            .first()
+            .ok_or_else(|| "No characters loaded. Use spawn_character first.".to_string())?;
+        self.set_active_character(Some(first.id.clone()));
+
+        self.persona_api
+            .resolve(first.id.clone())
+            .await
+            .map_err(|e| e.to_string())
+    }
+
+    /// Resolves a persona by display name.
+    ///
+    /// Searches all personas for a matching `name` field first,
+    /// then falls back to matching against the persona ID string.
+    pub(crate) async fn resolve_persona_by_name(
+        &self,
+        name: &str,
+    ) -> Result<Persona, String> {
+        let personas = self
+            .persona_api
+            .list()
+            .await
+            .map_err(|e| e.to_string())?;
+
+        if let Some(p) = personas
+            .iter()
+            .find(|p| p.name.as_deref() == Some(name))
+        {
+            return Ok(p.clone());
+        }
+
+        if let Some(p) = personas.iter().find(|p| p.id.0 == name) {
+            return Ok(p.clone());
+        }
+
+        Err(format!(
+            "No persona found with name or id '{name}'. Use get_character_snapshot to see available characters."
+        ))
+    }
+
+    /// Returns the currently active [`PersonaId`], if any.
+    pub(crate) fn active_persona_id(&self) -> Option<PersonaId> {
+        self.active_character
             .lock()
             .unwrap_or_else(|e| {
                 bevy::log::warn!("Mutex poisoned: {e}");
                 e.into_inner()
             })
-            .to_owned();
-
-        if let Some(bits) = current {
-            return Ok(Entity::from_bits(bits));
-        }
-
-        let snapshots = self.vrm_api.snapshot().await.map_err(|e| e.to_string())?;
-        let first = snapshots
-            .first()
-            .ok_or_else(|| "No characters loaded. Use spawn_character first.".to_string())?;
-        let bits = first.entity.to_bits();
-        *self.active_character.lock().unwrap_or_else(|e| {
-            bevy::log::warn!("Mutex poisoned: {e}");
-            e.into_inner()
-        }) = Some(bits);
-        Ok(first.entity)
+            .clone()
     }
 
-    /// Sets or clears the active character.
-    pub(crate) fn set_active_character(&self, entity: Option<u64>) {
+    /// Sets or clears the active character by [`PersonaId`].
+    pub(crate) fn set_active_character(&self, persona_id: Option<PersonaId>) {
         *self.active_character.lock().unwrap_or_else(|e| {
             bevy::log::warn!("Mutex poisoned: {e}");
             e.into_inner()
-        }) = entity;
+        }) = persona_id;
     }
 }
 
