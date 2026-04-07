@@ -6,7 +6,7 @@ use bevy::prelude::*;
 use bevy_flurx::prelude::*;
 use bevy_vrm1::prelude::*;
 use homunculus_core::prelude::{
-    AssetIdComponent, Coordinate, GlobalViewport, LinkedVrm, Persona, VrmState,
+    AssetIdComponent, Coordinate, GlobalViewport, LinkedPersona, Persona, PersonaState,
 };
 use serde::{Deserialize, Serialize};
 
@@ -59,7 +59,7 @@ fn snapshot_all_vrms(
         (
             Entity,
             &Name,
-            Option<&VrmState>,
+            Option<&PersonaState>,
             &Transform,
             Option<&LookAt>,
             Option<&Persona>,
@@ -78,7 +78,7 @@ fn snapshot_all_vrms(
     vrma_query: Query<(Entity, &Name, &VrmaAnimationPlayers), With<Vrma>>,
     players: Query<&AnimationPlayer>,
     coordinate: Coordinate,
-    linked_vrms: Query<(Entity, &LinkedVrm)>,
+    linked_personas: Query<(Entity, &LinkedPersona)>,
 ) -> Vec<VrmSnapshot> {
     vrms.iter()
         .map(
@@ -91,11 +91,15 @@ fn snapshot_all_vrms(
                     LookAt::Cursor => LookAtState::Cursor,
                     LookAt::Target(target) => LookAtState::Target { entity: *target },
                 });
-                let linked_webviews = linked_vrms
-                    .iter()
-                    .filter(|(_, linked)| linked.0 == entity)
-                    .map(|(webview_entity, _)| webview_entity)
-                    .collect();
+                let linked_webviews = persona
+                    .map(|p| {
+                        linked_personas
+                            .iter()
+                            .filter(|(_, linked)| linked.0 == p.id)
+                            .map(|(webview_entity, _)| webview_entity)
+                            .collect()
+                    })
+                    .unwrap_or_default();
 
                 VrmSnapshot {
                     entity,

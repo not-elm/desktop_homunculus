@@ -1,4 +1,3 @@
-use crate::extract::EntityId;
 use axum::extract::State;
 use axum::response::Sse;
 use axum::response::sse::{Event, KeepAlive};
@@ -10,34 +9,58 @@ use homunculus_api::prelude::{ApiError, ApiReactor};
 use homunculus_core::prelude::{
     ExpressionChangeEvent, OnClickEvent, OnDragEndEvent, OnDragEvent, OnDragStartEvent,
     OnPointerCancelEvent, OnPointerMoveEvent, OnPointerOutEvent, OnPointerOverEvent,
-    OnPointerPressedEvent, OnPointerReleasedEvent, VrmEventReceiver, VrmStateChangeEvent,
-    VrmaFinishEvent, VrmaPlayEvent,
+    OnPointerPressedEvent, OnPointerReleasedEvent, PersonaChangeEvent, PersonaStateChangeEvent,
+    VrmAttachedEvent, VrmDetachedEvent, VrmEventReceiver, VrmaFinishEvent, VrmaPlayEvent,
 };
 use serde::Serialize;
 use std::convert::Infallible;
 use std::pin::Pin;
 use std::time::Duration;
 
-/// Subscribe to VRM events via SSE.
+use super::PersonaPath;
+
+/// Subscribe to persona events via SSE.
 ///
-/// Events include: drag-start, drag, drag-end, pointer-press, pointer-click,
-/// pointer-move, pointer-release, pointer-over, pointer-out, pointer-cancel,
-/// state-change, expression-change, vrma-play, vrma-finish.
+/// Always delivered: persona-change, state-change, vrm-attached, vrm-detached.
+/// Delivered only when VRM is attached: drag-start, drag, drag-end, pointer-press,
+/// pointer-click, pointer-move, pointer-release, pointer-over, pointer-out,
+/// pointer-cancel, expression-change, vrma-play, vrma-finish.
 #[utoipa::path(
     get,
     path = "/events",
-    tag = "vrm",
-    params(("entity" = String, Path, description = "Entity ID")),
+    tag = "personas",
+    params(("id" = String, Path, description = "Persona ID")),
     responses(
-        (status = 200, description = "SSE stream of VRM events", content_type = "text/event-stream"),
+        (status = 200, description = "SSE stream of persona events", content_type = "text/event-stream"),
     ),
 )]
 pub async fn events(
     State(reactor): State<ApiReactor>,
-    EntityId(entity): EntityId,
+    path: PersonaPath,
 ) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>> + Send + Sync>, ApiError> {
+    let entity = path.entity;
+
     let stream = reactor
         .schedule(move |task| async move {
+            let persona_change = task
+                .will(
+                    Update,
+                    once::run(observe_stream::<PersonaChangeEvent>)
+                        .with(("persona-change", entity)),
+                )
+                .await;
+            let vrm_attached = task
+                .will(
+                    Update,
+                    once::run(observe_stream::<VrmAttachedEvent>).with(("vrm-attached", entity)),
+                )
+                .await;
+            let vrm_detached = task
+                .will(
+                    Update,
+                    once::run(observe_stream::<VrmDetachedEvent>).with(("vrm-detached", entity)),
+                )
+                .await;
             let drag_start = task
                 .will(
                     Update,
@@ -104,7 +127,8 @@ pub async fn events(
             let state_change = task
                 .will(
                     Update,
-                    once::run(observe_stream::<VrmStateChangeEvent>).with(("state-change", entity)),
+                    once::run(observe_stream::<PersonaStateChangeEvent>)
+                        .with(("state-change", entity)),
                 )
                 .await;
             let expression_change = task
@@ -127,6 +151,9 @@ pub async fn events(
                 )
                 .await;
             select_all([
+                persona_change,
+                vrm_attached,
+                vrm_detached,
                 drag_start,
                 drag,
                 drag_end,

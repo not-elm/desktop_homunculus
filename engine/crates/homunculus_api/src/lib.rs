@@ -42,6 +42,7 @@ mod effects;
 pub mod entities;
 mod error;
 pub mod mods;
+pub mod persona;
 pub mod preferences;
 mod reactor;
 mod settings;
@@ -53,6 +54,7 @@ pub mod vrm;
 mod vrma;
 mod webview;
 
+use crate::persona::PersonaApiPlugin;
 use crate::prelude::{ShadowPanelApiPlugin, WebviewApiPlugin};
 use crate::reactor::ApiReactorPlugin;
 use crate::signals::SignalsApiPlugin;
@@ -71,6 +73,7 @@ pub mod prelude {
         entities::*,
         error::*,
         mods::ModsApi,
+        persona::PersonaApi,
         preferences::*,
         reactor::*,
         settings::*,
@@ -97,6 +100,7 @@ pub mod prelude {
 /// - `GptApiPlugin`: AI chat integration
 /// - `SignalsApiPlugin`: Signal-based pub/sub messaging
 /// - `ShadowPanelApiPlugin`: Shadow rendering control
+/// - `PersonaApiPlugin`: Persona startup restoration
 pub struct HomunculusApiPlugin;
 
 impl PluginGroup for HomunculusApiPlugin {
@@ -107,6 +111,7 @@ impl PluginGroup for HomunculusApiPlugin {
             .add(WebviewApiPlugin)
             .add(SignalsApiPlugin)
             .add(ShadowPanelApiPlugin)
+            .add(PersonaApiPlugin)
             .add(SttPttPlugin)
             .build()
     }

@@ -10,7 +10,7 @@ and user interactions.
 
 ## Features
 
-- **Core Components**: Essential components like Loading, ShadowPanel, GlobalViewport, PrimaryCamera, and VrmState
+- **Core Components**: Essential components like Loading, ShadowPanel, GlobalViewport, PrimaryCamera, PersonaState, and PersonaId
 - **Event System**: Comprehensive event handling for VRM models, including pointer events and state changes
 - **Path Utilities**: Utilities for working with file paths
 - **System Parameters**: Custom Bevy system parameters for common operations

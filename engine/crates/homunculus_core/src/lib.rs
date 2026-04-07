@@ -14,7 +14,7 @@
 //! ## Key Features
 //!
 //! - **Core Components**: Essential Bevy components like `Loading`, `ShadowPanel`,
-//!   `GlobalViewport`, `PrimaryCamera`, and `VrmState`
+//!   `GlobalViewport`, `PrimaryCamera`, and `PersonaState`
 //! - **Event System**: Comprehensive event handling for VRM models, pointer
 //!   interactions, and state changes
 //! - **System Parameters**: Custom Bevy system parameters for common operations
@@ -41,7 +41,7 @@
 //! ## Core Components
 //!
 //! ### VRM Management
-//! - `VrmState`: Tracks the current state of VRM models (idle, sitting, etc.)
+//! - `PersonaState`: Tracks the current state of persona characters (idle, sitting, etc.)
 //! - `Loading`: Indicates when VRM models are being loaded
 //! - Various bone and animation-related components
 //!

@@ -4,7 +4,7 @@ use crate::webview::open::{OriginalWebviewSource, webview_source_to_info};
 use bevy::prelude::*;
 use bevy_cef::prelude::WebviewSize;
 use bevy_flurx::action::once;
-use homunculus_core::prelude::{LinkedVrm, WebviewInfo, WebviewMeshSize, WebviewOffset};
+use homunculus_core::prelude::{LinkedPersona, WebviewInfo, WebviewMeshSize, WebviewOffset};
 
 impl WebviewApi {
     pub async fn get(&self, webview: Entity) -> ApiResult<WebviewInfo> {
@@ -24,17 +24,17 @@ fn get_webview(
         Option<&WebviewMeshSize>,
         &WebviewSize,
         &WebviewOffset,
-        Option<&LinkedVrm>,
+        Option<&LinkedPersona>,
     )>,
 ) -> ApiResult<WebviewInfo> {
     match webviews.get(webview) {
-        Ok((source, mesh_size, viewport_size, offset, linked_vrm)) => Ok(WebviewInfo {
+        Ok((source, mesh_size, viewport_size, offset, linked_persona)) => Ok(WebviewInfo {
             entity: webview,
             source: webview_source_to_info(&source.0, true),
             size: mesh_size.map_or(WebviewMeshSize::default().0, |s| s.0),
             viewport_size: viewport_size.0,
             offset: *offset,
-            linked_vrm: linked_vrm.map(|l| l.0),
+            linked_persona: linked_persona.map(|l| l.0.clone()),
         }),
         Err(_) => Err(ApiError::WebviewNotFound(webview)),
     }

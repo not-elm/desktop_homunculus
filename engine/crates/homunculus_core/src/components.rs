@@ -31,34 +31,90 @@ pub struct GlobalViewport(pub Vec2);
 #[reflect(Component, Serialize, Deserialize)]
 pub struct PrimaryCamera;
 
-/// Represents the state of the VRM model.
+/// URL-safe unique identifier for a persona.
+/// Validation: non-empty, `[a-zA-Z0-9_-]`, max 64 characters.
+#[derive(Debug, Default, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
+pub struct PersonaId(pub String);
+
+impl PersonaId {
+    pub fn new(id: impl Into<String>) -> Self {
+        Self(id.into())
+    }
+
+    pub fn validate(id: &str) -> Result<Self, String> {
+        if id.is_empty() {
+            return Err("PersonaId cannot be empty".to_string());
+        }
+        if id.len() > 64 {
+            return Err(format!("PersonaId exceeds 64 characters: {}", id.len()));
+        }
+        if !id
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
+        {
+            return Err(format!("PersonaId contains invalid characters: {id}"));
+        }
+        Ok(Self(id.to_string()))
+    }
+}
+
+impl std::fmt::Display for PersonaId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl AsRef<str> for PersonaId {
+    fn as_ref(&self) -> &str {
+        &self.0
+    }
+}
+
+/// Represents the state of a persona (character).
 #[repr(transparent)]
 #[derive(Debug, Component, Eq, PartialEq, Clone, Reflect, Serialize, Deserialize, Deref)]
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[reflect(Component, Serialize, Deserialize)]
-pub struct VrmState(pub String);
+pub struct PersonaState(pub String);
 
-impl VrmState {
+impl PersonaState {
     pub const SITTING: &'static str = "sitting";
 }
 
-impl From<&str> for VrmState {
-    fn from(state: &str) -> Self {
-        Self(state.to_string())
-    }
-}
-
-impl Default for VrmState {
+impl Default for PersonaState {
     fn default() -> Self {
         Self("idle".to_string())
     }
 }
 
-/// Links a webview to a VRM entity.
-/// This is pure metadata - does not affect positioning or parenting.
-#[derive(Component, Reflect, Serialize, Deserialize, Debug, Clone, Copy)]
-#[reflect(Component, Serialize, Deserialize)]
-pub struct LinkedVrm(pub Entity);
+impl<S: Into<String>> From<S> for PersonaState {
+    fn from(s: S) -> Self {
+        Self(s.into())
+    }
+}
+
+/// Links a webview to a persona by PersonaId (stable across entity recreation).
+#[derive(Component, Debug, Clone)]
+pub struct LinkedPersona(pub PersonaId);
+
+/// O(1) PersonaId -> Entity lookup index.
+#[derive(Resource, Default, Debug)]
+pub struct PersonaIndex(pub HashMap<PersonaId, Entity>);
+
+impl PersonaIndex {
+    pub fn get(&self, id: &PersonaId) -> Option<Entity> {
+        self.0.get(id).copied()
+    }
+
+    pub fn insert(&mut self, id: PersonaId, entity: Entity) {
+        self.0.insert(id, entity);
+    }
+
+    pub fn remove(&mut self, id: &PersonaId) {
+        self.0.remove(id);
+    }
+}
 
 /// Gender identity for a VRM character.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
@@ -77,8 +133,9 @@ pub enum Gender {
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct Persona {
+    pub id: PersonaId,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub display_name: Option<String>,
+    pub name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub age: Option<u32>,
     #[serde(default)]
@@ -89,6 +146,8 @@ pub struct Persona {
     pub profile: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub personality: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub vrm_asset_id: Option<String>,
     #[serde(default, skip_serializing_if = "HashMap::is_empty")]
     #[cfg_attr(feature = "openapi", schema(value_type = std::collections::HashMap<String, Object>))]
     pub metadata: HashMap<String, serde_json::Value>,
@@ -102,8 +161,8 @@ impl Plugin for CoreComponentsPlugin {
             .register_type::<ShadowPanel>()
             .register_type::<GlobalViewport>()
             .register_type::<PrimaryCamera>()
-            .register_type::<VrmState>()
-            .register_type::<LinkedVrm>()
+            .register_type::<PersonaState>()
+            .init_resource::<PersonaIndex>()
             .register_type::<AppWindow>();
     }
 }

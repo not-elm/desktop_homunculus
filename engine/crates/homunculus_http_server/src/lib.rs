@@ -27,15 +27,20 @@
 //! ### Application Control
 //! - `POST /app/exit` - Exit the application
 //!
-//! ### VRM Management
-//! - `GET /vrm` - List VRM models (optional `?name=` filter)
-//! - `POST /vrm` - Spawn new VRM model
-//! - `GET /vrm/stream` - SSE stream of VRM load events
-//! - `DELETE /vrm/{entity}` - Remove VRM model
+//! ### Persona Management
+//! - `POST /personas` - Create a new persona
+//! - `GET /personas` - List all personas
+//! - `GET /personas/{id}` - Get persona details
+//! - `PATCH /personas/{id}` - Partial update persona
+//! - `DELETE /personas/{id}` - Delete persona
+//! - `GET /personas/{id}/events` - SSE event stream
+//! - `GET /personas/stream` - Combined SSE stream for all personas
 //!
-//! ### Animation Control
-//! - `POST /vrm/{entity}/vrma/play` - Play VRMA animation
-//! - `POST /vrm/{entity}/vrma/stop` - Stop VRMA animation
+//! ### VRM Operations (via persona)
+//! - `POST /personas/{id}/vrm` - Attach VRM model
+//! - `DELETE /personas/{id}/vrm` - Detach VRM model
+//! - `POST /personas/{id}/vrm/vrma/play` - Play VRMA animation
+//! - `POST /personas/{id}/vrm/vrma/stop` - Stop VRMA animation
 //!
 //! ### Effects
 //! - `POST /effects/stamps` - Display visual stamp effect
@@ -69,7 +74,7 @@ pub mod prelude {
 }
 
 use crate::route::{
-    assets, audio, coordinates, displays, info, preferences, settings, shadow_panel, stt, vrm,
+    assets, audio, coordinates, displays, info, persona, preferences, settings, shadow_panel, stt,
     webviews,
 };
 use crate::state::HttpState;
@@ -97,7 +102,7 @@ use utoipa_axum::{router::OpenApiRouter, routes};
     tags(
         (name = "app", description = "Application lifecycle"),
         (name = "audio", description = "Sound effects and background music"),
-        (name = "vrm", description = "VRM model management"),
+        (name = "personas", description = "Persona management"),
         (name = "entities", description = "Entity transform and tween control"),
         (name = "webviews", description = "WebView management"),
         (name = "coordinates", description = "Coordinate system conversion"),
@@ -215,7 +220,7 @@ fn build_openapi_router() -> OpenApiRouter<HttpState> {
         .nest("/settings", settings_router())
         .nest("/shadow-panel", shadow_panel_router())
         .nest("/entities", entities_router())
-        .nest("/vrm", vrm_router())
+        .nest("/personas", persona_router())
         .nest("/coordinates", coordinates_router())
         .nest("/preferences", preferences_router())
         .nest("/webviews", webviews_router())
@@ -334,41 +339,71 @@ fn entities_id_router() -> OpenApiRouter<HttpState> {
         .routes(routes!(entities::tween::tween_scale))
 }
 
-fn vrm_router() -> OpenApiRouter<HttpState> {
+fn persona_router() -> OpenApiRouter<HttpState> {
     OpenApiRouter::new()
-        .routes(routes!(vrm::get::get, vrm::spawn::spawn))
-        .routes(routes!(vrm::snapshot::snapshot))
-        .routes(routes!(vrm::stream::stream))
-        .routes(routes!(vrm::wait_load::wait_load))
-        .nest("/{entity}", vrm_entity_router())
+        .routes(routes!(persona::get::list, persona::create::create))
+        .routes(routes!(persona::snapshot::snapshot))
+        .routes(routes!(persona::stream::stream))
+        .nest("/{id}", persona_id_router())
 }
 
-fn vrm_entity_router() -> OpenApiRouter<HttpState> {
+fn persona_id_router() -> OpenApiRouter<HttpState> {
     OpenApiRouter::new()
-        .routes(routes!(vrm::state::get, vrm::state::put))
-        .routes(routes!(vrm::persona::get, vrm::persona::put))
-        .routes(routes!(route::vrm::events::events))
-        .routes(routes!(vrm::vrma::get))
-        .routes(routes!(vrm::vrma::play))
-        .routes(routes!(vrm::vrma::stop))
-        .routes(routes!(vrm::vrma::state))
-        .routes(routes!(vrm::vrma::speed))
         .routes(routes!(
-            vrm::expressions::list,
-            vrm::expressions::set,
-            vrm::expressions::modify,
-            vrm::expressions::clear
+            persona::get::get,
+            persona::update::patch,
+            persona::delete::delete
         ))
-        .routes(routes!(vrm::expressions::modify_mouth))
-        .routes(routes!(vrm::position::get))
-        .routes(routes!(vrm::spring_bones::list))
-        .routes(routes!(vrm::spring_bones::get, vrm::spring_bones::put))
-        .routes(routes!(vrm::speech::timeline))
-        .routes(routes!(vrm::look::unlook))
-        .routes(routes!(vrm::look::target))
-        .routes(routes!(vrm::look::cursor))
-        .routes(routes!(vrm::bone::get))
-        .routes(routes!(vrm::despawn::despawn))
+        .routes(routes!(
+            persona::fields::get_name,
+            persona::fields::put_name
+        ))
+        .routes(routes!(persona::fields::get_age, persona::fields::put_age))
+        .routes(routes!(
+            persona::fields::get_gender,
+            persona::fields::put_gender
+        ))
+        .routes(routes!(
+            persona::fields::get_first_person_pronoun,
+            persona::fields::put_first_person_pronoun
+        ))
+        .routes(routes!(
+            persona::fields::get_profile,
+            persona::fields::put_profile
+        ))
+        .routes(routes!(
+            persona::fields::get_personality,
+            persona::fields::put_personality
+        ))
+        .routes(routes!(persona::state::get, persona::state::put))
+        .routes(routes!(
+            persona::fields::get_metadata,
+            persona::fields::put_metadata
+        ))
+        .routes(routes!(
+            persona::fields::get_transform,
+            persona::fields::put_transform
+        ))
+        .routes(routes!(persona::events::events))
+        .routes(routes!(persona::vrm::attach, persona::vrm::detach))
+        .routes(routes!(
+            persona::vrm::expressions::list_expressions,
+            persona::vrm::expressions::modify_expressions,
+            persona::vrm::expressions::clear_expressions
+        ))
+        .routes(routes!(persona::vrm::vrma::play_vrma))
+        .routes(routes!(persona::vrm::vrma::stop_vrma))
+        .routes(routes!(persona::vrm::vrma::get_vrma))
+        .routes(routes!(persona::vrm::position::get_position))
+        .routes(routes!(persona::vrm::bone::get_bone))
+        .routes(routes!(persona::vrm::look::look_cursor))
+        .routes(routes!(persona::vrm::look::look_target))
+        .routes(routes!(persona::vrm::look::unlook))
+        .routes(routes!(
+            persona::vrm::spring_bones::list_spring_bones,
+            persona::vrm::spring_bones::patch_spring_bones
+        ))
+        .routes(routes!(persona::vrm::speech::speech_timeline))
         .layer(axum::extract::DefaultBodyLimit::max(20 * 1024 * 1024))
 }
 
@@ -396,9 +431,9 @@ fn webviews_router() -> OpenApiRouter<HttpState> {
         .routes(routes!(webviews::navigate_forward))
         .routes(routes!(webviews::reload))
         .routes(routes!(
-            webviews::get_linked_vrm,
-            webviews::set_linked_vrm,
-            webviews::unlink_vrm
+            webviews::get_linked_persona,
+            webviews::set_linked_persona,
+            webviews::unlink_persona
         ))
 }
 
@@ -463,6 +498,7 @@ mod tests {
         app.insert_non_send_resource(PrefsDatabase::open_in_memory());
         app.init_resource::<ModRegistry>();
         app.init_resource::<ModMenuMetadataList>();
+        app.init_resource::<homunculus_core::prelude::PersonaIndex>();
         let config = HomunculusConfig::default();
         let rpc_registry = Arc::new(RwLock::new(RpcRegistry::default()));
         let router = create_router(
