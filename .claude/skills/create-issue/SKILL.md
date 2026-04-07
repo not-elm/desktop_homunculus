@@ -171,3 +171,87 @@ The brainstorming skill runs its normal process:
 | What alternatives were considered? | What's the implementation plan? |
 
 After brainstorming completes, resume at step 6 — building the final issue draft from the refined spec.
+
+## Final Draft
+
+### Build Final Draft
+
+Map the refined spec from brainstorming back to the proposal template fields:
+
+- **Title**: Re-generate if the brainstorming significantly changed the scope. Same rules: meaning preservation > imperative mood > under 80 chars.
+- **Body**: Rebuild the 4-5 fields from the refined spec. Same format rules as Initial Structuring.
+
+### Present to User
+
+Show the full issue exactly as it will appear on GitHub:
+
+```
+### Issue Draft
+
+**Title:** Add tray menu for character switching
+
+---
+
+## Type
+
+New feature
+
+## Problem / Current Behavior
+
+Currently users must open the settings UI to switch between VRM characters...
+
+## Proposed Solution
+
+Add a submenu to the system tray icon that lists available characters...
+
+## Affected Area
+
+engine / mods
+
+## Alternatives Considered
+
+A keyboard shortcut was considered but discarded because...
+```
+
+| User action | Behavior |
+|-------------|----------|
+| Approve | Execute `gh issue create` (step 7) |
+| Edit requests | Apply edits, re-present. Repeat until approved |
+| Abort | Stop with no side effects |
+
+## Issue Creation
+
+### Execution
+
+Use a HEREDOC for the body to avoid quote/newline escaping issues:
+
+```bash
+gh issue create --title "<title>" --label enhancement --body "$(cat <<'EOF'
+<body>
+EOF
+)"
+```
+
+| Result | Action |
+|--------|--------|
+| Success | Report issue URL |
+| Failure | Display error as-is and abort |
+
+### Post-Creation
+
+Report the created issue URL and hint at next steps:
+
+```
+Created: <url>
+
+Tip: Run /brainstorm-issue #<number> to start designing a solution.
+```
+
+## Constraints
+
+- All output (title + body) MUST be in English regardless of input language.
+- MUST NOT create an issue without explicit user approval of the full draft.
+- MUST NOT proceed past a failed preflight check.
+- The `enhancement` label is always applied; no additional label selection step.
+- Headings use exact case-sensitive matches compatible with brainstorm-issue's parser: `## Type`, `## Problem / Current Behavior`, `## Proposed Solution`, `## Affected Area`, `## Alternatives Considered`.
+- When `## Alternatives Considered` is omitted, brainstorm-issue handles this gracefully.
