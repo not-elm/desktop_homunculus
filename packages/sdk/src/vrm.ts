@@ -7,18 +7,18 @@ import {type GlobalViewport} from "./coordinates";
 import {host} from "./host";
 import {EventSource} from "eventsource";
 import {entities} from "./entities";
+import {type Gender} from "./persona";
 
 // --- Persona types ---
 
-/** Gender identity for a VRM character. */
-export type Gender = "male" | "female" | "other" | "unknown";
-
 /**
- * Persona data for a VRM character.
+ * Inline persona data embedded in a VRM character.
+ *
+ * @deprecated Use the {@link Persona} class from `persona.ts` for persona management.
  *
  * @example
  * ```typescript
- * const persona: Persona = {
+ * const persona: VrmPersonaData = {
  *   displayName: "エルマー",
  *   age: 25,
  *   gender: "female",
@@ -29,7 +29,7 @@ export type Gender = "male" | "female" | "other" | "unknown";
  * };
  * ```
  */
-export interface Persona {
+export interface VrmPersonaData {
     /** Optional display name / nickname for the character. */
     displayName?: string | null;
     /** Age of the character. null means age unknown. */
@@ -223,7 +223,7 @@ export interface VrmSnapshot {
     animations: VrmaInfo[];
     lookAt: LookAtState | null;
     linkedWebviews: number[];
-    persona: Persona;
+    persona: VrmPersonaData;
 }
 
 /**
@@ -252,7 +252,7 @@ export interface VrmaSpeedBody {
 
 export interface SpawnVrmOptions {
     transform?: TransformArgs;
-    persona?: Persona;
+    persona?: VrmPersonaData;
 }
 
 /**
@@ -320,7 +320,7 @@ export interface PersonaChangeEvent {
     /**
      * The updated persona.
      */
-    persona: Persona;
+    persona: VrmPersonaData;
 }
 
 export type EventMap = {
@@ -434,9 +434,9 @@ export class Vrm {
      * console.log(persona.profile);
      * ```
      */
-    async persona(): Promise<Persona> {
+    async persona(): Promise<VrmPersonaData> {
         const response = await this.fetch("persona");
-        return await response.json() as Persona;
+        return await response.json() as VrmPersonaData;
     }
 
     /**
@@ -454,7 +454,7 @@ export class Vrm {
      * });
      * ```
      */
-    async setPersona(persona: Persona): Promise<void> {
+    async setPersona(persona: VrmPersonaData): Promise<void> {
         await this.put("persona", persona);
     }
 

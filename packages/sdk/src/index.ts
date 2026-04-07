@@ -49,6 +49,7 @@ export * from "./math";
 export * from "./settings";
 export * from "./shadowPanel";
 export * from "./vrm";
+export * from "./persona";
 export * from "./speech";
 export * from "./webviews";
 export * from "./signals";

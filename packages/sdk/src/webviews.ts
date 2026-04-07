@@ -1,6 +1,7 @@
 import { host } from "./host";
 import { type Vec2, type Vec3 } from "./math";
 import { Vrm } from "./vrm";
+import { Persona } from "./persona";
 
 // --- Webview types ---
 
@@ -179,7 +180,10 @@ export interface WebviewInfo {
     size: Vec2;
     viewportSize: Vec2;
     offset: Vec2 | Vec3;
+    /** @deprecated Use {@link linkedPersona} instead. */
     linkedVrm?: number | null;
+    /** The persona ID linked to this webview, or null/undefined if none. */
+    linkedPersona?: string | null;
 }
 
 /**
@@ -200,7 +204,10 @@ export interface WebviewOpenOptions {
     size?: Vec2;
     viewportSize?: Vec2;
     offset?: Vec2 | Vec3;
+    /** @deprecated Use {@link linkedPersona} instead. */
     linkedVrm?: number;
+    /** The persona ID to link to this webview. */
+    linkedPersona?: string;
 }
 
 /** Request body for patching webview properties. */
@@ -369,6 +376,8 @@ export class Webview {
      * Gets the VRM linked to this webview.
      *
      * @returns The linked VRM instance, or undefined if no VRM is linked
+     *
+     * @deprecated Use {@link linkedPersona} instead.
      */
     async linkedVrm(): Promise<Vrm | undefined> {
         const response = await host.get(
@@ -382,6 +391,8 @@ export class Webview {
      * Links this webview to a VRM entity.
      *
      * @param vrm - The VRM to link to this webview
+     *
+     * @deprecated Use {@link setLinkedPersona} instead.
      */
     async setLinkedVrm(vrm: Vrm): Promise<void> {
         await host.put(
@@ -392,10 +403,67 @@ export class Webview {
 
     /**
      * Removes the VRM link from this webview.
+     *
+     * @deprecated Use {@link unlinkPersona} instead.
      */
     async unlinkVrm(): Promise<void> {
         await host.deleteMethod(
             host.createUrl(`webviews/${this.entity}/linked-vrm`)
+        );
+    }
+
+    /**
+     * Gets the persona linked to this webview.
+     *
+     * @returns The linked Persona instance, or undefined if no persona is linked
+     *
+     * @example
+     * ```typescript
+     * const wv = new Webview(entity);
+     * const p = await wv.linkedPersona();
+     * if (p) {
+     *   console.log(`Linked to persona: ${p.id}`);
+     * }
+     * ```
+     */
+    async linkedPersona(): Promise<Persona | undefined> {
+        const response = await host.get(
+            host.createUrl(`webviews/${this.entity}/linked-persona`)
+        );
+        const id = await response.json();
+        return id !== null ? new Persona(id as string) : undefined;
+    }
+
+    /**
+     * Links this webview to a persona.
+     *
+     * @param personaId - The persona ID to link
+     *
+     * @example
+     * ```typescript
+     * const wv = new Webview(entity);
+     * await wv.setLinkedPersona("alice");
+     * ```
+     */
+    async setLinkedPersona(personaId: string): Promise<void> {
+        await host.put(
+            host.createUrl(`webviews/${this.entity}/linked-persona`),
+            { personaId }
+        );
+    }
+
+    /**
+     * Removes the persona link from this webview.
+     *
+     * @example
+     * ```typescript
+     * const wv = new Webview(entity);
+     * await wv.unlinkPersona();
+     * ```
+     */
+    async unlinkPersona(): Promise<void> {
+        await host.deleteMethod(
+            host.createUrl(`webviews/${this.entity}/linked-persona`)
         );
     }
 
