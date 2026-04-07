@@ -2,7 +2,9 @@ use crate::route::AssetRequest;
 use axum::Json;
 use axum::extract::{Path, State};
 use base64::Engine;
+use bevy::animation::RepeatAnimation;
 use bevy::prelude::Entity;
+use bevy_vrm1::prelude::PlayVrma;
 use bevy_vrm1::vrm::VrmBone;
 use homunculus_api::prelude::axum::{HttpResult, IntoHttpResult};
 use homunculus_api::prelude::{
@@ -11,10 +13,45 @@ use homunculus_api::prelude::{
 use homunculus_api::vrm::{
     ExpressionsResponse, PositionResponse, SpringBoneChainsResponse, SpringBonePropsUpdate, VrmApi,
 };
+use homunculus_core::prelude::AssetId;
 use serde::{Deserialize, Serialize};
+use std::time::Duration;
 use utoipa::ToSchema;
 
 use super::PersonaPath;
+
+/// Request body for playing a VRMA animation.
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct PlayBody {
+    /// Asset ID for the VRMA animation to play.
+    pub asset: AssetId,
+    /// Duration in seconds for the transition of the animation.
+    #[serde(rename = "transitionSecs")]
+    pub transition_secs: Option<f64>,
+    /// Repetition behavior of an animation.
+    pub repeat: Option<Repeat>,
+    /// If true, the API will wait until the animation finishes.
+    #[serde(rename = "waitForCompletion")]
+    pub wait_for_completion: Option<bool>,
+    /// If true, resets SpringBone velocities to prevent bouncing during animation transitions.
+    #[serde(rename = "resetSpringBones")]
+    pub reset_spring_bones: Option<bool>,
+}
+
+/// Repetition behavior of a VRMA animation.
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+#[serde(tag = "type", rename_all = "camelCase")]
+pub enum Repeat {
+    /// Loop forever.
+    Forever,
+    /// Play once and stop.
+    Never,
+    /// Repeat a fixed number of times.
+    Count {
+        /// Number of repetitions.
+        count: u32,
+    },
+}
 
 // ---------------------------------------------------------------------------
 // Expressions
@@ -108,7 +145,7 @@ pub async fn get_vrma(
     path = "/vrm/vrma/play",
     tag = "personas",
     params(("id" = String, Path, description = "Persona ID")),
-    request_body = crate::route::vrm::vrma::PlayBody,
+    request_body = PlayBody,
     responses(
         (status = 200, description = "Animation started"),
         (status = 404, description = "Persona, VRM, or animation not found"),
@@ -118,12 +155,8 @@ pub async fn play_vrma(
     State(vrm_api): State<VrmApi>,
     State(vrma_api): State<VrmAnimationApi>,
     path: PersonaPath,
-    Json(body): Json<crate::route::vrm::vrma::PlayBody>,
+    Json(body): Json<PlayBody>,
 ) -> HttpResult {
-    use bevy::animation::RepeatAnimation;
-    use bevy_vrm1::prelude::PlayVrma;
-    use std::time::Duration;
-
     let vrma = vrm_api.vrma(path.entity, body.asset).await?;
 
     let mut args = PlayVrma {
@@ -137,9 +170,9 @@ pub async fn play_vrma(
     }
     if let Some(repeat) = body.repeat {
         args.repeat = match repeat {
-            crate::route::vrm::vrma::Repeat::Forever => RepeatAnimation::Forever,
-            crate::route::vrm::vrma::Repeat::Never => RepeatAnimation::Never,
-            crate::route::vrm::vrma::Repeat::Count { count } => RepeatAnimation::Count(count),
+            Repeat::Forever => RepeatAnimation::Forever,
+            Repeat::Never => RepeatAnimation::Never,
+            Repeat::Count { count } => RepeatAnimation::Count(count),
         };
     }
     vrma_api

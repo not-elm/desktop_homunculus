@@ -1,6 +1,5 @@
 import { host } from "./host";
 import { type Vec2, type Vec3 } from "./math";
-import { Vrm } from "./vrm";
 import { Persona } from "./persona";
 
 // --- Webview types ---
@@ -180,8 +179,6 @@ export interface WebviewInfo {
     size: Vec2;
     viewportSize: Vec2;
     offset: Vec2 | Vec3;
-    /** @deprecated Use {@link linkedPersona} instead. */
-    linkedVrm?: number | null;
     /** The persona ID linked to this webview, or null/undefined if none. */
     linkedPersona?: string | null;
 }
@@ -204,8 +201,6 @@ export interface WebviewOpenOptions {
     size?: Vec2;
     viewportSize?: Vec2;
     offset?: Vec2 | Vec3;
-    /** @deprecated Use {@link linkedPersona} instead. */
-    linkedVrm?: number;
     /** The persona ID to link to this webview. */
     linkedPersona?: string;
 }
@@ -220,11 +215,6 @@ export interface WebviewPatchRequest {
 /** Request body for navigating a webview to a new source. */
 export interface WebviewNavigateRequest {
     source: WebviewSource;
-}
-
-/** Request body for setting a webview's linked VRM. */
-export interface SetLinkedVrmRequest {
-    vrm: number;
 }
 
 /**
@@ -370,46 +360,6 @@ export class Webview {
      */
     async navigateForward(): Promise<void> {
         await host.post(host.createUrl(`webviews/${this.entity}/navigate/forward`));
-    }
-
-    /**
-     * Gets the VRM linked to this webview.
-     *
-     * @returns The linked VRM instance, or undefined if no VRM is linked
-     *
-     * @deprecated Use {@link linkedPersona} instead.
-     */
-    async linkedVrm(): Promise<Vrm | undefined> {
-        const response = await host.get(
-            host.createUrl(`webviews/${this.entity}/linked-vrm`)
-        );
-        const entity = await response.json();
-        return entity !== null ? new Vrm(entity) : undefined;
-    }
-
-    /**
-     * Links this webview to a VRM entity.
-     *
-     * @param vrm - The VRM to link to this webview
-     *
-     * @deprecated Use {@link setLinkedPersona} instead.
-     */
-    async setLinkedVrm(vrm: Vrm): Promise<void> {
-        await host.put(
-            host.createUrl(`webviews/${this.entity}/linked-vrm`),
-            { vrm: vrm.entity }
-        );
-    }
-
-    /**
-     * Removes the VRM link from this webview.
-     *
-     * @deprecated Use {@link unlinkPersona} instead.
-     */
-    async unlinkVrm(): Promise<void> {
-        await host.deleteMethod(
-            host.createUrl(`webviews/${this.entity}/linked-vrm`)
-        );
     }
 
     /**

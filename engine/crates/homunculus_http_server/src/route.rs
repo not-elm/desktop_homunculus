@@ -20,7 +20,6 @@ pub(crate) mod settings;
 pub(crate) mod shadow_panel;
 pub(crate) mod signals;
 pub(crate) mod stt;
-pub(crate) mod vrm;
 pub(crate) mod webviews;
 
 #[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]

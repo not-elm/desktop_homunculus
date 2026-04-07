@@ -70,7 +70,7 @@ pub mod prelude {
 
 use crate::route::{
     assets, audio, coordinates, displays, info, persona, preferences, settings, shadow_panel, stt,
-    vrm, webviews,
+    webviews,
 };
 use crate::state::HttpState;
 use axum::Router;
@@ -98,7 +98,6 @@ use utoipa_axum::{router::OpenApiRouter, routes};
         (name = "app", description = "Application lifecycle"),
         (name = "audio", description = "Sound effects and background music"),
         (name = "personas", description = "Persona management"),
-        (name = "vrm", description = "VRM model management"),
         (name = "entities", description = "Entity transform and tween control"),
         (name = "webviews", description = "WebView management"),
         (name = "coordinates", description = "Coordinate system conversion"),
@@ -217,7 +216,6 @@ fn build_openapi_router() -> OpenApiRouter<HttpState> {
         .nest("/shadow-panel", shadow_panel_router())
         .nest("/entities", entities_router())
         .nest("/personas", persona_router())
-        .nest("/vrm", vrm_router())
         .nest("/coordinates", coordinates_router())
         .nest("/preferences", preferences_router())
         .nest("/webviews", webviews_router())
@@ -400,44 +398,6 @@ fn persona_id_router() -> OpenApiRouter<HttpState> {
             persona::vrm_ops::patch_spring_bones
         ))
         .routes(routes!(persona::vrm_ops::speech_timeline))
-        .layer(axum::extract::DefaultBodyLimit::max(20 * 1024 * 1024))
-}
-
-fn vrm_router() -> OpenApiRouter<HttpState> {
-    OpenApiRouter::new()
-        .routes(routes!(vrm::get::get, vrm::spawn::spawn))
-        .routes(routes!(vrm::snapshot::snapshot))
-        .routes(routes!(vrm::stream::stream))
-        .routes(routes!(vrm::wait_load::wait_load))
-        .nest("/{entity}", vrm_entity_router())
-}
-
-fn vrm_entity_router() -> OpenApiRouter<HttpState> {
-    OpenApiRouter::new()
-        .routes(routes!(vrm::state::get, vrm::state::put))
-        .routes(routes!(vrm::persona::get, vrm::persona::put))
-        .routes(routes!(route::vrm::events::events))
-        .routes(routes!(vrm::vrma::get))
-        .routes(routes!(vrm::vrma::play))
-        .routes(routes!(vrm::vrma::stop))
-        .routes(routes!(vrm::vrma::state))
-        .routes(routes!(vrm::vrma::speed))
-        .routes(routes!(
-            vrm::expressions::list,
-            vrm::expressions::set,
-            vrm::expressions::modify,
-            vrm::expressions::clear
-        ))
-        .routes(routes!(vrm::expressions::modify_mouth))
-        .routes(routes!(vrm::position::get))
-        .routes(routes!(vrm::spring_bones::list))
-        .routes(routes!(vrm::spring_bones::get, vrm::spring_bones::put))
-        .routes(routes!(vrm::speech::timeline))
-        .routes(routes!(vrm::look::unlook))
-        .routes(routes!(vrm::look::target))
-        .routes(routes!(vrm::look::cursor))
-        .routes(routes!(vrm::bone::get))
-        .routes(routes!(vrm::despawn::despawn))
         .layer(axum::extract::DefaultBodyLimit::max(20 * 1024 * 1024))
 }
 
