@@ -38,8 +38,8 @@ impl FromRequestParts<crate::state::HttpState> for PersonaPath {
             (StatusCode::BAD_REQUEST, "Invalid persona id")
         })?;
 
-        let persona_id =
-            PersonaId::validate(&id).map_err(|_| (StatusCode::BAD_REQUEST, "Invalid persona id"))?;
+        let persona_id = PersonaId::validate(&id)
+            .map_err(|_| (StatusCode::BAD_REQUEST, "Invalid persona id"))?;
 
         let entity = state
             .persona

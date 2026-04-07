@@ -79,9 +79,7 @@ mod tests {
         let response = call_any_status(&mut app, router.clone(), request).await;
         assert_eq!(response.status(), StatusCode::CREATED);
 
-        let request = Request::get("/personas/bob")
-            .body(Body::empty())
-            .unwrap();
+        let request = Request::get("/personas/bob").body(Body::empty()).unwrap();
         let response = call_any_status(&mut app, router, request).await;
         assert_eq!(response.status(), StatusCode::OK);
 

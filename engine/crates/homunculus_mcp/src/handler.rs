@@ -105,11 +105,7 @@ impl HomunculusMcpHandler {
                 .map_err(|e| e.to_string());
         }
 
-        let personas = self
-            .persona_api
-            .list()
-            .await
-            .map_err(|e| e.to_string())?;
+        let personas = self.persona_api.list().await.map_err(|e| e.to_string())?;
         let first = personas
             .first()
             .ok_or_else(|| "No characters loaded. Use spawn_character first.".to_string())?;
@@ -125,20 +121,10 @@ impl HomunculusMcpHandler {
     ///
     /// Searches all personas for a matching `name` field first,
     /// then falls back to matching against the persona ID string.
-    pub(crate) async fn resolve_persona_by_name(
-        &self,
-        name: &str,
-    ) -> Result<Persona, String> {
-        let personas = self
-            .persona_api
-            .list()
-            .await
-            .map_err(|e| e.to_string())?;
+    pub(crate) async fn resolve_persona_by_name(&self, name: &str) -> Result<Persona, String> {
+        let personas = self.persona_api.list().await.map_err(|e| e.to_string())?;
 
-        if let Some(p) = personas
-            .iter()
-            .find(|p| p.name.as_deref() == Some(name))
-        {
+        if let Some(p) = personas.iter().find(|p| p.name.as_deref() == Some(name)) {
             return Ok(p.clone());
         }
 

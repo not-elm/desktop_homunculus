@@ -76,10 +76,7 @@ pub async fn modify_expressions(
         (status = 404, description = "Persona or VRM not found"),
     ),
 )]
-pub async fn clear_expressions(
-    State(api): State<VrmApi>,
-    path: PersonaPath,
-) -> HttpResult {
+pub async fn clear_expressions(State(api): State<VrmApi>, path: PersonaPath) -> HttpResult {
     api.clear_expressions(path.entity).await.into_http_result()
 }
 
@@ -299,9 +296,7 @@ pub async fn list_spring_bones(
     State(api): State<VrmApi>,
     path: PersonaPath,
 ) -> HttpResult<SpringBoneChainsResponse> {
-    api.list_spring_bones(path.entity)
-        .await
-        .into_http_result()
+    api.list_spring_bones(path.entity).await.into_http_result()
 }
 
 /// Update properties of a spring bone chain.

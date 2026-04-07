@@ -45,10 +45,7 @@ pub async fn attach(
         (status = 409, description = "No VRM attached"),
     ),
 )]
-pub async fn detach(
-    State(api): State<PersonaApi>,
-    path: PersonaPath,
-) -> Response {
+pub async fn detach(State(api): State<PersonaApi>, path: PersonaPath) -> Response {
     match api.detach_vrm(path.persona_id).await {
         Ok(()) => StatusCode::NO_CONTENT.into_response(),
         Err(e) => e.into_response(),

@@ -624,6 +624,954 @@ paths:
                 $ref: '#/components/schemas/ModInfo'
         '404':
           description: Mod not found
+  /personas:
+    get:
+      tags:
+      - personas
+      summary: List all personas.
+      operationId: list
+      responses:
+        '200':
+          description: List of personas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Persona'
+    post:
+      tags:
+      - personas
+      summary: Create a new persona.
+      operationId: create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePersona'
+        required: true
+      responses:
+        '201':
+          description: Persona created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Persona'
+        '400':
+          description: Invalid input
+        '409':
+          description: Persona already exists
+  /personas/snapshot:
+    get:
+      tags:
+      - personas
+      summary: Get a snapshot of all personas.
+      operationId: snapshot
+      responses:
+        '200':
+          description: All persona data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Persona'
+  /personas/{id}:
+    get:
+      tags:
+      - personas
+      summary: Get a single persona by ID.
+      operationId: get
+      parameters:
+      - name: id
+        in: path
+        description: Persona ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Persona details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Persona'
+        '404':
+          description: Persona not found
+    delete:
+      tags:
+      - personas
+      summary: Delete a persona.
+      operationId: delete
+      parameters:
+      - name: id
+        in: path
+        description: Persona ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Persona deleted
+        '404':
+          description: Persona not found
+    patch:
+      tags:
+      - personas
+      summary: Partially update a persona.
+      operationId: patch
+      parameters:
+      - name: id
+        in: path
+        description: Persona ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchPersona'
+        required: true
+      responses:
+        '200':
+          description: Updated persona
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Persona'
+        '404':
+          description: Persona not found
+  /personas/{id}/age:
+    get:
+      tags:
+      - personas
+      summary: Get the age of a persona.
+      operationId: get_age
+      parameters:
+      - name: id
+        in: path
+        description: Persona ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgeBody'
+        '404':
+          description: ''
+    put:
+      tags:
+      - personas
+      summary: Set the age of a persona.
+      operationId: put_age
+      parameters:
+      - name: id
+        in: path
+        description: Persona ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgeBody'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Persona'
+        '404':
+          description: ''
+  /personas/{id}/events:
+    get:
+      tags:
+      - personas
+      summary: Subscribe to persona events via SSE.
+      description: |-
+        Events include: drag-start, drag, drag-end, pointer-press, pointer-click,
+        pointer-move, pointer-release, pointer-over, pointer-out, pointer-cancel,
+        state-change, expression-change, vrma-play, vrma-finish.
+      operationId: events
+      parameters:
+      - name: id
+        in: path
+        description: Persona ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: SSE stream of persona events
+          content:
+            text/event-stream: {}
+  /personas/{id}/first-person-pronoun:
+    get:
+      tags:
+      - personas
+      summary: Get the first-person pronoun of a persona.
+      operationId: get_first_person_pronoun
+      parameters:
+      - name: id
+        in: path
+        description: Persona ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PronounBody'
+        '404':
+          description: ''
+    put:
+      tags:
+      - personas
+      summary: Set the first-person pronoun of a persona.
+      operationId: put_first_person_pronoun
+      parameters:
+      - name: id
+        in: path
+        description: Persona ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PronounBody'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Persona'
+        '404':
+          description: ''
+  /personas/{id}/gender:
+    get:
+      tags:
+      - personas
+      summary: Get the gender of a persona.
+      operationId: get_gender
+      parameters:
+      - name: id
+        in: path
+        description: Persona ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenderBody'
+        '404':
+          description: ''
+    put:
+      tags:
+      - personas
+      summary: Set the gender of a persona.
+      operationId: put_gender
+      parameters:
+      - name: id
+        in: path
+        description: Persona ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenderBody'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Persona'
+        '404':
+          description: ''
+  /personas/{id}/metadata:
+    get:
+      tags:
+      - personas
+      summary: Get the metadata of a persona.
+      operationId: get_metadata
+      parameters:
+      - name: id
+        in: path
+        description: Persona ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetadataBody'
+        '404':
+          description: ''
+    put:
+      tags:
+      - personas
+      summary: Set the metadata of a persona.
+      operationId: put_metadata
+      parameters:
+      - name: id
+        in: path
+        description: Persona ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MetadataBody'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Persona'
+        '404':
+          description: ''
+  /personas/{id}/name:
+    get:
+      tags:
+      - personas
+      summary: Get the display name of a persona.
+      operationId: get_name
+      parameters:
+      - name: id
+        in: path
+        description: Persona ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NameBody'
+        '404':
+          description: ''
+    put:
+      tags:
+      - personas
+      summary: Set the display name of a persona.
+      operationId: put_name
+      parameters:
+      - name: id
+        in: path
+        description: Persona ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NameBody'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Persona'
+        '404':
+          description: ''
+  /personas/{id}/personality:
+    get:
+      tags:
+      - personas
+      summary: Get the personality of a persona.
+      operationId: get_personality
+      parameters:
+      - name: id
+        in: path
+        description: Persona ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonalityBody'
+        '404':
+          description: ''
+    put:
+      tags:
+      - personas
+      summary: Set the personality of a persona.
+      operationId: put_personality
+      parameters:
+      - name: id
+        in: path
+        description: Persona ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonalityBody'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Persona'
+        '404':
+          description: ''
+  /personas/{id}/profile:
+    get:
+      tags:
+      - personas
+      summary: Get the profile of a persona.
+      operationId: get_profile
+      parameters:
+      - name: id
+        in: path
+        description: Persona ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileBody'
+        '404':
+          description: ''
+    put:
+      tags:
+      - personas
+      summary: Set the profile of a persona.
+      operationId: put_profile
+      parameters:
+      - name: id
+        in: path
+        description: Persona ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileBody'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Persona'
+        '404':
+          description: ''
+  /personas/{id}/state:
+    get:
+      tags:
+      - personas
+      summary: Get the state of a persona.
+      operationId: get
+      parameters:
+      - name: id
+        in: path
+        description: Persona ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Persona state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateBody'
+        '404':
+          description: Persona not found
+    put:
+      tags:
+      - personas
+      summary: Set the state of a persona.
+      operationId: put
+      parameters:
+      - name: id
+        in: path
+        description: Persona ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StateBody'
+        required: true
+      responses:
+        '200':
+          description: Persona state updated
+        '404':
+          description: Persona not found
+  /personas/{id}/transform:
+    get:
+      tags:
+      - personas
+      summary: Get the transform of a persona.
+      operationId: get_transform
+      parameters:
+      - name: id
+        in: path
+        description: Persona ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OptionalTransform'
+        '404':
+          description: ''
+    put:
+      tags:
+      - personas
+      summary: Set the transform of a persona.
+      operationId: put_transform
+      parameters:
+      - name: id
+        in: path
+        description: Persona ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OptionalTransform'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OptionalTransform'
+        '404':
+          description: ''
+  /personas/{id}/vrm:
+    post:
+      tags:
+      - personas
+      summary: Attach a VRM model to a persona.
+      operationId: attach
+      parameters:
+      - name: id
+        in: path
+        description: Persona ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttachVrmBody'
+        required: true
+      responses:
+        '200':
+          description: VRM attached, returns updated persona
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Persona'
+        '404':
+          description: Persona or asset not found
+        '409':
+          description: VRM already attached
+    delete:
+      tags:
+      - personas
+      summary: Detach the VRM model from a persona.
+      operationId: detach
+      parameters:
+      - name: id
+        in: path
+        description: Persona ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: VRM detached
+        '404':
+          description: Persona not found
+        '409':
+          description: No VRM attached
+  /personas/{id}/vrm/bone/{bone_name}:
+    get:
+      tags:
+      - personas
+      summary: Get the entity ID of a specific bone in a persona's VRM.
+      operationId: get_bone
+      parameters:
+      - name: id
+        in: path
+        description: Persona ID
+        required: true
+        schema:
+          type: string
+      - name: bone_name
+        in: path
+        description: Bone name
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Bone entity ID
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: Persona, VRM, or bone not found
+  /personas/{id}/vrm/expressions:
+    get:
+      tags:
+      - personas
+      summary: List all expressions and their current weights for a persona's VRM.
+      operationId: list_expressions
+      parameters:
+      - name: id
+        in: path
+        description: Persona ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Expression weights
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExpressionsResponse'
+        '404':
+          description: Persona or VRM not found
+    delete:
+      tags:
+      - personas
+      summary: Clear all expression weights.
+      operationId: clear_expressions
+      parameters:
+      - name: id
+        in: path
+        description: Persona ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Expressions cleared
+        '404':
+          description: Persona or VRM not found
+    patch:
+      tags:
+      - personas
+      summary: Modify specific expression weights (merges with current weights).
+      operationId: modify_expressions
+      parameters:
+      - name: id
+        in: path
+        description: Persona ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WeightsBody'
+        required: true
+      responses:
+        '200':
+          description: Expressions modified
+        '404':
+          description: Persona or VRM not found
+  /personas/{id}/vrm/look:
+    delete:
+      tags:
+      - personas
+      summary: Disable look-at control.
+      operationId: unlook
+      parameters:
+      - name: id
+        in: path
+        description: Persona ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Look-at disabled
+        '404':
+          description: Persona or VRM not found
+  /personas/{id}/vrm/look/cursor:
+    put:
+      tags:
+      - personas
+      summary: Set look-at to follow the cursor.
+      operationId: look_cursor
+      parameters:
+      - name: id
+        in: path
+        description: Persona ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Look-at cursor mode set
+        '404':
+          description: Persona or VRM not found
+  /personas/{id}/vrm/look/target/{target}:
+    put:
+      tags:
+      - personas
+      summary: Set look-at target to another entity.
+      operationId: look_target
+      parameters:
+      - name: id
+        in: path
+        description: Persona ID
+        required: true
+        schema:
+          type: string
+      - name: target
+        in: path
+        description: Target entity ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Look-at target set
+        '404':
+          description: Persona or VRM not found
+  /personas/{id}/vrm/position:
+    get:
+      tags:
+      - personas
+      summary: Get the position of a persona's VRM.
+      operationId: get_position
+      parameters:
+      - name: id
+        in: path
+        description: Persona ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: VRM position data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PositionResponse'
+        '404':
+          description: Persona or VRM not found
+  /personas/{id}/vrm/speech/timeline:
+    post:
+      tags:
+      - personas
+      summary: Speak with a timeline of expression keyframes and audio data.
+      operationId: speech_timeline
+      parameters:
+      - name: id
+        in: path
+        description: Persona ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TimelineBody'
+        required: true
+      responses:
+        '200':
+          description: Speech timeline started
+        '400':
+          description: Invalid audio data
+        '404':
+          description: Persona or VRM not found
+  /personas/{id}/vrm/spring-bones:
+    get:
+      tags:
+      - personas
+      summary: List all spring bone chains for a persona's VRM.
+      operationId: list_spring_bones
+      parameters:
+      - name: id
+        in: path
+        description: Persona ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Spring bone chains
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpringBoneChainsResponse'
+        '404':
+          description: Persona or VRM not found
+  /personas/{id}/vrm/spring-bones/{chain_id}:
+    patch:
+      tags:
+      - personas
+      summary: Update properties of a spring bone chain.
+      operationId: patch_spring_bones
+      parameters:
+      - name: id
+        in: path
+        description: Persona ID
+        required: true
+        schema:
+          type: string
+      - name: chain_id
+        in: path
+        description: Spring bone chain entity ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SpringBonePropsUpdate'
+        required: true
+      responses:
+        '200':
+          description: Spring bone properties updated
+        '404':
+          description: Persona, VRM, or chain not found
+  /personas/{id}/vrm/vrma:
+    get:
+      tags:
+      - personas
+      summary: List all VRMA animations under a persona's VRM.
+      operationId: get_vrma
+      parameters:
+      - name: id
+        in: path
+        description: Persona ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: List of VRMA animations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VrmaInfo'
+        '404':
+          description: Persona or VRM not found
+  /personas/{id}/vrm/vrma/play:
+    post:
+      tags:
+      - personas
+      summary: Play a VRMA animation on a persona's VRM.
+      operationId: play_vrma
+      parameters:
+      - name: id
+        in: path
+        description: Persona ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlayBody'
+        required: true
+      responses:
+        '200':
+          description: Animation started
+        '404':
+          description: Persona, VRM, or animation not found
+  /personas/{id}/vrm/vrma/stop:
+    post:
+      tags:
+      - personas
+      summary: Stop a VRMA animation on a persona's VRM.
+      operationId: stop_vrma
+      parameters:
+      - name: id
+        in: path
+        description: Persona ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssetRequest'
+        required: true
+      responses:
+        '200':
+          description: Animation stopped
+        '404':
+          description: Persona, VRM, or animation not found
   /preferences:
     get:
       tags:
@@ -1969,6 +2917,15 @@ paths:
           description: Page reloaded
 components:
   schemas:
+    AgeBody:
+      type: object
+      properties:
+        age:
+          type:
+          - integer
+          - 'null'
+          format: int32
+          minimum: 0
     AppInfo:
       type: object
       required:
@@ -2048,6 +3005,14 @@ components:
       - sound
       - image
       - html
+    AttachVrmBody:
+      type: object
+      required:
+      - assetId
+      properties:
+        assetId:
+          type: string
+          description: The asset ID of the VRM model to attach.
     BgmPlayRequest:
       type: object
       required:
@@ -2131,6 +3096,48 @@ components:
           type: string
         modName:
           type: string
+    CreatePersona:
+      type: object
+      description: Arguments for creating a new persona.
+      required:
+      - id
+      properties:
+        age:
+          type:
+          - integer
+          - 'null'
+          format: int32
+          minimum: 0
+        firstPersonPronoun:
+          type:
+          - string
+          - 'null'
+        gender:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/Gender'
+        id:
+          type: string
+        metadata:
+          type:
+          - object
+          - 'null'
+          additionalProperties:
+            type: object
+          propertyNames:
+            type: string
+        name:
+          type:
+          - string
+          - 'null'
+        personality:
+          type:
+          - string
+          - 'null'
+        profile:
+          type:
+          - string
+          - 'null'
     DeregisterRequest:
       type: object
       description: Body for `POST /rpc/deregister`.
@@ -2278,6 +3285,13 @@ components:
       - female
       - other
       - unknown
+    GenderBody:
+      type: object
+      required:
+      - gender
+      properties:
+        gender:
+          $ref: '#/components/schemas/Gender'
     GlobalDisplay:
       type: object
       required:
@@ -2331,6 +3345,17 @@ components:
             type: string
             enum:
             - target
+    MetadataBody:
+      type: object
+      required:
+      - metadata
+      properties:
+        metadata:
+          type: object
+          additionalProperties:
+            type: object
+          propertyNames:
+            type: string
     ModInfo:
       type: object
       description: Summary of a loaded mod, persisted after discovery.
@@ -2483,6 +3508,13 @@ components:
           when omitted, the entity's current z-position is preserved.
         - `Viewport`: Set position using global viewport (screen) coordinates,
           which are converted to world coordinates using the active camera.
+    NameBody:
+      type: object
+      properties:
+        name:
+          type:
+          - string
+          - 'null'
     OptionalTransform:
       type: object
       properties:
@@ -2507,9 +3539,9 @@ components:
           items:
             type: number
             format: float
-    Persona:
+    PatchPersona:
       type: object
-      description: Persona data for a VRM character.
+      description: Partial update payload for a persona.
       properties:
         age:
           type:
@@ -2517,28 +3549,86 @@ components:
           - 'null'
           format: int32
           minimum: 0
-        displayName:
+        firstPersonPronoun:
           type:
           - string
           - 'null'
+        gender:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/Gender'
+        metadata:
+          type:
+          - object
+          - 'null'
+          additionalProperties:
+            type: object
+          propertyNames:
+            type: string
+        name:
+          type:
+          - string
+          - 'null'
+        personality:
+          type:
+          - string
+          - 'null'
+        profile:
+          type:
+          - string
+          - 'null'
+    Persona:
+      type: object
+      description: Persona data for a VRM character.
+      required:
+      - id
+      properties:
+        age:
+          type:
+          - integer
+          - 'null'
+          format: int32
+          minimum: 0
         firstPersonPronoun:
           type:
           - string
           - 'null'
         gender:
           $ref: '#/components/schemas/Gender'
+        id:
+          $ref: '#/components/schemas/PersonaId'
         metadata:
           type: object
           additionalProperties:
             type: object
           propertyNames:
             type: string
+        name:
+          type:
+          - string
+          - 'null'
         personality:
           type:
           - string
           - 'null'
         profile:
           type: string
+        vrmAssetId:
+          type:
+          - string
+          - 'null'
+    PersonaId:
+      type: string
+      description: |-
+        URL-safe unique identifier for a persona.
+        Validation: non-empty, `[a-zA-Z0-9_-]`, max 64 characters.
+    PersonalityBody:
+      type: object
+      properties:
+        personality:
+          type:
+          - string
+          - 'null'
     PickFileRequest:
       type: object
       description: Request body for file picker dialogs.
@@ -2656,6 +3746,20 @@ components:
           items:
             type: number
             format: float
+    ProfileBody:
+      type: object
+      required:
+      - profile
+      properties:
+        profile:
+          type: string
+    PronounBody:
+      type: object
+      properties:
+        firstPersonPronoun:
+          type:
+          - string
+          - 'null'
     PttStartOptions:
       type: object
       description: Request options for starting a PTT session.
@@ -2943,6 +4047,13 @@ components:
         properties:
           asset:
             $ref: '#/components/schemas/AssetId'
+    StateBody:
+      type: object
+      required:
+      - state
+      properties:
+        state:
+          type: object
     SttModelSize:
       type: string
       description: Whisper model size variants.
@@ -3406,6 +4517,8 @@ tags:
   description: Application lifecycle
 - name: audio
   description: Sound effects and background music
+- name: personas
+  description: Persona management
 - name: vrm
   description: VRM model management
 - name: entities

@@ -302,7 +302,7 @@ impl PrefsDatabase {
             "SELECT id, name, age, gender, first_person_pronoun, profile, personality, vrm_asset_id
              FROM personas",
         )?;
-        let rows = stmt.query_map([], |row| row_to_persona(row))?;
+        let rows = stmt.query_map([], row_to_persona)?;
         let mut personas = Vec::new();
         for row_result in rows {
             let persona = row_result?;

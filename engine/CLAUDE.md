@@ -92,8 +92,8 @@ Custom `SystemParam` types available in `homunculus_core::system_param::prelude`
 
 ### Crates
 
-- `homunculus_core` — Components (`Loading`, `AppWindow`, `VrmState`, `LinkedVrm`, `Persona`), events, resources, system parameters
-- `homunculus_api` — `ApiReactor`, `api!` macro, domain APIs: `VrmApi`, `VrmAnimationApi`, `AudioSeApi`, `AudioBgmApi`, `PrefsApi`, `CameraApi`, `WebviewApi`, `EffectsApi`, `SpeechApi`, `SignalsApi`, `EntitiesApi`, `AssetsApi`, `ModsApi`, `ShadowPanelApi`, `AppApi`
+- `homunculus_core` — Components (`Loading`, `AppWindow`, `PersonaState`, `LinkedPersona`, `Persona`, `PersonaId`), events, resources, system parameters
+- `homunculus_api` — `ApiReactor`, `api!` macro, domain APIs: `VrmApi`, `PersonaApi`, `VrmAnimationApi`, `AudioSeApi`, `AudioBgmApi`, `PrefsApi`, `CameraApi`, `WebviewApi`, `EffectsApi`, `SpeechApi`, `SignalsApi`, `EntitiesApi`, `AssetsApi`, `ModsApi`, `ShadowPanelApi`, `AppApi`
 - `homunculus_http_server` — Axum routes organized by domain in `src/route/`. `HttpState` holds all API resources. Test utilities: `test_app()`, `call()`, `assert_response()`. Includes command execution endpoint (`POST /commands/execute`) with NDJSON streaming output.
 - `homunculus_mod` — MOD system: NPM package discovery, Node.js child processes
 - `homunculus_speech` — Mora-based lip-sync for VRM models. Provides speech queue, vowel animation, and expression keyframe control. TTS audio is provided externally (e.g. via the Timeline API or MODs).

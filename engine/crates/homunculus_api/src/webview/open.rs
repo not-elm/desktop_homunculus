@@ -78,12 +78,12 @@ fn create_global_webview(
         .try_insert(OriginalWebviewSource(options.source.clone()));
     insert_preload_scripts(&mut commands, webview);
 
-    if let Some(vrm) = options.linked_vrm {
-        if let Ok(persona) = personas.get(vrm) {
-            commands
-                .entity(webview)
-                .try_insert(LinkedPersona(persona.id.clone()));
-        }
+    if let Some(vrm) = options.linked_vrm
+        && let Ok(persona) = personas.get(vrm)
+    {
+        commands
+            .entity(webview)
+            .try_insert(LinkedPersona(persona.id.clone()));
     }
     Ok(webview)
 }

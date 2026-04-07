@@ -130,17 +130,17 @@ impl HomunculusMcpHandler {
                 let display = updated.name.as_deref().unwrap_or(updated.id.as_ref());
 
                 // Optionally move to viewport position.
-                if let (Some(x), Some(y)) = (args.x, args.y) {
-                    if let Ok(entity) = self.persona_api.resolve(persona_id.clone()).await {
-                        let target = MoveTarget::Viewport {
-                            position: Vec2::new(x, y),
-                        };
-                        if let Err(e) = self.entities_api.move_to(entity, target).await {
-                            return format!(
-                                "Spawned character '{display}' (persona {}) but failed to move: {e}",
-                                persona_id
-                            );
-                        }
+                if let (Some(x), Some(y)) = (args.x, args.y)
+                    && let Ok(entity) = self.persona_api.resolve(persona_id.clone()).await
+                {
+                    let target = MoveTarget::Viewport {
+                        position: Vec2::new(x, y),
+                    };
+                    if let Err(e) = self.entities_api.move_to(entity, target).await {
+                        return format!(
+                            "Spawned character '{display}' (persona {}) but failed to move: {e}",
+                            persona_id
+                        );
                     }
                 }
 

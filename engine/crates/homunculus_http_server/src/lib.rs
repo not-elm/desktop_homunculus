@@ -350,7 +350,10 @@ fn persona_id_router() -> OpenApiRouter<HttpState> {
             persona::update::patch,
             persona::delete::delete
         ))
-        .routes(routes!(persona::fields::get_name, persona::fields::put_name))
+        .routes(routes!(
+            persona::fields::get_name,
+            persona::fields::put_name
+        ))
         .routes(routes!(persona::fields::get_age, persona::fields::put_age))
         .routes(routes!(
             persona::fields::get_gender,

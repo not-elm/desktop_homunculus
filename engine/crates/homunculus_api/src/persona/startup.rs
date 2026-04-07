@@ -45,10 +45,7 @@ fn run_migration(prefs: &PrefsDatabase) {
 
 /// Spawns a single persona entity and registers it in the [`PersonaIndex`].
 fn spawn_persona(commands: &mut Commands, index: &mut PersonaIndex, persona: Persona) {
-    let display_name = persona
-        .name
-        .clone()
-        .unwrap_or_else(|| persona.id.0.clone());
+    let display_name = persona.name.clone().unwrap_or_else(|| persona.id.0.clone());
     let transform = extract_transform(&persona);
     let persona_id = persona.id.clone();
 
@@ -91,7 +88,9 @@ mod tests {
         let expected = Transform::from_xyz(1.0, 2.0, 3.0);
         let json_value = serde_json::to_value(&expected).unwrap();
         let persona = Persona {
-            metadata: [("transform".to_string(), json_value)].into_iter().collect(),
+            metadata: [("transform".to_string(), json_value)]
+                .into_iter()
+                .collect(),
             ..default()
         };
         assert_eq!(extract_transform(&persona), expected);
@@ -200,9 +199,7 @@ mod tests {
             "displayName": "Legacy Char",
             "age": 25
         });
-        prefs
-            .save_as("persona::vrm:legacy", &legacy_json)
-            .unwrap();
+        prefs.save_as("persona::vrm:legacy", &legacy_json).unwrap();
 
         app.update();
 

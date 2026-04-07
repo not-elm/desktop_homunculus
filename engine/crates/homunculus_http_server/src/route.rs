@@ -13,13 +13,13 @@ pub(crate) mod effects;
 pub(crate) mod entities;
 pub(crate) mod info;
 pub(crate) mod mods;
+pub(crate) mod persona;
 pub(crate) mod preferences;
 pub(crate) mod rpc;
 pub(crate) mod settings;
 pub(crate) mod shadow_panel;
 pub(crate) mod signals;
 pub(crate) mod stt;
-pub(crate) mod persona;
 pub(crate) mod vrm;
 pub(crate) mod webviews;
 

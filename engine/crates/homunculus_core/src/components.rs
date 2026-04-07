@@ -33,7 +33,7 @@ pub struct PrimaryCamera;
 
 /// URL-safe unique identifier for a persona.
 /// Validation: non-empty, `[a-zA-Z0-9_-]`, max 64 characters.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 pub struct PersonaId(pub String);
 
@@ -68,12 +68,6 @@ impl std::fmt::Display for PersonaId {
 impl AsRef<str> for PersonaId {
     fn as_ref(&self) -> &str {
         &self.0
-    }
-}
-
-impl Default for PersonaId {
-    fn default() -> Self {
-        Self(String::new())
     }
 }
 
