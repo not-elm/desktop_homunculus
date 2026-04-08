@@ -1,11 +1,5 @@
-import { useState, useEffect } from "react";
-import { rpc } from "@hmcs/sdk/rpc";
-
-interface SessionMeta {
-  uuid: string;
-  startedAt: number;
-  preview: string | null;
-}
+import { useSessionList } from "../hooks/useSessionList";
+import type { SessionMeta } from "../hooks/useSessionList";
 
 interface SessionHistoryProps {
   workspacePath: string;
@@ -15,32 +9,7 @@ interface SessionHistoryProps {
 }
 
 export function SessionHistory({ workspacePath, personaId, branchName, onSelectSession }: SessionHistoryProps) {
-  const [sessions, setSessions] = useState<SessionMeta[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!branchName) {
-      setLoading(false);
-      return;
-    }
-    let cancelled = false;
-    (async () => {
-      try {
-        const result = await rpc.call({
-          modName: "@hmcs/agent",
-          method: "list-sessions",
-          body: { workspacePath, personaId, branchName },
-        }) as { success: boolean; sessions?: SessionMeta[] };
-        if (!cancelled && result.success && result.sessions) {
-          setSessions(result.sessions);
-        }
-      } catch {
-        // silently fail
-      }
-      if (!cancelled) setLoading(false);
-    })();
-    return () => { cancelled = true; };
-  }, [workspacePath, personaId, branchName]);
+  const { sessions, loading } = useSessionList(workspacePath, personaId, branchName);
 
   if (loading) return null;
 
