@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { audio, dialog, Webview } from "@hmcs/sdk";
+import { rpc } from "@hmcs/sdk/rpc";
 import { useAgentSession } from "./hooks/useAgentSession";
 import { useWebviewMode } from "./hooks/useWebviewMode";
 import { useCurrentBranch } from "./hooks/useCurrentBranch";
