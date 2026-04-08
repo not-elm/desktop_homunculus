@@ -163,6 +163,9 @@ async function startSession(personaId: string, contextSessionUuid?: string): Pro
       const entries = await persistence.read(basePath, personaId, branchName, contextUuid);
       if (entries.length > 0) {
         sessionContext = buildSessionContext(entries);
+        // Replay previous entries to UI as a batch for visual continuity.
+        // Uses a dedicated signal (not emitLog) to avoid persisting to new JSONL.
+        signals.send("agent:session-replay", { personaId, entries });
       }
     }
   }

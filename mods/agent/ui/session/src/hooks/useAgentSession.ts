@@ -93,6 +93,16 @@ export function useAgentSession() {
       }),
       subscribeToRecording(personaId, setIsRecording),
       subscribeToWorktree(personaId, setWorktreeInfo),
+      subscribeToSessionReplay(personaId, (replayEntries) => {
+        const mapped = replayEntries.map((e: { type: string; message: string; timestamp: number; source?: string }, i: number) => ({
+          id: `replay-${i}`,
+          type: e.type as LogType,
+          message: e.message,
+          timestamp: e.timestamp,
+          source: e.source as "voice" | "text" | undefined,
+        }));
+        setEntries(mapped.slice(-100));
+      }),
     ];
     return () => sources.forEach((s) => s.close());
   }, [personaId]);
@@ -149,6 +159,9 @@ export function useAgentSession() {
 
   const sendMessage = useCallback(async (text: string, contextSessionUuid?: string) => {
     if (!personaId || !text.trim()) return;
+    if (state === "idle") {
+      setEntries([]); // Clear stale entries before session starts
+    }
     try {
       await callRpc("send-message", {
         personaId,
@@ -158,7 +171,7 @@ export function useAgentSession() {
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
-  }, [personaId]);
+  }, [personaId, state]);
 
   const closePanel = useCallback(async () => {
     if (personaId && state !== "idle") {
@@ -249,6 +262,20 @@ function subscribeToRecording(id: string, onRecording: (recording: boolean) => v
   return signals.stream<{ personaId: string; recording: boolean }>(
     "agent:recording",
     (p) => { if (p.personaId === id) onRecording(p.recording); },
+  );
+}
+
+interface ReplayEntry {
+  type: string;
+  message: string;
+  timestamp: number;
+  source?: string;
+}
+
+function subscribeToSessionReplay(id: string, onReplay: (entries: ReplayEntry[]) => void) {
+  return signals.stream<{ personaId: string; entries: ReplayEntry[] }>(
+    "agent:session-replay",
+    (p) => { if (p.personaId === id) onReplay(p.entries); },
   );
 }
 
