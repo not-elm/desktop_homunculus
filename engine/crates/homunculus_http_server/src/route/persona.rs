@@ -6,8 +6,10 @@ pub(crate) mod events;
 pub(crate) mod fields;
 pub(crate) mod get;
 pub(crate) mod snapshot;
+pub(crate) mod spawn;
 pub(crate) mod state;
 pub(crate) mod stream;
+pub(crate) mod thumbnail;
 pub(crate) mod update;
 pub(crate) mod vrm;
 
