@@ -103,6 +103,22 @@ impl PrefsKeys {
     pub const SHADOW_PANEL_ALPHA: &'static str = "shadow_panel::alpha";
 }
 
+/// An imported asset record stored in the `imported_assets` table.
+///
+/// Represents a user-imported file (VRM model, animation, sound, etc.) that has
+/// been copied into the application's managed storage. Optionally linked to a
+/// persona via `persona_id` (cascade-deleted when the persona is removed).
+#[derive(Debug, Clone)]
+pub struct ImportedAsset {
+    pub id: String,
+    pub persona_id: Option<String>,
+    pub path: String,
+    pub asset_type: String,
+    pub description: Option<String>,
+    pub source_path: Option<String>,
+    pub created_at: Option<String>,
+}
+
 pub struct PrefsDatabase(pub rusqlite::Connection);
 
 impl PrefsDatabase {
@@ -244,6 +260,64 @@ impl PrefsDatabase {
     pub fn delete(&self, key: &str) -> Result<(), rusqlite::Error> {
         self.0
             .execute("DELETE FROM preferences WHERE key = ?", [key])?;
+        Ok(())
+    }
+
+    /// Inserts or updates an imported asset record.
+    ///
+    /// Uses `ON CONFLICT(id) DO UPDATE` to avoid triggering `ON DELETE CASCADE`
+    /// (which `INSERT OR REPLACE` would cause). Only the mutable fields (`path`,
+    /// `type`, `description`, `source_path`, `created_at`) are updated on conflict;
+    /// `persona_id` is set only on initial insert.
+    pub fn upsert_imported_asset(
+        &self,
+        id: &str,
+        persona_id: Option<&str>,
+        path: &str,
+        asset_type: &str,
+        description: Option<&str>,
+        source_path: Option<&str>,
+    ) -> Result<(), rusqlite::Error> {
+        self.0.execute(
+            "INSERT INTO imported_assets (id, persona_id, path, type, description, source_path, created_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, datetime('now'))
+             ON CONFLICT(id) DO UPDATE SET
+                path = excluded.path,
+                type = excluded.type,
+                description = excluded.description,
+                source_path = excluded.source_path,
+                created_at = excluded.created_at",
+            rusqlite::params![id, persona_id, path, asset_type, description, source_path],
+        )?;
+        Ok(())
+    }
+
+    /// Lists all imported asset records.
+    pub fn list_imported_assets(&self) -> Result<Vec<ImportedAsset>, rusqlite::Error> {
+        let mut stmt = self.0.prepare(
+            "SELECT id, persona_id, path, type, description, source_path, created_at
+             FROM imported_assets",
+        )?;
+        let rows = stmt.query_map([], |row| {
+            Ok(ImportedAsset {
+                id: row.get(0)?,
+                persona_id: row.get(1)?,
+                path: row.get(2)?,
+                asset_type: row.get(3)?,
+                description: row.get(4)?,
+                source_path: row.get(5)?,
+                created_at: row.get(6)?,
+            })
+        })?;
+        rows.collect()
+    }
+
+    /// Deletes an imported asset by ID.
+    ///
+    /// Returns `Ok(())` even if the ID did not exist.
+    pub fn delete_imported_asset(&self, id: &str) -> Result<(), rusqlite::Error> {
+        self.0
+            .execute("DELETE FROM imported_assets WHERE id = ?", [id])?;
         Ok(())
     }
 
@@ -461,6 +535,18 @@ fn create_tables(db: &rusqlite::Connection) -> Result<(), rusqlite::Error> {
             value TEXT NOT NULL,
             PRIMARY KEY (persona_id, key),
             FOREIGN KEY (persona_id) REFERENCES personas(id) ON DELETE CASCADE
+        )",
+        [],
+    )?;
+    db.execute(
+        "CREATE TABLE IF NOT EXISTS imported_assets (
+            id TEXT PRIMARY KEY,
+            persona_id TEXT REFERENCES personas(id) ON DELETE CASCADE,
+            path TEXT NOT NULL,
+            type TEXT NOT NULL,
+            description TEXT,
+            source_path TEXT,
+            created_at TEXT
         )",
         [],
     )?;
@@ -1467,5 +1553,84 @@ mod test {
             ..Default::default()
         };
         assert!(db.update_persona(&persona).is_err());
+    }
+
+    #[test]
+    fn test_imported_asset_upsert() {
+        let db = PrefsDatabase::open_in_memory();
+
+        // Initial insert
+        db.upsert_imported_asset("asset-1", None, "/old/path.vrm", "vrm", None, None)
+            .unwrap();
+        let assets = db.list_imported_assets().unwrap();
+        assert_eq!(assets.len(), 1);
+        assert_eq!(assets[0].path, "/old/path.vrm");
+
+        // Upsert same ID with different path
+        db.upsert_imported_asset(
+            "asset-1",
+            None,
+            "/new/path.vrm",
+            "vrm",
+            Some("updated"),
+            None,
+        )
+        .unwrap();
+        let assets = db.list_imported_assets().unwrap();
+        assert_eq!(assets.len(), 1, "upsert should not create a second row");
+        assert_eq!(assets[0].path, "/new/path.vrm");
+        assert_eq!(assets[0].description.as_deref(), Some("updated"));
+    }
+
+    #[test]
+    fn test_imported_asset_cascade_delete() {
+        use homunculus_core::prelude::{Persona, PersonaId};
+
+        let db = PrefsDatabase::open_in_memory();
+
+        // Create persona
+        let persona = Persona {
+            id: PersonaId::new("p1"),
+            profile: String::new(),
+            ..Default::default()
+        };
+        db.insert_persona(&persona).unwrap();
+
+        // Insert imported asset linked to persona
+        db.upsert_imported_asset("asset-linked", Some("p1"), "/some/model.vrm", "vrm", None, None)
+            .unwrap();
+        assert_eq!(db.list_imported_assets().unwrap().len(), 1);
+
+        // Delete persona — imported asset should be cascade-deleted
+        db.delete_persona("p1").unwrap();
+        assert!(
+            db.list_imported_assets().unwrap().is_empty(),
+            "imported asset should be cascade-deleted with persona"
+        );
+    }
+
+    #[test]
+    fn test_imported_asset_null_persona_id() {
+        use homunculus_core::prelude::{Persona, PersonaId};
+
+        let db = PrefsDatabase::open_in_memory();
+
+        // Create persona and an asset NOT linked to it
+        let persona = Persona {
+            id: PersonaId::new("p2"),
+            profile: String::new(),
+            ..Default::default()
+        };
+        db.insert_persona(&persona).unwrap();
+
+        db.upsert_imported_asset("orphan-asset", None, "/standalone.vrma", "vrma", None, None)
+            .unwrap();
+
+        // Delete persona — orphan asset should survive
+        db.delete_persona("p2").unwrap();
+        let assets = db.list_imported_assets().unwrap();
+        assert_eq!(assets.len(), 1);
+        assert_eq!(assets[0].id, "orphan-asset");
+        assert!(assets[0].persona_id.is_none());
     }
 }
