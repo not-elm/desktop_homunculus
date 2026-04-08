@@ -401,9 +401,7 @@ async function runSession(
 
     const handle = activeSessionHandles.get(personaId);
     if (handle) {
-      if (!signal.aborted) {
-        await persistence.close(handle).catch(() => {});
-      }
+      await persistence.close(handle).catch(() => {});
       activeSessionHandles.delete(personaId);
     }
 

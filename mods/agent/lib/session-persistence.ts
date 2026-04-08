@@ -52,8 +52,14 @@ export class SessionPersistence {
   /** Pending write chains per file path — guarantees append ordering. */
   private _pendingWrites = new Map<string, Promise<void>>();
 
+  /** Tracks file paths that received at least one user-type entry. */
+  private _hasUserEntries = new Set<string>();
+
   /** Append a log entry. Non-blocking but ordered via promise chaining. */
   append(handle: SessionHandle, entry: PersistLogEntry): void {
+    if (entry.type === "user") {
+      this._hasUserEntries.add(handle.filePath);
+    }
     const line = JSON.stringify(entry) + "\n";
     const prev = this._pendingWrites.get(handle.filePath) ?? Promise.resolve();
     const next = prev.then(() => appendFile(handle.filePath, line, "utf-8")).catch((err) => {
@@ -62,14 +68,21 @@ export class SessionPersistence {
     this._pendingWrites.set(handle.filePath, next);
   }
 
-  /** Close a session. Awaits pending appends, then writes footer. Idempotent. */
+  /** Close a session. Awaits pending appends, then writes footer or deletes if empty. Idempotent. */
   async close(handle: SessionHandle): Promise<void> {
     const pending = this._pendingWrites.get(handle.filePath);
     if (!pending) return;
     await pending;
-    const footer = JSON.stringify({ _meta: "footer", endedAt: Date.now() });
-    await appendFile(handle.filePath, footer + "\n", "utf-8");
+
+    if (this._hasUserEntries.has(handle.filePath)) {
+      const footer = JSON.stringify({ _meta: "footer", endedAt: Date.now() });
+      await appendFile(handle.filePath, footer + "\n", "utf-8");
+    } else {
+      await rm(handle.filePath).catch(() => {});
+    }
+
     this._pendingWrites.delete(handle.filePath);
+    this._hasUserEntries.delete(handle.filePath);
   }
 
   /** List sessions in the scoped directory, sorted by startedAt desc. */
