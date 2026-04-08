@@ -139,7 +139,10 @@ function buildWebviewSection(): string {
 
 const SESSION_CONTEXT_BUDGET = 8000;
 
-/** Extract a structured summary from session log entries for prompt injection. */
+/** Extract a structured summary from session log entries for prompt injection.
+ *
+ * TODO: For large sessions, consider adding compression (e.g., LLM-based summarization)
+ * to stay within the token budget more intelligently than simple truncation. */
 export function buildSessionContext(
   entries: { type: string; message: string; timestamp: number; source?: string }[],
 ): string {
