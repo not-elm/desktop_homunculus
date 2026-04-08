@@ -18,14 +18,12 @@
         "command": "persona-open-ui"
       }
     ],
-    "tray": [
-      {
-        "id": "open-persona-management",
-        "text": "Persona",
-        "command": "persona-open-management",
-        "position": "top"
-      }
-    ],
+    "tray": {
+      "id": "open-persona-management",
+      "text": "Persona",
+      "command": "persona-open-management",
+      "position": "top"
+    },
     "assets": {
       "persona:ui": {
         "path": "ui/dist/index.html",

@@ -164,30 +164,74 @@ fn patch_persona(
     prefs: NonSend<PrefsDatabase>,
     tx: Option<Res<VrmEventSender<PersonaChangeEvent>>>,
 ) -> ApiResult<PersonaSnapshot> {
-    let entity = index.get(&persona_id).ok_or(ApiError::EntityNotFound)?;
+    if let Some(entity) = index.get(&persona_id) {
+        // ECS path: persona is spawned — update component + DB
+        let (mut persona, state) = personas
+            .get_mut(entity)
+            .map_err(|_| ApiError::EntityNotFound)?;
 
-    let (mut persona, state) = personas
-        .get_mut(entity)
-        .map_err(|_| ApiError::EntityNotFound)?;
+        apply_patch_mut(&mut persona, &patch);
 
-    apply_patch(&mut persona, &patch);
+        let display_name = persona.name.clone().unwrap_or_else(|| persona.id.0.clone());
+        commands.entity(entity).try_insert(Name::new(display_name));
 
-    let display_name = persona.name.clone().unwrap_or_else(|| persona.id.0.clone());
-    commands.entity(entity).try_insert(Name::new(display_name));
+        let updated = persona.clone();
+        let state_str = state.0.clone();
+        persist_and_broadcast(&prefs, &tx, entity, &updated);
 
-    let updated = persona.clone();
-    let state_str = state.0.clone();
-    persist_and_broadcast(&prefs, &tx, entity, &updated);
+        Ok(PersonaSnapshot {
+            persona: updated,
+            state: state_str,
+            spawned: true,
+        })
+    } else {
+        // DB path: persona is not spawned — update DB directly
+        let mut persona = prefs
+            .load_persona(&persona_id.0)
+            .map_err(|e| ApiError::Sql(e.to_string()))?
+            .ok_or(ApiError::EntityNotFound)?;
 
-    Ok(PersonaSnapshot {
-        persona: updated,
-        state: state_str,
-        spawned: true,
-    })
+        apply_patch_owned(&mut persona, &patch);
+
+        if let Err(e) = prefs.update_persona(&persona) {
+            warn!("Failed to persist persona: {e}");
+        }
+
+        Ok(PersonaSnapshot {
+            persona,
+            state: String::new(),
+            spawned: false,
+        })
+    }
 }
 
-/// Merges non-`None` patch fields into the existing persona.
-fn apply_patch(persona: &mut Mut<'_, Persona>, patch: &PatchPersona) {
+/// Merges non-`None` patch fields into a mutable ECS component reference.
+fn apply_patch_mut(persona: &mut Mut<'_, Persona>, patch: &PatchPersona) {
+    if let Some(name) = &patch.name {
+        persona.name = Some(name.clone());
+    }
+    if let Some(age) = patch.age {
+        persona.age = Some(age);
+    }
+    if let Some(gender) = &patch.gender {
+        persona.gender = gender.clone();
+    }
+    if let Some(pronoun) = &patch.first_person_pronoun {
+        persona.first_person_pronoun = Some(pronoun.clone());
+    }
+    if let Some(profile) = &patch.profile {
+        persona.profile = profile.clone();
+    }
+    if let Some(personality) = &patch.personality {
+        persona.personality = Some(personality.clone());
+    }
+    if let Some(metadata) = &patch.metadata {
+        persona.metadata = metadata.clone();
+    }
+}
+
+/// Merges non-`None` patch fields into an owned Persona (for DB-only path).
+fn apply_patch_owned(persona: &mut Persona, patch: &PatchPersona) {
     if let Some(name) = &patch.name {
         persona.name = Some(name.clone());
     }

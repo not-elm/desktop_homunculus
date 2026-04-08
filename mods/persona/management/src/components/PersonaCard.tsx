@@ -18,7 +18,7 @@ export default function PersonaCard({
   onAutoSpawnChange,
 }: PersonaCardProps) {
   const isSpawned = persona.spawned;
-  const autoSpawn = persona.metadata["auto-spawn"] === true;
+  const autoSpawn = persona.metadata?.["auto-spawn"] === true;
   const thumbnailUrl = new Persona(persona.id).thumbnailUrl();
 
   return (

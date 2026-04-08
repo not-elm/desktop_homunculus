@@ -65,7 +65,7 @@ export function usePersonaManagement() {
       const snapshot = personas.find((s) => s.id === id);
       if (snapshot) {
         await p.patch({
-          metadata: { ...snapshot.metadata, "auto-spawn": value },
+          metadata: { ...(snapshot.metadata ?? {}), "auto-spawn": value },
         });
         await refresh();
       }

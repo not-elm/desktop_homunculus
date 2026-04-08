@@ -7,14 +7,6 @@ const personas = await Persona.list();
 for (const snapshot of personas) {
     const autoSpawn = snapshot.metadata?.["auto-spawn"];
 
-    // Migration: first run, set auto-spawn=true for existing personas without the key
-    if (autoSpawn === undefined) {
-        const p = new Persona(snapshot.id);
-        await p.patch({ metadata: { ...snapshot.metadata, "auto-spawn": true } });
-        await spawnAndManage(snapshot);
-        continue;
-    }
-
     if (autoSpawn === true) {
         await spawnAndManage(snapshot);
     }
