@@ -5,8 +5,7 @@
   "dependencies": {
     "@hmcs/agent": "workspace:*",
     "@hmcs/assets": "workspace:*",
-    "@hmcs/character-settings": "workspace:*",
-    "@hmcs/elmer": "workspace:*",
+    "@hmcs/persona": "workspace:*",
     "@hmcs/menu": "workspace:*",
     "@hmcs/settings": "workspace:*",
     "@hmcs/stt": "workspace:*",

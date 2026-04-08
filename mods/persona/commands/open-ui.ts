@@ -9,7 +9,7 @@ import { input, output } from "@hmcs/sdk/commands";
 try {
   const { linkedPersona: personaId } = await input.parse(z.object({ linkedPersona: z.string() }));
   await Webview.open({
-    source: webviewSource.local("character-settings:ui"),
+    source: webviewSource.local("persona:ui"),
     size: [1, 0.9],
     viewportSize: [900, 700],
     offset: [1.1, 0],

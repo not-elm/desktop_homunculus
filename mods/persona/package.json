@@ -1,7 +1,7 @@
 {
-  "name": "@hmcs/character-settings",
+  "name": "@hmcs/persona",
   "version": "0.1.0-alpha.6-dev",
-  "description": "Character settings panel mod that provides a WebView UI to configure individual character preferences",
+  "description": "Persona management mod — spawns personas at startup, manages animations, and provides settings and management UIs",
   "license": "MIT",
   "type": "module",
   "author": "notelm",
@@ -10,23 +10,38 @@
     "dev": "pnpm exec vite dev ui"
   },
   "homunculus": {
+    "service": "service.ts",
     "menus": [
       {
-        "id": "open-character-settings",
-        "text": "Character Settings",
-        "command": "character-settings-open-ui"
+        "id": "open-persona",
+        "text": "Persona",
+        "command": "persona-open-ui"
+      }
+    ],
+    "tray": [
+      {
+        "id": "open-persona-management",
+        "text": "Persona",
+        "command": "persona-open-management",
+        "position": "top"
       }
     ],
     "assets": {
-      "character-settings:ui": {
+      "persona:ui": {
         "path": "ui/dist/index.html",
         "type": "html",
-        "description": "Character settings panel UI"
+        "description": "Per-persona settings panel UI"
+      },
+      "persona:management": {
+        "path": "management/dist/index.html",
+        "type": "html",
+        "description": "Persona management UI"
       }
     }
   },
   "bin": {
-    "character-settings-open-ui": "commands/open-ui.ts"
+    "persona-open-ui": "commands/open-ui.ts",
+    "persona-open-management": "commands/open-management.ts"
   },
   "dependencies": {
     "@hmcs/sdk": "workspace:*",

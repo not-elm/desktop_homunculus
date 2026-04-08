@@ -18,7 +18,7 @@ desktop-homunculus/
 │   ├── ui/              # @hmcs/ui — Shared React component library (Radix + Tailwind)
 │   ├── cli/             # @hmcs/cli — Node CLI wrapper (distributes platform-specific Rust binary)
 │   └── cli-platform/    # Platform-specific binary packages for hmcs CLI
-├── mods/                # Mods (NPM packages): elmer/, settings/, menu/, assets/, voicevox/, character-settings/, agent/
+├── mods/                # Mods (NPM packages): persona/, settings/, menu/, assets/, voicevox/, agent/
 ├── docs/website/        # Docusaurus documentation site
 └── sandbox/             # Dev sandbox — aggregates all mods for workspace linking validation
 ```
@@ -135,7 +135,7 @@ Source mods live in `mods/` (in the repo, for development). At runtime, mods are
 
 ### Frontend UI (Mod-Based)
 
-UI apps live in `mods/` as mod packages — **settings** (`mods/settings/ui/`), **menu** (`mods/menu/ui/`), and **character-settings** (`mods/character-settings/ui/`). They are React 19 + Vite + Tailwind CSS v4 apps that import `@hmcs/ui` (from `packages/ui/`) as the shared component library. Build output goes to each mod's `ui/dist/` (bundled into a single `index.html` via `vite-plugin-singlefile` for CEF loading) and is declared as an asset in the mod's `package.json`.
+UI apps live in `mods/` as mod packages — **settings** (`mods/settings/ui/`), **menu** (`mods/menu/ui/`), and **persona** (`mods/persona/ui/`). They are React 19 + Vite + Tailwind CSS v4 apps that import `@hmcs/ui` (from `packages/ui/`) as the shared component library. Build output goes to each mod's `ui/dist/` (bundled into a single `index.html` via `vite-plugin-singlefile` for CEF loading) and is declared as an asset in the mod's `package.json`.
 
 **Design language**: Glassmorphism — semi-transparent backgrounds (`bg-primary/30`), `backdrop-blur-sm`, subtle borders (`border-white/20`), white text. This is the canonical style for all WebView UI overlays on the transparent Bevy window. The `@hmcs/ui` library is built on **shadcn/ui (new-york style)** with Radix UI primitives and **lucide-react** icons. Use the `cn()` utility from `@hmcs/ui` (clsx + tailwind-merge) for conditional class names.
 

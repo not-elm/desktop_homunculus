@@ -102,15 +102,14 @@ hmcs --version
 推奨される公式 MOD をインストールします:
 
 ```shell
-hmcs mod install @hmcs/assets @hmcs/elmer @hmcs/menu @hmcs/character-settings @hmcs/settings @hmcs/app-exit
+hmcs mod install @hmcs/assets @hmcs/persona @hmcs/menu @hmcs/settings @hmcs/app-exit
 ```
 
 | MOD                        | 説明                                                                     |
 | -------------------------- | ------------------------------------------------------------------------ |
 | `@hmcs/assets`             | デフォルトのアニメーションと効果音                                       |
-| `@hmcs/elmer`              | デフォルトのキャラクターモデル                                           |
+| `@hmcs/persona`            | ペルソナ管理 — 自動生成、アニメーション、設定 UI                         |
 | `@hmcs/menu`               | 右クリックコンテキストメニュー                                           |
-| `@hmcs/character-settings` | キャラクターごとの設定パネル                                             |
 | `@hmcs/settings`           | システムトレイからのアプリケーション設定（フレームレート、影の不透明度） |
 | `@hmcs/app-exit`           | システムトレイの終了メニュー                                             |
 

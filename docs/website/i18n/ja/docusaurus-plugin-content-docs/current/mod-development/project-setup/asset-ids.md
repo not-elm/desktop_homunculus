@@ -19,12 +19,12 @@ sidebar_position: 3
 
 | 部分         | ソース                                      | 例                              |
 | ------------ | ------------------------------------------- | ------------------------------- |
-| `mod-name`   | `package.json` の `name` フィールドから導出 | `@hmcs/elmer` は `elmer` になる |
+| `mod-name`   | `package.json` の `name` フィールドから導出 | `@hmcs/persona` は `persona` になる |
 | `asset-name` | `homunculus.assets` オブジェクトのキー      | `vrm`、`open`、`ui`             |
 
 **MOD 名**はパッケージ名からスコーププレフィックスを除去して抽出されます。例えば：
 
-- `@hmcs/elmer` -- MOD 名は `elmer`
+- `@hmcs/persona` -- MOD 名は `persona`
 - `@hmcs/settings` -- MOD 名は `settings`
 - `my-character` -- MOD 名は `my-character`（除去するスコープなし）
 
@@ -36,7 +36,7 @@ sidebar_position: 3
 
 ```json
 {
-  "name": "@hmcs/elmer",
+  "name": "@hmcs/my-character",
   "homunculus": {
     "assets": {
       "elmer:vrm": {
