@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { audio, dialog, Webview } from "@hmcs/sdk";
-import { rpc } from "@hmcs/sdk/rpc";
 import { useAgentSession } from "./hooks/useAgentSession";
 import { useWebviewMode } from "./hooks/useWebviewMode";
+import { useCurrentBranch } from "./hooks/useCurrentBranch";
 import { useSettingsDraft } from "./settings/hooks/useSettingsDraft";
 import type { WorkspaceSelection, PttKey } from "./settings/hooks/useSettingsDraft";
 import { formatPttKeyName } from "./utils/format-ptt-key";
@@ -32,31 +32,10 @@ export function UnifiedView() {
   const [mounted, setMounted] = useState(false);
   const dragRef = useRef<{ startX: number; startWidth: number } | null>(null);
 
-  const [currentBranch, setCurrentBranch] = useState<string | null>(null);
-
   const paths = draft.settings.workspaces.paths;
   const selection = draft.settings.workspaces.selection;
   const workspacePath = paths[selection.workspaceIndex] ?? null;
-
-  useEffect(() => {
-    if (!workspacePath) return;
-    let cancelled = false;
-    (async () => {
-      try {
-        const result = await rpc.call({
-          modName: "@hmcs/agent",
-          method: "get-current-branch",
-          body: { workspacePath, worktreeName: selection.worktreeName },
-        }) as { success: boolean; branchName?: string };
-        if (!cancelled && result.success && result.branchName) {
-          setCurrentBranch(result.branchName);
-        }
-      } catch {
-        if (!cancelled) setCurrentBranch(null);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [workspacePath, selection.worktreeName]);
+  const currentBranch = useCurrentBranch(workspacePath, selection.worktreeName);
 
   // Geometry management
   const geometryMode = sidebarOpen ? "expanded" : "collapsed";
