@@ -26,10 +26,11 @@ export interface PersistLogEntry {
 const SESSION_TTL_DAYS = 90;
 
 export class SessionPersistence {
-  /** Resolve the directory for a given persona + branch scope. */
-  private sessionDir(workspacePath: string, personaId: string, branchName: string): string {
-    return join(workspacePath, ".hmcs", "sessions", personaId, branchName);
-  }
+  /** Pending write chains per file path — guarantees append ordering. */
+  private _pendingWrites = new Map<string, Promise<void>>();
+
+  /** Tracks file paths that received at least one user-type entry. */
+  private _hasUserEntries = new Set<string>();
 
   /** Create a new session file and write the JSONL header. */
   async create(params: {
@@ -48,12 +49,6 @@ export class SessionPersistence {
     this._pendingWrites.set(filePath, Promise.resolve());
     return { uuid, filePath };
   }
-
-  /** Pending write chains per file path — guarantees append ordering. */
-  private _pendingWrites = new Map<string, Promise<void>>();
-
-  /** Tracks file paths that received at least one user-type entry. */
-  private _hasUserEntries = new Set<string>();
 
   /** Append a log entry. Non-blocking but ordered via promise chaining. */
   append(handle: SessionHandle, entry: PersistLogEntry): void {
@@ -139,6 +134,11 @@ export class SessionPersistence {
     } catch {
       // personaDir may not exist yet — that's fine
     }
+  }
+
+  /** Resolve the directory for a given persona + branch scope. */
+  private sessionDir(workspacePath: string, personaId: string, branchName: string): string {
+    return join(workspacePath, ".hmcs", "sessions", personaId, branchName);
   }
 
   private async cleanupDir(dir: string, ttlDays: number): Promise<void> {
