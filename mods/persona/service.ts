@@ -1,4 +1,5 @@
 import { host, Persona, repeat, sleep, type PersonaSnapshot } from "@hmcs/sdk";
+import { EventSource } from "eventsource";
 
 // --- Startup: spawn all auto-spawn personas ---
 
