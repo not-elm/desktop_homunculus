@@ -131,8 +131,8 @@ export class SessionPersistence {
     const personaDir = join(workspacePath, ".hmcs", "sessions", personaId);
     try {
       await this.cleanupDir(personaDir, ttlDays);
-    } catch {
-      // personaDir may not exist yet — that's fine
+    } catch (e) {
+      console.error(`[session-persistence] cleanup failed for ${personaDir}:`, e);
     }
   }
 
@@ -170,8 +170,8 @@ export class SessionPersistence {
       if (header._meta === "header" && header.startedAt < cutoff) {
         await rm(filePath);
       }
-    } catch {
-      // corrupt file or read error — skip
+    } catch (e) {
+      console.error(`[session-persistence] removeIfExpired failed for ${filePath}:`, e);
     }
   }
 
@@ -188,43 +188,55 @@ export class SessionPersistence {
 
   /** Read header + scan for first user message as preview. */
   private async readSessionMeta(filePath: string): Promise<SessionMeta | null> {
-    let content: string;
-    try {
-      content = await readFile(filePath, "utf-8");
-    } catch {
-      return null;
-    }
+    const lines = await readNonEmptyLines(filePath);
+    if (!lines) return null;
 
-    const lines = content.split("\n").filter((l) => l.trim());
-    if (lines.length === 0) return null;
-
-    let header: { _meta: string; startedAt: number };
-    try {
-      header = JSON.parse(lines[0]);
-    } catch {
-      return null;
-    }
-    if (header._meta !== "header" || typeof header.startedAt !== "number") return null;
+    const header = parseSessionHeader(lines[0]);
+    if (!header) return null;
 
     const uuid = basename(filePath, ".jsonl");
-
-    let preview: string | null = null;
-    for (let i = 1; i < Math.min(lines.length, 10); i++) {
-      try {
-        const entry = JSON.parse(lines[i]);
-        if (entry.type === "user" && entry.message) {
-          preview = entry.message.length > 100
-            ? entry.message.slice(0, 100) + "\u2026"
-            : entry.message;
-          break;
-        }
-      } catch {
-        continue;
-      }
-    }
-
+    const preview = findFirstUserPreview(lines);
     return { uuid, startedAt: header.startedAt, preview };
   }
+}
+
+async function readNonEmptyLines(filePath: string): Promise<string[] | null> {
+  let content: string;
+  try {
+    content = await readFile(filePath, "utf-8");
+  } catch {
+    return null;
+  }
+  const lines = content.split("\n").filter((l) => l.trim());
+  return lines.length > 0 ? lines : null;
+}
+
+function parseSessionHeader(line: string): { startedAt: number } | null {
+  try {
+    const header = JSON.parse(line);
+    if (header._meta === "header" && typeof header.startedAt === "number") {
+      return { startedAt: header.startedAt };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function findFirstUserPreview(lines: string[]): string | null {
+  for (let i = 1; i < Math.min(lines.length, 10); i++) {
+    try {
+      const entry = JSON.parse(lines[i]);
+      if (entry.type === "user" && entry.message) {
+        return entry.message.length > 100
+          ? entry.message.slice(0, 100) + "\u2026"
+          : entry.message;
+      }
+    } catch {
+      continue;
+    }
+  }
+  return null;
 }
 
 function parseLogEntries(content: string): PersistLogEntry[] {
