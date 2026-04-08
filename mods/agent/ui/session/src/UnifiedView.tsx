@@ -154,7 +154,7 @@ export function UnifiedView() {
     }
     updateSelection(newSelection);
     setActiveCategory(null);
-    setBodyContent({ kind: "sessionLog" });
+    setBodyContent({ kind: "sessionHistory" });
   }
 
   function updateSelection(newSelection: WorkspaceSelection) {
