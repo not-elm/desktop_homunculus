@@ -132,7 +132,6 @@ export function useAgentSession() {
     setEntries([]);
     try {
       const result = await callRpc("start-session", { personaId }) as {
-        success: boolean;
         replayEntries?: Array<{ type: string; message: string; timestamp: number; source?: string }>;
       };
       if (result.replayEntries && result.replayEntries.length > 0) {
@@ -166,7 +165,7 @@ export function useAgentSession() {
         personaId,
         text: text.trim(),
         ...(contextSessionUuid && { contextSessionUuid }),
-      }) as { success: boolean; replayEntries?: Array<{ type: string; message: string; timestamp: number; source?: string }> };
+      }) as { replayEntries?: Array<{ type: string; message: string; timestamp: number; source?: string }> };
       if (result.replayEntries && result.replayEntries.length > 0) {
         setEntries(result.replayEntries.map((e, i) => ({
           id: `replay-${i}`,
