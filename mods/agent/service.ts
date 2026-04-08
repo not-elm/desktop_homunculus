@@ -19,7 +19,7 @@ import { buildPersonaPrompt, buildSessionContext, type WorktreeContext } from ".
 import { WorktreeManager, WORKTREE_NAME_PATTERN } from "./lib/worktree-manager.ts";
 import { gitExec, isGitRepo, currentBranch, listBranches } from "./lib/git.ts";
 import { sanitizeForTts } from "./lib/tts.ts";
-import { SessionPersistence, type SessionHandle } from "./lib/session-persistence.ts";
+import { SessionPersistence, type SessionHandle, type PersistLogEntry } from "./lib/session-persistence.ts";
 import { mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import path from "node:path";
@@ -128,7 +128,7 @@ async function scanOrphanedWorktrees(): Promise<void> {
   }
 }
 
-async function startSession(personaId: string, contextSessionUuid?: string): Promise<void> {
+async function startSession(personaId: string, contextSessionUuid?: string): Promise<PersistLogEntry[]> {
   const settings = await loadPersonaSettings(personaId);
   assertCanStartSession(personaId, settings);
 
@@ -156,6 +156,7 @@ async function startSession(personaId: string, contextSessionUuid?: string): Pro
 
   // Read previous session context for prompt injection
   let sessionContext: string | undefined;
+  let replayEntries: PersistLogEntry[] = [];
   if (basePath && branchName) {
     const contextUuid = contextSessionUuid
       ?? await persistence.findLatestSessionUuid(basePath, personaId, branchName);
@@ -163,9 +164,7 @@ async function startSession(personaId: string, contextSessionUuid?: string): Pro
       const entries = await persistence.read(basePath, personaId, branchName, contextUuid);
       if (entries.length > 0) {
         sessionContext = buildSessionContext(entries);
-        // Replay previous entries to UI as a batch for visual continuity.
-        // Uses a dedicated signal (not emitLog) to avoid persisting to new JSONL.
-        signals.send("agent:session-replay", { personaId, entries });
+        replayEntries = entries;
       }
     }
   }
@@ -188,6 +187,7 @@ async function startSession(personaId: string, contextSessionUuid?: string): Pro
   textQueues.set(personaId, new AsyncQueue<string>());
 
   launchSessionLoop(personaId, runtime, sessionAbort, settings, resolvedKey);
+  return replayEntries;
 }
 
 function assertCanStartSession(
@@ -954,9 +954,9 @@ function buildRpcMethods() {
         contextSessionUuid: z.string().optional(),
       }),
       handler: async ({ personaId, text, contextSessionUuid }) => {
+        let replayEntries: PersistLogEntry[] = [];
         if (!activeSessions.has(personaId)) {
-          // Auto-start session with optional context
-          await startSession(personaId, contextSessionUuid);
+          replayEntries = await startSession(personaId, contextSessionUuid);
         }
         const queue = textQueues.get(personaId);
         if (!queue) {
@@ -965,7 +965,7 @@ function buildRpcMethods() {
         await interruptSession(personaId);
         queue.clear();
         queue.push(text);
-        return { success: true as const };
+        return { success: true as const, replayEntries };
       },
     }),
     "set-text-focus": rpc.method({
@@ -1005,8 +1005,8 @@ function buildRpcMethods() {
       description: "Manually start an agent session for a persona",
       input: z.object({ personaId: z.string() }),
       handler: async ({ personaId }) => {
-        await startSession(personaId);
-        return { success: true as const };
+        const replayEntries = await startSession(personaId);
+        return { success: true as const, replayEntries };
       },
     }),
     "stop-session": rpc.method({

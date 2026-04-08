@@ -93,16 +93,6 @@ export function useAgentSession() {
       }),
       subscribeToRecording(personaId, setIsRecording),
       subscribeToWorktree(personaId, setWorktreeInfo),
-      subscribeToSessionReplay(personaId, (replayEntries) => {
-        const mapped = replayEntries.map((e: { type: string; message: string; timestamp: number; source?: string }, i: number) => ({
-          id: `replay-${i}`,
-          type: e.type as LogType,
-          message: e.message,
-          timestamp: e.timestamp,
-          source: e.source as "voice" | "text" | undefined,
-        }));
-        setEntries(mapped.slice(-100));
-      }),
     ];
     return () => sources.forEach((s) => s.close());
   }, [personaId]);
@@ -159,19 +149,26 @@ export function useAgentSession() {
 
   const sendMessage = useCallback(async (text: string, contextSessionUuid?: string) => {
     if (!personaId || !text.trim()) return;
-    if (state === "idle") {
-      setEntries([]); // Clear stale entries before session starts
-    }
+    setEntries([]);
     try {
-      await callRpc("send-message", {
+      const result = await callRpc("send-message", {
         personaId,
         text: text.trim(),
         ...(contextSessionUuid && { contextSessionUuid }),
-      });
+      }) as { success: boolean; replayEntries?: Array<{ type: string; message: string; timestamp: number; source?: string }> };
+      if (result.replayEntries && result.replayEntries.length > 0) {
+        setEntries(result.replayEntries.map((e, i) => ({
+          id: `replay-${i}`,
+          type: e.type as LogType,
+          message: e.message,
+          timestamp: e.timestamp,
+          source: e.source as "voice" | "text" | undefined,
+        })).slice(-100));
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
-  }, [personaId, state]);
+  }, [personaId]);
 
   const closePanel = useCallback(async () => {
     if (personaId && state !== "idle") {
@@ -262,20 +259,6 @@ function subscribeToRecording(id: string, onRecording: (recording: boolean) => v
   return signals.stream<{ personaId: string; recording: boolean }>(
     "agent:recording",
     (p) => { if (p.personaId === id) onRecording(p.recording); },
-  );
-}
-
-interface ReplayEntry {
-  type: string;
-  message: string;
-  timestamp: number;
-  source?: string;
-}
-
-function subscribeToSessionReplay(id: string, onReplay: (entries: ReplayEntry[]) => void) {
-  return signals.stream<{ personaId: string; entries: ReplayEntry[] }>(
-    "agent:session-replay",
-    (p) => { if (p.personaId === id) onReplay(p.entries); },
   );
 }
 
