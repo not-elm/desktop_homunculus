@@ -27,7 +27,11 @@ export function buildWorktreeSection(ctx: WorktreeContext): string {
 }
 
 /** Builds the system prompt with spoken-style instructions and personality description. */
-export function buildCharacterPrompt(persona: Persona, worktree?: WorktreeContext): string {
+export function buildPersonaPrompt(
+  persona: Persona,
+  worktree?: WorktreeContext,
+  sessionContext?: string,
+): string {
   const lines = [
     buildNameLine(persona.name),
     buildAgeLine(persona.age),
@@ -43,6 +47,9 @@ export function buildCharacterPrompt(persona: Persona, worktree?: WorktreeContex
   ];
   if (worktree) {
     lines.push(buildWorktreeSection(worktree));
+  }
+  if (sessionContext) {
+    lines.push(sessionContext);
   }
   return lines.filter(Boolean).join("\n");
 }
@@ -128,4 +135,56 @@ function buildWebviewSection(): string {
     "use the open_webview MCP tool to display it as HTML.",
     'Verbally, just say something brief like "I put it up on screen, take a look."',
   ].join("\n");
+}
+
+const SESSION_CONTEXT_BUDGET = 8000;
+
+/** Extract a structured summary from session log entries for prompt injection.
+ *
+ * TODO: For large sessions, consider adding compression (e.g., LLM-based summarization)
+ * to stay within the token budget more intelligently than simple truncation. */
+export function buildSessionContext(
+  entries: { type: string; message: string; timestamp: number; source?: string }[],
+): string {
+  const conversationLines: string[] = [];
+  const toolCounts: Record<string, number> = {};
+
+  for (const entry of entries) {
+    if (entry.type === "user" || entry.type === "assistant") {
+      const prefix = entry.type === "user" ? "User" : "Assistant";
+      conversationLines.push(`${prefix}: ${entry.message}`);
+    } else if (["read", "edit", "run", "tool"].includes(entry.type)) {
+      toolCounts[entry.type] = (toolCounts[entry.type] ?? 0) + 1;
+    }
+  }
+
+  const toolSummaryParts: string[] = [];
+  if (toolCounts.read || toolCounts.edit) {
+    toolSummaryParts.push(`${(toolCounts.read ?? 0) + (toolCounts.edit ?? 0)} file operations`);
+  }
+  if (toolCounts.run) {
+    toolSummaryParts.push(`${toolCounts.run} commands executed`);
+  }
+  if (toolCounts.tool) {
+    toolSummaryParts.push(`${toolCounts.tool} tool calls`);
+  }
+
+  let body = "";
+  if (toolSummaryParts.length > 0) {
+    body += `Tool activity: ${toolSummaryParts.join(", ")}\n\n`;
+  }
+
+  body += "Conversation:\n";
+  body += conversationLines.join("\n");
+
+  // Truncate oldest entries first to stay within budget
+  if (body.length > SESSION_CONTEXT_BUDGET) {
+    body = body.slice(body.length - SESSION_CONTEXT_BUDGET);
+    const firstNewline = body.indexOf("\n");
+    if (firstNewline > 0) {
+      body = "…" + body.slice(firstNewline);
+    }
+  }
+
+  return `## Prior Session Context\n\n${body}`;
 }

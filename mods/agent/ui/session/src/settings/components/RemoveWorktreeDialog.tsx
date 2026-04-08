@@ -40,18 +40,14 @@ export function RemoveWorktreeDialog({
     setBusy(true);
     setError(null);
     try {
-      const result = await rpc.call<{ success: boolean; error?: string }>({
+      await rpc.call({
         modName: "@hmcs/agent",
         method: "remove-worktree",
         body: { workspacePath, name: worktree.name, action },
       });
-      if (!result.success) {
-        setError(result.error ?? "Operation failed");
-        return;
-      }
       onRemoved();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Operation failed");
     } finally {
       setBusy(false);
     }

@@ -131,7 +131,18 @@ export function useAgentSession() {
     setError(null);
     setEntries([]);
     try {
-      await callRpc("start-session", { personaId });
+      const result = await callRpc("start-session", { personaId }) as {
+        replayEntries?: Array<{ type: string; message: string; timestamp: number; source?: string }>;
+      };
+      if (result.replayEntries && result.replayEntries.length > 0) {
+        setEntries(result.replayEntries.map((e, i) => ({
+          id: `replay-${i}`,
+          type: e.type as LogType,
+          message: e.message,
+          timestamp: e.timestamp,
+          source: e.source as "voice" | "text" | undefined,
+        })).slice(-100));
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
@@ -147,17 +158,27 @@ export function useAgentSession() {
     }
   }, [personaId]);
 
-  const sendMessage = useCallback(async (text: string) => {
+  const sendMessage = useCallback(async (text: string, contextSessionUuid?: string) => {
     if (!personaId || !text.trim()) return;
     try {
-      if (state === "idle") {
-        await callRpc("start-session", { personaId });
+      const result = await callRpc("send-message", {
+        personaId,
+        text: text.trim(),
+        ...(contextSessionUuid && { contextSessionUuid }),
+      }) as { replayEntries?: Array<{ type: string; message: string; timestamp: number; source?: string }> };
+      if (result.replayEntries && result.replayEntries.length > 0) {
+        setEntries(result.replayEntries.map((e, i) => ({
+          id: `replay-${i}`,
+          type: e.type as LogType,
+          message: e.message,
+          timestamp: e.timestamp,
+          source: e.source as "voice" | "text" | undefined,
+        })).slice(-100));
       }
-      await callRpc("send-message", { personaId, text: text.trim() });
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
-  }, [personaId, state]);
+  }, [personaId]);
 
   const closePanel = useCallback(async () => {
     if (personaId && state !== "idle") {

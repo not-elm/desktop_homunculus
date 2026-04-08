@@ -1,14 +1,16 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { audio, dialog, Webview } from "@hmcs/sdk";
-import { rpc } from "@hmcs/sdk/rpc";
 import { useAgentSession } from "./hooks/useAgentSession";
 import { useWebviewMode } from "./hooks/useWebviewMode";
+import { useCurrentBranch } from "./hooks/useCurrentBranch";
 import { useSettingsDraft } from "./settings/hooks/useSettingsDraft";
 import type { WorkspaceSelection, PttKey } from "./settings/hooks/useSettingsDraft";
 import { formatPttKeyName } from "./utils/format-ptt-key";
 import { Sidebar } from "./settings/components/Sidebar";
 import { SettingsFormView } from "./settings/components/SettingsFormView";
 import { ActivityLog } from "./components/ActivityLog";
+import { SessionHistory } from "./components/SessionHistory";
+import { PastSessionView } from "./components/PastSessionView";
 import { PermissionDialog } from "./components/PermissionDialog";
 import { QuestionDialog } from "./components/QuestionDialog";
 import { TextInput } from "./components/TextInput";
@@ -33,6 +35,7 @@ export function UnifiedView() {
   const paths = draft.settings.workspaces.paths;
   const selection = draft.settings.workspaces.selection;
   const workspacePath = paths[selection.workspaceIndex] ?? null;
+  const currentBranch = useCurrentBranch(workspacePath, selection.worktreeName);
 
   // Geometry management
   const geometryMode = sidebarOpen ? "expanded" : "collapsed";
@@ -47,9 +50,12 @@ export function UnifiedView() {
     }
     if (!isActive && prevActive) {
       setSidebarOpen(true);
+      if (workspacePath) {
+        setBodyContent({ kind: "sessionHistory" });
+      }
     }
     setPrevActive(isActive);
-  }, [isActive, prevActive]);
+  }, [isActive, prevActive, workspacePath]);
 
   // Focus reporting for PTT
   useEffect(() => {
@@ -84,12 +90,14 @@ export function UnifiedView() {
     };
   }, [session.personaId]);
 
-  // Empty state when no workspaces
+  // Empty state when no workspaces, or session history when idle with workspaces
   useEffect(() => {
     if (!draft.loading && paths.length === 0) {
       setBodyContent({ kind: "empty" });
+    } else if (!draft.loading && paths.length > 0 && !isActive) {
+      setBodyContent({ kind: "sessionHistory" });
     }
-  }, [draft.loading, paths.length]);
+  }, [draft.loading, paths.length, isActive]);
 
   // Auto-restore when permission or question dialog arrives
   useEffect(() => {
@@ -125,7 +133,7 @@ export function UnifiedView() {
     }
     updateSelection(newSelection);
     setActiveCategory(null);
-    setBodyContent({ kind: "sessionLog" });
+    setBodyContent({ kind: "sessionHistory" });
   }
 
   function updateSelection(newSelection: WorkspaceSelection) {
@@ -281,6 +289,10 @@ export function UnifiedView() {
             isActive={isActive}
             onBack={handleBack}
             onAddWorkspace={handleAddWorkspaceFromPanel}
+            workspacePath={workspacePath}
+            branchName={currentBranch}
+            onSelectSession={(uuid) => setBodyContent({ kind: "pastSession", uuid })}
+            onBodyContentChange={setBodyContent}
           />
         </div>
       </div>
@@ -295,6 +307,10 @@ function BodyPanel({
   isActive,
   onBack,
   onAddWorkspace,
+  workspacePath,
+  branchName,
+  onSelectSession,
+  onBodyContentChange,
 }: {
   content: BodyContent;
   session: ReturnType<typeof useAgentSession>;
@@ -302,6 +318,10 @@ function BodyPanel({
   isActive: boolean;
   onBack: () => void;
   onAddWorkspace: () => void;
+  workspacePath: string | null;
+  branchName: string | null;
+  onSelectSession: (uuid: string) => void;
+  onBodyContentChange: (content: BodyContent) => void;
 }) {
   if (content.kind === "empty") {
     return (
@@ -341,6 +361,41 @@ function BodyPanel({
           />
         </div>
       </div>
+    );
+  }
+
+  if (content.kind === "sessionHistory") {
+    return (
+      <div className="uv-session">
+        {workspacePath && session.personaId && (
+          <SessionHistory
+            workspacePath={workspacePath}
+            personaId={session.personaId}
+            branchName={branchName}
+            onSelectSession={onSelectSession}
+          />
+        )}
+        <TextInput
+          onSend={session.sendMessage}
+          isInterruptible={false}
+          onInterrupt={session.interruptSession}
+        />
+      </div>
+    );
+  }
+
+  if (content.kind === "pastSession") {
+    return (
+      <PastSessionView
+        workspacePath={workspacePath ?? ""}
+        personaId={session.personaId}
+        branchName={branchName}
+        uuid={content.uuid}
+        onBack={() => onBodyContentChange({ kind: "sessionHistory" })}
+        onSendMessage={async (text, contextUuid) => {
+          await session.sendMessage(text, contextUuid);
+        }}
+      />
     );
   }
 
