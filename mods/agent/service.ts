@@ -15,10 +15,11 @@ import {
   type Persona,
   DEFAULT_SETTINGS,
 } from "./lib/types.ts";
-import type { WorktreeContext } from "./lib/prompt.ts";
+import { buildPersonaPrompt, buildSessionContext, type WorktreeContext } from "./lib/prompt.ts";
 import { WorktreeManager, WORKTREE_NAME_PATTERN } from "./lib/worktree-manager.ts";
 import { gitExec, isGitRepo, currentBranch, listBranches } from "./lib/git.ts";
 import { sanitizeForTts } from "./lib/tts.ts";
+import { SessionPersistence, type SessionHandle, type PersistLogEntry } from "./lib/session-persistence.ts";
 import { mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import path from "node:path";
@@ -31,6 +32,9 @@ const pendingQuestions = new Map<string, Deferred<Record<string, string>>>();
 const pendingInterrupts = new Map<string, Deferred<void>>();
 const textQueues = new Map<string, AsyncQueue<string>>();
 const textFocusedPersonas = new Set<string>();
+
+const persistence = new SessionPersistence();
+const activeSessionHandles = new Map<string, SessionHandle>();
 
 let appServerProcess: CodexAppServerProcess | null = null;
 
@@ -124,7 +128,7 @@ async function scanOrphanedWorktrees(): Promise<void> {
   }
 }
 
-async function startSession(personaId: string): Promise<void> {
+async function startSession(personaId: string, contextSessionUuid?: string): Promise<PersistLogEntry[]> {
   const settings = await loadPersonaSettings(personaId);
   assertCanStartSession(personaId, settings);
 
@@ -144,13 +148,46 @@ async function startSession(personaId: string): Promise<void> {
   }
 
   const worktreeCtx = await buildWorktreeContext(settings, workDir);
-  const runtime = createRuntime(settings, persona, currentApiKey, workDir, worktreeCtx);
+
+  const basePath = settings.workspaces.paths[selection.workspaceIndex];
+  const branchName = basePath
+    ? await resolveCurrentBranch(basePath, selection.worktreeName)
+    : null;
+
+  // Read previous session context for prompt injection
+  let sessionContext: string | undefined;
+  let replayEntries: PersistLogEntry[] = [];
+  if (basePath && branchName) {
+    const contextUuid = contextSessionUuid
+      ?? await persistence.findLatestSessionUuid(basePath, personaId, branchName);
+    if (contextUuid) {
+      const entries = await persistence.read(basePath, personaId, branchName, contextUuid);
+      if (entries.length > 0) {
+        sessionContext = buildSessionContext(entries);
+        replayEntries = entries;
+      }
+    }
+  }
+
+  const prompt = buildPersonaPrompt(persona, worktreeCtx, sessionContext);
+  const runtime = createRuntime(settings, prompt, currentApiKey, workDir);
+
+  if (basePath && branchName) {
+    const handle = await persistence.create({
+      workspacePath: basePath,
+      personaId,
+      branchName,
+    });
+    activeSessionHandles.set(personaId, handle);
+    persistence.cleanup(basePath, personaId).catch(() => {});
+  }
 
   const sessionAbort = new AbortController();
   activeSessions.set(personaId, sessionAbort);
   textQueues.set(personaId, new AsyncQueue<string>());
 
   launchSessionLoop(personaId, runtime, sessionAbort, settings, resolvedKey);
+  return replayEntries;
 }
 
 function assertCanStartSession(
@@ -187,6 +224,11 @@ function handleSessionCrash(
   if (!isAbortError(err)) {
     console.error(`[agent] Session error for ${personaId}:`, err);
     emitLog(personaId, "error", extractErrorMessage(err));
+  }
+  const handle = activeSessionHandles.get(personaId);
+  if (handle) {
+    persistence.close(handle).catch(() => {});
+    activeSessionHandles.delete(personaId);
   }
   const queue = textQueues.get(personaId);
   if (queue) {
@@ -251,18 +293,35 @@ async function readWorktreeBaseBranch(worktreePath: string): Promise<string> {
   }
 }
 
+/** Resolve the current git branch for session scoping. */
+async function resolveCurrentBranch(
+  workspacePath: string,
+  worktreeName: string | null,
+): Promise<string | null> {
+  try {
+    if (worktreeName) {
+      const manager = new WorktreeManager(workspacePath);
+      const worktrees = await manager.list();
+      const wt = worktrees.find((w) => w.name === worktreeName);
+      return wt?.branch ?? null;
+    }
+    return await currentBranch(workspacePath);
+  } catch {
+    return null;
+  }
+}
+
 function createRuntime(
   settings: AgentSettings,
-  persona: Persona,
+  prompt: string,
   apiKey: string | null,
   workDir: string,
-  worktree?: WorktreeContext,
 ): AgentRuntime {
   switch (settings.runtime) {
     case "codex":
-      return new CodexAppServerRuntime(persona, settings, workDir, getAppServerProcess(), worktree);
+      return new CodexAppServerRuntime(prompt, settings, workDir, getAppServerProcess());
     case "sdk":
-      return new ClaudeAgentRuntime(persona, settings, apiKey!, workDir, worktree);
+      return new ClaudeAgentRuntime(prompt, settings, apiKey!, workDir);
     default:
       throw new Error(`Runtime "${settings.runtime}" is not yet implemented.`);
   }
@@ -271,6 +330,13 @@ function createRuntime(
 async function stopSession(personaId: string): Promise<void> {
   const controller = activeSessions.get(personaId);
   if (!controller) return;
+
+  const handle = activeSessionHandles.get(personaId);
+  if (handle) {
+    await persistence.close(handle).catch(() => {});
+    activeSessionHandles.delete(personaId);
+  }
+
   controller.abort();
   const queue = textQueues.get(personaId);
   if (queue) {
@@ -293,30 +359,6 @@ async function interruptSession(personaId: string): Promise<void> {
   }
 }
 
-const SESSION_PREF_PREFIX = "agent::session::";
-
-async function loadSavedSession(
-  personaId: string,
-  runtime: AgentSettings["runtime"],
-): Promise<string | null> {
-  return (
-    (await preferences.load<string>(
-      `${SESSION_PREF_PREFIX}${runtime}::${personaId}`,
-    )) ?? null
-  );
-}
-
-function saveSession(
-  personaId: string,
-  runtime: AgentSettings["runtime"],
-  sessionId: string | null,
-): void {
-  preferences.save(
-    `${SESSION_PREF_PREFIX}${runtime}::${personaId}`,
-    sessionId,
-  );
-}
-
 interface UserInput {
   text: string;
   source: "voice" | "text";
@@ -329,7 +371,7 @@ async function runSession(
   settings: AgentSettings,
   resolvedKey: ResolvedPttKey | null,
 ): Promise<void> {
-  let sessionId = await loadSavedSession(personaId, settings.runtime);
+  let sessionId: string | null = null;
   const signal = sessionAbort.signal;
 
   try {
@@ -356,6 +398,13 @@ async function runSession(
   } finally {
     activeSessions.delete(personaId);
     textFocusedPersonas.delete(personaId);
+
+    const handle = activeSessionHandles.get(personaId);
+    if (handle) {
+      await persistence.close(handle).catch(() => {});
+      activeSessionHandles.delete(personaId);
+    }
+
     emitStatus(personaId, "idle", "session-ended");
   }
 }
@@ -507,7 +556,7 @@ async function handleAgentEvent(
     case "elicitation_request":
       return await handleElicitationRequest(personaId, event, signal);
     case "completed":
-      return handleCompleted(personaId, event.sessionId, settings);
+      return handleCompleted(personaId, event.sessionId);
     case "error":
       return handleError(personaId, event.message, settings);
   }
@@ -551,9 +600,7 @@ async function handleElicitationRequest(
 function handleCompleted(
   personaId: string,
   sessionId: string,
-  settings: AgentSettings,
 ): undefined {
-  saveSession(personaId, settings.runtime, sessionId);
   return undefined;
 }
 
@@ -832,22 +879,19 @@ function emitStatus(personaId: string, state: AgentStatus, reason?: string): voi
 }
 
 function emitLog(personaId: string, type: string, message: string): void {
-  signals.send("agent:log", {
-    personaId,
-    type,
-    message,
-    timestamp: Date.now(),
-  });
+  const entry = { type, message, timestamp: Date.now() };
+  signals.send("agent:log", { personaId, ...entry });
+
+  const handle = activeSessionHandles.get(personaId);
+  if (handle) persistence.append(handle, entry);
 }
 
 function emitUserLog(personaId: string, text: string, source: "voice" | "text"): void {
-  signals.send("agent:log", {
-    personaId,
-    type: "user",
-    message: text,
-    source,
-    timestamp: Date.now(),
-  });
+  const entry = { type: "user" as const, message: text, timestamp: Date.now(), source };
+  signals.send("agent:log", { personaId, ...entry });
+
+  const handle = activeSessionHandles.get(personaId);
+  if (handle) persistence.append(handle, entry);
 }
 
 function emitInterruptLog(personaId: string): void {
@@ -880,10 +924,10 @@ function buildRpcMethods() {
       handler: async ({ requestId, approved, decision }) => {
         const deferred = pendingApprovals.get(requestId);
         if (!deferred) {
-          return { success: false as const, error: "No pending approval for this request" };
+          throw new Error("No pending approval for this request");
         }
         deferred.resolve({ approved, decision });
-        return { success: true as const };
+        return {};
       },
     }),
     "answer-question": rpc.method({
@@ -897,7 +941,7 @@ function buildRpcMethods() {
         if (deferred) {
           deferred.resolve(answers);
         }
-        return { success: true as const };
+        return {};
       },
     }),
     "send-message": rpc.method({
@@ -905,19 +949,21 @@ function buildRpcMethods() {
       input: z.object({
         personaId: z.string(),
         text: z.string().min(1),
+        contextSessionUuid: z.string().optional(),
       }),
-      handler: async ({ personaId, text }) => {
+      handler: async ({ personaId, text, contextSessionUuid }) => {
+        let replayEntries: PersistLogEntry[] = [];
         if (!activeSessions.has(personaId)) {
-          return { success: false as const, error: "No active session" };
+          replayEntries = await startSession(personaId, contextSessionUuid);
         }
         const queue = textQueues.get(personaId);
         if (!queue) {
-          return { success: false as const, error: "No active session" };
+          throw new Error("No active session");
         }
         await interruptSession(personaId);
         queue.clear();
         queue.push(text);
-        return { success: true as const };
+        return { replayEntries };
       },
     }),
     "set-text-focus": rpc.method({
@@ -932,7 +978,7 @@ function buildRpcMethods() {
         } else {
           textFocusedPersonas.delete(personaId);
         }
-        return { success: true as const };
+        return {};
       },
     }),
     status: rpc.method({
@@ -957,8 +1003,8 @@ function buildRpcMethods() {
       description: "Manually start an agent session for a persona",
       input: z.object({ personaId: z.string() }),
       handler: async ({ personaId }) => {
-        await startSession(personaId);
-        return { success: true as const };
+        const replayEntries = await startSession(personaId);
+        return { replayEntries };
       },
     }),
     "stop-session": rpc.method({
@@ -966,7 +1012,7 @@ function buildRpcMethods() {
       input: z.object({ personaId: z.string() }),
       handler: async ({ personaId }) => {
         await stopSession(personaId);
-        return { success: true as const };
+        return {};
       },
     }),
     "interrupt-session": rpc.method({
@@ -974,7 +1020,7 @@ function buildRpcMethods() {
       input: z.object({ personaId: z.string() }),
       handler: async ({ personaId }) => {
         await interruptSession(personaId);
-        return { success: true as const };
+        return {};
       },
     }),
     "list-worktrees": rpc.method({
@@ -1017,12 +1063,12 @@ function buildRpcMethods() {
         if (action === "merge") {
           const result = await manager.merge(name);
           if (!result.success) {
-            return { success: false, error: result.error };
+            throw new Error(result.error);
           }
-          return { success: true };
+          return {};
         }
         await manager.remove(name);
-        return { success: true };
+        return {};
       },
     }),
     "list-branches": rpc.method({
@@ -1040,6 +1086,45 @@ function buildRpcMethods() {
       handler: async ({ workspacePath, name }) => {
         const manager = new WorktreeManager(workspacePath);
         return await manager.status(name);
+      },
+    }),
+    "get-current-branch": rpc.method({
+      description: "Resolve the current git branch for a workspace",
+      input: z.object({
+        workspacePath: z.string(),
+        worktreeName: z.string().nullable(),
+      }),
+      handler: async ({ workspacePath, worktreeName }) => {
+        const branchName = await resolveCurrentBranch(workspacePath, worktreeName);
+        if (!branchName) {
+          throw new Error("Not a git repository or branch could not be resolved");
+        }
+        return { branchName };
+      },
+    }),
+    "list-sessions": rpc.method({
+      description: "List past sessions for a persona on a branch",
+      input: z.object({
+        workspacePath: z.string(),
+        personaId: z.string(),
+        branchName: z.string(),
+      }),
+      handler: async ({ workspacePath, personaId, branchName }) => {
+        const sessions = await persistence.list(workspacePath, personaId, branchName);
+        return { sessions };
+      },
+    }),
+    "get-session-logs": rpc.method({
+      description: "Read the full log entries for a past session",
+      input: z.object({
+        workspacePath: z.string(),
+        personaId: z.string(),
+        branchName: z.string(),
+        uuid: z.string(),
+      }),
+      handler: async ({ workspacePath, personaId, branchName, uuid }) => {
+        const entries = await persistence.read(workspacePath, personaId, branchName, uuid);
+        return { entries };
       },
     }),
   };
