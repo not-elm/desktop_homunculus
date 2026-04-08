@@ -28,8 +28,8 @@ export function useSessionList(
           modName: "@hmcs/agent",
           method: "list-sessions",
           body: { workspacePath, personaId, branchName },
-        }) as { success: boolean; sessions?: SessionMeta[] };
-        if (!cancelled && result.success && result.sessions) {
+        }) as { sessions?: SessionMeta[] };
+        if (!cancelled && result.sessions) {
           setSessions(result.sessions);
         }
       } catch {

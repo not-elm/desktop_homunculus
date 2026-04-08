@@ -37,8 +37,8 @@ export function PastSessionView({
           modName: "@hmcs/agent",
           method: "get-session-logs",
           body: { workspacePath, personaId, branchName, uuid },
-        }) as { success: boolean; entries?: Array<{ type: string; message: string; timestamp: number; source?: string }> };
-        if (!cancelled && result.success && result.entries) {
+        }) as { entries?: Array<{ type: string; message: string; timestamp: number; source?: string }> };
+        if (!cancelled && result.entries) {
           const mapped = mapEntries(result.entries);
           setEntries(mapped);
           if (mapped.length > 0) {

@@ -924,10 +924,10 @@ function buildRpcMethods() {
       handler: async ({ requestId, approved, decision }) => {
         const deferred = pendingApprovals.get(requestId);
         if (!deferred) {
-          return { success: false as const, error: "No pending approval for this request" };
+          throw new Error("No pending approval for this request");
         }
         deferred.resolve({ approved, decision });
-        return { success: true as const };
+        return {};
       },
     }),
     "answer-question": rpc.method({
@@ -941,7 +941,7 @@ function buildRpcMethods() {
         if (deferred) {
           deferred.resolve(answers);
         }
-        return { success: true as const };
+        return {};
       },
     }),
     "send-message": rpc.method({
@@ -958,12 +958,12 @@ function buildRpcMethods() {
         }
         const queue = textQueues.get(personaId);
         if (!queue) {
-          return { success: false as const, error: "No active session" };
+          throw new Error("No active session");
         }
         await interruptSession(personaId);
         queue.clear();
         queue.push(text);
-        return { success: true as const, replayEntries };
+        return { replayEntries };
       },
     }),
     "set-text-focus": rpc.method({
@@ -978,7 +978,7 @@ function buildRpcMethods() {
         } else {
           textFocusedPersonas.delete(personaId);
         }
-        return { success: true as const };
+        return {};
       },
     }),
     status: rpc.method({
@@ -1004,7 +1004,7 @@ function buildRpcMethods() {
       input: z.object({ personaId: z.string() }),
       handler: async ({ personaId }) => {
         const replayEntries = await startSession(personaId);
-        return { success: true as const, replayEntries };
+        return { replayEntries };
       },
     }),
     "stop-session": rpc.method({
@@ -1012,7 +1012,7 @@ function buildRpcMethods() {
       input: z.object({ personaId: z.string() }),
       handler: async ({ personaId }) => {
         await stopSession(personaId);
-        return { success: true as const };
+        return {};
       },
     }),
     "interrupt-session": rpc.method({
@@ -1020,7 +1020,7 @@ function buildRpcMethods() {
       input: z.object({ personaId: z.string() }),
       handler: async ({ personaId }) => {
         await interruptSession(personaId);
-        return { success: true as const };
+        return {};
       },
     }),
     "list-worktrees": rpc.method({
@@ -1063,12 +1063,12 @@ function buildRpcMethods() {
         if (action === "merge") {
           const result = await manager.merge(name);
           if (!result.success) {
-            return { success: false, error: result.error };
+            throw new Error(result.error);
           }
-          return { success: true };
+          return {};
         }
         await manager.remove(name);
-        return { success: true };
+        return {};
       },
     }),
     "list-branches": rpc.method({
@@ -1097,9 +1097,9 @@ function buildRpcMethods() {
       handler: async ({ workspacePath, worktreeName }) => {
         const branchName = await resolveCurrentBranch(workspacePath, worktreeName);
         if (!branchName) {
-          return { success: false as const, error: "Not a git repository or branch could not be resolved" };
+          throw new Error("Not a git repository or branch could not be resolved");
         }
-        return { success: true as const, branchName };
+        return { branchName };
       },
     }),
     "list-sessions": rpc.method({
@@ -1111,7 +1111,7 @@ function buildRpcMethods() {
       }),
       handler: async ({ workspacePath, personaId, branchName }) => {
         const sessions = await persistence.list(workspacePath, personaId, branchName);
-        return { success: true as const, sessions };
+        return { sessions };
       },
     }),
     "get-session-logs": rpc.method({
@@ -1124,7 +1124,7 @@ function buildRpcMethods() {
       }),
       handler: async ({ workspacePath, personaId, branchName, uuid }) => {
         const entries = await persistence.read(workspacePath, personaId, branchName, uuid);
-        return { success: true as const, entries };
+        return { entries };
       },
     }),
   };
