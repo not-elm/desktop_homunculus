@@ -29,7 +29,6 @@ mod tests {
     use axum::body::Body;
     use axum::http::{Request, StatusCode};
     use homunculus_api::persona::PersonaSnapshot;
-    use homunculus_core::prelude::Persona;
     use http_body_util::BodyExt;
 
     #[tokio::test]

@@ -182,6 +182,7 @@ fn patch_persona(
     Ok(PersonaSnapshot {
         persona: updated,
         state: state_str,
+        spawned: true,
     })
 }
 

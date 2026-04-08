@@ -31,6 +31,8 @@ pub struct PersonaSnapshot {
     pub persona: Persona,
     /// Current ephemeral state (e.g. "idle", "sitting", "drag").
     pub state: String,
+    /// Whether this persona has a live ECS entity (i.e. is spawned in the scene).
+    pub spawned: bool,
 }
 
 api!(

@@ -84,6 +84,7 @@ fn attach(
         PersonaSnapshot {
             persona: updated,
             state: state_str,
+            spawned: true,
         },
         entity,
     ))

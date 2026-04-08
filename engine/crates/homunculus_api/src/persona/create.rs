@@ -76,6 +76,7 @@ fn create(
     Ok(PersonaSnapshot {
         persona,
         state: state.0,
+        spawned: true,
     })
 }
 
