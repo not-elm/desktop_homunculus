@@ -294,9 +294,11 @@ impl PrefsDatabase {
 
     /// Updates an existing persona in the `personas` table.
     ///
-    /// Uses `UPDATE ... WHERE id = ?` so no `DELETE + INSERT` occurs, preserving
-    /// `persona_metadata` rows that are not explicitly touched.
-    /// Also replaces all metadata entries via `save_all_metadata`.
+    /// Uses `UPDATE ... WHERE id = ?` so no `DELETE + INSERT` occurs on the `personas`
+    /// row itself. Replaces all metadata entries with the supplied set via
+    /// `save_all_metadata` (which performs `DELETE + INSERT` on `persona_metadata`).
+    ///
+    /// Returns an error if no persona with the given ID exists.
     pub fn update_persona(&self, persona: &Persona) -> Result<(), rusqlite::Error> {
         update_persona_to_conn(&self.0, persona)?;
         self.save_all_metadata(&persona.id, &persona.metadata)
@@ -740,12 +742,15 @@ fn insert_persona_to_conn(
 }
 
 /// Updates an existing persona row using a raw connection/transaction (`UPDATE`).
+///
+/// Returns [`rusqlite::Error::QueryReturnedNoRows`] if no persona with the given
+/// ID exists.
 #[cfg(feature = "bevy")]
 fn update_persona_to_conn(
     conn: &rusqlite::Connection,
     persona: &Persona,
 ) -> Result<(), rusqlite::Error> {
-    conn.execute(
+    let rows_affected = conn.execute(
         "UPDATE personas SET name = ?1, age = ?2, gender = ?3, first_person_pronoun = ?4,
          profile = ?5, personality = ?6, vrm_asset_id = ?7
          WHERE id = ?8",
@@ -760,6 +765,9 @@ fn update_persona_to_conn(
             persona.id.0,
         ],
     )?;
+    if rows_affected == 0 {
+        return Err(rusqlite::Error::QueryReturnedNoRows);
+    }
     Ok(())
 }
 
@@ -1446,5 +1454,18 @@ mod test {
             .unwrap();
         assert_eq!(md.len(), 2);
         assert_eq!(md.get("extra"), Some(&serde_json::json!("extra-value")));
+    }
+
+    #[test]
+    fn test_update_nonexistent_persona_fails() {
+        use homunculus_core::prelude::Persona;
+
+        let db = PrefsDatabase::open_in_memory();
+        let persona = Persona {
+            id: homunculus_core::prelude::PersonaId::new("ghost"),
+            name: Some("Ghost".to_string()),
+            ..Default::default()
+        };
+        assert!(db.update_persona(&persona).is_err());
     }
 }
