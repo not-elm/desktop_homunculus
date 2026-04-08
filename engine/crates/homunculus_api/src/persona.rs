@@ -7,6 +7,7 @@ mod create;
 mod delete;
 mod fetch;
 mod full_snapshot;
+mod spawn;
 mod startup;
 mod state;
 mod update;
@@ -40,11 +41,14 @@ api!(
     PersonaApi
 );
 
-/// Plugin that restores persisted personas at startup.
+/// Plugin that migrates legacy persona data at startup.
+///
+/// Personas are stored as DB records only. Spawning into the ECS world
+/// is delegated to mods via `POST /personas/{id}/spawn`.
 pub struct PersonaApiPlugin;
 
 impl Plugin for PersonaApiPlugin {
     fn build(&self, app: &mut bevy::app::App) {
-        app.add_systems(Startup, startup::load_personas);
+        app.add_systems(Startup, startup::migrate_personas);
     }
 }

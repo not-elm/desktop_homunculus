@@ -2,7 +2,7 @@ use crate::error::{ApiError, ApiResult};
 use crate::persona::{PersonaApi, PersonaSnapshot};
 use bevy::prelude::*;
 use bevy_flurx::prelude::*;
-use homunculus_core::prelude::{Gender, Persona, PersonaId, PersonaIndex, PersonaState};
+use homunculus_core::prelude::{Gender, Persona, PersonaId};
 use homunculus_prefs::prelude::PrefsDatabase;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -31,7 +31,10 @@ pub struct CreatePersona {
 }
 
 impl PersonaApi {
-    /// Creates a new persona entity and persists it to the database.
+    /// Creates a new persona as a DB record only.
+    ///
+    /// The persona is **not** spawned into the ECS world. Use
+    /// `POST /personas/{id}/spawn` to bring it into the scene.
     pub async fn create(&self, args: CreatePersona) -> ApiResult<PersonaSnapshot> {
         let persona_id = PersonaId::validate(&args.id).map_err(ApiError::InvalidInput)?;
 
@@ -46,38 +49,34 @@ impl PersonaApi {
 
 fn create(
     In((persona_id, args)): In<(PersonaId, CreatePersona)>,
-    mut commands: Commands,
-    mut index: ResMut<PersonaIndex>,
     prefs: NonSend<PrefsDatabase>,
 ) -> ApiResult<PersonaSnapshot> {
-    if index.get(&persona_id).is_some() {
+    reject_if_exists_in_db(&prefs, &persona_id)?;
+
+    let persona = build_persona(&persona_id, &args);
+    persist_persona(&prefs, &persona)?;
+
+    Ok(PersonaSnapshot {
+        persona,
+        state: String::new(),
+        spawned: false,
+    })
+}
+
+/// Returns `Err(409 Conflict)` if a persona with the given ID already exists in the database.
+fn reject_if_exists_in_db(prefs: &PrefsDatabase, persona_id: &PersonaId) -> ApiResult<()> {
+    let exists = prefs
+        .load_persona(&persona_id.0)
+        .map_err(|e| ApiError::Sql(e.to_string()))?
+        .is_some();
+
+    if exists {
         return Err(ApiError::Conflict(format!(
             "Persona already exists: {}",
             persona_id
         )));
     }
-
-    let persona = build_persona(&persona_id, &args);
-    let display_name = persona.name.clone().unwrap_or_else(|| persona_id.0.clone());
-    let state = PersonaState::default();
-
-    let entity = commands
-        .spawn((
-            persona.clone(),
-            state.clone(),
-            Name::new(display_name),
-            Transform::default(),
-        ))
-        .id();
-
-    index.insert(persona_id.clone(), entity);
-    persist_persona(&prefs, &persona);
-
-    Ok(PersonaSnapshot {
-        persona,
-        state: state.0,
-        spawned: true,
-    })
+    Ok(())
 }
 
 /// Builds a [`Persona`] component from the validated ID and creation arguments.
@@ -95,9 +94,9 @@ fn build_persona(persona_id: &PersonaId, args: &CreatePersona) -> Persona {
     }
 }
 
-/// Persists a newly created persona to the SQLite database, logging on failure.
-fn persist_persona(prefs: &PrefsDatabase, persona: &Persona) {
-    if let Err(e) = prefs.insert_persona(persona) {
-        warn!("Failed to persist persona: {e}");
-    }
+/// Inserts a newly created persona into the SQLite database.
+fn persist_persona(prefs: &PrefsDatabase, persona: &Persona) -> ApiResult<()> {
+    prefs
+        .insert_persona(persona)
+        .map_err(|e| ApiError::Sql(e.to_string()))
 }
