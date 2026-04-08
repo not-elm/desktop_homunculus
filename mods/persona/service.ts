@@ -1,4 +1,4 @@
-import { createUrl, Persona, repeat, sleep, type PersonaSnapshot } from "@hmcs/sdk";
+import { host, Persona, repeat, sleep, type PersonaSnapshot } from "@hmcs/sdk";
 
 // --- Startup: spawn all auto-spawn personas ---
 
@@ -12,7 +12,7 @@ for (const snapshot of personas) {
 
 // --- Dynamic management via SSE combined stream ---
 
-const streamUrl = createUrl("personas/stream");
+const streamUrl = host.createUrl("personas/stream");
 const source = new EventSource(streamUrl.toString());
 
 source.addEventListener("persona-spawned", async (event) => {
