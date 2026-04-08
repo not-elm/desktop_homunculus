@@ -1,0 +1,200 @@
+import type { Gender } from "@hmcs/sdk";
+import { useRef } from "react";
+import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@hmcs/ui";
+
+export interface PersonaFormValues {
+  name: string;
+  age: number | null;
+  gender: Gender;
+  firstPersonPronoun: string;
+  profile: string;
+  personality: string;
+}
+
+interface PersonaFieldsProps {
+  values: PersonaFormValues;
+  onChange: (values: PersonaFormValues) => void;
+  disabled?: boolean;
+}
+
+const GENDER_OPTIONS: { value: Gender; label: string }[] = [
+  { value: "unknown", label: "Unknown" },
+  { value: "male", label: "Male" },
+  { value: "female", label: "Female" },
+  { value: "other", label: "Other" },
+];
+
+export function PersonaFields({ values, onChange, disabled }: PersonaFieldsProps) {
+  function update<K extends keyof PersonaFormValues>(key: K, value: PersonaFormValues[K]) {
+    onChange({ ...values, [key]: value });
+  }
+
+  return (
+    <div className="settings-section">
+      <label className="settings-label">
+        Name
+        <input
+          type="text"
+          className="settings-input"
+          value={values.name}
+          placeholder="Name"
+          onChange={(e) => update("name", e.target.value)}
+          disabled={disabled}
+        />
+      </label>
+
+      <AgeField
+        value={values.age}
+        onChange={(age) => update("age", age)}
+        disabled={disabled}
+      />
+
+      <div className="settings-label">
+        Gender
+        <Select
+          value={values.gender}
+          onValueChange={(v) => update("gender", v as Gender)}
+          disabled={disabled}
+        >
+          <SelectTrigger className="settings-input">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {GENDER_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <label className="settings-label">
+        First Person Pronoun
+        <input
+          type="text"
+          className="settings-input"
+          value={values.firstPersonPronoun}
+          placeholder="e.g. watashi, boku, ore"
+          onChange={(e) => update("firstPersonPronoun", e.target.value)}
+          disabled={disabled}
+        />
+      </label>
+
+      <label className="settings-label">
+        Profile
+        <textarea
+          className="settings-textarea"
+          rows={5}
+          value={values.profile}
+          onChange={(e) => update("profile", e.target.value)}
+          placeholder="Character background and profile description..."
+          disabled={disabled}
+        />
+      </label>
+
+      <label className="settings-label">
+        Personality
+        <textarea
+          className="settings-textarea"
+          rows={3}
+          value={values.personality}
+          onChange={(e) => update("personality", e.target.value)}
+          placeholder="e.g. Sarcastic but caring, uses formal speech"
+          disabled={disabled}
+        />
+      </label>
+    </div>
+  );
+}
+
+interface AgeFieldProps {
+  value: number | null;
+  onChange: (age: number | null) => void;
+  disabled?: boolean;
+}
+
+function AgeField({ value, onChange, disabled }: AgeFieldProps) {
+  const preservedAge = useRef<number | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const isUnknown = value == null && preservedAge.current != null;
+  const radioValue = isUnknown ? "unknown" : "specify";
+
+  function handleModeChange(newMode: string) {
+    if (disabled) return;
+    if (newMode === "unknown") {
+      if (value != null) preservedAge.current = value;
+      onChange(null);
+    } else {
+      const restored = preservedAge.current;
+      if (restored != null) onChange(restored);
+      requestAnimationFrame(() => inputRef.current?.focus());
+    }
+  }
+
+  function handleInput(raw: string) {
+    const digits = raw.replace(/[^0-9]/g, "");
+    if (digits === "") {
+      onChange(null);
+      return;
+    }
+    onChange(Math.min(parseInt(digits, 10), 999));
+  }
+
+  return (
+    <fieldset className="settings-label settings-age-field" disabled={disabled}>
+      <legend className="settings-age-legend">Age</legend>
+      <RadioGroupPrimitive.Root
+        className="settings-age-segments"
+        value={radioValue}
+        onValueChange={handleModeChange}
+        data-mode={radioValue === "unknown" ? "unknown" : "specify"}
+        disabled={disabled}
+      >
+        <RadioGroupPrimitive.Item
+          value="specify"
+          className="settings-age-segment"
+          aria-label="Specify age"
+          data-mode="specify"
+        >
+          Specify
+        </RadioGroupPrimitive.Item>
+        <RadioGroupPrimitive.Item
+          value="unknown"
+          className="settings-age-segment"
+          aria-label="Age unknown"
+          data-mode="unknown"
+        >
+          Unknown
+        </RadioGroupPrimitive.Item>
+      </RadioGroupPrimitive.Root>
+      <div
+        className="settings-age-value-area"
+        role="status"
+        aria-live="polite"
+        data-mode={radioValue === "unknown" ? "unknown" : "specify"}
+      >
+        {radioValue === "unknown" ? (
+          <span className="settings-age-unknown-readout">Unknown</span>
+        ) : (
+          <input
+            ref={inputRef}
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            className="settings-age-input"
+            value={value ?? ""}
+            onChange={(e) => handleInput(e.target.value)}
+            aria-label="Age value"
+            placeholder="&#x2014;"
+            disabled={disabled}
+          />
+        )}
+      </div>
+    </fieldset>
+  );
+}
