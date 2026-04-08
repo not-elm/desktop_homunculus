@@ -94,9 +94,9 @@ fn build_persona(persona_id: &PersonaId, args: &CreatePersona) -> Persona {
     }
 }
 
-/// Persists the persona to the SQLite database, logging on failure.
+/// Persists a newly created persona to the SQLite database, logging on failure.
 fn persist_persona(prefs: &PrefsDatabase, persona: &Persona) {
-    if let Err(e) = prefs.save_persona(persona) {
+    if let Err(e) = prefs.insert_persona(persona) {
         warn!("Failed to persist persona: {e}");
     }
 }

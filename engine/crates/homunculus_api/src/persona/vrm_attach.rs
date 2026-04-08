@@ -98,7 +98,7 @@ fn persist_and_broadcast(
     persona: &Persona,
     asset_id: &str,
 ) {
-    if let Err(e) = prefs.save_persona(persona) {
+    if let Err(e) = prefs.update_persona(persona) {
         warn!("Failed to persist persona after VRM attach: {e}");
     }
     if let Some(tx) = tx_attached {

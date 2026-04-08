@@ -260,6 +260,11 @@ impl PrefsDatabase {
     /// Saves a persona to the `personas` table, replacing any existing row with the same ID.
     ///
     /// Also saves all metadata entries to `persona_metadata`.
+    ///
+    /// **Warning**: Uses `INSERT OR REPLACE`, which in SQLite is internally `DELETE + INSERT`.
+    /// This triggers `ON DELETE CASCADE` on `persona_metadata`, silently deleting all metadata
+    /// rows for an existing persona before re-inserting them. Prefer [`insert_persona`] for
+    /// new personas and [`update_persona`] for existing ones.
     pub fn save_persona(&self, persona: &Persona) -> Result<(), rusqlite::Error> {
         self.0.execute(
             "INSERT OR REPLACE INTO personas (id, name, age, gender, first_person_pronoun, profile, personality, vrm_asset_id)
@@ -275,6 +280,25 @@ impl PrefsDatabase {
                 persona.vrm_asset_id,
             ],
         )?;
+        self.save_all_metadata(&persona.id, &persona.metadata)
+    }
+
+    /// Inserts a new persona into the `personas` table.
+    ///
+    /// Returns a UNIQUE constraint error if a persona with the same ID already exists.
+    /// Also saves all metadata entries to `persona_metadata`.
+    pub fn insert_persona(&self, persona: &Persona) -> Result<(), rusqlite::Error> {
+        insert_persona_to_conn(&self.0, persona)?;
+        self.save_all_metadata(&persona.id, &persona.metadata)
+    }
+
+    /// Updates an existing persona in the `personas` table.
+    ///
+    /// Uses `UPDATE ... WHERE id = ?` so no `DELETE + INSERT` occurs, preserving
+    /// `persona_metadata` rows that are not explicitly touched.
+    /// Also replaces all metadata entries via `save_all_metadata`.
+    pub fn update_persona(&self, persona: &Persona) -> Result<(), rusqlite::Error> {
+        update_persona_to_conn(&self.0, persona)?;
         self.save_all_metadata(&persona.id, &persona.metadata)
     }
 
@@ -667,7 +691,7 @@ fn parse_legacy_persona(
     }
 }
 
-/// Saves a persona row using a raw connection/transaction.
+/// Saves a persona row using a raw connection/transaction (`INSERT OR REPLACE`).
 #[cfg(feature = "bevy")]
 fn save_persona_to_conn(
     conn: &rusqlite::Connection,
@@ -685,6 +709,55 @@ fn save_persona_to_conn(
             persona.profile,
             persona.personality,
             persona.vrm_asset_id,
+        ],
+    )?;
+    Ok(())
+}
+
+/// Inserts a new persona row using a raw connection/transaction (`INSERT INTO`).
+///
+/// Fails with a UNIQUE constraint error if the persona ID already exists.
+#[cfg(feature = "bevy")]
+fn insert_persona_to_conn(
+    conn: &rusqlite::Connection,
+    persona: &Persona,
+) -> Result<(), rusqlite::Error> {
+    conn.execute(
+        "INSERT INTO personas (id, name, age, gender, first_person_pronoun, profile, personality, vrm_asset_id)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+        rusqlite::params![
+            persona.id.0,
+            persona.name,
+            persona.age.map(|v| v as i64),
+            gender_to_str(&persona.gender),
+            persona.first_person_pronoun,
+            persona.profile,
+            persona.personality,
+            persona.vrm_asset_id,
+        ],
+    )?;
+    Ok(())
+}
+
+/// Updates an existing persona row using a raw connection/transaction (`UPDATE`).
+#[cfg(feature = "bevy")]
+fn update_persona_to_conn(
+    conn: &rusqlite::Connection,
+    persona: &Persona,
+) -> Result<(), rusqlite::Error> {
+    conn.execute(
+        "UPDATE personas SET name = ?1, age = ?2, gender = ?3, first_person_pronoun = ?4,
+         profile = ?5, personality = ?6, vrm_asset_id = ?7
+         WHERE id = ?8",
+        rusqlite::params![
+            persona.name,
+            persona.age.map(|v| v as i64),
+            gender_to_str(&persona.gender),
+            persona.first_person_pronoun,
+            persona.profile,
+            persona.personality,
+            persona.vrm_asset_id,
+            persona.id.0,
         ],
     )?;
     Ok(())
@@ -1240,5 +1313,138 @@ mod test {
         assert_eq!(loaded.name, Some("V2".to_string()));
         assert_eq!(loaded.gender, Gender::Female);
         assert_eq!(loaded.profile, "Version 2");
+    }
+
+    #[test]
+    fn test_insert_persona_duplicate_fails() {
+        use homunculus_core::prelude::{Persona, PersonaId};
+
+        let db = PrefsDatabase::open_in_memory();
+        let persona = Persona {
+            id: PersonaId::new("dup-test"),
+            name: Some("First".to_string()),
+            profile: "Original".to_string(),
+            ..Default::default()
+        };
+        db.insert_persona(&persona).unwrap();
+
+        // Second insert with the same ID should fail
+        let persona2 = Persona {
+            id: PersonaId::new("dup-test"),
+            name: Some("Second".to_string()),
+            profile: "Duplicate".to_string(),
+            ..Default::default()
+        };
+        let result = db.insert_persona(&persona2);
+        assert!(result.is_err(), "Expected UNIQUE constraint violation");
+
+        // Original persona should be unchanged
+        let loaded = db.load_persona("dup-test").unwrap().unwrap();
+        assert_eq!(loaded.name, Some("First".to_string()));
+        assert_eq!(loaded.profile, "Original");
+    }
+
+    #[test]
+    fn test_update_persona_preserves_metadata() {
+        use homunculus_core::prelude::{Persona, PersonaId};
+        use std::collections::HashMap;
+
+        let db = PrefsDatabase::open_in_memory();
+        let mut metadata = HashMap::new();
+        metadata.insert("mood".to_string(), serde_json::json!("happy"));
+        metadata.insert("theme".to_string(), serde_json::json!("dark"));
+
+        let persona = Persona {
+            id: PersonaId::new("update-meta-test"),
+            name: Some("Original".to_string()),
+            profile: "Before update".to_string(),
+            metadata: metadata.clone(),
+            ..Default::default()
+        };
+        db.insert_persona(&persona).unwrap();
+
+        // Verify metadata was saved
+        let md = db
+            .load_persona_metadata(&PersonaId::new("update-meta-test"))
+            .unwrap();
+        assert_eq!(md.len(), 2);
+
+        // Update persona name, keeping same metadata
+        let updated = Persona {
+            id: PersonaId::new("update-meta-test"),
+            name: Some("Updated".to_string()),
+            profile: "After update".to_string(),
+            metadata,
+            ..Default::default()
+        };
+        db.update_persona(&updated).unwrap();
+
+        // Verify persona fields were updated
+        let loaded = db.load_persona("update-meta-test").unwrap().unwrap();
+        assert_eq!(loaded.name, Some("Updated".to_string()));
+        assert_eq!(loaded.profile, "After update");
+
+        // Verify metadata still exists
+        assert_eq!(loaded.metadata.len(), 2);
+        assert_eq!(
+            loaded.metadata.get("mood"),
+            Some(&serde_json::json!("happy"))
+        );
+        assert_eq!(
+            loaded.metadata.get("theme"),
+            Some(&serde_json::json!("dark"))
+        );
+    }
+
+    #[test]
+    fn test_insert_persona_does_not_cascade() {
+        use homunculus_core::prelude::{Persona, PersonaId};
+        use std::collections::HashMap;
+
+        let db = PrefsDatabase::open_in_memory();
+
+        // Create persona with metadata via insert
+        let mut metadata = HashMap::new();
+        metadata.insert("key1".to_string(), serde_json::json!("value1"));
+        let persona = Persona {
+            id: PersonaId::new("cascade-test"),
+            name: Some("Test".to_string()),
+            profile: String::new(),
+            metadata,
+            ..Default::default()
+        };
+        db.insert_persona(&persona).unwrap();
+
+        // Add extra metadata directly (simulating external metadata writes)
+        db.save_persona_metadata(
+            &PersonaId::new("cascade-test"),
+            "extra",
+            &serde_json::json!("extra-value"),
+        )
+        .unwrap();
+
+        // Verify both metadata entries exist
+        let md = db
+            .load_persona_metadata(&PersonaId::new("cascade-test"))
+            .unwrap();
+        assert_eq!(md.len(), 2);
+        assert_eq!(md.get("key1"), Some(&serde_json::json!("value1")));
+        assert_eq!(md.get("extra"), Some(&serde_json::json!("extra-value")));
+
+        // A second insert should fail (not silently replace and cascade-delete)
+        let persona2 = Persona {
+            id: PersonaId::new("cascade-test"),
+            name: Some("Replaced".to_string()),
+            profile: String::new(),
+            ..Default::default()
+        };
+        assert!(db.insert_persona(&persona2).is_err());
+
+        // Metadata should still be intact
+        let md = db
+            .load_persona_metadata(&PersonaId::new("cascade-test"))
+            .unwrap();
+        assert_eq!(md.len(), 2);
+        assert_eq!(md.get("extra"), Some(&serde_json::json!("extra-value")));
     }
 }

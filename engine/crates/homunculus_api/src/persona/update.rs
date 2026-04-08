@@ -217,7 +217,7 @@ fn persist_and_broadcast(
     entity: Entity,
     persona: &Persona,
 ) {
-    if let Err(e) = prefs.save_persona(persona) {
+    if let Err(e) = prefs.update_persona(persona) {
         warn!("Failed to persist persona: {e}");
     }
     if let Some(tx) = tx {
