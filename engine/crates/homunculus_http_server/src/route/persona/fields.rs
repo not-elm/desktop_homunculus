@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use utoipa::ToSchema;
 
-use super::PersonaPath;
+use super::{PersonaPath, SpawnedPersonaPath};
 
 // ---------------------------------------------------------------------------
 // Name
@@ -315,7 +315,7 @@ pub struct MetadataBody {
 )]
 pub async fn get_transform(
     State(entities): State<homunculus_api::prelude::EntitiesApi>,
-    path: PersonaPath,
+    path: SpawnedPersonaPath,
 ) -> HttpResult<bevy::prelude::Transform> {
     entities.transform(path.entity).await.into_http_result()
 }
@@ -329,7 +329,7 @@ pub async fn get_transform(
 )]
 pub async fn put_transform(
     State(entities): State<homunculus_api::prelude::EntitiesApi>,
-    path: PersonaPath,
+    path: SpawnedPersonaPath,
     Json(body): Json<homunculus_api::vrm::OptionalTransform>,
 ) -> HttpResult<Option<bevy::prelude::Transform>> {
     entities

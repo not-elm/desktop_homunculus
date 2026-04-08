@@ -17,7 +17,7 @@ use std::convert::Infallible;
 use std::pin::Pin;
 use std::time::Duration;
 
-use super::PersonaPath;
+use super::SpawnedPersonaPath;
 
 /// Subscribe to persona events via SSE.
 ///
@@ -36,7 +36,7 @@ use super::PersonaPath;
 )]
 pub async fn events(
     State(reactor): State<ApiReactor>,
-    path: PersonaPath,
+    path: SpawnedPersonaPath,
 ) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>> + Send + Sync>, ApiError> {
     let entity = path.entity;
 
