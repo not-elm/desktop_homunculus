@@ -129,10 +129,10 @@ export default function PersonaDetail({
 
   async function handleAutoSpawnToggle() {
     if (!snapshot) return;
-    const current = snapshot.metadata["auto-spawn"] === true;
+    const current = snapshot.metadata?.["auto-spawn"] === true;
     try {
       await persona.patch({
-        metadata: { ...snapshot.metadata, "auto-spawn": !current },
+        metadata: { ...(snapshot.metadata ?? {}), "auto-spawn": !current },
       });
       await loadSnapshot();
     } catch (e) {
@@ -148,7 +148,7 @@ export default function PersonaDetail({
     );
   }
 
-  const autoSpawn = snapshot.metadata["auto-spawn"] === true;
+  const autoSpawn = snapshot.metadata?.["auto-spawn"] === true;
 
   return (
     <>
