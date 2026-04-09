@@ -204,6 +204,18 @@ export interface WebviewInfo {
     offset: Vec2 | Vec3;
     /** The persona ID linked to this webview, or null/undefined if none. */
     linkedPersona?: string | null;
+    /** Active constraint parameters. */
+    constraints: WebviewConstraints;
+}
+
+/** Transform constraint parameters for webview panels. */
+export interface WebviewConstraints {
+    /** How much rotation to inherit from parent. 0.0 = billboard, 1.0 = full inherit. */
+    rotationFollow?: number;
+    /** Maximum tilt angle from upright in degrees. 0.0 = no tilt allowed. */
+    maxTiltDegrees?: number;
+    /** Lock scale at 1.0 regardless of parent scale. */
+    lockScale?: boolean;
 }
 
 /**
@@ -223,7 +235,10 @@ export interface WebviewOpenOptions {
     source: WebviewSource;
     size?: Vec2;
     viewportSize?: Vec2;
-    offset?: Vec2 | Vec3;
+    /** @deprecated Use transform instead. */
+    offset?: [number, number] | [number, number, number];
+    /** Transform constraint parameters. */
+    constraints?: WebviewConstraints;
     /** The persona ID to link to this webview. */
     linkedPersona?: string;
 }
@@ -233,6 +248,8 @@ export interface WebviewPatchRequest {
     offset?: Vec2 | Vec3;
     size?: Vec2;
     viewportSize?: Vec2;
+    /** Transform constraint parameters (partial merge). */
+    constraints?: WebviewConstraints;
 }
 
 /** Request body for navigating a webview to a new source. */
