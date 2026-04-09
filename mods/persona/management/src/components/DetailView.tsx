@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Persona, type PersonaSnapshot } from "@hmcs/sdk";
 import {
   Dialog,
@@ -47,7 +47,7 @@ export default function DetailView({
   const initialValues = useRef<PersonaFormValues | null>(null);
   const initialVrm = useRef<string | null>(null);
 
-  const persona = new Persona(personaId);
+  const persona = useMemo(() => new Persona(personaId), [personaId]);
 
   const loadSnapshot = useCallback(async () => {
     try {

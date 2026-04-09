@@ -25,7 +25,7 @@ export function usePersonaManagement() {
 
   useEffect(() => {
     refresh().then((list) => {
-      if (list.length > 0 && selectedId == null) {
+      if (list.length > 0 && selectedId === null) {
         setSelectedId(list[0].id);
       } else if (list.length === 0) {
         setCreateMode(true);
@@ -68,38 +68,6 @@ export function usePersonaManagement() {
     [refresh, selectedId],
   );
 
-  const spawnPersona = useCallback(
-    async (id: string) => {
-      const p = new Persona(id);
-      await p.spawn();
-      await refresh();
-    },
-    [refresh],
-  );
-
-  const despawnPersona = useCallback(
-    async (id: string) => {
-      const p = new Persona(id);
-      await p.despawn();
-      await refresh();
-    },
-    [refresh],
-  );
-
-  const setAutoSpawn = useCallback(
-    async (id: string, value: boolean) => {
-      const p = new Persona(id);
-      const snapshot = personas.find((s) => s.id === id);
-      if (snapshot) {
-        await p.patch({
-          metadata: { ...(snapshot.metadata ?? {}), "auto-spawn": value },
-        });
-        await refresh();
-      }
-    },
-    [personas, refresh],
-  );
-
   return {
     personas,
     loading,
@@ -112,8 +80,5 @@ export function usePersonaManagement() {
     exitCreateMode,
     createPersona,
     deletePersona,
-    spawnPersona,
-    despawnPersona,
-    setAutoSpawn,
   };
 }

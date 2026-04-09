@@ -31,14 +31,6 @@ export default function App() {
     [mgmt.selectedId, mgmt.selectPersona],
   );
 
-  const handleConfirmDiscard = useCallback(() => {
-    setDiscardOpen(false);
-    if (pendingId) {
-      mgmt.selectPersona(pendingId);
-      setPendingId(null);
-    }
-  }, [pendingId, mgmt.selectPersona]);
-
   const handleCancelDiscard = useCallback(() => {
     setDiscardOpen(false);
     setPendingId(null);
