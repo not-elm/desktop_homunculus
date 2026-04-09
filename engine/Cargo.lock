@@ -4557,7 +4557,6 @@ dependencies = [
  "homunculus_shadow_panel",
  "homunculus_speech",
  "homunculus_utils",
- "rusqlite",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
