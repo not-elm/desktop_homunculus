@@ -1,90 +1,165 @@
-import { useState, useCallback } from "react";
-import { audio, Webview } from "@hmcs/sdk";
+import { useState, useRef, useCallback } from "react";
 import { usePersonaManagement } from "./hooks/usePersonaManagement";
-import PersonaList from "./components/PersonaList";
-import PersonaDetail from "./components/PersonaDetail";
-import CreatePersonaDialog from "./components/CreatePersonaDialog";
-
-type Route = "list" | { type: "detail"; id: string };
+import Toolbar from "./components/Toolbar";
+import Sidebar from "./components/Sidebar";
+import DetailView from "./components/DetailView";
+import CreateForm from "./components/CreateForm";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@hmcs/ui";
 
 export default function App() {
-  const [route, setRoute] = useState<Route>("list");
-  const [createOpen, setCreateOpen] = useState(false);
   const mgmt = usePersonaManagement();
+  const dirtyRef = useRef(false);
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const [discardOpen, setDiscardOpen] = useState(false);
 
-  const handleClose = useCallback(() => {
-    audio.se.play("se:close");
-    Webview.current()?.close();
+  const handleSelectPersona = useCallback(
+    (id: string) => {
+      if (dirtyRef.current && id !== mgmt.selectedId) {
+        setPendingId(id);
+        setDiscardOpen(true);
+      } else {
+        mgmt.selectPersona(id);
+      }
+    },
+    [mgmt.selectedId, mgmt.selectPersona],
+  );
+
+  const handleConfirmDiscard = useCallback(() => {
+    setDiscardOpen(false);
+    if (pendingId) {
+      mgmt.selectPersona(pendingId);
+      setPendingId(null);
+    }
+  }, [pendingId, mgmt.selectPersona]);
+
+  const handleCancelDiscard = useCallback(() => {
+    setDiscardOpen(false);
+    setPendingId(null);
   }, []);
+
+  const handleCreateClick = useCallback(() => {
+    if (dirtyRef.current) {
+      setPendingId(null);
+      setDiscardOpen(true);
+    } else {
+      mgmt.enterCreateMode();
+    }
+  }, [mgmt.enterCreateMode]);
+
+  const handleConfirmDiscardForCreate = useCallback(() => {
+    setDiscardOpen(false);
+    if (pendingId) {
+      mgmt.selectPersona(pendingId);
+      setPendingId(null);
+    } else {
+      mgmt.enterCreateMode();
+    }
+  }, [pendingId, mgmt.selectPersona, mgmt.enterCreateMode]);
+
+  const handleDirtyChange = useCallback((dirty: boolean) => {
+    dirtyRef.current = dirty;
+  }, []);
+
+  const handleDelete = useCallback(async () => {
+    dirtyRef.current = false;
+    if (mgmt.selectedId) {
+      await mgmt.deletePersona(mgmt.selectedId);
+    }
+  }, [mgmt.selectedId, mgmt.deletePersona]);
 
   if (mgmt.loading) {
     return (
-      <div className="management-panel holo-noise">
-        <HudDecorations />
-        <div className="management-loading">
-          <div className="management-loading-text">Loading...</div>
+      <div className="management-panel">
+        <Toolbar />
+        <div className="main-loading">
+          <div className="main-loading-text">Loading...</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="management-panel holo-noise">
-      <HudDecorations />
-      <button
-        className="management-close-btn"
-        onClick={handleClose}
-        aria-label="Close"
-      >
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <path d="M1 1l12 12M13 1L1 13" />
-        </svg>
-      </button>
-
-      {route === "list" ? (
-        <>
-          <PersonaList
-            personas={mgmt.personas}
-            onEdit={(id) => setRoute({ type: "detail", id })}
-            onDelete={mgmt.deletePersona}
-            onSpawn={mgmt.spawnPersona}
-            onDespawn={mgmt.despawnPersona}
-            onAutoSpawnChange={mgmt.setAutoSpawn}
-            onCreateClick={() => setCreateOpen(true)}
-          />
-          <CreatePersonaDialog
-            open={createOpen}
-            onOpenChange={setCreateOpen}
-            onCreate={async (id, name) => {
-              await mgmt.createPersona(id, name);
-              setCreateOpen(false);
-              setRoute({ type: "detail", id });
-            }}
-          />
-        </>
-      ) : (
-        <PersonaDetail
-          personaId={route.id}
-          onBack={() => {
-            mgmt.refresh();
-            setRoute("list");
-          }}
+    <div className="management-panel">
+      <Toolbar />
+      <div className="management-body">
+        <Sidebar
+          personas={mgmt.personas}
+          selectedId={mgmt.createMode ? null : mgmt.selectedId}
+          onSelect={handleSelectPersona}
+          onCreateClick={handleCreateClick}
         />
-      )}
+        <div className="main-area">
+          {mgmt.createMode ? (
+            <CreateForm
+              onCreate={mgmt.createPersona}
+              onCancel={mgmt.exitCreateMode}
+            />
+          ) : mgmt.selectedId ? (
+            <DetailView
+              key={mgmt.selectedId}
+              personaId={mgmt.selectedId}
+              onDirtyChange={handleDirtyChange}
+              onSaved={mgmt.refresh}
+              onDelete={handleDelete}
+            />
+          ) : (
+            <div className="main-empty">
+              <div className="main-empty-text">No personas yet</div>
+              <button className="management-btn" onClick={mgmt.enterCreateMode}>
+                + Create
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <DiscardDialog
+        open={discardOpen}
+        onConfirm={handleConfirmDiscardForCreate}
+        onCancel={handleCancelDiscard}
+      />
     </div>
   );
 }
 
-function HudDecorations() {
+function DiscardDialog({
+  open,
+  onConfirm,
+  onCancel,
+}: {
+  open: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
   return (
-    <>
-      <div className="management-scanline" />
-      <div className="management-highlight" />
-      <div className="management-bottom-line" />
-      <span className="management-corner management-corner--tl" />
-      <span className="management-corner management-corner--tr" />
-      <span className="management-corner management-corner--bl" />
-      <span className="management-corner management-corner--br" />
-    </>
+    <Dialog open={open} onOpenChange={(v) => !v && onCancel()}>
+      <DialogContent showCloseButton={false}>
+        <DialogHeader>
+          <DialogTitle>Unsaved Changes</DialogTitle>
+          <DialogDescription>You have unsaved changes. Discard?</DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <button
+            className="management-btn management-btn--secondary"
+            onClick={onCancel}
+          >
+            Cancel
+          </button>
+          <button
+            className="management-btn management-btn--danger"
+            onClick={onConfirm}
+          >
+            Discard
+          </button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
