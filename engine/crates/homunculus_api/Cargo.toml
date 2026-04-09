@@ -19,6 +19,7 @@ homunculus_core = { workspace = true }
 homunculus_audio = { workspace = true }
 homunculus_effects = { workspace = true }
 homunculus_prefs = { workspace = true }
+rusqlite = { version = "0.38", default-features = false }
 homunculus_shadow_panel = { workspace = true }
 homunculus_microphone = { workspace = true }
 homunculus_speech = { workspace = true }

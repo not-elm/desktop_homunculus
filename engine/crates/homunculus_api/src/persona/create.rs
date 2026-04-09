@@ -51,8 +51,6 @@ fn create(
     In((persona_id, args)): In<(PersonaId, CreatePersona)>,
     prefs: NonSend<PrefsDatabase>,
 ) -> ApiResult<PersonaSnapshot> {
-    reject_if_exists_in_db(&prefs, &persona_id)?;
-
     let persona = build_persona(&persona_id, &args);
     persist_persona(&prefs, &persona)?;
 
@@ -61,22 +59,6 @@ fn create(
         state: String::new(),
         spawned: false,
     })
-}
-
-/// Returns `Err(409 Conflict)` if a persona with the given ID already exists in the database.
-fn reject_if_exists_in_db(prefs: &PrefsDatabase, persona_id: &PersonaId) -> ApiResult<()> {
-    let exists = prefs
-        .load_persona(&persona_id.0)
-        .map_err(|e| ApiError::Sql(e.to_string()))?
-        .is_some();
-
-    if exists {
-        return Err(ApiError::Conflict(format!(
-            "Persona already exists: {}",
-            persona_id
-        )));
-    }
-    Ok(())
 }
 
 /// Builds a [`Persona`] component from the validated ID and creation arguments.
@@ -95,8 +77,28 @@ fn build_persona(persona_id: &PersonaId, args: &CreatePersona) -> Persona {
 }
 
 /// Inserts a newly created persona into the SQLite database.
+///
+/// Maps UNIQUE/PRIMARY KEY constraint violations to [`ApiError::Conflict`].
 fn persist_persona(prefs: &PrefsDatabase, persona: &Persona) -> ApiResult<()> {
-    prefs
-        .insert_persona(persona)
-        .map_err(|e| ApiError::Sql(e.to_string()))
+    prefs.insert_persona(persona).map_err(|e| {
+        if is_unique_violation(&e) {
+            ApiError::Conflict(format!("Persona already exists: {}", persona.id))
+        } else {
+            ApiError::Sql(e.to_string())
+        }
+    })
+}
+
+/// Returns `true` if the error is a SQLite UNIQUE or PRIMARY KEY constraint violation.
+fn is_unique_violation(err: &rusqlite::Error) -> bool {
+    matches!(
+        err,
+        rusqlite::Error::SqliteFailure(
+            rusqlite::ffi::Error {
+                extended_code: 1555 | 2067,
+                ..
+            },
+            _,
+        )
+    )
 }
