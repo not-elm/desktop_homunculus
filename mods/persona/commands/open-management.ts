@@ -16,9 +16,9 @@ try {
     } else {
         await Webview.open({
             source: webviewSource.local("persona:management"),
-            size: [0.8, 1],
-            viewportSize: [900, 700],
-            offset: [1.1, 0],
+            size: [1.4, 0.9],
+            viewportSize: [1200, 700],
+            offset: [1.3, 0],
         });
         await audio.se.play("se:open");
         output.succeed();
