@@ -10,18 +10,11 @@ use homunculus_effects::{Entity, Update};
 
 impl WebviewApi {
     /// Updates the transform of a webview entity.
-    pub async fn set_transform(
-        &self,
-        webview: Entity,
-        transform: TransformArgs,
-    ) -> ApiResult<()> {
+    pub async fn set_transform(&self, webview: Entity, transform: TransformArgs) -> ApiResult<()> {
         self.0
             .schedule(move |task| async move {
-                task.will(
-                    Update,
-                    once::run(set_transform).with((webview, transform)),
-                )
-                .await
+                task.will(Update, once::run(set_transform).with((webview, transform)))
+                    .await
             })
             .await?
     }
