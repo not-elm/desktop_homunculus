@@ -416,9 +416,11 @@ impl PrefsDatabase {
     }
 
     /// Deletes a persona by ID. Metadata is cascade-deleted by the foreign key constraint.
-    pub fn delete_persona(&self, id: &str) -> Result<(), rusqlite::Error> {
-        self.0.execute("DELETE FROM personas WHERE id = ?", [id])?;
-        Ok(())
+    ///
+    /// Returns the number of rows deleted (0 if persona did not exist).
+    pub fn delete_persona(&self, id: &str) -> Result<usize, rusqlite::Error> {
+        let affected = self.0.execute("DELETE FROM personas WHERE id = ?", [id])?;
+        Ok(affected)
     }
 
     /// Saves a single metadata key-value pair for a persona.
