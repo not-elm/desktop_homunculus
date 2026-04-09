@@ -84,9 +84,10 @@ export default function PersonaDetail({
     }
   }
 
-  async function handleSave() {
-    if (!formValues || saving) return;
-    setSaving(true);
+  async function saveDraft(options?: {
+    reload?: boolean;
+  }): Promise<boolean> {
+    if (!formValues) return false;
     try {
       const vrmChanged = vrmAssetId !== initialVrm.current;
 
@@ -108,9 +109,21 @@ export default function PersonaDetail({
         }
       }
 
-      await loadSnapshot();
+      if (options?.reload !== false) {
+        await loadSnapshot();
+      }
+      return true;
     } catch (e) {
       console.error("Failed to save persona:", e);
+      return false;
+    }
+  }
+
+  async function handleSave() {
+    if (saving) return;
+    setSaving(true);
+    try {
+      await saveDraft();
     } finally {
       setSaving(false);
     }
@@ -122,6 +135,8 @@ export default function PersonaDetail({
       if (snapshot.spawned) {
         await persona.despawn();
       } else {
+        const ok = await saveDraft({ reload: false });
+        if (!ok) return;
         await persona.spawn();
       }
       await loadSnapshot();
@@ -173,6 +188,7 @@ export default function PersonaDetail({
             autoSpawn={autoSpawn}
             onSpawnToggle={handleSpawnToggle}
             onAutoSpawnToggle={handleAutoSpawnToggle}
+            spawnDisabled={saving}
           />
           <RightColumn
             personaId={personaId}
@@ -238,6 +254,7 @@ function LeftColumn({
   autoSpawn,
   onSpawnToggle,
   onAutoSpawnToggle,
+  spawnDisabled,
 }: {
   personaId: string;
   thumbnailUrl: string;
@@ -247,6 +264,7 @@ function LeftColumn({
   autoSpawn: boolean;
   onSpawnToggle: () => void;
   onAutoSpawnToggle: () => void;
+  spawnDisabled?: boolean;
 }) {
   return (
     <div className="detail-left">
@@ -278,6 +296,7 @@ function LeftColumn({
         <button
           className={`detail-spawn-btn ${isSpawned ? "deactivate" : "activate"}`}
           onClick={onSpawnToggle}
+          disabled={spawnDisabled}
         >
           {isSpawned ? "Despawn" : "Spawn"}
         </button>
