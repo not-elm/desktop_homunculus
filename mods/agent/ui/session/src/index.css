@@ -1030,6 +1030,7 @@ h3.hud-md-heading {
 }
 
 .hud-icon-btn {
+  -webkit-app-region: no-drag;
   background: oklch(1 0 0 / 0.06);
   border: 1px solid oklch(1 0 0 / 0.08);
   padding: 5px;
