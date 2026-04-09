@@ -91,7 +91,7 @@ export default function DetailView({
       const vrmChanged = vrmAssetId !== initialVrm.current;
       await persona.patch({
         name: formValues.name,
-        age: formValues.age ?? undefined,
+        age: formValues.age,
         gender: formValues.gender,
         firstPersonPronoun: formValues.firstPersonPronoun || undefined,
         profile: formValues.profile,

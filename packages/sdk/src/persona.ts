@@ -57,8 +57,8 @@ export interface PersonaSnapshot {
 export interface PatchPersona {
     /** New display name. */
     name?: string;
-    /** New age. */
-    age?: number;
+    /** New age. Pass `null` to clear (set to unknown). */
+    age?: number | null;
     /** New gender. */
     gender?: Gender;
     /** New first-person pronoun. */

@@ -121,7 +121,7 @@ function AgeField({ value, onChange, disabled }: AgeFieldProps) {
   const preservedAge = useRef<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const isUnknown = value == null && preservedAge.current != null;
+  const isUnknown = value == null;
   const radioValue = isUnknown ? "unknown" : "specify";
 
   function handleModeChange(newMode: string) {

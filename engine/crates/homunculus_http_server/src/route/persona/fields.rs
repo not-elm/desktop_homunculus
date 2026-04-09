@@ -78,9 +78,11 @@ pub async fn put_age(
     path: PersonaPath,
     Json(body): Json<AgeBody>,
 ) -> HttpResult<PersonaSnapshot> {
-    api.set_age(path.persona_id, body.age.unwrap_or_default())
-        .await
-        .into_http_result()
+    match body.age {
+        Some(age) => api.set_age(path.persona_id, age).await,
+        None => api.clear_age(path.persona_id).await,
+    }
+    .into_http_result()
 }
 
 #[derive(Serialize, Deserialize, ToSchema)]

@@ -17,8 +17,9 @@ use std::collections::HashMap;
 pub struct PatchPersona {
     #[serde(default)]
     pub name: Option<String>,
-    #[serde(default)]
-    pub age: Option<u32>,
+    #[serde(default, with = "nullable", skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "openapi", schema(value_type = Option<u32>))]
+    pub age: Option<Option<u32>>,
     #[serde(default)]
     pub gender: Option<Gender>,
     #[serde(default)]
@@ -70,7 +71,19 @@ impl PersonaApi {
         self.patch(
             persona_id,
             PatchPersona {
-                age: Some(age),
+                age: Some(Some(age)),
+                ..Default::default()
+            },
+        )
+        .await
+    }
+
+    /// Clears the age of a persona (sets to unknown).
+    pub async fn clear_age(&self, persona_id: PersonaId) -> ApiResult<PersonaSnapshot> {
+        self.patch(
+            persona_id,
+            PatchPersona {
+                age: Some(None),
                 ..Default::default()
             },
         )
@@ -212,8 +225,10 @@ fn apply_patch_mut(persona: &mut Mut<'_, Persona>, patch: &PatchPersona) {
     if let Some(name) = &patch.name {
         persona.name = Some(name.clone());
     }
-    if let Some(age) = patch.age {
-        persona.age = Some(age);
+    match patch.age {
+        Some(Some(age)) => persona.age = Some(age),
+        Some(None) => persona.age = None,
+        None => {}
     }
     if let Some(gender) = &patch.gender {
         persona.gender = gender.clone();
@@ -240,8 +255,10 @@ fn apply_patch_owned(persona: &mut Persona, patch: &PatchPersona) {
     if let Some(name) = &patch.name {
         persona.name = Some(name.clone());
     }
-    if let Some(age) = patch.age {
-        persona.age = Some(age);
+    match patch.age {
+        Some(Some(age)) => persona.age = Some(age),
+        Some(None) => persona.age = None,
+        None => {}
     }
     if let Some(gender) = &patch.gender {
         persona.gender = gender.clone();
@@ -260,6 +277,31 @@ fn apply_patch_owned(persona: &mut Persona, patch: &PatchPersona) {
     }
     if let Some(metadata) = &patch.metadata {
         persona.metadata = metadata.clone();
+    }
+}
+
+/// Serde helper for `Option<Option<T>>` that distinguishes absent from `null`.
+///
+/// - Absent key → `None` (don't update)
+/// - JSON `null` → `Some(None)` (clear the field)
+/// - JSON value → `Some(Some(value))` (set the field)
+mod nullable {
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+    pub fn serialize<S: Serializer, T: Serialize>(
+        value: &Option<Option<T>>,
+        s: S,
+    ) -> Result<S::Ok, S::Error> {
+        match value {
+            Some(inner) => inner.serialize(s),
+            None => s.serialize_none(),
+        }
+    }
+
+    pub fn deserialize<'de, D: Deserializer<'de>, T: Deserialize<'de>>(
+        d: D,
+    ) -> Result<Option<Option<T>>, D::Error> {
+        Ok(Some(Option::deserialize(d)?))
     }
 }
 
