@@ -2,7 +2,7 @@
 
 /// <reference types="node" />
 
-import { audio, Webview, webviewSource } from "@hmcs/sdk";
+import { audio, Webview, webviewSource, WebviewLayer } from "@hmcs/sdk";
 import { output } from "@hmcs/sdk/commands";
 
 try {
@@ -18,7 +18,7 @@ try {
             source: webviewSource.local("persona:management"),
             size: [1.4, 0.9],
             viewportSize: [1200, 700],
-            offset: [1.3, 0],
+            offset: [1.3, 0, WebviewLayer.FOREGROUND],
         });
         await audio.se.play("se:open");
         output.succeed();
