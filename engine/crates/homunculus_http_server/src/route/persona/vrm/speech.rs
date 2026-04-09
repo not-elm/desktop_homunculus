@@ -6,7 +6,7 @@ use homunculus_api::prelude::{ApiError, SpeakTimelineOptions, SpeechApi, Timelin
 use serde::Deserialize;
 use utoipa::ToSchema;
 
-use crate::route::persona::PersonaPath;
+use crate::route::persona::SpawnedPersonaPath;
 
 #[derive(Deserialize, ToSchema)]
 pub struct TimelineBody {
@@ -32,7 +32,7 @@ pub struct TimelineBody {
 )]
 pub async fn speech_timeline(
     State(api): State<SpeechApi>,
-    path: PersonaPath,
+    path: SpawnedPersonaPath,
     Json(body): Json<TimelineBody>,
 ) -> HttpResult {
     const MAX_AUDIO_BYTES: usize = 5 * 1024 * 1024;

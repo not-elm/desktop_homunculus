@@ -75,18 +75,6 @@ impl Plugin for HomunculusPrefsPlugin {
 pub struct PrefsKeys;
 
 impl PrefsKeys {
-    /// Preferences key for a VRM's persona, keyed by asset ID.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use homunculus_prefs::PrefsKeys;
-    /// assert_eq!(PrefsKeys::persona("vrm:elmer"), "persona::vrm:elmer");
-    /// ```
-    pub fn persona(asset_id: &str) -> String {
-        format!("persona::{asset_id}")
-    }
-
     /// Preferences key for a VRM's transform, keyed by asset ID.
     ///
     /// # Example
@@ -101,6 +89,22 @@ impl PrefsKeys {
 
     /// Preferences key for the shadow panel's alpha (opacity) value.
     pub const SHADOW_PANEL_ALPHA: &'static str = "shadow_panel::alpha";
+}
+
+/// An imported asset record stored in the `imported_assets` table.
+///
+/// Represents a user-imported file (VRM model, animation, sound, etc.) that has
+/// been copied into the application's managed storage. Optionally linked to a
+/// persona via `persona_id` (cascade-deleted when the persona is removed).
+#[derive(Debug, Clone)]
+pub struct ImportedAsset {
+    pub id: String,
+    pub persona_id: Option<String>,
+    pub path: String,
+    pub asset_type: String,
+    pub description: Option<String>,
+    pub source_path: Option<String>,
+    pub created_at: Option<String>,
 }
 
 pub struct PrefsDatabase(pub rusqlite::Connection);
@@ -247,6 +251,64 @@ impl PrefsDatabase {
         Ok(())
     }
 
+    /// Inserts or updates an imported asset record.
+    ///
+    /// Uses `ON CONFLICT(id) DO UPDATE` to avoid triggering `ON DELETE CASCADE`
+    /// (which `INSERT OR REPLACE` would cause). Only the mutable fields (`path`,
+    /// `type`, `description`, `source_path`, `created_at`) are updated on conflict;
+    /// `persona_id` is set only on initial insert.
+    pub fn upsert_imported_asset(
+        &self,
+        id: &str,
+        persona_id: Option<&str>,
+        path: &str,
+        asset_type: &str,
+        description: Option<&str>,
+        source_path: Option<&str>,
+    ) -> Result<(), rusqlite::Error> {
+        self.0.execute(
+            "INSERT INTO imported_assets (id, persona_id, path, type, description, source_path, created_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, datetime('now'))
+             ON CONFLICT(id) DO UPDATE SET
+                path = excluded.path,
+                type = excluded.type,
+                description = excluded.description,
+                source_path = excluded.source_path,
+                created_at = excluded.created_at",
+            rusqlite::params![id, persona_id, path, asset_type, description, source_path],
+        )?;
+        Ok(())
+    }
+
+    /// Lists all imported asset records.
+    pub fn list_imported_assets(&self) -> Result<Vec<ImportedAsset>, rusqlite::Error> {
+        let mut stmt = self.0.prepare(
+            "SELECT id, persona_id, path, type, description, source_path, created_at
+             FROM imported_assets",
+        )?;
+        let rows = stmt.query_map([], |row| {
+            Ok(ImportedAsset {
+                id: row.get(0)?,
+                persona_id: row.get(1)?,
+                path: row.get(2)?,
+                asset_type: row.get(3)?,
+                description: row.get(4)?,
+                source_path: row.get(5)?,
+                created_at: row.get(6)?,
+            })
+        })?;
+        rows.collect()
+    }
+
+    /// Deletes an imported asset by ID.
+    ///
+    /// Returns `Ok(())` even if the ID did not exist.
+    pub fn delete_imported_asset(&self, id: &str) -> Result<(), rusqlite::Error> {
+        self.0
+            .execute("DELETE FROM imported_assets WHERE id = ?", [id])?;
+        Ok(())
+    }
+
     fn log_error(msg: &str) {
         #[cfg(feature = "bevy")]
         error!("{msg}");
@@ -260,6 +322,11 @@ impl PrefsDatabase {
     /// Saves a persona to the `personas` table, replacing any existing row with the same ID.
     ///
     /// Also saves all metadata entries to `persona_metadata`.
+    ///
+    /// **Warning**: Uses `INSERT OR REPLACE`, which in SQLite is internally `DELETE + INSERT`.
+    /// This triggers `ON DELETE CASCADE` on `persona_metadata`, silently deleting all metadata
+    /// rows for an existing persona before re-inserting them. Prefer [`insert_persona`] for
+    /// new personas and [`update_persona`] for existing ones.
     pub fn save_persona(&self, persona: &Persona) -> Result<(), rusqlite::Error> {
         self.0.execute(
             "INSERT OR REPLACE INTO personas (id, name, age, gender, first_person_pronoun, profile, personality, vrm_asset_id)
@@ -275,6 +342,27 @@ impl PrefsDatabase {
                 persona.vrm_asset_id,
             ],
         )?;
+        self.save_all_metadata(&persona.id, &persona.metadata)
+    }
+
+    /// Inserts a new persona into the `personas` table.
+    ///
+    /// Returns a UNIQUE constraint error if a persona with the same ID already exists.
+    /// Also saves all metadata entries to `persona_metadata`.
+    pub fn insert_persona(&self, persona: &Persona) -> Result<(), rusqlite::Error> {
+        insert_persona_to_conn(&self.0, persona)?;
+        self.save_all_metadata(&persona.id, &persona.metadata)
+    }
+
+    /// Updates an existing persona in the `personas` table.
+    ///
+    /// Uses `UPDATE ... WHERE id = ?` so no `DELETE + INSERT` occurs on the `personas`
+    /// row itself. Replaces all metadata entries with the supplied set via
+    /// `save_all_metadata` (which performs `DELETE + INSERT` on `persona_metadata`).
+    ///
+    /// Returns an error if no persona with the given ID exists.
+    pub fn update_persona(&self, persona: &Persona) -> Result<(), rusqlite::Error> {
+        update_persona_to_conn(&self.0, persona)?;
         self.save_all_metadata(&persona.id, &persona.metadata)
     }
 
@@ -316,9 +404,11 @@ impl PrefsDatabase {
     }
 
     /// Deletes a persona by ID. Metadata is cascade-deleted by the foreign key constraint.
-    pub fn delete_persona(&self, id: &str) -> Result<(), rusqlite::Error> {
-        self.0.execute("DELETE FROM personas WHERE id = ?", [id])?;
-        Ok(())
+    ///
+    /// Returns the number of rows deleted (0 if persona did not exist).
+    pub fn delete_persona(&self, id: &str) -> Result<usize, rusqlite::Error> {
+        let affected = self.0.execute("DELETE FROM personas WHERE id = ?", [id])?;
+        Ok(affected)
     }
 
     /// Saves a single metadata key-value pair for a persona.
@@ -359,35 +449,6 @@ impl PrefsDatabase {
         Ok(map)
     }
 
-    /// Migrates old `persona::*` preference keys to the new `personas` table.
-    ///
-    /// Each old key has the format `persona::{asset_id}`, with the value being
-    /// a JSON object containing `displayName`, `age`, `gender`, etc.
-    /// This function reads them, creates proper `Persona` rows, and deletes
-    /// the old preference keys — all within a single transaction.
-    pub fn migrate_personas(&self) -> Result<(), rusqlite::Error> {
-        let keys = self.list_keys()?;
-        let persona_keys: Vec<String> = keys
-            .into_iter()
-            .filter(|k| k.starts_with("persona::"))
-            .collect();
-        if persona_keys.is_empty() {
-            return Ok(());
-        }
-        let tx = self.0.unchecked_transaction()?;
-        let mut used_ids = std::collections::HashSet::new();
-        for key in &persona_keys {
-            let asset_id = &key["persona::".len()..];
-            let persona_id = derive_unique_persona_id(asset_id, &mut used_ids);
-            let json_value = load_json_from_conn(&tx, key)?;
-            let persona = parse_legacy_persona(&persona_id, asset_id, json_value);
-            save_persona_to_conn(&tx, &persona)?;
-            save_all_metadata_to_conn(&tx, &persona.id, &persona.metadata)?;
-            tx.execute("DELETE FROM preferences WHERE key = ?", [key.as_str()])?;
-        }
-        tx.commit()
-    }
-
     /// Replaces all metadata for a persona (deletes existing, inserts new).
     fn save_all_metadata(
         &self,
@@ -402,6 +463,20 @@ impl Default for PrefsDatabase {
     fn default() -> Self {
         Self::new(Self::DB_NAME)
     }
+}
+
+/// Returns `true` if the error is a SQLite UNIQUE or PRIMARY KEY constraint violation.
+pub fn is_unique_violation(err: &rusqlite::Error) -> bool {
+    matches!(
+        err,
+        rusqlite::Error::SqliteFailure(
+            rusqlite::ffi::Error {
+                extended_code: 1555 | 2067,
+                ..
+            },
+            _,
+        )
+    )
 }
 
 fn create_tables(db: &rusqlite::Connection) -> Result<(), rusqlite::Error> {
@@ -435,6 +510,18 @@ fn create_tables(db: &rusqlite::Connection) -> Result<(), rusqlite::Error> {
             value TEXT NOT NULL,
             PRIMARY KEY (persona_id, key),
             FOREIGN KEY (persona_id) REFERENCES personas(id) ON DELETE CASCADE
+        )",
+        [],
+    )?;
+    db.execute(
+        "CREATE TABLE IF NOT EXISTS imported_assets (
+            id TEXT PRIMARY KEY,
+            persona_id TEXT REFERENCES personas(id) ON DELETE CASCADE,
+            path TEXT NOT NULL,
+            type TEXT NOT NULL,
+            description TEXT,
+            source_path TEXT,
+            created_at TEXT
         )",
         [],
     )?;
@@ -563,118 +650,16 @@ fn row_to_persona(row: &rusqlite::Row<'_>) -> Result<Persona, rusqlite::Error> {
     })
 }
 
-/// Derives a unique `PersonaId` from an asset ID by sanitizing characters and handling collisions.
+/// Inserts a new persona row using a raw connection/transaction (`INSERT INTO`).
+///
+/// Fails with a UNIQUE constraint error if the persona ID already exists.
 #[cfg(feature = "bevy")]
-fn derive_unique_persona_id(
-    asset_id: &str,
-    used_ids: &mut std::collections::HashSet<String>,
-) -> String {
-    let sanitized: String = asset_id
-        .chars()
-        .map(|c| {
-            if c.is_ascii_alphanumeric() || c == '_' || c == '-' {
-                c
-            } else {
-                '-'
-            }
-        })
-        .collect();
-    let truncated = if sanitized.len() > 60 {
-        sanitized[..60].to_string()
-    } else {
-        sanitized
-    };
-    let mut candidate = truncated.clone();
-    let mut suffix = 1u32;
-    while used_ids.contains(&candidate) {
-        candidate = format!("{truncated}-{suffix}");
-        suffix += 1;
-    }
-    used_ids.insert(candidate.clone());
-    candidate
-}
-
-/// Loads a JSON value from the preferences table using a raw connection/transaction.
-#[cfg(feature = "bevy")]
-fn load_json_from_conn(
-    conn: &rusqlite::Connection,
-    key: &str,
-) -> Result<Option<serde_json::Value>, rusqlite::Error> {
-    let mut stmt = conn.prepare("SELECT value, value_type FROM preferences WHERE key = ?")?;
-    let mut rows = stmt.query([key])?;
-    match rows.next()? {
-        Some(row) => {
-            let value: SqlValue = row.get(0)?;
-            let value_type: String = row.get(1)?;
-            Ok(sql_to_json(value, &value_type))
-        }
-        None => Ok(None),
-    }
-}
-
-/// Parses a legacy persona JSON (from the old `persona::*` preferences) into a `Persona`.
-#[cfg(feature = "bevy")]
-fn parse_legacy_persona(
-    persona_id: &str,
-    asset_id: &str,
-    json_value: Option<serde_json::Value>,
-) -> Persona {
-    let obj = json_value
-        .and_then(|v| v.as_object().cloned())
-        .unwrap_or_default();
-    let name = obj
-        .get("displayName")
-        .and_then(|v| v.as_str())
-        .map(String::from);
-    let age = obj.get("age").and_then(|v| v.as_u64()).map(|v| v as u32);
-    let gender_str = obj
-        .get("gender")
-        .and_then(|v| v.as_str())
-        .unwrap_or("unknown");
-    let gender = str_to_gender(gender_str);
-    let first_person_pronoun = obj
-        .get("firstPersonPronoun")
-        .and_then(|v| v.as_str())
-        .map(String::from);
-    let profile = obj
-        .get("profile")
-        .and_then(|v| v.as_str())
-        .unwrap_or("")
-        .to_string();
-    let personality = obj
-        .get("personality")
-        .and_then(|v| v.as_str())
-        .map(String::from);
-    let metadata = obj
-        .get("metadata")
-        .and_then(|v| v.as_object())
-        .map(|m| {
-            m.iter()
-                .map(|(k, v)| (k.clone(), v.clone()))
-                .collect::<HashMap<String, serde_json::Value>>()
-        })
-        .unwrap_or_default();
-    Persona {
-        id: PersonaId::new(persona_id),
-        name,
-        age,
-        gender,
-        first_person_pronoun,
-        profile,
-        personality,
-        vrm_asset_id: Some(asset_id.to_string()),
-        metadata,
-    }
-}
-
-/// Saves a persona row using a raw connection/transaction.
-#[cfg(feature = "bevy")]
-fn save_persona_to_conn(
+fn insert_persona_to_conn(
     conn: &rusqlite::Connection,
     persona: &Persona,
 ) -> Result<(), rusqlite::Error> {
     conn.execute(
-        "INSERT OR REPLACE INTO personas (id, name, age, gender, first_person_pronoun, profile, personality, vrm_asset_id)
+        "INSERT INTO personas (id, name, age, gender, first_person_pronoun, profile, personality, vrm_asset_id)
          VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
         rusqlite::params![
             persona.id.0,
@@ -687,6 +672,36 @@ fn save_persona_to_conn(
             persona.vrm_asset_id,
         ],
     )?;
+    Ok(())
+}
+
+/// Updates an existing persona row using a raw connection/transaction (`UPDATE`).
+///
+/// Returns [`rusqlite::Error::QueryReturnedNoRows`] if no persona with the given
+/// ID exists.
+#[cfg(feature = "bevy")]
+fn update_persona_to_conn(
+    conn: &rusqlite::Connection,
+    persona: &Persona,
+) -> Result<(), rusqlite::Error> {
+    let rows_affected = conn.execute(
+        "UPDATE personas SET name = ?1, age = ?2, gender = ?3, first_person_pronoun = ?4,
+         profile = ?5, personality = ?6, vrm_asset_id = ?7
+         WHERE id = ?8",
+        rusqlite::params![
+            persona.name,
+            persona.age.map(|v| v as i64),
+            gender_to_str(&persona.gender),
+            persona.first_person_pronoun,
+            persona.profile,
+            persona.personality,
+            persona.vrm_asset_id,
+            persona.id.0,
+        ],
+    )?;
+    if rows_affected == 0 {
+        return Err(rusqlite::Error::QueryReturnedNoRows);
+    }
     Ok(())
 }
 
@@ -1075,115 +1090,6 @@ mod test {
     }
 
     #[test]
-    fn test_migration() {
-        use homunculus_core::prelude::Gender;
-
-        let db = PrefsDatabase::open_in_memory();
-
-        // Insert old-style persona preferences
-        let old_persona = serde_json::json!({
-            "displayName": "Elmer",
-            "age": 10,
-            "gender": "female",
-            "firstPersonPronoun": "watashi",
-            "profile": "A cute mascot",
-            "personality": "cheerful and kind",
-            "metadata": {
-                "theme": "pink"
-            }
-        });
-        db.save_json("persona::vrm:elmer", &old_persona).unwrap();
-
-        let old_persona2 = serde_json::json!({
-            "displayName": "Bob",
-            "gender": "male",
-            "profile": "A test character"
-        });
-        db.save_json("persona::vrm:bob", &old_persona2).unwrap();
-
-        // Also save a non-persona key to verify it is untouched
-        db.save_json("transform::vrm:elmer", &serde_json::json!({"x": 0}))
-            .unwrap();
-
-        // Run migration
-        db.migrate_personas().unwrap();
-
-        // Verify old preference keys are deleted
-        assert!(db.load_json("persona::vrm:elmer").unwrap().is_none());
-        assert!(db.load_json("persona::vrm:bob").unwrap().is_none());
-
-        // Verify non-persona key is untouched
-        assert!(db.load_json("transform::vrm:elmer").unwrap().is_some());
-
-        // Verify personas are in the new table
-        let mut personas = db.list_personas().unwrap();
-        personas.sort_by(|a, b| a.id.0.cmp(&b.id.0));
-        assert_eq!(personas.len(), 2);
-
-        // The IDs should be sanitized versions of the asset IDs
-        // "vrm:elmer" -> "vrm-elmer", "vrm:bob" -> "vrm-bob"
-        let elmer = personas
-            .iter()
-            .find(|p| p.name == Some("Elmer".to_string()))
-            .unwrap();
-        assert_eq!(elmer.id.0, "vrm-elmer");
-        assert_eq!(elmer.age, Some(10));
-        assert_eq!(elmer.gender, Gender::Female);
-        assert_eq!(elmer.first_person_pronoun, Some("watashi".to_string()));
-        assert_eq!(elmer.profile, "A cute mascot");
-        assert_eq!(elmer.personality, Some("cheerful and kind".to_string()));
-        assert_eq!(elmer.vrm_asset_id, Some("vrm:elmer".to_string()));
-        assert_eq!(
-            elmer.metadata.get("theme"),
-            Some(&serde_json::json!("pink"))
-        );
-
-        let bob = personas
-            .iter()
-            .find(|p| p.name == Some("Bob".to_string()))
-            .unwrap();
-        assert_eq!(bob.id.0, "vrm-bob");
-        assert_eq!(bob.gender, Gender::Male);
-        assert_eq!(bob.vrm_asset_id, Some("vrm:bob".to_string()));
-    }
-
-    #[test]
-    fn test_migration_empty_is_noop() {
-        let db = PrefsDatabase::open_in_memory();
-        // No persona keys, migration should succeed silently
-        db.migrate_personas().unwrap();
-        assert!(db.list_personas().unwrap().is_empty());
-    }
-
-    #[test]
-    fn test_migration_id_collision() {
-        let db = PrefsDatabase::open_in_memory();
-
-        // Two asset IDs that sanitize to the same persona ID
-        // "vrm:elmer" and "vrm.elmer" both become "vrm-elmer"
-        db.save_json(
-            "persona::vrm:elmer",
-            &serde_json::json!({"displayName": "First", "gender": "unknown", "profile": ""}),
-        )
-        .unwrap();
-        db.save_json(
-            "persona::vrm.elmer",
-            &serde_json::json!({"displayName": "Second", "gender": "unknown", "profile": ""}),
-        )
-        .unwrap();
-
-        db.migrate_personas().unwrap();
-
-        let personas = db.list_personas().unwrap();
-        assert_eq!(personas.len(), 2);
-
-        // One should be "vrm-elmer" and the other "vrm-elmer-1"
-        let mut ids: Vec<String> = personas.iter().map(|p| p.id.0.clone()).collect();
-        ids.sort();
-        assert_eq!(ids, vec!["vrm-elmer", "vrm-elmer-1"]);
-    }
-
-    #[test]
     fn test_save_persona_metadata_individual() {
         use homunculus_core::prelude::PersonaId;
 
@@ -1240,5 +1146,237 @@ mod test {
         assert_eq!(loaded.name, Some("V2".to_string()));
         assert_eq!(loaded.gender, Gender::Female);
         assert_eq!(loaded.profile, "Version 2");
+    }
+
+    #[test]
+    fn test_insert_persona_duplicate_fails() {
+        use homunculus_core::prelude::{Persona, PersonaId};
+
+        let db = PrefsDatabase::open_in_memory();
+        let persona = Persona {
+            id: PersonaId::new("dup-test"),
+            name: Some("First".to_string()),
+            profile: "Original".to_string(),
+            ..Default::default()
+        };
+        db.insert_persona(&persona).unwrap();
+
+        // Second insert with the same ID should fail
+        let persona2 = Persona {
+            id: PersonaId::new("dup-test"),
+            name: Some("Second".to_string()),
+            profile: "Duplicate".to_string(),
+            ..Default::default()
+        };
+        let result = db.insert_persona(&persona2);
+        assert!(result.is_err(), "Expected UNIQUE constraint violation");
+
+        // Original persona should be unchanged
+        let loaded = db.load_persona("dup-test").unwrap().unwrap();
+        assert_eq!(loaded.name, Some("First".to_string()));
+        assert_eq!(loaded.profile, "Original");
+    }
+
+    #[test]
+    fn test_update_persona_preserves_metadata() {
+        use homunculus_core::prelude::{Persona, PersonaId};
+        use std::collections::HashMap;
+
+        let db = PrefsDatabase::open_in_memory();
+        let mut metadata = HashMap::new();
+        metadata.insert("mood".to_string(), serde_json::json!("happy"));
+        metadata.insert("theme".to_string(), serde_json::json!("dark"));
+
+        let persona = Persona {
+            id: PersonaId::new("update-meta-test"),
+            name: Some("Original".to_string()),
+            profile: "Before update".to_string(),
+            metadata: metadata.clone(),
+            ..Default::default()
+        };
+        db.insert_persona(&persona).unwrap();
+
+        // Verify metadata was saved
+        let md = db
+            .load_persona_metadata(&PersonaId::new("update-meta-test"))
+            .unwrap();
+        assert_eq!(md.len(), 2);
+
+        // Update persona name, keeping same metadata
+        let updated = Persona {
+            id: PersonaId::new("update-meta-test"),
+            name: Some("Updated".to_string()),
+            profile: "After update".to_string(),
+            metadata,
+            ..Default::default()
+        };
+        db.update_persona(&updated).unwrap();
+
+        // Verify persona fields were updated
+        let loaded = db.load_persona("update-meta-test").unwrap().unwrap();
+        assert_eq!(loaded.name, Some("Updated".to_string()));
+        assert_eq!(loaded.profile, "After update");
+
+        // Verify metadata still exists
+        assert_eq!(loaded.metadata.len(), 2);
+        assert_eq!(
+            loaded.metadata.get("mood"),
+            Some(&serde_json::json!("happy"))
+        );
+        assert_eq!(
+            loaded.metadata.get("theme"),
+            Some(&serde_json::json!("dark"))
+        );
+    }
+
+    #[test]
+    fn test_insert_persona_does_not_cascade() {
+        use homunculus_core::prelude::{Persona, PersonaId};
+        use std::collections::HashMap;
+
+        let db = PrefsDatabase::open_in_memory();
+
+        // Create persona with metadata via insert
+        let mut metadata = HashMap::new();
+        metadata.insert("key1".to_string(), serde_json::json!("value1"));
+        let persona = Persona {
+            id: PersonaId::new("cascade-test"),
+            name: Some("Test".to_string()),
+            profile: String::new(),
+            metadata,
+            ..Default::default()
+        };
+        db.insert_persona(&persona).unwrap();
+
+        // Add extra metadata directly (simulating external metadata writes)
+        db.save_persona_metadata(
+            &PersonaId::new("cascade-test"),
+            "extra",
+            &serde_json::json!("extra-value"),
+        )
+        .unwrap();
+
+        // Verify both metadata entries exist
+        let md = db
+            .load_persona_metadata(&PersonaId::new("cascade-test"))
+            .unwrap();
+        assert_eq!(md.len(), 2);
+        assert_eq!(md.get("key1"), Some(&serde_json::json!("value1")));
+        assert_eq!(md.get("extra"), Some(&serde_json::json!("extra-value")));
+
+        // A second insert should fail (not silently replace and cascade-delete)
+        let persona2 = Persona {
+            id: PersonaId::new("cascade-test"),
+            name: Some("Replaced".to_string()),
+            profile: String::new(),
+            ..Default::default()
+        };
+        assert!(db.insert_persona(&persona2).is_err());
+
+        // Metadata should still be intact
+        let md = db
+            .load_persona_metadata(&PersonaId::new("cascade-test"))
+            .unwrap();
+        assert_eq!(md.len(), 2);
+        assert_eq!(md.get("extra"), Some(&serde_json::json!("extra-value")));
+    }
+
+    #[test]
+    fn test_update_nonexistent_persona_fails() {
+        use homunculus_core::prelude::Persona;
+
+        let db = PrefsDatabase::open_in_memory();
+        let persona = Persona {
+            id: homunculus_core::prelude::PersonaId::new("ghost"),
+            name: Some("Ghost".to_string()),
+            ..Default::default()
+        };
+        assert!(db.update_persona(&persona).is_err());
+    }
+
+    #[test]
+    fn test_imported_asset_upsert() {
+        let db = PrefsDatabase::open_in_memory();
+
+        // Initial insert
+        db.upsert_imported_asset("asset-1", None, "/old/path.vrm", "vrm", None, None)
+            .unwrap();
+        let assets = db.list_imported_assets().unwrap();
+        assert_eq!(assets.len(), 1);
+        assert_eq!(assets[0].path, "/old/path.vrm");
+
+        // Upsert same ID with different path
+        db.upsert_imported_asset(
+            "asset-1",
+            None,
+            "/new/path.vrm",
+            "vrm",
+            Some("updated"),
+            None,
+        )
+        .unwrap();
+        let assets = db.list_imported_assets().unwrap();
+        assert_eq!(assets.len(), 1, "upsert should not create a second row");
+        assert_eq!(assets[0].path, "/new/path.vrm");
+        assert_eq!(assets[0].description.as_deref(), Some("updated"));
+    }
+
+    #[test]
+    fn test_imported_asset_cascade_delete() {
+        use homunculus_core::prelude::{Persona, PersonaId};
+
+        let db = PrefsDatabase::open_in_memory();
+
+        // Create persona
+        let persona = Persona {
+            id: PersonaId::new("p1"),
+            profile: String::new(),
+            ..Default::default()
+        };
+        db.insert_persona(&persona).unwrap();
+
+        // Insert imported asset linked to persona
+        db.upsert_imported_asset(
+            "asset-linked",
+            Some("p1"),
+            "/some/model.vrm",
+            "vrm",
+            None,
+            None,
+        )
+        .unwrap();
+        assert_eq!(db.list_imported_assets().unwrap().len(), 1);
+
+        // Delete persona — imported asset should be cascade-deleted
+        db.delete_persona("p1").unwrap();
+        assert!(
+            db.list_imported_assets().unwrap().is_empty(),
+            "imported asset should be cascade-deleted with persona"
+        );
+    }
+
+    #[test]
+    fn test_imported_asset_null_persona_id() {
+        use homunculus_core::prelude::{Persona, PersonaId};
+
+        let db = PrefsDatabase::open_in_memory();
+
+        // Create persona and an asset NOT linked to it
+        let persona = Persona {
+            id: PersonaId::new("p2"),
+            profile: String::new(),
+            ..Default::default()
+        };
+        db.insert_persona(&persona).unwrap();
+
+        db.upsert_imported_asset("orphan-asset", None, "/standalone.vrma", "vrma", None, None)
+            .unwrap();
+
+        // Delete persona — orphan asset should survive
+        db.delete_persona("p2").unwrap();
+        let assets = db.list_imported_assets().unwrap();
+        assert_eq!(assets.len(), 1);
+        assert_eq!(assets[0].id, "orphan-asset");
+        assert!(assets[0].persona_id.is_none());
     }
 }

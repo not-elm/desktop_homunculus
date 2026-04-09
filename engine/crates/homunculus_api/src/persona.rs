@@ -7,7 +7,7 @@ mod create;
 mod delete;
 mod fetch;
 mod full_snapshot;
-mod startup;
+mod spawn;
 mod state;
 mod update;
 mod vrm_attach;
@@ -18,7 +18,7 @@ pub use full_snapshot::PersonaFullSnapshot;
 pub use update::PatchPersona;
 
 use crate::api;
-use bevy::app::{Plugin, Startup};
+use bevy::app::Plugin;
 use homunculus_core::prelude::Persona;
 use serde::{Deserialize, Serialize};
 
@@ -31,6 +31,8 @@ pub struct PersonaSnapshot {
     pub persona: Persona,
     /// Current ephemeral state (e.g. "idle", "sitting", "drag").
     pub state: String,
+    /// Whether this persona has a live ECS entity (i.e. is spawned in the scene).
+    pub spawned: bool,
 }
 
 api!(
@@ -38,11 +40,12 @@ api!(
     PersonaApi
 );
 
-/// Plugin that restores persisted personas at startup.
+/// Plugin for persona API.
+///
+/// Personas are stored as DB records only. Spawning into the ECS world
+/// is delegated to mods via `POST /personas/{id}/spawn`.
 pub struct PersonaApiPlugin;
 
 impl Plugin for PersonaApiPlugin {
-    fn build(&self, app: &mut bevy::app::App) {
-        app.add_systems(Startup, startup::load_personas);
-    }
+    fn build(&self, _app: &mut bevy::app::App) {}
 }

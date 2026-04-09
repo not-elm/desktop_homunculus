@@ -56,5 +56,6 @@ export * from "./entities";
 export * from "./app";
 export * from "./mods";
 export * from "./assets";
+export * as fileDialog from "./file-dialog.js";
 export * from "./utils";
 export * from "./stt";

@@ -3,7 +3,7 @@ use bevy::prelude::Entity;
 use homunculus_api::prelude::axum::{HttpResult, IntoHttpResult};
 use homunculus_api::vrm::VrmApi;
 
-use crate::route::persona::PersonaPath;
+use crate::route::persona::SpawnedPersonaPath;
 
 /// Set look-at to follow the cursor.
 #[utoipa::path(
@@ -16,7 +16,7 @@ use crate::route::persona::PersonaPath;
         (status = 404, description = "Persona or VRM not found"),
     ),
 )]
-pub async fn look_cursor(State(api): State<VrmApi>, path: PersonaPath) -> HttpResult {
+pub async fn look_cursor(State(api): State<VrmApi>, path: SpawnedPersonaPath) -> HttpResult {
     api.look_at_cursor(path.entity).await.into_http_result()
 }
 
@@ -36,7 +36,7 @@ pub async fn look_cursor(State(api): State<VrmApi>, path: PersonaPath) -> HttpRe
 )]
 pub async fn look_target(
     State(api): State<VrmApi>,
-    path: PersonaPath,
+    path: SpawnedPersonaPath,
     Path((_, target)): Path<(String, Entity)>,
 ) -> HttpResult {
     api.look_at_target(path.entity, target)
@@ -55,6 +55,6 @@ pub async fn look_target(
         (status = 404, description = "Persona or VRM not found"),
     ),
 )]
-pub async fn unlook(State(api): State<VrmApi>, path: PersonaPath) -> HttpResult {
+pub async fn unlook(State(api): State<VrmApi>, path: SpawnedPersonaPath) -> HttpResult {
     api.unlook(path.entity).await.into_http_result()
 }

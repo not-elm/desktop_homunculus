@@ -54,6 +54,7 @@ pub mod vrm;
 mod vrma;
 mod webview;
 
+use crate::assets::AssetsApiPlugin;
 use crate::persona::PersonaApiPlugin;
 use crate::prelude::{ShadowPanelApiPlugin, WebviewApiPlugin};
 use crate::reactor::ApiReactorPlugin;
@@ -112,6 +113,7 @@ impl PluginGroup for HomunculusApiPlugin {
             .add(SignalsApiPlugin)
             .add(ShadowPanelApiPlugin)
             .add(PersonaApiPlugin)
+            .add(AssetsApiPlugin)
             .add(SttPttPlugin)
             .build()
     }

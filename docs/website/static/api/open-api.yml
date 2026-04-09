@@ -77,6 +77,30 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/AssetInfo'
+  /assets/import:
+    post:
+      tags:
+      - assets
+      summary: Import a local file as a managed asset.
+      description: |-
+        Copies the file to `~/.homunculus/assets/`, registers it in the
+        asset registry, and persists the record in the database.
+      operationId: import
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportAsset'
+        required: true
+      responses:
+        '200':
+          description: Asset imported successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportAssetResponse'
+        '400':
+          description: Invalid source path or parameters
   /audio/bgm:
     get:
       tags:
@@ -638,7 +662,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Persona'
+                  $ref: '#/components/schemas/PersonaSnapshot'
     post:
       tags:
       - personas
@@ -656,7 +680,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Persona'
+                $ref: '#/components/schemas/PersonaSnapshot'
         '400':
           description: Invalid input
         '409':
@@ -665,17 +689,17 @@ paths:
     get:
       tags:
       - personas
-      summary: Get a snapshot of all personas.
+      summary: Get a full snapshot of all personas including transform and VRM state.
       operationId: snapshot
       responses:
         '200':
-          description: All persona data
+          description: Full state of all personas
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Persona'
+                  $ref: '#/components/schemas/PersonaFullSnapshot'
   /personas/stream:
     get:
       tags:
@@ -709,7 +733,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Persona'
+                $ref: '#/components/schemas/PersonaSnapshot'
         '404':
           description: Persona not found
     delete:
@@ -753,7 +777,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Persona'
+                $ref: '#/components/schemas/PersonaSnapshot'
         '404':
           description: Persona not found
   /personas/{id}/age:
@@ -802,18 +826,37 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Persona'
+                $ref: '#/components/schemas/PersonaSnapshot'
         '404':
           description: ''
+  /personas/{id}/despawn:
+    post:
+      tags:
+      - personas
+      summary: Despawn persona entity, retaining DB record.
+      operationId: despawn
+      parameters:
+      - name: id
+        in: path
+        description: Persona ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Persona despawned
+        '404':
+          description: Not spawned
   /personas/{id}/events:
     get:
       tags:
       - personas
       summary: Subscribe to persona events via SSE.
       description: |-
-        Events include: drag-start, drag, drag-end, pointer-press, pointer-click,
-        pointer-move, pointer-release, pointer-over, pointer-out, pointer-cancel,
-        state-change, expression-change, vrma-play, vrma-finish.
+        Always delivered: persona-change, state-change, vrm-attached, vrm-detached.
+        Delivered only when VRM is attached: drag-start, drag, drag-end, pointer-press,
+        pointer-click, pointer-move, pointer-release, pointer-over, pointer-out,
+        pointer-cancel, expression-change, vrma-play, vrma-finish.
       operationId: events
       parameters:
       - name: id
@@ -873,7 +916,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Persona'
+                $ref: '#/components/schemas/PersonaSnapshot'
         '404':
           description: ''
   /personas/{id}/gender:
@@ -922,7 +965,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Persona'
+                $ref: '#/components/schemas/PersonaSnapshot'
         '404':
           description: ''
   /personas/{id}/metadata:
@@ -971,7 +1014,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Persona'
+                $ref: '#/components/schemas/PersonaSnapshot'
         '404':
           description: ''
   /personas/{id}/name:
@@ -1020,7 +1063,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Persona'
+                $ref: '#/components/schemas/PersonaSnapshot'
         '404':
           description: ''
   /personas/{id}/personality:
@@ -1069,7 +1112,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Persona'
+                $ref: '#/components/schemas/PersonaSnapshot'
         '404':
           description: ''
   /personas/{id}/profile:
@@ -1118,9 +1161,33 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Persona'
+                $ref: '#/components/schemas/PersonaSnapshot'
         '404':
           description: ''
+  /personas/{id}/spawn:
+    post:
+      tags:
+      - personas
+      summary: Spawn persona ECS entity from DB record.
+      operationId: spawn
+      parameters:
+      - name: id
+        in: path
+        description: Persona ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Persona spawned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonaSnapshot'
+        '404':
+          description: Persona not found in DB
+        '409':
+          description: Already spawned
   /personas/{id}/state:
     get:
       tags:
@@ -1164,6 +1231,35 @@ paths:
       responses:
         '200':
           description: Persona state updated
+        '404':
+          description: Persona not found
+  /personas/{id}/thumbnail:
+    get:
+      tags:
+      - personas
+      summary: Get persona thumbnail image.
+      description: |-
+        Resolution chain:
+        1. Custom thumbnail from `persona_metadata["thumbnail"]` path
+        2. Default 1x1 transparent PNG placeholder
+
+        # Note
+
+        VRM-embedded thumbnail extraction is not yet implemented and is planned
+        as a follow-up enhancement.
+      operationId: thumbnail
+      parameters:
+      - name: id
+        in: path
+        description: Persona ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Thumbnail image
+          content:
+            image/png: {}
         '404':
           description: Persona not found
   /personas/{id}/transform:
@@ -1236,15 +1332,13 @@ paths:
         required: true
       responses:
         '200':
-          description: VRM attached, returns updated persona
+          description: VRM attached (auto-detaches any existing VRM), returns updated persona
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Persona'
+                $ref: '#/components/schemas/PersonaSnapshot'
         '404':
           description: Persona or asset not found
-        '409':
-          description: VRM already attached
     delete:
       tags:
       - personas
@@ -2661,6 +2755,57 @@ components:
       properties:
         status:
           type: string
+    ImportAsset:
+      type: object
+      description: Request body for `POST /assets/import`.
+      required:
+      - sourcePath
+      - assetId
+      - assetType
+      properties:
+        assetId:
+          type: string
+          description: Unique asset identifier (e.g. `"vrm:local:my-persona"`).
+        assetType:
+          $ref: '#/components/schemas/AssetType'
+          description: Asset type (`vrm`, `vrma`, `sound`, `image`, `html`).
+        description:
+          type:
+          - string
+          - 'null'
+          description: Optional human-readable description.
+        sourcePath:
+          type: string
+          description: Absolute path to the source file on the local filesystem.
+    ImportAssetResponse:
+      type: object
+      description: Response body for `POST /assets/import`.
+      required:
+      - assetId
+      properties:
+        assetId:
+          $ref: '#/components/schemas/AssetId'
+    LookAtState:
+      oneOf:
+      - type: object
+        required:
+        - type
+        properties:
+          type:
+            type: string
+            enum:
+            - cursor
+      - type: object
+        required:
+        - entity
+        - type
+        properties:
+          entity:
+            type: string
+          type:
+            type: string
+            enum:
+            - target
     MetadataBody:
       type: object
       required:
@@ -2933,11 +3078,55 @@ components:
           type:
           - string
           - 'null'
+    PersonaFullSnapshot:
+      allOf:
+      - $ref: '#/components/schemas/Persona'
+      - type: object
+        required:
+        - state
+        - transform
+        - linkedWebviews
+        properties:
+          linkedWebviews:
+            type: array
+            items:
+              type: string
+            description: Entity IDs of linked webviews (as strings to avoid JS 64-bit precision loss).
+          state:
+            type: string
+            description: Current ephemeral state.
+          transform:
+            type: object
+            description: World-space transform.
+          vrm:
+            oneOf:
+            - type: 'null'
+            - $ref: '#/components/schemas/VrmInfo'
+              description: VRM-specific data, or `null` if no VRM is attached.
+      description: |-
+        Full snapshot of a persona including transform, linked webviews, and VRM state.
+
+        Returned by `GET /personas/snapshot`.
     PersonaId:
       type: string
       description: |-
         URL-safe unique identifier for a persona.
         Validation: non-empty, `[a-zA-Z0-9_-]`, max 64 characters.
+    PersonaSnapshot:
+      allOf:
+      - $ref: '#/components/schemas/Persona'
+      - type: object
+        required:
+        - state
+        - spawned
+        properties:
+          spawned:
+            type: boolean
+            description: Whether this persona has a live ECS entity (i.e. is spawned in the scene).
+          state:
+            type: string
+            description: Current ephemeral state (e.g. "idle", "sitting", "drag").
+      description: Persona data combined with ephemeral state, returned by all CRUD endpoints.
     PersonalityBody:
       type: object
       properties:
@@ -3510,6 +3699,29 @@ components:
             format: float
         wait:
           type: boolean
+    VrmInfo:
+      type: object
+      description: VRM-specific rendering state nested within a persona full snapshot.
+      required:
+      - assetId
+      - expressions
+      - animations
+      - springBones
+      properties:
+        animations:
+          type: array
+          items:
+            $ref: '#/components/schemas/VrmaInfo'
+        assetId:
+          type: string
+        expressions:
+          $ref: '#/components/schemas/ExpressionsResponse'
+        lookAt:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/LookAtState'
+        springBones:
+          type: object
     VrmaInfo:
       type: object
       required:

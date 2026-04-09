@@ -5,7 +5,7 @@ use homunculus_api::vrm::{ExpressionsResponse, VrmApi};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-use crate::route::persona::PersonaPath;
+use crate::route::persona::SpawnedPersonaPath;
 
 #[derive(Serialize, Deserialize, ToSchema)]
 pub struct WeightsBody {
@@ -25,7 +25,7 @@ pub struct WeightsBody {
 )]
 pub async fn list_expressions(
     State(api): State<VrmApi>,
-    path: PersonaPath,
+    path: SpawnedPersonaPath,
 ) -> HttpResult<ExpressionsResponse> {
     api.list_expressions(path.entity).await.into_http_result()
 }
@@ -44,7 +44,7 @@ pub async fn list_expressions(
 )]
 pub async fn modify_expressions(
     State(api): State<VrmApi>,
-    path: PersonaPath,
+    path: SpawnedPersonaPath,
     Json(body): Json<WeightsBody>,
 ) -> HttpResult {
     api.modify_expressions(path.entity, body.weights)
@@ -63,6 +63,6 @@ pub async fn modify_expressions(
         (status = 404, description = "Persona or VRM not found"),
     ),
 )]
-pub async fn clear_expressions(State(api): State<VrmApi>, path: PersonaPath) -> HttpResult {
+pub async fn clear_expressions(State(api): State<VrmApi>, path: SpawnedPersonaPath) -> HttpResult {
     api.clear_expressions(path.entity).await.into_http_result()
 }

@@ -4,7 +4,7 @@ use bevy_vrm1::vrm::VrmBone;
 use homunculus_api::prelude::axum::{HttpResult, IntoHttpResult};
 use homunculus_api::vrm::VrmApi;
 
-use crate::route::persona::PersonaPath;
+use crate::route::persona::SpawnedPersonaPath;
 
 /// Get the entity ID of a specific bone in a persona's VRM.
 #[utoipa::path(
@@ -22,7 +22,7 @@ use crate::route::persona::PersonaPath;
 )]
 pub async fn get_bone(
     State(api): State<VrmApi>,
-    path: PersonaPath,
+    path: SpawnedPersonaPath,
     Path((_, bone_name)): Path<(String, String)>,
 ) -> HttpResult<Entity> {
     let bone_name = VrmBone(bone_name);

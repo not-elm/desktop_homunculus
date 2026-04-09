@@ -11,9 +11,9 @@ mod vrm;
 
 pub mod prelude {
     pub use crate::events::{
-        PersonaChangeEvent, PersonaDeletedEvent, PersonaEvent, PersonaStateChangeEvent,
-        VrmAttachedEvent, VrmDetachedEvent, VrmEvent, VrmEventReceiver, VrmEventSender,
-        VrmMetadata, vrm::*,
+        PersonaChangeEvent, PersonaDeletedEvent, PersonaDespawnedEvent, PersonaEvent,
+        PersonaSpawnedEvent, PersonaStateChangeEvent, VrmAttachedEvent, VrmDetachedEvent, VrmEvent,
+        VrmEventReceiver, VrmEventSender, VrmMetadata, vrm::*,
     };
 }
 
@@ -68,6 +68,20 @@ pub struct PersonaChangeEvent {
     pub persona: Persona,
 }
 
+/// Fired when a persona entity is spawned from DB.
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct PersonaSpawnedEvent {
+    pub persona_id: PersonaId,
+}
+
+/// Fired when a persona entity is despawned (DB record retained).
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct PersonaDespawnedEvent {
+    pub persona_id: PersonaId,
+}
+
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct VrmMetadata {
     pub name: String,
@@ -97,6 +111,8 @@ impl Plugin for HomunculusEventsPlugin {
         setup_channel::<VrmaPlayEvent>(app);
         setup_channel::<VrmaFinishEvent>(app);
         setup_channel::<PersonaChangeEvent>(app);
+        setup_channel::<PersonaSpawnedEvent>(app);
+        setup_channel::<PersonaDespawnedEvent>(app);
 
         app.add_systems(Update, (start_observe_vrm, state_change, vrm_metadata));
     }

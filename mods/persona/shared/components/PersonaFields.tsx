@@ -5,19 +5,19 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@hmcs/ui";
 
-interface PersonaTabProps {
+export interface PersonaFormValues {
   name: string;
-  onNameChange: (name: string) => void;
   age: number | null;
-  onAgeChange: (age: number | null) => void;
   gender: Gender;
-  onGenderChange: (gender: Gender) => void;
   firstPersonPronoun: string;
-  onFirstPersonPronounChange: (pronoun: string) => void;
   profile: string;
-  onProfileChange: (profile: string) => void;
   personality: string;
-  onPersonalityChange: (personality: string) => void;
+}
+
+interface PersonaFieldsProps {
+  values: PersonaFormValues;
+  onChange: (values: PersonaFormValues) => void;
+  disabled?: boolean;
 }
 
 const GENDER_OPTIONS: { value: Gender; label: string }[] = [
@@ -27,20 +27,11 @@ const GENDER_OPTIONS: { value: Gender; label: string }[] = [
   { value: "other", label: "Other" },
 ];
 
-export function PersonaTab({
-  name,
-  onNameChange,
-  age,
-  onAgeChange,
-  gender,
-  onGenderChange,
-  firstPersonPronoun,
-  onFirstPersonPronounChange,
-  profile,
-  onProfileChange,
-  personality,
-  onPersonalityChange,
-}: PersonaTabProps) {
+export function PersonaFields({ values, onChange, disabled }: PersonaFieldsProps) {
+  function update<K extends keyof PersonaFormValues>(key: K, value: PersonaFormValues[K]) {
+    onChange({ ...values, [key]: value });
+  }
+
   return (
     <div className="settings-section">
       <label className="settings-label">
@@ -48,17 +39,26 @@ export function PersonaTab({
         <input
           type="text"
           className="settings-input"
-          value={name}
+          value={values.name}
           placeholder="Name"
-          onChange={(e) => onNameChange(e.target.value)}
+          onChange={(e) => update("name", e.target.value)}
+          disabled={disabled}
         />
       </label>
 
-      <AgeField value={age} onChange={onAgeChange} />
+      <AgeField
+        value={values.age}
+        onChange={(age) => update("age", age)}
+        disabled={disabled}
+      />
 
       <div className="settings-label">
         Gender
-        <Select value={gender} onValueChange={(v) => onGenderChange(v as Gender)}>
+        <Select
+          value={values.gender}
+          onValueChange={(v) => update("gender", v as Gender)}
+          disabled={disabled}
+        >
           <SelectTrigger className="settings-input">
             <SelectValue />
           </SelectTrigger>
@@ -77,9 +77,10 @@ export function PersonaTab({
         <input
           type="text"
           className="settings-input"
-          value={firstPersonPronoun}
+          value={values.firstPersonPronoun}
           placeholder="e.g. watashi, boku, ore"
-          onChange={(e) => onFirstPersonPronounChange(e.target.value)}
+          onChange={(e) => update("firstPersonPronoun", e.target.value)}
+          disabled={disabled}
         />
       </label>
 
@@ -88,9 +89,10 @@ export function PersonaTab({
         <textarea
           className="settings-textarea"
           rows={5}
-          value={profile}
-          onChange={(e) => onProfileChange(e.target.value)}
+          value={values.profile}
+          onChange={(e) => update("profile", e.target.value)}
           placeholder="Character background and profile description..."
+          disabled={disabled}
         />
       </label>
 
@@ -99,12 +101,12 @@ export function PersonaTab({
         <textarea
           className="settings-textarea"
           rows={3}
-          value={personality}
-          onChange={(e) => onPersonalityChange(e.target.value)}
+          value={values.personality}
+          onChange={(e) => update("personality", e.target.value)}
           placeholder="e.g. Sarcastic but caring, uses formal speech"
+          disabled={disabled}
         />
       </label>
-
     </div>
   );
 }
@@ -112,16 +114,18 @@ export function PersonaTab({
 interface AgeFieldProps {
   value: number | null;
   onChange: (age: number | null) => void;
+  disabled?: boolean;
 }
 
-function AgeField({ value, onChange }: AgeFieldProps) {
+function AgeField({ value, onChange, disabled }: AgeFieldProps) {
   const preservedAge = useRef<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const isUnknown = value == null && preservedAge.current != null;
+  const isUnknown = value == null;
   const radioValue = isUnknown ? "unknown" : "specify";
 
   function handleModeChange(newMode: string) {
+    if (disabled) return;
     if (newMode === "unknown") {
       if (value != null) preservedAge.current = value;
       onChange(null);
@@ -142,13 +146,14 @@ function AgeField({ value, onChange }: AgeFieldProps) {
   }
 
   return (
-    <fieldset className="settings-label settings-age-field">
+    <fieldset className="settings-label settings-age-field" disabled={disabled}>
       <legend className="settings-age-legend">Age</legend>
       <RadioGroupPrimitive.Root
         className="settings-age-segments"
         value={radioValue}
         onValueChange={handleModeChange}
         data-mode={radioValue === "unknown" ? "unknown" : "specify"}
+        disabled={disabled}
       >
         <RadioGroupPrimitive.Item
           value="specify"
@@ -176,19 +181,18 @@ function AgeField({ value, onChange }: AgeFieldProps) {
         {radioValue === "unknown" ? (
           <span className="settings-age-unknown-readout">Unknown</span>
         ) : (
-          <>
-            <input
-              ref={inputRef}
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              className="settings-age-input"
-              value={value ?? ""}
-              onChange={(e) => handleInput(e.target.value)}
-              aria-label="Age value"
-              placeholder="—"
-            />
-          </>
+          <input
+            ref={inputRef}
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            className="settings-age-input"
+            value={value ?? ""}
+            onChange={(e) => handleInput(e.target.value)}
+            aria-label="Age value"
+            placeholder="&#x2014;"
+            disabled={disabled}
+          />
         )}
       </div>
     </fieldset>

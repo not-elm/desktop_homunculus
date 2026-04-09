@@ -59,7 +59,7 @@ export function useCharacterSettings() {
     try {
       await personaInstance.patch({
         name: name || undefined,
-        age: age ?? undefined,
+        age: age,
         gender,
         firstPersonPronoun: firstPersonPronoun || undefined,
         profile,

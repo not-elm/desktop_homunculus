@@ -11,7 +11,7 @@ use std::time::Duration;
 use utoipa::ToSchema;
 
 use crate::route::AssetRequest;
-use crate::route::persona::PersonaPath;
+use crate::route::persona::SpawnedPersonaPath;
 
 /// Request body for playing a VRMA animation.
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
@@ -59,7 +59,7 @@ pub enum Repeat {
 )]
 pub async fn get_vrma(
     State(api): State<VrmAnimationApi>,
-    path: PersonaPath,
+    path: SpawnedPersonaPath,
 ) -> HttpResult<Vec<VrmaInfo>> {
     api.list_all(path.entity).await.into_http_result()
 }
@@ -79,7 +79,7 @@ pub async fn get_vrma(
 pub async fn play_vrma(
     State(vrm_api): State<VrmApi>,
     State(vrma_api): State<VrmAnimationApi>,
-    path: PersonaPath,
+    path: SpawnedPersonaPath,
     Json(body): Json<PlayBody>,
 ) -> HttpResult {
     let vrma = vrm_api.vrma(path.entity, body.asset).await?;
@@ -121,7 +121,7 @@ pub async fn play_vrma(
 pub async fn stop_vrma(
     State(vrm_api): State<VrmApi>,
     State(vrma_api): State<VrmAnimationApi>,
-    path: PersonaPath,
+    path: SpawnedPersonaPath,
     Json(body): Json<AssetRequest>,
 ) -> HttpResult {
     let vrma = vrm_api.vrma(path.entity, body.asset).await?;

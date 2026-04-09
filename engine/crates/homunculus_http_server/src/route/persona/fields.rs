@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use utoipa::ToSchema;
 
-use super::PersonaPath;
+use super::{PersonaPath, SpawnedPersonaPath};
 
 // ---------------------------------------------------------------------------
 // Name
@@ -78,9 +78,11 @@ pub async fn put_age(
     path: PersonaPath,
     Json(body): Json<AgeBody>,
 ) -> HttpResult<PersonaSnapshot> {
-    api.set_age(path.persona_id, body.age.unwrap_or_default())
-        .await
-        .into_http_result()
+    match body.age {
+        Some(age) => api.set_age(path.persona_id, age).await,
+        None => api.clear_age(path.persona_id).await,
+    }
+    .into_http_result()
 }
 
 #[derive(Serialize, Deserialize, ToSchema)]
@@ -315,7 +317,7 @@ pub struct MetadataBody {
 )]
 pub async fn get_transform(
     State(entities): State<homunculus_api::prelude::EntitiesApi>,
-    path: PersonaPath,
+    path: SpawnedPersonaPath,
 ) -> HttpResult<bevy::prelude::Transform> {
     entities.transform(path.entity).await.into_http_result()
 }
@@ -329,7 +331,7 @@ pub async fn get_transform(
 )]
 pub async fn put_transform(
     State(entities): State<homunculus_api::prelude::EntitiesApi>,
-    path: PersonaPath,
+    path: SpawnedPersonaPath,
     Json(body): Json<homunculus_api::vrm::OptionalTransform>,
 ) -> HttpResult<Option<bevy::prelude::Transform>> {
     entities

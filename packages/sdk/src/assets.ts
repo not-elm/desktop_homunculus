@@ -68,4 +68,46 @@ export namespace assets {
         const response = await host.get(host.createUrl("assets", filter));
         return await response.json() as AssetInfo[];
     }
+
+    /** Parameters for importing an asset file. */
+    export interface ImportAssetParams {
+        /** Absolute path to the source file */
+        sourcePath: string;
+        /** Asset ID to register (e.g., "vrm:local:my-persona") */
+        assetId: string;
+        /** Asset type */
+        assetType: AssetType;
+        /** Optional description */
+        description?: string;
+    }
+
+    /** Result of an asset import. */
+    export interface ImportAssetResult {
+        /** The registered asset ID */
+        assetId: string;
+    }
+
+    /**
+     * Imports a file as a managed asset.
+     *
+     * Copies the source file to the managed assets directory, registers it in the
+     * asset registry, and persists the registration to the database.
+     *
+     * @returns The registered asset info
+     *
+     * @example
+     * ```typescript
+     * const result = await assets.importAsset({
+     *   sourcePath: "/Users/me/Downloads/model.vrm",
+     *   assetId: "vrm:local:alice",
+     *   assetType: "vrm",
+     *   description: "Alice's custom model",
+     * });
+     * console.log("Imported:", result.assetId);
+     * ```
+     */
+    export async function importAsset(params: ImportAssetParams): Promise<ImportAssetResult> {
+        const response = await host.post(host.createUrl("assets/import"), params);
+        return await response.json() as ImportAssetResult;
+    }
 }

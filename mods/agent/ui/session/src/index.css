@@ -1030,6 +1030,7 @@ h3.hud-md-heading {
 }
 
 .hud-icon-btn {
+  -webkit-app-region: no-drag;
   background: oklch(1 0 0 / 0.06);
   border: 1px solid oklch(1 0 0 / 0.08);
   padding: 5px;
@@ -1062,6 +1063,7 @@ h3.hud-md-heading {
 /* ━━ Session Toggle Button ━━ */
 
 .hud-session-toggle {
+  -webkit-app-region: no-drag;
   background: oklch(0.72 0.14 192 / 0.1);
   border: 1px solid var(--hud-border-interactive);
   border-radius: 5px;

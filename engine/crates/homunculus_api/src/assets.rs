@@ -1,3 +1,8 @@
+mod import;
+mod startup;
+
+pub use import::{ImportAsset, ImportAssetResponse};
+
 use crate::api;
 use crate::error::ApiResult;
 use bevy::prelude::*;
@@ -27,11 +32,12 @@ pub struct AssetInfo {
 }
 
 api!(
-    /// Provides asset listing API.
+    /// Provides asset listing and import API.
     AssetsApi
 );
 
 impl AssetsApi {
+    /// Lists assets with an optional filter.
     pub async fn list(&self, filter: AssetFilter) -> ApiResult<Vec<AssetInfo>> {
         self.0
             .schedule(move |task| async move {
@@ -58,4 +64,13 @@ fn list_assets(In(filter): In<AssetFilter>, registry: Res<AssetRegistry>) -> Vec
             description: e.description.clone(),
         })
         .collect()
+}
+
+/// Plugin that restores imported assets from the database at startup.
+pub struct AssetsApiPlugin;
+
+impl Plugin for AssetsApiPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(Startup, startup::restore_imported_assets);
+    }
 }

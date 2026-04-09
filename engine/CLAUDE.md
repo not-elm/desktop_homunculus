@@ -99,7 +99,7 @@ Custom `SystemParam` types available in `homunculus_core::system_param::prelude`
 - `homunculus_speech` — Mora-based lip-sync for VRM models. Provides speech queue, vowel animation, and expression keyframe control. TTS audio is provided externally (e.g. via the Timeline API or MODs).
 - `homunculus_prefs` — SQLite-backed preferences and persona persistence (`~/.homunculus/preferences.db`). Manages `personas` and `persona_metadata` tables with CRUD methods. Transform persistence uses `persona_metadata` key `"transform"`.
 - `homunculus_utils` — Bevy-independent utilities shared across engine, CLI, and MCP: config loading (`~/.homunculus/config.toml`), path helpers (`homunculus_dir()`, `mod_dir()`), shared schema types, camera order constants
-- Other plugins: `drag`, `effects`, `windows`, `hit_test`, `screen`, `sitting`, `shadow_panel`, `power_saver`, `audio`
+- Other plugins: `drag`, `effects`, `windows`, `hit_test`, `screen`, `sitting`, `shadow_panel`, `power_saver`, `audio`, `microphone`, `tray`
 
 ### Command Execution
 
