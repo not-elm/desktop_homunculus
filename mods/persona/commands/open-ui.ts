@@ -3,7 +3,7 @@
 /// <reference types="node" />
 
 import { z } from "zod";
-import { audio, Webview, webviewSource } from "@hmcs/sdk";
+import { audio, Webview, WebviewLayer, webviewSource } from "@hmcs/sdk";
 import { input, output } from "@hmcs/sdk/commands";
 
 try {
@@ -14,7 +14,7 @@ try {
     source: webviewSource.local("persona:ui"),
     size: [1, 0.85],
     viewportSize: [1000, 700],
-    transform: { translation: [1.4, 1.0, 10.0] },
+    transform: { translation: [1.4, 0.8, WebviewLayer.UI] },
     linkedPersona: personaId,
   });
   await audio.se.play("se:open");

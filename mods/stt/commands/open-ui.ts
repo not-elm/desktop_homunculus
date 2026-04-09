@@ -2,7 +2,7 @@
 
 /// <reference types="node" />
 
-import { audio, Webview, webviewSource } from "@hmcs/sdk";
+import { audio, Webview, WebviewLayer, webviewSource } from "@hmcs/sdk";
 import { output } from "@hmcs/sdk/commands";
 
 try {
@@ -10,7 +10,7 @@ try {
     source: webviewSource.local("stt:ui"),
     size: [0.8, 1],
     viewportSize: [700, 800],
-    transform: { translation: [1.1, 1.5, 10.0] },
+    transform: { translation: [1.1, 0.8, WebviewLayer.UI] },
   });
   await audio.se.play("se:open");
   output.succeed();

@@ -2,7 +2,7 @@
 /// <reference types="node" />
 
 import { z } from "zod";
-import { audio, Webview, webviewSource } from "@hmcs/sdk";
+import { audio, Webview, WebviewLayer, webviewSource } from "@hmcs/sdk";
 import { input, output } from "@hmcs/sdk/commands";
 
 try {
@@ -12,7 +12,7 @@ try {
     source: webviewSource.local("agent:session-ui"),
     size: [1.07, 0.8],
     viewportSize: [800, 500],
-    transform: { translation: [1.3, 1.0, 10.0] },
+    transform: { translation: [1.3, 0.8, WebviewLayer.UI] },
     linkedPersona: personaId,
   });
   await audio.se.play("se:open");
