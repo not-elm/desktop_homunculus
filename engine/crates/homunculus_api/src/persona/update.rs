@@ -28,6 +28,8 @@ pub struct PatchPersona {
     #[serde(default)]
     pub personality: Option<String>,
     #[serde(default)]
+    pub vrm_asset_id: Option<String>,
+    #[serde(default)]
     #[cfg_attr(feature = "openapi", schema(value_type = Option<std::collections::HashMap<String, Object>>))]
     pub metadata: Option<HashMap<String, serde_json::Value>>,
 }
@@ -225,6 +227,9 @@ fn apply_patch_mut(persona: &mut Mut<'_, Persona>, patch: &PatchPersona) {
     if let Some(personality) = &patch.personality {
         persona.personality = Some(personality.clone());
     }
+    if let Some(vrm_asset_id) = &patch.vrm_asset_id {
+        persona.vrm_asset_id = Some(vrm_asset_id.clone());
+    }
     if let Some(metadata) = &patch.metadata {
         persona.metadata = metadata.clone();
     }
@@ -249,6 +254,9 @@ fn apply_patch_owned(persona: &mut Persona, patch: &PatchPersona) {
     }
     if let Some(personality) = &patch.personality {
         persona.personality = Some(personality.clone());
+    }
+    if let Some(vrm_asset_id) = &patch.vrm_asset_id {
+        persona.vrm_asset_id = Some(vrm_asset_id.clone());
     }
     if let Some(metadata) = &patch.metadata {
         persona.metadata = metadata.clone();

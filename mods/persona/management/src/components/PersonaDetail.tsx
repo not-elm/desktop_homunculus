@@ -88,6 +88,8 @@ export default function PersonaDetail({
     if (!formValues || saving) return;
     setSaving(true);
     try {
+      const vrmChanged = vrmAssetId !== initialVrm.current;
+
       await persona.patch({
         name: formValues.name,
         age: formValues.age ?? undefined,
@@ -95,9 +97,10 @@ export default function PersonaDetail({
         firstPersonPronoun: formValues.firstPersonPronoun || undefined,
         profile: formValues.profile,
         personality: formValues.personality || undefined,
+        vrmAssetId: vrmChanged ? (vrmAssetId ?? undefined) : undefined,
       });
 
-      if (vrmAssetId !== initialVrm.current) {
+      if (vrmChanged && snapshot?.spawned) {
         if (vrmAssetId) {
           await persona.attachVrm(vrmAssetId);
         } else if (initialVrm.current) {

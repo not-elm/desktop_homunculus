@@ -39,6 +39,8 @@ export interface PersonaSnapshot {
     vrmAssetId?: string | null;
     /** Extension metadata for MODs. */
     metadata: Record<string, unknown>;
+    /** Whether this persona currently has a spawned ECS entity. */
+    spawned: boolean;
 }
 
 /**
@@ -65,6 +67,8 @@ export interface PatchPersona {
     profile?: string;
     /** New personality description. */
     personality?: string;
+    /** New VRM asset ID. */
+    vrmAssetId?: string | null;
     /** Replace all metadata. */
     metadata?: Record<string, unknown>;
 }
@@ -777,6 +781,40 @@ export class Persona {
     }
 
     /**
+     * Spawns an ECS entity for this persona from the database record.
+     * Does not attach VRM — call {@link attachVrm} after spawning.
+     *
+     * @returns The persona snapshot with `spawned: true`
+     * @throws {HomunculusApiError} 409 if already spawned, 404 if persona not found
+     *
+     * @example
+     * ```typescript
+     * const snapshot = await p.spawn();
+     * if (snapshot.vrmAssetId) {
+     *   await p.attachVrm(snapshot.vrmAssetId);
+     * }
+     * ```
+     */
+    async spawn(): Promise<PersonaSnapshot> {
+        const response = await host.post(this.url("spawn"), {});
+        return await response.json() as PersonaSnapshot;
+    }
+
+    /**
+     * Despawns the ECS entity for this persona, retaining the database record.
+     *
+     * @throws {HomunculusApiError} 404 if not spawned
+     *
+     * @example
+     * ```typescript
+     * await p.despawn();
+     * ```
+     */
+    async despawn(): Promise<void> {
+        await host.post(this.url("despawn"), {});
+    }
+
+    /**
      * Attaches a VRM model to this persona.
      *
      * @param assetId - The asset ID of the VRM model (e.g. "elmer:model")
@@ -803,6 +841,24 @@ export class Persona {
      */
     async detachVrm(): Promise<void> {
         await host.deleteMethod(this.url("vrm"));
+    }
+
+    /**
+     * Returns the URL for this persona's thumbnail image.
+     *
+     * Resolution order: custom thumbnail → VRM embedded thumbnail → placeholder.
+     * The URL can be used directly as an `<img>` src attribute.
+     *
+     * @returns The thumbnail image URL
+     *
+     * @example
+     * ```typescript
+     * const url = p.thumbnailUrl();
+     * // Use in React: <img src={url} alt={name} />
+     * ```
+     */
+    thumbnailUrl(): string {
+        return host.createUrl(`personas/${encodeURIComponent(this.id)}/thumbnail`).toString();
     }
 
     /**

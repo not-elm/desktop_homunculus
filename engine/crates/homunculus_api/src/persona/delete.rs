@@ -25,13 +25,24 @@ fn delete(
     prefs: NonSend<PrefsDatabase>,
     tx: Option<Res<VrmEventSender<PersonaDeletedEvent>>>,
 ) -> ApiResult {
-    let entity = index.get(&persona_id).ok_or(ApiError::EntityNotFound)?;
-
-    commands.entity(entity).try_despawn();
-    index.remove(&persona_id);
+    verify_exists_in_db(&prefs, &persona_id)?;
     delete_from_db(&prefs, &persona_id);
+
+    let entity = despawn_if_spawned(&mut commands, &mut index, &persona_id);
     broadcast_deleted(&tx, entity, &persona_id);
 
+    Ok(())
+}
+
+/// Verifies the persona exists in the database before proceeding.
+fn verify_exists_in_db(prefs: &PrefsDatabase, persona_id: &PersonaId) -> ApiResult {
+    let exists = prefs
+        .load_persona(persona_id.as_ref())
+        .map_err(|e| ApiError::Sql(e.to_string()))?
+        .is_some();
+    if !exists {
+        return Err(ApiError::EntityNotFound);
+    }
     Ok(())
 }
 
@@ -39,6 +50,21 @@ fn delete(
 fn delete_from_db(prefs: &PrefsDatabase, persona_id: &PersonaId) {
     if let Err(e) = prefs.delete_persona(persona_id.as_ref()) {
         warn!("Failed to delete persona from DB: {e}");
+    }
+}
+
+/// Despawns the ECS entity if it exists, returning the entity or a placeholder.
+fn despawn_if_spawned(
+    commands: &mut Commands,
+    index: &mut ResMut<PersonaIndex>,
+    persona_id: &PersonaId,
+) -> Entity {
+    if let Some(entity) = index.get(persona_id) {
+        commands.entity(entity).try_despawn();
+        index.remove(persona_id);
+        entity
+    } else {
+        Entity::PLACEHOLDER
     }
 }
 
