@@ -25,8 +25,7 @@ fn delete(
     prefs: NonSend<PrefsDatabase>,
     tx: Option<Res<VrmEventSender<PersonaDeletedEvent>>>,
 ) -> ApiResult {
-    verify_exists_in_db(&prefs, &persona_id)?;
-    delete_from_db(&prefs, &persona_id);
+    delete_from_db(&prefs, &persona_id)?;
 
     let entity = despawn_if_spawned(&mut commands, &mut index, &persona_id);
     broadcast_deleted(&tx, entity, &persona_id);
@@ -34,23 +33,15 @@ fn delete(
     Ok(())
 }
 
-/// Verifies the persona exists in the database before proceeding.
-fn verify_exists_in_db(prefs: &PrefsDatabase, persona_id: &PersonaId) -> ApiResult {
-    let exists = prefs
-        .load_persona(persona_id.as_ref())
-        .map_err(|e| ApiError::Sql(e.to_string()))?
-        .is_some();
-    if !exists {
+/// Deletes the persona from the database, returning 404 if it did not exist.
+fn delete_from_db(prefs: &PrefsDatabase, persona_id: &PersonaId) -> ApiResult {
+    let affected = prefs
+        .delete_persona(persona_id.as_ref())
+        .map_err(|e| ApiError::Sql(e.to_string()))?;
+    if affected == 0 {
         return Err(ApiError::EntityNotFound);
     }
     Ok(())
-}
-
-/// Removes the persona row from the SQLite database.
-fn delete_from_db(prefs: &PrefsDatabase, persona_id: &PersonaId) {
-    if let Err(e) = prefs.delete_persona(persona_id.as_ref()) {
-        warn!("Failed to delete persona from DB: {e}");
-    }
 }
 
 /// Despawns the ECS entity if it exists, returning the entity or a placeholder.
