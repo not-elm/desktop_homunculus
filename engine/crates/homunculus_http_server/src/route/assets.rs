@@ -50,7 +50,7 @@ pub async fn import(
 /// Query parameters for the asset file endpoint.
 #[derive(Deserialize)]
 pub struct AssetFileQuery {
-    pub id: Option<String>,
+    pub id: String,
 }
 
 /// Get the raw file content of an asset by its ID.
@@ -76,11 +76,7 @@ pub async fn get_asset_file(
     State(api): State<AssetsApi>,
     Query(query): Query<AssetFileQuery>,
 ) -> Result<Response, ApiError> {
-    let asset_id = query
-        .id
-        .ok_or_else(|| ApiError::InvalidInput("Missing required query parameter: id".into()))?;
-
-    let path = api.get_file_path(asset_id).await?;
+    let path = api.get_file_path(query.id).await?;
     read_and_respond(&path).await
 }
 
