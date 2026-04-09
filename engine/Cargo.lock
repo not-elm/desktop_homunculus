@@ -923,6 +923,8 @@ dependencies = [
 [[package]]
 name = "bevy_cef"
 version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4e7ab91efdd06ac9ab6d9e43f0ef5ead8f796c6a80a275fc4c9bc78b1b22f95c"
 dependencies = [
  "async-channel",
  "bevy",
@@ -938,6 +940,8 @@ dependencies = [
 [[package]]
 name = "bevy_cef_core"
 version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "373017c708d3fcad506120a7e8ba62c4e20a36da9b14e77c272cf608a4c49329"
 dependencies = [
  "async-channel",
  "bevy",
