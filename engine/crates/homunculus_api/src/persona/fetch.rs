@@ -90,10 +90,7 @@ fn spawned_state(
 ) -> (bool, String) {
     match index.get(persona_id) {
         Some(entity) => {
-            let state = states
-                .get(entity)
-                .map(|s| s.0.clone())
-                .unwrap_or_default();
+            let state = states.get(entity).map(|s| s.0.clone()).unwrap_or_default();
             (true, state)
         }
         None => (false, String::new()),

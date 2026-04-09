@@ -1597,8 +1597,15 @@ mod test {
         db.insert_persona(&persona).unwrap();
 
         // Insert imported asset linked to persona
-        db.upsert_imported_asset("asset-linked", Some("p1"), "/some/model.vrm", "vrm", None, None)
-            .unwrap();
+        db.upsert_imported_asset(
+            "asset-linked",
+            Some("p1"),
+            "/some/model.vrm",
+            "vrm",
+            None,
+            None,
+        )
+        .unwrap();
         assert_eq!(db.list_imported_assets().unwrap().len(), 1);
 
         // Delete persona — imported asset should be cascade-deleted
