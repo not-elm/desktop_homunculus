@@ -42,6 +42,7 @@ export default function App() {
             onOpenChange={setCreateOpen}
             onCreate={async (id, name) => {
               await mgmt.createPersona(id, name);
+              setCreateOpen(false);
               setRoute({ type: "detail", id });
             }}
           />
