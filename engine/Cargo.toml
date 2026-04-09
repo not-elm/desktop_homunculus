@@ -169,6 +169,7 @@ strip = true
 
 [workspace.lints.clippy]
 type_complexity = "allow"
+too_many_arguments = "allow"
 result_large_err = "allow"
 
 [workspace.lints.rust]
