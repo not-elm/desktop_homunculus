@@ -465,6 +465,20 @@ impl Default for PrefsDatabase {
     }
 }
 
+/// Returns `true` if the error is a SQLite UNIQUE or PRIMARY KEY constraint violation.
+pub fn is_unique_violation(err: &rusqlite::Error) -> bool {
+    matches!(
+        err,
+        rusqlite::Error::SqliteFailure(
+            rusqlite::ffi::Error {
+                extended_code: 1555 | 2067,
+                ..
+            },
+            _,
+        )
+    )
+}
+
 fn create_tables(db: &rusqlite::Connection) -> Result<(), rusqlite::Error> {
     db.execute_batch("PRAGMA foreign_keys = ON")?;
     db.execute(

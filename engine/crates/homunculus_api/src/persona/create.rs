@@ -81,24 +81,10 @@ fn build_persona(persona_id: &PersonaId, args: &CreatePersona) -> Persona {
 /// Maps UNIQUE/PRIMARY KEY constraint violations to [`ApiError::Conflict`].
 fn persist_persona(prefs: &PrefsDatabase, persona: &Persona) -> ApiResult<()> {
     prefs.insert_persona(persona).map_err(|e| {
-        if is_unique_violation(&e) {
+        if homunculus_prefs::is_unique_violation(&e) {
             ApiError::Conflict(format!("Persona already exists: {}", persona.id))
         } else {
             ApiError::Sql(e.to_string())
         }
     })
-}
-
-/// Returns `true` if the error is a SQLite UNIQUE or PRIMARY KEY constraint violation.
-fn is_unique_violation(err: &rusqlite::Error) -> bool {
-    matches!(
-        err,
-        rusqlite::Error::SqliteFailure(
-            rusqlite::ffi::Error {
-                extended_code: 1555 | 2067,
-                ..
-            },
-            _,
-        )
-    )
 }
