@@ -18,7 +18,7 @@ desktop-homunculus/
 │   ├── ui/              # @hmcs/ui — Shared React component library (Radix + Tailwind)
 │   ├── cli/             # @hmcs/cli — Node CLI wrapper (distributes platform-specific Rust binary)
 │   └── cli-platform/    # Platform-specific binary packages for hmcs CLI
-├── mods/                # Mods (NPM packages): persona/, settings/, menu/, assets/, voicevox/, agent/
+├── mods/                # Mods (NPM packages): persona/, settings/, menu/, assets/, voicevox/, agent/, app-exit/, stt/
 ├── docs/website/        # Docusaurus documentation site
 └── sandbox/             # Dev sandbox — aggregates all mods for workspace linking validation
 ```
@@ -108,7 +108,7 @@ pnpm build               # Production build
 
 ## Architecture Overview
 
-The engine is built from ~18 independent Bevy plugins in `engine/crates/`, following a Core → API → HTTP layering. The HTTP API (Axum on `localhost:3100`) bridges async requests to Bevy's single-threaded ECS via the `ApiReactor` pattern. See `engine/CLAUDE.md` for detailed Rust architecture, code examples, and crate descriptions.
+The engine is built from ~20 independent Bevy plugins in `engine/crates/`, following a Core → API → HTTP layering. The HTTP API (Axum on `localhost:3100`) bridges async requests to Bevy's single-threaded ECS via the `ApiReactor` pattern. See `engine/CLAUDE.md` for detailed Rust architecture, code examples, and crate descriptions.
 
 Asset path resolution: dev mode uses `assets/` relative to `CARGO_MANIFEST_DIR`; release uses `../Resources/assets` (inside `.app` bundle).
 
