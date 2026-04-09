@@ -3,7 +3,7 @@
 use super::super::HomunculusMcpHandler;
 use bevy::math::{Vec2, Vec3};
 use bevy::prelude::Entity;
-use homunculus_core::prelude::{WebviewOffset, WebviewOpenOptions, WebviewSource};
+use homunculus_core::prelude::{WebviewConstraints, WebviewOffset, WebviewOpenOptions, WebviewSource};
 use rmcp::handler::server::wrapper::Parameters;
 use rmcp::schemars;
 use rmcp::schemars::JsonSchema;
@@ -49,6 +49,12 @@ pub struct OpenWebviewParams {
     /// When linked, the webview follows the character's head position.
     /// Use get_character_snapshot to see available character names.
     pub character_name: Option<String>,
+    /// How much rotation to inherit from parent (0.0 = billboard, 1.0 = full). Default: 0.0.
+    pub rotation_follow: Option<f32>,
+    /// Maximum tilt angle from upright in degrees. Default: 0.0.
+    pub max_tilt_degrees: Option<f32>,
+    /// Lock scale at 1.0 regardless of parent scale. Default: true.
+    pub lock_scale: Option<bool>,
 }
 
 /// Parameters for the `close_webview` tool.
@@ -132,6 +138,18 @@ impl HomunculusMcpHandler {
             size: Some(Vec2::new(size_x, size_y)),
             viewport_size: Some(Vec2::new(viewport_width as f32, viewport_height as f32)),
             offset: Some(WebviewOffset(Vec3::new(offset_x, offset_y, 10.0))),
+            constraints: if args.rotation_follow.is_some()
+                || args.max_tilt_degrees.is_some()
+                || args.lock_scale.is_some()
+            {
+                Some(WebviewConstraints {
+                    rotation_follow: args.rotation_follow,
+                    max_tilt_degrees: args.max_tilt_degrees,
+                    lock_scale: args.lock_scale,
+                })
+            } else {
+                None
+            },
             linked_persona,
         };
 
