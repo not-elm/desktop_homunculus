@@ -3,7 +3,9 @@ use crate::prelude::WebviewApi;
 use bevy::prelude::*;
 use bevy_cef::prelude::WebviewSize;
 use bevy_flurx::action::once;
-use homunculus_core::prelude::{WebviewMeshSize, WebviewOffset, WebviewPatchRequest};
+use homunculus_core::prelude::{
+    TransformConstraint, WebviewMeshSize, WebviewOffset, WebviewPatchRequest,
+};
 use homunculus_effects::{Entity, Update};
 
 impl WebviewApi {
@@ -52,14 +54,17 @@ impl WebviewApi {
 fn set_offset(
     In((webview, offset)): In<(Entity, WebviewOffset)>,
     mut commands: Commands,
-    webviews: Query<Entity, With<bevy_cef::prelude::WebviewSource>>,
+    webviews: Query<(Entity, Option<&TransformConstraint>), With<bevy_cef::prelude::WebviewSource>>,
 ) -> ApiResult<()> {
-    if webviews.contains(webview) {
-        commands.entity(webview).try_insert(offset);
-        Ok(())
-    } else {
-        Err(ApiError::WebviewNotFound(webview))
-    }
+    let Ok((_, existing)) = webviews.get(webview) else {
+        return Err(ApiError::WebviewNotFound(webview));
+    };
+    let base = existing.copied().unwrap_or_default();
+    commands.entity(webview).try_insert(TransformConstraint {
+        intended_offset: offset.0,
+        ..base
+    });
+    Ok(())
 }
 
 fn set_size(
@@ -96,16 +101,35 @@ fn patch(
     In((webview, request)): In<(Entity, WebviewPatchRequest)>,
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    webviews: Query<Entity, With<bevy_cef::prelude::WebviewSource>>,
+    webviews: Query<
+        (Entity, Option<&TransformConstraint>),
+        With<bevy_cef::prelude::WebviewSource>,
+    >,
 ) -> ApiResult<()> {
-    if !webviews.contains(webview) {
+    let Ok((_, existing_constraint)) = webviews.get(webview) else {
         return Err(ApiError::WebviewNotFound(webview));
-    }
+    };
 
     let mut entity_commands = commands.entity(webview);
 
     if let Some(offset) = request.offset {
-        entity_commands.try_insert(offset);
+        let base = existing_constraint.copied().unwrap_or_default();
+        entity_commands.try_insert(TransformConstraint {
+            intended_offset: offset.0,
+            ..base
+        });
+    }
+
+    if let Some(constraints) = request.constraints {
+        let base = existing_constraint.copied().unwrap_or_default();
+        entity_commands.try_insert(TransformConstraint {
+            rotation_follow: constraints.rotation_follow.unwrap_or(base.rotation_follow),
+            max_tilt_degrees: constraints
+                .max_tilt_degrees
+                .unwrap_or(base.max_tilt_degrees),
+            lock_scale: constraints.lock_scale.unwrap_or(base.lock_scale),
+            intended_offset: base.intended_offset,
+        });
     }
 
     if let Some(size) = request.size {
