@@ -45,6 +45,26 @@ impl AssetsApi {
             })
             .await
     }
+
+    /// Resolves an asset ID to its absolute file path.
+    pub async fn get_file_path(&self, asset_id: String) -> ApiResult<std::path::PathBuf> {
+        self.0
+            .schedule(move |task| async move {
+                task.will(Update, once::run(resolve_file_path).with(asset_id))
+                    .await
+            })
+            .await?
+    }
+}
+
+fn resolve_file_path(
+    In(asset_id): In<String>,
+    registry: Res<AssetRegistry>,
+) -> ApiResult<std::path::PathBuf> {
+    let entry = registry
+        .get(&asset_id)
+        .ok_or_else(|| crate::error::ApiError::AssetNotFound(AssetId::new(&asset_id)))?;
+    Ok(entry.absolute_path.clone())
 }
 
 fn list_assets(In(filter): In<AssetFilter>, registry: Res<AssetRegistry>) -> Vec<AssetInfo> {
