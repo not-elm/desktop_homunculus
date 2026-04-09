@@ -24,7 +24,6 @@ export default function PersonaCard({
   return (
     <div
       className={`persona-card ${isSpawned ? "spawned" : "not-spawned"}`}
-      onClick={() => onEdit(persona.id)}
     >
       {isSpawned && <CornerAccents />}
 
