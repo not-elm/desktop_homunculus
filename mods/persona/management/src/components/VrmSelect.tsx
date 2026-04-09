@@ -1,5 +1,7 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-import { assets, fileDialog } from "@hmcs/sdk";
+import { useState, useRef, useCallback } from "react";
+import type { assets } from "@hmcs/sdk";
+import { useVrmAssets } from "../hooks/useVrmAssets";
+import { useClickOutside } from "../hooks/useClickOutside";
 
 interface VrmSelectProps {
   personaId: string;
@@ -15,61 +17,16 @@ export default function VrmSelect({
   disabled,
 }: VrmSelectProps) {
   const [open, setOpen] = useState(false);
-  const [assetList, setAssetList] = useState<assets.AssetInfo[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
+  const { modAssets, localAssets, importVrm } = useVrmAssets();
 
-  const fetchAssets = useCallback(async () => {
-    try {
-      const list = await assets.list({ type: "vrm" });
-      setAssetList(list);
-    } catch (e) {
-      console.error("Failed to load VRM assets:", e);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchAssets();
-  }, [fetchAssets]);
-
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(e.target as Node)
-      ) {
-        setOpen(false);
-      }
-    }
-    if (open) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [open]);
-
-  const modAssets = assetList.filter((a) => !a.id.startsWith("vrm:local:"));
-  const localAssets = assetList.filter((a) => a.id.startsWith("vrm:local:"));
-  const displayValue = value ?? "None";
+  useClickOutside(containerRef, useCallback(() => setOpen(false), []));
 
   async function handleBrowse() {
     setOpen(false);
-    const path = await fileDialog.open({
-      accept: [".vrm"],
-      title: "Select VRM file",
-    });
-    if (!path) return;
-
-    try {
-      const assetId = `vrm:local:${personaId}`;
-      await assets.importAsset({
-        sourcePath: path,
-        assetId,
-        assetType: "vrm",
-        description: `Imported VRM for ${personaId}`,
-      });
-      await fetchAssets();
+    const assetId = await importVrm(personaId);
+    if (assetId) {
       onChange(assetId);
-    } catch (e) {
-      console.error("Failed to import VRM:", e);
     }
   }
 
@@ -77,6 +34,8 @@ export default function VrmSelect({
     onChange(assetId);
     setOpen(false);
   }
+
+  const displayValue = value ?? "None";
 
   return (
     <div className="detail-field" ref={containerRef} style={{ position: "relative" }}>
