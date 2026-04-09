@@ -7,6 +7,7 @@
 use bevy::prelude::*;
 use homunculus_core::prelude::{AssetEntry, AssetId, AssetRegistry, AssetType};
 use homunculus_prefs::PrefsDatabase;
+use homunculus_utils::path::homunculus_dir;
 use std::path::PathBuf;
 
 /// Startup system that loads all previously imported assets from the
@@ -29,11 +30,16 @@ pub fn restore_imported_assets(mut registry: ResMut<AssetRegistry>, prefs: NonSe
             continue;
         };
 
-        let path = PathBuf::from(&asset.path);
+        let stored_path = PathBuf::from(&asset.path);
+        let filename = stored_path
+            .file_name()
+            .map(PathBuf::from)
+            .unwrap_or_else(|| stored_path.clone());
+        let absolute_path = homunculus_dir().join("assets").join(&filename);
         let entry = AssetEntry {
             id: AssetId::new(&asset.id),
-            path: path.clone(),
-            absolute_path: path,
+            path: filename,
+            absolute_path,
             asset_type,
             description: asset.description,
             mod_name: "local".to_string(),

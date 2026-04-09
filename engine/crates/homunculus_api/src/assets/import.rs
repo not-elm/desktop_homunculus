@@ -115,10 +115,11 @@ fn register_and_persist(
 ) -> ApiResult<ImportAssetResponse> {
     let asset_id = AssetId::new(&args.asset_id);
     let dest = PathBuf::from(&dest_path);
+    let filename = derive_filename(&PathBuf::from(&source_path), &args.asset_id);
 
     let entry = AssetEntry {
         id: asset_id.clone(),
-        path: dest.clone(),
+        path: PathBuf::from(&filename),
         absolute_path: dest,
         asset_type: args.asset_type.clone(),
         description: args.description.clone(),
