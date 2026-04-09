@@ -4,9 +4,9 @@ use bevy::light::NotShadowCaster;
 use bevy::prelude::*;
 use bevy_cef::prelude::{PreloadScripts, WebviewExtendStandardMaterial, WebviewSize};
 use bevy_flurx::action::once;
-use bevy_vrm1::prelude::{Cameras, HeadBoneEntity};
+use bevy_vrm1::prelude::Cameras;
 use homunculus_core::prelude::{
-    AssetResolver, AssetType, LinkedPersona, PersonaIndex, WebviewMeshSize, WebviewOffset,
+    AssetResolver, AssetType, LinkedPersona, PersonaIndex, TransformConstraint, WebviewMeshSize,
     WebviewOpenOptions, WebviewSource, WebviewSourceInfo,
 };
 use homunculus_effects::{Entity, Update};
@@ -31,7 +31,7 @@ pub(crate) struct WebviewOpenPlugin;
 
 impl Plugin for WebviewOpenPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (visible, track_for_linked_persona));
+        app.add_systems(Update, visible);
     }
 }
 
@@ -60,6 +60,7 @@ fn create_global_webview(
     mut materials: ResMut<Assets<WebviewExtendStandardMaterial>>,
     cameras: Cameras,
     asset_resolver: AssetResolver,
+    index: Res<PersonaIndex>,
 ) -> ApiResult<Entity> {
     let webview_source = source_to_webview_source(&options.source, &asset_resolver)?;
 
@@ -80,7 +81,10 @@ fn create_global_webview(
     if let Some(persona_id) = options.linked_persona {
         commands
             .entity(webview)
-            .try_insert(LinkedPersona(persona_id));
+            .try_insert(LinkedPersona(persona_id.clone()));
+        if let Some(persona_entity) = index.get(&persona_id) {
+            commands.entity(webview).set_parent_in_place(persona_entity);
+        }
     }
     Ok(webview)
 }
@@ -140,6 +144,7 @@ fn spawn_webview_entity(
     options: &WebviewOpenOptions,
 ) -> Entity {
     let size = options.size.unwrap_or(Vec2::splat(0.7));
+    let constraint = build_transform_constraint(options);
     let mut entity_commands = commands.spawn((
         Name::new("Webview"),
         webview_source,
@@ -159,11 +164,8 @@ fn spawn_webview_entity(
             is_hoverable: true,
         },
         Visibility::Hidden,
-        {
-            let offset = options.offset.unwrap_or_default();
-            Transform::from_translation(Vec3::new(0.0, 0.0, offset.0.z))
-        },
-        options.offset.unwrap_or_default(),
+        Transform::from_translation(constraint.intended_offset),
+        constraint,
         WebviewMeshSize(size),
     ));
 
@@ -174,31 +176,24 @@ fn spawn_webview_entity(
     entity_commands.id()
 }
 
-fn track_for_linked_persona(
-    par_commands: ParallelCommands,
-    head_bones: Query<&HeadBoneEntity>,
-    global_transforms: Query<&GlobalTransform>,
-    webviews: Query<(Entity, &LinkedPersona, &WebviewOffset, &Transform)>,
-    index: Res<PersonaIndex>,
-) {
-    webviews
-        .par_iter()
-        .for_each(|(entity, linked_persona, offset, tf)| {
-            let Some(vrm_entity) = index.get(&linked_persona.0) else {
-                return;
-            };
-            let Ok(head_bone) = head_bones.get(vrm_entity) else {
-                return;
-            };
-            let Ok(p) = global_transforms.get(head_bone.0) else {
-                return;
-            };
-            let mut new_tf = *tf;
-            new_tf.translation = p.translation() + offset.0;
-            par_commands.command_scope(|mut commands| {
-                commands.entity(entity).try_insert(new_tf);
-            });
-        });
+fn build_transform_constraint(options: &WebviewOpenOptions) -> TransformConstraint {
+    let offset = options.offset.unwrap_or_default();
+    let mut constraint = TransformConstraint {
+        intended_offset: offset.0,
+        ..Default::default()
+    };
+    if let Some(c) = &options.constraints {
+        if let Some(v) = c.rotation_follow {
+            constraint.rotation_follow = v;
+        }
+        if let Some(v) = c.max_tilt_degrees {
+            constraint.max_tilt_degrees = v;
+        }
+        if let Some(v) = c.lock_scale {
+            constraint.lock_scale = v;
+        }
+    }
+    constraint
 }
 
 fn insert_preload_scripts(commands: &mut Commands, webview: Entity) {
