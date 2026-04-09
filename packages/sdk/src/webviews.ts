@@ -19,8 +19,8 @@ import { Persona } from "./persona";
  * ```
  */
 export const WebviewLayer = {
-    /** Default webview layer (z=10). Same depth as other webviews. */
-    DEFAULT: 10,
+    /** Default webview layer (z=0). Standard depth, behind VRM characters. */
+    DEFAULT: 0,
     /** Foreground layer (z=15). Renders in front of VRM characters and other webviews. */
     FOREGROUND: 15,
 } as const;
