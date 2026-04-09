@@ -179,7 +179,7 @@ export default function DetailView({
   return (
     <div className="detail-view">
       <DetailHeader
-        name={snapshot.name}
+        name={snapshot.name ?? ""}
         personaId={personaId}
         isSpawned={snapshot.spawned}
         onSpawnToggle={handleSpawnToggle}

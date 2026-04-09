@@ -47,10 +47,9 @@ export function usePersonaManagement() {
   const createPersona = useCallback(
     async (id: string, name: string) => {
       await Persona.create({ id, name });
-      const list = await refresh();
+      await refresh();
       setCreateMode(false);
       setSelectedId(id);
-      return id;
     },
     [refresh],
   );
