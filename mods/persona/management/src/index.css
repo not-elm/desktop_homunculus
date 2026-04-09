@@ -235,11 +235,11 @@ body {
 
 .management-close-btn {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 14px;
+  right: 14px;
   z-index: 20;
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -271,6 +271,7 @@ body {
   align-items: center;
   position: relative;
   z-index: 7;
+  padding-right: 36px;
 }
 
 .management-title {
