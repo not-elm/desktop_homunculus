@@ -233,6 +233,7 @@ fn build_openapi_router() -> OpenApiRouter<HttpState> {
         .nest("/stt", stt_router())
         .nest("/dialog", dialog_router())
         .routes(routes!(assets::list))
+        .routes(routes!(assets::import))
         .nest("/rpc", rpc_openapi_router())
 }
 
@@ -384,6 +385,9 @@ fn persona_id_router() -> OpenApiRouter<HttpState> {
             persona::fields::get_transform,
             persona::fields::put_transform
         ))
+        .routes(routes!(persona::thumbnail::thumbnail))
+        .routes(routes!(persona::spawn::spawn))
+        .routes(routes!(persona::spawn::despawn))
         .routes(routes!(persona::events::events))
         .routes(routes!(persona::vrm::attach, persona::vrm::detach))
         .routes(routes!(
@@ -465,7 +469,9 @@ mod tests {
     use bevy::tasks::{block_on, poll_once};
     use homunculus_api::HomunculusApiPlugin;
     use homunculus_api::prelude::{ApiReactor, ShadowPanelApiPlugin, WebviewApiPlugin};
-    use homunculus_core::prelude::{ModInfo, ModMenuMetadata, ModMenuMetadataList, ModRegistry};
+    use homunculus_core::prelude::{
+        AssetRegistry, ModInfo, ModMenuMetadata, ModMenuMetadataList, ModRegistry,
+    };
     use homunculus_core::rpc_registry::RpcRegistry;
     use homunculus_prefs::PrefsDatabase;
     use homunculus_utils::config::HomunculusConfig;
@@ -496,6 +502,7 @@ mod tests {
         ));
 
         app.insert_non_send_resource(PrefsDatabase::open_in_memory());
+        app.init_resource::<AssetRegistry>();
         app.init_resource::<ModRegistry>();
         app.init_resource::<ModMenuMetadataList>();
         app.init_resource::<homunculus_core::prelude::PersonaIndex>();

@@ -24,9 +24,8 @@ use super::PersonaPath;
     params(("id" = String, Path, description = "Persona ID")),
     request_body = AttachVrmBody,
     responses(
-        (status = 200, description = "VRM attached, returns updated persona", body = PersonaSnapshot),
+        (status = 200, description = "VRM attached (auto-detaches any existing VRM), returns updated persona", body = PersonaSnapshot),
         (status = 404, description = "Persona or asset not found"),
-        (status = 409, description = "VRM already attached"),
     ),
 )]
 pub async fn attach(

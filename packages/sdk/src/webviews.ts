@@ -2,6 +2,29 @@ import { host } from "./host";
 import { type Vec2, type Vec3 } from "./math";
 import { Persona } from "./persona";
 
+// --- Z-layer constants ---
+
+/**
+ * Z-layer constants for webview positioning.
+ *
+ * The scene uses an orthographic camera at z=20. Objects with higher z
+ * values appear in front. VRM characters are at z~0, default webviews at z=10.
+ *
+ * @example
+ * ```typescript
+ * await Webview.open({
+ *   source: webviewSource.local("my-mod:ui"),
+ *   offset: [0, 0, WebviewLayer.FOREGROUND],
+ * });
+ * ```
+ */
+export const WebviewLayer = {
+    /** Default webview layer (z=0). Standard depth, behind VRM characters. */
+    DEFAULT: 0,
+    /** Foreground layer (z=15). Renders in front of VRM characters and other webviews. */
+    FOREGROUND: 15,
+} as const;
+
 // --- Webview types ---
 
 /**

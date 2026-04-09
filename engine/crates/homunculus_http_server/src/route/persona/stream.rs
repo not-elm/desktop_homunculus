@@ -7,8 +7,9 @@ use bevy_flurx::action::once;
 use futures::stream::select_all;
 use homunculus_api::prelude::ApiReactor;
 use homunculus_core::prelude::{
-    PersonaChangeEvent, PersonaDeletedEvent, PersonaEvent, PersonaId, PersonaIndex,
-    PersonaStateChangeEvent, VrmAttachedEvent, VrmDetachedEvent, VrmEventReceiver,
+    PersonaChangeEvent, PersonaDeletedEvent, PersonaDespawnedEvent, PersonaEvent, PersonaId,
+    PersonaIndex, PersonaSpawnedEvent, PersonaStateChangeEvent, VrmAttachedEvent, VrmDetachedEvent,
+    VrmEventReceiver,
 };
 use std::collections::HashMap;
 use std::convert::Infallible;
@@ -54,6 +55,8 @@ fn build_combined_stream(
     rx_attached: Res<VrmEventReceiver<VrmAttachedEvent>>,
     rx_detached: Res<VrmEventReceiver<VrmDetachedEvent>>,
     rx_deleted: Res<VrmEventReceiver<PersonaDeletedEvent>>,
+    rx_spawned: Res<VrmEventReceiver<PersonaSpawnedEvent>>,
+    rx_despawned: Res<VrmEventReceiver<PersonaDespawnedEvent>>,
 ) -> Pin<Box<dyn Stream<Item = Result<Event, Infallible>> + Send + Sync + 'static>> {
     let reverse: ReverseIndex = Arc::new(RwLock::new(build_reverse_index(&index)));
 
@@ -63,6 +66,8 @@ fn build_combined_stream(
         entity_event_stream("vrm-attached", rx_attached.clone(), Arc::clone(&reverse)),
         entity_event_stream("vrm-detached", rx_detached.clone(), Arc::clone(&reverse)),
         persona_deleted_stream(rx_deleted.clone(), Arc::clone(&reverse)),
+        persona_spawned_stream(rx_spawned.clone(), Arc::clone(&reverse)),
+        persona_despawned_stream(rx_despawned.clone(), Arc::clone(&reverse)),
     ];
 
     Box::pin(select_all(streams))
@@ -123,6 +128,62 @@ fn persona_deleted_stream(
         };
         let sse = Event::default()
             .event("persona-deleted")
+            .data(serde_json::to_string(&wrapped).unwrap());
+        Some((Ok(sse), (rx, reverse)))
+    });
+    Box::pin(stream)
+}
+
+/// Stream for `persona-spawned` events.
+///
+/// The persona_id is embedded in the payload. The entity is added to the
+/// reverse index so that subsequent events for the same entity can be resolved.
+fn persona_spawned_stream(
+    rx: VrmEventReceiver<PersonaSpawnedEvent>,
+    reverse: ReverseIndex,
+) -> Pin<Box<dyn Stream<Item = Result<Event, Infallible>> + Send + Sync + 'static>> {
+    let stream = futures::stream::unfold((rx, reverse), |(mut rx, reverse)| async move {
+        let event = rx.recv().await.ok()?;
+        let persona_id = event.payload.persona_id.clone();
+
+        if let Ok(mut map) = reverse.write() {
+            map.insert(event.vrm, persona_id.clone());
+        }
+
+        let wrapped = PersonaEvent {
+            persona_id,
+            payload: event.payload,
+        };
+        let sse = Event::default()
+            .event("persona-spawned")
+            .data(serde_json::to_string(&wrapped).unwrap());
+        Some((Ok(sse), (rx, reverse)))
+    });
+    Box::pin(stream)
+}
+
+/// Stream for `persona-despawned` events.
+///
+/// The persona_id is embedded in the payload. The entity is removed from the
+/// reverse index since it is no longer valid.
+fn persona_despawned_stream(
+    rx: VrmEventReceiver<PersonaDespawnedEvent>,
+    reverse: ReverseIndex,
+) -> Pin<Box<dyn Stream<Item = Result<Event, Infallible>> + Send + Sync + 'static>> {
+    let stream = futures::stream::unfold((rx, reverse), |(mut rx, reverse)| async move {
+        let event = rx.recv().await.ok()?;
+        let persona_id = event.payload.persona_id.clone();
+
+        if let Ok(mut map) = reverse.write() {
+            map.remove(&event.vrm);
+        }
+
+        let wrapped = PersonaEvent {
+            persona_id,
+            payload: event.payload,
+        };
+        let sse = Event::default()
+            .event("persona-despawned")
             .data(serde_json::to_string(&wrapped).unwrap());
         Some((Ok(sse), (rx, reverse)))
     });

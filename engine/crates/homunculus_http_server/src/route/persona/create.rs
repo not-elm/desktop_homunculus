@@ -29,7 +29,6 @@ mod tests {
     use axum::body::Body;
     use axum::http::{Request, StatusCode};
     use homunculus_api::persona::PersonaSnapshot;
-    use homunculus_core::prelude::Persona;
     use http_body_util::BodyExt;
 
     #[tokio::test]
@@ -47,7 +46,8 @@ mod tests {
         let snap: PersonaSnapshot = serde_json::from_slice(&body).unwrap();
         assert_eq!(snap.persona.id.0, "alice");
         assert_eq!(snap.persona.name, Some("Alice".to_string()));
-        assert_eq!(snap.state, "idle");
+        assert_eq!(snap.state, "");
+        assert!(!snap.spawned);
     }
 
     #[tokio::test]
@@ -88,7 +88,8 @@ mod tests {
         let snap: PersonaSnapshot = serde_json::from_slice(&body).unwrap();
         assert_eq!(snap.persona.id.0, "bob");
         assert_eq!(snap.persona.name, Some("Bob".to_string()));
-        assert_eq!(snap.state, "idle");
+        assert!(!snap.spawned);
+        assert_eq!(snap.state, "");
     }
 
     #[tokio::test]
@@ -123,12 +124,20 @@ mod tests {
     async fn test_delete_persona_204() {
         let (mut app, router) = test_app();
 
+        // Create persona (DB only)
         let request = Request::post("/personas")
             .header("content-type", "application/json")
             .body(Body::from(r#"{"id":"to-delete"}"#))
             .unwrap();
         let response = call_any_status(&mut app, router.clone(), request).await;
         assert_eq!(response.status(), StatusCode::CREATED);
+
+        // Spawn so delete can find the ECS entity
+        let request = Request::post("/personas/to-delete/spawn")
+            .body(Body::empty())
+            .unwrap();
+        let response = call_any_status(&mut app, router.clone(), request).await;
+        assert_eq!(response.status(), StatusCode::OK);
 
         let request = Request::delete("/personas/to-delete")
             .body(Body::empty())
@@ -147,12 +156,20 @@ mod tests {
     async fn test_patch_persona() {
         let (mut app, router) = test_app();
 
+        // Create persona (DB only)
         let request = Request::post("/personas")
             .header("content-type", "application/json")
             .body(Body::from(r#"{"id":"patch-me","name":"Before"}"#))
             .unwrap();
         let response = call_any_status(&mut app, router.clone(), request).await;
         assert_eq!(response.status(), StatusCode::CREATED);
+
+        // Spawn so patch can access the ECS entity
+        let request = Request::post("/personas/patch-me/spawn")
+            .body(Body::empty())
+            .unwrap();
+        let response = call_any_status(&mut app, router.clone(), request).await;
+        assert_eq!(response.status(), StatusCode::OK);
 
         let request = Request::patch("/personas/patch-me")
             .header("content-type", "application/json")

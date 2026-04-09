@@ -17,8 +17,9 @@ use std::collections::HashMap;
 pub struct PatchPersona {
     #[serde(default)]
     pub name: Option<String>,
-    #[serde(default)]
-    pub age: Option<u32>,
+    #[serde(default, with = "nullable", skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "openapi", schema(value_type = Option<u32>))]
+    pub age: Option<Option<u32>>,
     #[serde(default)]
     pub gender: Option<Gender>,
     #[serde(default)]
@@ -27,6 +28,8 @@ pub struct PatchPersona {
     pub profile: Option<String>,
     #[serde(default)]
     pub personality: Option<String>,
+    #[serde(default)]
+    pub vrm_asset_id: Option<String>,
     #[serde(default)]
     #[cfg_attr(feature = "openapi", schema(value_type = Option<std::collections::HashMap<String, Object>>))]
     pub metadata: Option<HashMap<String, serde_json::Value>>,
@@ -68,7 +71,19 @@ impl PersonaApi {
         self.patch(
             persona_id,
             PatchPersona {
-                age: Some(age),
+                age: Some(Some(age)),
+                ..Default::default()
+            },
+        )
+        .await
+    }
+
+    /// Clears the age of a persona (sets to unknown).
+    pub async fn clear_age(&self, persona_id: PersonaId) -> ApiResult<PersonaSnapshot> {
+        self.patch(
+            persona_id,
+            PatchPersona {
+                age: Some(None),
                 ..Default::default()
             },
         )
@@ -164,34 +179,56 @@ fn patch_persona(
     prefs: NonSend<PrefsDatabase>,
     tx: Option<Res<VrmEventSender<PersonaChangeEvent>>>,
 ) -> ApiResult<PersonaSnapshot> {
-    let entity = index.get(&persona_id).ok_or(ApiError::EntityNotFound)?;
+    if let Some(entity) = index.get(&persona_id) {
+        // ECS path: persona is spawned — update component + DB
+        let (mut persona, state) = personas
+            .get_mut(entity)
+            .map_err(|_| ApiError::EntityNotFound)?;
 
-    let (mut persona, state) = personas
-        .get_mut(entity)
-        .map_err(|_| ApiError::EntityNotFound)?;
+        apply_patch_mut(&mut persona, &patch);
 
-    apply_patch(&mut persona, &patch);
+        let display_name = persona.name.clone().unwrap_or_else(|| persona.id.0.clone());
+        commands.entity(entity).try_insert(Name::new(display_name));
 
-    let display_name = persona.name.clone().unwrap_or_else(|| persona.id.0.clone());
-    commands.entity(entity).try_insert(Name::new(display_name));
+        let updated = persona.clone();
+        let state_str = state.0.clone();
+        persist_and_broadcast(&prefs, &tx, entity, &updated);
 
-    let updated = persona.clone();
-    let state_str = state.0.clone();
-    persist_and_broadcast(&prefs, &tx, entity, &updated);
+        Ok(PersonaSnapshot {
+            persona: updated,
+            state: state_str,
+            spawned: true,
+        })
+    } else {
+        // DB path: persona is not spawned — update DB directly
+        let mut persona = prefs
+            .load_persona(&persona_id.0)
+            .map_err(|e| ApiError::Sql(e.to_string()))?
+            .ok_or(ApiError::EntityNotFound)?;
 
-    Ok(PersonaSnapshot {
-        persona: updated,
-        state: state_str,
-    })
+        apply_patch_owned(&mut persona, &patch);
+
+        if let Err(e) = prefs.update_persona(&persona) {
+            warn!("Failed to persist persona: {e}");
+        }
+
+        Ok(PersonaSnapshot {
+            persona,
+            state: String::new(),
+            spawned: false,
+        })
+    }
 }
 
-/// Merges non-`None` patch fields into the existing persona.
-fn apply_patch(persona: &mut Mut<'_, Persona>, patch: &PatchPersona) {
+/// Merges non-`None` patch fields into a mutable ECS component reference.
+fn apply_patch_mut(persona: &mut Mut<'_, Persona>, patch: &PatchPersona) {
     if let Some(name) = &patch.name {
         persona.name = Some(name.clone());
     }
-    if let Some(age) = patch.age {
-        persona.age = Some(age);
+    match patch.age {
+        Some(Some(age)) => persona.age = Some(age),
+        Some(None) => persona.age = None,
+        None => {}
     }
     if let Some(gender) = &patch.gender {
         persona.gender = gender.clone();
@@ -205,8 +242,66 @@ fn apply_patch(persona: &mut Mut<'_, Persona>, patch: &PatchPersona) {
     if let Some(personality) = &patch.personality {
         persona.personality = Some(personality.clone());
     }
+    if let Some(vrm_asset_id) = &patch.vrm_asset_id {
+        persona.vrm_asset_id = Some(vrm_asset_id.clone());
+    }
     if let Some(metadata) = &patch.metadata {
         persona.metadata = metadata.clone();
+    }
+}
+
+/// Merges non-`None` patch fields into an owned Persona (for DB-only path).
+fn apply_patch_owned(persona: &mut Persona, patch: &PatchPersona) {
+    if let Some(name) = &patch.name {
+        persona.name = Some(name.clone());
+    }
+    match patch.age {
+        Some(Some(age)) => persona.age = Some(age),
+        Some(None) => persona.age = None,
+        None => {}
+    }
+    if let Some(gender) = &patch.gender {
+        persona.gender = gender.clone();
+    }
+    if let Some(pronoun) = &patch.first_person_pronoun {
+        persona.first_person_pronoun = Some(pronoun.clone());
+    }
+    if let Some(profile) = &patch.profile {
+        persona.profile = profile.clone();
+    }
+    if let Some(personality) = &patch.personality {
+        persona.personality = Some(personality.clone());
+    }
+    if let Some(vrm_asset_id) = &patch.vrm_asset_id {
+        persona.vrm_asset_id = Some(vrm_asset_id.clone());
+    }
+    if let Some(metadata) = &patch.metadata {
+        persona.metadata = metadata.clone();
+    }
+}
+
+/// Serde helper for `Option<Option<T>>` that distinguishes absent from `null`.
+///
+/// - Absent key → `None` (don't update)
+/// - JSON `null` → `Some(None)` (clear the field)
+/// - JSON value → `Some(Some(value))` (set the field)
+mod nullable {
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+    pub fn serialize<S: Serializer, T: Serialize>(
+        value: &Option<Option<T>>,
+        s: S,
+    ) -> Result<S::Ok, S::Error> {
+        match value {
+            Some(inner) => inner.serialize(s),
+            None => s.serialize_none(),
+        }
+    }
+
+    pub fn deserialize<'de, D: Deserializer<'de>, T: Deserialize<'de>>(
+        d: D,
+    ) -> Result<Option<Option<T>>, D::Error> {
+        Ok(Some(Option::deserialize(d)?))
     }
 }
 
@@ -217,7 +312,7 @@ fn persist_and_broadcast(
     entity: Entity,
     persona: &Persona,
 ) {
-    if let Err(e) = prefs.save_persona(persona) {
+    if let Err(e) = prefs.update_persona(persona) {
         warn!("Failed to persist persona: {e}");
     }
     if let Some(tx) = tx {

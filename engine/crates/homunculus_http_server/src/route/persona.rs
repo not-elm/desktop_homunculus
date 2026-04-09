@@ -6,8 +6,10 @@ pub(crate) mod events;
 pub(crate) mod fields;
 pub(crate) mod get;
 pub(crate) mod snapshot;
+pub(crate) mod spawn;
 pub(crate) mod state;
 pub(crate) mod stream;
+pub(crate) mod thumbnail;
 pub(crate) mod update;
 pub(crate) mod vrm;
 
@@ -18,15 +20,46 @@ use axum::http::request::Parts;
 use bevy::prelude::{Entity, error};
 use homunculus_core::prelude::PersonaId;
 
-/// Extracts and resolves a persona `{id}` path parameter to `(Entity, PersonaId)`.
+/// Extracts a persona `{id}` path parameter and validates the ID format.
 ///
-/// Returns 404 if the persona is not found in the [`PersonaIndex`].
+/// Does **not** require the persona to be spawned as an ECS entity.
+/// Used by identity endpoints (GET/PATCH/DELETE persona, field getters/setters)
+/// that operate on persona data rather than ECS state.
 pub struct PersonaPath {
-    pub entity: Entity,
     pub persona_id: PersonaId,
 }
 
 impl FromRequestParts<crate::state::HttpState> for PersonaPath {
+    type Rejection = (StatusCode, &'static str);
+
+    async fn from_request_parts(
+        parts: &mut Parts,
+        _state: &crate::state::HttpState,
+    ) -> Result<Self, Self::Rejection> {
+        let Path(id): Path<String> = parts.extract().await.map_err(|e| {
+            error!("Failed to extract persona id from path: {e}");
+            (StatusCode::BAD_REQUEST, "Invalid persona id")
+        })?;
+
+        let persona_id = PersonaId::validate(&id)
+            .map_err(|_| (StatusCode::BAD_REQUEST, "Invalid persona id"))?;
+
+        Ok(PersonaPath { persona_id })
+    }
+}
+
+/// Extracts and resolves a persona `{id}` path parameter to `(Entity, PersonaId)`.
+///
+/// Requires the persona to be spawned as an ECS entity. Returns 404 if the
+/// persona is not found in the [`PersonaIndex`](homunculus_core::prelude::PersonaIndex).
+/// Used by VRM/state/events/transform endpoints that need a live ECS entity.
+#[allow(dead_code)]
+pub struct SpawnedPersonaPath {
+    pub entity: Entity,
+    pub persona_id: PersonaId,
+}
+
+impl FromRequestParts<crate::state::HttpState> for SpawnedPersonaPath {
     type Rejection = (StatusCode, &'static str);
 
     async fn from_request_parts(
@@ -47,6 +80,6 @@ impl FromRequestParts<crate::state::HttpState> for PersonaPath {
             .await
             .map_err(|_| (StatusCode::NOT_FOUND, "Persona not found"))?;
 
-        Ok(PersonaPath { entity, persona_id })
+        Ok(SpawnedPersonaPath { entity, persona_id })
     }
 }

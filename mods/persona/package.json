@@ -1,0 +1,64 @@
+{
+  "name": "@hmcs/persona",
+  "version": "0.1.0-alpha.6-dev",
+  "description": "Persona management mod — spawns personas at startup, manages animations, and provides settings and management UIs",
+  "license": "MIT",
+  "type": "module",
+  "author": "notelm",
+  "scripts": {
+    "build": "pnpm exec vite build ui && pnpm exec vite build management",
+    "dev": "pnpm exec vite dev ui"
+  },
+  "homunculus": {
+    "service": "service.ts",
+    "menus": [
+      {
+        "id": "open-persona",
+        "text": "Persona",
+        "command": "persona-open-ui"
+      }
+    ],
+    "tray": {
+      "id": "open-persona-management",
+      "text": "Persona",
+      "command": "persona-open-management",
+      "position": "top"
+    },
+    "assets": {
+      "persona:ui": {
+        "path": "ui/dist/index.html",
+        "type": "html",
+        "description": "Per-persona settings panel UI"
+      },
+      "persona:management": {
+        "path": "management/dist/index.html",
+        "type": "html",
+        "description": "Persona management UI"
+      }
+    }
+  },
+  "bin": {
+    "persona-open-ui": "commands/open-ui.ts",
+    "persona-open-management": "commands/open-management.ts"
+  },
+  "dependencies": {
+    "@hmcs/sdk": "workspace:*",
+    "@hmcs/ui": "workspace:*",
+    "@radix-ui/react-radio-group": "^1.3.8",
+    "eventsource": "^4.1.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.2.1",
+    "@types/node": "^25.3.3",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react-swc": "^4.2.3",
+    "tailwindcss": "^4.2.1",
+    "typescript": "^5.9.3",
+    "vite": "^6.4.1",
+    "vite-plugin-singlefile": "^2.3.0"
+  }
+}

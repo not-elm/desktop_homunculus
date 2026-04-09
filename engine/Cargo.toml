@@ -55,8 +55,8 @@ async-channel = "2.5.0"
 tokio = { workspace = true }
 
 [workspace.dependencies]
-bevy_cef = { version = "0.5.4" }
-bevy_cef_core = { version = "0.5.4" }
+bevy_cef = { version = "0.6" }
+bevy_cef_core = { version = "0.6" }
 bevy_flurx = { version = "0.14.1", features = [
     "side-effect",
     "state",
@@ -169,6 +169,7 @@ strip = true
 
 [workspace.lints.clippy]
 type_complexity = "allow"
+too_many_arguments = "allow"
 result_large_err = "allow"
 
 [workspace.lints.rust]

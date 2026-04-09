@@ -3,10 +3,10 @@ use crate::persona::{PersonaApi, PersonaSnapshot};
 use crate::prelude::initialized;
 use bevy::prelude::*;
 use bevy_flurx::prelude::*;
-use bevy_vrm1::prelude::{BodyTracking, Cameras, LookAt, VrmHandle};
+use bevy_vrm1::prelude::{BodyTracking, Cameras, LookAt, RequestDetachVrm, VrmHandle};
 use homunculus_core::prelude::{
     AssetResolver, Persona, PersonaChangeEvent, PersonaId, PersonaIndex, PersonaState,
-    VrmAttachedEvent, VrmEvent, VrmEventSender,
+    VrmAttachedEvent, VrmDetachedEvent, VrmEvent, VrmEventSender,
 };
 use homunculus_prefs::prelude::PrefsDatabase;
 
@@ -43,14 +43,20 @@ fn attach(
     cameras: Cameras,
     prefs: NonSend<PrefsDatabase>,
     tx_attached: Option<Res<VrmEventSender<VrmAttachedEvent>>>,
+    tx_detached: Option<Res<VrmEventSender<VrmDetachedEvent>>>,
     tx_change: Option<Res<VrmEventSender<PersonaChangeEvent>>>,
 ) -> ApiResult<(PersonaSnapshot, Entity)> {
     let entity = index.get(&persona_id).ok_or(ApiError::EntityNotFound)?;
 
     if vrm_handles.get(entity).is_ok() {
-        return Err(ApiError::Conflict(
-            "VRM already attached to this persona".to_string(),
-        ));
+        auto_detach(
+            &mut commands,
+            &mut personas,
+            &prefs,
+            &tx_detached,
+            &tx_change,
+            entity,
+        )?;
     }
 
     let handle = asset_resolver
@@ -84,6 +90,7 @@ fn attach(
         PersonaSnapshot {
             persona: updated,
             state: state_str,
+            spawned: true,
         },
         entity,
     ))
@@ -98,7 +105,7 @@ fn persist_and_broadcast(
     persona: &Persona,
     asset_id: &str,
 ) {
-    if let Err(e) = prefs.save_persona(persona) {
+    if let Err(e) = prefs.update_persona(persona) {
         warn!("Failed to persist persona after VRM attach: {e}");
     }
     if let Some(tx) = tx_attached {
@@ -117,4 +124,43 @@ fn persist_and_broadcast(
             },
         });
     }
+}
+
+/// Detaches the currently attached VRM before a new one is attached.
+fn auto_detach(
+    commands: &mut Commands,
+    personas: &mut Query<(&mut Persona, &PersonaState)>,
+    prefs: &PrefsDatabase,
+    tx_detached: &Option<Res<VrmEventSender<VrmDetachedEvent>>>,
+    tx_change: &Option<Res<VrmEventSender<PersonaChangeEvent>>>,
+    entity: Entity,
+) -> ApiResult<()> {
+    let (mut persona, _) = personas
+        .get_mut(entity)
+        .map_err(|_| ApiError::EntityNotFound)?;
+
+    let old_asset_id = persona.vrm_asset_id.take().unwrap_or_default();
+    let updated = persona.clone();
+
+    commands.entity(entity).trigger(RequestDetachVrm);
+
+    if let Err(e) = prefs.update_persona(&updated) {
+        warn!("Failed to persist persona after VRM auto-detach: {e}");
+    }
+    if let Some(tx) = tx_detached {
+        let _ = tx.try_broadcast(VrmEvent {
+            vrm: entity,
+            payload: VrmDetachedEvent {
+                asset_id: old_asset_id,
+            },
+        });
+    }
+    if let Some(tx) = tx_change {
+        let _ = tx.try_broadcast(VrmEvent {
+            vrm: entity,
+            payload: PersonaChangeEvent { persona: updated },
+        });
+    }
+
+    Ok(())
 }

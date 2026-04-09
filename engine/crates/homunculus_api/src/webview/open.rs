@@ -159,7 +159,10 @@ fn spawn_webview_entity(
             is_hoverable: true,
         },
         Visibility::Hidden,
-        Transform::default(),
+        {
+            let offset = options.offset.unwrap_or_default();
+            Transform::from_translation(Vec3::new(0.0, 0.0, offset.0.z))
+        },
         options.offset.unwrap_or_default(),
         WebviewMeshSize(size),
     ));

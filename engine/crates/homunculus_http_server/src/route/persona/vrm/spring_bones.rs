@@ -4,7 +4,7 @@ use bevy::prelude::Entity;
 use homunculus_api::prelude::axum::{HttpResult, IntoHttpResult};
 use homunculus_api::vrm::{SpringBoneChainsResponse, SpringBonePropsUpdate, VrmApi};
 
-use crate::route::persona::PersonaPath;
+use crate::route::persona::SpawnedPersonaPath;
 
 /// List all spring bone chains for a persona's VRM.
 #[utoipa::path(
@@ -19,7 +19,7 @@ use crate::route::persona::PersonaPath;
 )]
 pub async fn list_spring_bones(
     State(api): State<VrmApi>,
-    path: PersonaPath,
+    path: SpawnedPersonaPath,
 ) -> HttpResult<SpringBoneChainsResponse> {
     api.list_spring_bones(path.entity).await.into_http_result()
 }
@@ -41,7 +41,7 @@ pub async fn list_spring_bones(
 )]
 pub async fn patch_spring_bones(
     State(api): State<VrmApi>,
-    path: PersonaPath,
+    path: SpawnedPersonaPath,
     Path((_, chain_id)): Path<(String, Entity)>,
     Json(body): Json<SpringBonePropsUpdate>,
 ) -> HttpResult {

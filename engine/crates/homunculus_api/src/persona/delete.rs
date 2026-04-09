@@ -25,20 +25,37 @@ fn delete(
     prefs: NonSend<PrefsDatabase>,
     tx: Option<Res<VrmEventSender<PersonaDeletedEvent>>>,
 ) -> ApiResult {
-    let entity = index.get(&persona_id).ok_or(ApiError::EntityNotFound)?;
+    delete_from_db(&prefs, &persona_id)?;
 
-    commands.entity(entity).try_despawn();
-    index.remove(&persona_id);
-    delete_from_db(&prefs, &persona_id);
+    let entity = despawn_if_spawned(&mut commands, &mut index, &persona_id);
     broadcast_deleted(&tx, entity, &persona_id);
 
     Ok(())
 }
 
-/// Removes the persona row from the SQLite database.
-fn delete_from_db(prefs: &PrefsDatabase, persona_id: &PersonaId) {
-    if let Err(e) = prefs.delete_persona(persona_id.as_ref()) {
-        warn!("Failed to delete persona from DB: {e}");
+/// Deletes the persona from the database, returning 404 if it did not exist.
+fn delete_from_db(prefs: &PrefsDatabase, persona_id: &PersonaId) -> ApiResult {
+    let affected = prefs
+        .delete_persona(persona_id.as_ref())
+        .map_err(|e| ApiError::Sql(e.to_string()))?;
+    if affected == 0 {
+        return Err(ApiError::EntityNotFound);
+    }
+    Ok(())
+}
+
+/// Despawns the ECS entity if it exists, returning the entity or a placeholder.
+fn despawn_if_spawned(
+    commands: &mut Commands,
+    index: &mut ResMut<PersonaIndex>,
+    persona_id: &PersonaId,
+) -> Entity {
+    if let Some(entity) = index.get(persona_id) {
+        commands.entity(entity).try_despawn();
+        index.remove(persona_id);
+        entity
+    } else {
+        Entity::PLACEHOLDER
     }
 }
 
