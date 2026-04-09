@@ -1,4 +1,5 @@
 use super::asset::AssetId;
+use super::transform_constraint::WebviewConstraints;
 use crate::components::PersonaId;
 use bevy::math::{Vec2, Vec3};
 use bevy::prelude::{Component, Entity, Reflect};
@@ -52,8 +53,12 @@ pub struct WebviewOpenOptions {
     #[serde(default)]
     #[cfg_attr(feature = "openapi", schema(value_type = Option<[f32; 2]>))]
     pub viewport_size: Option<Vec2>,
+    /// Deprecated: use `transform` instead. Maps to transform.translation with z=10.0.
     #[serde(default)]
     pub offset: Option<WebviewOffset>,
+    /// Transform constraint parameters for parent transform propagation.
+    #[serde(default)]
+    pub constraints: Option<WebviewConstraints>,
     /// Persona to link to this webview (optional).
     #[serde(default)]
     pub linked_persona: Option<PersonaId>,
@@ -109,7 +114,10 @@ pub struct WebviewInfo {
     pub size: Vec2,
     #[cfg_attr(feature = "openapi", schema(value_type = [f32; 2]))]
     pub viewport_size: Vec2,
+    /// Deprecated: included for backward compatibility.
     pub offset: WebviewOffset,
+    /// Active constraint parameters.
+    pub constraints: WebviewConstraints,
     #[serde(default)]
     pub linked_persona: Option<PersonaId>,
 }
@@ -119,6 +127,7 @@ pub struct WebviewInfo {
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct WebviewPatchRequest {
+    /// Deprecated: use transform via /entities/{entity}/transform instead.
     #[serde(default)]
     pub offset: Option<WebviewOffset>,
     #[serde(default)]
@@ -127,6 +136,9 @@ pub struct WebviewPatchRequest {
     #[serde(default)]
     #[cfg_attr(feature = "openapi", schema(value_type = Option<[f32; 2]>))]
     pub viewport_size: Option<Vec2>,
+    /// Constraint parameters update (partial merge).
+    #[serde(default)]
+    pub constraints: Option<WebviewConstraints>,
 }
 
 /// Request for POST /webviews/{entity}/navigate
