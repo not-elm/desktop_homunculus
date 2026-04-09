@@ -41,8 +41,8 @@ fn get_webview(
                 viewport_size: viewport_size.0,
                 transform: TransformArgs {
                     translation: Some(transform.translation),
-                    rotation: None,
-                    scale: None,
+                    rotation: Some(transform.rotation),
+                    scale: Some(transform.scale),
                 },
                 constraints: WebviewConstraints {
                     rotation_follow: Some(c.rotation_follow),
