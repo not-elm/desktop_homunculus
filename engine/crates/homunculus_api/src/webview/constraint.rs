@@ -36,7 +36,9 @@ fn auto_insert_constraints(
     }
 }
 
-/// Overrides the propagated `GlobalTransform` of constrained child entities.
+/// Corrects the propagated `GlobalTransform` of constrained child entities.
+///
+/// Preserves the propagated translation and only overrides rotation and scale.
 fn apply_transform_constraints(
     mut children: Query<(&ChildOf, &TransformConstraint, &mut GlobalTransform)>,
     parents: Query<&GlobalTransform, Without<TransformConstraint>>,
@@ -45,50 +47,27 @@ fn apply_transform_constraints(
         let Ok(parent_global) = parents.get(child_of.parent()) else {
             continue;
         };
-        *global = compute_constrained_global(parent_global, constraint);
+        let propagated_translation = global.translation();
+        let parent_rot = parent_global.rotation();
+        let parent_scale = parent_global.scale();
+
+        let rotation = compute_constrained_rotation(
+            parent_rot,
+            constraint.rotation_follow,
+            constraint.max_tilt_degrees,
+        );
+        let scale = if constraint.lock_scale {
+            Vec3::ONE
+        } else {
+            parent_scale
+        };
+
+        *global = GlobalTransform::from(Transform {
+            translation: propagated_translation,
+            rotation,
+            scale,
+        });
     }
-}
-
-// ---------------------------------------------------------------------------
-// Math helpers
-// ---------------------------------------------------------------------------
-
-/// Builds a `GlobalTransform` that honours the given constraint relative to a parent.
-///
-/// The pipeline:
-/// 1. Fast-path: `rotation_follow == 0` and `max_tilt_degrees == 0` → identity rotation.
-/// 2. Slerp from identity toward the parent rotation by `rotation_follow`.
-/// 3. Decompose into swing (tilt from Y-up) and twist (yaw around Y).
-/// 4. Clamp swing to `max_tilt_degrees`, discard twist.
-/// 5. Compute translation as `parent_T + constrained_R * intended_offset`.
-/// 6. Scale is `Vec3::ONE` when `lock_scale` is true.
-pub fn compute_constrained_global(
-    parent_global: &GlobalTransform,
-    constraint: &TransformConstraint,
-) -> GlobalTransform {
-    let parent_rot = parent_global.rotation();
-    let parent_translation = parent_global.translation();
-    let parent_scale = parent_global.scale();
-
-    let rotation = compute_constrained_rotation(
-        parent_rot,
-        constraint.rotation_follow,
-        constraint.max_tilt_degrees,
-    );
-
-    let scale = if constraint.lock_scale {
-        Vec3::ONE
-    } else {
-        parent_scale
-    };
-
-    let translation = parent_translation + rotation * constraint.intended_offset;
-
-    GlobalTransform::from(Transform {
-        translation,
-        rotation,
-        scale,
-    })
 }
 
 /// Computes the constrained rotation from a parent rotation.
@@ -252,92 +231,58 @@ mod tests {
     }
 
     // -----------------------------------------------------------------------
-    // compute_constrained_global
+    // compute_constrained_rotation (via apply_transform_constraints)
     // -----------------------------------------------------------------------
 
     #[test]
     fn billboard_mode_no_rotation() {
         // follow=0, lock_scale=true, parent rotated + scaled
-        let parent = GlobalTransform::from(Transform {
-            translation: Vec3::new(1.0, 2.0, 3.0),
-            rotation: Quat::from_rotation_y(PI / 3.0),
-            scale: Vec3::splat(2.0),
-        });
         let constraint = TransformConstraint {
             rotation_follow: 0.0,
             max_tilt_degrees: 0.0,
             lock_scale: true,
-            intended_offset: Vec3::new(0.0, 1.0, 0.0),
         };
+        let parent_rot = Quat::from_rotation_y(PI / 3.0);
 
-        let result = compute_constrained_global(&parent, &constraint);
-        let t = result.compute_transform();
-
-        assert_near_identity(t.rotation, "rotation");
-        assert!(
-            (t.scale - Vec3::ONE).length() < EPSILON,
-            "scale should be ONE, got {:?}",
-            t.scale
-        );
-        // Translation = parent_T + IDENTITY * offset = (1,2,3) + (0,1,0) = (1,3,3)
-        let expected_t = Vec3::new(1.0, 3.0, 3.0);
-        assert!(
-            (t.translation - expected_t).length() < EPSILON,
-            "expected translation {expected_t:?}, got {:?}",
-            t.translation
-        );
+        let rotation =
+            compute_constrained_rotation(parent_rot, constraint.rotation_follow, constraint.max_tilt_degrees);
+        assert_near_identity(rotation, "rotation");
     }
 
     #[test]
     fn scale_locked_ignores_parent_scale() {
-        let parent = GlobalTransform::from(Transform {
-            translation: Vec3::ZERO,
-            rotation: Quat::IDENTITY,
-            scale: Vec3::splat(3.0),
-        });
         let constraint = TransformConstraint {
             rotation_follow: 0.0,
             max_tilt_degrees: 0.0,
             lock_scale: true,
-            intended_offset: Vec3::new(1.0, 0.0, 0.0),
         };
+        let parent_scale = Vec3::splat(3.0);
 
-        let result = compute_constrained_global(&parent, &constraint);
-        let t = result.compute_transform();
-
+        let scale = if constraint.lock_scale {
+            Vec3::ONE
+        } else {
+            parent_scale
+        };
         assert!(
-            (t.scale - Vec3::ONE).length() < EPSILON,
+            (scale - Vec3::ONE).length() < EPSILON,
             "scale should be ONE, got {:?}",
-            t.scale
-        );
-        // Offset should NOT be multiplied by parent scale
-        let expected_t = Vec3::new(1.0, 0.0, 0.0);
-        assert!(
-            (t.translation - expected_t).length() < EPSILON,
-            "expected translation {expected_t:?}, got {:?}",
-            t.translation
+            scale
         );
     }
 
     #[test]
     fn partial_follow_with_clamp() {
         // follow=1.0, maxTilt=10°, parent tilted 60° around X
-        let parent = GlobalTransform::from(Transform {
-            translation: Vec3::ZERO,
-            rotation: Quat::from_rotation_x(60f32.to_radians()),
-            scale: Vec3::ONE,
-        });
         let constraint = TransformConstraint {
             rotation_follow: 1.0,
             max_tilt_degrees: 10.0,
             lock_scale: true,
-            intended_offset: Vec3::ZERO,
         };
+        let parent_rot = Quat::from_rotation_x(60f32.to_radians());
 
-        let result = compute_constrained_global(&parent, &constraint);
-        let t = result.compute_transform();
-
-        let tilt_deg = t.rotation.angle_between(Quat::IDENTITY).to_degrees();
+        let rotation =
+            compute_constrained_rotation(parent_rot, constraint.rotation_follow, constraint.max_tilt_degrees);
+        let tilt_deg = rotation.angle_between(Quat::IDENTITY).to_degrees();
         assert!(tilt_deg <= 10.5, "expected tilt <= ~10°, got {tilt_deg}°");
     }
 }

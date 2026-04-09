@@ -23,6 +23,7 @@ fn list_webviews(
         &OriginalWebviewSource,
         Option<&WebviewMeshSize>,
         &WebviewSize,
+        &Transform,
         Option<&TransformConstraint>,
         Option<&LinkedPersona>,
     )>,
@@ -30,7 +31,7 @@ fn list_webviews(
     webviews
         .iter()
         .map(
-            |(entity, source, mesh_size, viewport_size, constraint, linked_persona)| {
+            |(entity, source, mesh_size, viewport_size, transform, constraint, linked_persona)| {
                 let c = constraint.copied().unwrap_or_default();
                 WebviewInfo {
                     entity,
@@ -38,7 +39,7 @@ fn list_webviews(
                     size: mesh_size.map_or(WebviewMeshSize::default().0, |s| s.0),
                     viewport_size: viewport_size.0,
                     transform: TransformArgs {
-                        translation: Some(c.intended_offset),
+                        translation: Some(transform.translation),
                         rotation: None,
                         scale: None,
                     },

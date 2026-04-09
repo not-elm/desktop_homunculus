@@ -1,4 +1,3 @@
-use bevy::math::Vec3;
 use bevy::prelude::Component;
 use serde::{Deserialize, Serialize};
 
@@ -6,7 +5,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// Designed for webview entities that are `ChildOf` a persona entity.
 /// The PostUpdate correction system reads this component and overrides the propagated
-/// GlobalTransform to keep the webview upright and correctly positioned.
+/// rotation and scale while preserving translation from Bevy's standard propagation.
 ///
 /// # Architectural constraint
 ///
@@ -21,9 +20,6 @@ pub struct TransformConstraint {
     pub max_tilt_degrees: f32,
     /// Whether to lock scale at Vec3::ONE regardless of parent scale.
     pub lock_scale: bool,
-    /// User-specified offset in unscaled parent-local space.
-    /// Stored separately from local Transform to prevent scale-coupling feedback loops.
-    pub intended_offset: Vec3,
 }
 
 impl Default for TransformConstraint {
@@ -32,14 +28,12 @@ impl Default for TransformConstraint {
             rotation_follow: 0.0,
             max_tilt_degrees: 0.0,
             lock_scale: true,
-            intended_offset: Vec3::ZERO,
         }
     }
 }
 
 /// API-facing constraint parameters for HTTP/MCP.
-/// Maps to the non-offset fields of `TransformConstraint`.
-/// `intended_offset` is set via the `transform.translation` field instead.
+/// Maps to the fields of `TransformConstraint`.
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq)]
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[serde(rename_all = "camelCase")]

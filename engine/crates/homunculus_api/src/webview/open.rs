@@ -144,6 +144,11 @@ fn spawn_webview_entity(
     options: &WebviewOpenOptions,
 ) -> Entity {
     let size = options.size.unwrap_or(Vec2::splat(0.7));
+    let translation = options
+        .transform
+        .as_ref()
+        .and_then(|t| t.translation)
+        .unwrap_or(Vec3::new(0.0, 0.0, 10.0));
     let constraint = build_transform_constraint(options);
     let mut entity_commands = commands.spawn((
         Name::new("Webview"),
@@ -164,7 +169,7 @@ fn spawn_webview_entity(
             is_hoverable: true,
         },
         Visibility::Hidden,
-        Transform::from_translation(constraint.intended_offset),
+        Transform::from_translation(translation),
         constraint,
         WebviewMeshSize(size),
     ));
@@ -177,15 +182,7 @@ fn spawn_webview_entity(
 }
 
 fn build_transform_constraint(options: &WebviewOpenOptions) -> TransformConstraint {
-    let intended_offset = options
-        .transform
-        .as_ref()
-        .and_then(|t| t.translation)
-        .unwrap_or(Vec3::new(0.0, 0.0, 10.0));
-    let mut constraint = TransformConstraint {
-        intended_offset,
-        ..Default::default()
-    };
+    let mut constraint = TransformConstraint::default();
     if let Some(c) = &options.constraints {
         if let Some(v) = c.rotation_follow {
             constraint.rotation_follow = v;

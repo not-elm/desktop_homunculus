@@ -3,9 +3,7 @@ use crate::prelude::WebviewApi;
 use bevy::prelude::*;
 use bevy_cef::prelude::WebviewSize;
 use bevy_flurx::action::once;
-use homunculus_core::prelude::{
-    TransformArgs, TransformConstraint, WebviewMeshSize, WebviewPatchRequest,
-};
+use homunculus_core::prelude::{TransformArgs, TransformConstraint, WebviewMeshSize, WebviewPatchRequest};
 use homunculus_effects::{Entity, Update};
 
 impl WebviewApi {
@@ -54,17 +52,15 @@ impl WebviewApi {
 fn set_transform(
     In((webview, transform)): In<(Entity, TransformArgs)>,
     mut commands: Commands,
-    webviews: Query<(Entity, Option<&TransformConstraint>), With<bevy_cef::prelude::WebviewSource>>,
+    webviews: Query<Entity, With<bevy_cef::prelude::WebviewSource>>,
 ) -> ApiResult<()> {
-    let Ok((_, existing)) = webviews.get(webview) else {
+    if !webviews.contains(webview) {
         return Err(ApiError::WebviewNotFound(webview));
-    };
+    }
     if let Some(translation) = transform.translation {
-        let base = existing.copied().unwrap_or_default();
-        commands.entity(webview).try_insert(TransformConstraint {
-            intended_offset: translation,
-            ..base
-        });
+        commands
+            .entity(webview)
+            .try_insert(Transform::from_translation(translation));
     }
     Ok(())
 }
@@ -103,7 +99,10 @@ fn patch(
     In((webview, request)): In<(Entity, WebviewPatchRequest)>,
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    webviews: Query<(Entity, Option<&TransformConstraint>), With<bevy_cef::prelude::WebviewSource>>,
+    webviews: Query<
+        (Entity, Option<&TransformConstraint>),
+        With<bevy_cef::prelude::WebviewSource>,
+    >,
 ) -> ApiResult<()> {
     let Ok((_, existing_constraint)) = webviews.get(webview) else {
         return Err(ApiError::WebviewNotFound(webview));
@@ -114,11 +113,7 @@ fn patch(
     if let Some(transform) = request.transform
         && let Some(translation) = transform.translation
     {
-        let base = existing_constraint.copied().unwrap_or_default();
-        entity_commands.try_insert(TransformConstraint {
-            intended_offset: translation,
-            ..base
-        });
+        entity_commands.try_insert(Transform::from_translation(translation));
     }
 
     if let Some(constraints) = request.constraints {
@@ -129,7 +124,6 @@ fn patch(
                 .max_tilt_degrees
                 .unwrap_or(base.max_tilt_degrees),
             lock_scale: constraints.lock_scale.unwrap_or(base.lock_scale),
-            intended_offset: base.intended_offset,
         });
     }
 
