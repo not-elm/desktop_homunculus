@@ -944,9 +944,7 @@ mod tests {
             .unwrap();
         assert_eq!(content_type, "image/jpeg");
 
-        let body = block_on(response.into_body().collect())
-            .unwrap()
-            .to_bytes();
+        let body = block_on(response.into_body().collect()).unwrap().to_bytes();
         assert_eq!(&body[..], b"fake-jpg-data");
 
         std::fs::remove_file(&tmp).ok();
@@ -957,16 +955,16 @@ mod tests {
         let (mut app, router) = test_app();
 
         // Register asset with a path that does not exist on disk
-        app.world_mut()
-            .resource_mut::<AssetRegistry>()
-            .register(homunculus_core::prelude::AssetEntry {
+        app.world_mut().resource_mut::<AssetRegistry>().register(
+            homunculus_core::prelude::AssetEntry {
                 id: homunculus_utils::prelude::AssetId::new("test-mod:ghost"),
                 path: PathBuf::from("ghost.png"),
                 absolute_path: PathBuf::from("/tmp/does_not_exist_12345.png"),
                 asset_type: AssetType::Image,
                 description: None,
                 mod_name: "test-mod".to_string(),
-            });
+            },
+        );
 
         let request = Request::get("/assets/file?id=test-mod:ghost")
             .body(Body::empty())
