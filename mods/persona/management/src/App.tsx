@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
+import { audio, Webview } from "@hmcs/sdk";
 import { usePersonaManagement } from "./hooks/usePersonaManagement";
 import PersonaList from "./components/PersonaList";
 import PersonaDetail from "./components/PersonaDetail";
@@ -10,6 +11,11 @@ export default function App() {
   const [route, setRoute] = useState<Route>("list");
   const [createOpen, setCreateOpen] = useState(false);
   const mgmt = usePersonaManagement();
+
+  const handleClose = useCallback(() => {
+    audio.se.play("se:close");
+    Webview.current()?.close();
+  }, []);
 
   if (mgmt.loading) {
     return (
@@ -25,6 +31,15 @@ export default function App() {
   return (
     <div className="management-panel holo-noise">
       <HudDecorations />
+      <button
+        className="management-close-btn"
+        onClick={handleClose}
+        aria-label="Close"
+      >
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M1 1l12 12M13 1L1 13" />
+        </svg>
+      </button>
 
       {route === "list" ? (
         <>
