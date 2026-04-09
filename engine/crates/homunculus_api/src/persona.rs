@@ -8,7 +8,6 @@ mod delete;
 mod fetch;
 mod full_snapshot;
 mod spawn;
-mod startup;
 mod state;
 mod update;
 mod vrm_attach;
@@ -19,7 +18,7 @@ pub use full_snapshot::PersonaFullSnapshot;
 pub use update::PatchPersona;
 
 use crate::api;
-use bevy::app::{Plugin, Startup};
+use bevy::app::Plugin;
 use homunculus_core::prelude::Persona;
 use serde::{Deserialize, Serialize};
 
@@ -41,14 +40,12 @@ api!(
     PersonaApi
 );
 
-/// Plugin that migrates legacy persona data at startup.
+/// Plugin for persona API.
 ///
 /// Personas are stored as DB records only. Spawning into the ECS world
 /// is delegated to mods via `POST /personas/{id}/spawn`.
 pub struct PersonaApiPlugin;
 
 impl Plugin for PersonaApiPlugin {
-    fn build(&self, app: &mut bevy::app::App) {
-        app.add_systems(Startup, startup::migrate_personas);
-    }
+    fn build(&self, _app: &mut bevy::app::App) {}
 }
