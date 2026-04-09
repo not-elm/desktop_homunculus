@@ -914,6 +914,68 @@ mod tests {
     }
 
     #[test]
+    fn test_get_asset_file_imported_asset() {
+        let (mut app, router) = test_app();
+
+        let tmp = std::env::temp_dir().join("test_imported_asset.jpg");
+        std::fs::write(&tmp, b"fake-jpg-data").unwrap();
+
+        // Use register_imported (same path as POST /assets/import)
+        app.world_mut()
+            .resource_mut::<AssetRegistry>()
+            .register_imported(homunculus_core::prelude::AssetEntry {
+                id: homunculus_utils::prelude::AssetId::new("vrm:local:my-persona"),
+                path: PathBuf::from("vrm_local_my-persona.jpg"),
+                absolute_path: tmp.clone(),
+                asset_type: AssetType::Image,
+                description: None,
+                mod_name: "local".to_string(),
+            });
+
+        let request = Request::get("/assets/file?id=vrm:local:my-persona")
+            .body(Body::empty())
+            .unwrap();
+        let response = block_on(call(&mut app, router, request));
+        let content_type = response
+            .headers()
+            .get("content-type")
+            .unwrap()
+            .to_str()
+            .unwrap();
+        assert_eq!(content_type, "image/jpeg");
+
+        let body = block_on(response.into_body().collect())
+            .unwrap()
+            .to_bytes();
+        assert_eq!(&body[..], b"fake-jpg-data");
+
+        std::fs::remove_file(&tmp).ok();
+    }
+
+    #[test]
+    fn test_get_asset_file_missing_file_on_disk() {
+        let (mut app, router) = test_app();
+
+        // Register asset with a path that does not exist on disk
+        app.world_mut()
+            .resource_mut::<AssetRegistry>()
+            .register(homunculus_core::prelude::AssetEntry {
+                id: homunculus_utils::prelude::AssetId::new("test-mod:ghost"),
+                path: PathBuf::from("ghost.png"),
+                absolute_path: PathBuf::from("/tmp/does_not_exist_12345.png"),
+                asset_type: AssetType::Image,
+                description: None,
+                mod_name: "test-mod".to_string(),
+            });
+
+        let request = Request::get("/assets/file?id=test-mod:ghost")
+            .body(Body::empty())
+            .unwrap();
+        let response = block_on(call_any_status(&mut app, router, request));
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    }
+
+    #[test]
     fn test_list_signals_with_channels() {
         let (mut app, router) = test_app();
 
