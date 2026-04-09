@@ -11,7 +11,7 @@ List, install, and uninstall MOD packages.
 
 ```shell
 hmcs mod list
-hmcs mod install @hmcs/assets @hmcs/persona
+hmcs mod install @hmcs/assets @hmcs/elmer
 hmcs mod uninstall @hmcs/assets
 ```
 
@@ -33,7 +33,7 @@ Success:
 
 ```text
  NAME           VERSION  DESCRIPTION
- @hmcs/persona    1.0.0    Default character model
+ @hmcs/elmer    1.0.0    Default character model
  @hmcs/menu     1.0.0    Context menu
 ```
 
@@ -72,14 +72,14 @@ hmcs mod install <package>...
 
 | Name | Required | Description |
 |---|---|---|
-| `package` | Yes | One or more package specifiers (for example `@hmcs/persona` or `pkg@version`). |
+| `package` | Yes | One or more package specifiers (for example `@hmcs/elmer` or `pkg@version`). |
 
 ### Examples
 
 Success:
 
 ```shell
-hmcs mod install @hmcs/assets @hmcs/persona
+hmcs mod install @hmcs/assets @hmcs/elmer
 ```
 
 Failure example (invalid package name):
@@ -130,7 +130,7 @@ hmcs mod uninstall <package>...
 Success:
 
 ```shell
-hmcs mod uninstall @hmcs/assets @hmcs/persona
+hmcs mod uninstall @hmcs/assets @hmcs/elmer
 ```
 
 Failure example (invalid package name):
@@ -242,7 +242,7 @@ hmcs mod update
 Update specific MODs:
 
 ```shell
-hmcs mod update @hmcs/persona @hmcs/assets
+hmcs mod update @hmcs/elmer @hmcs/assets
 ```
 
 Update all MODs to their latest versions:
@@ -254,7 +254,7 @@ hmcs mod update --latest
 Update a specific MOD to the latest version:
 
 ```shell
-hmcs mod update @hmcs/persona -L
+hmcs mod update @hmcs/elmer -L
 ```
 
 Failure example (pnpm update failed):

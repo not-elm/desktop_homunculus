@@ -51,7 +51,7 @@ Declares files bundled with the MOD. Each entry maps an **asset ID** to a file d
 | `image` | `.png`, `.jpg`, `.svg` | Image file |
 | `html` | `.html` | WebView UI entry point |
 
-**Example** -- a MOD that spawns a desktop character:
+**Example** -- `@hmcs/elmer`, a MOD that spawns a desktop character:
 
 ```json
 {
@@ -94,16 +94,16 @@ Declares entries for the right-click context menu. Each menu entry triggers a `b
 }
 ```
 
-**Example** -- the `@hmcs/persona` MOD adds a "Persona" entry to the context menu:
+**Example** -- the `@hmcs/character-settings` MOD adds a "Character Settings" entry to the context menu:
 
 ```json
 {
   "homunculus": {
     "menus": [
       {
-        "id": "open-persona",
-        "text": "Persona",
-        "command": "persona-open-ui"
+        "id": "open-character-settings",
+        "text": "Character Settings",
+        "command": "open-ui"
       }
     ]
   }

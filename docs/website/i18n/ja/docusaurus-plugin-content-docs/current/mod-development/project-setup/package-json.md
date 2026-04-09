@@ -51,7 +51,7 @@ MOD にバンドルされるファイルを宣言します。各エントリは*
 | `image` | `.png`, `.jpg`, `.svg` | 画像ファイル |
 | `html` | `.html` | WebView UI エントリポイント |
 
-**例** -- デスクトップキャラクターを生成する MOD：
+**例** -- デスクトップキャラクターを生成する `@hmcs/elmer` MOD：
 
 ```json
 {
@@ -94,16 +94,16 @@ MOD にバンドルされるファイルを宣言します。各エントリは*
 }
 ```
 
-**例** -- `@hmcs/persona` MOD はコンテキストメニューに「Persona」エントリを追加します：
+**例** -- `@hmcs/character-settings` MOD はコンテキストメニューに「Character Settings」エントリを追加します：
 
 ```json
 {
   "homunculus": {
     "menus": [
       {
-        "id": "open-persona",
-        "text": "Persona",
-        "command": "persona-open-ui"
+        "id": "open-character-settings",
+        "text": "Character Settings",
+        "command": "open-ui"
       }
     ]
   }

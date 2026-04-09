@@ -102,14 +102,15 @@ If you see `EACCES` permission errors, see the [npm docs on resolving permission
 Install the recommended set of official MODs:
 
 ```shell
-hmcs mod install @hmcs/assets @hmcs/persona @hmcs/menu @hmcs/settings @hmcs/app-exit
+hmcs mod install @hmcs/assets @hmcs/elmer @hmcs/menu @hmcs/character-settings @hmcs/settings @hmcs/app-exit
 ```
 
 | MOD                        | Description                                                       |
 | -------------------------- | ----------------------------------------------------------------- |
 | `@hmcs/assets`             | Default animations and sound effects                              |
-| `@hmcs/persona`            | Persona management — auto-spawn, animations, settings UIs         |
+| `@hmcs/elmer`              | Default character model                                           |
 | `@hmcs/menu`               | Right-click context menu                                          |
+| `@hmcs/character-settings` | Per-character settings panel                                      |
 | `@hmcs/settings`           | Application settings (frame rate, shadow opacity) via system tray |
 | `@hmcs/app-exit`           | Exit menu in the system tray                                      |
 

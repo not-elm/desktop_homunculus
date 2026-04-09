@@ -25,13 +25,13 @@ MODs communicate with the engine through a local **HTTP API** running on `localh
 
 MODs combine any mix of the following capabilities. A single MOD can do one of these things or all of them at once.
 
-- **Spawn characters** — Load a VRM 3D model and control its animations, expressions, and behavior. The `@hmcs/persona` MOD spawns personas that idle on your desktop and react to dragging.
+- **Spawn characters** — Load a VRM 3D model and control its animations, expressions, and behavior. The `@hmcs/elmer` MOD spawns the default character that idles on your desktop and reacts to dragging.
 
 - **Run a service** — Run a long-running TypeScript process when the app launches (declared via the `homunculus.service` field). Services typically set up characters and event listeners. The `@hmcs/menu` MOD uses a service to initialize the right-click menu overlay.
 
 - **Expose MOD commands** — Provide commands other MODs or AI agents can invoke through the HTTP API (declared via the `bin` field). For example, the `@hmcs/voicevox` MOD exposes `voicevox:speak` and `voicevox:speakers` commands for text-to-speech.
 
-- **Embed UI panels** — Bundle a WebView-based interface (React + Vite) as an HTML asset. The `@hmcs/persona` MOD combines an HTML asset, a `bin` command to open the panel, and a menu entry — showing how capabilities work together.
+- **Embed UI panels** — Bundle a WebView-based interface (React + Vite) as an HTML asset. The `@hmcs/character-settings` MOD combines an HTML asset, a `bin` command to open the panel, and a menu entry — showing how capabilities work together.
 
 - **Add menu entries** — Register items in the right-click context menu that trigger commands or open webviews (declared via `homunculus.menus`).
 
@@ -43,7 +43,7 @@ Here is the `package.json` for a MOD that loads a VRM character:
 
 ```json
 {
-  "name": "@hmcs/my-character",
+  "name": "@hmcs/elmer",
   "version": "1.0.0",
   "type": "module",
   "dependencies": {
@@ -65,7 +65,7 @@ Here is the `package.json` for a MOD that loads a VRM character:
 The `homunculus.service` field points to a TypeScript service that uses the SDK to spawn the character and set up its behavior. The `homunculus.assets` field registers a VRM model with the asset ID `vrm:elmer`.
 
 :::note
-This is an illustrative example. Asset IDs follow `type:name` format (e.g. `vrm:elmer`, `vrma:idle-maid`, `se:open`). The built-in `@hmcs/assets` MOD provides default animations and sound effects.
+This is an illustrative example. In practice, the official `@hmcs/elmer` MOD does not declare its own VRM asset — instead it consumes `vrm:elmer` from the `@hmcs/assets` MOD. Asset IDs follow `type:name` format (e.g. `vrm:elmer`, `vrma:idle-maid`, `se:open`).
 :::
 
 ## Get Started
