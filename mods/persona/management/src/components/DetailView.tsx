@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { Persona, type PersonaSnapshot } from "@hmcs/sdk";
+import { useState, useMemo } from "react";
+import { Persona } from "@hmcs/sdk";
 import {
   Dialog,
   DialogContent,
@@ -13,6 +13,7 @@ import {
   type PersonaFormValues,
 } from "@persona/shared/components/PersonaFields";
 import VrmSelect from "./VrmSelect";
+import { usePersonaDetail } from "../hooks/usePersonaDetail";
 
 interface DetailViewProps {
   personaId: string;
@@ -21,153 +22,28 @@ interface DetailViewProps {
   onDelete: () => Promise<void>;
 }
 
-function snapshotToFormValues(snapshot: PersonaSnapshot): PersonaFormValues {
-  return {
-    name: snapshot.name ?? "",
-    age: snapshot.age ?? null,
-    gender: snapshot.gender,
-    firstPersonPronoun: snapshot.firstPersonPronoun ?? "",
-    profile: snapshot.profile,
-    personality: snapshot.personality ?? "",
-  };
-}
-
 export default function DetailView({
   personaId,
   onDirtyChange,
   onSaved,
   onDelete,
 }: DetailViewProps) {
-  const [snapshot, setSnapshot] = useState<PersonaSnapshot | null>(null);
-  const [formValues, setFormValues] = useState<PersonaFormValues | null>(null);
-  const [vrmAssetId, setVrmAssetId] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const initialValues = useRef<PersonaFormValues | null>(null);
-  const initialVrm = useRef<string | null>(null);
+  const callbacks = useMemo(() => ({ onDirtyChange, onSaved }), [onDirtyChange, onSaved]);
+  const {
+    snapshot,
+    formValues,
+    vrmAssetId,
+    saving,
+    saved,
+    setFormValues,
+    setVrmAssetId,
+    save,
+    toggleSpawn,
+    toggleAutoSpawn,
+  } = usePersonaDetail(personaId, callbacks);
 
   const persona = useMemo(() => new Persona(personaId), [personaId]);
-
-  const loadSnapshot = useCallback(async () => {
-    try {
-      const snap = await new Persona(personaId).snapshot();
-      setSnapshot(snap);
-      const values = snapshotToFormValues(snap);
-      setFormValues(values);
-      setVrmAssetId(snap.vrmAssetId ?? null);
-      initialValues.current = values;
-      initialVrm.current = snap.vrmAssetId ?? null;
-    } catch (e) {
-      console.error("Failed to load persona:", e);
-    }
-  }, [personaId]);
-
-  useEffect(() => {
-    loadSnapshot();
-  }, [loadSnapshot]);
-
-  const isDirty = useCallback(() => {
-    if (!formValues || !initialValues.current) return false;
-    const iv = initialValues.current;
-    return (
-      formValues.name !== iv.name ||
-      formValues.age !== iv.age ||
-      formValues.gender !== iv.gender ||
-      formValues.firstPersonPronoun !== iv.firstPersonPronoun ||
-      formValues.profile !== iv.profile ||
-      formValues.personality !== iv.personality ||
-      vrmAssetId !== initialVrm.current
-    );
-  }, [formValues, vrmAssetId]);
-
-  useEffect(() => {
-    onDirtyChange(isDirty());
-  }, [isDirty, onDirtyChange]);
-
-  async function saveDraft(options?: { reload?: boolean }): Promise<boolean> {
-    if (!formValues) return false;
-    try {
-      const vrmChanged = vrmAssetId !== initialVrm.current;
-      await persona.patch({
-        name: formValues.name,
-        age: formValues.age,
-        gender: formValues.gender,
-        firstPersonPronoun: formValues.firstPersonPronoun || undefined,
-        profile: formValues.profile,
-        personality: formValues.personality || undefined,
-        vrmAssetId: vrmChanged ? (vrmAssetId ?? undefined) : undefined,
-      });
-
-      if (vrmChanged && snapshot?.spawned) {
-        if (vrmAssetId) {
-          await persona.attachVrm(vrmAssetId);
-        } else if (initialVrm.current) {
-          await persona.detachVrm();
-        }
-      }
-
-      if (options?.reload !== false) {
-        await loadSnapshot();
-      }
-      return true;
-    } catch (e) {
-      console.error("Failed to save persona:", e);
-      return false;
-    }
-  }
-
-  async function handleSave() {
-    if (saving) return;
-    setSaving(true);
-    try {
-      await saveDraft();
-      onSaved();
-      setSaved(true);
-      setTimeout(() => setSaved(false), 1500);
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function handleSpawnToggle() {
-    if (!snapshot) return;
-    try {
-      if (snapshot.spawned) {
-        await persona.despawn();
-      } else {
-        const ok = await saveDraft({ reload: false });
-        if (!ok) return;
-        await persona.spawn();
-      }
-      await loadSnapshot();
-      onSaved();
-    } catch (e) {
-      console.error("Failed to toggle spawn:", e);
-    }
-  }
-
-  async function handleAutoSpawnToggle() {
-    if (!snapshot) return;
-    const current = snapshot.metadata?.["auto-spawn"] === true;
-    try {
-      await persona.patch({
-        metadata: { ...(snapshot.metadata ?? {}), "auto-spawn": !current },
-      });
-      await loadSnapshot();
-      onSaved();
-    } catch (e) {
-      console.error("Failed to toggle auto-spawn:", e);
-    }
-  }
-
-  async function handleDelete() {
-    try {
-      await onDelete();
-    } catch (e) {
-      console.error("Failed to delete persona:", e);
-    }
-  }
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   if (!snapshot || !formValues) {
     return (
@@ -179,14 +55,22 @@ export default function DetailView({
 
   const autoSpawn = snapshot.metadata?.["auto-spawn"] === true;
 
+  async function handleDelete() {
+    try {
+      await onDelete();
+    } catch (e) {
+      console.error("Failed to delete persona:", e);
+    }
+  }
+
   return (
     <div className="detail-view">
       <DetailHeader
         name={snapshot.name ?? ""}
         personaId={personaId}
         isSpawned={snapshot.spawned}
-        onSpawnToggle={handleSpawnToggle}
-        onSave={handleSave}
+        onSpawnToggle={toggleSpawn}
+        onSave={save}
         saving={saving}
         saved={saved}
       />
@@ -198,7 +82,7 @@ export default function DetailView({
           vrmAssetId={vrmAssetId}
           onVrmChange={setVrmAssetId}
           autoSpawn={autoSpawn}
-          onAutoSpawnToggle={handleAutoSpawnToggle}
+          onAutoSpawnToggle={toggleAutoSpawn}
         />
         <RightColumn
           personaId={personaId}
