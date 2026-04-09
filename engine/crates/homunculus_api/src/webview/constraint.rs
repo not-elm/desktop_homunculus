@@ -25,7 +25,10 @@ impl Plugin for ConstraintPlugin {
 }
 
 /// Inserts a default `TransformConstraint` on every entity that just received `LinkedPersona`.
-fn auto_insert_constraints(mut commands: Commands, query: Query<Entity, Added<LinkedPersona>>) {
+fn auto_insert_constraints(
+    mut commands: Commands,
+    query: Query<Entity, (Added<LinkedPersona>, Without<TransformConstraint>)>,
+) {
     for entity in &query {
         commands
             .entity(entity)
