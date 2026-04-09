@@ -5,8 +5,8 @@ use bevy::prelude::*;
 use bevy_cef::prelude::WebviewSize;
 use bevy_flurx::action::once;
 use homunculus_core::prelude::{
-    LinkedPersona, TransformConstraint, WebviewConstraints, WebviewInfo, WebviewMeshSize,
-    WebviewOffset,
+    LinkedPersona, TransformArgs, TransformConstraint, WebviewConstraints, WebviewInfo,
+    WebviewMeshSize,
 };
 
 impl WebviewApi {
@@ -37,7 +37,11 @@ fn list_webviews(
                     source: webview_source_to_info(&source.0, false),
                     size: mesh_size.map_or(WebviewMeshSize::default().0, |s| s.0),
                     viewport_size: viewport_size.0,
-                    offset: WebviewOffset(c.intended_offset),
+                    transform: TransformArgs {
+                        translation: Some(c.intended_offset),
+                        rotation: None,
+                        scale: None,
+                    },
                     constraints: WebviewConstraints {
                         rotation_follow: Some(c.rotation_follow),
                         max_tilt_degrees: Some(c.max_tilt_degrees),

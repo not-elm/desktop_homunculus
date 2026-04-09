@@ -72,7 +72,7 @@ async function setupPersonaEvents(p: Persona) {
         source: webviewSource.local("menu:ui"),
         size: [0.8, 1],
         viewportSize: [500, 600],
-        offset: [1, -0.3],
+        transform: { translation: [1.0, 1.2, 10.0] },
         linkedPersona: p.id,
       });
       await audio.se.play("se:open");

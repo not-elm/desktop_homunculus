@@ -1,5 +1,5 @@
 import { host } from "./host";
-import { type Vec2, type Vec3 } from "./math";
+import { type TransformArgs, type Vec2 } from "./math";
 import { Persona } from "./persona";
 
 // --- Z-layer constants ---
@@ -14,7 +14,7 @@ import { Persona } from "./persona";
  * ```typescript
  * await Webview.open({
  *   source: webviewSource.local("my-mod:ui"),
- *   offset: [0, 0, WebviewLayer.FOREGROUND],
+ *   transform: { translation: [0, 1.5, WebviewLayer.FOREGROUND] },
  * });
  * ```
  */
@@ -201,7 +201,8 @@ export interface WebviewInfo {
     source: WebviewSourceInfo;
     size: Vec2;
     viewportSize: Vec2;
-    offset: Vec2 | Vec3;
+    /** Current transform (translation = intended offset from parent). */
+    transform: TransformArgs;
     /** The persona ID linked to this webview, or null/undefined if none. */
     linkedPersona?: string | null;
     /** Active constraint parameters. */
@@ -227,7 +228,7 @@ export interface WebviewConstraints {
  *   source: webviewSource.url("my-mod::ui.html"),
  *   size: [0.7, 0.7],
  *   viewportSize: [800, 600],
- *   offset: [0, 0.5],
+ *   transform: { translation: [0, 1.5, 10.0] },
  * };
  * ```
  */
@@ -235,8 +236,8 @@ export interface WebviewOpenOptions {
     source: WebviewSource;
     size?: Vec2;
     viewportSize?: Vec2;
-    /** @deprecated Use transform instead. */
-    offset?: [number, number] | [number, number, number];
+    /** Transform for positioning. translation sets the offset from parent. */
+    transform?: TransformArgs;
     /** Transform constraint parameters. */
     constraints?: WebviewConstraints;
     /** The persona ID to link to this webview. */
@@ -245,7 +246,8 @@ export interface WebviewOpenOptions {
 
 /** Request body for patching webview properties. */
 export interface WebviewPatchRequest {
-    offset?: Vec2 | Vec3;
+    /** Transform update (translation updates the offset from parent). */
+    transform?: TransformArgs;
     size?: Vec2;
     viewportSize?: Vec2;
     /** Transform constraint parameters (partial merge). */
@@ -269,7 +271,7 @@ export interface WebviewNavigateRequest {
  *   source: webviewSource.url("my-mod::ui.html"),
  *   size: [0.7, 0.7],
  *   viewportSize: [800, 600],
- *   offset: [0, 0.5],
+ *   transform: { translation: [0, 1.5, 10.0] },
  * });
  *
  * if (!(await webview.isClosed())) {
@@ -314,7 +316,7 @@ export class Webview {
     }
 
     /**
-     * Patches webview properties (offset, size, viewportSize).
+     * Patches webview properties (transform, size, viewportSize).
      *
      * @param options - The properties to update
      */
@@ -323,12 +325,12 @@ export class Webview {
     }
 
     /**
-     * Sets the offset of the webview.
+     * Sets the transform of the webview.
      *
-     * @param offset - The new offset
+     * @param transform - The new transform
      */
-    async setOffset(offset: Vec2 | Vec3): Promise<void> {
-        await this.patch({ offset });
+    async setTransform(transform: TransformArgs): Promise<void> {
+        await this.patch({ transform });
     }
 
     /**
@@ -480,7 +482,7 @@ export class Webview {
      *   source: webviewSource.url("my-mod::settings.html"),
      *   size: [0.7, 0.5],
      *   viewportSize: [800, 600],
-     *   offset: [0, 1.0],
+     *   transform: { translation: [0, 1.5, 10.0] },
      * });
      *
      * // Open with inline HTML
@@ -491,7 +493,7 @@ export class Webview {
      * // Open with a local asset
      * const local = await Webview.open({
      *   source: webviewSource.local("my-mod::panel.html"),
-     *   offset: [0.5, 0],
+     *   transform: { translation: [0.5, 1.5, 10.0] },
      * });
      * ```
      */

@@ -14,7 +14,7 @@ try {
     source: webviewSource.local("persona:ui"),
     size: [1, 0.85],
     viewportSize: [1000, 700],
-    offset: [1.4, -0.5],
+    transform: { translation: [1.4, 1.0, 10.0] },
     linkedPersona: personaId,
   });
   await audio.se.play("se:open");

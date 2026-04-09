@@ -4,17 +4,24 @@ use bevy::prelude::*;
 use bevy_cef::prelude::WebviewSize;
 use bevy_flurx::action::once;
 use homunculus_core::prelude::{
-    TransformConstraint, WebviewMeshSize, WebviewOffset, WebviewPatchRequest,
+    TransformArgs, TransformConstraint, WebviewMeshSize, WebviewPatchRequest,
 };
 use homunculus_effects::{Entity, Update};
 
 impl WebviewApi {
-    /// Updates the offset of a webview entity.
-    pub async fn set_offset(&self, webview: Entity, offset: WebviewOffset) -> ApiResult<()> {
+    /// Updates the transform of a webview entity.
+    pub async fn set_transform(
+        &self,
+        webview: Entity,
+        transform: TransformArgs,
+    ) -> ApiResult<()> {
         self.0
             .schedule(move |task| async move {
-                task.will(Update, once::run(set_offset).with((webview, offset)))
-                    .await
+                task.will(
+                    Update,
+                    once::run(set_transform).with((webview, transform)),
+                )
+                .await
             })
             .await?
     }
@@ -51,19 +58,21 @@ impl WebviewApi {
     }
 }
 
-fn set_offset(
-    In((webview, offset)): In<(Entity, WebviewOffset)>,
+fn set_transform(
+    In((webview, transform)): In<(Entity, TransformArgs)>,
     mut commands: Commands,
     webviews: Query<(Entity, Option<&TransformConstraint>), With<bevy_cef::prelude::WebviewSource>>,
 ) -> ApiResult<()> {
     let Ok((_, existing)) = webviews.get(webview) else {
         return Err(ApiError::WebviewNotFound(webview));
     };
-    let base = existing.copied().unwrap_or_default();
-    commands.entity(webview).try_insert(TransformConstraint {
-        intended_offset: offset.0,
-        ..base
-    });
+    if let Some(translation) = transform.translation {
+        let base = existing.copied().unwrap_or_default();
+        commands.entity(webview).try_insert(TransformConstraint {
+            intended_offset: translation,
+            ..base
+        });
+    }
     Ok(())
 }
 
@@ -101,10 +110,7 @@ fn patch(
     In((webview, request)): In<(Entity, WebviewPatchRequest)>,
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    webviews: Query<
-        (Entity, Option<&TransformConstraint>),
-        With<bevy_cef::prelude::WebviewSource>,
-    >,
+    webviews: Query<(Entity, Option<&TransformConstraint>), With<bevy_cef::prelude::WebviewSource>>,
 ) -> ApiResult<()> {
     let Ok((_, existing_constraint)) = webviews.get(webview) else {
         return Err(ApiError::WebviewNotFound(webview));
@@ -112,10 +118,12 @@ fn patch(
 
     let mut entity_commands = commands.entity(webview);
 
-    if let Some(offset) = request.offset {
+    if let Some(transform) = request.transform
+        && let Some(translation) = transform.translation
+    {
         let base = existing_constraint.copied().unwrap_or_default();
         entity_commands.try_insert(TransformConstraint {
-            intended_offset: offset.0,
+            intended_offset: translation,
             ..base
         });
     }

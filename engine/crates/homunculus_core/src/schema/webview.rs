@@ -1,7 +1,8 @@
 use super::asset::AssetId;
+use super::transform::TransformArgs;
 use super::transform_constraint::WebviewConstraints;
 use crate::components::PersonaId;
-use bevy::math::{Vec2, Vec3};
+use bevy::math::Vec2;
 use bevy::prelude::{Component, Entity, Reflect};
 use serde::{Deserialize, Serialize};
 
@@ -53,42 +54,15 @@ pub struct WebviewOpenOptions {
     #[serde(default)]
     #[cfg_attr(feature = "openapi", schema(value_type = Option<[f32; 2]>))]
     pub viewport_size: Option<Vec2>,
-    /// Deprecated: use `transform` instead. Maps to transform.translation with z=10.0.
+    /// Transform for positioning. translation sets the offset from parent.
     #[serde(default)]
-    pub offset: Option<WebviewOffset>,
+    pub transform: Option<TransformArgs>,
     /// Transform constraint parameters for parent transform propagation.
     #[serde(default)]
     pub constraints: Option<WebviewConstraints>,
     /// Persona to link to this webview (optional).
     #[serde(default)]
     pub linked_persona: Option<PersonaId>,
-}
-
-#[derive(Debug, Serialize, Clone, PartialEq, Component, Copy)]
-#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
-#[cfg_attr(feature = "openapi", schema(value_type = [f32; 3]))]
-pub struct WebviewOffset(pub Vec3);
-
-impl Default for WebviewOffset {
-    fn default() -> Self {
-        Self(Vec3::new(0.0, 0.0, 10.0))
-    }
-}
-
-impl<'de> Deserialize<'de> for WebviewOffset {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        let arr: Vec<f32> = Vec::deserialize(deserializer)?;
-        match arr.len() {
-            2 => Ok(WebviewOffset(Vec3::new(arr[0], arr[1], 10.0))),
-            3 => Ok(WebviewOffset(Vec3::new(arr[0], arr[1], arr[2]))),
-            _ => Err(serde::de::Error::custom(
-                "offset must be [x, y] or [x, y, z]",
-            )),
-        }
-    }
 }
 
 /// Tracks the mesh size of a webview in world units.
@@ -114,8 +88,8 @@ pub struct WebviewInfo {
     pub size: Vec2,
     #[cfg_attr(feature = "openapi", schema(value_type = [f32; 2]))]
     pub viewport_size: Vec2,
-    /// Deprecated: included for backward compatibility.
-    pub offset: WebviewOffset,
+    /// Current transform (translation = intended offset from parent).
+    pub transform: TransformArgs,
     /// Active constraint parameters.
     pub constraints: WebviewConstraints,
     #[serde(default)]
@@ -127,9 +101,9 @@ pub struct WebviewInfo {
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct WebviewPatchRequest {
-    /// Deprecated: use transform via /entities/{entity}/transform instead.
+    /// Transform update (translation updates the offset from parent).
     #[serde(default)]
-    pub offset: Option<WebviewOffset>,
+    pub transform: Option<TransformArgs>,
     #[serde(default)]
     #[cfg_attr(feature = "openapi", schema(value_type = Option<[f32; 2]>))]
     pub size: Option<Vec2>,

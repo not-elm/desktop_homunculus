@@ -12,7 +12,7 @@ try {
     source: webviewSource.local("agent:session-ui"),
     size: [1.07, 0.8],
     viewportSize: [800, 500],
-    offset: [1.3, -0.5],
+    transform: { translation: [1.3, 1.0, 10.0] },
     linkedPersona: personaId,
   });
   await audio.se.play("se:open");

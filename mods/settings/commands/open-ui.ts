@@ -10,7 +10,7 @@ try {
     source: webviewSource.local("settings:ui"),
     size: [0.8, 1],
     viewportSize: [600, 800],
-    offset: [1.1, 0],
+    transform: { translation: [1.1, 1.5, 10.0] },
   });
   await audio.se.play("se:open");
   output.succeed();

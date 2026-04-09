@@ -3,7 +3,9 @@
 use super::super::HomunculusMcpHandler;
 use bevy::math::{Vec2, Vec3};
 use bevy::prelude::Entity;
-use homunculus_core::prelude::{WebviewConstraints, WebviewOffset, WebviewOpenOptions, WebviewSource};
+use homunculus_core::prelude::{
+    TransformArgs, WebviewConstraints, WebviewOpenOptions, WebviewSource,
+};
 use rmcp::handler::server::wrapper::Parameters;
 use rmcp::schemars;
 use rmcp::schemars::JsonSchema;
@@ -18,10 +20,12 @@ const DEFAULT_SIZE_Y: f32 = 0.5;
 const DEFAULT_VIEWPORT_WIDTH: u32 = 800;
 /// Default internal browser height in pixels.
 const DEFAULT_VIEWPORT_HEIGHT: u32 = 600;
-/// Default horizontal offset from character center.
-const DEFAULT_OFFSET_X: f32 = 0.0;
-/// Default vertical offset from character center (positive = above).
-const DEFAULT_OFFSET_Y: f32 = 0.5;
+/// Default horizontal translation from character center.
+const DEFAULT_TRANSLATION_X: f32 = 0.0;
+/// Default vertical translation from character center (positive = above).
+const DEFAULT_TRANSLATION_Y: f32 = 1.5;
+/// Default depth translation (z-offset from character).
+const DEFAULT_TRANSLATION_Z: f32 = 10.0;
 
 /// Parameters for the `open_webview` tool.
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
@@ -41,10 +45,12 @@ pub struct OpenWebviewParams {
     pub viewport_width: Option<u32>,
     /// Internal browser height in pixels.
     pub viewport_height: Option<u32>,
-    /// Horizontal offset from character center.
-    pub offset_x: Option<f32>,
-    /// Vertical offset from character center (positive = above).
-    pub offset_y: Option<f32>,
+    /// Horizontal translation from character center.
+    pub translation_x: Option<f32>,
+    /// Vertical translation from character center (positive = above).
+    pub translation_y: Option<f32>,
+    /// Depth translation (z-offset). Default: 10.0.
+    pub translation_z: Option<f32>,
     /// Name of the character to link this webview to.
     /// When linked, the webview follows the character's head position.
     /// Use get_character_snapshot to see available character names.
@@ -107,7 +113,7 @@ impl HomunculusMcpHandler {
     /// Open a webview panel displaying HTML content, a URL, or a local mod asset near the active character.
     #[tool(
         name = "open_webview",
-        description = "Open a webview panel. Provide exactly one of: 'html' (inline HTML), 'url' (a URL to load), or 'asset_id' (a local mod asset, e.g. 'mod-name:asset-id'). Optionally provide 'characterName' to link the webview to a specific character (it will follow the character's head position). Returns the webview entity ID. Use close_webview to close it."
+        description = "Open a webview panel. Provide exactly one of: 'html' (inline HTML), 'url' (a URL to load), or 'asset_id' (a local mod asset, e.g. 'mod-name:asset-id'). Position with 'translationX', 'translationY', 'translationZ'. Optionally provide 'characterName' to link the webview to a specific character (it will follow the character's head position). Returns the webview entity ID. Use close_webview to close it."
     )]
     async fn open_webview(&self, params: Parameters<OpenWebviewParams>) -> String {
         let args = params.0;
@@ -130,14 +136,19 @@ impl HomunculusMcpHandler {
         let size_y = args.size_y.unwrap_or(DEFAULT_SIZE_Y);
         let viewport_width = args.viewport_width.unwrap_or(DEFAULT_VIEWPORT_WIDTH);
         let viewport_height = args.viewport_height.unwrap_or(DEFAULT_VIEWPORT_HEIGHT);
-        let offset_x = args.offset_x.unwrap_or(DEFAULT_OFFSET_X);
-        let offset_y = args.offset_y.unwrap_or(DEFAULT_OFFSET_Y);
+        let translation_x = args.translation_x.unwrap_or(DEFAULT_TRANSLATION_X);
+        let translation_y = args.translation_y.unwrap_or(DEFAULT_TRANSLATION_Y);
+        let translation_z = args.translation_z.unwrap_or(DEFAULT_TRANSLATION_Z);
 
         let options = WebviewOpenOptions {
             source,
             size: Some(Vec2::new(size_x, size_y)),
             viewport_size: Some(Vec2::new(viewport_width as f32, viewport_height as f32)),
-            offset: Some(WebviewOffset(Vec3::new(offset_x, offset_y, 10.0))),
+            transform: Some(TransformArgs {
+                translation: Some(Vec3::new(translation_x, translation_y, translation_z)),
+                rotation: None,
+                scale: None,
+            }),
             constraints: if args.rotation_follow.is_some()
                 || args.max_tilt_degrees.is_some()
                 || args.lock_scale.is_some()

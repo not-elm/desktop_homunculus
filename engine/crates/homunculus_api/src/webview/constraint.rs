@@ -25,10 +25,7 @@ impl Plugin for ConstraintPlugin {
 }
 
 /// Inserts a default `TransformConstraint` on every entity that just received `LinkedPersona`.
-fn auto_insert_constraints(
-    mut commands: Commands,
-    query: Query<Entity, Added<LinkedPersona>>,
-) {
+fn auto_insert_constraints(mut commands: Commands, query: Query<Entity, Added<LinkedPersona>>) {
     for entity in &query {
         commands
             .entity(entity)
@@ -241,10 +238,7 @@ mod tests {
         let swing = Quat::from_rotation_x(30f32.to_radians());
         let clamped = clamp_swing(swing, 10.0);
         let angle = clamped.angle_between(Quat::IDENTITY).to_degrees();
-        assert!(
-            (angle - 10.0).abs() < 0.5,
-            "expected ~10°, got {angle}°"
-        );
+        assert!((angle - 10.0).abs() < 0.5, "expected ~10°, got {angle}°");
     }
 
     #[test]
@@ -341,9 +335,6 @@ mod tests {
         let t = result.compute_transform();
 
         let tilt_deg = t.rotation.angle_between(Quat::IDENTITY).to_degrees();
-        assert!(
-            tilt_deg <= 10.5,
-            "expected tilt <= ~10°, got {tilt_deg}°"
-        );
+        assert!(tilt_deg <= 10.5, "expected tilt <= ~10°, got {tilt_deg}°");
     }
 }

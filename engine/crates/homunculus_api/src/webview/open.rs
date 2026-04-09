@@ -177,9 +177,13 @@ fn spawn_webview_entity(
 }
 
 fn build_transform_constraint(options: &WebviewOpenOptions) -> TransformConstraint {
-    let offset = options.offset.unwrap_or_default();
+    let intended_offset = options
+        .transform
+        .as_ref()
+        .and_then(|t| t.translation)
+        .unwrap_or(Vec3::new(0.0, 0.0, 10.0));
     let mut constraint = TransformConstraint {
-        intended_offset: offset.0,
+        intended_offset,
         ..Default::default()
     };
     if let Some(c) = &options.constraints {

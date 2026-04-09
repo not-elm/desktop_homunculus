@@ -12,7 +12,7 @@ try {
     source: webviewSource.local("voicevox:ui"),
     size: [0.6, 0.8],
     viewportSize: [460, 520],
-    offset: [1.1, 0],
+    transform: { translation: [1.1, 1.5, 10.0] },
     linkedPersona: personaId,
   });
   await audio.se.play("se:open");
