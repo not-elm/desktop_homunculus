@@ -42,6 +42,7 @@ export default function DetailView({
   const [formValues, setFormValues] = useState<PersonaFormValues | null>(null);
   const [vrmAssetId, setVrmAssetId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const initialValues = useRef<PersonaFormValues | null>(null);
   const initialVrm = useRef<string | null>(null);
@@ -122,6 +123,8 @@ export default function DetailView({
     try {
       await saveDraft();
       onSaved();
+      setSaved(true);
+      setTimeout(() => setSaved(false), 1500);
     } finally {
       setSaving(false);
     }
@@ -185,6 +188,7 @@ export default function DetailView({
         onSpawnToggle={handleSpawnToggle}
         onSave={handleSave}
         saving={saving}
+        saved={saved}
       />
 
       <div className="detail-body">
@@ -221,6 +225,7 @@ function DetailHeader({
   onSpawnToggle,
   onSave,
   saving,
+  saved,
 }: {
   name: string;
   personaId: string;
@@ -228,6 +233,7 @@ function DetailHeader({
   onSpawnToggle: () => void;
   onSave: () => void;
   saving: boolean;
+  saved: boolean;
 }) {
   return (
     <div className="detail-header">
@@ -248,7 +254,7 @@ function DetailHeader({
           onClick={onSave}
           disabled={saving}
         >
-          {saving ? "Saving..." : "Save"}
+          {saving ? "Saving..." : saved ? "Saved!" : "Save"}
         </button>
       </div>
     </div>

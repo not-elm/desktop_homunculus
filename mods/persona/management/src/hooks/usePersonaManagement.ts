@@ -27,6 +27,8 @@ export function usePersonaManagement() {
     refresh().then((list) => {
       if (list.length > 0 && selectedId == null) {
         setSelectedId(list[0].id);
+      } else if (list.length === 0) {
+        setCreateMode(true);
       }
     });
   }, [refresh]);
