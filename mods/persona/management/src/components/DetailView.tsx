@@ -30,7 +30,10 @@ export default function DetailView({
   onSaved,
   onDelete,
 }: DetailViewProps) {
-  const callbacks = useMemo(() => ({ onDirtyChange, onSaved }), [onDirtyChange, onSaved]);
+  const callbacks = useMemo(
+    () => ({ onDirtyChange, onSaved }),
+    [onDirtyChange, onSaved],
+  );
   const {
     snapshot,
     formValues,
@@ -62,6 +65,7 @@ export default function DetailView({
 
   async function handleThumbnailChange() {
     const assetId = await importThumbnail(personaId);
+    console.log("AAAAA", assetId);
     if (assetId) {
       setThumbnail(assetId);
     }
@@ -177,9 +181,16 @@ function LeftColumn({
 }) {
   return (
     <div className="detail-left">
-      <ThumbnailCard thumbnailUrl={thumbnailUrl} onThumbnailChange={onThumbnailChange} />
+      <ThumbnailCard
+        thumbnailUrl={thumbnailUrl}
+        onThumbnailChange={onThumbnailChange}
+      />
 
-      <VrmSelect personaId={personaId} value={vrmAssetId} onChange={onVrmChange} />
+      <VrmSelect
+        personaId={personaId}
+        value={vrmAssetId}
+        onChange={onVrmChange}
+      />
 
       <div className="detail-auto-row">
         <div>
@@ -229,7 +240,10 @@ function RightColumn({
 function DeleteSection({ onDelete }: { onDelete: () => void }) {
   return (
     <div className="delete-section">
-      <button className="management-btn management-btn--danger" onClick={onDelete}>
+      <button
+        className="management-btn management-btn--danger"
+        onClick={onDelete}
+      >
         Delete Persona
       </button>
     </div>
@@ -261,7 +275,10 @@ function DeleteConfirmDialog({
           >
             Cancel
           </button>
-          <button className="management-btn management-btn--danger" onClick={onConfirm}>
+          <button
+            className="management-btn management-btn--danger"
+            onClick={onConfirm}
+          >
             Delete
           </button>
         </DialogFooter>
