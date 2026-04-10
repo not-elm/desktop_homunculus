@@ -65,7 +65,6 @@ export default function DetailView({
 
   async function handleThumbnailChange() {
     const assetId = await importThumbnail(personaId);
-    console.log("AAAAA", assetId);
     if (assetId) {
       setThumbnail(assetId);
     }
