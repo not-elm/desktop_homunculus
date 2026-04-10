@@ -1,7 +1,13 @@
-import type { Gender } from "@hmcs/sdk";
+import { useMemo } from "react";
+import { Persona, type Gender } from "@hmcs/sdk";
 import { PersonaFields, type PersonaFormValues } from "@persona/shared/components/PersonaFields";
+import { ThumbnailCard } from "@persona/shared/components/ThumbnailCard";
+import { useThumbnailImport } from "@persona/shared/hooks/useThumbnailImport";
 
 interface PersonaTabProps {
+  personaId: string;
+  thumbnail: string | null;
+  onThumbnailChange: (id: string | null) => void;
   name: string;
   onNameChange: (name: string) => void;
   age: number | null;
@@ -17,6 +23,9 @@ interface PersonaTabProps {
 }
 
 export function PersonaTab({
+  personaId,
+  thumbnail,
+  onThumbnailChange,
   name,
   onNameChange,
   age,
@@ -30,6 +39,18 @@ export function PersonaTab({
   personality,
   onPersonalityChange,
 }: PersonaTabProps) {
+  const { importThumbnail } = useThumbnailImport();
+  const persona = useMemo(() => new Persona(personaId), [personaId]);
+
+  async function handleThumbnailClick() {
+    const assetId = await importThumbnail(personaId);
+    if (assetId) {
+      onThumbnailChange(assetId);
+    }
+  }
+
+  const thumbnailUrl = persona.thumbnailUrl(thumbnail);
+
   const values: PersonaFormValues = {
     name,
     age,
@@ -48,5 +69,10 @@ export function PersonaTab({
     if (updated.personality !== personality) onPersonalityChange(updated.personality);
   }
 
-  return <PersonaFields values={values} onChange={handleChange} />;
+  return (
+    <div>
+      <ThumbnailCard thumbnailUrl={thumbnailUrl} onThumbnailChange={handleThumbnailClick} />
+      <PersonaFields values={values} onChange={handleChange} />
+    </div>
+  );
 }

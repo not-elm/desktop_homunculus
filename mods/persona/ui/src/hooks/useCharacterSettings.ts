@@ -13,6 +13,8 @@ export function useCharacterSettings() {
   const [age, setAge] = useState<number | null>(null);
   const [gender, setGender] = useState<Gender>("unknown");
   const [firstPersonPronoun, setFirstPersonPronoun] = useState("");
+  const [thumbnail, setThumbnail] = useState<string | null>(null);
+  const [initialThumbnail, setInitialThumbnail] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -40,6 +42,8 @@ export function useCharacterSettings() {
       setAge(snapshot.age ?? null);
       setGender(snapshot.gender ?? "unknown");
       setFirstPersonPronoun(snapshot.firstPersonPronoun ?? "");
+      setThumbnail(snapshot.thumbnail ?? null);
+      setInitialThumbnail(snapshot.thumbnail ?? null);
       setLoading(false);
     })();
 
@@ -64,6 +68,7 @@ export function useCharacterSettings() {
         firstPersonPronoun: firstPersonPronoun || undefined,
         profile,
         personality: personality || undefined,
+        thumbnail: thumbnail !== initialThumbnail ? (thumbnail ?? undefined) : undefined,
       });
       const currentTransform = await personaInstance.transform();
       await personaInstance.setTransform({
@@ -78,7 +83,7 @@ export function useCharacterSettings() {
     } finally {
       setSaving(false);
     }
-  }, [personaInstance, name, age, gender, firstPersonPronoun, profile, personality, scale, saving]);
+  }, [personaInstance, name, age, gender, firstPersonPronoun, profile, personality, thumbnail, initialThumbnail, scale, saving]);
 
   return {
     loading,
@@ -98,6 +103,9 @@ export function useCharacterSettings() {
     setGender,
     firstPersonPronoun,
     setFirstPersonPronoun,
+    thumbnail,
+    setThumbnail,
+    personaId: personaInstance?.id ?? "",
     saving,
     saved,
     handleSave,

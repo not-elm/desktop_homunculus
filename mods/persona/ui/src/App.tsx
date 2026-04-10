@@ -21,6 +21,9 @@ export function App() {
     setGender,
     firstPersonPronoun,
     setFirstPersonPronoun,
+    thumbnail,
+    setThumbnail,
+    personaId,
     saving,
     saved,
     handleSave,
@@ -74,6 +77,9 @@ export function App() {
       <div className={`settings-content${tab === "persona" ? " settings-content--visible" : ""}`}>
         {tab === "persona" && (
           <PersonaTab
+            personaId={personaId}
+            thumbnail={thumbnail}
+            onThumbnailChange={setThumbnail}
             name={name}
             onNameChange={setName}
             age={age}
