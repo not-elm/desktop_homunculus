@@ -1,42 +1,92 @@
-import { useCharacterSettings, type Tab } from "./hooks/useCharacterSettings";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Persona, Webview, audio } from "@hmcs/sdk";
+import { PersonaDetailBody } from "@persona/shared/components/PersonaDetailBody";
+import { usePersonaDetail } from "@persona/shared/hooks/usePersonaDetail";
+import { useThumbnailImport } from "@persona/shared/hooks/useThumbnailImport";
 import { AppearanceTab } from "./components/AppearanceTab";
-import { PersonaTab } from "./components/PersonaTab";
+import { useScale } from "./hooks/useScale";
+
+type Tab = "persona" | "appearance";
+
+const NOOP = () => {};
+const DETAIL_CALLBACKS = { onDirtyChange: NOOP, onSaved: NOOP };
 
 export function App() {
-  const {
-    loading,
-    name,
-    setName,
-    tab,
-    setTab,
-    scale,
-    setScale,
-    profile,
-    setProfile,
-    personality,
-    setPersonality,
-    age,
-    setAge,
-    gender,
-    setGender,
-    firstPersonPronoun,
-    setFirstPersonPronoun,
-    thumbnail,
-    setThumbnail,
-    personaId,
-    saving,
-    saved,
-    handleSave,
-    handleClose,
-  } = useCharacterSettings();
+  const [personaId, setPersonaId] = useState<string | null>(null);
 
-  if (loading) {
+  useEffect(() => {
+    const webview = Webview.current();
+    if (!webview) return;
+    let cancelled = false;
+    (async () => {
+      const linked = await webview.linkedPersona();
+      if (cancelled || !linked) return;
+      setPersonaId(linked.id);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (!personaId) {
     return (
       <div className="settings-panel settings-loading">
         <div className="settings-loading-text">Loading...</div>
       </div>
     );
   }
+
+  return <SettingsContent personaId={personaId} />;
+}
+
+function SettingsContent({ personaId }: { personaId: string }) {
+  const [tab, setTab] = useState<Tab>("persona");
+
+  const detail = usePersonaDetail(personaId, DETAIL_CALLBACKS);
+  const scaleState = useScale(personaId);
+  const { importThumbnail } = useThumbnailImport();
+  const persona = useMemo(() => new Persona(personaId), [personaId]);
+
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const handleClose = useCallback(() => {
+    audio.se.play("se:close");
+    Webview.current()?.close();
+  }, []);
+
+  const handleSave = useCallback(async () => {
+    if (saving) return;
+    setSaving(true);
+    try {
+      await detail.save();
+      await scaleState.saveScale();
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      console.error("Save failed:", err);
+    } finally {
+      setSaving(false);
+    }
+  }, [saving, detail, scaleState]);
+
+  const handleThumbnailChange = useCallback(async () => {
+    const assetId = await importThumbnail(personaId);
+    if (assetId) {
+      detail.setThumbnail(assetId);
+    }
+  }, [personaId, importThumbnail, detail]);
+
+  if (!detail.snapshot || !detail.formValues || scaleState.loading) {
+    return (
+      <div className="settings-panel settings-loading">
+        <div className="settings-loading-text">Loading...</div>
+      </div>
+    );
+  }
+
+  const autoSpawn = detail.snapshot.metadata?.["auto-spawn"] === true;
+  const name = detail.snapshot.name ?? "";
 
   const tabs: { id: Tab; label: string }[] = [
     { id: "persona", label: "Persona" },
@@ -76,28 +126,22 @@ export function App() {
       {/* Content */}
       <div className={`settings-content${tab === "persona" ? " settings-content--visible" : ""}`}>
         {tab === "persona" && (
-          <PersonaTab
+          <PersonaDetailBody
             personaId={personaId}
-            thumbnail={thumbnail}
-            onThumbnailChange={setThumbnail}
-            name={name}
-            onNameChange={setName}
-            age={age}
-            onAgeChange={setAge}
-            gender={gender}
-            onGenderChange={setGender}
-            firstPersonPronoun={firstPersonPronoun}
-            onFirstPersonPronounChange={setFirstPersonPronoun}
-            profile={profile}
-            onProfileChange={setProfile}
-            personality={personality}
-            onPersonalityChange={setPersonality}
+            thumbnailUrl={persona.thumbnailUrl(detail.thumbnail)}
+            onThumbnailChange={handleThumbnailChange}
+            vrmAssetId={detail.vrmAssetId}
+            onVrmChange={detail.setVrmAssetId}
+            autoSpawn={autoSpawn}
+            onAutoSpawnToggle={detail.toggleAutoSpawn}
+            formValues={detail.formValues}
+            onFormChange={detail.setFormValues}
           />
         )}
         {tab === "appearance" && (
           <AppearanceTab
-            scale={scale}
-            onScaleChange={setScale}
+            scale={scaleState.scale}
+            onScaleChange={scaleState.setScale}
           />
         )}
       </div>
