@@ -94,6 +94,7 @@ async fn read_and_respond(path: &std::path::Path) -> Result<Response, ApiError> 
                 axum::http::header::HeaderName::from_static("x-content-type-options"),
                 "nosniff",
             ),
+            (axum::http::header::CACHE_CONTROL, "no-cache"),
         ],
         bytes,
     )
