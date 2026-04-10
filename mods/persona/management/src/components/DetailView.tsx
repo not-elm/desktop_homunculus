@@ -13,7 +13,7 @@ import {
   type PersonaFormValues,
 } from "@persona/shared/components/PersonaFields";
 import { ThumbnailCard } from "@persona/shared/components/ThumbnailCard";
-import VrmSelect from "./VrmSelect";
+import VrmSelect from "@persona/shared/components/VrmSelect";
 import { usePersonaDetail } from "../hooks/usePersonaDetail";
 import { useThumbnailImport } from "@persona/shared/hooks/useThumbnailImport";
 
