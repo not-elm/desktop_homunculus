@@ -2,7 +2,7 @@ use crate::error::{ApiError, ApiResult};
 use crate::prelude::WebviewApi;
 use bevy::prelude::*;
 use bevy_flurx::action::once;
-use homunculus_core::prelude::{LinkedPersona, PersonaId};
+use homunculus_core::prelude::{LinkedPersona, PersonaId, PersonaIndex};
 
 impl WebviewApi {
     /// Gets the linked persona ID for a webview.
@@ -57,13 +57,17 @@ fn set_linked_persona(
     In((webview, persona_id)): In<(Entity, PersonaId)>,
     mut commands: Commands,
     webviews: Query<Entity, With<bevy_cef::prelude::WebviewSource>>,
+    index: Res<PersonaIndex>,
 ) -> ApiResult<()> {
     if !webviews.contains(webview) {
         return Err(ApiError::WebviewNotFound(webview));
     }
     commands
         .entity(webview)
-        .try_insert(LinkedPersona(persona_id));
+        .try_insert(LinkedPersona(persona_id.clone()));
+    if let Some(persona_entity) = index.get(&persona_id) {
+        commands.entity(webview).set_parent_in_place(persona_entity);
+    }
     Ok(())
 }
 
@@ -73,7 +77,10 @@ fn unlink_persona(
     webviews: Query<Entity, With<bevy_cef::prelude::WebviewSource>>,
 ) -> ApiResult<()> {
     if webviews.contains(webview) {
-        commands.entity(webview).remove::<LinkedPersona>();
+        commands
+            .entity(webview)
+            .remove::<LinkedPersona>()
+            .remove_parent_in_place();
         Ok(())
     } else {
         Err(ApiError::WebviewNotFound(webview))

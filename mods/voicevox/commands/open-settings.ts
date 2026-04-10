@@ -3,7 +3,7 @@
 /// <reference types="node" />
 
 import { z } from "zod";
-import { audio, Webview, webviewSource } from "@hmcs/sdk";
+import { audio, Webview, WebviewLayer, webviewSource } from "@hmcs/sdk";
 import { input, output } from "@hmcs/sdk/commands";
 
 try {
@@ -12,7 +12,7 @@ try {
     source: webviewSource.local("voicevox:ui"),
     size: [0.6, 0.8],
     viewportSize: [460, 520],
-    offset: [1.1, 0],
+    transform: { translation: [1.1, 0.8, WebviewLayer.UI] },
     linkedPersona: personaId,
   });
   await audio.se.play("se:open");
