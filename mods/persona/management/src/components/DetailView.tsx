@@ -14,7 +14,7 @@ import {
 } from "@persona/shared/components/PersonaFields";
 import VrmSelect from "./VrmSelect";
 import { usePersonaDetail } from "../hooks/usePersonaDetail";
-import { useThumbnailImport } from "../hooks/useThumbnailImport";
+import { useThumbnailImport } from "@persona/shared/hooks/useThumbnailImport";
 
 interface DetailViewProps {
   personaId: string;
