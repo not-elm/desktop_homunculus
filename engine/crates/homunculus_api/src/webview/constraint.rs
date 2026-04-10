@@ -38,16 +38,17 @@ fn auto_insert_constraints(
 
 /// Corrects the propagated `GlobalTransform` of constrained child entities.
 ///
-/// Preserves the propagated translation and only overrides rotation and scale.
+/// Overrides rotation and scale. When `lock_scale` is true, translation is
+/// recomputed without parent scale (using `parent_rot * local_T` instead of
+/// `parent_scale * parent_rot * local_T`).
 fn apply_transform_constraints(
-    mut children: Query<(&ChildOf, &TransformConstraint, &mut GlobalTransform)>,
+    mut children: Query<(&ChildOf, &TransformConstraint, &Transform, &mut GlobalTransform)>,
     parents: Query<&GlobalTransform, Without<TransformConstraint>>,
 ) {
-    for (child_of, constraint, mut global) in &mut children {
+    for (child_of, constraint, local_transform, mut global) in &mut children {
         let Ok(parent_global) = parents.get(child_of.parent()) else {
             continue;
         };
-        let propagated_translation = global.translation();
         let parent_rot = parent_global.rotation();
         let parent_scale = parent_global.scale();
 
@@ -61,9 +62,14 @@ fn apply_transform_constraints(
         } else {
             parent_scale
         };
+        let translation = if constraint.lock_scale {
+            parent_global.translation() + parent_rot * local_transform.translation
+        } else {
+            global.translation()
+        };
 
         *global = GlobalTransform::from(Transform {
-            translation: propagated_translation,
+            translation,
             rotation,
             scale,
         });
