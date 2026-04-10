@@ -24,7 +24,7 @@ export function UnifiedView() {
   const isActive = session.state !== "idle";
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [sidebarWidth, setSidebarWidth] = useState(300);
+  const [sidebarWidth, setSidebarWidth] = useState(270);
   const [resizing, setResizing] = useState(false);
   const [bodyContent, setBodyContent] = useState<BodyContent>({ kind: "sessionLog" });
   const [activeCategory, setActiveCategory] = useState<SettingsCategory | null>(null);
@@ -238,7 +238,7 @@ export function UnifiedView() {
       data-resizing={resizing || undefined}
       data-minimized={minimized || undefined}
       data-mounted={mounted || undefined}
-      style={minimized ? undefined : { width: sidebarOpen ? 700 : 400 }}
+      style={minimized ? undefined : { width: sidebarOpen ? 800 : 400 }}
       onClick={minimized ? handleRestore : undefined}
       onKeyDown={minimized ? (e: React.KeyboardEvent) => { if (e.key === "Enter") handleRestore(); } : undefined}
       role={minimized ? "button" : undefined}
