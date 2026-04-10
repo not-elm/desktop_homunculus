@@ -6,6 +6,8 @@ export interface UsePersonaDetailReturn {
   snapshot: PersonaSnapshot | null;
   formValues: PersonaFormValues | null;
   vrmAssetId: string | null;
+  thumbnail: string | null;
+  setThumbnail: (id: string | null) => void;
   saving: boolean;
   saved: boolean;
   isDirty: boolean;
@@ -40,10 +42,12 @@ export function usePersonaDetail(
   const [snapshot, setSnapshot] = useState<PersonaSnapshot | null>(null);
   const [formValues, setFormValues] = useState<PersonaFormValues | null>(null);
   const [vrmAssetId, setVrmAssetId] = useState<string | null>(null);
+  const [thumbnail, setThumbnail] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const initialValues = useRef<PersonaFormValues | null>(null);
   const initialVrm = useRef<string | null>(null);
+  const initialThumbnail = useRef<string | null>(null);
 
   const persona = useMemo(() => new Persona(personaId), [personaId]);
 
@@ -54,8 +58,10 @@ export function usePersonaDetail(
       const values = snapshotToFormValues(snap);
       setFormValues(values);
       setVrmAssetId(snap.vrmAssetId ?? null);
+      setThumbnail(snap.thumbnail ?? null);
       initialValues.current = values;
       initialVrm.current = snap.vrmAssetId ?? null;
+      initialThumbnail.current = snap.thumbnail ?? null;
     } catch (e) {
       console.error("Failed to load persona:", e);
     }
@@ -75,9 +81,10 @@ export function usePersonaDetail(
       formValues.firstPersonPronoun !== iv.firstPersonPronoun ||
       formValues.profile !== iv.profile ||
       formValues.personality !== iv.personality ||
-      vrmAssetId !== initialVrm.current
+      vrmAssetId !== initialVrm.current ||
+      thumbnail !== initialThumbnail.current
     );
-  }, [formValues, vrmAssetId]);
+  }, [formValues, vrmAssetId, thumbnail]);
 
   useEffect(() => {
     callbacks.onDirtyChange(isDirty());
@@ -87,6 +94,7 @@ export function usePersonaDetail(
     if (!formValues) return false;
     try {
       const vrmChanged = vrmAssetId !== initialVrm.current;
+      const thumbnailChanged = thumbnail !== initialThumbnail.current;
       await persona.patch({
         name: formValues.name,
         age: formValues.age,
@@ -95,6 +103,7 @@ export function usePersonaDetail(
         profile: formValues.profile,
         personality: formValues.personality || undefined,
         vrmAssetId: vrmChanged ? (vrmAssetId ?? undefined) : undefined,
+        thumbnail: thumbnailChanged ? (thumbnail ?? undefined) : undefined,
       });
 
       if (vrmChanged && snapshot?.spawned) {
@@ -126,7 +135,7 @@ export function usePersonaDetail(
     } finally {
       setSaving(false);
     }
-  }, [saving, formValues, vrmAssetId, snapshot, callbacks]);
+  }, [saving, formValues, vrmAssetId, thumbnail, snapshot, callbacks]);
 
   const toggleSpawn = useCallback(async () => {
     if (!snapshot) return;
@@ -163,6 +172,8 @@ export function usePersonaDetail(
     snapshot,
     formValues,
     vrmAssetId,
+    thumbnail,
+    setThumbnail,
     saving,
     saved,
     isDirty: isDirty(),
