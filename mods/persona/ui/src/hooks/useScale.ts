@@ -39,13 +39,17 @@ export function useScale(personaId: string): UseScaleReturn {
 
   const saveScale = useCallback(async () => {
     if (!loadedRef.current) return;
-    const persona = new Persona(personaId);
-    const current = await persona.transform();
-    await persona.setTransform({
-      scale: [scale, scale, scale],
-      translation: current.translation,
-      rotation: current.rotation,
-    });
+    try {
+      const persona = new Persona(personaId);
+      const current = await persona.transform();
+      await persona.setTransform({
+        scale: [scale, scale, scale],
+        translation: current.translation,
+        rotation: current.rotation,
+      });
+    } catch (e) {
+      console.error("Failed to save scale:", e);
+    }
   }, [personaId, scale]);
 
   return { scale, setScale, saveScale, loading };
