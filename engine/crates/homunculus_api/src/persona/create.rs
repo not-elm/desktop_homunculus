@@ -72,6 +72,7 @@ fn build_persona(persona_id: &PersonaId, args: &CreatePersona) -> Persona {
         profile: args.profile.clone().unwrap_or_default(),
         personality: args.personality.clone(),
         vrm_asset_id: None,
+        thumbnail: None,
         metadata: args.metadata.clone().unwrap_or_default(),
     }
 }
