@@ -1,8 +1,14 @@
 import { useMemo } from "react";
-import { Persona, type Gender } from "@hmcs/sdk";
-import { PersonaFields, type PersonaFormValues } from "@persona/shared/components/PersonaFields";
+import { Persona } from "@hmcs/sdk";
+import type { Gender } from "@hmcs/sdk";
 import { ThumbnailCard } from "@persona/shared/components/ThumbnailCard";
 import { useThumbnailImport } from "@persona/shared/hooks/useThumbnailImport";
+import { NameField } from "@persona/shared/components/fields/NameField";
+import { AgeField } from "@persona/shared/components/fields/AgeField";
+import { GenderField } from "@persona/shared/components/fields/GenderField";
+import { FirstPersonPronounField } from "@persona/shared/components/fields/FirstPersonPronounField";
+import { ProfileField } from "@persona/shared/components/fields/ProfileField";
+import { PersonalityField } from "@persona/shared/components/fields/PersonalityField";
 
 interface PersonaTabProps {
   personaId: string;
@@ -51,32 +57,25 @@ export function PersonaTab({
 
   const thumbnailUrl = persona.thumbnailUrl(thumbnail);
 
-  const values: PersonaFormValues = {
-    name,
-    age,
-    gender,
-    firstPersonPronoun,
-    profile,
-    personality,
-  };
-
-  function handleChange(updated: PersonaFormValues) {
-    if (updated.name !== name) onNameChange(updated.name);
-    if (updated.age !== age) onAgeChange(updated.age);
-    if (updated.gender !== gender) onGenderChange(updated.gender);
-    if (updated.firstPersonPronoun !== firstPersonPronoun) onFirstPersonPronounChange(updated.firstPersonPronoun);
-    if (updated.profile !== profile) onProfileChange(updated.profile);
-    if (updated.personality !== personality) onPersonalityChange(updated.personality);
-  }
-
   return (
     <div>
-      <ThumbnailCard
-        className="thumb-inline"
-        thumbnailUrl={thumbnailUrl}
-        onThumbnailChange={handleThumbnailClick}
-      />
-      <PersonaFields values={values} onChange={handleChange} />
+      <div className="persona-tab-header">
+        <ThumbnailCard
+          className="thumb-inline"
+          thumbnailUrl={thumbnailUrl}
+          onThumbnailChange={handleThumbnailClick}
+        />
+        <div className="persona-tab-header-fields">
+          <NameField value={name} onChange={onNameChange} />
+          <AgeField value={age} onChange={onAgeChange} />
+        </div>
+      </div>
+      <div className="settings-section">
+        <GenderField value={gender} onChange={onGenderChange} />
+        <FirstPersonPronounField value={firstPersonPronoun} onChange={onFirstPersonPronounChange} />
+        <ProfileField value={profile} onChange={onProfileChange} />
+        <PersonalityField value={personality} onChange={onPersonalityChange} />
+      </div>
     </div>
   );
 }
