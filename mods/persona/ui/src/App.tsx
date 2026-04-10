@@ -124,7 +124,7 @@ function SettingsContent({ personaId }: { personaId: string }) {
       </div>
 
       {/* Content */}
-      <div className={`settings-content${tab === "persona" ? " settings-content--visible" : ""}`}>
+      <div className="settings-content">
         {tab === "persona" && (
           <PersonaDetailBody
             personaId={personaId}
