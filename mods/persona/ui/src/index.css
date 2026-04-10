@@ -744,5 +744,6 @@ body {
 .thumb-inline {
   width: 80px;
   aspect-ratio: 1 / 1;
-  margin: 0 auto 12px;
+  float: left;
+  margin: 0 12px 12px 0;
 }
