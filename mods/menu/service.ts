@@ -1,6 +1,7 @@
 import {
   Persona,
   Webview,
+  WebviewLayer,
   audio,
   signals,
   isWebviewSourceInfoLocal,
@@ -24,13 +25,18 @@ const existsLinkedWebview = async (personaId: string) => {
 };
 
 function isNonBlockingSource(source: WebviewSourceInfo): boolean {
-  return isWebviewSourceInfoLocal(source) && NON_BLOCKING_SOURCES.has(source.id);
+  return (
+    isWebviewSourceInfoLocal(source) && NON_BLOCKING_SOURCES.has(source.id)
+  );
 }
 
 const openedMenu = async () => {
   const webviews = await Webview.list();
   for (let webview of webviews) {
-    if (isWebviewSourceInfoLocal(webview.source) && webview.source.id === menuUIAssetId) {
+    if (
+      isWebviewSourceInfoLocal(webview.source) &&
+      webview.source.id === menuUIAssetId
+    ) {
       return new Webview(webview.entity);
     }
   }
@@ -72,7 +78,7 @@ async function setupPersonaEvents(p: Persona) {
         source: webviewSource.local("menu:ui"),
         size: [0.8, 1],
         viewportSize: [500, 600],
-        offset: [1, -0.3],
+        transform: { translation: [1.0, 0.8, WebviewLayer.UI] },
         linkedPersona: p.id,
       });
       await audio.se.play("se:open");
