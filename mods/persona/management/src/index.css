@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "@hmcs/ui/dist/index.css";
+@import "@persona/shared/detail-body.css";
 
 body {
   background: transparent;
@@ -290,29 +291,6 @@ body {
   gap: 6px;
 }
 
-.detail-body {
-  flex: 1;
-  display: flex;
-  gap: 20px;
-  padding: 14px 18px;
-  overflow-y: auto;
-  scrollbar-width: none;
-}
-
-.detail-body::-webkit-scrollbar {
-  display: none;
-}
-
-.detail-left {
-  width: 140px;
-  flex-shrink: 0;
-}
-
-.detail-right {
-  flex: 1;
-  min-width: 0;
-}
-
 /* Spawn button (detail header) */
 .detail-spawn-btn {
   font-size: 10px;
@@ -355,41 +333,6 @@ body {
   cursor: not-allowed;
 }
 
-/* Auto-spawn row */
-.detail-auto-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 12px;
-}
-
-.detail-auto-label {
-  font-size: 12px;
-  color: oklch(0.55 0.02 250);
-  letter-spacing: 0.5px;
-}
-
-.detail-auto-sublabel {
-  font-size: 10px;
-  color: oklch(0.45 0.02 250);
-  margin-top: 2px;
-  letter-spacing: 0.3px;
-}
-
-/* Detail field groups */
-.detail-field {
-  margin-bottom: 14px;
-}
-
-.detail-field-label {
-  font-size: 9px;
-  font-weight: 400;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: oklch(0.72 0.14 192 / 0.4);
-  margin-bottom: 6px;
-}
-
 /* Delete section */
 .delete-section {
   flex-shrink: 0;
@@ -415,47 +358,6 @@ body {
 
 .status-dot.inactive {
   background: oklch(0.4 0.02 250);
-}
-
-/* ━━ Mini Toggle ━━ */
-
-.toggle-mini {
-  width: 32px;
-  height: 16px;
-  border-radius: 8px;
-  position: relative;
-  cursor: pointer;
-  transition: all 0.25s ease;
-}
-
-.toggle-mini.on {
-  background: oklch(0.72 0.14 192 / 0.35);
-  border: 1px solid oklch(0.72 0.14 192 / 0.5);
-}
-
-.toggle-mini.off {
-  background: oklch(0.25 0.01 250);
-  border: 1px solid oklch(0.4 0.02 250 / 0.4);
-}
-
-.toggle-mini .knob {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  position: absolute;
-  top: 1px;
-  transition: all 0.25s ease;
-}
-
-.toggle-mini.on .knob {
-  right: 1px;
-  background: oklch(0.72 0.14 192);
-  box-shadow: 0 0 6px oklch(0.72 0.14 192 / 0.4);
-}
-
-.toggle-mini.off .knob {
-  left: 1px;
-  background: oklch(0.45 0.02 250);
 }
 
 /* ━━ Create Form ━━ */
