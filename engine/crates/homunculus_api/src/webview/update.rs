@@ -3,7 +3,9 @@ use crate::prelude::WebviewApi;
 use bevy::prelude::*;
 use bevy_cef::prelude::WebviewSize;
 use bevy_flurx::action::once;
-use homunculus_core::prelude::{TransformArgs, TransformConstraint, WebviewMeshSize, WebviewPatchRequest};
+use homunculus_core::prelude::{
+    TransformArgs, TransformConstraint, WebviewMeshSize, WebviewPatchRequest,
+};
 use homunculus_effects::{Entity, Update};
 
 impl WebviewApi {
@@ -99,10 +101,7 @@ fn patch(
     In((webview, request)): In<(Entity, WebviewPatchRequest)>,
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    webviews: Query<
-        (Entity, Option<&TransformConstraint>),
-        With<bevy_cef::prelude::WebviewSource>,
-    >,
+    webviews: Query<(Entity, Option<&TransformConstraint>), With<bevy_cef::prelude::WebviewSource>>,
 ) -> ApiResult<()> {
     let Ok((_, existing_constraint)) = webviews.get(webview) else {
         return Err(ApiError::WebviewNotFound(webview));

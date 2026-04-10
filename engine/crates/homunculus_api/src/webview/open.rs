@@ -83,7 +83,7 @@ fn create_global_webview(
             .entity(webview)
             .try_insert(LinkedPersona(persona_id.clone()));
         if let Some(persona_entity) = index.get(&persona_id) {
-            commands.entity(webview).set_parent_in_place(persona_entity);
+            commands.entity(webview).insert(ChildOf(persona_entity));
         }
     }
     Ok(webview)

@@ -42,7 +42,12 @@ fn auto_insert_constraints(
 /// recomputed without parent scale (using `parent_rot * local_T` instead of
 /// `parent_scale * parent_rot * local_T`).
 fn apply_transform_constraints(
-    mut children: Query<(&ChildOf, &TransformConstraint, &Transform, &mut GlobalTransform)>,
+    mut children: Query<(
+        &ChildOf,
+        &TransformConstraint,
+        &Transform,
+        &mut GlobalTransform,
+    )>,
     parents: Query<&GlobalTransform, Without<TransformConstraint>>,
 ) {
     for (child_of, constraint, local_transform, mut global) in &mut children {
@@ -250,8 +255,11 @@ mod tests {
         };
         let parent_rot = Quat::from_rotation_y(PI / 3.0);
 
-        let rotation =
-            compute_constrained_rotation(parent_rot, constraint.rotation_follow, constraint.max_tilt_degrees);
+        let rotation = compute_constrained_rotation(
+            parent_rot,
+            constraint.rotation_follow,
+            constraint.max_tilt_degrees,
+        );
         assert_near_identity(rotation, "rotation");
     }
 
@@ -286,8 +294,11 @@ mod tests {
         };
         let parent_rot = Quat::from_rotation_x(60f32.to_radians());
 
-        let rotation =
-            compute_constrained_rotation(parent_rot, constraint.rotation_follow, constraint.max_tilt_degrees);
+        let rotation = compute_constrained_rotation(
+            parent_rot,
+            constraint.rotation_follow,
+            constraint.max_tilt_degrees,
+        );
         let tilt_deg = rotation.angle_between(Quat::IDENTITY).to_degrees();
         assert!(tilt_deg <= 10.5, "expected tilt <= ~10°, got {tilt_deg}°");
     }
