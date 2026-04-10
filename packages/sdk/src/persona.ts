@@ -37,6 +37,8 @@ export interface PersonaSnapshot {
     state: string;
     /** The asset ID of the currently attached VRM, or null. */
     vrmAssetId?: string | null;
+    /** Asset ID for the persona's thumbnail image, or null. */
+    thumbnail?: string | null;
     /** Extension metadata for MODs. */
     metadata: Record<string, unknown>;
     /** Whether this persona currently has a spawned ECS entity. */
@@ -69,6 +71,8 @@ export interface PatchPersona {
     personality?: string;
     /** New VRM asset ID. */
     vrmAssetId?: string | null;
+    /** New thumbnail asset ID. Pass `null` to clear. */
+    thumbnail?: string | null;
     /** Replace all metadata. */
     metadata?: Record<string, unknown>;
 }
@@ -846,19 +850,24 @@ export class Persona {
     /**
      * Returns the URL for this persona's thumbnail image.
      *
-     * Resolution order: custom thumbnail → VRM embedded thumbnail → placeholder.
-     * The URL can be used directly as an `<img>` src attribute.
+     * Constructs a URL pointing to `/assets/file?id={thumbnail}` for the
+     * given asset ID. Returns `null` if no thumbnail is set.
      *
-     * @returns The thumbnail image URL
+     * @param thumbnail - The thumbnail asset ID (from `PersonaSnapshot.thumbnail`)
+     * @returns The thumbnail image URL, or `null` if no thumbnail is set
      *
      * @example
      * ```typescript
-     * const url = p.thumbnailUrl();
-     * // Use in React: <img src={url} alt={name} />
+     * const snap = await p.snapshot();
+     * const url = p.thumbnailUrl(snap.thumbnail);
+     * if (url) {
+     *   // Use in React: <img src={url} alt={snap.name} />
+     * }
      * ```
      */
-    thumbnailUrl(): string {
-        return host.createUrl(`personas/${encodeURIComponent(this.id)}/thumbnail`).toString();
+    thumbnailUrl(thumbnail?: string | null): string | null {
+        if (!thumbnail) return null;
+        return host.createUrl("assets/file", { id: thumbnail }).toString();
     }
 
     /**
