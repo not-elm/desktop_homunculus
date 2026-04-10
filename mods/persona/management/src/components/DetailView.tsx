@@ -12,6 +12,7 @@ import {
   PersonaFields,
   type PersonaFormValues,
 } from "@persona/shared/components/PersonaFields";
+import { ThumbnailCard } from "@persona/shared/components/ThumbnailCard";
 import VrmSelect from "./VrmSelect";
 import { usePersonaDetail } from "../hooks/usePersonaDetail";
 import { useThumbnailImport } from "@persona/shared/hooks/useThumbnailImport";
@@ -176,16 +177,7 @@ function LeftColumn({
 }) {
   return (
     <div className="detail-left">
-      <div className="detail-thumb" onClick={onThumbnailChange}>
-        {thumbnailUrl ? (
-          <img src={thumbnailUrl} alt="Thumbnail" />
-        ) : (
-          <div className="detail-thumb-placeholder" />
-        )}
-        <div className="change-overlay">
-          <span>Change Image...</span>
-        </div>
-      </div>
+      <ThumbnailCard thumbnailUrl={thumbnailUrl} onThumbnailChange={onThumbnailChange} />
 
       <VrmSelect personaId={personaId} value={vrmAssetId} onChange={onVrmChange} />
 
