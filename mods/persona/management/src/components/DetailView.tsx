@@ -14,6 +14,7 @@ import {
 } from "@persona/shared/components/PersonaFields";
 import VrmSelect from "./VrmSelect";
 import { usePersonaDetail } from "../hooks/usePersonaDetail";
+import { useThumbnailImport } from "../hooks/useThumbnailImport";
 
 interface DetailViewProps {
   personaId: string;
@@ -33,6 +34,8 @@ export default function DetailView({
     snapshot,
     formValues,
     vrmAssetId,
+    thumbnail,
+    setThumbnail,
     saving,
     saved,
     setFormValues,
@@ -43,6 +46,7 @@ export default function DetailView({
   } = usePersonaDetail(personaId, callbacks);
 
   const persona = useMemo(() => new Persona(personaId), [personaId]);
+  const { importThumbnail } = useThumbnailImport();
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   if (!snapshot || !formValues) {
@@ -54,6 +58,13 @@ export default function DetailView({
   }
 
   const autoSpawn = snapshot.metadata?.["auto-spawn"] === true;
+
+  async function handleThumbnailChange() {
+    const assetId = await importThumbnail(personaId);
+    if (assetId) {
+      setThumbnail(assetId);
+    }
+  }
 
   async function handleDelete() {
     try {
@@ -78,11 +89,12 @@ export default function DetailView({
       <div className="detail-body">
         <LeftColumn
           personaId={personaId}
-          thumbnailUrl={persona.thumbnailUrl()}
+          thumbnailUrl={persona.thumbnailUrl(thumbnail)}
           vrmAssetId={vrmAssetId}
           onVrmChange={setVrmAssetId}
           autoSpawn={autoSpawn}
           onAutoSpawnToggle={toggleAutoSpawn}
+          onThumbnailChange={handleThumbnailChange}
         />
         <RightColumn
           personaId={personaId}
@@ -152,18 +164,24 @@ function LeftColumn({
   onVrmChange,
   autoSpawn,
   onAutoSpawnToggle,
+  onThumbnailChange,
 }: {
   personaId: string;
-  thumbnailUrl: string;
+  thumbnailUrl: string | null;
   vrmAssetId: string | null;
   onVrmChange: (assetId: string | null) => void;
   autoSpawn: boolean;
   onAutoSpawnToggle: () => void;
+  onThumbnailChange: () => void;
 }) {
   return (
     <div className="detail-left">
-      <div className="detail-thumb">
-        <img src={thumbnailUrl} alt="Thumbnail" />
+      <div className="detail-thumb" onClick={onThumbnailChange}>
+        {thumbnailUrl ? (
+          <img src={thumbnailUrl} alt="Thumbnail" />
+        ) : (
+          <div className="detail-thumb-placeholder" />
+        )}
         <div className="change-overlay">
           <span>Change Image...</span>
         </div>
