@@ -739,3 +739,10 @@ body {
     transition-duration: 0ms;
   }
 }
+
+/* Inline thumbnail for PersonaTab */
+.thumb-inline {
+  width: 80px;
+  aspect-ratio: 1 / 1;
+  margin: 0 auto 12px;
+}

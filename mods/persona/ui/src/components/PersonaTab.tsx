@@ -71,7 +71,11 @@ export function PersonaTab({
 
   return (
     <div>
-      <ThumbnailCard thumbnailUrl={thumbnailUrl} onThumbnailChange={handleThumbnailClick} />
+      <ThumbnailCard
+        className="thumb-inline"
+        thumbnailUrl={thumbnailUrl}
+        onThumbnailChange={handleThumbnailClick}
+      />
       <PersonaFields values={values} onChange={handleChange} />
     </div>
   );

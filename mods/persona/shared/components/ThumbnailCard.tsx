@@ -3,11 +3,12 @@ import "../thumbnail.css";
 interface ThumbnailCardProps {
   thumbnailUrl: string | null;
   onThumbnailChange: () => void;
+  className?: string;
 }
 
-export function ThumbnailCard({ thumbnailUrl, onThumbnailChange }: ThumbnailCardProps) {
+export function ThumbnailCard({ thumbnailUrl, onThumbnailChange, className }: ThumbnailCardProps) {
   return (
-    <div className="detail-thumb" onClick={onThumbnailChange}>
+    <div className={`detail-thumb${className ? ` ${className}` : ""}`} onClick={onThumbnailChange}>
       {thumbnailUrl ? (
         <img src={thumbnailUrl} alt="Thumbnail" />
       ) : (
