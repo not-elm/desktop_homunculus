@@ -8,12 +8,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@hmcs/ui";
-import {
-  PersonaFields,
-  type PersonaFormValues,
-} from "@persona/shared/components/PersonaFields";
-import { ThumbnailCard } from "@persona/shared/components/ThumbnailCard";
-import VrmSelect from "@persona/shared/components/VrmSelect";
+import { PersonaDetailBody } from "@persona/shared/components/PersonaDetailBody";
 import { usePersonaDetail } from "@persona/shared/hooks/usePersonaDetail";
 import { useThumbnailImport } from "@persona/shared/hooks/useThumbnailImport";
 
@@ -90,22 +85,17 @@ export default function DetailView({
         saved={saved}
       />
 
-      <div className="detail-body">
-        <LeftColumn
-          personaId={personaId}
-          thumbnailUrl={persona.thumbnailUrl(thumbnail)}
-          vrmAssetId={vrmAssetId}
-          onVrmChange={setVrmAssetId}
-          autoSpawn={autoSpawn}
-          onAutoSpawnToggle={toggleAutoSpawn}
-          onThumbnailChange={handleThumbnailChange}
-        />
-        <RightColumn
-          personaId={personaId}
-          formValues={formValues}
-          onFormChange={setFormValues}
-        />
-      </div>
+      <PersonaDetailBody
+        personaId={personaId}
+        thumbnailUrl={persona.thumbnailUrl(thumbnail)}
+        onThumbnailChange={handleThumbnailChange}
+        vrmAssetId={vrmAssetId}
+        onVrmChange={setVrmAssetId}
+        autoSpawn={autoSpawn}
+        onAutoSpawnToggle={toggleAutoSpawn}
+        formValues={formValues}
+        onFormChange={setFormValues}
+      />
 
       <DeleteSection onDelete={() => setDeleteOpen(true)} />
 
@@ -157,81 +147,6 @@ function DetailHeader({
           {saving ? "Saving..." : saved ? "Saved!" : "Save"}
         </button>
       </div>
-    </div>
-  );
-}
-
-function LeftColumn({
-  personaId,
-  thumbnailUrl,
-  vrmAssetId,
-  onVrmChange,
-  autoSpawn,
-  onAutoSpawnToggle,
-  onThumbnailChange,
-}: {
-  personaId: string;
-  thumbnailUrl: string | null;
-  vrmAssetId: string | null;
-  onVrmChange: (assetId: string | null) => void;
-  autoSpawn: boolean;
-  onAutoSpawnToggle: () => void;
-  onThumbnailChange: () => void;
-}) {
-  return (
-    <div className="detail-left">
-      <ThumbnailCard
-        thumbnailUrl={thumbnailUrl}
-        onThumbnailChange={onThumbnailChange}
-      />
-
-      <VrmSelect
-        personaId={personaId}
-        value={vrmAssetId}
-        onChange={onVrmChange}
-      />
-
-      <div className="detail-auto-row">
-        <div>
-          <div className="detail-auto-label">Auto Spawn</div>
-          <div className="detail-auto-sublabel">Launch at startup</div>
-        </div>
-        <button
-          className={`toggle-mini ${autoSpawn ? "on" : "off"}`}
-          onClick={onAutoSpawnToggle}
-          aria-label="Toggle auto spawn"
-          role="switch"
-          aria-checked={autoSpawn}
-        >
-          <span className="knob" />
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function RightColumn({
-  personaId,
-  formValues,
-  onFormChange,
-}: {
-  personaId: string;
-  formValues: PersonaFormValues;
-  onFormChange: (values: PersonaFormValues) => void;
-}) {
-  return (
-    <div className="detail-right">
-      <div className="detail-field">
-        <div className="detail-field-label">ID</div>
-        <input
-          type="text"
-          className="settings-input"
-          value={personaId}
-          readOnly
-          style={{ opacity: 0.5, cursor: "not-allowed", width: "100%" }}
-        />
-      </div>
-      <PersonaFields values={formValues} onChange={onFormChange} />
     </div>
   );
 }
