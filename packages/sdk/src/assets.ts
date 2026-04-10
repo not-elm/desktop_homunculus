@@ -110,4 +110,34 @@ export namespace assets {
         const response = await host.post(host.createUrl("assets/import"), params);
         return await response.json() as ImportAssetResult;
     }
+
+    /**
+     * Fetches the raw file content of an asset by ID.
+     *
+     * The returned `Blob` carries both the byte payload and the MIME type
+     * (inferred server-side from the file extension). Unknown extensions
+     * fall back to `application/octet-stream`.
+     *
+     * @param id - Asset ID (e.g. `"@hmcs/elmer:thumbnail"`)
+     * @returns A Blob containing the asset bytes. `blob.type` holds the MIME type.
+     * @throws {HomunculusApiError} 400 if the id is missing, 404 if the asset
+     *         or underlying file is missing, 500 on IO error.
+     *
+     * @example
+     * ```typescript
+     * const blob = await assets.getFile("@hmcs/elmer:thumbnail");
+     * console.log(blob.type);  // "image/png"
+     * console.log(blob.size);  // e.g. 12345
+     *
+     * // Read as bytes
+     * const bytes = new Uint8Array(await blob.arrayBuffer());
+     *
+     * // Or use directly as an <img src> in a browser/CEF context
+     * const url = URL.createObjectURL(blob);
+     * ```
+     */
+    export async function getFile(id: string): Promise<Blob> {
+        const response = await host.get(host.createUrl("assets/file", {id}));
+        return await response.blob();
+    }
 }
