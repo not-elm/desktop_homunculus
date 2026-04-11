@@ -68,12 +68,33 @@ impl ProcessesApi {
             .await?
     }
 
-    /// Stop a managed process by handle ID. Blocks until the process exits.
+    /// Stop a managed process by handle ID.
+    ///
+    /// The shutdown is fully non-blocking for the Bevy main thread:
+    /// entity lookup and despawn happen in a one-shot system, then the
+    /// actual SIGTERM → grace → SIGKILL sequence runs in a tokio blocking task.
     pub async fn stop(&self, handle_id: String) -> ApiResult<()> {
         self.0
             .schedule(move |task| async move {
-                task.will(Update, once::run(stop_process).with(handle_id))
-                    .await
+                // Step 1: Take NodeProcessHandle ownership and despawn entity.
+                let mut handle = task
+                    .will(Update, once::run(take_and_despawn).with(handle_id))
+                    .await?;
+
+                // Step 2: Async shutdown in tokio (does NOT block Bevy).
+                task.will(
+                    Update,
+                    side_effect::tokio::spawn(async move {
+                        tokio::task::spawn_blocking(move || {
+                            handle.shutdown(Duration::from_secs(2));
+                        })
+                        .await
+                        .ok();
+                    }),
+                )
+                .await;
+
+                Ok(())
             })
             .await?
     }
@@ -113,21 +134,26 @@ fn start_process(
     })
 }
 
-fn stop_process(
+/// Takes [`NodeProcessHandle`] ownership from the entity and despawns it.
+///
+/// This is an exclusive system (`&mut World`) because `entity_mut().take::<T>()`
+/// requires immediate component removal (not deferred via `Commands`).
+fn take_and_despawn(
     In(handle_id): In<String>,
-    mut commands: Commands,
-    mut query: Query<(Entity, &ManagedProcess, &mut NodeProcessHandle)>,
-) -> ApiResult<()> {
-    let (entity, _, mut handle) = query
-        .iter_mut()
-        .find(|(_, m, _)| m.handle_id == handle_id)
+    world: &mut World,
+) -> ApiResult<NodeProcessHandle> {
+    let entity = world
+        .query::<(Entity, &ManagedProcess)>()
+        .iter(world)
+        .find(|(_, m)| m.handle_id == handle_id)
+        .map(|(e, _)| e)
         .ok_or(ApiError::EntityNotFound)?;
-
-    // Synchronous shutdown: SIGTERM → grace → SIGKILL.
-    // Blocks the Bevy main thread briefly (up to ~2s grace).
-    handle.shutdown(Duration::from_secs(2));
-    commands.entity(entity).despawn();
-    Ok(())
+    let handle = world
+        .entity_mut(entity)
+        .take::<NodeProcessHandle>()
+        .ok_or(ApiError::EntityNotFound)?;
+    world.despawn(entity);
+    Ok(handle)
 }
 
 fn list_processes(query: Query<&ManagedProcess>) -> Vec<ProcessInfo> {
