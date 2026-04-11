@@ -281,22 +281,29 @@ export class CodexAppServerRuntime implements AgentRuntime {
   }
 
   /**
-   * Auto-approve a command execution and emit a tool_use event for visibility.
+   * Auto-approve a request and emit an appropriate event for visibility.
+   *
+   * Handles two request types:
+   * - Command execution: emits a `tool_use` event and responds with `{ decision: 'accept' }`
+   * - MCP tool call: responds with `{ action: 'accept' }` (no UI event needed)
    */
   private async *autoApproveRequest(
     id: RequestId,
-    _method: string,
+    method: string,
     params: unknown,
     pendingRequests: Map<string, string>,
   ): AsyncGenerator<AgentEvent, void, AgentResponse | undefined> {
-    const cmdParams = params as CommandExecutionRequestApprovalParams;
-    yield {
-      type: 'tool_use',
-      tool: 'bash',
-      summary: `[auto] $ ${cmdParams.command ?? ''}`,
-    };
-
-    this.process.sendResponse(id, { decision: 'accept' });
+    if (method === 'mcpServer/elicitation/request') {
+      this.process.sendResponse(id, { action: 'accept', content: null, _meta: null });
+    } else {
+      const cmdParams = params as CommandExecutionRequestApprovalParams;
+      yield {
+        type: 'tool_use',
+        tool: 'bash',
+        summary: `[auto] $ ${cmdParams.command ?? ''}`,
+      };
+      this.process.sendResponse(id, { decision: 'accept' });
+    }
     pendingRequests.delete(String(id));
   }
 
@@ -623,12 +630,21 @@ export class CodexAppServerRuntime implements AgentRuntime {
   /**
    * Check whether a command execution request should be auto-approved.
    *
-   * Only applies to `item/commandExecution/requestApproval` requests.
-   * Tests the command against {@link AgentSettings.commandAutoApprovePatterns}.
+   * Checks command execution requests against auto-approve patterns and
+   * MCP tool calls against trusted MCP server names.
    */
   private shouldAutoApprove(method: string, params: unknown): boolean {
-    if (method !== 'item/commandExecution/requestApproval') return false;
+    if (method === 'item/commandExecution/requestApproval') {
+      return this.shouldAutoApproveCommand(params);
+    }
+    if (method === 'mcpServer/elicitation/request') {
+      return this.shouldAutoApproveMcpTool(params);
+    }
+    return false;
+  }
 
+  /** Auto-approve shell commands matching {@link AgentSettings.commandAutoApprovePatterns}. */
+  private shouldAutoApproveCommand(params: unknown): boolean {
     const cmdParams = params as CommandExecutionRequestApprovalParams;
     const command = cmdParams.command ?? '';
     return this.settings.commandAutoApprovePatterns.some((pattern) => {
@@ -638,6 +654,14 @@ export class CodexAppServerRuntime implements AgentRuntime {
         return false;
       }
     });
+  }
+
+  /** Auto-approve MCP tool calls from the trusted `homunculus` MCP server. */
+  private shouldAutoApproveMcpTool(params: unknown): boolean {
+    const elicitation = params as McpServerElicitationRequestParams;
+    const meta = elicitation._meta as Record<string, unknown> | null;
+    if (meta?.codex_approval_kind !== 'mcp_tool_call') return false;
+    return elicitation.serverName === 'homunculus';
   }
 
   /** Handle abort signal: cancel pending turn then interrupt. */
