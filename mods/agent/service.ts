@@ -334,7 +334,7 @@ function createRuntime(
     case 'codex':
       return new CodexAppServerRuntime(prompt, settings, workDir, getAppServerProcess());
     case 'sdk':
-      return new ClaudeAgentRuntime(prompt, settings, apiKey!, workDir);
+      return new ClaudeAgentRuntime(prompt, settings, apiKey as string, workDir);
     default:
       throw new Error(`Runtime "${settings.runtime}" is not yet implemented.`);
   }
@@ -655,7 +655,7 @@ async function resolvePermission(
   const onAbort = () => deferred.reject(signal.reason);
   signal.addEventListener('abort', onAbort, { once: true });
 
-  const resolvedKey = resolvePttKeycodes(settings.pttKey!);
+  const resolvedKey = resolvePttKeycodes(settings.pttKey as NonNullable<typeof settings.pttKey>);
   if (resolvedKey) {
     runVoiceApproval(personaId, resolvedKey, settings, combined, deferred);
   }

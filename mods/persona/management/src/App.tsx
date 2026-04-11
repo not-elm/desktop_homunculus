@@ -101,7 +101,7 @@ export default function App() {
           ) : (
             <div className="main-empty">
               <div className="main-empty-text">No personas yet</div>
-              <button className="management-btn" onClick={mgmt.enterCreateMode}>
+              <button type="button" className="management-btn" onClick={mgmt.enterCreateMode}>
                 + Create
               </button>
             </div>
@@ -135,10 +135,18 @@ function DiscardDialog({
           <DialogDescription>You have unsaved changes. Discard?</DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <button className="management-btn management-btn--secondary" onClick={onCancel}>
+          <button
+            type="button"
+            className="management-btn management-btn--secondary"
+            onClick={onCancel}
+          >
             Cancel
           </button>
-          <button className="management-btn management-btn--danger" onClick={onConfirm}>
+          <button
+            type="button"
+            className="management-btn management-btn--danger"
+            onClick={onConfirm}
+          >
             Discard
           </button>
         </DialogFooter>

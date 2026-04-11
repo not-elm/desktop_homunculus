@@ -39,7 +39,7 @@ export function PhraseListField({
       <div className="agent-phrase-badges">
         {phrases.map((phrase, i) => (
           <PhraseBadge
-            key={i}
+            key={phrase}
             phrase={phrase}
             variant={badgeVariant}
             onRemove={() => onRemove(i)}

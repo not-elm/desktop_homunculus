@@ -21,7 +21,7 @@ export default function Sidebar({ personas, selectedId, onSelect, onCreateClick 
           />
         ))}
       </div>
-      <button className="sidebar-create" onClick={onCreateClick}>
+      <button type="button" className="sidebar-create" onClick={onCreateClick}>
         + Create
       </button>
     </div>
@@ -41,6 +41,7 @@ function SidebarItem({
 
   return (
     <button
+      type="button"
       className={`sidebar-item ${selected ? 'sidebar-item--selected' : ''}`}
       onClick={onSelect}
     >

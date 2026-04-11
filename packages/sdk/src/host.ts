@@ -296,7 +296,7 @@ export namespace host {
         buffer += value;
         const lines = buffer.split('\n');
         // Keep the last (possibly incomplete) chunk in the buffer
-        buffer = lines.pop()!;
+        buffer = lines.pop() ?? '';
         for (const line of lines) {
           const trimmed = line.trim();
           if (trimmed.length === 0) continue;
