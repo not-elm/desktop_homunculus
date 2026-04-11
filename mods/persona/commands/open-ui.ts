@@ -12,8 +12,8 @@ try {
   );
   await Webview.open({
     source: webviewSource.local("persona:ui"),
-    size: [1, 0.85],
-    viewportSize: [1000, 700],
+    size: [1, 0.92],
+    viewportSize: [1000, 760],
     transform: { translation: [1.4, 0.8, WebviewLayer.UI] },
     linkedPersona: personaId,
   });

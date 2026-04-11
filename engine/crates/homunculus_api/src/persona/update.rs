@@ -30,6 +30,9 @@ pub struct PatchPersona {
     pub personality: Option<String>,
     #[serde(default)]
     pub vrm_asset_id: Option<String>,
+    #[serde(default, with = "nullable", skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "openapi", schema(value_type = Option<String>))]
+    pub thumbnail: Option<Option<String>>,
     #[serde(default)]
     #[cfg_attr(feature = "openapi", schema(value_type = Option<std::collections::HashMap<String, Object>>))]
     pub metadata: Option<HashMap<String, serde_json::Value>>,
@@ -169,6 +172,40 @@ impl PersonaApi {
         )
         .await
     }
+
+    /// Gets the thumbnail asset ID of a persona.
+    pub async fn get_thumbnail(&self, persona_id: PersonaId) -> ApiResult<Option<String>> {
+        let snap = self.get(persona_id).await?;
+        Ok(snap.persona.thumbnail)
+    }
+
+    /// Updates the thumbnail asset ID of a persona.
+    pub async fn set_thumbnail(
+        &self,
+        persona_id: PersonaId,
+        asset_id: String,
+    ) -> ApiResult<PersonaSnapshot> {
+        self.patch(
+            persona_id,
+            PatchPersona {
+                thumbnail: Some(Some(asset_id)),
+                ..Default::default()
+            },
+        )
+        .await
+    }
+
+    /// Clears the thumbnail of a persona.
+    pub async fn clear_thumbnail(&self, persona_id: PersonaId) -> ApiResult<PersonaSnapshot> {
+        self.patch(
+            persona_id,
+            PatchPersona {
+                thumbnail: Some(None),
+                ..Default::default()
+            },
+        )
+        .await
+    }
 }
 
 fn patch_persona(
@@ -245,6 +282,11 @@ fn apply_patch_mut(persona: &mut Mut<'_, Persona>, patch: &PatchPersona) {
     if let Some(vrm_asset_id) = &patch.vrm_asset_id {
         persona.vrm_asset_id = Some(vrm_asset_id.clone());
     }
+    match &patch.thumbnail {
+        Some(Some(thumbnail)) => persona.thumbnail = Some(thumbnail.clone()),
+        Some(None) => persona.thumbnail = None,
+        None => {}
+    }
     if let Some(metadata) = &patch.metadata {
         persona.metadata = metadata.clone();
     }
@@ -274,6 +316,11 @@ fn apply_patch_owned(persona: &mut Persona, patch: &PatchPersona) {
     }
     if let Some(vrm_asset_id) = &patch.vrm_asset_id {
         persona.vrm_asset_id = Some(vrm_asset_id.clone());
+    }
+    match &patch.thumbnail {
+        Some(Some(thumbnail)) => persona.thumbnail = Some(thumbnail.clone()),
+        Some(None) => persona.thumbnail = None,
+        None => {}
     }
     if let Some(metadata) = &patch.metadata {
         persona.metadata = metadata.clone();

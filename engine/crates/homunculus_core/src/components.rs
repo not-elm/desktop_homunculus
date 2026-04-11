@@ -148,6 +148,8 @@ pub struct Persona {
     pub personality: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub vrm_asset_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub thumbnail: Option<String>,
     #[serde(default, skip_serializing_if = "HashMap::is_empty")]
     #[cfg_attr(feature = "openapi", schema(value_type = std::collections::HashMap<String, Object>))]
     pub metadata: HashMap<String, serde_json::Value>,
