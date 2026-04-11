@@ -52,6 +52,7 @@ export * from './math';
 export * from './mods';
 export * from './persona';
 export * from './preferences';
+export * from './processes';
 export * from './settings';
 export * from './shadowPanel';
 export * from './signals';
