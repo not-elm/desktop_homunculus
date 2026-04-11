@@ -37,6 +37,7 @@ export * from './components/ui/separator';
 export * from './components/ui/settings-card';
 export * from './components/ui/slider';
 export * from './components/ui/textarea';
+export * from './components/ui/toolbar';
 export * from './components/ui/tooltip';
 export { useClickOutside } from './hooks/use-click-outside';
 import './index.css';
