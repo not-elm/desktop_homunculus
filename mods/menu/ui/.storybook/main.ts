@@ -1,14 +1,14 @@
-import type { StorybookConfig } from "@storybook/react-vite";
-import tailwindcss from "@tailwindcss/vite";
-import { resolve, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import type { StorybookConfig } from '@storybook/react-vite';
+import tailwindcss from '@tailwindcss/vite';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const config: StorybookConfig = {
-  stories: ["../src/**/*.stories.@(ts|tsx)"],
+  stories: ['../src/**/*.stories.@(ts|tsx)'],
   addons: [],
-  framework: "@storybook/react-vite",
+  framework: '@storybook/react-vite',
   typescript: {
     reactDocgen: false,
   },
@@ -25,11 +25,17 @@ const config: StorybookConfig = {
         }));
     config.resolve.alias = [
       ...existingAlias,
-      { find: "@hmcs/sdk", replacement: resolve(__dirname, "../src/__mocks__/homunculus-api.ts") },
-      { find: "@hmcs/ui/storybook", replacement: resolve(__dirname, "../../../../packages/ui/src/storybook/preview.ts") },
-      { find: "@hmcs/ui/dist/index.css", replacement: resolve(__dirname, "../../../../packages/ui/dist/index.css") },
-      { find: /^@hmcs\/ui$/, replacement: resolve(__dirname, "./hmcs-ui-shim.ts") },
-      { find: "@", replacement: resolve(__dirname, "../../../../packages/ui/src") },
+      { find: '@hmcs/sdk', replacement: resolve(__dirname, '../src/__mocks__/homunculus-api.ts') },
+      {
+        find: '@hmcs/ui/storybook',
+        replacement: resolve(__dirname, '../../../../packages/ui/src/storybook/preview.ts'),
+      },
+      {
+        find: '@hmcs/ui/dist/index.css',
+        replacement: resolve(__dirname, '../../../../packages/ui/dist/index.css'),
+      },
+      { find: /^@hmcs\/ui$/, replacement: resolve(__dirname, './hmcs-ui-shim.ts') },
+      { find: '@', replacement: resolve(__dirname, '../../../../packages/ui/src') },
     ];
 
     config.plugins ??= [];
@@ -38,9 +44,9 @@ const config: StorybookConfig = {
     config.optimizeDeps ??= {};
     config.optimizeDeps.include = [
       ...(config.optimizeDeps.include ?? []),
-      "react",
-      "react-dom",
-      "react/jsx-runtime",
+      'react',
+      'react-dom',
+      'react/jsx-runtime',
     ];
 
     return config;

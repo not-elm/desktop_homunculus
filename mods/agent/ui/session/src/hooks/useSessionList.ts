@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { rpc } from "@hmcs/sdk/rpc";
+import { rpc } from '@hmcs/sdk/rpc';
+import { useEffect, useState } from 'react';
 
 export interface SessionMeta {
   uuid: string;
@@ -24,11 +24,11 @@ export function useSessionList(
     let cancelled = false;
     (async () => {
       try {
-        const result = await rpc.call({
-          modName: "@hmcs/agent",
-          method: "list-sessions",
+        const result = (await rpc.call({
+          modName: '@hmcs/agent',
+          method: 'list-sessions',
           body: { workspacePath, personaId, branchName },
-        }) as { sessions?: SessionMeta[] };
+        })) as { sessions?: SessionMeta[] };
         if (!cancelled && result.sessions) {
           setSessions(result.sessions);
         }
@@ -37,7 +37,9 @@ export function useSessionList(
       }
       if (!cancelled) setLoading(false);
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [workspacePath, personaId, branchName]);
 
   return { sessions, loading };

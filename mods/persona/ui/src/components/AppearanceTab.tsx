@@ -3,10 +3,7 @@ interface AppearanceTabProps {
   onScaleChange: (scale: number) => void;
 }
 
-export function AppearanceTab({
-  scale,
-  onScaleChange,
-}: AppearanceTabProps) {
+export function AppearanceTab({ scale, onScaleChange }: AppearanceTabProps) {
   return (
     <div className="settings-section">
       <label className="settings-label">

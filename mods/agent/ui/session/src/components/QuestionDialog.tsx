@@ -1,4 +1,4 @@
-import type { PendingQuestion } from "../hooks/useAgentSession";
+import type { PendingQuestion } from '../hooks/useAgentSession';
 
 interface AskUserQuestion {
   question: string;
@@ -59,24 +59,22 @@ function parseQuestions(raw: unknown): AskUserQuestion[] {
   if (Array.isArray(raw)) {
     return raw.map(normalizeQuestion);
   }
-  if (typeof raw === "string") {
+  if (typeof raw === 'string') {
     return [{ question: raw, options: [] }];
   }
-  if (raw && typeof raw === "object") {
+  if (raw && typeof raw === 'object') {
     return [normalizeQuestion(raw)];
   }
   return [];
 }
 
 function normalizeQuestion(item: unknown): AskUserQuestion {
-  if (typeof item === "string") {
+  if (typeof item === 'string') {
     return { question: item, options: [] };
   }
   const obj = item as Record<string, unknown>;
   return {
-    question: typeof obj["question"] === "string" ? obj["question"] : String(obj),
-    options: Array.isArray(obj["options"])
-      ? obj["options"].map(String)
-      : [],
+    question: typeof obj.question === 'string' ? obj.question : String(obj),
+    options: Array.isArray(obj.options) ? obj.options.map(String) : [],
   };
 }

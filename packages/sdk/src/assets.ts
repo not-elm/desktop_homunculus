@@ -1,4 +1,4 @@
-import { host } from "./host";
+import { host } from './host';
 
 /**
  * Assets API namespace for querying available mod assets.
@@ -21,7 +21,7 @@ import { host } from "./host";
  */
 export namespace assets {
   /** The type of an asset. */
-  export type AssetType = "vrm" | "vrma" | "sound" | "image" | "html";
+  export type AssetType = 'vrm' | 'vrma' | 'sound' | 'image' | 'html';
 
   /** Information about a registered asset. */
   export interface AssetInfo {
@@ -65,7 +65,7 @@ export namespace assets {
    * ```
    */
   export async function list(filter?: AssetFilter): Promise<AssetInfo[]> {
-    const response = await host.get(host.createUrl("assets", filter));
+    const response = await host.get(host.createUrl('assets', filter));
     return (await response.json()) as AssetInfo[];
   }
 
@@ -106,10 +106,8 @@ export namespace assets {
    * console.log("Imported:", result.assetId);
    * ```
    */
-  export async function importAsset(
-    params: ImportAssetParams,
-  ): Promise<ImportAssetResult> {
-    const response = await host.post(host.createUrl("assets/import"), params);
+  export async function importAsset(params: ImportAssetParams): Promise<ImportAssetResult> {
+    const response = await host.post(host.createUrl('assets/import'), params);
     return (await response.json()) as ImportAssetResult;
   }
 
@@ -139,7 +137,7 @@ export namespace assets {
    * ```
    */
   export async function fetchFile(id: string): Promise<Blob> {
-    const response = await host.get(host.createUrl("assets/file", { id }));
+    const response = await host.get(host.createUrl('assets/file', { id }));
     return await response.blob();
   }
 }

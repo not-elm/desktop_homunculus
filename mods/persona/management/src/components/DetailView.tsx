@@ -1,16 +1,16 @@
-import { useState, useMemo } from "react";
-import { Persona } from "@hmcs/sdk";
+import { Persona } from '@hmcs/sdk';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogDescription,
   DialogFooter,
-} from "@hmcs/ui";
-import { PersonaDetailBody } from "@persona/shared/components/PersonaDetailBody";
-import { usePersonaDetail } from "@persona/shared/hooks/usePersonaDetail";
-import { useThumbnailImport } from "@persona/shared/hooks/useThumbnailImport";
+  DialogHeader,
+  DialogTitle,
+} from '@hmcs/ui';
+import { PersonaDetailBody } from '@persona/shared/components/PersonaDetailBody';
+import { usePersonaDetail } from '@persona/shared/hooks/usePersonaDetail';
+import { useThumbnailImport } from '@persona/shared/hooks/useThumbnailImport';
+import { useMemo, useState } from 'react';
 
 interface DetailViewProps {
   personaId: string;
@@ -25,10 +25,7 @@ export default function DetailView({
   onSaved,
   onDelete,
 }: DetailViewProps) {
-  const callbacks = useMemo(
-    () => ({ onDirtyChange, onSaved }),
-    [onDirtyChange, onSaved],
-  );
+  const callbacks = useMemo(() => ({ onDirtyChange, onSaved }), [onDirtyChange, onSaved]);
   const {
     snapshot,
     formValues,
@@ -56,7 +53,7 @@ export default function DetailView({
     );
   }
 
-  const autoSpawn = snapshot.metadata?.["auto-spawn"] === true;
+  const autoSpawn = snapshot.metadata?.['auto-spawn'] === true;
 
   async function handleThumbnailChange() {
     const assetId = await importThumbnail(personaId);
@@ -69,14 +66,14 @@ export default function DetailView({
     try {
       await onDelete();
     } catch (e) {
-      console.error("Failed to delete persona:", e);
+      console.error('Failed to delete persona:', e);
     }
   }
 
   return (
     <div className="detail-view">
       <DetailHeader
-        name={snapshot.name ?? ""}
+        name={snapshot.name ?? ''}
         personaId={personaId}
         isSpawned={snapshot.spawned}
         onSpawnToggle={toggleSpawn}
@@ -133,18 +130,18 @@ function DetailHeader({
       </div>
       <div className="detail-header-actions">
         <button
-          className={`detail-spawn-btn ${isSpawned ? "deactivate" : "activate"}`}
+          className={`detail-spawn-btn ${isSpawned ? 'deactivate' : 'activate'}`}
           onClick={onSpawnToggle}
           disabled={saving}
         >
-          {isSpawned ? "Despawn" : "Spawn"}
+          {isSpawned ? 'Despawn' : 'Spawn'}
         </button>
         <button
           className="management-btn management-btn--success"
           onClick={onSave}
           disabled={saving}
         >
-          {saving ? "Saving..." : saved ? "Saved!" : "Save"}
+          {saving ? 'Saving...' : saved ? 'Saved!' : 'Save'}
         </button>
       </div>
     </div>
@@ -154,10 +151,7 @@ function DetailHeader({
 function DeleteSection({ onDelete }: { onDelete: () => void }) {
   return (
     <div className="delete-section">
-      <button
-        className="management-btn management-btn--danger"
-        onClick={onDelete}
-      >
+      <button className="management-btn management-btn--danger" onClick={onDelete}>
         Delete Persona
       </button>
     </div>
@@ -178,9 +172,7 @@ function DeleteConfirmDialog({
       <DialogContent showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>Delete Persona</DialogTitle>
-          <DialogDescription>
-            This action cannot be undone. Are you sure?
-          </DialogDescription>
+          <DialogDescription>This action cannot be undone. Are you sure?</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <button
@@ -189,10 +181,7 @@ function DeleteConfirmDialog({
           >
             Cancel
           </button>
-          <button
-            className="management-btn management-btn--danger"
-            onClick={onConfirm}
-          >
+          <button className="management-btn management-btn--danger" onClick={onConfirm}>
             Delete
           </button>
         </DialogFooter>

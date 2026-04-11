@@ -31,9 +31,9 @@
  * @packageDocumentation
  */
 
-import { writeFileSync } from "node:fs";
-import { z, type ZodType } from "zod";
-import { Persona } from "./persona";
+import { writeFileSync } from 'node:fs';
+import { type ZodType, z } from 'zod';
+import { Persona } from './persona';
 
 /**
  * Safely serialize a value to JSON. Returns a fallback error JSON string
@@ -67,11 +67,11 @@ function safeStringify(data: unknown): string {
  * ```
  */
 export class StdinParseError extends Error {
-  override readonly name = "StdinParseError";
+  override readonly name = 'StdinParseError';
 
   constructor(
     /** Structured error code identifying the failure stage. */
-    public readonly code: "EMPTY_STDIN" | "INVALID_JSON" | "VALIDATION_ERROR",
+    public readonly code: 'EMPTY_STDIN' | 'INVALID_JSON' | 'VALIDATION_ERROR',
     message: string,
     /** For `VALIDATION_ERROR`, contains the `ZodError` instance. */
     public readonly details?: unknown,
@@ -114,7 +114,7 @@ export namespace input {
     for await (const chunk of process.stdin) {
       chunks.push(chunk);
     }
-    return Buffer.concat(chunks).toString("utf-8");
+    return Buffer.concat(chunks).toString('utf-8');
   }
 
   /**
@@ -150,23 +150,20 @@ export namespace input {
     const raw = await read();
 
     if (raw.trim().length === 0) {
-      throw new StdinParseError("EMPTY_STDIN", "No input received on stdin");
+      throw new StdinParseError('EMPTY_STDIN', 'No input received on stdin');
     }
 
     let json: unknown;
     try {
       json = JSON.parse(raw);
     } catch {
-      throw new StdinParseError(
-        "INVALID_JSON",
-        `Invalid JSON: ${raw.slice(0, 200)}`,
-      );
+      throw new StdinParseError('INVALID_JSON', `Invalid JSON: ${raw.slice(0, 200)}`);
     }
 
     const result = schema.safeParse(json);
     if (!result.success) {
       throw new StdinParseError(
-        "VALIDATION_ERROR",
+        'VALIDATION_ERROR',
         `Validation failed: ${result.error.message}`,
         result.error,
       );
@@ -230,7 +227,7 @@ export namespace output {
    * ```
    */
   export function write(data: unknown): void {
-    writeFileSync(1, safeStringify(data) + "\n");
+    writeFileSync(1, `${safeStringify(data)}\n`);
   }
 
   /**
@@ -251,7 +248,7 @@ export namespace output {
    * ```
    */
   export function writeError(code: string, message: string): void {
-    writeFileSync(2, JSON.stringify({ code, message }) + "\n");
+    writeFileSync(2, `${JSON.stringify({ code, message })}\n`);
   }
 
   /**

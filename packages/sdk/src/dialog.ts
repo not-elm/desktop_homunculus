@@ -1,4 +1,4 @@
-import { host } from "./host";
+import { host } from './host';
 
 /**
  * Native OS dialog API namespace for file and directory selection.
@@ -79,7 +79,7 @@ export namespace dialog {
    * ```
    */
   export async function pickFile(options?: PickFileOptions): Promise<string | null> {
-    const response = await host.post(host.createUrl("dialog/pick-file"), options);
+    const response = await host.post(host.createUrl('dialog/pick-file'), options);
     const body = (await response.json()) as { path: string | null };
     return body.path;
   }
@@ -105,7 +105,7 @@ export namespace dialog {
    * ```
    */
   export async function pickFiles(options?: PickFileOptions): Promise<string[]> {
-    const response = await host.post(host.createUrl("dialog/pick-files"), options);
+    const response = await host.post(host.createUrl('dialog/pick-files'), options);
     const body = (await response.json()) as { paths: string[] };
     return body.paths;
   }
@@ -128,7 +128,7 @@ export namespace dialog {
    * ```
    */
   export async function pickFolder(options?: PickFolderOptions): Promise<string | null> {
-    const response = await host.post(host.createUrl("dialog/pick-folder"), options);
+    const response = await host.post(host.createUrl('dialog/pick-folder'), options);
     const body = (await response.json()) as { path: string | null };
     return body.path;
   }

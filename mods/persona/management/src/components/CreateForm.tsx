@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useMemo, useState } from 'react';
 
 interface CreateFormProps {
   onCreate: (id: string, name: string) => Promise<void>;
@@ -8,8 +8,8 @@ interface CreateFormProps {
 const ID_PATTERN = /^[a-zA-Z0-9_-]{1,64}$/;
 
 export default function CreateForm({ onCreate, onCancel }: CreateFormProps) {
-  const [id, setId] = useState("");
-  const [name, setName] = useState("");
+  const [id, setId] = useState('');
+  const [name, setName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -26,7 +26,7 @@ export default function CreateForm({ onCreate, onCancel }: CreateFormProps) {
     try {
       await onCreate(id, name.trim());
     } catch (err) {
-      const message = (err as Error).message ?? "Failed to create persona";
+      const message = (err as Error).message ?? 'Failed to create persona';
       setError(message);
     } finally {
       setSubmitting(false);
@@ -46,7 +46,6 @@ export default function CreateForm({ onCreate, onCancel }: CreateFormProps) {
             value={id}
             onChange={(e) => setId(e.target.value)}
             placeholder="e.g. alice, my-persona"
-            autoFocus
           />
           {idError && (
             <span className="create-form-error-hint">
@@ -76,12 +75,8 @@ export default function CreateForm({ onCreate, onCancel }: CreateFormProps) {
           >
             Cancel
           </button>
-          <button
-            type="submit"
-            className="management-btn"
-            disabled={!formValid || submitting}
-          >
-            {submitting ? "Creating..." : "Create"}
+          <button type="submit" className="management-btn" disabled={!formValid || submitting}>
+            {submitting ? 'Creating...' : 'Create'}
           </button>
         </div>
       </form>

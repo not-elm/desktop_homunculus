@@ -4,7 +4,11 @@ interface FirstPersonPronounFieldProps {
   disabled?: boolean;
 }
 
-export function FirstPersonPronounField({ value, onChange, disabled }: FirstPersonPronounFieldProps) {
+export function FirstPersonPronounField({
+  value,
+  onChange,
+  disabled,
+}: FirstPersonPronounFieldProps) {
   return (
     <label className="settings-label">
       First Person Pronoun

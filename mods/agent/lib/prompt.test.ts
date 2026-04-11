@@ -1,129 +1,129 @@
-import { describe, it, expect } from "vitest";
-import { buildPersonaPrompt } from "./prompt.ts";
-import type { Persona } from "./types.ts";
+import { describe, expect, it } from 'vitest';
+import { buildPersonaPrompt } from './prompt.ts';
+import type { Persona } from './types.ts';
 
 const basePersona: Persona = {
-  name: "TestChar",
+  name: 'TestChar',
   age: 25,
-  gender: "female",
-  firstPersonPronoun: "watashi",
-  profile: "",
+  gender: 'female',
+  firstPersonPronoun: 'watashi',
+  profile: '',
   personality: null,
 };
 
-describe("buildPersonaPrompt", () => {
-  describe("basic persona fields", () => {
-    it("includes character name", () => {
+describe('buildPersonaPrompt', () => {
+  describe('basic persona fields', () => {
+    it('includes character name', () => {
       const prompt = buildPersonaPrompt(basePersona);
       expect(prompt).toContain('"TestChar"');
     });
 
-    it("includes age", () => {
+    it('includes age', () => {
       const prompt = buildPersonaPrompt(basePersona);
-      expect(prompt).toContain("Age: 25");
+      expect(prompt).toContain('Age: 25');
     });
 
-    it("shows Unknown when age is null", () => {
+    it('shows Unknown when age is null', () => {
       const prompt = buildPersonaPrompt({ ...basePersona, age: null });
-      expect(prompt).toContain("Age: Unknown");
+      expect(prompt).toContain('Age: Unknown');
     });
 
-    it("includes gender label", () => {
+    it('includes gender label', () => {
       const prompt = buildPersonaPrompt(basePersona);
-      expect(prompt).toContain("Gender: Female");
+      expect(prompt).toContain('Gender: Female');
     });
 
-    it("includes first-person pronoun instruction", () => {
+    it('includes first-person pronoun instruction', () => {
       const prompt = buildPersonaPrompt(basePersona);
       expect(prompt).toContain('"watashi"');
     });
 
-    it("omits pronoun line when null", () => {
+    it('omits pronoun line when null', () => {
       const prompt = buildPersonaPrompt({
         ...basePersona,
         firstPersonPronoun: null,
       });
-      expect(prompt).not.toContain("first-person pronoun");
+      expect(prompt).not.toContain('first-person pronoun');
     });
   });
 
-  describe("profile", () => {
-    it("includes profile when non-empty", () => {
+  describe('profile', () => {
+    it('includes profile when non-empty', () => {
       const prompt = buildPersonaPrompt({
         ...basePersona,
-        profile: "A cheerful girl",
+        profile: 'A cheerful girl',
       });
-      expect(prompt).toContain("Profile: A cheerful girl");
+      expect(prompt).toContain('Profile: A cheerful girl');
     });
 
-    it("omits profile when empty string", () => {
-      const prompt = buildPersonaPrompt({ ...basePersona, profile: "" });
-      expect(prompt).not.toContain("Profile:");
+    it('omits profile when empty string', () => {
+      const prompt = buildPersonaPrompt({ ...basePersona, profile: '' });
+      expect(prompt).not.toContain('Profile:');
     });
   });
 
-  describe("personality section", () => {
-    it("omits section when personality is null", () => {
+  describe('personality section', () => {
+    it('omits section when personality is null', () => {
       const prompt = buildPersonaPrompt({ ...basePersona, personality: null });
-      expect(prompt).not.toContain("## Personality");
+      expect(prompt).not.toContain('## Personality');
     });
 
-    it("omits section when personality is empty string", () => {
-      const prompt = buildPersonaPrompt({ ...basePersona, personality: "" });
-      expect(prompt).not.toContain("## Personality");
+    it('omits section when personality is empty string', () => {
+      const prompt = buildPersonaPrompt({ ...basePersona, personality: '' });
+      expect(prompt).not.toContain('## Personality');
     });
 
-    it("omits section when personality is undefined", () => {
+    it('omits section when personality is undefined', () => {
       const { personality: _, ...withoutPersonality } = basePersona;
       const prompt = buildPersonaPrompt(withoutPersonality as Persona);
-      expect(prompt).not.toContain("## Personality");
+      expect(prompt).not.toContain('## Personality');
     });
 
-    it("includes personality text under ## Personality header", () => {
+    it('includes personality text under ## Personality header', () => {
       const prompt = buildPersonaPrompt({
         ...basePersona,
-        personality: "Sarcastic but caring",
+        personality: 'Sarcastic but caring',
       });
-      expect(prompt).toContain("## Personality");
-      expect(prompt).toContain("Sarcastic but caring");
+      expect(prompt).toContain('## Personality');
+      expect(prompt).toContain('Sarcastic but caring');
     });
 
-    it("places personality before response style section", () => {
+    it('places personality before response style section', () => {
       const prompt = buildPersonaPrompt({
         ...basePersona,
-        personality: "Cheerful and bright",
+        personality: 'Cheerful and bright',
       });
-      const personalityIdx = prompt.indexOf("## Personality");
-      const styleIdx = prompt.indexOf("## Response Style");
+      const personalityIdx = prompt.indexOf('## Personality');
+      const styleIdx = prompt.indexOf('## Response Style');
       expect(personalityIdx).toBeLessThan(styleIdx);
     });
 
-    it("places profile before personality", () => {
+    it('places profile before personality', () => {
       const prompt = buildPersonaPrompt({
         ...basePersona,
-        profile: "An apprentice wizard",
-        personality: "Curious and talkative",
+        profile: 'An apprentice wizard',
+        personality: 'Curious and talkative',
       });
-      const profileIdx = prompt.indexOf("Profile:");
-      const personalityIdx = prompt.indexOf("## Personality");
+      const profileIdx = prompt.indexOf('Profile:');
+      const personalityIdx = prompt.indexOf('## Personality');
       expect(profileIdx).toBeLessThan(personalityIdx);
     });
   });
 
-  describe("existing sections", () => {
-    it("includes response style section", () => {
+  describe('existing sections', () => {
+    it('includes response style section', () => {
       const prompt = buildPersonaPrompt(basePersona);
-      expect(prompt).toContain("## Response Style");
+      expect(prompt).toContain('## Response Style');
     });
 
-    it("includes response examples section", () => {
+    it('includes response examples section', () => {
       const prompt = buildPersonaPrompt(basePersona);
-      expect(prompt).toContain("## Response Examples");
+      expect(prompt).toContain('## Response Examples');
     });
 
-    it("includes webview section", () => {
+    it('includes webview section', () => {
       const prompt = buildPersonaPrompt(basePersona);
-      expect(prompt).toContain("open_webview");
+      expect(prompt).toContain('open_webview');
     });
   });
 });

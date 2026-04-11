@@ -1,4 +1,4 @@
-import { useEffect, type RefObject } from "react";
+import { type RefObject, useEffect } from 'react';
 
 /**
  * Calls `onClickOutside` when a mousedown event occurs outside the referenced element.
@@ -13,7 +13,7 @@ export function useClickOutside(
         onClickOutside();
       }
     }
-    document.addEventListener("mousedown", handleMouseDown);
-    return () => document.removeEventListener("mousedown", handleMouseDown);
+    document.addEventListener('mousedown', handleMouseDown);
+    return () => document.removeEventListener('mousedown', handleMouseDown);
   }, [ref, onClickOutside]);
 }

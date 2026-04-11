@@ -8,9 +8,13 @@
     "dev": "turbo run dev",
     "check-types": "turbo run check-types",
     "test": "turbo run test",
-    "lint": "turbo run lint"
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "lint:ci": "biome ci .",
+    "format": "biome format --write ."
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.4.11",
     "tsx": "^4.21.0",
     "turbo": "^2.8.13"
   },

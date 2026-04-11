@@ -1,6 +1,7 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn } from "storybook/test";
-import { Globe, Monitor, Moon, Sun } from "lucide-react";
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { Globe, Monitor, Moon, Sun } from 'lucide-react';
+import { fn } from 'storybook/test';
+import { Label } from './label';
 import {
   Select,
   SelectContent,
@@ -10,18 +11,17 @@ import {
   SelectSeparator,
   SelectTrigger,
   SelectValue,
-} from "./select";
-import { Label } from "./label";
+} from './select';
 
 const meta = {
-  title: "UI/Forms/Select",
+  title: 'UI/Forms/Select',
   component: Select,
   args: {
     onValueChange: fn(),
   },
   argTypes: {
     disabled: {
-      control: "boolean",
+      control: 'boolean',
     },
   },
 } satisfies Meta<typeof Select>;

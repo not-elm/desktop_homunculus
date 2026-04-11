@@ -1,33 +1,39 @@
-import { z } from "zod";
-import { Persona, preferences, signals, stt } from "@hmcs/sdk";
-import { rpc } from "@hmcs/sdk/rpc";
-import { KeyboardHookService, waitForComboRelease, isComboHeld } from "./lib/keyboard-hook.ts";
-import { resolvePttKeycodes, type ResolvedPttKey } from "./lib/key-mapping.ts";
-import { ClaudeAgentRuntime } from "./lib/claude-agent-runtime.ts";
-import { CodexAppServerRuntime } from "./lib/codex-appserver-runtime.ts";
-import { CodexAppServerProcess } from "./lib/codex-appserver-process.ts";
-import type { AgentRuntime } from "./lib/agent-runtime.ts";
-import { AsyncQueue, Deferred } from "./lib/async-queue.ts";
-import type { AgentEvent, AgentResponse } from "./lib/agent-runtime.ts";
+import { mkdirSync } from 'node:fs';
+import { homedir } from 'node:os';
+import path from 'node:path';
+import { preferences, Persona as SdkPersona, signals, stt } from '@hmcs/sdk';
+import { rpc } from '@hmcs/sdk/rpc';
+import { z } from 'zod';
+import type { AgentEvent, AgentResponse, AgentRuntime } from './lib/agent-runtime.ts';
+import { AsyncQueue, Deferred } from './lib/async-queue.ts';
+import { ClaudeAgentRuntime } from './lib/claude-agent-runtime.ts';
+import { CodexAppServerProcess } from './lib/codex-appserver-process.ts';
+import { CodexAppServerRuntime } from './lib/codex-appserver-runtime.ts';
+import { currentBranch, gitExec, isGitRepo, listBranches } from './lib/git.ts';
+import { type ResolvedPttKey, resolvePttKeycodes } from './lib/key-mapping.ts';
+import { isComboHeld, KeyboardHookService, waitForComboRelease } from './lib/keyboard-hook.ts';
+import { buildPersonaPrompt, buildSessionContext, type WorktreeContext } from './lib/prompt.ts';
+import {
+  type PersistLogEntry,
+  type SessionHandle,
+  SessionPersistence,
+} from './lib/session-persistence.ts';
+import { sanitizeForTts } from './lib/tts.ts';
 import {
   type AgentSettings,
   type AgentStatus,
-  type Persona,
   DEFAULT_SETTINGS,
-} from "./lib/types.ts";
-import { buildPersonaPrompt, buildSessionContext, type WorktreeContext } from "./lib/prompt.ts";
-import { WorktreeManager, WORKTREE_NAME_PATTERN } from "./lib/worktree-manager.ts";
-import { gitExec, isGitRepo, currentBranch, listBranches } from "./lib/git.ts";
-import { sanitizeForTts } from "./lib/tts.ts";
-import { SessionPersistence, type SessionHandle, type PersistLogEntry } from "./lib/session-persistence.ts";
-import { mkdirSync } from "node:fs";
-import { homedir } from "node:os";
-import path from "node:path";
+  type Persona,
+} from './lib/types.ts';
+import { WORKTREE_NAME_PATTERN, WorktreeManager } from './lib/worktree-manager.ts';
 
 const keyboardHook = new KeyboardHookService();
 
 const activeSessions = new Map<string, AbortController>();
-const pendingApprovals = new Map<string, Deferred<{ approved: boolean; message?: string; decision?: string | Record<string, unknown> }>>();
+const pendingApprovals = new Map<
+  string,
+  Deferred<{ approved: boolean; message?: string; decision?: string | Record<string, unknown> }>
+>();
 const pendingQuestions = new Map<string, Deferred<Record<string, string>>>();
 const pendingInterrupts = new Map<string, Deferred<void>>();
 const textQueues = new Map<string, AsyncQueue<string>>();
@@ -48,29 +54,24 @@ function getAppServerProcess(): CodexAppServerProcess {
 let currentApiKey: string | null = null;
 
 async function loadApiKey(): Promise<string> {
-  const apiKey = await preferences.load<string>("agent::api-key");
-  if (!apiKey)
-    throw new Error(
-      "API key not configured. Set 'agent::api-key' in preferences.",
-    );
+  const apiKey = await preferences.load<string>('agent::api-key');
+  if (!apiKey) throw new Error("API key not configured. Set 'agent::api-key' in preferences.");
   return apiKey;
 }
 
-async function loadPersonaSettings(
-  personaId: string,
-): Promise<AgentSettings> {
-  const saved = await preferences.load<Record<string, unknown>>("agent::" + personaId);
+async function loadPersonaSettings(personaId: string): Promise<AgentSettings> {
+  const saved = await preferences.load<Record<string, unknown>>(`agent::${personaId}`);
   if (!saved) return { ...DEFAULT_SETTINGS };
 
   // Migrate workingDirectories → workspaces
-  if ("workingDirectories" in saved && !("workspaces" in saved)) {
+  if ('workingDirectories' in saved && !('workspaces' in saved)) {
     const wd = saved.workingDirectories as { paths: string[]; default: number };
     saved.workspaces = {
       paths: wd.paths,
       selection: { workspaceIndex: wd.default, worktreeName: null },
     };
     delete saved.workingDirectories;
-    await preferences.save("agent::" + personaId, { ...DEFAULT_SETTINGS, ...saved });
+    await preferences.save(`agent::${personaId}`, { ...DEFAULT_SETTINGS, ...saved });
   }
 
   return { ...DEFAULT_SETTINGS, ...(saved as Partial<AgentSettings>) };
@@ -80,26 +81,26 @@ function speakText(personaId: string, text: string): void {
   const { sentences, log } = sanitizeForTts(text);
   if (sentences.length === 0) return;
   if (log.length > 0) {
-    emitLog(personaId, "tts-sanitize", log.join("; "));
+    emitLog(personaId, 'tts-sanitize', log.join('; '));
   }
   rpc
     .call({
-      modName: "@hmcs/voicevox",
-      method: "speak",
+      modName: '@hmcs/voicevox',
+      method: 'speak',
       body: { personaId, text: sentences },
     })
-    .catch(() => emitLog(personaId, "warning", "TTS unavailable"));
+    .catch(() => emitLog(personaId, 'warning', 'TTS unavailable'));
 }
 
 async function startKeyboardHook(): Promise<void> {
   const started = keyboardHook.start();
   if (!started) {
-    console.warn("[agent] Keyboard hook failed to start.");
+    console.warn('[agent] Keyboard hook failed to start.');
   }
 }
 
 async function scanOrphanedWorktrees(): Promise<void> {
-  const snapshots = await Persona.list();
+  const snapshots = await SdkPersona.list();
   for (const snapshot of snapshots) {
     const personaId = snapshot.id;
     if (activeSessions.has(personaId)) continue;
@@ -112,13 +113,17 @@ async function scanOrphanedWorktrees(): Promise<void> {
         for (const wt of worktrees) {
           const hasChanges = await manager.hasUncommittedChanges(wt.name);
           if (hasChanges) {
-            await signals.send("agent:worktree", {
+            await signals.send('agent:worktree', {
               personaId,
-              state: "orphaned",
+              state: 'orphaned',
               worktreeName: wt.name,
               workspacePath: wsPath,
             });
-            emitLog(personaId, "warning", `Orphaned worktree detected: ${wt.name} in ${wsPath} (has uncommitted changes)`);
+            emitLog(
+              personaId,
+              'warning',
+              `Orphaned worktree detected: ${wt.name} in ${wsPath} (has uncommitted changes)`,
+            );
           }
         }
       } catch {
@@ -128,7 +133,10 @@ async function scanOrphanedWorktrees(): Promise<void> {
   }
 }
 
-async function startSession(personaId: string, contextSessionUuid?: string): Promise<PersistLogEntry[]> {
+async function startSession(
+  personaId: string,
+  contextSessionUuid?: string,
+): Promise<PersistLogEntry[]> {
   const settings = await loadPersonaSettings(personaId);
   assertCanStartSession(personaId, settings);
 
@@ -139,9 +147,9 @@ async function startSession(personaId: string, contextSessionUuid?: string): Pro
 
   const selection = settings.workspaces.selection;
   if (selection.worktreeName) {
-    await signals.send("agent:worktree", {
+    await signals.send('agent:worktree', {
       personaId,
-      state: "created",
+      state: 'created',
       worktreeName: selection.worktreeName,
       workspacePath: settings.workspaces.paths[selection.workspaceIndex],
     });
@@ -150,16 +158,15 @@ async function startSession(personaId: string, contextSessionUuid?: string): Pro
   const worktreeCtx = await buildWorktreeContext(settings, workDir);
 
   const basePath = settings.workspaces.paths[selection.workspaceIndex];
-  const branchName = basePath
-    ? await resolveCurrentBranch(basePath, selection.worktreeName)
-    : null;
+  const branchName = basePath ? await resolveCurrentBranch(basePath, selection.worktreeName) : null;
 
   // Read previous session context for prompt injection
   let sessionContext: string | undefined;
   let replayEntries: PersistLogEntry[] = [];
   if (basePath && branchName) {
-    const contextUuid = contextSessionUuid
-      ?? await persistence.findLatestSessionUuid(basePath, personaId, branchName);
+    const contextUuid =
+      contextSessionUuid ??
+      (await persistence.findLatestSessionUuid(basePath, personaId, branchName));
     if (contextUuid) {
       const entries = await persistence.read(basePath, personaId, branchName, contextUuid);
       if (entries.length > 0) {
@@ -190,14 +197,9 @@ async function startSession(personaId: string, contextSessionUuid?: string): Pro
   return replayEntries;
 }
 
-function assertCanStartSession(
-  personaId: string,
-  settings: AgentSettings,
-): void {
-  if (settings.runtime === "sdk" && !currentApiKey) {
-    throw new Error(
-      "API key not configured. Open Agent Settings to set your Anthropic API key.",
-    );
+function assertCanStartSession(personaId: string, settings: AgentSettings): void {
+  if (settings.runtime === 'sdk' && !currentApiKey) {
+    throw new Error('API key not configured. Open Agent Settings to set your Anthropic API key.');
   }
   if (activeSessions.has(personaId)) {
     throw new Error(`Session already active for "${personaId}".`);
@@ -211,19 +213,15 @@ function launchSessionLoop(
   settings: AgentSettings,
   resolvedKey: ResolvedPttKey | null,
 ): void {
-  runSession(personaId, runtime, sessionAbort, settings, resolvedKey).catch(
-    (err) => handleSessionCrash(personaId, err, settings),
+  runSession(personaId, runtime, sessionAbort, settings, resolvedKey).catch((err) =>
+    handleSessionCrash(personaId, err, settings),
   );
 }
 
-function handleSessionCrash(
-  personaId: string,
-  err: unknown,
-  settings: AgentSettings,
-): void {
+function handleSessionCrash(personaId: string, err: unknown, _settings: AgentSettings): void {
   if (!isAbortError(err)) {
     console.error(`[agent] Session error for ${personaId}:`, err);
-    emitLog(personaId, "error", extractErrorMessage(err));
+    emitLog(personaId, 'error', extractErrorMessage(err));
   }
   const handle = activeSessionHandles.get(personaId);
   if (handle) {
@@ -232,11 +230,11 @@ function handleSessionCrash(
   }
   const queue = textQueues.get(personaId);
   if (queue) {
-    queue.rejectAll(new DOMException("Session crashed", "AbortError"));
+    queue.rejectAll(new DOMException('Session crashed', 'AbortError'));
     textQueues.delete(personaId);
   }
   activeSessions.delete(personaId);
-  emitStatus(personaId, "idle", isAbortError(err) ? "stopped" : "crashed");
+  emitStatus(personaId, 'idle', isAbortError(err) ? 'stopped' : 'crashed');
 }
 
 function resolvePttKeyOptional(settings: AgentSettings): ResolvedPttKey | null {
@@ -245,27 +243,24 @@ function resolvePttKeyOptional(settings: AgentSettings): ResolvedPttKey | null {
 }
 
 async function loadPersona(personaId: string): Promise<Persona> {
-  const p = await Persona.load(personaId);
+  const p = await SdkPersona.load(personaId);
   const snapshot = await p.snapshot();
   return {
     name: snapshot.name || personaId,
     age: snapshot.age ?? null,
-    gender: snapshot.gender ?? "unknown",
+    gender: snapshot.gender ?? 'unknown',
     firstPersonPronoun: snapshot.firstPersonPronoun ?? null,
-    profile: snapshot.profile ?? "",
+    profile: snapshot.profile ?? '',
     personality: snapshot.personality ?? null,
   };
 }
 
-function resolveWorkingDirectory(
-  personaId: string,
-  settings: AgentSettings,
-): string {
+function resolveWorkingDirectory(personaId: string, settings: AgentSettings): string {
   const { paths, selection } = settings.workspaces;
   const basePath = paths[selection.workspaceIndex];
-  if (!basePath) return path.join(homedir(), ".homunculus", "agents", personaId);
+  if (!basePath) return path.join(homedir(), '.homunculus', 'agents', personaId);
   if (selection.worktreeName) {
-    return path.join(basePath, ".hmcs/worktrees", selection.worktreeName);
+    return path.join(basePath, '.hmcs/worktrees', selection.worktreeName);
   }
   return basePath;
 }
@@ -286,10 +281,10 @@ async function buildWorktreeContext(
 
 async function readWorktreeBaseBranch(worktreePath: string): Promise<string> {
   try {
-    const result = await gitExec(worktreePath, ["config", "hmcs.baseBranch"]);
-    return result.trim() || "main";
+    const result = await gitExec(worktreePath, ['config', 'hmcs.baseBranch']);
+    return result.trim() || 'main';
   } catch {
-    return "main";
+    return 'main';
   }
 }
 
@@ -318,9 +313,9 @@ function createRuntime(
   workDir: string,
 ): AgentRuntime {
   switch (settings.runtime) {
-    case "codex":
+    case 'codex':
       return new CodexAppServerRuntime(prompt, settings, workDir, getAppServerProcess());
-    case "sdk":
+    case 'sdk':
       return new ClaudeAgentRuntime(prompt, settings, apiKey!, workDir);
     default:
       throw new Error(`Runtime "${settings.runtime}" is not yet implemented.`);
@@ -340,11 +335,11 @@ async function stopSession(personaId: string): Promise<void> {
   controller.abort();
   const queue = textQueues.get(personaId);
   if (queue) {
-    queue.rejectAll(new DOMException("Session stopped", "AbortError"));
+    queue.rejectAll(new DOMException('Session stopped', 'AbortError'));
     textQueues.delete(personaId);
   }
   activeSessions.delete(personaId);
-  emitStatus(personaId, "idle", "stopped");
+  emitStatus(personaId, 'idle', 'stopped');
 
   if (appServerProcess && appServerProcess.refCount === 0) {
     appServerProcess.shutdown();
@@ -361,7 +356,7 @@ async function interruptSession(personaId: string): Promise<void> {
 
 interface UserInput {
   text: string;
-  source: "voice" | "text";
+  source: 'voice' | 'text';
 }
 
 async function runSession(
@@ -376,12 +371,12 @@ async function runSession(
 
   try {
     while (!signal.aborted) {
-      emitStatus(personaId, "listening");
+      emitStatus(personaId, 'listening');
       const input = await waitForUserInput(personaId, resolvedKey, signal);
       if (input === null) continue;
 
       emitUserLog(personaId, input.text, input.source);
-      emitStatus(personaId, "thinking");
+      emitStatus(personaId, 'thinking');
       const result = await executeOneRound(
         personaId,
         runtime,
@@ -405,7 +400,7 @@ async function runSession(
       activeSessionHandles.delete(personaId);
     }
 
-    emitStatus(personaId, "idle", "session-ended");
+    emitStatus(personaId, 'idle', 'session-ended');
   }
 }
 
@@ -446,7 +441,7 @@ async function executeOneRound(
 async function driveRuntime(
   personaId: string,
   runtimeGen: AsyncGenerator<AgentEvent, void, AgentResponse | undefined>,
-  interruptPromise: Promise<"ptt" | "ui">,
+  interruptPromise: Promise<'ptt' | 'ui'>,
   interruptAbort: AbortController,
   sessionId: string | null,
   settings: AgentSettings,
@@ -454,7 +449,7 @@ async function driveRuntime(
   sessionSignal: AbortSignal,
 ): Promise<RoundResult> {
   let lastSessionId = sessionId;
-  let response: AgentResponse | undefined = undefined;
+  let response: AgentResponse | undefined;
 
   while (true) {
     const raceResult = await raceInterrupt(runtimeGen.next(response), interruptPromise);
@@ -462,7 +457,7 @@ async function driveRuntime(
     if (raceResult.interrupted) {
       lastSessionId = await abortExecution(personaId, runtimeGen, interruptAbort, lastSessionId);
 
-      if (raceResult.source === "ptt" && resolvedKey) {
+      if (raceResult.source === 'ptt' && resolvedKey) {
         const voiceText = await recognizeWhileHeld(personaId, resolvedKey, sessionSignal);
         if (voiceText) {
           const queue = textQueues.get(personaId);
@@ -479,8 +474,8 @@ async function driveRuntime(
 
     const event = raceResult.value as AgentEvent;
     response = await handleAgentEvent(personaId, event, settings, sessionSignal);
-    if (event.type === "completed" || event.type === "error") {
-      if (event.type === "completed") lastSessionId = event.sessionId;
+    if (event.type === 'completed' || event.type === 'error') {
+      if (event.type === 'completed') lastSessionId = event.sessionId;
       break;
     }
   }
@@ -515,14 +510,14 @@ interface RaceResultEvent {
 
 interface RaceResultInterrupted {
   interrupted: true;
-  source: "ptt" | "ui";
+  source: 'ptt' | 'ui';
 }
 
 type RaceResult = RaceResultDone | RaceResultEvent | RaceResultInterrupted;
 
 async function raceInterrupt(
   nextResult: Promise<IteratorResult<AgentEvent, void>>,
-  interruptPromise: Promise<"ptt" | "ui">,
+  interruptPromise: Promise<'ptt' | 'ui'>,
 ): Promise<RaceResult> {
   const runtimeSide = nextResult.then((r): RaceResultDone | RaceResultEvent =>
     r.done
@@ -534,9 +529,7 @@ async function raceInterrupt(
 
   return Promise.race([
     runtimeSide,
-    interruptPromise.then(
-      (source): RaceResultInterrupted => ({ interrupted: true, source }),
-    ),
+    interruptPromise.then((source): RaceResultInterrupted => ({ interrupted: true, source })),
   ]);
 }
 
@@ -547,80 +540,74 @@ async function handleAgentEvent(
   signal: AbortSignal,
 ): Promise<AgentResponse | undefined> {
   switch (event.type) {
-    case "assistant_message":
+    case 'assistant_message':
       return handleAssistantMessage(personaId, event.text);
-    case "tool_use":
+    case 'tool_use':
       return handleToolUse(personaId, event.summary);
-    case "permission_request":
+    case 'permission_request':
       return await handlePermissionRequest(personaId, event, settings, signal);
-    case "elicitation_request":
+    case 'elicitation_request':
       return await handleElicitationRequest(personaId, event, signal);
-    case "completed":
+    case 'completed':
       return handleCompleted(personaId, event.sessionId);
-    case "error":
+    case 'error':
       return handleError(personaId, event.message, settings);
   }
 }
 
-function handleAssistantMessage(
-  personaId: string,
-  text: string,
-): undefined {
-  emitStatus(personaId, "thinking");
-  emitLog(personaId, "assistant", text);
+function handleAssistantMessage(personaId: string, text: string): undefined {
+  emitStatus(personaId, 'thinking');
+  emitLog(personaId, 'assistant', text);
   speakText(personaId, text);
   return undefined;
 }
 
 function handleToolUse(personaId: string, summary: string): undefined {
-  emitStatus(personaId, "executing");
-  emitLog(personaId, "tool", summary);
+  emitStatus(personaId, 'executing');
+  emitLog(personaId, 'tool', summary);
   return undefined;
 }
 
 async function handlePermissionRequest(
   personaId: string,
-  event: AgentEvent & { type: "permission_request" },
+  event: AgentEvent & { type: 'permission_request' },
   settings: AgentSettings,
   signal: AbortSignal,
 ): Promise<AgentResponse> {
-  emitStatus(personaId, "waiting");
+  emitStatus(personaId, 'waiting');
   return await resolvePermission(personaId, event, settings, signal);
 }
 
 async function handleElicitationRequest(
   personaId: string,
-  event: AgentEvent & { type: "elicitation_request" },
+  event: AgentEvent & { type: 'elicitation_request' },
   signal: AbortSignal,
 ): Promise<AgentResponse> {
-  emitStatus(personaId, "waiting");
+  emitStatus(personaId, 'waiting');
   return await resolveElicitation(personaId, event, signal);
 }
 
-function handleCompleted(
-  personaId: string,
-  sessionId: string,
-): undefined {
+function handleCompleted(_personaId: string, _sessionId: string): undefined {
   return undefined;
 }
 
-function handleError(
-  personaId: string,
-  message: string,
-  settings: AgentSettings,
-): undefined {
+function handleError(personaId: string, message: string, _settings: AgentSettings): undefined {
   console.error(`[agent] ${personaId}: error — ${message}`);
-  emitLog(personaId, "error", message);
+  emitLog(personaId, 'error', message);
   return undefined;
 }
 
 async function resolvePermission(
   personaId: string,
-  event: AgentEvent & { type: "permission_request" },
+  event: AgentEvent & { type: 'permission_request' },
   settings: AgentSettings,
   signal: AbortSignal,
 ): Promise<AgentResponse> {
-  const deferred = new Deferred<{ approved: boolean; message?: string; decision?: string | Record<string, unknown> }>();
+  const deferred = new Deferred<{
+    approved: boolean;
+    message?: string;
+    decision?: string | Record<string, unknown>;
+  }>();
   const permAbort = new AbortController();
   const combined = AbortSignal.any([signal, permAbort.signal]);
 
@@ -633,17 +620,20 @@ async function resolvePermission(
     target: JSON.stringify(event.input),
     availableDecisions: event.availableDecisions,
   };
-  console.log(`[agent] resolvePermission: ${event.tool} (${event.requestId})`, JSON.stringify(permissionPayload, null, 2));
+  console.log(
+    `[agent] resolvePermission: ${event.tool} (${event.requestId})`,
+    JSON.stringify(permissionPayload, null, 2),
+  );
 
-  signals.send("agent:permission", permissionPayload);
+  signals.send('agent:permission', permissionPayload);
 
   const timer = setTimeout(
-    () => deferred.resolve({ approved: false, message: "Permission request timed out" }),
+    () => deferred.resolve({ approved: false, message: 'Permission request timed out' }),
     60_000,
   );
 
   const onAbort = () => deferred.reject(signal.reason);
-  signal.addEventListener("abort", onAbort, { once: true });
+  signal.addEventListener('abort', onAbort, { once: true });
 
   const resolvedKey = resolvePttKeycodes(settings.pttKey!);
   if (resolvedKey) {
@@ -652,11 +642,18 @@ async function resolvePermission(
 
   try {
     const result = await deferred.promise;
-    console.log(`[agent] permission result: approved=${result.approved}, message=${result.message}`);
-    return { type: "permission", approved: result.approved, message: result.message, decision: result.decision };
+    console.log(
+      `[agent] permission result: approved=${result.approved}, message=${result.message}`,
+    );
+    return {
+      type: 'permission',
+      approved: result.approved,
+      message: result.message,
+      decision: result.decision,
+    };
   } finally {
     clearTimeout(timer);
-    signal.removeEventListener("abort", onAbort);
+    signal.removeEventListener('abort', onAbort);
     permAbort.abort();
     pendingApprovals.delete(event.requestId);
   }
@@ -667,14 +664,18 @@ function runVoiceApproval(
   resolvedKey: ResolvedPttKey,
   settings: AgentSettings,
   signal: AbortSignal,
-  deferred: Deferred<{ approved: boolean; message?: string; decision?: string | Record<string, unknown> }>,
+  deferred: Deferred<{
+    approved: boolean;
+    message?: string;
+    decision?: string | Record<string, unknown>;
+  }>,
 ): void {
   (async () => {
     try {
       await waitForComboPress(personaId, resolvedKey, signal);
       const text = await recognizeWhileHeld(personaId, resolvedKey, signal);
       if (text === null) {
-        deferred.resolve({ approved: false, message: "No speech detected" });
+        deferred.resolve({ approved: false, message: 'No speech detected' });
       } else {
         deferred.resolve(evaluateApprovalPhrase(text, settings));
       }
@@ -689,24 +690,19 @@ function evaluateApprovalPhrase(
   settings: AgentSettings,
 ): { approved: boolean; message?: string } {
   const lower = text.toLowerCase();
-  const isApproval = settings.approvalPhrases.some((p) =>
-    lower.includes(p.toLowerCase()),
-  );
+  const isApproval = settings.approvalPhrases.some((p) => lower.includes(p.toLowerCase()));
   if (isApproval) return { approved: true };
-  const isDenial = settings.denyPhrases.some((p) =>
-    lower.includes(p.toLowerCase()),
-  );
+  const isDenial = settings.denyPhrases.some((p) => lower.includes(p.toLowerCase()));
   if (isDenial) return { approved: false, message: `Denied: "${text}"` };
   return { approved: false, message: `Unrecognized: "${text}"` };
 }
 
-
 async function resolveElicitation(
   personaId: string,
-  event: AgentEvent & { type: "elicitation_request" },
+  event: AgentEvent & { type: 'elicitation_request' },
   signal: AbortSignal,
 ): Promise<AgentResponse> {
-  signals.send("agent:question", {
+  signals.send('agent:question', {
     personaId,
     requestId: event.requestId,
     message: event.message,
@@ -722,9 +718,9 @@ async function resolveElicitation(
       abortToReject(signal),
       timeoutReject(60_000),
     ]);
-    return { type: "elicitation", action: "accept", values: answers };
+    return { type: 'elicitation', action: 'accept', values: answers };
   } catch {
-    return { type: "elicitation", action: "decline" };
+    return { type: 'elicitation', action: 'decline' };
   } finally {
     pendingQuestions.delete(event.requestId);
   }
@@ -732,7 +728,7 @@ async function resolveElicitation(
 
 function abortToReject(signal: AbortSignal): Promise<never> {
   return new Promise((_, reject) => {
-    signal.addEventListener("abort", () => reject(signal.reason), {
+    signal.addEventListener('abort', () => reject(signal.reason), {
       once: true,
     });
   });
@@ -740,7 +736,7 @@ function abortToReject(signal: AbortSignal): Promise<never> {
 
 function timeoutReject(ms: number): Promise<never> {
   return new Promise((_, reject) => {
-    setTimeout(() => reject(new Error("Timed out")), ms);
+    setTimeout(() => reject(new Error('Timed out')), ms);
   });
 }
 
@@ -748,21 +744,18 @@ async function waitForInterrupt(
   personaId: string,
   resolvedKey: ResolvedPttKey | null,
   sessionSignal: AbortSignal,
-): Promise<"ptt" | "ui"> {
+): Promise<'ptt' | 'ui'> {
   const pttPromise = resolvedKey
-    ? waitForComboPress(personaId, resolvedKey, sessionSignal).then(() => "ptt" as const)
+    ? waitForComboPress(personaId, resolvedKey, sessionSignal).then(() => 'ptt' as const)
     : new Promise<never>(() => {});
 
   return Promise.race([
     pttPromise,
-    waitForInterruptRpc(personaId, sessionSignal).then(() => "ui" as const),
+    waitForInterruptRpc(personaId, sessionSignal).then(() => 'ui' as const),
   ]);
 }
 
-async function waitForInterruptRpc(
-  personaId: string,
-  signal: AbortSignal,
-): Promise<void> {
+async function waitForInterruptRpc(personaId: string, signal: AbortSignal): Promise<void> {
   const deferred = new Deferred<void>();
   pendingInterrupts.set(personaId, deferred);
 
@@ -783,16 +776,16 @@ async function waitForUserInput(
 
   if (!resolvedKey) {
     const text = await queue.shift(signal);
-    return { text, source: "text" };
+    return { text, source: 'text' };
   }
 
   const inputAbort = new AbortController();
   const combined = AbortSignal.any([signal, inputAbort.signal]);
 
-  const voicePromise = recognizeOneSentenceVoice(personaId, resolvedKey, combined)
-    .then((text): UserInput | null => text ? { text, source: "voice" } : null);
-  const textPromise = queue.shift(combined)
-    .then((text): UserInput => ({ text, source: "text" }));
+  const voicePromise = recognizeOneSentenceVoice(personaId, resolvedKey, combined).then(
+    (text): UserInput | null => (text ? { text, source: 'voice' } : null),
+  );
+  const textPromise = queue.shift(combined).then((text): UserInput => ({ text, source: 'text' }));
 
   try {
     return await Promise.race([voicePromise, textPromise]);
@@ -825,13 +818,17 @@ async function recognizeWhileHeld(
   let session: stt.ptt.PttSession | null = null;
 
   try {
-    session = await stt.ptt.start({ language: "ja" });
+    session = await stt.ptt.start({ language: 'ja' });
     await waitForComboRelease(keyboardHook, resolvedKey, signal);
     const result = await session.stop();
     return result.text?.trim() || null;
   } catch (e) {
     if (session) {
-      try { await session.stop(); } catch { /* best-effort cleanup */ }
+      try {
+        await session.stop();
+      } catch {
+        /* best-effort cleanup */
+      }
     }
     throw e;
   } finally {
@@ -864,58 +861,58 @@ function waitForComboPress(
       cleanup();
       reject(signal.reason);
     };
-    signal.addEventListener("abort", onAbort, { once: true });
+    signal.addEventListener('abort', onAbort, { once: true });
 
     function cleanup() {
       unsubscribe();
-      signal.removeEventListener("abort", onAbort);
+      signal.removeEventListener('abort', onAbort);
     }
   });
 }
 
 function emitStatus(personaId: string, state: AgentStatus, reason?: string): void {
-  signals.send("agent:status", { personaId, state, reason });
-  console.debug(`[agent] ${personaId}: ${state}${reason ? ` (${reason})` : ""}`);
+  signals.send('agent:status', { personaId, state, reason });
+  console.debug(`[agent] ${personaId}: ${state}${reason ? ` (${reason})` : ''}`);
 }
 
 function emitLog(personaId: string, type: string, message: string): void {
   const entry = { type, message, timestamp: Date.now() };
-  signals.send("agent:log", { personaId, ...entry });
+  signals.send('agent:log', { personaId, ...entry });
 
   const handle = activeSessionHandles.get(personaId);
   if (handle) persistence.append(handle, entry);
 }
 
-function emitUserLog(personaId: string, text: string, source: "voice" | "text"): void {
-  const entry = { type: "user" as const, message: text, timestamp: Date.now(), source };
-  signals.send("agent:log", { personaId, ...entry });
+function emitUserLog(personaId: string, text: string, source: 'voice' | 'text'): void {
+  const entry = { type: 'user' as const, message: text, timestamp: Date.now(), source };
+  signals.send('agent:log', { personaId, ...entry });
 
   const handle = activeSessionHandles.get(personaId);
   if (handle) persistence.append(handle, entry);
 }
 
 function emitInterruptLog(personaId: string): void {
-  emitLog(personaId, "interrupt", "中断しました");
+  emitLog(personaId, 'interrupt', '中断しました');
 }
 
 function emitRecording(personaId: string, recording: boolean): void {
-  signals.send("agent:recording", { personaId, recording });
+  signals.send('agent:recording', { personaId, recording });
 }
 
 function isAbortError(e: unknown): boolean {
-  return e instanceof DOMException && e.name === "AbortError";
+  return e instanceof DOMException && e.name === 'AbortError';
 }
 
 function extractErrorMessage(err: unknown): string {
   if (!(err instanceof Error)) return String(err);
-  const cause = err.cause instanceof Error ? `: ${err.cause.message}` : "";
+  const cause = err.cause instanceof Error ? `: ${err.cause.message}` : '';
   return `${err.message}${cause}`;
 }
 
 function buildRpcMethods() {
   return {
-    "approve-permission": rpc.method({
-      description: "Approve or deny a pending permission request",
+    'approve-permission': rpc.method({
+      description: 'Approve or deny a pending permission request',
       input: z.object({
         requestId: z.string(),
         approved: z.boolean(),
@@ -924,14 +921,14 @@ function buildRpcMethods() {
       handler: async ({ requestId, approved, decision }) => {
         const deferred = pendingApprovals.get(requestId);
         if (!deferred) {
-          throw new Error("No pending approval for this request");
+          throw new Error('No pending approval for this request');
         }
         deferred.resolve({ approved, decision });
         return {};
       },
     }),
-    "answer-question": rpc.method({
-      description: "Answer a pending question request",
+    'answer-question': rpc.method({
+      description: 'Answer a pending question request',
       input: z.object({
         requestId: z.string(),
         answers: z.record(z.string()),
@@ -944,8 +941,8 @@ function buildRpcMethods() {
         return {};
       },
     }),
-    "send-message": rpc.method({
-      description: "Send a text message to the agent",
+    'send-message': rpc.method({
+      description: 'Send a text message to the agent',
       input: z.object({
         personaId: z.string(),
         text: z.string().min(1),
@@ -958,7 +955,7 @@ function buildRpcMethods() {
         }
         const queue = textQueues.get(personaId);
         if (!queue) {
-          throw new Error("No active session");
+          throw new Error('No active session');
         }
         await interruptSession(personaId);
         queue.clear();
@@ -966,8 +963,8 @@ function buildRpcMethods() {
         return { replayEntries };
       },
     }),
-    "set-text-focus": rpc.method({
-      description: "Report whether an editable element currently has focus in the WebView",
+    'set-text-focus': rpc.method({
+      description: 'Report whether an editable element currently has focus in the WebView',
       input: z.object({
         personaId: z.string(),
         focused: z.boolean(),
@@ -982,49 +979,49 @@ function buildRpcMethods() {
       },
     }),
     status: rpc.method({
-      description: "Get the current session state for all personas",
+      description: 'Get the current session state for all personas',
       handler: async () => {
         const result: Record<string, string> = {};
         for (const [id] of activeSessions) {
-          result[id] = "active";
+          result[id] = 'active';
         }
         return result;
       },
     }),
-    "get-session-status": rpc.method({
-      description: "Get the session status for a specific persona",
+    'get-session-status': rpc.method({
+      description: 'Get the session status for a specific persona',
       input: z.object({ personaId: z.string() }),
       handler: async ({ personaId }) => {
-        const status = activeSessions.has(personaId) ? "active" : "idle";
+        const status = activeSessions.has(personaId) ? 'active' : 'idle';
         return { status } as const;
       },
     }),
-    "start-session": rpc.method({
-      description: "Manually start an agent session for a persona",
+    'start-session': rpc.method({
+      description: 'Manually start an agent session for a persona',
       input: z.object({ personaId: z.string() }),
       handler: async ({ personaId }) => {
         const replayEntries = await startSession(personaId);
         return { replayEntries };
       },
     }),
-    "stop-session": rpc.method({
-      description: "Stop an active agent session for a persona",
+    'stop-session': rpc.method({
+      description: 'Stop an active agent session for a persona',
       input: z.object({ personaId: z.string() }),
       handler: async ({ personaId }) => {
         await stopSession(personaId);
         return {};
       },
     }),
-    "interrupt-session": rpc.method({
-      description: "Interrupt the current agent execution for a persona",
+    'interrupt-session': rpc.method({
+      description: 'Interrupt the current agent execution for a persona',
       input: z.object({ personaId: z.string() }),
       handler: async ({ personaId }) => {
         await interruptSession(personaId);
         return {};
       },
     }),
-    "list-worktrees": rpc.method({
-      description: "List worktrees for a workspace",
+    'list-worktrees': rpc.method({
+      description: 'List worktrees for a workspace',
       input: z.object({ workspacePath: z.string() }),
       handler: async ({ workspacePath }) => {
         const manager = new WorktreeManager(workspacePath);
@@ -1038,11 +1035,17 @@ function buildRpcMethods() {
         return { worktrees: results };
       },
     }),
-    "add-worktree": rpc.method({
-      description: "Create a new worktree in a workspace",
+    'add-worktree': rpc.method({
+      description: 'Create a new worktree in a workspace',
       input: z.object({
         workspacePath: z.string(),
-        name: z.string().min(1).regex(WORKTREE_NAME_PATTERN, "Name must contain only alphanumeric characters, hyphens, underscores, and dots"),
+        name: z
+          .string()
+          .min(1)
+          .regex(
+            WORKTREE_NAME_PATTERN,
+            'Name must contain only alphanumeric characters, hyphens, underscores, and dots',
+          ),
         branch: z.string().min(1),
       }),
       handler: async ({ workspacePath, name, branch }) => {
@@ -1051,16 +1054,16 @@ function buildRpcMethods() {
         return { worktree: info };
       },
     }),
-    "remove-worktree": rpc.method({
-      description: "Remove a worktree (optionally merge first)",
+    'remove-worktree': rpc.method({
+      description: 'Remove a worktree (optionally merge first)',
       input: z.object({
         workspacePath: z.string(),
         name: z.string(),
-        action: z.enum(["remove", "merge"]),
+        action: z.enum(['remove', 'merge']),
       }),
       handler: async ({ workspacePath, name, action }) => {
         const manager = new WorktreeManager(workspacePath);
-        if (action === "merge") {
+        if (action === 'merge') {
           const result = await manager.merge(name);
           if (!result.success) {
             throw new Error(result.error);
@@ -1071,8 +1074,8 @@ function buildRpcMethods() {
         return {};
       },
     }),
-    "list-branches": rpc.method({
-      description: "List git branches for a workspace",
+    'list-branches': rpc.method({
+      description: 'List git branches for a workspace',
       input: z.object({ workspacePath: z.string() }),
       handler: async ({ workspacePath }) => {
         const branches = await listBranches(workspacePath);
@@ -1080,16 +1083,16 @@ function buildRpcMethods() {
         return { branches, current };
       },
     }),
-    "worktree-status": rpc.method({
-      description: "Get status of a specific worktree",
+    'worktree-status': rpc.method({
+      description: 'Get status of a specific worktree',
       input: z.object({ workspacePath: z.string(), name: z.string() }),
       handler: async ({ workspacePath, name }) => {
         const manager = new WorktreeManager(workspacePath);
         return await manager.status(name);
       },
     }),
-    "get-current-branch": rpc.method({
-      description: "Resolve the current git branch for a workspace",
+    'get-current-branch': rpc.method({
+      description: 'Resolve the current git branch for a workspace',
       input: z.object({
         workspacePath: z.string(),
         worktreeName: z.string().nullable(),
@@ -1097,13 +1100,13 @@ function buildRpcMethods() {
       handler: async ({ workspacePath, worktreeName }) => {
         const branchName = await resolveCurrentBranch(workspacePath, worktreeName);
         if (!branchName) {
-          throw new Error("Not a git repository or branch could not be resolved");
+          throw new Error('Not a git repository or branch could not be resolved');
         }
         return { branchName };
       },
     }),
-    "list-sessions": rpc.method({
-      description: "List past sessions for a persona on a branch",
+    'list-sessions': rpc.method({
+      description: 'List past sessions for a persona on a branch',
       input: z.object({
         workspacePath: z.string(),
         personaId: z.string(),
@@ -1114,8 +1117,8 @@ function buildRpcMethods() {
         return { sessions };
       },
     }),
-    "get-session-logs": rpc.method({
-      description: "Read the full log entries for a past session",
+    'get-session-logs': rpc.method({
+      description: 'Read the full log entries for a past session',
       input: z.object({
         workspacePath: z.string(),
         personaId: z.string(),
@@ -1131,7 +1134,7 @@ function buildRpcMethods() {
 }
 
 async function shutdown(): Promise<void> {
-  console.log("[agent] Shutting down...");
+  console.log('[agent] Shutting down...');
   for (const [, controller] of activeSessions) {
     controller.abort();
   }
@@ -1148,9 +1151,7 @@ async function main(): Promise<void> {
   try {
     currentApiKey = await loadApiKey();
   } catch {
-    console.warn(
-      "[agent] API key not configured. Sessions require an API key.",
-    );
+    console.warn('[agent] API key not configured. Sessions require an API key.');
   }
 
   await startKeyboardHook();
@@ -1158,8 +1159,8 @@ async function main(): Promise<void> {
   await rpc.serve({ methods: buildRpcMethods() });
 }
 
-main().catch((err) => console.error("[agent] Fatal startup error:", err));
+main().catch((err) => console.error('[agent] Fatal startup error:', err));
 
-process.once("SIGTERM", () => {
-  shutdown().catch((err) => console.error("[agent] Shutdown error:", err));
+process.once('SIGTERM', () => {
+  shutdown().catch((err) => console.error('[agent] Shutdown error:', err));
 });

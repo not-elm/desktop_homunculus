@@ -2,8 +2,8 @@
 
 /// <reference types="node" />
 
-import { app } from "@hmcs/sdk";
-import { output } from "@hmcs/sdk/commands";
+import { app } from '@hmcs/sdk';
+import { output } from '@hmcs/sdk/commands';
 
 await app.exit();
 output.succeed();

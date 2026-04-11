@@ -1,11 +1,11 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn } from "storybook/test";
-import { CalendarDays, MapPin, Link as LinkIcon } from "lucide-react";
-import { HoverCard, HoverCardTrigger, HoverCardContent } from "./hover-card";
-import { Button } from "./button";
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { CalendarDays, Link as LinkIcon, MapPin } from 'lucide-react';
+import { fn } from 'storybook/test';
+import { Button } from './button';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from './hover-card';
 
 const meta = {
-  title: "UI/Overlays/HoverCard",
+  title: 'UI/Overlays/HoverCard',
   component: HoverCard,
   args: {
     onOpenChange: fn(),
@@ -50,7 +50,7 @@ export const Default: Story = {
 export const ProjectInfo: Story = {
   render: (args) => (
     <div className="flex items-center gap-1 text-sm">
-      Powered by{" "}
+      Powered by{' '}
       <HoverCard {...args}>
         <HoverCardTrigger asChild>
           <Button variant="link" className="h-auto p-0">
@@ -62,8 +62,8 @@ export const ProjectInfo: Story = {
           <div className="flex flex-col gap-2">
             <h4 className="text-sm font-semibold">Bevy Game Engine</h4>
             <p className="text-xs text-muted-foreground">
-              A refreshingly simple data-driven game engine built in Rust. Free
-              and open source forever.
+              A refreshingly simple data-driven game engine built in Rust. Free and open source
+              forever.
             </p>
             <div className="flex items-center gap-3 text-xs text-muted-foreground">
               <span className="flex items-center gap-1">
@@ -94,8 +94,7 @@ export const LocationCard: Story = {
         <div className="flex flex-col gap-2">
           <h4 className="text-sm font-semibold">Tokyo, Japan</h4>
           <p className="text-xs text-muted-foreground">
-            Capital and most populous city of Japan. Home to many anime studios
-            and game developers.
+            Capital and most populous city of Japan. Home to many anime studios and game developers.
           </p>
           <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
             <div>

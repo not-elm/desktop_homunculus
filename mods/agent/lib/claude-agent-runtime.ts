@@ -1,14 +1,14 @@
-import { query } from "@anthropic-ai/claude-agent-sdk";
 import type {
   Options,
-  Query,
-  SDKMessage,
   PermissionResult,
   PermissionUpdate,
-} from "@anthropic-ai/claude-agent-sdk";
-import type { AgentRuntime, AgentEvent, AgentResponse } from "./agent-runtime.ts";
-import { AsyncQueue, Deferred } from "./async-queue.ts";
-import type { AgentSettings } from "./types.ts";
+  Query,
+  SDKMessage,
+} from '@anthropic-ai/claude-agent-sdk';
+import { query } from '@anthropic-ai/claude-agent-sdk';
+import type { AgentEvent, AgentResponse, AgentRuntime } from './agent-runtime.ts';
+import { AsyncQueue, Deferred } from './async-queue.ts';
+import type { AgentSettings } from './types.ts';
 
 /** Item enqueued by canUseTool; awaited by mergeStreams. */
 interface PermissionQueueItem {
@@ -22,10 +22,10 @@ interface PermissionQueueItem {
 }
 
 /** Sentinel value to distinguish permission items from SDK messages in a race. */
-const PERMISSION_TAG = Symbol("permission");
+const PERMISSION_TAG = Symbol('permission');
 
 type RaceResult =
-  | { tag: "sdk"; value: IteratorResult<SDKMessage, void> }
+  | { tag: 'sdk'; value: IteratorResult<SDKMessage, void> }
   | { tag: typeof PERMISSION_TAG; value: PermissionQueueItem };
 
 /**
@@ -49,17 +49,24 @@ export class ClaudeAgentRuntime implements AgentRuntime {
   ): AsyncGenerator<AgentEvent, void, AgentResponse | undefined> {
     const permQueue = new AsyncQueue<PermissionQueueItem>();
     const canUseTool = createCanUseToolHandler(permQueue);
-    const options = buildQueryOptions(this.prompt, this.settings, this.apiKey, this.workDir, sessionId, canUseTool);
+    const options = buildQueryOptions(
+      this.prompt,
+      this.settings,
+      this.apiKey,
+      this.workDir,
+      sessionId,
+      canUseTool,
+    );
     const handle = query({ prompt: text, options });
 
     const onAbort = () => handle.close();
-    signal.addEventListener("abort", onAbort, { once: true });
+    signal.addEventListener('abort', onAbort, { once: true });
 
     try {
       yield* mergeStreams(handle, permQueue, signal);
     } finally {
-      signal.removeEventListener("abort", onAbort);
-      permQueue.rejectAll(new Error("stream closed"));
+      signal.removeEventListener('abort', onAbort);
+      permQueue.rejectAll(new Error('stream closed'));
       handle.close();
     }
   }
@@ -71,7 +78,7 @@ export class ClaudeAgentRuntime implements AgentRuntime {
  */
 function createCanUseToolHandler(
   permQueue: AsyncQueue<PermissionQueueItem>,
-): Options["canUseTool"] {
+): Options['canUseTool'] {
   return (toolName, input, options) => {
     console.log(`[agent] canUseTool called: ${toolName} (${options.toolUseID})`);
     const deferred = new Deferred<PermissionResult>();
@@ -109,7 +116,7 @@ async function* mergeStreams(
     while (!signal.aborted) {
       const result = await Promise.race([sdkNext, permNext]);
 
-      if (result.tag === "sdk") {
+      if (result.tag === 'sdk') {
         if (result.value.done) return;
         const event = mapSdkMessageToEvent(result.value.value);
         if (event) yield event;
@@ -121,25 +128,19 @@ async function* mergeStreams(
       }
     }
   } finally {
-    permQueue.rejectAll(new Error("stream closed"));
+    permQueue.rejectAll(new Error('stream closed'));
     await sdkIter.return?.();
   }
 }
 
 /** Tags an SDK iterator result for discrimination in Promise.race. */
-function wrapSdkNext(
-  promise: Promise<IteratorResult<SDKMessage, void>>,
-): Promise<RaceResult> {
-  return promise.then((value): RaceResult => ({ tag: "sdk", value }));
+function wrapSdkNext(promise: Promise<IteratorResult<SDKMessage, void>>): Promise<RaceResult> {
+  return promise.then((value): RaceResult => ({ tag: 'sdk', value }));
 }
 
 /** Tags a permission queue item for discrimination in Promise.race. Swallows rejection to prevent unhandled errors during cleanup. */
-function wrapPermNext(
-  promise: Promise<PermissionQueueItem>,
-): Promise<RaceResult> {
-  const wrapped = promise.then(
-    (value): RaceResult => ({ tag: PERMISSION_TAG, value }),
-  );
+function wrapPermNext(promise: Promise<PermissionQueueItem>): Promise<RaceResult> {
+  const wrapped = promise.then((value): RaceResult => ({ tag: PERMISSION_TAG, value }));
   wrapped.catch(() => {});
   return wrapped;
 }
@@ -147,7 +148,7 @@ function wrapPermNext(
 /** Builds the AgentEvent for a permission request. */
 function buildPermissionEvent(item: PermissionQueueItem): AgentEvent {
   return {
-    type: "permission_request",
+    type: 'permission_request',
     requestId: item.requestId,
     tool: item.tool,
     input: item.input,
@@ -166,19 +167,16 @@ function resolvePermissionDeferred(
 }
 
 /** Maps an AgentResponse to the SDK's PermissionResult. */
-function mapResponseToPermissionResult(
-  response: AgentResponse | undefined,
-): PermissionResult {
-  if (response?.type === "permission" && response.approved) {
+function mapResponseToPermissionResult(response: AgentResponse | undefined): PermissionResult {
+  if (response?.type === 'permission' && response.approved) {
     return {
-      behavior: "allow",
+      behavior: 'allow',
       updatedPermissions: response.updatedPermissions as PermissionUpdate[] | undefined,
     };
   }
-  const message = response?.type === "permission"
-    ? (response.message ?? "User denied")
-    : "No response";
-  return { behavior: "deny", message };
+  const message =
+    response?.type === 'permission' ? (response.message ?? 'User denied') : 'No response';
+  return { behavior: 'deny', message };
 }
 
 /**
@@ -187,11 +185,11 @@ function mapResponseToPermissionResult(
  */
 function mapSdkMessageToEvent(msg: SDKMessage): AgentEvent | null {
   switch (msg.type) {
-    case "assistant":
+    case 'assistant':
       return mapAssistantMessage(msg);
-    case "tool_use_summary":
-      return { type: "tool_use", tool: "", summary: msg.summary };
-    case "result":
+    case 'tool_use_summary':
+      return { type: 'tool_use', tool: '', summary: msg.summary };
+    case 'result':
       return mapResultMessage(msg);
     default:
       return null;
@@ -202,19 +200,23 @@ function mapSdkMessageToEvent(msg: SDKMessage): AgentEvent | null {
 function mapAssistantMessage(msg: { message: { content: unknown[] } }): AgentEvent | null {
   const blocks = msg.message.content as Array<{ type: string; text?: string }>;
   const text = blocks
-    .filter((b) => b.type === "text" && b.text)
+    .filter((b) => b.type === 'text' && b.text)
     .map((b) => b.text!)
-    .join("");
+    .join('');
   if (!text) return null;
-  return { type: "assistant_message", text };
+  return { type: 'assistant_message', text };
 }
 
 /** Maps a result message to a completed or error event. */
-function mapResultMessage(msg: { subtype: string; session_id: string; is_error: boolean }): AgentEvent {
+function mapResultMessage(msg: {
+  subtype: string;
+  session_id: string;
+  is_error: boolean;
+}): AgentEvent {
   if (msg.is_error) {
-    return { type: "error", message: `Agent ended with error (${msg.subtype})` };
+    return { type: 'error', message: `Agent ended with error (${msg.subtype})` };
   }
-  return { type: "completed", sessionId: msg.session_id };
+  return { type: 'completed', sessionId: msg.session_id };
 }
 
 /** Constructs the SDK Options for a query call. */
@@ -224,25 +226,30 @@ function buildQueryOptions(
   apiKey: string,
   workDir: string,
   sessionId: string | null,
-  canUseTool: Options["canUseTool"],
+  canUseTool: Options['canUseTool'],
 ): Options {
   const options: Options = {
     systemPrompt: prompt,
     cwd: workDir,
     mcpServers: {
-      homunculus: { type: "http", url: "http://localhost:3100/mcp" },
+      homunculus: { type: 'http', url: 'http://localhost:3100/mcp' },
     },
     hooks: {
       PreToolUse: [buildReadOnlyHook()],
     },
-    settings: { permissions: { allow: ["Bash(*)", "Write(*)", "Edit(*)"] } },
+    settings: { permissions: { allow: ['Bash(*)', 'Write(*)', 'Edit(*)'] } },
     allowedTools: settings.allowList.length > 0 ? settings.allowList : undefined,
     disallowedTools: settings.disallowedTools,
     canUseTool,
-    env: { ...process.env, NODE_OPTIONS: "", ANTHROPIC_API_KEY: apiKey, DEBUG_CLAUDE_AGENT_SDK: "1" },
+    env: {
+      ...process.env,
+      NODE_OPTIONS: '',
+      ANTHROPIC_API_KEY: apiKey,
+      DEBUG_CLAUDE_AGENT_SDK: '1',
+    },
     maxTurns: 100,
     stderr: (data: string) => {
-      for (const line of data.split("\n")) {
+      for (const line of data.split('\n')) {
         if (line.trim()) console.log(`[sdk-stderr] ${line}`);
       }
     },
@@ -255,13 +262,13 @@ function buildQueryOptions(
 /** Hook that auto-allows read-only tools without prompting. */
 function buildReadOnlyHook() {
   return {
-    matcher: "^(Read|Glob|Grep|mcp__homunculus__list|mcp__homunculus__get)",
+    matcher: '^(Read|Glob|Grep|mcp__homunculus__list|mcp__homunculus__get)',
     hooks: [
       () =>
         Promise.resolve({
           hookSpecificOutput: {
-            hookEventName: "PreToolUse" as const,
-            permissionDecision: "allow" as const,
+            hookEventName: 'PreToolUse' as const,
+            permissionDecision: 'allow' as const,
           },
         }),
     ],

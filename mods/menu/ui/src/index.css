@@ -61,7 +61,8 @@ body {
 }
 
 @keyframes orbital-float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
   }
   50% {
@@ -79,14 +80,14 @@ body {
 }
 
 @keyframes holo-corner-pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.4;
   }
   50% {
     opacity: 0.8;
   }
 }
-
 
 /* ━━ Menu HUD Container ━━ */
 
@@ -97,8 +98,8 @@ body {
   scrollbar-gutter: stable;
   width: var(--menu-w);
   max-width: 340px;
-  padding: var(--hud-space-sm) var(--hud-space-sm) var(--hud-space-sm) var(--hud-space-sm) !important;
-  box-shadow: none !important;
+  padding: var(--hud-space-sm) var(--hud-space-sm) var(--hud-space-sm) var(--hud-space-sm);
+  box-shadow: none;
   animation: orbital-float 4s ease-in-out infinite;
   animation-delay: 0.8s;
 }
@@ -117,7 +118,7 @@ body {
 
 /* Connection line — subtle cyan thread toward the character */
 .menu-hud::after {
-  content: '';
+  content: "";
   position: absolute;
   left: -6px;
   top: 25%;
@@ -157,7 +158,6 @@ body {
   white-space: nowrap;
   max-width: 200px;
 }
-
 
 /* ━━ Separator ━━ */
 
@@ -225,12 +225,11 @@ body {
 .menu-card:hover,
 .menu-card:focus {
   border-color: oklch(0.72 0.14 var(--menu-accent-hue) / 0.5);
-  background:
-    linear-gradient(
-      135deg,
-      oklch(0.72 0.14 var(--menu-accent-hue) / 0.18) 0%,
-      oklch(0.65 0.18 285 / 0.08) 100%
-    );
+  background: linear-gradient(
+    135deg,
+    oklch(0.72 0.14 var(--menu-accent-hue) / 0.18) 0%,
+    oklch(0.65 0.18 285 / 0.08) 100%
+  );
   transform: translateY(-1px);
 }
 
@@ -330,22 +329,21 @@ body {
   left: 0;
   right: 0;
   height: 1px;
-  background:
-    linear-gradient(
-      90deg,
-      transparent 5%,
-      oklch(0.72 0.14 192 / 0.35) 20%,
-      oklch(0.65 0.18 285 / 0.25) 50%,
-      oklch(0.7 0.16 350 / 0.35) 80%,
-      transparent 95%
-    );
+  background: linear-gradient(
+    90deg,
+    transparent 5%,
+    oklch(0.72 0.14 192 / 0.35) 20%,
+    oklch(0.65 0.18 285 / 0.25) 50%,
+    oklch(0.7 0.16 350 / 0.35) 80%,
+    transparent 95%
+  );
   pointer-events: none;
   z-index: 10;
   border-radius: inherit;
 }
 
 .menu-hud-highlight::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   background: linear-gradient(
@@ -390,16 +388,16 @@ body {
   }
 
   .menu-hud {
-    animation: none !important;
+    animation: none;
   }
 
   .menu-hud[data-state="open"] {
-    animation: none !important;
+    animation: none;
     opacity: 1;
   }
 
   .menu-hud[data-state="closed"] {
-    animation: none !important;
+    animation: none;
   }
 
   .menu-hud-highlight::after {
@@ -410,5 +408,4 @@ body {
     animation: none;
     opacity: 0.6;
   }
-
 }

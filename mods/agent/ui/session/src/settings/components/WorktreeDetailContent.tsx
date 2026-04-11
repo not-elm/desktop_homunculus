@@ -1,5 +1,5 @@
-import { GitBranch } from "lucide-react";
-import type { WorktreeData } from "./WorktreeNode.tsx";
+import { GitBranch } from 'lucide-react';
+import type { WorktreeData } from './WorktreeNode.tsx';
 
 interface WorktreeDetailContentProps {
   worktree: WorktreeData;
@@ -24,7 +24,7 @@ export function WorktreeDetailContent({ worktree }: WorktreeDetailContentProps) 
         <span className="ws-detail-label">Diff</span>
         <span className="ws-detail-value">
           <span className="ws-detail-plus">+{worktree.insertions}</span>
-          {" / "}
+          {' / '}
           <span className="ws-detail-minus">-{worktree.deletions}</span>
         </span>
       </div>
@@ -38,10 +38,12 @@ function StatusSection({ worktree }: { worktree: WorktreeData }) {
     <div className="ws-detail-separator">
       <div className="ws-detail-status">
         <span
-          className={`ws-dot ${worktree.hasUncommittedChanges ? "ws-dot--dirty" : "ws-dot--clean"}`}
+          className={`ws-dot ${worktree.hasUncommittedChanges ? 'ws-dot--dirty' : 'ws-dot--clean'}`}
         />
         <span className="ws-detail-status-text">
-          {worktree.hasUncommittedChanges ? "Uncommitted changes" : "Clean — no uncommitted changes"}
+          {worktree.hasUncommittedChanges
+            ? 'Uncommitted changes'
+            : 'Clean — no uncommitted changes'}
         </span>
       </div>
       <MergeStatus canMerge={worktree.canMerge} />

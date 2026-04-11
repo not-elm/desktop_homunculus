@@ -1,20 +1,20 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn } from "storybook/test";
-import { Info } from "lucide-react";
-import { Label } from "./label";
-import { Input } from "./input";
-import { Checkbox } from "./checkbox";
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { Info } from 'lucide-react';
+import { fn } from 'storybook/test';
+import { Checkbox } from './checkbox';
+import { Input } from './input';
+import { Label } from './label';
 
 const meta = {
-  title: "UI/Forms/Label",
+  title: 'UI/Forms/Label',
   component: Label,
   args: {
-    children: "Label text",
+    children: 'Label text',
     onClick: fn(),
   },
   argTypes: {
     children: {
-      control: "text",
+      control: 'text',
     },
   },
 } satisfies Meta<typeof Label>;

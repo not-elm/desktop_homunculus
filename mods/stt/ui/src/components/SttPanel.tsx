@@ -1,17 +1,12 @@
-import { useCallback } from "react";
-import { audio, Webview } from "@hmcs/sdk";
-import { useStt, type ModelCardState } from "../hooks/useStt";
+import { audio, Webview } from '@hmcs/sdk';
+import { useCallback } from 'react';
+import { type ModelCardState, useStt } from '../hooks/useStt';
 
 export function SttPanel() {
-  const {
-    models,
-    downloadModel,
-    cancelDownload,
-    errorMessage,
-  } = useStt();
+  const { models, downloadModel, cancelDownload, errorMessage } = useStt();
 
   const handleClose = useCallback(() => {
-    audio.se.play("se:close");
+    audio.se.play('se:close');
     Webview.current()?.close();
   }, []);
 
@@ -72,27 +67,27 @@ function ModelCard({
   onDownload: () => void;
   onCancel: () => void;
 }) {
-  const isReady = model.status === "downloaded";
-  const isDownloading = model.status === "downloading";
+  const isReady = model.status === 'downloaded';
+  const isDownloading = model.status === 'downloading';
 
   return (
     <div
-      className={`stt-model-card${isReady ? " stt-model-card--ready" : ""}`}
+      className={`stt-model-card${isReady ? ' stt-model-card--ready' : ''}`}
       aria-label={`${model.label} model, ${model.fileSize}${
-        isReady ? ", ready" : isDownloading ? ", downloading" : ", not downloaded"
+        isReady ? ', ready' : isDownloading ? ', downloading' : ', not downloaded'
       }`}
     >
       <span className="stt-model-card__name">{model.label}</span>
       <span className="stt-model-card__size">{model.fileSize}</span>
 
-      {model.status === "not_downloaded" && (
+      {model.status === 'not_downloaded' && (
         <span
           className="stt-model-card__download"
           role="button"
           tabIndex={0}
           onClick={onDownload}
           onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
+            if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault();
               onDownload();
             }
@@ -110,17 +105,15 @@ function ModelCard({
               style={{ width: `${model.downloadProgress ?? 0}%` }}
             />
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span className="stt-model-card__size">
-              {Math.round(model.downloadProgress ?? 0)}%
-            </span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span className="stt-model-card__size">{Math.round(model.downloadProgress ?? 0)}%</span>
             <span
               className="stt-model-card__cancel"
               role="button"
               tabIndex={0}
               onClick={onCancel}
               onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
+                if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault();
                   onCancel();
                 }
@@ -133,9 +126,7 @@ function ModelCard({
       )}
 
       {isReady && (
-        <span className="stt-model-card__status stt-model-card__status--ready">
-          ✓ Ready
-        </span>
+        <span className="stt-model-card__status stt-model-card__status--ready">✓ Ready</span>
       )}
     </div>
   );

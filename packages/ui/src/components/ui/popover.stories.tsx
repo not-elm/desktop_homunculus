@@ -1,20 +1,20 @@
-import { useRef, useState } from "react";
-import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn } from "storybook/test";
-import { Settings, MoreHorizontal, Info, Trash2 } from "lucide-react";
-import { Popover, PopoverTrigger, PopoverContent, PopoverAnchor } from "./popover";
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { Info, MoreHorizontal, Settings, Trash2 } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { fn } from 'storybook/test';
+import { Button } from './button';
 import {
   DropdownMenu,
-  DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-} from "./dropdown-menu";
-import { Button } from "./button";
-import { Label } from "./label";
-import { Input } from "./input";
+  DropdownMenuTrigger,
+} from './dropdown-menu';
+import { Input } from './input';
+import { Label } from './label';
+import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from './popover';
 
 const meta = {
-  title: "UI/Overlays/Popover",
+  title: 'UI/Overlays/Popover',
   component: Popover,
   args: {
     onOpenChange: fn(),
@@ -37,9 +37,7 @@ export const Default: Story = {
         <div className="grid gap-4">
           <div className="space-y-2">
             <h4 className="font-medium leading-none">Dimensions</h4>
-            <p className="text-sm text-muted-foreground">
-              Set the dimensions for the layer.
-            </p>
+            <p className="text-sm text-muted-foreground">Set the dimensions for the layer.</p>
           </div>
           <div className="grid gap-2">
             <div className="grid grid-cols-3 items-center gap-4">
@@ -67,12 +65,7 @@ export const WithAnchor: Story = {
           <div className="flex items-center gap-2 rounded-md border border-white/20 bg-primary/30 p-3">
             <Info className="size-4" />
             <span className="text-sm">Anchored row — popover attaches here</span>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="ml-auto"
-              onClick={() => setOpen(true)}
-            >
+            <Button variant="ghost" size="sm" className="ml-auto" onClick={() => setOpen(true)}>
               Show Details
             </Button>
           </div>
@@ -191,9 +184,7 @@ export const Controlled: Story = {
         <Button variant="secondary" size="sm" onClick={() => setOpen(false)}>
           Close
         </Button>
-        <span className="text-xs text-muted-foreground">
-          State: {open ? "open" : "closed"}
-        </span>
+        <span className="text-xs text-muted-foreground">State: {open ? 'open' : 'closed'}</span>
       </div>
     );
   },

@@ -1,5 +1,5 @@
-import { uIOhook } from "uiohook-napi";
-import { type ResolvedPttKey } from "./key-mapping.ts";
+import { uIOhook } from 'uiohook-napi';
+import type { ResolvedPttKey } from './key-mapping.ts';
 
 export interface PttCallback {
   onPttStart(): void;
@@ -23,8 +23,8 @@ export class KeyboardHookService {
   start(): boolean {
     if (this.started) return true;
     try {
-      uIOhook.on("keydown", (e) => this.handleKeyDown(e.keycode));
-      uIOhook.on("keyup", (e) => this.handleKeyUp(e.keycode));
+      uIOhook.on('keydown', (e) => this.handleKeyDown(e.keycode));
+      uIOhook.on('keyup', (e) => this.handleKeyUp(e.keycode));
       uIOhook.start();
       this.started = true;
       this.staleCheckInterval = setInterval(() => this.checkStaleKeys(), 5_000);
@@ -49,7 +49,7 @@ export class KeyboardHookService {
     if (!this.subscribers.has(keycode)) {
       this.subscribers.set(keycode, new Set());
     }
-    this.subscribers.get(keycode)!.add(callback);
+    this.subscribers.get(keycode)?.add(callback);
     return () => {
       this.subscribers.get(keycode)?.delete(callback);
     };
@@ -66,7 +66,9 @@ export class KeyboardHookService {
     if (this.pressedKeys.has(keycode)) return; // Debounce OS autorepeat
     this.pressedKeys.add(keycode);
     this.pressTimestamps.set(keycode, Date.now());
-    this.subscribers.get(keycode)?.forEach((cb) => cb.onPttStart());
+    this.subscribers.get(keycode)?.forEach((cb) => {
+      cb.onPttStart();
+    });
     this.notifyComboSubscribers();
   }
 
@@ -74,7 +76,9 @@ export class KeyboardHookService {
     if (!this.pressedKeys.has(keycode)) return;
     this.pressedKeys.delete(keycode);
     this.pressTimestamps.delete(keycode);
-    this.subscribers.get(keycode)?.forEach((cb) => cb.onPttStop());
+    this.subscribers.get(keycode)?.forEach((cb) => {
+      cb.onPttStop();
+    });
     this.notifyComboSubscribers();
   }
 
@@ -132,21 +136,16 @@ export function waitForComboRelease(
       cleanup();
       reject(signal.reason);
     };
-    signal.addEventListener("abort", onAbort, { once: true });
+    signal.addEventListener('abort', onAbort, { once: true });
 
     function cleanup() {
       unsubscribe();
-      signal.removeEventListener("abort", onAbort);
+      signal.removeEventListener('abort', onAbort);
     }
   });
 }
 
-export function isComboHeld(
-  pressedKeys: ReadonlySet<number>,
-  key: ResolvedPttKey,
-): boolean {
+export function isComboHeld(pressedKeys: ReadonlySet<number>, key: ResolvedPttKey): boolean {
   if (!pressedKeys.has(key.primaryKeycode)) return false;
-  return key.modifiers.every((keycodes) =>
-    keycodes.some((kc) => pressedKeys.has(kc)),
-  );
+  return key.modifiers.every((keycodes) => keycodes.some((kc) => pressedKeys.has(kc)));
 }

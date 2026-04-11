@@ -53,7 +53,7 @@ export class AsyncQueue<T> {
 
     return new Promise<T>((resolve, reject) => {
       this.waiters.push({ resolve, reject });
-      signal.addEventListener("abort", () => reject(signal.reason), {
+      signal.addEventListener('abort', () => reject(signal.reason), {
         once: true,
       });
     });
@@ -62,9 +62,7 @@ export class AsyncQueue<T> {
   /** Register a Deferred for bulk cleanup on interrupt. */
   trackDeferred(deferred: Deferred<unknown>): void {
     this.deferreds.add(deferred);
-    deferred.promise
-      .finally(() => this.deferreds.delete(deferred))
-      .catch(() => {});
+    deferred.promise.finally(() => this.deferreds.delete(deferred)).catch(() => {});
   }
 
   /** Reject all tracked deferreds and pending waiters. Called during interrupt/cleanup. */

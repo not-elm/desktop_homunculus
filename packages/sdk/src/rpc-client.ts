@@ -23,7 +23,7 @@
  * @packageDocumentation
  */
 
-import { host } from "./host";
+import { host } from './host';
 
 /**
  * Options for {@link rpc.call}.
@@ -85,7 +85,7 @@ export namespace rpc {
    * ```
    */
   export async function call<T = unknown>(options: RpcCallOptions): Promise<T> {
-    const url = host.createUrl("rpc/call");
+    const url = host.createUrl('rpc/call');
     const response = await host.post(url, {
       modName: options.modName,
       method: options.method,

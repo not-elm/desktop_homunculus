@@ -38,21 +38,21 @@
  * ```
  */
 export interface Transform {
-    /**
-     * The position of the entity in world space.
-     * Format: [x, y, z] where Y is typically up in Bevy's coordinate system.
-     */
-    translation: [number, number, number];
-    /**
-     * The rotation of the entity in world space, represented as a quaternion.
-     * Format: [x, y, z, w] where [0, 0, 0, 1] represents no rotation (identity).
-     */
-    rotation: [number, number, number, number];
-    /**
-     * The scale of the entity in world space.
-     * Format: [x, y, z] where [1, 1, 1] represents normal size.
-     */
-    scale: [number, number, number];
+  /**
+   * The position of the entity in world space.
+   * Format: [x, y, z] where Y is typically up in Bevy's coordinate system.
+   */
+  translation: [number, number, number];
+  /**
+   * The rotation of the entity in world space, represented as a quaternion.
+   * Format: [x, y, z, w] where [0, 0, 0, 1] represents no rotation (identity).
+   */
+  rotation: [number, number, number, number];
+  /**
+   * The scale of the entity in world space.
+   * Format: [x, y, z] where [1, 1, 1] represents normal size.
+   */
+  scale: [number, number, number];
 }
 
 /**
@@ -77,13 +77,13 @@ export type Quat = [number, number, number, number];
 
 /** Transform arguments for API requests. Partial version of Transform. */
 export interface TransformArgs {
-    translation?: Vec3;
-    rotation?: Quat;
-    scale?: Vec3;
+  translation?: Vec3;
+  rotation?: Quat;
+  scale?: Vec3;
 }
 
 /** A 2D rectangle defined by minimum and maximum points. */
 export interface Rect {
-    min: Vec2;
-    max: Vec2;
+  min: Vec2;
+  max: Vec2;
 }
