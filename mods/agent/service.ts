@@ -593,6 +593,17 @@ function buildRpcMethods() {
         return {};
       },
     }),
+    'toggle-workers-webview': rpc.method({
+      description: 'Open or close the Workers WebView for a persona.',
+      input: z.object({
+        personaId: z.string().optional(),
+      }),
+      handler: async ({ personaId }) => {
+        if (!personaId) throw new Error('personaId is required');
+        await sessionManager.toggleWorkersWebview(personaId);
+        return {};
+      },
+    }),
   };
 }
 

@@ -1,4 +1,4 @@
-import { audio, Persona as SdkPersona, signals, stt } from '@hmcs/sdk';
+import { audio, Persona as SdkPersona, preferences, signals, stt, Webview, webviewSource } from '@hmcs/sdk';
 import { rpc } from '@hmcs/sdk/rpc';
 import { AsyncQueue, Deferred } from './async-queue.ts';
 import { MessageRouter } from './coordination/message-router.ts';
@@ -86,6 +86,7 @@ export class SessionManager {
   private readonly textQueues = new Map<string, AsyncQueue<string>>();
   private readonly textFocusedPersonas = new Set<string>();
   private readonly activeSessionHandles = new Map<string, SessionHandle>();
+  private readonly workersWebviews = new Map<string, Webview>();
 
   constructor(
     private readonly persistence: SessionPersistence,
@@ -207,6 +208,39 @@ export class SessionManager {
       this.textQueues.delete(personaId);
     }
     this.sessions.delete(personaId);
+
+    const wv = this.workersWebviews.get(personaId);
+    if (wv) {
+      try { await wv.close(); } catch { /* ignore */ }
+      this.workersWebviews.delete(personaId);
+    }
+  }
+
+  /**
+   * Toggle the Workers WebView for a persona.
+   * Opens if not open, closes if already open.
+   */
+  async toggleWorkersWebview(personaId: string): Promise<void> {
+    const existing = this.workersWebviews.get(personaId);
+    if (existing) {
+      try { await existing.close(); } catch { /* may already be closed */ }
+      this.workersWebviews.delete(personaId);
+      return;
+    }
+
+    const savedPos = await preferences.load<[number, number, number]>(
+      `workers-webview:${personaId}:position`,
+    );
+    const translation = savedPos ?? [1.0, 1.5, 11.0];
+
+    const wv = await Webview.open({
+      source: webviewSource.local('agent:workers-ui'),
+      size: [0.55, 0.65],
+      viewportSize: [340, 360],
+      transform: { translation },
+    });
+    await wv.setLinkedPersona(personaId);
+    this.workersWebviews.set(personaId, wv);
   }
 
   /** Abort every tracked session without awaiting persistence cleanup. */
