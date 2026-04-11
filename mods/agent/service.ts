@@ -4,15 +4,16 @@ import path from 'node:path';
 import { preferences, Persona as SdkPersona, signals } from '@hmcs/sdk';
 import { rpc } from '@hmcs/sdk/rpc';
 import { z } from 'zod';
-import { currentBranch, gitExec, isGitRepo, listBranches } from './lib/git.ts';
+import { buildFrontmanPrompt, createFrontmanRuntime } from './lib/frontman.ts';
+import { currentBranch, isGitRepo, listBranches } from './lib/git.ts';
 import { type ResolvedPttKey, resolvePttKeycodes } from './lib/key-mapping.ts';
 import { KeyboardHookService } from './lib/keyboard-hook.ts';
-import { buildPersonaPrompt, buildSessionContext, type WorktreeContext } from './lib/prompt.ts';
 import type { AgentRuntime } from './lib/runtime/agent-runtime.ts';
 import { CodexAppServerProcess } from './lib/runtime/codex-appserver-process.ts';
 import { SessionManager } from './lib/session-manager.ts';
 import { type PersistLogEntry, SessionPersistence } from './lib/session-persistence.ts';
 import { type AgentSettings, DEFAULT_SETTINGS, type Persona } from './lib/types.ts';
+// biome-ignore lint/correctness/noUnusedImports: reserved for delegate-task RPC (Phase 5)
 import { createWorkerRuntime } from './lib/worker.ts';
 import { WORKTREE_NAME_PATTERN, WorktreeManager } from './lib/worktree-manager.ts';
 
@@ -118,13 +119,11 @@ async function startSession(
     });
   }
 
-  const worktreeCtx = await buildWorktreeContext(settings, workDir);
-
   const basePath = settings.workspaces.paths[selection.workspaceIndex];
   const branchName = basePath ? await resolveCurrentBranch(basePath, selection.worktreeName) : null;
 
-  // Read previous session context for prompt injection
-  let sessionContext: string | undefined;
+  // Read previous session entries for UI replay. Frontman does not use
+  // session context injection — that will be handled by Workers (Phase 5).
   let replayEntries: PersistLogEntry[] = [];
   if (basePath && branchName) {
     const contextUuid =
@@ -133,14 +132,13 @@ async function startSession(
     if (contextUuid) {
       const entries = await persistence.read(basePath, personaId, branchName, contextUuid);
       if (entries.length > 0) {
-        sessionContext = buildSessionContext(entries);
         replayEntries = entries;
       }
     }
   }
 
-  const prompt = buildPersonaPrompt(persona, worktreeCtx, sessionContext);
-  const runtime = createWorkerRuntime({
+  const prompt = buildFrontmanPrompt(persona);
+  const runtime = createFrontmanRuntime({
     settings,
     prompt,
     apiKey: currentApiKey,
@@ -223,29 +221,6 @@ function resolveWorkingDirectory(personaId: string, settings: AgentSettings): st
     return path.join(basePath, '.hmcs/worktrees', selection.worktreeName);
   }
   return basePath;
-}
-
-async function buildWorktreeContext(
-  settings: AgentSettings,
-  workDir: string,
-): Promise<WorktreeContext | undefined> {
-  const { selection } = settings.workspaces;
-  if (!selection.worktreeName) return undefined;
-  const baseBranch = await readWorktreeBaseBranch(workDir);
-  return {
-    worktreeName: selection.worktreeName,
-    baseBranch,
-    worktreePath: workDir,
-  };
-}
-
-async function readWorktreeBaseBranch(worktreePath: string): Promise<string> {
-  try {
-    const result = await gitExec(worktreePath, ['config', 'hmcs.baseBranch']);
-    return result.trim() || 'main';
-  } catch {
-    return 'main';
-  }
 }
 
 /** Resolve the current git branch for session scoping. */
