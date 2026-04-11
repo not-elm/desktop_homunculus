@@ -229,4 +229,33 @@ mod tests {
         let snap: PersonaSnapshot = serde_json::from_slice(&body).unwrap();
         assert_eq!(snap.persona.thumbnail.as_deref(), Some("image:example:thumb"));
     }
+
+    #[tokio::test]
+    async fn test_patch_persona_thumbnail_null_clears_field() {
+        let (mut app, router) = test_app();
+
+        // Create a persona with a thumbnail
+        let request = Request::post("/personas")
+            .header("content-type", "application/json")
+            .body(Body::from(
+                r#"{"id":"thumb-clear","thumbnail":"image:example:thumb"}"#,
+            ))
+            .unwrap();
+        let response = call_any_status(&mut app, router.clone(), request).await;
+        assert_eq!(response.status(), StatusCode::CREATED);
+
+        // PATCH with thumbnail: null should clear it
+        let request = Request::builder()
+            .method("PATCH")
+            .uri("/personas/thumb-clear")
+            .header("content-type", "application/json")
+            .body(Body::from(r#"{"thumbnail":null}"#))
+            .unwrap();
+        let response = call_any_status(&mut app, router, request).await;
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let snap: PersonaSnapshot = serde_json::from_slice(&body).unwrap();
+        assert_eq!(snap.persona.thumbnail, None);
+    }
 }
