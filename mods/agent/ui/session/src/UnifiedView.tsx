@@ -238,7 +238,7 @@ export function UnifiedView() {
       data-resizing={resizing || undefined}
       data-minimized={minimized || undefined}
       data-mounted={mounted || undefined}
-      style={minimized ? undefined : { width: sidebarOpen ? 800 : 400 }}
+      style={minimized ? undefined : { width: sidebarOpen ? sidebarWidth + 400 : 400 }}
       onClick={minimized ? handleRestore : undefined}
       onKeyDown={minimized ? (e: React.KeyboardEvent) => { if (e.key === "Enter") handleRestore(); } : undefined}
       role={minimized ? "button" : undefined}
