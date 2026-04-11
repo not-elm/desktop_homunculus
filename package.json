@@ -11,6 +11,7 @@
     "lint": "turbo run lint"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.4.11",
     "tsx": "^4.21.0",
     "turbo": "^2.8.13"
   },
