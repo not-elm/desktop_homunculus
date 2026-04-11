@@ -94,6 +94,12 @@ async fn read_and_respond(path: &std::path::Path) -> Result<Response, ApiError> 
                 axum::http::header::HeaderName::from_static("x-content-type-options"),
                 "nosniff",
             ),
+            // Force revalidation on every request. Asset IDs are not strictly
+            // content-addressed in this codebase — e.g. `vrm:local:{personaId}`
+            // and hash-derived thumbnail IDs can map to different file
+            // contents over time (local re-imports overwrite the asset file
+            // in place). Without `no-cache` the browser shows stale images
+            // after re-imports.
             (axum::http::header::CACHE_CONTROL, "no-cache"),
         ],
         bytes,
