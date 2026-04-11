@@ -522,6 +522,7 @@ mod tests {
         app.init_resource::<ModMenuMetadataList>();
         app.init_resource::<homunculus_core::prelude::PersonaIndex>();
         let config = HomunculusConfig::default();
+        app.insert_resource(config.clone());
         let rpc_registry = Arc::new(RwLock::new(RpcRegistry::default()));
         let router = create_router(
             app.world().resource::<ApiReactor>().clone(),
