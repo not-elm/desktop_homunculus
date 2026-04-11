@@ -18,6 +18,17 @@ const DEFAULTS = {
   postPhonemeLength: 0.1,
 };
 
+/** Opaque audio query object returned by the VoiceVox API. */
+interface VoicevoxAudioQuery extends Record<string, unknown> {
+  speedScale: number;
+  pitchScale: number;
+  intonationScale: number;
+  volumeScale: number;
+  pauseLength: number;
+  prePhonemeLength: number;
+  postPhonemeLength: number;
+}
+
 interface VoicevoxSettings {
   speakerId: number;
   speedScale: number;
@@ -105,7 +116,7 @@ async function speakSentence(
   }
 }
 
-async function fetchAudioQuery(sentence: string, speakerId: number): Promise<any> {
+async function fetchAudioQuery(sentence: string, speakerId: number): Promise<VoicevoxAudioQuery> {
   const url = `${VOICEVOX_HOST}/audio_query?speaker=${speakerId}&text=${encodeURIComponent(sentence)}`;
   let response: Response;
   try {
@@ -122,7 +133,7 @@ async function fetchAudioQuery(sentence: string, speakerId: number): Promise<any
   return response.json();
 }
 
-function applyVoiceParams(query: any, settings: VoicevoxSettings): void {
+function applyVoiceParams(query: VoicevoxAudioQuery, settings: VoicevoxSettings): void {
   query.speedScale = settings.speedScale;
   query.pitchScale = settings.pitchScale;
   query.intonationScale = settings.intonationScale;
@@ -132,15 +143,15 @@ function applyVoiceParams(query: any, settings: VoicevoxSettings): void {
   query.postPhonemeLength = settings.postPhonemeLength;
 }
 
-function generateTimeline(query: any) {
+function generateTimeline(query: VoicevoxAudioQuery) {
   try {
-    return voicevoxToTimeline(query);
+    return voicevoxToTimeline(query as Parameters<typeof voicevoxToTimeline>[0]);
   } catch (err) {
     throw new Error(`Timeline generation failed: ${(err as Error).message}`);
   }
 }
 
-async function synthesize(query: any, speakerId: number): Promise<ArrayBuffer> {
+async function synthesize(query: VoicevoxAudioQuery, speakerId: number): Promise<ArrayBuffer> {
   const url = `${VOICEVOX_HOST}/synthesis?speaker=${speakerId}`;
   let response: Response;
   try {

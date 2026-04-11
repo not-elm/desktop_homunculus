@@ -130,6 +130,7 @@ function DetailHeader({
       </div>
       <div className="detail-header-actions">
         <button
+          type="button"
           className={`detail-spawn-btn ${isSpawned ? 'deactivate' : 'activate'}`}
           onClick={onSpawnToggle}
           disabled={saving}
@@ -137,6 +138,7 @@ function DetailHeader({
           {isSpawned ? 'Despawn' : 'Spawn'}
         </button>
         <button
+          type="button"
           className="management-btn management-btn--success"
           onClick={onSave}
           disabled={saving}
@@ -151,7 +153,7 @@ function DetailHeader({
 function DeleteSection({ onDelete }: { onDelete: () => void }) {
   return (
     <div className="delete-section">
-      <button className="management-btn management-btn--danger" onClick={onDelete}>
+      <button type="button" className="management-btn management-btn--danger" onClick={onDelete}>
         Delete Persona
       </button>
     </div>
@@ -176,12 +178,17 @@ function DeleteConfirmDialog({
         </DialogHeader>
         <DialogFooter>
           <button
+            type="button"
             className="management-btn management-btn--secondary"
             onClick={() => onOpenChange(false)}
           >
             Cancel
           </button>
-          <button className="management-btn management-btn--danger" onClick={onConfirm}>
+          <button
+            type="button"
+            className="management-btn management-btn--danger"
+            onClick={onConfirm}
+          >
             Delete
           </button>
         </DialogFooter>

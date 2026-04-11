@@ -75,6 +75,7 @@ function LeftColumn({
           <div className="detail-auto-sublabel">Launch at startup</div>
         </div>
         <button
+          type="button"
           className={`toggle-mini ${autoSpawn ? 'on' : 'off'}`}
           onClick={onAutoSpawnToggle}
           aria-label="Toggle auto spawn"

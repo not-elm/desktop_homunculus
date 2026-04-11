@@ -2,6 +2,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { KeyCaptureField } from '../../components/KeyCaptureField';
 import type { AgentSettings, PttKey } from '../hooks/useSettingsDraft';
 import type { SettingsCategory } from '../types';
+import { PermissionSeField } from './PermissionSeField';
 import { PhraseListField } from './PhraseListField';
 
 interface SettingsFormViewProps {
@@ -101,6 +102,8 @@ function PermissionsForm({
 
   return (
     <>
+      <PermissionSeField />
+      <div className="stg-section-divider" />
       <PhraseListField
         label="Default Allow List"
         description="Tools always permitted without asking"

@@ -60,7 +60,7 @@ export const WithIcon: Story = {
 export const AsLink: Story = {
   render: () => (
     <Badge asChild variant="outline">
-      <a href="#">Clickable Badge</a>
+      <a href="https://example.com">Clickable Badge</a>
     </Badge>
   ),
 };

@@ -201,7 +201,7 @@ function mapAssistantMessage(msg: { message: { content: unknown[] } }): AgentEve
   const blocks = msg.message.content as Array<{ type: string; text?: string }>;
   const text = blocks
     .filter((b) => b.type === 'text' && b.text)
-    .map((b) => b.text!)
+    .map((b) => b.text as string)
     .join('');
   if (!text) return null;
   return { type: 'assistant_message', text };

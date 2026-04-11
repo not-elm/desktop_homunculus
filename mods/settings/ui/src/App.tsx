@@ -32,10 +32,11 @@ export function App() {
       </div>
 
       <div className="settings-footer">
-        <button className="settings-close" onClick={handleClose}>
+        <button type="button" className="settings-close" onClick={handleClose}>
           Close
         </button>
         <button
+          type="button"
           className={`settings-save ${saved ? 'settings-save--success' : ''}`}
           onClick={handleSave}
           disabled={saving}

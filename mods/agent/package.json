@@ -24,6 +24,11 @@
         "path": "ui/session/dist/index.html",
         "type": "html",
         "description": "Agent session HUD"
+      },
+      "agent:request-permissions": {
+        "path": "assets/request_permissions.mp3",
+        "type": "sound",
+        "description": "Permission request SE"
       }
     }
   },

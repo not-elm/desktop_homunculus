@@ -1,7 +1,7 @@
 import { mkdirSync } from 'node:fs';
 import { homedir } from 'node:os';
 import path from 'node:path';
-import { preferences, Persona as SdkPersona, signals, stt } from '@hmcs/sdk';
+import { audio, preferences, Persona as SdkPersona, signals, stt } from '@hmcs/sdk';
 import { rpc } from '@hmcs/sdk/rpc';
 import { z } from 'zod';
 import type { AgentEvent, AgentResponse, AgentRuntime } from './lib/agent-runtime.ts';
@@ -12,6 +12,7 @@ import { CodexAppServerRuntime } from './lib/codex-appserver-runtime.ts';
 import { currentBranch, gitExec, isGitRepo, listBranches } from './lib/git.ts';
 import { type ResolvedPttKey, resolvePttKeycodes } from './lib/key-mapping.ts';
 import { isComboHeld, KeyboardHookService, waitForComboRelease } from './lib/keyboard-hook.ts';
+import { DEFAULT_PERMISSION_SE, resolvePermissionSeAsset } from './lib/permission-se.ts';
 import { buildPersonaPrompt, buildSessionContext, type WorktreeContext } from './lib/prompt.ts';
 import {
   type PersistLogEntry,
@@ -255,6 +256,23 @@ async function loadPersona(personaId: string): Promise<Persona> {
   };
 }
 
+async function playPermissionSe(personaId: string): Promise<void> {
+  let assetId: string | null;
+  try {
+    const p = await SdkPersona.load(personaId);
+    const metadata = await p.metadata();
+    assetId = resolvePermissionSeAsset(metadata);
+  } catch (e) {
+    console.error(`[agent] failed to load permission SE metadata, using default:`, e);
+    assetId = DEFAULT_PERMISSION_SE;
+  }
+  if (assetId) {
+    audio.se.play(assetId).catch((e) => {
+      console.error(`[agent] failed to play permission SE:`, e);
+    });
+  }
+}
+
 function resolveWorkingDirectory(personaId: string, settings: AgentSettings): string {
   const { paths, selection } = settings.workspaces;
   const basePath = paths[selection.workspaceIndex];
@@ -316,7 +334,7 @@ function createRuntime(
     case 'codex':
       return new CodexAppServerRuntime(prompt, settings, workDir, getAppServerProcess());
     case 'sdk':
-      return new ClaudeAgentRuntime(prompt, settings, apiKey!, workDir);
+      return new ClaudeAgentRuntime(prompt, settings, apiKey as string, workDir);
     default:
       throw new Error(`Runtime "${settings.runtime}" is not yet implemented.`);
   }
@@ -625,6 +643,8 @@ async function resolvePermission(
     JSON.stringify(permissionPayload, null, 2),
   );
 
+  playPermissionSe(personaId);
+
   signals.send('agent:permission', permissionPayload);
 
   const timer = setTimeout(
@@ -635,7 +655,7 @@ async function resolvePermission(
   const onAbort = () => deferred.reject(signal.reason);
   signal.addEventListener('abort', onAbort, { once: true });
 
-  const resolvedKey = resolvePttKeycodes(settings.pttKey!);
+  const resolvedKey = resolvePttKeycodes(settings.pttKey as NonNullable<typeof settings.pttKey>);
   if (resolvedKey) {
     runVoiceApproval(personaId, resolvedKey, settings, combined, deferred);
   }

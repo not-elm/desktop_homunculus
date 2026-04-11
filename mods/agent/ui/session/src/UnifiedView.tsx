@@ -167,15 +167,25 @@ export function UnifiedView() {
 
   const handleAddWorkspaceFromPanel = useCallback(async () => {
     try {
-      const path = await dialog.pickFolder({
+      const pickedPath = await dialog.pickFolder({
         title: 'Select workspace directory',
       });
-      if (!path) return;
-      handleAddWorkspace(path);
+      if (!pickedPath) return;
+      const newPaths = [...paths, pickedPath];
+      const newIndex = newPaths.length - 1;
+      void draft.autoSave({
+        ...draft.settings,
+        workspaces: {
+          paths: newPaths,
+          selection: { workspaceIndex: newIndex, worktreeName: null },
+        },
+      });
+      setActiveCategory(null);
+      setBodyContent({ kind: 'sessionLog' });
     } catch (e) {
       console.error('pickFolder failed:', e);
     }
-  }, [handleAddWorkspace]);
+  }, [paths, draft]);
 
   function handleRemoveWorkspace(index: number) {
     const newPaths = paths.filter((_, i) => i !== index);
@@ -229,6 +239,8 @@ export function UnifiedView() {
   if (draft.loading) return null;
 
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: role="button" is conditionally applied when minimized
+    // biome-ignore lint/a11y/useAriaPropsSupportedByRole: aria-label is valid when role="button" is set
     <div
       className="stg-chrome"
       data-sidebar={sidebarOpen ? 'open' : 'closed'}
@@ -284,6 +296,7 @@ export function UnifiedView() {
             refreshKey={0}
           />
         </div>
+        {/* biome-ignore lint/a11y/noStaticElementInteractions: resize handle is mouse-only by design */}
         <div className="uv-resize-handle" onMouseDown={handleResizeStart} />
         <div className="uv-main">
           <BodyPanel
@@ -462,15 +475,21 @@ function TitleBar({
       <div className="uv-header-spacer" />
       <button
         className={`hud-session-toggle${isActive ? ' hud-session-toggle--active' : ''}`}
+        type="button"
         onClick={onToggleSession}
         title={isActive ? 'Stop Session' : 'Start Session'}
       >
         {isActive ? <StopSquare /> : <PlayTriangle />}
       </button>
-      <button className="hud-icon-btn" onClick={onMinimize} title="Minimize">
+      <button className="hud-icon-btn" type="button" onClick={onMinimize} title="Minimize">
         <MinimizeIcon />
       </button>
-      <button className="hud-icon-btn hud-icon-btn--close" onClick={onClose} title="Close">
+      <button
+        className="hud-icon-btn hud-icon-btn--close"
+        type="button"
+        onClick={onClose}
+        title="Close"
+      >
         <CloseIcon />
       </button>
     </div>
@@ -559,7 +578,7 @@ function formatElapsed(ms: number): string {
 
 function HamburgerIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
       <path
         d="M2 4h10M2 7h10M2 10h10"
         stroke="currentColor"
@@ -572,7 +591,7 @@ function HamburgerIcon() {
 
 function PlayTriangle() {
   return (
-    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
       <path d="M3 2L10 6L3 10V2Z" fill="currentColor" />
     </svg>
   );
@@ -580,7 +599,7 @@ function PlayTriangle() {
 
 function StopSquare() {
   return (
-    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
       <rect x="2.5" y="2.5" width="7" height="7" rx="1" fill="currentColor" />
     </svg>
   );
@@ -588,7 +607,7 @@ function StopSquare() {
 
 function CloseIcon() {
   return (
-    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
       <path d="M3 3L9 9M9 3L3 9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
     </svg>
   );
@@ -597,7 +616,7 @@ function CloseIcon() {
 function RecordingIndicator() {
   return (
     <span className="hud-recording-indicator">
-      <svg width="14" height="14" viewBox="0 0 12 12" fill="none">
+      <svg width="14" height="14" viewBox="0 0 12 12" fill="none" aria-hidden="true">
         <rect x="4" y="1" width="4" height="6" rx="2" fill="oklch(0.8 0.18 30)" />
         <path
           d="M2.5 5.5V6a3.5 3.5 0 0 0 7 0V5.5"
@@ -618,7 +637,7 @@ function RecordingIndicator() {
 
 function MinimizeIcon() {
   return (
-    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
       <path d="M2.5 6h7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
     </svg>
   );

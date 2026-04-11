@@ -114,6 +114,7 @@ function SettingsContent({ personaId }: { personaId: string }) {
       <div className="settings-tabs">
         {tabs.map((t) => (
           <button
+            type="button"
             key={t.id}
             className={`settings-tab ${tab === t.id ? 'settings-tab--active' : ''}`}
             onClick={() => setTab(t.id)}
@@ -145,10 +146,11 @@ function SettingsContent({ personaId }: { personaId: string }) {
 
       {/* Footer */}
       <div className="settings-footer">
-        <button className="settings-close" onClick={handleClose}>
+        <button type="button" className="settings-close" onClick={handleClose}>
           Close
         </button>
         <button
+          type="button"
           className={`settings-save ${saved ? 'settings-save--success' : ''}`}
           onClick={handleSave}
           disabled={saving}

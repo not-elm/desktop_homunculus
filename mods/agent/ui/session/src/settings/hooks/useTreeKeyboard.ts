@@ -51,12 +51,12 @@ export function useTreeKeyboard({ onSelect }: UseTreeKeyboardOptions): UseTreeKe
         }
         case 'ArrowRight': {
           e.preventDefault();
-          handleArrowRight(current, items);
+          arrowRight(current, items, focusItem);
           break;
         }
         case 'ArrowLeft': {
           e.preventDefault();
-          handleArrowLeft(current);
+          arrowLeft(current, focusItem);
           break;
         }
         case 'Enter': {
@@ -83,37 +83,41 @@ export function useTreeKeyboard({ onSelect }: UseTreeKeyboardOptions): UseTreeKe
         }
       }
     },
-    [getVisibleItems, focusItem, onSelect, handleArrowRight, handleArrowLeft],
+    [getVisibleItems, focusItem, onSelect],
   );
 
-  function handleArrowRight(current: HTMLElement, items: HTMLElement[]) {
-    const expanded = current.getAttribute('aria-expanded');
-    if (expanded === 'false') {
-      const chevron = current.querySelector<HTMLElement>('.ws-chevron');
-      if (chevron) chevron.click();
-      return;
-    }
-    if (expanded === 'true') {
-      const idx = items.indexOf(current);
-      const next = items[idx + 1];
-      if (next && getAriaLevel(next) > getAriaLevel(current)) {
-        focusItem(next);
-      }
-    }
-  }
-
-  function handleArrowLeft(current: HTMLElement) {
-    const expanded = current.getAttribute('aria-expanded');
-    if (expanded === 'true') {
-      const chevron = current.querySelector<HTMLElement>('.ws-chevron');
-      if (chevron) chevron.click();
-      return;
-    }
-    const parent = findParentTreeItem(current);
-    if (parent) focusItem(parent);
-  }
-
   return { treeRef, handleKeyDown, focusItem };
+}
+
+function arrowRight(
+  current: HTMLElement,
+  items: HTMLElement[],
+  focusItem: (el: HTMLElement) => void,
+) {
+  const expanded = current.getAttribute('aria-expanded');
+  if (expanded === 'false') {
+    const chevron = current.querySelector<HTMLElement>('.ws-chevron');
+    if (chevron) chevron.click();
+    return;
+  }
+  if (expanded === 'true') {
+    const idx = items.indexOf(current);
+    const next = items[idx + 1];
+    if (next && getAriaLevel(next) > getAriaLevel(current)) {
+      focusItem(next);
+    }
+  }
+}
+
+function arrowLeft(current: HTMLElement, focusItem: (el: HTMLElement) => void) {
+  const expanded = current.getAttribute('aria-expanded');
+  if (expanded === 'true') {
+    const chevron = current.querySelector<HTMLElement>('.ws-chevron');
+    if (chevron) chevron.click();
+    return;
+  }
+  const parent = findParentTreeItem(current);
+  if (parent) focusItem(parent);
 }
 
 // Supports 2-level tree (workspace > worktree). For deeper nesting, walk all ancestor groups.
