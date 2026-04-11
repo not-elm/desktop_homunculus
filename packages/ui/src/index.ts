@@ -1,3 +1,4 @@
+export { useClickOutside } from './hooks/use-click-outside';
 export * from './components/sliders/NumericSlider';
 export * from './components/ui/accordion';
 export * from './components/ui/alert';
