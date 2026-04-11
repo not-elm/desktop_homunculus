@@ -8,12 +8,9 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@hmcs/ui";
-import {
-  PersonaFields,
-  type PersonaFormValues,
-} from "@persona/shared/components/PersonaFields";
-import VrmSelect from "./VrmSelect";
-import { usePersonaDetail } from "../hooks/usePersonaDetail";
+import { PersonaDetailBody } from "@persona/shared/components/PersonaDetailBody";
+import { usePersonaDetail } from "@persona/shared/hooks/usePersonaDetail";
+import { useThumbnailImport } from "@persona/shared/hooks/useThumbnailImport";
 
 interface DetailViewProps {
   personaId: string;
@@ -28,11 +25,16 @@ export default function DetailView({
   onSaved,
   onDelete,
 }: DetailViewProps) {
-  const callbacks = useMemo(() => ({ onDirtyChange, onSaved }), [onDirtyChange, onSaved]);
+  const callbacks = useMemo(
+    () => ({ onDirtyChange, onSaved }),
+    [onDirtyChange, onSaved],
+  );
   const {
     snapshot,
     formValues,
     vrmAssetId,
+    thumbnail,
+    setThumbnail,
     saving,
     saved,
     setFormValues,
@@ -43,6 +45,7 @@ export default function DetailView({
   } = usePersonaDetail(personaId, callbacks);
 
   const persona = useMemo(() => new Persona(personaId), [personaId]);
+  const { importThumbnail } = useThumbnailImport();
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   if (!snapshot || !formValues) {
@@ -54,6 +57,13 @@ export default function DetailView({
   }
 
   const autoSpawn = snapshot.metadata?.["auto-spawn"] === true;
+
+  async function handleThumbnailChange() {
+    const assetId = await importThumbnail(personaId);
+    if (assetId) {
+      setThumbnail(assetId);
+    }
+  }
 
   async function handleDelete() {
     try {
@@ -75,21 +85,17 @@ export default function DetailView({
         saved={saved}
       />
 
-      <div className="detail-body">
-        <LeftColumn
-          personaId={personaId}
-          thumbnailUrl={persona.thumbnailUrl()}
-          vrmAssetId={vrmAssetId}
-          onVrmChange={setVrmAssetId}
-          autoSpawn={autoSpawn}
-          onAutoSpawnToggle={toggleAutoSpawn}
-        />
-        <RightColumn
-          personaId={personaId}
-          formValues={formValues}
-          onFormChange={setFormValues}
-        />
-      </div>
+      <PersonaDetailBody
+        personaId={personaId}
+        thumbnailUrl={persona.thumbnailUrl(thumbnail)}
+        onThumbnailChange={handleThumbnailChange}
+        vrmAssetId={vrmAssetId}
+        onVrmChange={setVrmAssetId}
+        autoSpawn={autoSpawn}
+        onAutoSpawnToggle={toggleAutoSpawn}
+        formValues={formValues}
+        onFormChange={setFormValues}
+      />
 
       <DeleteSection onDelete={() => setDeleteOpen(true)} />
 
@@ -145,81 +151,13 @@ function DetailHeader({
   );
 }
 
-function LeftColumn({
-  personaId,
-  thumbnailUrl,
-  vrmAssetId,
-  onVrmChange,
-  autoSpawn,
-  onAutoSpawnToggle,
-}: {
-  personaId: string;
-  thumbnailUrl: string;
-  vrmAssetId: string | null;
-  onVrmChange: (assetId: string | null) => void;
-  autoSpawn: boolean;
-  onAutoSpawnToggle: () => void;
-}) {
-  return (
-    <div className="detail-left">
-      <div className="detail-thumb">
-        <img src={thumbnailUrl} alt="Thumbnail" />
-        <div className="change-overlay">
-          <span>Change Image...</span>
-        </div>
-      </div>
-
-      <VrmSelect personaId={personaId} value={vrmAssetId} onChange={onVrmChange} />
-
-      <div className="detail-auto-row">
-        <div>
-          <div className="detail-auto-label">Auto Spawn</div>
-          <div className="detail-auto-sublabel">Launch at startup</div>
-        </div>
-        <button
-          className={`toggle-mini ${autoSpawn ? "on" : "off"}`}
-          onClick={onAutoSpawnToggle}
-          aria-label="Toggle auto spawn"
-          role="switch"
-          aria-checked={autoSpawn}
-        >
-          <span className="knob" />
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function RightColumn({
-  personaId,
-  formValues,
-  onFormChange,
-}: {
-  personaId: string;
-  formValues: PersonaFormValues;
-  onFormChange: (values: PersonaFormValues) => void;
-}) {
-  return (
-    <div className="detail-right">
-      <div className="detail-field">
-        <div className="detail-field-label">ID</div>
-        <input
-          type="text"
-          className="settings-input"
-          value={personaId}
-          readOnly
-          style={{ opacity: 0.5, cursor: "not-allowed", width: "100%" }}
-        />
-      </div>
-      <PersonaFields values={formValues} onChange={onFormChange} />
-    </div>
-  );
-}
-
 function DeleteSection({ onDelete }: { onDelete: () => void }) {
   return (
     <div className="delete-section">
-      <button className="management-btn management-btn--danger" onClick={onDelete}>
+      <button
+        className="management-btn management-btn--danger"
+        onClick={onDelete}
+      >
         Delete Persona
       </button>
     </div>
@@ -251,7 +189,10 @@ function DeleteConfirmDialog({
           >
             Cancel
           </button>
-          <button className="management-btn management-btn--danger" onClick={onConfirm}>
+          <button
+            className="management-btn management-btn--danger"
+            onClick={onConfirm}
+          >
             Delete
           </button>
         </DialogFooter>

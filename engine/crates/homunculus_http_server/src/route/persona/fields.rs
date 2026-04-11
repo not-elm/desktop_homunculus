@@ -339,3 +339,174 @@ pub async fn put_transform(
         .await
         .into_http_result()
 }
+
+// ---------------------------------------------------------------------------
+// Thumbnail
+// ---------------------------------------------------------------------------
+
+/// Get the thumbnail asset ID of a persona.
+#[utoipa::path(
+    get, path = "/thumbnail", tag = "personas",
+    params(("id" = String, Path, description = "Persona ID")),
+    responses((status = 200, body = ThumbnailBody), (status = 404)),
+)]
+pub async fn get_thumbnail(
+    State(api): State<PersonaApi>,
+    path: PersonaPath,
+) -> HttpResult<ThumbnailBody> {
+    let thumbnail = api.get_thumbnail(path.persona_id).await?;
+    Ok(Json(ThumbnailBody { thumbnail }))
+}
+
+/// Set (or clear) the thumbnail asset ID of a persona.
+///
+/// Sending `{ "thumbnail": null }` clears the field.
+#[utoipa::path(
+    put, path = "/thumbnail", tag = "personas",
+    params(("id" = String, Path, description = "Persona ID")),
+    request_body = ThumbnailBody,
+    responses((status = 200, body = PersonaSnapshot), (status = 404)),
+)]
+pub async fn put_thumbnail(
+    State(api): State<PersonaApi>,
+    path: PersonaPath,
+    Json(body): Json<ThumbnailBody>,
+) -> HttpResult<PersonaSnapshot> {
+    match body.thumbnail {
+        Some(asset_id) => api.set_thumbnail(path.persona_id, asset_id).await,
+        None => api.clear_thumbnail(path.persona_id).await,
+    }
+    .into_http_result()
+}
+
+#[derive(Serialize, Deserialize, ToSchema)]
+pub struct ThumbnailBody {
+    pub thumbnail: Option<String>,
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::tests::{call_any_status, test_app};
+    use axum::body::Body;
+    use axum::http::{Request, StatusCode};
+    use homunculus_api::persona::PersonaSnapshot;
+    use http_body_util::BodyExt;
+
+    async fn create_persona(
+        app: &mut bevy::prelude::App,
+        router: axum::Router,
+        body: &'static str,
+    ) {
+        let request = Request::post("/personas")
+            .header("content-type", "application/json")
+            .body(Body::from(body))
+            .unwrap();
+        let response = call_any_status(app, router, request).await;
+        assert_eq!(response.status(), StatusCode::CREATED);
+    }
+
+    #[tokio::test]
+    async fn test_get_thumbnail_returns_null_when_unset() {
+        let (mut app, router) = test_app();
+        create_persona(&mut app, router.clone(), r#"{"id":"p1"}"#).await;
+
+        let request = Request::get("/personas/p1/thumbnail")
+            .body(Body::empty())
+            .unwrap();
+        let response = call_any_status(&mut app, router, request).await;
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let parsed: serde_json::Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(parsed, serde_json::json!({ "thumbnail": null }));
+    }
+
+    #[tokio::test]
+    async fn test_get_thumbnail_returns_value_when_set() {
+        let (mut app, router) = test_app();
+        create_persona(
+            &mut app,
+            router.clone(),
+            r#"{"id":"p2","thumbnail":"image:a:b"}"#,
+        )
+        .await;
+
+        let request = Request::get("/personas/p2/thumbnail")
+            .body(Body::empty())
+            .unwrap();
+        let response = call_any_status(&mut app, router, request).await;
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let parsed: serde_json::Value = serde_json::from_slice(&body).unwrap();
+        assert_eq!(parsed, serde_json::json!({ "thumbnail": "image:a:b" }));
+    }
+
+    #[tokio::test]
+    async fn test_get_thumbnail_404_when_persona_missing() {
+        let (mut app, router) = test_app();
+
+        let request = Request::get("/personas/missing/thumbnail")
+            .body(Body::empty())
+            .unwrap();
+        let response = call_any_status(&mut app, router, request).await;
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    }
+
+    #[tokio::test]
+    async fn test_put_thumbnail_sets_and_returns_snapshot() {
+        let (mut app, router) = test_app();
+        create_persona(&mut app, router.clone(), r#"{"id":"p3"}"#).await;
+
+        let request = Request::builder()
+            .method("PUT")
+            .uri("/personas/p3/thumbnail")
+            .header("content-type", "application/json")
+            .body(Body::from(r#"{"thumbnail":"image:new:id"}"#))
+            .unwrap();
+        let response = call_any_status(&mut app, router, request).await;
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let snap: PersonaSnapshot = serde_json::from_slice(&body).unwrap();
+        assert_eq!(snap.persona.thumbnail.as_deref(), Some("image:new:id"));
+    }
+
+    #[tokio::test]
+    async fn test_put_thumbnail_null_clears_and_returns_snapshot() {
+        let (mut app, router) = test_app();
+        create_persona(
+            &mut app,
+            router.clone(),
+            r#"{"id":"p4","thumbnail":"image:old:id"}"#,
+        )
+        .await;
+
+        let request = Request::builder()
+            .method("PUT")
+            .uri("/personas/p4/thumbnail")
+            .header("content-type", "application/json")
+            .body(Body::from(r#"{"thumbnail":null}"#))
+            .unwrap();
+        let response = call_any_status(&mut app, router, request).await;
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let snap: PersonaSnapshot = serde_json::from_slice(&body).unwrap();
+        assert_eq!(snap.persona.thumbnail, None);
+    }
+
+    #[tokio::test]
+    async fn test_put_thumbnail_404_when_persona_missing() {
+        let (mut app, router) = test_app();
+
+        let request = Request::builder()
+            .method("PUT")
+            .uri("/personas/missing/thumbnail")
+            .header("content-type", "application/json")
+            .body(Body::from(r#"{"thumbnail":"image:a:b"}"#))
+            .unwrap();
+        let response = call_any_status(&mut app, router, request).await;
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    }
+}

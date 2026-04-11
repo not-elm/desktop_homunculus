@@ -1,0 +1,56 @@
+/* Thumbnail card */
+.detail-thumb {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: linear-gradient(
+    135deg,
+    oklch(0.22 0.03 250),
+    oklch(0.17 0.02 260)
+  );
+  border: 1px solid oklch(0.72 0.14 192 / 0.2);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.detail-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.detail-thumb-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.3;
+}
+
+.detail-thumb .change-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 8px;
+  background: linear-gradient(transparent, oklch(0.1 0.01 250 / 0.9));
+  text-align: center;
+}
+
+.change-overlay span {
+  font-size: 11px;
+  color: oklch(0.72 0.14 192 / 0.4);
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.change-overlay span:hover {
+  color: oklch(0.72 0.14 192);
+}

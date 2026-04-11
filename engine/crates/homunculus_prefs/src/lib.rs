@@ -329,8 +329,8 @@ impl PrefsDatabase {
     /// new personas and [`update_persona`] for existing ones.
     pub fn save_persona(&self, persona: &Persona) -> Result<(), rusqlite::Error> {
         self.0.execute(
-            "INSERT OR REPLACE INTO personas (id, name, age, gender, first_person_pronoun, profile, personality, vrm_asset_id)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+            "INSERT OR REPLACE INTO personas (id, name, age, gender, first_person_pronoun, profile, personality, vrm_asset_id, thumbnail)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
             rusqlite::params![
                 persona.id.0,
                 persona.name,
@@ -340,6 +340,7 @@ impl PrefsDatabase {
                 persona.profile,
                 persona.personality,
                 persona.vrm_asset_id,
+                persona.thumbnail,
             ],
         )?;
         self.save_all_metadata(&persona.id, &persona.metadata)
@@ -369,7 +370,7 @@ impl PrefsDatabase {
     /// Loads a persona by ID, returning `None` if not found.
     pub fn load_persona(&self, id: &str) -> Result<Option<Persona>, rusqlite::Error> {
         let mut stmt = self.0.prepare(
-            "SELECT id, name, age, gender, first_person_pronoun, profile, personality, vrm_asset_id
+            "SELECT id, name, age, gender, first_person_pronoun, profile, personality, vrm_asset_id, thumbnail
              FROM personas WHERE id = ?",
         )?;
         let mut rows = stmt.query([id])?;
@@ -387,7 +388,7 @@ impl PrefsDatabase {
     /// Lists all personas with their metadata.
     pub fn list_personas(&self) -> Result<Vec<Persona>, rusqlite::Error> {
         let mut stmt = self.0.prepare(
-            "SELECT id, name, age, gender, first_person_pronoun, profile, personality, vrm_asset_id
+            "SELECT id, name, age, gender, first_person_pronoun, profile, personality, vrm_asset_id, thumbnail
              FROM personas",
         )?;
         let rows = stmt.query_map([], row_to_persona)?;
@@ -503,6 +504,9 @@ fn create_tables(db: &rusqlite::Connection) -> Result<(), rusqlite::Error> {
         )",
         [],
     )?;
+    // Add thumbnail column (idempotent — SQLite ignores if column already exists)
+    let _ = db.execute("ALTER TABLE personas ADD COLUMN thumbnail TEXT", []);
+
     db.execute(
         "CREATE TABLE IF NOT EXISTS persona_metadata (
             persona_id TEXT NOT NULL,
@@ -637,6 +641,7 @@ fn row_to_persona(row: &rusqlite::Row<'_>) -> Result<Persona, rusqlite::Error> {
     let profile: String = row.get(5)?;
     let personality: Option<String> = row.get(6)?;
     let vrm_asset_id: Option<String> = row.get(7)?;
+    let thumbnail: Option<String> = row.get(8)?;
     Ok(Persona {
         id: PersonaId::new(id),
         name,
@@ -646,6 +651,7 @@ fn row_to_persona(row: &rusqlite::Row<'_>) -> Result<Persona, rusqlite::Error> {
         profile,
         personality,
         vrm_asset_id,
+        thumbnail,
         metadata: HashMap::new(),
     })
 }
@@ -659,8 +665,8 @@ fn insert_persona_to_conn(
     persona: &Persona,
 ) -> Result<(), rusqlite::Error> {
     conn.execute(
-        "INSERT INTO personas (id, name, age, gender, first_person_pronoun, profile, personality, vrm_asset_id)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+        "INSERT INTO personas (id, name, age, gender, first_person_pronoun, profile, personality, vrm_asset_id, thumbnail)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
         rusqlite::params![
             persona.id.0,
             persona.name,
@@ -670,6 +676,7 @@ fn insert_persona_to_conn(
             persona.profile,
             persona.personality,
             persona.vrm_asset_id,
+            persona.thumbnail,
         ],
     )?;
     Ok(())
@@ -686,8 +693,8 @@ fn update_persona_to_conn(
 ) -> Result<(), rusqlite::Error> {
     let rows_affected = conn.execute(
         "UPDATE personas SET name = ?1, age = ?2, gender = ?3, first_person_pronoun = ?4,
-         profile = ?5, personality = ?6, vrm_asset_id = ?7
-         WHERE id = ?8",
+         profile = ?5, personality = ?6, vrm_asset_id = ?7, thumbnail = ?8
+         WHERE id = ?9",
         rusqlite::params![
             persona.name,
             persona.age.map(|v| v as i64),
@@ -696,6 +703,7 @@ fn update_persona_to_conn(
             persona.profile,
             persona.personality,
             persona.vrm_asset_id,
+            persona.thumbnail,
             persona.id.0,
         ],
     )?;
@@ -975,6 +983,7 @@ mod test {
             profile: "A cheerful mascot".to_string(),
             personality: Some("friendly".to_string()),
             vrm_asset_id: Some("vrm:elmer".to_string()),
+            thumbnail: Some("image:local:elmer".to_string()),
             metadata,
         };
         db.save_persona(&persona).unwrap();
@@ -988,6 +997,7 @@ mod test {
         assert_eq!(loaded.profile, "A cheerful mascot");
         assert_eq!(loaded.personality, Some("friendly".to_string()));
         assert_eq!(loaded.vrm_asset_id, Some("vrm:elmer".to_string()));
+        assert_eq!(loaded.thumbnail, Some("image:local:elmer".to_string()));
         assert_eq!(
             loaded.metadata.get("mood"),
             Some(&serde_json::json!("happy"))

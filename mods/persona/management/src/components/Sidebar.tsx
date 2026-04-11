@@ -51,7 +51,7 @@ function SidebarItem({
     >
       <div className="sidebar-item-avatar">
         <img
-          src={new Persona(persona.id).thumbnailUrl()}
+          src={new Persona(persona.id).thumbnailUrl() || undefined}
           alt=""
           onError={(e) => {
             e.currentTarget.style.display = "none";
