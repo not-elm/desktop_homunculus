@@ -1,3 +1,4 @@
+import { Toolbar } from '@hmcs/ui';
 import { audio, Webview } from '@hmcs/sdk';
 import { useCallback } from 'react';
 import { type ModelCardState, useStt } from '../hooks/useStt';
@@ -21,16 +22,12 @@ export function SttPanel() {
       <span className="settings-corner settings-corner--bl" />
       <span className="settings-corner settings-corner--br" />
 
-      <div className="settings-header">
-        <h1 className="settings-title">Speech to Text</h1>
-      </div>
+      <Toolbar title="Speech to Text" onClose={handleClose} />
 
       <div className="settings-content">
         <div className="settings-section">
-          {/* Error Message */}
           {errorMessage && <div className="stt-error">{errorMessage}</div>}
 
-          {/* Models Section */}
           <div className="stt-section-divider">
             <span className="stt-section-divider__label">Models</span>
             <span className="stt-section-divider__line" />
@@ -47,12 +44,6 @@ export function SttPanel() {
             ))}
           </div>
         </div>
-      </div>
-
-      <div className="settings-footer">
-        <button type="button" className="settings-close" onClick={handleClose}>
-          Close
-        </button>
       </div>
     </div>
   );

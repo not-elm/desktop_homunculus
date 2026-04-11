@@ -223,26 +223,6 @@ body {
   animation: holo-scanline 4s linear infinite;
 }
 
-/* ━━ Header ━━ */
-
-.settings-header {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-  position: relative;
-  z-index: 7;
-}
-
-.settings-title {
-  font-size: var(--hud-font-size-base);
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: oklch(0.72 0.14 192 / 0.9);
-  font-weight: 600;
-  margin: 0;
-}
-
 /* ━━ Content Area ━━ */
 
 .settings-content {
@@ -274,46 +254,6 @@ body {
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: oklch(0.72 0.14 192 / 0.7);
-}
-
-/* ━━ Footer ━━ */
-
-.settings-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--hud-space-md);
-  padding-top: var(--hud-space-md);
-  position: relative;
-  z-index: 7;
-}
-
-/* ━━ Close Button ━━ */
-
-.settings-close {
-  background: transparent;
-  border: 1px solid oklch(0.4 0.02 250 / 0.25);
-  border-radius: 6px;
-  padding: var(--hud-space-md) var(--hud-space-2xl);
-  color: oklch(0.75 0.04 250 / 0.75);
-  font-size: var(--hud-font-size-sm);
-  font-family: inherit;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition:
-    color var(--hud-duration-content) ease,
-    border-color var(--hud-duration-content) ease,
-    text-shadow var(--hud-duration-content) ease;
-}
-
-.settings-close:hover {
-  color: oklch(0.88 0.08 250 / 0.9);
-  border-color: oklch(0.55 0.04 250 / 0.35);
-  text-shadow: 0 0 10px oklch(0.72 0.14 192 / 0.2);
-}
-
-.settings-close:active {
-  transform: scale(0.97);
 }
 
 /* ━━ Loading State ━━ */
