@@ -13,7 +13,7 @@ const menuUIAssetId = 'menu:ui';
 let isProcessing = false;
 const eventSources = new Map<string, ReturnType<Persona['events']>>();
 
-const NON_BLOCKING_SOURCES = new Set(['agent:session-ui']);
+const NON_BLOCKING_SOURCES = new Set(['agent:session-ui', 'agent:workers-ui']);
 
 const existsLinkedWebview = async (personaId: string) => {
   const webviews = await Webview.list();
