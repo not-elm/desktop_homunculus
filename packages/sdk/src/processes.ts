@@ -26,7 +26,7 @@
  */
 
 import { host } from './host';
-import { signals } from './signals';
+import { type Subscription, signals } from './signals';
 
 /** Information about why a managed process exited unexpectedly. */
 export interface ProcessExitInfo {
@@ -52,6 +52,15 @@ export interface ProcessInfo {
   startedAt: string;
 }
 
+/** Signal payload shape for the process:exited channel. */
+interface ExitSignalPayload {
+  handleId: string;
+  command: string;
+  exitCode: number | null;
+  signal: string | null;
+  reason: 'exited' | 'crashed';
+}
+
 /**
  * Handle to a running managed process.
  *
@@ -67,9 +76,37 @@ export interface ProcessInfo {
  * }
  * ```
  */
-export interface ProcessHandle extends AsyncDisposable {
+export class ProcessHandle implements AsyncDisposable {
   /** Unique handle identifier for this process. */
   readonly handleId: string;
+
+  private disposed = false;
+  private exited = false;
+  private exitCallbacks: Array<(info: ProcessExitInfo) => void> = [];
+  private subscription: Subscription;
+
+  constructor(handleId: string) {
+    this.handleId = handleId;
+    this.subscription = signals.stream<ExitSignalPayload>('process:exited', (payload) => {
+      if (payload.handleId !== this.handleId) return;
+      if (this.disposed) return;
+
+      this.exited = true;
+      const info: ProcessExitInfo = {
+        exitCode: payload.exitCode,
+        signal: payload.signal,
+        reason: payload.reason,
+      };
+      for (const cb of this.exitCallbacks) {
+        try {
+          cb(info);
+        } catch (e) {
+          console.error('Error in onExit callback:', e);
+        }
+      }
+      this.subscription.close();
+    });
+  }
 
   /**
    * Register a callback for unexpected process termination.
@@ -89,13 +126,14 @@ export interface ProcessHandle extends AsyncDisposable {
    * });
    * ```
    */
-  onExit(callback: (info: ProcessExitInfo) => void): void;
+  onExit(callback: (info: ProcessExitInfo) => void): void {
+    this.exitCallbacks.push(callback);
+  }
 
   /**
    * Stop the process and clean up the exit listener.
    *
-   * Alias for `[Symbol.asyncDispose]()`. Idempotent — safe to call multiple times
-   * or on an already-exited process.
+   * Idempotent — safe to call multiple times or on an already-exited process.
    *
    * If the process is still running, this sends a stop request to the engine
    * and awaits shutdown. If the process has already exited, this only
@@ -108,70 +146,22 @@ export interface ProcessHandle extends AsyncDisposable {
    * await proc.stop();
    * ```
    */
-  stop(): Promise<void>;
-}
+  async stop(): Promise<void> {
+    if (this.disposed) return;
+    this.disposed = true;
+    this.subscription.close();
 
-/** Signal payload shape for the process:exited channel. */
-interface ExitSignalPayload {
-  handleId: string;
-  command: string;
-  exitCode: number | null;
-  signal: string | null;
-  reason: 'exited' | 'crashed';
-}
-
-function createProcessHandle(handleId: string): ProcessHandle {
-  const exitCallbacks: Array<(info: ProcessExitInfo) => void> = [];
-  let disposed = false;
-  let exited = false;
-
-  // Subscribe to the shared signals WebSocket (single connection, multiplexed
-  // by channel). Filter incoming events by handleId client-side.
-  const subscription = signals.stream<ExitSignalPayload>('process:exited', (payload) => {
-    if (payload.handleId !== handleId) return;
-    if (disposed) return;
-
-    exited = true;
-    const info: ProcessExitInfo = {
-      exitCode: payload.exitCode,
-      signal: payload.signal,
-      reason: payload.reason,
-    };
-    for (const cb of exitCallbacks) {
+    if (!this.exited) {
       try {
-        cb(info);
-      } catch (e) {
-        console.error('Error in onExit callback:', e);
-      }
-    }
-    subscription.close();
-  });
-
-  async function stop(): Promise<void> {
-    if (disposed) return;
-    disposed = true;
-    subscription.close();
-
-    if (!exited) {
-      try {
-        await host.deleteMethod(host.createUrl(`processes/${handleId}`));
+        await host.deleteMethod(host.createUrl(`processes/${this.handleId}`));
       } catch {
         // 404 = already exited — idempotent success
       }
     }
   }
 
-  return {
-    handleId,
-
-    onExit(callback: (info: ProcessExitInfo) => void): void {
-      exitCallbacks.push(callback);
-    },
-
-    stop,
-
-    [Symbol.asyncDispose]: stop,
-  };
+  /** Alias for {@link stop}. Enables `await using` syntax. */
+  [Symbol.asyncDispose] = (): Promise<void> => this.stop();
 }
 
 export namespace processes {
@@ -204,7 +194,7 @@ export namespace processes {
       args: params.args ?? [],
     });
     const { handleId } = (await response.json()) as { handleId: string };
-    return createProcessHandle(handleId);
+    return new ProcessHandle(handleId);
   }
 
   /**
