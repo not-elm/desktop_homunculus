@@ -1,4 +1,5 @@
 import type { Gender } from '@hmcs/sdk';
+import type { AgentEvent } from './agent-runtime.ts';
 
 /** PTT key configuration. */
 export interface PttKey {
@@ -76,6 +77,54 @@ export interface WorktreeSignalPayload {
   workspacePath?: string;
   error?: string;
 }
+
+/** A worker task spawned by the session manager on behalf of a persona. */
+export interface WorkerTask {
+  taskId: string;
+  personaId: string;
+  controller: AbortController;
+  sessionId: string | null;
+  status: 'running' | 'completed' | 'failed' | 'cancelled';
+  worktreeName: string | null;
+  description: string;
+  /** ISO timestamp when the task was spawned. */
+  startedAt: string;
+  /** ISO timestamp when the task reached a terminal state. */
+  endedAt: string | null;
+  /** Last error message when status is 'failed'. */
+  errorMessage: string | null;
+}
+
+/** Active sessions for a single persona (frontman + worker pool). */
+export interface PersonaSessions {
+  frontman?: {
+    controller: AbortController;
+    sessionId: string | null;
+  };
+  workers: Map<string, WorkerTask>;
+}
+
+/** Event payload forwarded from a worker task to the orchestrator. */
+export interface WorkerEventPayload {
+  personaId: string;
+  taskId: string;
+  event: AgentEvent;
+}
+
+/** A peer-to-peer message routed between personas. */
+export interface PeerMessage {
+  from: string;
+  to: string;
+  message: string;
+  replyTo?: string;
+  timestamp: string;
+}
+
+/** Maximum number of concurrent worker tasks per persona. */
+export const DEFAULT_WORKER_LIMIT = 3;
+
+/** Worker task timeout in milliseconds (10 minutes). */
+export const DEFAULT_WORKER_TIMEOUT_MS = 10 * 60 * 1000;
 
 export const DEFAULT_SETTINGS: AgentSettings = {
   runtime: 'codex',
