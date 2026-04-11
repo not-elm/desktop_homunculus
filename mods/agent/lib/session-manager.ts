@@ -1,6 +1,7 @@
 import { audio, Persona as SdkPersona, signals, stt } from '@hmcs/sdk';
 import { rpc } from '@hmcs/sdk/rpc';
 import { AsyncQueue, Deferred } from './async-queue.ts';
+import { MessageRouter } from './coordination/message-router.ts';
 import { type ResolvedPttKey, resolvePttKeycodes } from './key-mapping.ts';
 import { isComboHeld, type KeyboardHookService, waitForComboRelease } from './keyboard-hook.ts';
 import { DEFAULT_PERMISSION_SE, resolvePermissionSeAsset } from './permission-se.ts';
@@ -89,6 +90,7 @@ export class SessionManager {
   constructor(
     private readonly persistence: SessionPersistence,
     private readonly keyboardHook: KeyboardHookService,
+    private readonly messageRouter?: MessageRouter,
   ) {}
 
   startFrontman(personaId: string, _runtime: AgentRuntime): void {
@@ -100,8 +102,16 @@ export class SessionManager {
     const sessions: PersonaSessions = existing ?? {
       workers: new Map<string, WorkerTask>(),
     };
-    sessions.frontman = { controller, sessionId: null };
+    const unsubscribePeer = this.subscribeToRouter(personaId);
+    sessions.frontman = { controller, sessionId: null, unsubscribePeer };
     this.sessions.set(personaId, sessions);
+  }
+
+  private subscribeToRouter(personaId: string): (() => void) | undefined {
+    if (!this.messageRouter) return undefined;
+    return this.messageRouter.subscribe(personaId, (peerMsg) => {
+      signals.send('agent:peer-message', { personaId, message: peerMsg });
+    });
   }
 
   hasFrontman(personaId: string): boolean {
@@ -186,6 +196,7 @@ export class SessionManager {
       this.activeSessionHandles.delete(personaId);
     }
 
+    sessions.frontman?.unsubscribePeer?.();
     sessions.frontman?.controller.abort();
     for (const worker of sessions.workers.values()) {
       worker.controller.abort();
@@ -306,6 +317,8 @@ export class SessionManager {
         queue.rejectAll(new DOMException('Session ended', 'AbortError'));
         this.textQueues.delete(personaId);
       }
+      const sessions = this.sessions.get(personaId);
+      sessions?.frontman?.unsubscribePeer?.();
       this.sessions.delete(personaId);
       this.emitStatus(personaId, 'idle', 'session-ended');
     }

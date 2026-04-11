@@ -100,6 +100,8 @@ export interface PersonaSessions {
   frontman?: {
     controller: AbortController;
     sessionId: string | null;
+    /** Unsubscribes this persona from the MessageRouter when the session stops. */
+    unsubscribePeer?: () => void;
   };
   workers: Map<string, WorkerTask>;
 }

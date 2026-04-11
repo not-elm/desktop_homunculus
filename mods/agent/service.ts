@@ -10,6 +10,7 @@ import { type ResolvedPttKey, resolvePttKeycodes } from './lib/key-mapping.ts';
 import { KeyboardHookService } from './lib/keyboard-hook.ts';
 import type { AgentRuntime } from './lib/runtime/agent-runtime.ts';
 import { CodexAppServerProcess } from './lib/runtime/codex-appserver-process.ts';
+import { MessageRouter } from './lib/coordination/message-router.ts';
 import { SessionManager } from './lib/session-manager.ts';
 import { type PersistLogEntry, SessionPersistence } from './lib/session-persistence.ts';
 import { type AgentSettings, DEFAULT_SETTINGS, type Persona } from './lib/types.ts';
@@ -19,7 +20,8 @@ import { WORKTREE_NAME_PATTERN, WorktreeManager } from './lib/worktree-manager.t
 
 const keyboardHook = new KeyboardHookService();
 const persistence = new SessionPersistence();
-const sessionManager = new SessionManager(persistence, keyboardHook);
+const messageRouter = new MessageRouter();
+const sessionManager = new SessionManager(persistence, keyboardHook, messageRouter);
 
 let appServerProcess: CodexAppServerProcess | null = null;
 
@@ -568,6 +570,19 @@ function buildRpcMethods() {
           endedAt: task.endedAt,
           errorMessage: task.errorMessage,
         };
+      },
+    }),
+    'send-to-peer': rpc.method({
+      description: 'Send a message from one persona to another via the message router.',
+      input: z.object({
+        from: z.string(),
+        to: z.string(),
+        message: z.string(),
+        replyTo: z.string().optional(),
+      }),
+      handler: async (params) => {
+        await messageRouter.send(params);
+        return {};
       },
     }),
   };
