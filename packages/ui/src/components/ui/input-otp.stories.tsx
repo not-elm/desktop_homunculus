@@ -1,15 +1,10 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn } from "storybook/test";
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-  InputOTPSeparator,
-} from "./input-otp";
-import { Label } from "./label";
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { fn } from 'storybook/test';
+import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from './input-otp';
+import { Label } from './label';
 
 const meta = {
-  title: "UI/Forms/InputOTP",
+  title: 'UI/Forms/InputOTP',
   component: InputOTP,
   args: {
     onChange: fn(),
@@ -19,10 +14,10 @@ const meta = {
   },
   argTypes: {
     maxLength: {
-      control: "number",
+      control: 'number',
     },
     disabled: {
-      control: "boolean",
+      control: 'boolean',
     },
   },
 } satisfies Meta<typeof InputOTP>;

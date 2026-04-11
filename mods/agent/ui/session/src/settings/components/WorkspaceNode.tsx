@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { FolderGit2, Folder, ChevronRight } from "lucide-react";
-import { WorktreeNode, type WorktreeData } from "./WorktreeNode.tsx";
-import { TreeOverflowMenu } from "./TreeOverflowMenu.tsx";
+import { ChevronRight, Folder, FolderGit2 } from 'lucide-react';
+import { useState } from 'react';
+import { TreeOverflowMenu } from './TreeOverflowMenu.tsx';
+import { type WorktreeData, WorktreeNode } from './WorktreeNode.tsx';
 
 export interface WorkspaceData {
   isGit: boolean;
@@ -55,7 +55,7 @@ export function WorkspaceNode({
 
   const overflowItems = buildOverflowItems(data?.isGit ?? false, onAddWorktree, onRemoveWorkspace);
   const collapsedHint = buildCollapsedHint(expanded, hasWorktrees, selectedWorktree, data);
-  const rowClass = "ws-row ws-row--workspace";
+  const rowClass = 'ws-row ws-row--workspace';
 
   return (
     <div
@@ -73,23 +73,25 @@ export function WorkspaceNode({
         </span>
         {hasChildren ? (
           <ChevronRight
-            className={`ws-chevron${expanded ? " ws-chevron--expanded" : ""}`}
+            className={`ws-chevron${expanded ? ' ws-chevron--expanded' : ''}`}
             onClick={handleChevronClick}
           />
         ) : (
           <span style={{ width: 12, flexShrink: 0 }} />
         )}
         <FolderIcon className="ws-icon" />
-        <span className="ws-name" title={path}>{dirName}</span>
+        <span className="ws-name" title={path}>
+          {dirName}
+        </span>
         {collapsedHint && <span className="ws-collapsed-hint">{collapsedHint}</span>}
         {!expanded && hasWorktrees && (
-          <span className="ws-badge ws-badge--branch">{data!.worktrees.length}</span>
+          <span className="ws-badge ws-badge--branch">{data?.worktrees.length}</span>
         )}
         <TreeOverflowMenu items={overflowItems} />
       </div>
 
       {hasChildren && (
-        <div className={`ws-children-wrapper${expanded ? "" : " ws-children-wrapper--collapsed"}`}>
+        <div className={`ws-children-wrapper${expanded ? '' : ' ws-children-wrapper--collapsed'}`}>
           <div className="ws-children-inner">
             <div className="ws-connector" role="group">
               {data?.worktrees.map((wt) => (
@@ -103,7 +105,6 @@ export function WorkspaceNode({
                   onKeyDown={onKeyDown}
                 />
               ))}
-
             </div>
           </div>
         </div>
@@ -118,8 +119,8 @@ function buildOverflowItems(
   onRemoveWorkspace: () => void,
 ) {
   const items: { label: string; onClick: () => void; destructive?: boolean }[] = [];
-  if (isGit) items.push({ label: "Add Worktree", onClick: onAddWorktree });
-  items.push({ label: "Remove Workspace", onClick: onRemoveWorkspace, destructive: true });
+  if (isGit) items.push({ label: 'Add Worktree', onClick: onAddWorktree });
+  items.push({ label: 'Remove Workspace', onClick: onRemoveWorkspace, destructive: true });
   return items;
 }
 

@@ -9,41 +9,34 @@
  * @module
  */
 
-import { AsyncQueue } from "./async-queue.ts";
+import type { AgentEvent, AgentResponse, AgentRuntime } from './agent-runtime.ts';
+import { AsyncQueue } from './async-queue.ts';
+import type { CodexAppServerProcess, ThreadHandler } from './codex-appserver-process.ts';
 import type {
-  AgentRuntime,
-  AgentEvent,
-  AgentResponse,
-} from "./agent-runtime.ts";
-import type {
-  CodexAppServerProcess,
-  ThreadHandler,
-} from "./codex-appserver-process.ts";
-import type {
+  CommandExecutionRequestApprovalParams,
+  ErrorNotification,
+  FileChangeRequestApprovalParams,
+  ItemCompletedNotification,
+  ItemStartedNotification,
+  McpServerElicitationRequestParams,
+  PermissionsRequestApprovalParams,
   RequestId,
+  ThreadItem,
+  ThreadResumeParams,
   ThreadStartParams,
   ThreadStartResponse,
-  ThreadResumeParams,
-  TurnStartParams,
-  TurnStartedNotification,
-  TurnCompletedNotification,
-  ItemStartedNotification,
-  ItemCompletedNotification,
-  ThreadItem,
-  CommandExecutionRequestApprovalParams,
-  FileChangeRequestApprovalParams,
-  PermissionsRequestApprovalParams,
-  McpServerElicitationRequestParams,
   ToolRequestUserInputParams,
-  ErrorNotification,
-} from "./codex-appserver-types.ts";
-import type { AgentSettings } from "./types.ts";
+  TurnCompletedNotification,
+  TurnStartedNotification,
+  TurnStartParams,
+} from './codex-appserver-types.ts';
+import type { AgentSettings } from './types.ts';
 
 /** Internal message pushed into the event queue by the ThreadHandler. */
 type QueueMessage =
-  | { kind: "notification"; method: string; params: unknown }
-  | { kind: "server_request"; method: string; id: RequestId; params: unknown }
-  | { kind: "error"; error: Error };
+  | { kind: 'notification'; method: string; params: unknown }
+  | { kind: 'server_request'; method: string; id: RequestId; params: unknown }
+  | { kind: 'error'; error: Error };
 
 /**
  * Executes agent turns via the Codex AppServer JSON-RPC protocol.
@@ -90,9 +83,7 @@ export class CodexAppServerRuntime implements AgentRuntime {
   ): AsyncGenerator<AgentEvent, void, AgentResponse | undefined> {
     await this.process.ensureRunning();
 
-    const threadId = sessionId
-      ? await this.resumeThread(sessionId)
-      : await this.startThread();
+    const threadId = sessionId ? await this.resumeThread(sessionId) : await this.startThread();
 
     const queue = new AsyncQueue<QueueMessage>();
     const pendingRequests = new Map<string, string>();
@@ -103,7 +94,7 @@ export class CodexAppServerRuntime implements AgentRuntime {
     const abortHandler = () => {
       this.handleAbort(threadId, turnId, queue, signal);
     };
-    signal.addEventListener("abort", abortHandler, { once: true });
+    signal.addEventListener('abort', abortHandler, { once: true });
 
     try {
       await this.startTurn(threadId, text);
@@ -112,7 +103,7 @@ export class CodexAppServerRuntime implements AgentRuntime {
         turnId = id;
       });
     } finally {
-      signal.removeEventListener("abort", abortHandler);
+      signal.removeEventListener('abort', abortHandler);
       this.cancelAllPending(pendingRequests);
       unregister();
     }
@@ -127,21 +118,18 @@ export class CodexAppServerRuntime implements AgentRuntime {
     const params: ThreadStartParams = {
       cwd: this.workDir,
       baseInstructions: this.prompt,
-      personality: "none",
-      sandbox: "workspace-write",
+      personality: 'none',
+      sandbox: 'workspace-write',
       experimentalRawEvents: false,
       persistExtendedHistory: false,
       config: {
         mcp_servers: {
-          homunculus: { url: "http://localhost:3100/mcp" },
+          homunculus: { url: 'http://localhost:3100/mcp' },
         },
       },
     };
 
-    const response = await this.process.sendRequest<ThreadStartResponse>(
-      "thread/start",
-      params,
-    );
+    const response = await this.process.sendRequest<ThreadStartResponse>('thread/start', params);
     return response.thread.id;
   }
 
@@ -156,18 +144,18 @@ export class CodexAppServerRuntime implements AgentRuntime {
       threadId: sessionId,
       cwd: this.workDir,
       baseInstructions: this.prompt,
-      personality: "none",
-      sandbox: "workspace-write",
+      personality: 'none',
+      sandbox: 'workspace-write',
       persistExtendedHistory: false,
       config: {
         mcp_servers: {
-          homunculus: { url: "http://localhost:3100/mcp" },
+          homunculus: { url: 'http://localhost:3100/mcp' },
         },
       },
     };
 
     try {
-      await this.process.sendRequest("thread/resume", params);
+      await this.process.sendRequest('thread/resume', params);
       return sessionId;
     } catch (e) {
       console.warn(
@@ -179,19 +167,16 @@ export class CodexAppServerRuntime implements AgentRuntime {
   }
 
   /** Register a {@link ThreadHandler} that pushes messages into the queue. */
-  private registerHandler(
-    threadId: string,
-    queue: AsyncQueue<QueueMessage>,
-  ): () => void {
+  private registerHandler(threadId: string, queue: AsyncQueue<QueueMessage>): () => void {
     const handler: ThreadHandler = {
       onServerRequest(method, id, params) {
-        queue.push({ kind: "server_request", method, id, params });
+        queue.push({ kind: 'server_request', method, id, params });
       },
       onServerNotification(method, params) {
-        queue.push({ kind: "notification", method, params });
+        queue.push({ kind: 'notification', method, params });
       },
       onProcessError(error) {
-        queue.push({ kind: "error", error });
+        queue.push({ kind: 'error', error });
       },
     };
     return this.process.registerThread(threadId, handler);
@@ -201,10 +186,10 @@ export class CodexAppServerRuntime implements AgentRuntime {
   private async startTurn(threadId: string, text: string): Promise<void> {
     const params: TurnStartParams = {
       threadId,
-      input: [{ type: "text", text, text_elements: [] }],
-      approvalPolicy: "on-request",
+      input: [{ type: 'text', text, text_elements: [] }],
+      approvalPolicy: 'on-request',
     };
-    await this.process.sendRequest("turn/start", params);
+    await this.process.sendRequest('turn/start', params);
   }
 
   /**
@@ -224,20 +209,15 @@ export class CodexAppServerRuntime implements AgentRuntime {
     while (!done) {
       const msg = await queue.shift(signal);
 
-      if (msg.kind === "error") {
-        yield { type: "error", message: msg.error.message };
+      if (msg.kind === 'error') {
+        yield { type: 'error', message: msg.error.message };
         break;
       }
 
-      if (msg.kind === "notification") {
-        const events = this.handleNotification(
-          msg.method,
-          msg.params,
-          threadId,
-          onTurnId,
-        );
+      if (msg.kind === 'notification') {
+        const events = this.handleNotification(msg.method, msg.params, threadId, onTurnId);
         for (const event of events) {
-          if (event.type === "completed" || event.type === "error") {
+          if (event.type === 'completed' || event.type === 'error') {
             done = true;
           }
           yield event;
@@ -266,8 +246,8 @@ export class CodexAppServerRuntime implements AgentRuntime {
     id: RequestId,
     params: unknown,
     pendingRequests: Map<string, string>,
-    queue: AsyncQueue<QueueMessage>,
-    signal: AbortSignal,
+    _queue: AsyncQueue<QueueMessage>,
+    _signal: AbortSignal,
   ): AsyncGenerator<AgentEvent, void, AgentResponse | undefined> {
     const idKey = String(id);
     pendingRequests.set(idKey, method);
@@ -297,18 +277,18 @@ export class CodexAppServerRuntime implements AgentRuntime {
    */
   private async *autoApproveRequest(
     id: RequestId,
-    method: string,
+    _method: string,
     params: unknown,
     pendingRequests: Map<string, string>,
   ): AsyncGenerator<AgentEvent, void, AgentResponse | undefined> {
     const cmdParams = params as CommandExecutionRequestApprovalParams;
     yield {
-      type: "tool_use",
-      tool: "bash",
-      summary: `[auto] $ ${cmdParams.command ?? ""}`,
+      type: 'tool_use',
+      tool: 'bash',
+      summary: `[auto] $ ${cmdParams.command ?? ''}`,
     };
 
-    this.process.sendResponse(id, { decision: "accept" });
+    this.process.sendResponse(id, { decision: 'accept' });
     pendingRequests.delete(String(id));
   }
 
@@ -318,11 +298,7 @@ export class CodexAppServerRuntime implements AgentRuntime {
     method: string,
     pendingRequests: Map<string, string>,
   ): void {
-    this.process.sendErrorResponse(
-      id,
-      -32000,
-      `Unsupported request: ${method}`,
-    );
+    this.process.sendErrorResponse(id, -32000, `Unsupported request: ${method}`);
     pendingRequests.delete(String(id));
   }
 
@@ -338,25 +314,19 @@ export class CodexAppServerRuntime implements AgentRuntime {
     onTurnId: (id: string) => void,
   ): AgentEvent[] {
     switch (method) {
-      case "turn/started":
-        return this.handleTurnStarted(
-          params as TurnStartedNotification,
-          onTurnId,
-        );
-      case "turn/completed":
-        return this.handleTurnCompleted(
-          params as TurnCompletedNotification,
-          threadId,
-        );
-      case "item/started":
+      case 'turn/started':
+        return this.handleTurnStarted(params as TurnStartedNotification, onTurnId);
+      case 'turn/completed':
+        return this.handleTurnCompleted(params as TurnCompletedNotification, threadId);
+      case 'item/started':
         return this.handleItemStarted(params as ItemStartedNotification);
-      case "item/completed":
+      case 'item/completed':
         return this.handleItemCompleted(params as ItemCompletedNotification);
-      case "error":
+      case 'error':
         return this.handleErrorNotification(params as ErrorNotification);
-      case "item/agentMessage/delta":
-      case "item/commandExecution/output/delta":
-      case "serverRequest/resolved":
+      case 'item/agentMessage/delta':
+      case 'item/commandExecution/output/delta':
+      case 'serverRequest/resolved':
         return [];
       default:
         return [];
@@ -371,41 +341,36 @@ export class CodexAppServerRuntime implements AgentRuntime {
     return [];
   }
 
-  private handleTurnCompleted(
-    params: TurnCompletedNotification,
-    threadId: string,
-  ): AgentEvent[] {
+  private handleTurnCompleted(params: TurnCompletedNotification, threadId: string): AgentEvent[] {
     const { status, error } = params.turn;
 
-    if (status === "completed") {
-      return [{ type: "completed", sessionId: threadId }];
+    if (status === 'completed') {
+      return [{ type: 'completed', sessionId: threadId }];
     }
-    if (status === "failed") {
-      return [{ type: "error", message: error?.message ?? "Turn failed" }];
+    if (status === 'failed') {
+      return [{ type: 'error', message: error?.message ?? 'Turn failed' }];
     }
     // "interrupted" — emit error event so the event loop terminates cleanly
     // even for server-initiated interruptions (e.g. context exhaustion, rate limits).
-    console.warn(
-      `[codex-appserver-runtime] Turn interrupted by server (status: ${status})`,
-    );
-    return [{ type: "error", message: "Turn was interrupted by the server" }];
+    console.warn(`[codex-appserver-runtime] Turn interrupted by server (status: ${status})`);
+    return [{ type: 'error', message: 'Turn was interrupted by the server' }];
   }
 
   private handleItemStarted(params: ItemStartedNotification): AgentEvent[] {
     switch (params.item.type) {
-      case "commandExecution":
+      case 'commandExecution':
         return [
           {
-            type: "tool_use",
-            tool: "bash",
+            type: 'tool_use',
+            tool: 'bash',
             summary: `$ ${params.item.command}`,
           },
         ];
-      case "fileChange":
+      case 'fileChange':
         return [
           {
-            type: "tool_use",
-            tool: "file_change",
+            type: 'tool_use',
+            tool: 'file_change',
             summary: extractFileChangeSummaryFromItem(params.item),
           },
         ];
@@ -416,21 +381,21 @@ export class CodexAppServerRuntime implements AgentRuntime {
 
   private handleItemCompleted(params: ItemCompletedNotification): AgentEvent[] {
     switch (params.item.type) {
-      case "agentMessage":
-        return [{ type: "assistant_message", text: params.item.text }];
-      case "commandExecution":
+      case 'agentMessage':
+        return [{ type: 'assistant_message', text: params.item.text }];
+      case 'commandExecution':
         return [
           {
-            type: "tool_use",
-            tool: "bash",
+            type: 'tool_use',
+            tool: 'bash',
             summary: `$ ${params.item.command}`,
           },
         ];
-      case "fileChange":
+      case 'fileChange':
         return [
           {
-            type: "tool_use",
-            tool: "file_change",
+            type: 'tool_use',
+            tool: 'file_change',
             summary: extractFileChangeSummaryFromItem(params.item),
           },
         ];
@@ -440,7 +405,7 @@ export class CodexAppServerRuntime implements AgentRuntime {
   }
 
   private handleErrorNotification(params: ErrorNotification): AgentEvent[] {
-    return [{ type: "error", message: params.error.message }];
+    return [{ type: 'error', message: params.error.message }];
   }
 
   /**
@@ -452,38 +417,23 @@ export class CodexAppServerRuntime implements AgentRuntime {
     params: unknown,
   ): AgentEvent | null {
     switch (method) {
-      case "item/commandExecution/requestApproval":
-        return this.mapCommandApproval(
-          id,
-          params as CommandExecutionRequestApprovalParams,
-          method,
-        );
-      case "item/fileChange/requestApproval":
-        return this.mapFileChangeApproval(
-          id,
-          params as FileChangeRequestApprovalParams,
-          method,
-        );
-      case "item/permissions/requestApproval":
-        return this.mapPermissionsApproval(
-          id,
-          params as PermissionsRequestApprovalParams,
-          method,
-        );
-      case "mcpServer/elicitation/request":
-        return this.mapMcpElicitation(
-          id,
-          params as McpServerElicitationRequestParams,
-        );
-      case "item/tool/requestUserInput":
+      case 'item/commandExecution/requestApproval':
+        return this.mapCommandApproval(id, params as CommandExecutionRequestApprovalParams, method);
+      case 'item/fileChange/requestApproval':
+        return this.mapFileChangeApproval(id, params as FileChangeRequestApprovalParams, method);
+      case 'item/permissions/requestApproval':
+        return this.mapPermissionsApproval(id, params as PermissionsRequestApprovalParams, method);
+      case 'mcpServer/elicitation/request':
+        return this.mapMcpElicitation(id, params as McpServerElicitationRequestParams);
+      case 'item/tool/requestUserInput':
         return this.mapToolUserInput(id, params as ToolRequestUserInputParams);
-      case "item/tool/call":
-      case "account/chatgptAuthTokens/refresh":
+      case 'item/tool/call':
+      case 'account/chatgptAuthTokens/refresh':
         return null;
-      case "applyPatchApproval":
-        return this.mapLegacyApproval(id, "applyPatch", params, method);
-      case "execCommandApproval":
-        return this.mapLegacyApproval(id, "execCommand", params, method);
+      case 'applyPatchApproval':
+        return this.mapLegacyApproval(id, 'applyPatch', params, method);
+      case 'execCommandApproval':
+        return this.mapLegacyApproval(id, 'execCommand', params, method);
       default:
         return null;
     }
@@ -494,18 +444,13 @@ export class CodexAppServerRuntime implements AgentRuntime {
     params: CommandExecutionRequestApprovalParams,
     method: string,
   ): AgentEvent {
-    const defaultDecisions = [
-      "accept",
-      "acceptForSession",
-      "decline",
-      "cancel",
-    ];
+    const defaultDecisions = ['accept', 'acceptForSession', 'decline', 'cancel'];
     return {
-      type: "permission_request",
+      type: 'permission_request',
       requestId: String(id),
-      tool: "bash",
-      input: { command: params.command ?? "", cwd: params.cwd },
-      title: `Command: ${params.command ?? ""}`,
+      tool: 'bash',
+      input: { command: params.command ?? '', cwd: params.cwd },
+      title: `Command: ${params.command ?? ''}`,
       description: params.reason ?? undefined,
       requestMethod: method,
       availableDecisions: params.availableDecisions ?? defaultDecisions,
@@ -518,14 +463,14 @@ export class CodexAppServerRuntime implements AgentRuntime {
     method: string,
   ): AgentEvent {
     return {
-      type: "permission_request",
+      type: 'permission_request',
       requestId: String(id),
-      tool: "file_change",
+      tool: 'file_change',
       input: { grantRoot: params.grantRoot },
-      title: "File change approval",
+      title: 'File change approval',
       description: params.reason ?? undefined,
       requestMethod: method,
-      availableDecisions: ["accept", "acceptForSession", "decline", "cancel"],
+      availableDecisions: ['accept', 'acceptForSession', 'decline', 'cancel'],
     };
   }
 
@@ -535,30 +480,27 @@ export class CodexAppServerRuntime implements AgentRuntime {
     method: string,
   ): AgentEvent {
     return {
-      type: "permission_request",
+      type: 'permission_request',
       requestId: String(id),
-      tool: "permissions",
+      tool: 'permissions',
       input: { permissions: params.permissions },
-      title: "Permission request",
+      title: 'Permission request',
       description: params.reason ?? undefined,
       requestMethod: method,
-      availableDecisions: ["accept", "decline"],
+      availableDecisions: ['accept', 'decline'],
     };
   }
 
-  private mapMcpElicitation(
-    id: RequestId,
-    params: McpServerElicitationRequestParams,
-  ): AgentEvent {
+  private mapMcpElicitation(id: RequestId, params: McpServerElicitationRequestParams): AgentEvent {
     if (isMcpToolCallApproval(params)) {
       return this.mapMcpToolCallApproval(id, params);
     }
     return {
-      type: "elicitation_request",
+      type: 'elicitation_request',
       requestId: String(id),
       serverName: params.serverName,
       message: params.message,
-      schema: params.mode === "form" ? params.requestedSchema : undefined,
+      schema: params.mode === 'form' ? params.requestedSchema : undefined,
     };
   }
 
@@ -567,29 +509,26 @@ export class CodexAppServerRuntime implements AgentRuntime {
     params: McpServerElicitationRequestParams,
   ): AgentEvent {
     const meta = params._meta as Record<string, unknown> | null;
-    const toolDescription = (meta?.tool_description as string) ?? "";
+    const toolDescription = (meta?.tool_description as string) ?? '';
     const toolParams = meta?.tool_params as Record<string, unknown> | undefined;
     return {
-      type: "permission_request",
+      type: 'permission_request',
       requestId: String(id),
-      tool: "mcp",
+      tool: 'mcp',
       input: toolParams ?? {},
       title: params.message,
       description: toolDescription,
-      requestMethod: "mcpServer/elicitation/request",
-      availableDecisions: ["accept", "acceptForSession", "decline", "cancel"],
+      requestMethod: 'mcpServer/elicitation/request',
+      availableDecisions: ['accept', 'acceptForSession', 'decline', 'cancel'],
     };
   }
 
-  private mapToolUserInput(
-    id: RequestId,
-    params: ToolRequestUserInputParams,
-  ): AgentEvent {
-    const questionText = params.questions.map((q) => q.question).join("; ");
+  private mapToolUserInput(id: RequestId, params: ToolRequestUserInputParams): AgentEvent {
+    const questionText = params.questions.map((q) => q.question).join('; ');
     return {
-      type: "elicitation_request",
+      type: 'elicitation_request',
       requestId: String(id),
-      serverName: "tool",
+      serverName: 'tool',
       message: questionText,
     };
   }
@@ -601,12 +540,12 @@ export class CodexAppServerRuntime implements AgentRuntime {
     method: string,
   ): AgentEvent {
     return {
-      type: "permission_request",
+      type: 'permission_request',
       requestId: String(id),
       tool,
       input: params,
       requestMethod: method,
-      availableDecisions: ["accept", "decline"],
+      availableDecisions: ['accept', 'decline'],
     };
   }
 
@@ -619,13 +558,13 @@ export class CodexAppServerRuntime implements AgentRuntime {
     response: AgentResponse | undefined,
   ): void {
     if (!response) {
-      this.process.sendResponse(id, { decision: "decline" });
+      this.process.sendResponse(id, { decision: 'decline' });
       return;
     }
 
-    if (response.type === "permission") {
+    if (response.type === 'permission') {
       this.sendPermissionResult(id, method, response);
-    } else if (response.type === "elicitation") {
+    } else if (response.type === 'elicitation') {
       this.sendElicitationResult(id, method, response);
     }
   }
@@ -634,24 +573,23 @@ export class CodexAppServerRuntime implements AgentRuntime {
   private sendPermissionResult(
     id: RequestId,
     method: string,
-    response: Extract<AgentResponse, { type: "permission" }>,
+    response: Extract<AgentResponse, { type: 'permission' }>,
   ): void {
-    if (method === "item/permissions/requestApproval") {
+    if (method === 'item/permissions/requestApproval') {
       this.process.sendResponse(id, {
         permissions: response.updatedPermissions ?? [],
-        scope: "turn",
+        scope: 'turn',
       });
       return;
     }
 
-    if (method === "mcpServer/elicitation/request") {
-      const action = response.approved ? "accept" : "decline";
+    if (method === 'mcpServer/elicitation/request') {
+      const action = response.approved ? 'accept' : 'decline';
       this.process.sendResponse(id, { action, content: null, _meta: null });
       return;
     }
 
-    const decision =
-      response.decision ?? (response.approved ? "accept" : "decline");
+    const decision = response.decision ?? (response.approved ? 'accept' : 'decline');
     this.process.sendResponse(id, { decision });
   }
 
@@ -659,9 +597,9 @@ export class CodexAppServerRuntime implements AgentRuntime {
   private sendElicitationResult(
     id: RequestId,
     method: string,
-    response: Extract<AgentResponse, { type: "elicitation" }>,
+    response: Extract<AgentResponse, { type: 'elicitation' }>,
   ): void {
-    if (method === "item/tool/requestUserInput") {
+    if (method === 'item/tool/requestUserInput') {
       this.process.sendResponse(id, { answers: response.values ?? {} });
       return;
     }
@@ -681,10 +619,10 @@ export class CodexAppServerRuntime implements AgentRuntime {
    * Tests the command against {@link AgentSettings.commandAutoApprovePatterns}.
    */
   private shouldAutoApprove(method: string, params: unknown): boolean {
-    if (method !== "item/commandExecution/requestApproval") return false;
+    if (method !== 'item/commandExecution/requestApproval') return false;
 
     const cmdParams = params as CommandExecutionRequestApprovalParams;
-    const command = cmdParams.command ?? "";
+    const command = cmdParams.command ?? '';
     return this.settings.commandAutoApprovePatterns.some((pattern) => {
       try {
         return new RegExp(pattern).test(command);
@@ -704,14 +642,12 @@ export class CodexAppServerRuntime implements AgentRuntime {
     queue.rejectAll(signal.reason);
 
     if (turnId) {
-      this.process
-        .sendRequest("turn/interrupt", { threadId, turnId })
-        .catch((e) => {
-          console.warn(
-            "[codex-appserver-runtime] Failed to interrupt turn:",
-            e instanceof Error ? e.message : e,
-          );
-        });
+      this.process.sendRequest('turn/interrupt', { threadId, turnId }).catch((e) => {
+        console.warn(
+          '[codex-appserver-runtime] Failed to interrupt turn:',
+          e instanceof Error ? e.message : e,
+        );
+      });
     }
   }
 
@@ -735,13 +671,13 @@ export class CodexAppServerRuntime implements AgentRuntime {
 /** Check if an MCP elicitation request is actually a tool call approval. */
 function isMcpToolCallApproval(params: McpServerElicitationRequestParams): boolean {
   const meta = params._meta as Record<string, unknown> | null;
-  return meta?.codex_approval_kind === "mcp_tool_call";
+  return meta?.codex_approval_kind === 'mcp_tool_call';
 }
 
 /** Build a summary string from a fileChange ThreadItem. */
 function extractFileChangeSummaryFromItem(
-  item: Extract<ThreadItem, { type: "fileChange" }>,
+  item: Extract<ThreadItem, { type: 'fileChange' }>,
 ): string {
-  if (item.changes.length === 0) return "(unknown file change)";
-  return item.changes.map((c) => `${c.kind}: ${c.path}`).join(", ");
+  if (item.changes.length === 0) return '(unknown file change)';
+  return item.changes.map((c) => `${c.kind}: ${c.path}`).join(', ');
 }

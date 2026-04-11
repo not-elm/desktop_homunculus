@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
-import { assets, fileDialog } from "@hmcs/sdk";
+import { assets, fileDialog } from '@hmcs/sdk';
+import { useCallback, useEffect, useState } from 'react';
 
 export interface UseVrmAssetsReturn {
   modAssets: assets.AssetInfo[];
@@ -16,10 +16,10 @@ export function useVrmAssets(): UseVrmAssetsReturn {
 
   const fetchAssets = useCallback(async () => {
     try {
-      const list = await assets.list({ type: "vrm" });
+      const list = await assets.list({ type: 'vrm' });
       setAssetList(list);
     } catch (e) {
-      console.error("Failed to load VRM assets:", e);
+      console.error('Failed to load VRM assets:', e);
     }
   }, []);
 
@@ -30,8 +30,8 @@ export function useVrmAssets(): UseVrmAssetsReturn {
   const importVrm = useCallback(
     async (personaId: string): Promise<string | null> => {
       const path = await fileDialog.open({
-        accept: [".vrm"],
-        title: "Select VRM file",
+        accept: ['.vrm'],
+        title: 'Select VRM file',
       });
       if (!path) return null;
 
@@ -40,21 +40,21 @@ export function useVrmAssets(): UseVrmAssetsReturn {
         await assets.importAsset({
           sourcePath: path,
           assetId,
-          assetType: "vrm",
+          assetType: 'vrm',
           description: `Imported VRM for ${personaId}`,
         });
         await fetchAssets();
         return assetId;
       } catch (e) {
-        console.error("Failed to import VRM:", e);
+        console.error('Failed to import VRM:', e);
         return null;
       }
     },
     [fetchAssets],
   );
 
-  const modAssets = assetList.filter((a) => !a.id.startsWith("vrm:local:"));
-  const localAssets = assetList.filter((a) => a.id.startsWith("vrm:local:"));
+  const modAssets = assetList.filter((a) => !a.id.startsWith('vrm:local:'));
+  const localAssets = assetList.filter((a) => a.id.startsWith('vrm:local:'));
 
   return { modAssets, localAssets, importVrm };
 }

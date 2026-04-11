@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useRef } from 'react';
 
 interface UseTreeKeyboardOptions {
   onSelect: (element: HTMLElement) => void;
@@ -23,74 +23,77 @@ export function useTreeKeyboard({ onSelect }: UseTreeKeyboardOptions): UseTreeKe
     if (!treeRef.current) return;
     const items = treeRef.current.querySelectorAll<HTMLElement>('[role="treeitem"]');
     for (const item of items) {
-      item.setAttribute("tabindex", item === element ? "0" : "-1");
+      item.setAttribute('tabindex', item === element ? '0' : '-1');
     }
     element.focus();
   }, []);
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    const items = getVisibleItems();
-    if (items.length === 0) return;
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      const items = getVisibleItems();
+      if (items.length === 0) return;
 
-    const current = document.activeElement as HTMLElement;
-    const index = items.indexOf(current);
+      const current = document.activeElement as HTMLElement;
+      const index = items.indexOf(current);
 
-    switch (e.key) {
-      case "ArrowDown": {
-        e.preventDefault();
-        const next = items[index + 1] ?? items[0];
-        focusItem(next);
-        break;
+      switch (e.key) {
+        case 'ArrowDown': {
+          e.preventDefault();
+          const next = items[index + 1] ?? items[0];
+          focusItem(next);
+          break;
+        }
+        case 'ArrowUp': {
+          e.preventDefault();
+          const prev = items[index - 1] ?? items[items.length - 1];
+          focusItem(prev);
+          break;
+        }
+        case 'ArrowRight': {
+          e.preventDefault();
+          handleArrowRight(current, items);
+          break;
+        }
+        case 'ArrowLeft': {
+          e.preventDefault();
+          handleArrowLeft(current);
+          break;
+        }
+        case 'Enter': {
+          e.preventDefault();
+          onSelect(current);
+          break;
+        }
+        case ' ': {
+          const target = e.target as HTMLElement;
+          if (target.getAttribute('role') !== 'treeitem') break;
+          e.preventDefault();
+          onSelect(current);
+          break;
+        }
+        case 'Home': {
+          e.preventDefault();
+          if (items.length > 0) focusItem(items[0]);
+          break;
+        }
+        case 'End': {
+          e.preventDefault();
+          if (items.length > 0) focusItem(items[items.length - 1]);
+          break;
+        }
       }
-      case "ArrowUp": {
-        e.preventDefault();
-        const prev = items[index - 1] ?? items[items.length - 1];
-        focusItem(prev);
-        break;
-      }
-      case "ArrowRight": {
-        e.preventDefault();
-        handleArrowRight(current, items);
-        break;
-      }
-      case "ArrowLeft": {
-        e.preventDefault();
-        handleArrowLeft(current);
-        break;
-      }
-      case "Enter": {
-        e.preventDefault();
-        onSelect(current);
-        break;
-      }
-      case " ": {
-        const target = e.target as HTMLElement;
-        if (target.getAttribute("role") !== "treeitem") break;
-        e.preventDefault();
-        onSelect(current);
-        break;
-      }
-      case "Home": {
-        e.preventDefault();
-        if (items.length > 0) focusItem(items[0]);
-        break;
-      }
-      case "End": {
-        e.preventDefault();
-        if (items.length > 0) focusItem(items[items.length - 1]);
-        break;
-      }
-    }
-  }, [getVisibleItems, focusItem, onSelect]);
+    },
+    [getVisibleItems, focusItem, onSelect, handleArrowRight, handleArrowLeft],
+  );
 
   function handleArrowRight(current: HTMLElement, items: HTMLElement[]) {
-    const expanded = current.getAttribute("aria-expanded");
-    if (expanded === "false") {
-      const chevron = current.querySelector<HTMLElement>(".ws-chevron");
+    const expanded = current.getAttribute('aria-expanded');
+    if (expanded === 'false') {
+      const chevron = current.querySelector<HTMLElement>('.ws-chevron');
       if (chevron) chevron.click();
       return;
     }
-    if (expanded === "true") {
+    if (expanded === 'true') {
       const idx = items.indexOf(current);
       const next = items[idx + 1];
       if (next && getAriaLevel(next) > getAriaLevel(current)) {
@@ -100,9 +103,9 @@ export function useTreeKeyboard({ onSelect }: UseTreeKeyboardOptions): UseTreeKe
   }
 
   function handleArrowLeft(current: HTMLElement) {
-    const expanded = current.getAttribute("aria-expanded");
-    if (expanded === "true") {
-      const chevron = current.querySelector<HTMLElement>(".ws-chevron");
+    const expanded = current.getAttribute('aria-expanded');
+    if (expanded === 'true') {
+      const chevron = current.querySelector<HTMLElement>('.ws-chevron');
       if (chevron) chevron.click();
       return;
     }
@@ -118,12 +121,12 @@ function isVisible(el: HTMLElement): boolean {
   const group = el.closest('[role="group"]');
   if (!group) return true;
   const parentItem = group.closest('[role="treeitem"]');
-  if (parentItem && parentItem.getAttribute("aria-expanded") === "false") return false;
+  if (parentItem && parentItem.getAttribute('aria-expanded') === 'false') return false;
   return true;
 }
 
 function getAriaLevel(el: HTMLElement): number {
-  return Number(el.getAttribute("aria-level")) || 0;
+  return Number(el.getAttribute('aria-level')) || 0;
 }
 
 function findParentTreeItem(el: HTMLElement): HTMLElement | null {

@@ -1,14 +1,14 @@
-import { useState } from "react";
-import { rpc } from "@hmcs/sdk/rpc";
+import { rpc } from '@hmcs/sdk/rpc';
 import {
   AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogFooter,
-  AlertDialogTitle,
-  AlertDialogDescription,
   AlertDialogCancel,
-} from "@hmcs/ui";
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@hmcs/ui';
+import { useState } from 'react';
 
 interface WorktreeDetails {
   name: string;
@@ -36,18 +36,18 @@ export function RemoveWorktreeDialog({
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  async function handleAction(action: "merge" | "remove") {
+  async function handleAction(action: 'merge' | 'remove') {
     setBusy(true);
     setError(null);
     try {
       await rpc.call({
-        modName: "@hmcs/agent",
-        method: "remove-worktree",
+        modName: '@hmcs/agent',
+        method: 'remove-worktree',
         body: { workspacePath, name: worktree.name, action },
       });
       onRemoved();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Operation failed");
+      setError(e instanceof Error ? e.message : 'Operation failed');
     } finally {
       setBusy(false);
     }
@@ -56,24 +56,24 @@ export function RemoveWorktreeDialog({
   const actionsDisabled = busy || worktree.hasUncommittedChanges;
 
   return (
-    <AlertDialog open onOpenChange={(open) => { if (!open) onCancel(); }}>
+    <AlertDialog
+      open
+      onOpenChange={(open) => {
+        if (!open) onCancel();
+      }}
+    >
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>
-            Remove worktree &ldquo;{worktree.name}&rdquo;?
-          </AlertDialogTitle>
+          <AlertDialogTitle>Remove worktree &ldquo;{worktree.name}&rdquo;?</AlertDialogTitle>
           <AlertDialogDescription asChild>
             <div>
               <ChangeSummary worktree={worktree} />
               {worktree.hasUncommittedChanges && (
                 <p className="mt-2 text-amber-400 text-xs">
-                  Cannot remove: worktree has uncommitted changes. Commit or
-                  stash them first.
+                  Cannot remove: worktree has uncommitted changes. Commit or stash them first.
                 </p>
               )}
-              {error && (
-                <p className="mt-2 text-destructive text-xs">{error}</p>
-              )}
+              {error && <p className="mt-2 text-destructive text-xs">{error}</p>}
             </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
@@ -84,7 +84,7 @@ export function RemoveWorktreeDialog({
               className="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-4 py-2 bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 disabled:opacity-40 disabled:cursor-not-allowed"
               type="button"
               disabled={actionsDisabled}
-              onClick={() => handleAction("merge")}
+              onClick={() => handleAction('merge')}
             >
               Merge &amp; Remove
             </button>
@@ -93,7 +93,7 @@ export function RemoveWorktreeDialog({
             className="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-4 py-2 bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-40 disabled:cursor-not-allowed"
             type="button"
             disabled={actionsDisabled}
-            onClick={() => handleAction("remove")}
+            onClick={() => handleAction('remove')}
           >
             Remove
           </button>
@@ -110,10 +110,10 @@ function ChangeSummary({ worktree }: { worktree: WorktreeDetails }) {
 
   return (
     <span className="font-mono text-xs">
-      {worktree.commits} commit{worktree.commits !== 1 ? "s" : ""} &middot;{" "}
-      {worktree.filesChanged} file{worktree.filesChanged !== 1 ? "s" : ""}{" "}
-      changed{" "}
-      <span className="text-green-400">+{worktree.insertions}</span>{" / "}
+      {worktree.commits} commit{worktree.commits !== 1 ? 's' : ''} &middot; {worktree.filesChanged}{' '}
+      file{worktree.filesChanged !== 1 ? 's' : ''} changed{' '}
+      <span className="text-green-400">+{worktree.insertions}</span>
+      {' / '}
       <span className="text-red-400">-{worktree.deletions}</span>
     </span>
   );

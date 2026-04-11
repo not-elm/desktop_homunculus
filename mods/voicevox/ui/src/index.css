@@ -44,7 +44,8 @@ body {
 }
 
 @keyframes holo-corner-pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.4;
   }
   50% {
@@ -81,7 +82,7 @@ body {
 
 /* Noise texture overlay (scoped to settings panel) */
 .settings-panel.holo-noise::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
@@ -160,7 +161,7 @@ body {
 }
 
 .settings-highlight::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   background: linear-gradient(
@@ -206,7 +207,7 @@ body {
 }
 
 .settings-scanline::after {
-  content: '';
+  content: "";
   position: absolute;
   left: 0;
   right: 0;
@@ -270,7 +271,10 @@ body {
   text-transform: uppercase;
   padding: var(--hud-space-md) var(--hud-space-xl);
   cursor: pointer;
-  transition: color var(--hud-duration-content) ease, border-color var(--hud-duration-content) ease, text-shadow var(--hud-duration-content) ease;
+  transition:
+    color var(--hud-duration-content) ease,
+    border-color var(--hud-duration-content) ease,
+    text-shadow var(--hud-duration-content) ease;
   font-family: inherit;
 }
 
@@ -326,13 +330,16 @@ body {
   font-size: var(--hud-font-size-base);
   font-family: inherit;
   outline: none;
-  transition: border-color var(--hud-duration-content) ease, box-shadow var(--hud-duration-content) ease;
+  transition:
+    border-color var(--hud-duration-content) ease,
+    box-shadow var(--hud-duration-content) ease;
 }
 
 .settings-input:focus {
   border-color: oklch(0.72 0.14 192 / 0.5);
-  box-shadow: 0 0 8px oklch(0.72 0.14 192 / 0.15),
-              inset 0 0 4px oklch(0.72 0.14 192 / 0.05);
+  box-shadow:
+    0 0 8px oklch(0.72 0.14 192 / 0.15),
+    inset 0 0 4px oklch(0.72 0.14 192 / 0.05);
 }
 
 .settings-textarea {
@@ -346,13 +353,16 @@ body {
   outline: none;
   resize: vertical;
   min-height: 60px;
-  transition: border-color var(--hud-duration-content) ease, box-shadow var(--hud-duration-content) ease;
+  transition:
+    border-color var(--hud-duration-content) ease,
+    box-shadow var(--hud-duration-content) ease;
 }
 
 .settings-textarea:focus {
   border-color: oklch(0.72 0.14 192 / 0.5);
-  box-shadow: 0 0 8px oklch(0.72 0.14 192 / 0.15),
-              inset 0 0 4px oklch(0.72 0.14 192 / 0.05);
+  box-shadow:
+    0 0 8px oklch(0.72 0.14 192 / 0.15),
+    inset 0 0 4px oklch(0.72 0.14 192 / 0.05);
 }
 
 .settings-textarea::placeholder,
@@ -392,7 +402,9 @@ body {
   border: 2px solid oklch(0.72 0.14 192 / 0.5);
   box-shadow: 0 0 8px oklch(0.72 0.14 192 / 0.4);
   cursor: pointer;
-  transition: box-shadow var(--hud-duration-content) ease, transform var(--hud-duration-micro) ease;
+  transition:
+    box-shadow var(--hud-duration-content) ease,
+    transform var(--hud-duration-micro) ease;
 }
 
 .settings-slider::-webkit-slider-thumb:hover {
@@ -413,21 +425,13 @@ body {
 .settings-slider::-webkit-slider-runnable-track {
   height: 4px;
   border-radius: 2px;
-  background: linear-gradient(
-    90deg,
-    oklch(0.72 0.14 192 / 0.3),
-    oklch(0.65 0.18 285 / 0.2)
-  );
+  background: linear-gradient(90deg, oklch(0.72 0.14 192 / 0.3), oklch(0.65 0.18 285 / 0.2));
 }
 
 .settings-slider::-moz-range-track {
   height: 4px;
   border-radius: 2px;
-  background: linear-gradient(
-    90deg,
-    oklch(0.72 0.14 192 / 0.3),
-    oklch(0.65 0.18 285 / 0.2)
-  );
+  background: linear-gradient(90deg, oklch(0.72 0.14 192 / 0.3), oklch(0.65 0.18 285 / 0.2));
 }
 
 .settings-slider-value {
@@ -462,7 +466,10 @@ body {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: color var(--hud-duration-content) ease, border-color var(--hud-duration-content) ease, text-shadow var(--hud-duration-content) ease;
+  transition:
+    color var(--hud-duration-content) ease,
+    border-color var(--hud-duration-content) ease,
+    text-shadow var(--hud-duration-content) ease;
 }
 
 .settings-close:hover {
@@ -488,8 +495,11 @@ body {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: background var(--hud-duration-content) ease, border-color var(--hud-duration-content) ease, box-shadow var(--hud-duration-content) ease,
-              color var(--hud-duration-content) ease;
+  transition:
+    background var(--hud-duration-content) ease,
+    border-color var(--hud-duration-content) ease,
+    box-shadow var(--hud-duration-content) ease,
+    color var(--hud-duration-content) ease;
 }
 
 .settings-save:hover {

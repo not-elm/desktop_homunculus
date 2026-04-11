@@ -1,20 +1,20 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn } from "storybook/test";
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { fn } from 'storybook/test';
+import { Button } from './button';
 import {
   Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-  CardAction,
-} from "./card";
-import { Button } from "./button";
-import { Input } from "./input";
-import { Label } from "./label";
+} from './card';
+import { Input } from './input';
+import { Label } from './label';
 
 const meta = {
-  title: "UI/Layout/Card",
+  title: 'UI/Layout/Card',
   component: Card,
   args: {
     onClick: fn(),
@@ -30,14 +30,12 @@ export const Default: Story = {
     <Card className="w-[380px]">
       <CardHeader>
         <CardTitle>Card Title</CardTitle>
-        <CardDescription>
-          A brief description of what this card contains.
-        </CardDescription>
+        <CardDescription>A brief description of what this card contains.</CardDescription>
       </CardHeader>
       <CardContent>
         <p className="text-sm text-muted-foreground">
-          This is the main content area of the card. It can contain any elements
-          you need to display.
+          This is the main content area of the card. It can contain any elements you need to
+          display.
         </p>
       </CardContent>
       <CardFooter className="flex justify-between">
@@ -54,9 +52,7 @@ export const WithForm: Story = {
     <Card className="w-[380px]">
       <CardHeader>
         <CardTitle>Create Account</CardTitle>
-        <CardDescription>
-          Enter your details to create a new account.
-        </CardDescription>
+        <CardDescription>Enter your details to create a new account.</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
@@ -106,14 +102,11 @@ export const Interactive: Story = {
     >
       <CardHeader>
         <CardTitle>Clickable Card</CardTitle>
-        <CardDescription>
-          Hover over this card to see the interaction effect.
-        </CardDescription>
+        <CardDescription>Hover over this card to see the interaction effect.</CardDescription>
       </CardHeader>
       <CardContent>
         <p className="text-sm text-muted-foreground">
-          This card has hover and click interactions, useful for navigation or
-          selection patterns.
+          This card has hover and click interactions, useful for navigation or selection patterns.
         </p>
       </CardContent>
     </Card>

@@ -1,9 +1,6 @@
-import { ThumbnailCard } from "@persona/shared/components/ThumbnailCard";
-import VrmSelect from "@persona/shared/components/VrmSelect";
-import {
-  PersonaFields,
-  type PersonaFormValues,
-} from "@persona/shared/components/PersonaFields";
+import { PersonaFields, type PersonaFormValues } from '@persona/shared/components/PersonaFields';
+import { ThumbnailCard } from '@persona/shared/components/ThumbnailCard';
+import VrmSelect from '@persona/shared/components/VrmSelect';
 
 interface PersonaDetailBodyProps {
   personaId: string;
@@ -44,11 +41,7 @@ export function PersonaDetailBody({
         autoSpawn={autoSpawn}
         onAutoSpawnToggle={onAutoSpawnToggle}
       />
-      <RightColumn
-        personaId={personaId}
-        formValues={formValues}
-        onFormChange={onFormChange}
-      />
+      <RightColumn personaId={personaId} formValues={formValues} onFormChange={onFormChange} />
     </div>
   );
 }
@@ -72,16 +65,9 @@ function LeftColumn({
 }) {
   return (
     <div className="detail-left">
-      <ThumbnailCard
-        thumbnailUrl={thumbnailUrl}
-        onThumbnailChange={onThumbnailChange}
-      />
+      <ThumbnailCard thumbnailUrl={thumbnailUrl} onThumbnailChange={onThumbnailChange} />
 
-      <VrmSelect
-        personaId={personaId}
-        value={vrmAssetId}
-        onChange={onVrmChange}
-      />
+      <VrmSelect personaId={personaId} value={vrmAssetId} onChange={onVrmChange} />
 
       <div className="detail-auto-row">
         <div>
@@ -89,7 +75,7 @@ function LeftColumn({
           <div className="detail-auto-sublabel">Launch at startup</div>
         </div>
         <button
-          className={`toggle-mini ${autoSpawn ? "on" : "off"}`}
+          className={`toggle-mini ${autoSpawn ? 'on' : 'off'}`}
           onClick={onAutoSpawnToggle}
           aria-label="Toggle auto spawn"
           role="switch"
@@ -120,7 +106,7 @@ function RightColumn({
           className="settings-input"
           value={personaId}
           readOnly
-          style={{ opacity: 0.5, cursor: "not-allowed", width: "100%" }}
+          style={{ opacity: 0.5, cursor: 'not-allowed', width: '100%' }}
         />
       </div>
       <PersonaFields values={formValues} onChange={onFormChange} />

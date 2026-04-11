@@ -13,13 +13,13 @@
 // JSON-RPC 2.0 Envelope Types (not generated — part of the wire protocol)
 // ---------------------------------------------------------------------------
 
-import type { RequestId as _RequestId } from "./generated/index.ts";
+import type { RequestId as _RequestId } from './generated/index.ts';
 
 export type { _RequestId as RequestId };
 
 /** A JSON-RPC 2.0 request sent by the client to the server. */
 export interface JsonRpcRequest {
-  jsonrpc: "2.0";
+  jsonrpc: '2.0';
   id: _RequestId;
   method: string;
   params?: unknown;
@@ -27,14 +27,14 @@ export interface JsonRpcRequest {
 
 /** A JSON-RPC 2.0 notification sent by the client (no `id`, no response expected). */
 export interface JsonRpcNotification {
-  jsonrpc: "2.0";
+  jsonrpc: '2.0';
   method: string;
   params?: unknown;
 }
 
 /** A successful JSON-RPC 2.0 response from the server. */
 export interface JsonRpcResponse {
-  jsonrpc: "2.0";
+  jsonrpc: '2.0';
   id: _RequestId;
   result?: unknown;
   error?: JsonRpcError;
@@ -51,52 +51,48 @@ export interface JsonRpcError {
 // Re-exports from generated types
 // ---------------------------------------------------------------------------
 
+export type { ClientInfo } from './generated/ClientInfo.ts';
+export type { InitializeCapabilities } from './generated/InitializeCapabilities.ts';
 // Initialize handshake
-export type { InitializeParams } from "./generated/InitializeParams.ts";
-export type { InitializeResponse } from "./generated/InitializeResponse.ts";
-export type { ClientInfo } from "./generated/ClientInfo.ts";
-export type { InitializeCapabilities } from "./generated/InitializeCapabilities.ts";
-
-// Thread / Turn lifecycle
-export type { ThreadStartParams } from "./generated/v2/ThreadStartParams.ts";
-export type { ThreadStartResponse } from "./generated/v2/ThreadStartResponse.ts";
-export type { ThreadResumeParams } from "./generated/v2/ThreadResumeParams.ts";
-export type { TurnStartParams } from "./generated/v2/TurnStartParams.ts";
-export type { TurnInterruptParams } from "./generated/v2/TurnInterruptParams.ts";
-export type { UserInput } from "./generated/v2/UserInput.ts";
-export type { Thread } from "./generated/v2/Thread.ts";
-export type { Turn } from "./generated/v2/Turn.ts";
-export type { TurnStatus } from "./generated/v2/TurnStatus.ts";
-export type { TurnError } from "./generated/v2/TurnError.ts";
-export type { ThreadItem } from "./generated/v2/ThreadItem.ts";
-
+export type { InitializeParams } from './generated/InitializeParams.ts';
+export type { InitializeResponse } from './generated/InitializeResponse.ts';
 // Enums
-export type { Personality } from "./generated/Personality.ts";
-export type { SandboxMode } from "./generated/v2/SandboxMode.ts";
-export type { ServiceTier } from "./generated/ServiceTier.ts";
-
-// Server requests (approval / elicitation)
-export type { ServerRequest } from "./generated/ServerRequest.ts";
-export type { CommandExecutionRequestApprovalParams } from "./generated/v2/CommandExecutionRequestApprovalParams.ts";
-export type { CommandExecutionRequestApprovalResponse } from "./generated/v2/CommandExecutionRequestApprovalResponse.ts";
-export type { CommandExecutionApprovalDecision } from "./generated/v2/CommandExecutionApprovalDecision.ts";
-export type { FileChangeRequestApprovalParams } from "./generated/v2/FileChangeRequestApprovalParams.ts";
-export type { FileChangeRequestApprovalResponse } from "./generated/v2/FileChangeRequestApprovalResponse.ts";
-export type { FileChangeApprovalDecision } from "./generated/v2/FileChangeApprovalDecision.ts";
-export type { PermissionsRequestApprovalParams } from "./generated/v2/PermissionsRequestApprovalParams.ts";
-export type { PermissionsRequestApprovalResponse } from "./generated/v2/PermissionsRequestApprovalResponse.ts";
-export type { McpServerElicitationRequestParams } from "./generated/v2/McpServerElicitationRequestParams.ts";
-export type { McpServerElicitationRequestResponse } from "./generated/v2/McpServerElicitationRequestResponse.ts";
-export type { ToolRequestUserInputParams } from "./generated/v2/ToolRequestUserInputParams.ts";
-export type { ToolRequestUserInputResponse } from "./generated/v2/ToolRequestUserInputResponse.ts";
-
+export type { Personality } from './generated/Personality.ts';
 // Server notifications
-export type { ServerNotification } from "./generated/ServerNotification.ts";
-export type { TurnStartedNotification } from "./generated/v2/TurnStartedNotification.ts";
-export type { TurnCompletedNotification } from "./generated/v2/TurnCompletedNotification.ts";
-export type { ItemStartedNotification } from "./generated/v2/ItemStartedNotification.ts";
-export type { ItemCompletedNotification } from "./generated/v2/ItemCompletedNotification.ts";
-export type { AgentMessageDeltaNotification } from "./generated/v2/AgentMessageDeltaNotification.ts";
-export type { CommandExecutionOutputDeltaNotification } from "./generated/v2/CommandExecutionOutputDeltaNotification.ts";
-export type { ServerRequestResolvedNotification } from "./generated/v2/ServerRequestResolvedNotification.ts";
-export type { ErrorNotification } from "./generated/v2/ErrorNotification.ts";
+export type { ServerNotification } from './generated/ServerNotification.ts';
+// Server requests (approval / elicitation)
+export type { ServerRequest } from './generated/ServerRequest.ts';
+export type { ServiceTier } from './generated/ServiceTier.ts';
+export type { AgentMessageDeltaNotification } from './generated/v2/AgentMessageDeltaNotification.ts';
+export type { CommandExecutionApprovalDecision } from './generated/v2/CommandExecutionApprovalDecision.ts';
+export type { CommandExecutionOutputDeltaNotification } from './generated/v2/CommandExecutionOutputDeltaNotification.ts';
+export type { CommandExecutionRequestApprovalParams } from './generated/v2/CommandExecutionRequestApprovalParams.ts';
+export type { CommandExecutionRequestApprovalResponse } from './generated/v2/CommandExecutionRequestApprovalResponse.ts';
+export type { ErrorNotification } from './generated/v2/ErrorNotification.ts';
+export type { FileChangeApprovalDecision } from './generated/v2/FileChangeApprovalDecision.ts';
+export type { FileChangeRequestApprovalParams } from './generated/v2/FileChangeRequestApprovalParams.ts';
+export type { FileChangeRequestApprovalResponse } from './generated/v2/FileChangeRequestApprovalResponse.ts';
+export type { ItemCompletedNotification } from './generated/v2/ItemCompletedNotification.ts';
+export type { ItemStartedNotification } from './generated/v2/ItemStartedNotification.ts';
+export type { McpServerElicitationRequestParams } from './generated/v2/McpServerElicitationRequestParams.ts';
+export type { McpServerElicitationRequestResponse } from './generated/v2/McpServerElicitationRequestResponse.ts';
+export type { PermissionsRequestApprovalParams } from './generated/v2/PermissionsRequestApprovalParams.ts';
+export type { PermissionsRequestApprovalResponse } from './generated/v2/PermissionsRequestApprovalResponse.ts';
+export type { SandboxMode } from './generated/v2/SandboxMode.ts';
+export type { ServerRequestResolvedNotification } from './generated/v2/ServerRequestResolvedNotification.ts';
+export type { Thread } from './generated/v2/Thread.ts';
+export type { ThreadItem } from './generated/v2/ThreadItem.ts';
+export type { ThreadResumeParams } from './generated/v2/ThreadResumeParams.ts';
+// Thread / Turn lifecycle
+export type { ThreadStartParams } from './generated/v2/ThreadStartParams.ts';
+export type { ThreadStartResponse } from './generated/v2/ThreadStartResponse.ts';
+export type { ToolRequestUserInputParams } from './generated/v2/ToolRequestUserInputParams.ts';
+export type { ToolRequestUserInputResponse } from './generated/v2/ToolRequestUserInputResponse.ts';
+export type { Turn } from './generated/v2/Turn.ts';
+export type { TurnCompletedNotification } from './generated/v2/TurnCompletedNotification.ts';
+export type { TurnError } from './generated/v2/TurnError.ts';
+export type { TurnInterruptParams } from './generated/v2/TurnInterruptParams.ts';
+export type { TurnStartedNotification } from './generated/v2/TurnStartedNotification.ts';
+export type { TurnStartParams } from './generated/v2/TurnStartParams.ts';
+export type { TurnStatus } from './generated/v2/TurnStatus.ts';
+export type { UserInput } from './generated/v2/UserInput.ts';

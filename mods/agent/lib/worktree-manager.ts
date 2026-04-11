@@ -1,6 +1,6 @@
-import { join } from "node:path";
-import { existsSync } from "node:fs";
-import { gitExec } from "./git.ts";
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+import { gitExec } from './git.ts';
 
 /** Information about a git worktree. */
 export interface WorktreeInfo {
@@ -27,7 +27,7 @@ export interface MergeResult {
   error?: string;
 }
 
-const WORKTREE_DIR = ".hmcs/worktrees";
+const WORKTREE_DIR = '.hmcs/worktrees';
 
 /** Pattern for valid worktree names: alphanumeric start, then alphanumeric, hyphens, underscores, dots. */
 export const WORKTREE_NAME_PATTERN = /^[a-zA-Z0-9][a-zA-Z0-9_\-.]*$/;
@@ -49,14 +49,7 @@ export class WorktreeManager {
   async create(name: string, baseBranch: string): Promise<WorktreeInfo> {
     validateWorktreeName(name);
     const worktreePath = this.worktreePath(name);
-    await gitExec(this.repoDir, [
-      "worktree",
-      "add",
-      "-b",
-      name,
-      worktreePath,
-      baseBranch,
-    ]);
+    await gitExec(this.repoDir, ['worktree', 'add', '-b', name, worktreePath, baseBranch]);
     await this.storeBaseBranch(worktreePath, baseBranch);
     return {
       name,
@@ -70,12 +63,7 @@ export class WorktreeManager {
   /** Remove a worktree by name. */
   async remove(name: string): Promise<void> {
     const worktreePath = this.worktreePath(name);
-    await gitExec(this.repoDir, [
-      "worktree",
-      "remove",
-      "--force",
-      worktreePath,
-    ]);
+    await gitExec(this.repoDir, ['worktree', 'remove', '--force', worktreePath]);
     await this.deleteBranchSafely(name);
   }
 
@@ -85,7 +73,7 @@ export class WorktreeManager {
     if (!info) return { success: false, error: `Worktree "${name}" not found` };
 
     try {
-      await gitExec(this.repoDir, ["merge", "--ff-only", info.branch]);
+      await gitExec(this.repoDir, ['merge', '--ff-only', info.branch]);
       await this.remove(name);
       return { success: true };
     } catch (err) {
@@ -96,11 +84,7 @@ export class WorktreeManager {
 
   /** List all managed worktrees (excludes the main worktree). */
   async list(): Promise<WorktreeInfo[]> {
-    const raw = await gitExec(this.repoDir, [
-      "worktree",
-      "list",
-      "--porcelain",
-    ]);
+    const raw = await gitExec(this.repoDir, ['worktree', 'list', '--porcelain']);
     return await this.parseManagedWorktrees(raw);
   }
 
@@ -123,7 +107,7 @@ export class WorktreeManager {
   async hasUncommittedChanges(name: string): Promise<boolean> {
     const worktreePath = this.worktreePath(name);
     if (!existsSync(worktreePath)) return false;
-    const result = await gitExec(worktreePath, ["status", "--porcelain"]);
+    const result = await gitExec(worktreePath, ['status', '--porcelain']);
     return result.trim().length > 0;
   }
 
@@ -133,7 +117,7 @@ export class WorktreeManager {
 
   private async storeBaseBranch(worktreePath: string, baseBranch: string): Promise<void> {
     try {
-      await gitExec(worktreePath, ["config", "hmcs.baseBranch", baseBranch]);
+      await gitExec(worktreePath, ['config', 'hmcs.baseBranch', baseBranch]);
     } catch {
       // Non-critical: baseBranch metadata will fallback to "main"
     }
@@ -141,10 +125,10 @@ export class WorktreeManager {
 
   private async readBaseBranch(worktreePath: string): Promise<string> {
     try {
-      const result = await gitExec(worktreePath, ["config", "hmcs.baseBranch"]);
-      return result.trim() || "main";
+      const result = await gitExec(worktreePath, ['config', 'hmcs.baseBranch']);
+      return result.trim() || 'main';
     } catch {
-      return "main";
+      return 'main';
     }
   }
 
@@ -156,8 +140,8 @@ export class WorktreeManager {
   private async countCommits(info: WorktreeInfo): Promise<number> {
     try {
       const result = await gitExec(info.path, [
-        "rev-list",
-        "--count",
+        'rev-list',
+        '--count',
         `${info.baseBranch}..${info.branch}`,
       ]);
       return parseInt(result.trim(), 10) || 0;
@@ -171,8 +155,8 @@ export class WorktreeManager {
   ): Promise<{ filesChanged: number; insertions: number; deletions: number }> {
     try {
       const result = await gitExec(info.path, [
-        "diff",
-        "--shortstat",
+        'diff',
+        '--shortstat',
         `${info.baseBranch}...${info.branch}`,
       ]);
       return parseDiffShortstat(result);
@@ -184,15 +168,9 @@ export class WorktreeManager {
   private async canFastForward(info: WorktreeInfo): Promise<boolean> {
     try {
       const mergeBase = (
-        await gitExec(this.repoDir, [
-          "merge-base",
-          info.baseBranch,
-          info.branch,
-        ])
+        await gitExec(this.repoDir, ['merge-base', info.baseBranch, info.branch])
       ).trim();
-      const baseHead = (
-        await gitExec(this.repoDir, ["rev-parse", info.baseBranch])
-      ).trim();
+      const baseHead = (await gitExec(this.repoDir, ['rev-parse', info.baseBranch])).trim();
       return mergeBase === baseHead;
     } catch {
       return false;
@@ -201,19 +179,19 @@ export class WorktreeManager {
 
   private async deleteBranchSafely(branchName: string): Promise<void> {
     try {
-      await gitExec(this.repoDir, ["branch", "-D", branchName]);
+      await gitExec(this.repoDir, ['branch', '-D', branchName]);
     } catch {
       // Branch may already be deleted or is current -- ignore
     }
   }
 
   private async parseManagedWorktrees(porcelainOutput: string): Promise<WorktreeInfo[]> {
-    const entries = porcelainOutput.trim().split("\n\n");
+    const entries = porcelainOutput.trim().split('\n\n');
     const mainPath = normalizePath(this.repoDir);
 
     const parsed = entries
       .map((entry) => this.parseWorktreeEntry(entry, mainPath))
-      .filter((info): info is Omit<WorktreeInfo, "baseBranch"> & { path: string } => info !== null);
+      .filter((info): info is Omit<WorktreeInfo, 'baseBranch'> & { path: string } => info !== null);
 
     return Promise.all(
       parsed.map(async (entry) => {
@@ -226,22 +204,22 @@ export class WorktreeManager {
   private parseWorktreeEntry(
     entry: string,
     mainPath: string,
-  ): Omit<WorktreeInfo, "baseBranch"> | null {
-    const lines = entry.split("\n");
-    const pathLine = lines.find((l) => l.startsWith("worktree "));
-    const branchLine = lines.find((l) => l.startsWith("branch "));
+  ): Omit<WorktreeInfo, 'baseBranch'> | null {
+    const lines = entry.split('\n');
+    const pathLine = lines.find((l) => l.startsWith('worktree '));
+    const branchLine = lines.find((l) => l.startsWith('branch '));
     if (!pathLine || !branchLine) return null;
 
     // Skip bare worktrees and detached HEAD entries
-    if (lines.some((l) => l === "bare" || l === "detached")) return null;
+    if (lines.some((l) => l === 'bare' || l === 'detached')) return null;
 
-    const wtPath = normalizePath(pathLine.replace("worktree ", ""));
+    const wtPath = normalizePath(pathLine.replace('worktree ', ''));
 
     // Skip the main worktree (the repository root itself)
     if (wtPath === mainPath) return null;
 
-    const branch = branchLine.replace("branch refs/heads/", "");
-    const name = wtPath.split("/").pop() ?? branch;
+    const branch = branchLine.replace('branch refs/heads/', '');
+    const name = wtPath.split('/').pop() ?? branch;
 
     return {
       name,
@@ -254,7 +232,7 @@ export class WorktreeManager {
 
 /** Normalize a file path to use forward slashes for cross-platform comparison. */
 function normalizePath(p: string): string {
-  return p.replace(/\\/g, "/");
+  return p.replace(/\\/g, '/');
 }
 
 /** Parse git diff --shortstat output into structured numbers. */

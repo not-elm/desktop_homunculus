@@ -1,17 +1,17 @@
-import { useState, useRef, useCallback } from "react";
-import { usePersonaManagement } from "./hooks/usePersonaManagement";
-import Toolbar from "./components/Toolbar";
-import Sidebar from "./components/Sidebar";
-import DetailView from "./components/DetailView";
-import CreateForm from "./components/CreateForm";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogDescription,
   DialogFooter,
-} from "@hmcs/ui";
+  DialogHeader,
+  DialogTitle,
+} from '@hmcs/ui';
+import { useCallback, useRef, useState } from 'react';
+import CreateForm from './components/CreateForm';
+import DetailView from './components/DetailView';
+import Sidebar from './components/Sidebar';
+import Toolbar from './components/Toolbar';
+import { usePersonaManagement } from './hooks/usePersonaManagement';
 
 export default function App() {
   const mgmt = usePersonaManagement();
@@ -89,10 +89,7 @@ export default function App() {
         />
         <div className="main-area">
           {mgmt.createMode ? (
-            <CreateForm
-              onCreate={mgmt.createPersona}
-              onCancel={mgmt.exitCreateMode}
-            />
+            <CreateForm onCreate={mgmt.createPersona} onCancel={mgmt.exitCreateMode} />
           ) : mgmt.selectedId ? (
             <DetailView
               key={mgmt.selectedId}
@@ -138,16 +135,10 @@ function DiscardDialog({
           <DialogDescription>You have unsaved changes. Discard?</DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <button
-            className="management-btn management-btn--secondary"
-            onClick={onCancel}
-          >
+          <button className="management-btn management-btn--secondary" onClick={onCancel}>
             Cancel
           </button>
-          <button
-            className="management-btn management-btn--danger"
-            onClick={onConfirm}
-          >
+          <button className="management-btn management-btn--danger" onClick={onConfirm}>
             Discard
           </button>
         </DialogFooter>

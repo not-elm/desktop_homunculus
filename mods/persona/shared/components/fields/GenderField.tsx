@@ -1,13 +1,11 @@
-import type { Gender } from "@hmcs/sdk";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@hmcs/ui";
+import type { Gender } from '@hmcs/sdk';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@hmcs/ui';
 
 const GENDER_OPTIONS: { value: Gender; label: string }[] = [
-  { value: "unknown", label: "Unknown" },
-  { value: "male", label: "Male" },
-  { value: "female", label: "Female" },
-  { value: "other", label: "Other" },
+  { value: 'unknown', label: 'Unknown' },
+  { value: 'male', label: 'Male' },
+  { value: 'female', label: 'Female' },
+  { value: 'other', label: 'Other' },
 ];
 
 interface GenderFieldProps {
@@ -20,11 +18,7 @@ export function GenderField({ value, onChange, disabled }: GenderFieldProps) {
   return (
     <div className="settings-label">
       Gender
-      <Select
-        value={value}
-        onValueChange={(v) => onChange(v as Gender)}
-        disabled={disabled}
-      >
+      <Select value={value} onValueChange={(v) => onChange(v as Gender)} disabled={disabled}>
         <SelectTrigger className="settings-input">
           <SelectValue />
         </SelectTrigger>

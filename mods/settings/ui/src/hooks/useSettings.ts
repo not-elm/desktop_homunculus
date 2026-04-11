@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
-import { Webview, audio, settings, shadowPanel } from "@hmcs/sdk";
+import { audio, settings, shadowPanel, Webview } from '@hmcs/sdk';
+import { useCallback, useEffect, useState } from 'react';
 
 export function useSettings() {
   const [fps, setFps] = useState(60);
@@ -12,10 +12,7 @@ export function useSettings() {
     let cancelled = false;
 
     (async () => {
-      const [currentFps, currentAlpha] = await Promise.all([
-        settings.fps(),
-        shadowPanel.alpha(),
-      ]);
+      const [currentFps, currentAlpha] = await Promise.all([settings.fps(), shadowPanel.alpha()]);
       if (cancelled) return;
       setFps(currentFps);
       setAlpha(currentAlpha);
@@ -31,21 +28,18 @@ export function useSettings() {
     if (saving) return;
     setSaving(true);
     try {
-      await Promise.all([
-        settings.setFps(fps),
-        shadowPanel.setAlpha(alpha),
-      ]);
+      await Promise.all([settings.setFps(fps), shadowPanel.setAlpha(alpha)]);
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch (err) {
-      console.error("Save failed:", err);
+      console.error('Save failed:', err);
     } finally {
       setSaving(false);
     }
   }, [fps, alpha, saving]);
 
   const handleClose = useCallback(() => {
-    audio.se.play("se:close");
+    audio.se.play('se:close');
     Webview.current()?.close();
   }, []);
 

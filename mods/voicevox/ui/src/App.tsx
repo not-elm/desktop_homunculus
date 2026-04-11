@@ -6,9 +6,9 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from "@hmcs/ui";
-import { useVoicevoxSettings } from "./hooks/useVoicevoxSettings";
-import type { VoicevoxSettings } from "./hooks/useVoicevoxSettings";
+} from '@hmcs/ui';
+import type { VoicevoxSettings } from './hooks/useVoicevoxSettings';
+import { useVoicevoxSettings } from './hooks/useVoicevoxSettings';
 
 const PARAMS: {
   key: keyof VoicevoxSettings;
@@ -18,63 +18,63 @@ const PARAMS: {
   max: number;
   step: number;
 }[] = [
-    {
-      key: "speedScale",
-      label: "Speed",
-      desc: "Speech speed",
-      min: 0.5,
-      max: 2.0,
-      step: 0.05,
-    },
-    {
-      key: "pitchScale",
-      label: "Pitch",
-      desc: "Voice pitch (0 = baseline)",
-      min: -0.15,
-      max: 0.15,
-      step: 0.01,
-    },
-    {
-      key: "intonationScale",
-      label: "Intonation",
-      desc: "Intonation strength",
-      min: 0.0,
-      max: 2.0,
-      step: 0.05,
-    },
-    {
-      key: "volumeScale",
-      label: "Volume",
-      desc: "Volume level",
-      min: 0.0,
-      max: 2.0,
-      step: 0.05,
-    },
-    {
-      key: "pauseLength",
-      label: "Pause Length",
-      desc: "Pause duration at punctuation marks",
-      min: 0,
-      max: 2.0,
-      step: 0.01,
-    },
-    {
-      key: "prePhonemeLength",
-      label: "Pre Phoneme Length",
-      desc: "Silence before speech starts",
-      min: 0,
-      max: 1.5,
-      step: 0.01,
-    },
-    {
-      key: "postPhonemeLength",
-      label: "Post Phoneme Length",
-      desc: "Silence after speech ends",
-      min: 0,
-      max: 1.5,
-      step: 0.01,
-    },
-  ];
+  {
+    key: 'speedScale',
+    label: 'Speed',
+    desc: 'Speech speed',
+    min: 0.5,
+    max: 2.0,
+    step: 0.05,
+  },
+  {
+    key: 'pitchScale',
+    label: 'Pitch',
+    desc: 'Voice pitch (0 = baseline)',
+    min: -0.15,
+    max: 0.15,
+    step: 0.01,
+  },
+  {
+    key: 'intonationScale',
+    label: 'Intonation',
+    desc: 'Intonation strength',
+    min: 0.0,
+    max: 2.0,
+    step: 0.05,
+  },
+  {
+    key: 'volumeScale',
+    label: 'Volume',
+    desc: 'Volume level',
+    min: 0.0,
+    max: 2.0,
+    step: 0.05,
+  },
+  {
+    key: 'pauseLength',
+    label: 'Pause Length',
+    desc: 'Pause duration at punctuation marks',
+    min: 0,
+    max: 2.0,
+    step: 0.01,
+  },
+  {
+    key: 'prePhonemeLength',
+    label: 'Pre Phoneme Length',
+    desc: 'Silence before speech starts',
+    min: 0,
+    max: 1.5,
+    step: 0.01,
+  },
+  {
+    key: 'postPhonemeLength',
+    label: 'Post Phoneme Length',
+    desc: 'Silence after speech ends',
+    min: 0,
+    max: 1.5,
+    step: 0.01,
+  },
+];
 
 export function App() {
   const {
@@ -155,10 +155,10 @@ function Header({ name, connected }: { name: string; connected: boolean }) {
       <h1 className="settings-title">VOICEVOX</h1>
       <span className="settings-entity-name">{name}</span>
       <span
-        className={`voicevox-status ${connected ? "voicevox-status--connected" : "voicevox-status--disconnected"}`}
+        className={`voicevox-status ${connected ? 'voicevox-status--connected' : 'voicevox-status--disconnected'}`}
       >
         <span className="voicevox-status-dot" />
-        {connected ? "Connected" : "Disconnected"}
+        {connected ? 'Connected' : 'Disconnected'}
       </span>
     </div>
   );
@@ -197,12 +197,8 @@ function SettingsForm({
       <label className="settings-label">
         Speaker
         <Select
-          value={
-            settings.speakerId === -1 ? undefined : String(settings.speakerId)
-          }
-          onValueChange={(value) =>
-            onSettingsChange({ ...settings, speakerId: Number(value) })
-          }
+          value={settings.speakerId === -1 ? undefined : String(settings.speakerId)}
+          onValueChange={(value) => onSettingsChange({ ...settings, speakerId: Number(value) })}
         >
           <SelectTrigger className="w-full">
             <SelectValue placeholder="— Select a speaker —" />
@@ -278,11 +274,11 @@ function Footer({
         Reset
       </button>
       <button
-        className={`settings-save ${saved ? "settings-save--success" : ""}`}
+        className={`settings-save ${saved ? 'settings-save--success' : ''}`}
         onClick={onSave}
         disabled={saving || disabled}
       >
-        {saving ? "Saving..." : saved ? "Saved!" : "Save"}
+        {saving ? 'Saving...' : saved ? 'Saved!' : 'Save'}
       </button>
     </div>
   );

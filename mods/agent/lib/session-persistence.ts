@@ -1,6 +1,6 @@
-import { mkdir, writeFile, appendFile, readdir, readFile, rm } from "node:fs/promises";
-import { join, basename } from "node:path";
-import { randomUUID } from "node:crypto";
+import { randomUUID } from 'node:crypto';
+import { appendFile, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { basename, join } from 'node:path';
 
 /** Opaque handle to an active session file. */
 export interface SessionHandle {
@@ -43,8 +43,8 @@ export class SessionPersistence {
 
     const uuid = randomUUID();
     const filePath = join(dir, `${uuid}.jsonl`);
-    const header = JSON.stringify({ _meta: "header", startedAt: Date.now() });
-    await writeFile(filePath, header + "\n", "utf-8");
+    const header = JSON.stringify({ _meta: 'header', startedAt: Date.now() });
+    await writeFile(filePath, `${header}\n`, 'utf-8');
 
     this._pendingWrites.set(filePath, Promise.resolve());
     return { uuid, filePath };
@@ -52,14 +52,16 @@ export class SessionPersistence {
 
   /** Append a log entry. Non-blocking but ordered via promise chaining. */
   append(handle: SessionHandle, entry: PersistLogEntry): void {
-    if (entry.type === "user") {
+    if (entry.type === 'user') {
       this._hasUserEntries.add(handle.filePath);
     }
-    const line = JSON.stringify(entry) + "\n";
+    const line = `${JSON.stringify(entry)}\n`;
     const prev = this._pendingWrites.get(handle.filePath) ?? Promise.resolve();
-    const next = prev.then(() => appendFile(handle.filePath, line, "utf-8")).catch((err) => {
-      console.error(`[session-persistence] append failed: ${err}`);
-    });
+    const next = prev
+      .then(() => appendFile(handle.filePath, line, 'utf-8'))
+      .catch((err) => {
+        console.error(`[session-persistence] append failed: ${err}`);
+      });
     this._pendingWrites.set(handle.filePath, next);
   }
 
@@ -70,8 +72,8 @@ export class SessionPersistence {
     await pending;
 
     if (this._hasUserEntries.has(handle.filePath)) {
-      const footer = JSON.stringify({ _meta: "footer", endedAt: Date.now() });
-      await appendFile(handle.filePath, footer + "\n", "utf-8");
+      const footer = JSON.stringify({ _meta: 'footer', endedAt: Date.now() });
+      await appendFile(handle.filePath, `${footer}\n`, 'utf-8');
     } else {
       await rm(handle.filePath).catch(() => {});
     }
@@ -85,7 +87,7 @@ export class SessionPersistence {
     const dir = this.sessionDir(workspacePath, personaId, branchName);
     let files: string[];
     try {
-      files = (await readdir(dir)).filter((f) => f.endsWith(".jsonl"));
+      files = (await readdir(dir)).filter((f) => f.endsWith('.jsonl'));
     } catch {
       return [];
     }
@@ -109,7 +111,7 @@ export class SessionPersistence {
     const filePath = join(this.sessionDir(workspacePath, personaId, branchName), `${uuid}.jsonl`);
     let content: string;
     try {
-      content = await readFile(filePath, "utf-8");
+      content = await readFile(filePath, 'utf-8');
     } catch {
       return [];
     }
@@ -127,8 +129,12 @@ export class SessionPersistence {
   }
 
   /** Delete session files older than ttlDays. Walks persona dirs recursively. */
-  async cleanup(workspacePath: string, personaId: string, ttlDays: number = SESSION_TTL_DAYS): Promise<void> {
-    const personaDir = join(workspacePath, ".hmcs", "sessions", personaId);
+  async cleanup(
+    workspacePath: string,
+    personaId: string,
+    ttlDays: number = SESSION_TTL_DAYS,
+  ): Promise<void> {
+    const personaDir = join(workspacePath, '.hmcs', 'sessions', personaId);
     try {
       await this.cleanupDir(personaDir, ttlDays);
     } catch (e) {
@@ -138,11 +144,11 @@ export class SessionPersistence {
 
   /** Resolve the directory for a given persona + branch scope. */
   private sessionDir(workspacePath: string, personaId: string, branchName: string): string {
-    return join(workspacePath, ".hmcs", "sessions", personaId, branchName);
+    return join(workspacePath, '.hmcs', 'sessions', personaId, branchName);
   }
 
   private async cleanupDir(dir: string, ttlDays: number): Promise<void> {
-    let entries: import("node:fs").Dirent[];
+    let entries: import('node:fs').Dirent[];
     try {
       entries = await readdir(dir, { withFileTypes: true });
     } catch {
@@ -156,7 +162,7 @@ export class SessionPersistence {
       if (entry.isDirectory()) {
         await this.cleanupDir(fullPath, ttlDays);
         await this.removeIfEmpty(fullPath);
-      } else if (entry.name.endsWith(".jsonl")) {
+      } else if (entry.name.endsWith('.jsonl')) {
         await this.removeIfExpired(fullPath, cutoff);
       }
     }
@@ -164,10 +170,10 @@ export class SessionPersistence {
 
   private async removeIfExpired(filePath: string, cutoff: number): Promise<void> {
     try {
-      const content = await readFile(filePath, "utf-8");
-      const firstLine = content.split("\n")[0];
+      const content = await readFile(filePath, 'utf-8');
+      const firstLine = content.split('\n')[0];
       const header = JSON.parse(firstLine);
-      if (header._meta === "header" && header.startedAt < cutoff) {
+      if (header._meta === 'header' && header.startedAt < cutoff) {
         await rm(filePath);
       }
     } catch (e) {
@@ -194,7 +200,7 @@ export class SessionPersistence {
     const header = parseSessionHeader(lines[0]);
     if (!header) return null;
 
-    const uuid = basename(filePath, ".jsonl");
+    const uuid = basename(filePath, '.jsonl');
     const preview = findFirstUserPreview(lines);
     return { uuid, startedAt: header.startedAt, preview };
   }
@@ -203,18 +209,18 @@ export class SessionPersistence {
 async function readNonEmptyLines(filePath: string): Promise<string[] | null> {
   let content: string;
   try {
-    content = await readFile(filePath, "utf-8");
+    content = await readFile(filePath, 'utf-8');
   } catch {
     return null;
   }
-  const lines = content.split("\n").filter((l) => l.trim());
+  const lines = content.split('\n').filter((l) => l.trim());
   return lines.length > 0 ? lines : null;
 }
 
 function parseSessionHeader(line: string): { startedAt: number } | null {
   try {
     const header = JSON.parse(line);
-    if (header._meta === "header" && typeof header.startedAt === "number") {
+    if (header._meta === 'header' && typeof header.startedAt === 'number') {
       return { startedAt: header.startedAt };
     }
     return null;
@@ -227,29 +233,23 @@ function findFirstUserPreview(lines: string[]): string | null {
   for (let i = 1; i < Math.min(lines.length, 10); i++) {
     try {
       const entry = JSON.parse(lines[i]);
-      if (entry.type === "user" && entry.message) {
-        return entry.message.length > 100
-          ? entry.message.slice(0, 100) + "\u2026"
-          : entry.message;
+      if (entry.type === 'user' && entry.message) {
+        return entry.message.length > 100 ? `${entry.message.slice(0, 100)}\u2026` : entry.message;
       }
-    } catch {
-      continue;
-    }
+    } catch {}
   }
   return null;
 }
 
 function parseLogEntries(content: string): PersistLogEntry[] {
   const entries: PersistLogEntry[] = [];
-  for (const line of content.split("\n")) {
+  for (const line of content.split('\n')) {
     if (!line.trim()) continue;
     try {
       const parsed = JSON.parse(line);
       if (parsed._meta) continue;
       entries.push(parsed as PersistLogEntry);
-    } catch {
-      continue;
-    }
+    } catch {}
   }
   return entries;
 }

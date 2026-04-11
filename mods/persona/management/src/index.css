@@ -32,7 +32,8 @@ body {
 }
 
 @keyframes pulse-dot {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 0 4px oklch(0.68 0.17 155 / 0.3);
   }
   50% {
@@ -471,13 +472,16 @@ body {
   font-size: var(--hud-font-size-base);
   font-family: inherit;
   outline: none;
-  transition: border-color var(--hud-duration-content) ease, box-shadow var(--hud-duration-content) ease;
+  transition:
+    border-color var(--hud-duration-content) ease,
+    box-shadow var(--hud-duration-content) ease;
 }
 
 .settings-input:focus {
   border-color: oklch(0.72 0.14 192 / 0.5);
-  box-shadow: 0 0 8px oklch(0.72 0.14 192 / 0.15),
-              inset 0 0 4px oklch(0.72 0.14 192 / 0.05);
+  box-shadow:
+    0 0 8px oklch(0.72 0.14 192 / 0.15),
+    inset 0 0 4px oklch(0.72 0.14 192 / 0.05);
 }
 
 .settings-textarea {
@@ -491,13 +495,16 @@ body {
   outline: none;
   resize: vertical;
   min-height: 60px;
-  transition: border-color var(--hud-duration-content) ease, box-shadow var(--hud-duration-content) ease;
+  transition:
+    border-color var(--hud-duration-content) ease,
+    box-shadow var(--hud-duration-content) ease;
 }
 
 .settings-textarea:focus {
   border-color: oklch(0.72 0.14 192 / 0.5);
-  box-shadow: 0 0 8px oklch(0.72 0.14 192 / 0.15),
-              inset 0 0 4px oklch(0.72 0.14 192 / 0.05);
+  box-shadow:
+    0 0 8px oklch(0.72 0.14 192 / 0.15),
+    inset 0 0 4px oklch(0.72 0.14 192 / 0.05);
 }
 
 .settings-textarea::placeholder,
@@ -553,15 +560,18 @@ body {
   background: transparent;
   padding: var(--hud-space-sm) 0;
   color: oklch(0.58 0.02 250);
-  transition: color var(--hud-duration-content) ease, background var(--hud-duration-content) ease, text-shadow var(--hud-duration-content) ease,
-              border-color var(--hud-duration-content) ease;
+  transition:
+    color var(--hud-duration-content) ease,
+    background var(--hud-duration-content) ease,
+    text-shadow var(--hud-duration-content) ease,
+    border-color var(--hud-duration-content) ease;
   border-bottom: 2px solid transparent;
   font-family: inherit;
   outline: none;
 }
 
 .settings-age-segment:hover {
-  color: oklch(0.78 0.10 192);
+  color: oklch(0.78 0.1 192);
 }
 
 .settings-age-segment[data-mode="unknown"]:hover {
@@ -597,7 +607,9 @@ body {
   border: 1px solid oklch(0.72 0.14 192 / 0.2);
   border-radius: 6px;
   padding: var(--hud-space-md) var(--hud-space-lg);
-  transition: border-color var(--hud-duration-content) ease-out, box-shadow var(--hud-duration-content) ease-out;
+  transition:
+    border-color var(--hud-duration-content) ease-out,
+    box-shadow var(--hud-duration-content) ease-out;
 }
 
 .settings-age-value-area[data-mode="unknown"] {
@@ -646,14 +658,16 @@ body {
 
 .settings-age-value-area:focus-within {
   border-color: oklch(0.72 0.14 192 / 0.5);
-  box-shadow: 0 0 8px oklch(0.72 0.14 192 / 0.15),
-              inset 0 0 4px oklch(0.72 0.14 192 / 0.05);
+  box-shadow:
+    0 0 8px oklch(0.72 0.14 192 / 0.15),
+    inset 0 0 4px oklch(0.72 0.14 192 / 0.05);
 }
 
 .settings-age-value-area[data-mode="unknown"]:focus-within {
   border-color: oklch(0.65 0.18 285 / 0.5);
-  box-shadow: 0 0 8px oklch(0.65 0.18 285 / 0.15),
-              inset 0 0 4px oklch(0.65 0.18 285 / 0.05);
+  box-shadow:
+    0 0 8px oklch(0.65 0.18 285 / 0.15),
+    inset 0 0 4px oklch(0.65 0.18 285 / 0.05);
 }
 
 /* ━━ Buttons ━━ */
@@ -669,7 +683,10 @@ body {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: background var(--hud-duration-content) ease, border-color var(--hud-duration-content) ease, box-shadow var(--hud-duration-content) ease;
+  transition:
+    background var(--hud-duration-content) ease,
+    border-color var(--hud-duration-content) ease,
+    box-shadow var(--hud-duration-content) ease;
 }
 
 .management-btn:hover {

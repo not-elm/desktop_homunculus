@@ -1,7 +1,7 @@
 const defaultMenuItems = [
-  { id: "1", modName: "Elmer", text: "Greet", command: "greet" },
-  { id: "2", modName: "Elmer", text: "Dance", command: "dance" },
-  { id: "3", modName: "VoiceVox", text: "Speak", command: "speak" },
+  { id: '1', modName: 'Elmer', text: 'Greet', command: 'greet' },
+  { id: '2', modName: 'Elmer', text: 'Dance', command: 'dance' },
+  { id: '3', modName: 'VoiceVox', text: 'Speak', command: 'speak' },
 ];
 
 let _menuItems = [...defaultMenuItems];
@@ -19,8 +19,8 @@ export function __resetMocks() {
 export const Webview = {
   current: () => ({
     linkedPersona: async () => ({
-      id: "elmer",
-      name: async () => "Elmer",
+      id: 'elmer',
+      name: async () => 'Elmer',
     }),
     close: async () => {},
   }),

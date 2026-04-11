@@ -1,11 +1,11 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn } from "storybook/test";
-import { Plus, Save, Trash2, Settings, Info } from "lucide-react";
-import { Tooltip, TooltipTrigger, TooltipContent } from "./tooltip";
-import { Button } from "./button";
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { Info, Plus, Save, Settings, Trash2 } from 'lucide-react';
+import { fn } from 'storybook/test';
+import { Button } from './button';
+import { Tooltip, TooltipContent, TooltipTrigger } from './tooltip';
 
 const meta = {
-  title: "UI/Overlays/Tooltip",
+  title: 'UI/Overlays/Tooltip',
   component: Tooltip,
   args: {
     onOpenChange: fn(),

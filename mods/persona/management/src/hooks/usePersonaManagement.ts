@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
-import { Persona, type PersonaSnapshot } from "@hmcs/sdk";
+import { Persona, type PersonaSnapshot } from '@hmcs/sdk';
+import { useCallback, useEffect, useState } from 'react';
 
 export function usePersonaManagement() {
   const [personas, setPersonas] = useState<PersonaSnapshot[]>([]);
@@ -15,7 +15,7 @@ export function usePersonaManagement() {
       setError(null);
       return list;
     } catch (e) {
-      console.error("Failed to load personas:", e);
+      console.error('Failed to load personas:', e);
       setError((e as Error).message);
       return [];
     } finally {
@@ -31,7 +31,7 @@ export function usePersonaManagement() {
         setCreateMode(true);
       }
     });
-  }, [refresh]);
+  }, [refresh, selectedId]);
 
   const selectPersona = useCallback((id: string) => {
     setCreateMode(false);

@@ -1,17 +1,17 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn } from "storybook/test";
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { fn } from 'storybook/test';
 import {
   Breadcrumb,
-  BreadcrumbList,
+  BreadcrumbEllipsis,
   BreadcrumbItem,
   BreadcrumbLink,
-  BreadcrumbSeparator,
+  BreadcrumbList,
   BreadcrumbPage,
-  BreadcrumbEllipsis,
-} from "./breadcrumb";
+  BreadcrumbSeparator,
+} from './breadcrumb';
 
 const meta = {
-  title: "UI/Layout/Breadcrumb",
+  title: 'UI/Layout/Breadcrumb',
   component: Breadcrumb,
   args: {
     onClick: fn(),

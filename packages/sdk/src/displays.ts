@@ -1,5 +1,5 @@
-import {type GlobalDisplay} from "./coordinates";
-import {host} from "./host";
+import type { GlobalDisplay } from './coordinates';
+import { host } from './host';
 
 /**
  * Displays API namespace for monitor and screen management.
@@ -17,19 +17,19 @@ import {host} from "./host";
  * ```
  */
 export namespace displays {
-    /**
-     * Retrieves information about all currently connected displays/monitors.
-     *
-     * @returns A promise that resolves to an array of display information
-     *
-     * @example
-     * ```typescript
-     * const allDisplays = await displays.findAll();
-     * console.log(`System has ${allDisplays.length} displays`);
-     * ```
-     */
-    export async function findAll(): Promise<GlobalDisplay[]> {
-        const response = await host.get(host.createUrl("displays"));
-        return await response.json() as GlobalDisplay[];
-    }
+  /**
+   * Retrieves information about all currently connected displays/monitors.
+   *
+   * @returns A promise that resolves to an array of display information
+   *
+   * @example
+   * ```typescript
+   * const allDisplays = await displays.findAll();
+   * console.log(`System has ${allDisplays.length} displays`);
+   * ```
+   */
+  export async function findAll(): Promise<GlobalDisplay[]> {
+    const response = await host.get(host.createUrl('displays'));
+    return (await response.json()) as GlobalDisplay[];
+  }
 }

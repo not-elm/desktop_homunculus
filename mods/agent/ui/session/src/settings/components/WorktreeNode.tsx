@@ -1,8 +1,8 @@
-import { useRef, useState } from "react";
-import { GitBranch } from "lucide-react";
-import { Popover, PopoverAnchor } from "@hmcs/ui";
-import { TreeOverflowMenu } from "./TreeOverflowMenu.tsx";
-import { WorktreeDetailPopover } from "./WorktreeDetailPopover.tsx";
+import { Popover, PopoverAnchor } from '@hmcs/ui';
+import { GitBranch } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { TreeOverflowMenu } from './TreeOverflowMenu.tsx';
+import { WorktreeDetailPopover } from './WorktreeDetailPopover.tsx';
 
 export interface WorktreeData {
   name: string;
@@ -67,7 +67,7 @@ export function WorktreeNode({
 
 function buildOverflowItems(onShowDetails: () => void, onRemove: () => void) {
   return [
-    { label: "Details", onClick: onShowDetails },
-    { label: "Remove Worktree", onClick: onRemove, destructive: true },
+    { label: 'Details', onClick: onShowDetails },
+    { label: 'Remove Worktree', onClick: onRemove, destructive: true },
   ];
 }

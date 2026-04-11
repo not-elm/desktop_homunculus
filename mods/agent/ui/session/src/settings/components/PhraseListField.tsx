@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState } from 'react';
 
-type BadgeVariant = "default" | "violet" | "green" | "rose";
+type BadgeVariant = 'default' | 'violet' | 'green' | 'rose';
 
 interface PhraseListFieldProps {
   label: string;
@@ -17,27 +17,25 @@ export function PhraseListField({
   phrases,
   onAdd,
   onRemove,
-  badgeVariant = "default",
+  badgeVariant = 'default',
 }: PhraseListFieldProps) {
-  const [inputValue, setInputValue] = useState("");
+  const [inputValue, setInputValue] = useState('');
 
   function handleAdd() {
     const trimmed = inputValue.trim();
     if (!trimmed) return;
     onAdd(trimmed);
-    setInputValue("");
+    setInputValue('');
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter") handleAdd();
+    if (e.key === 'Enter') handleAdd();
   }
 
   return (
     <label className="settings-label">
       {label}
-      {description && (
-        <span className="settings-label-desc">{description}</span>
-      )}
+      {description && <span className="settings-label-desc">{description}</span>}
       <div className="agent-phrase-badges">
         {phrases.map((phrase, i) => (
           <PhraseBadge
@@ -73,13 +71,13 @@ interface PhraseBadgeProps {
 
 function PhraseBadge({ phrase, variant, onRemove }: PhraseBadgeProps) {
   const variantClass =
-    variant === "violet"
-      ? "agent-badge--violet"
-      : variant === "green"
-        ? "agent-badge--green"
-        : variant === "rose"
-          ? "agent-badge--rose"
-          : "agent-badge--cyan";
+    variant === 'violet'
+      ? 'agent-badge--violet'
+      : variant === 'green'
+        ? 'agent-badge--green'
+        : variant === 'rose'
+          ? 'agent-badge--rose'
+          : 'agent-badge--cyan';
 
   return (
     <span className={`agent-badge ${variantClass}`}>

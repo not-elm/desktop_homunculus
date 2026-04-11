@@ -1,5 +1,5 @@
-import { useCallback } from "react";
-import { assets, fileDialog } from "@hmcs/sdk";
+import { assets, fileDialog } from '@hmcs/sdk';
+import { useCallback } from 'react';
 
 export interface UseThumbnailImportReturn {
   /** Opens a file dialog, imports the selected image, and returns the new asset ID. */
@@ -16,31 +16,28 @@ export interface UseThumbnailImportReturn {
  * yields the same ID and is a no-op.
  */
 export function useThumbnailImport(): UseThumbnailImportReturn {
-  const importThumbnail = useCallback(
-    async (personaId: string): Promise<string | null> => {
-      const path = await fileDialog.open({
-        accept: [".png", ".jpg", ".jpeg", ".webp"],
-        title: "Select thumbnail image",
-      });
-      if (!path) return null;
+  const importThumbnail = useCallback(async (personaId: string): Promise<string | null> => {
+    const path = await fileDialog.open({
+      accept: ['.png', '.jpg', '.jpeg', '.webp'],
+      title: 'Select thumbnail image',
+    });
+    if (!path) return null;
 
-      try {
-        const hash = await hashPath(path);
-        const assetId = `image:local:${personaId}:${hash}`;
-        await assets.importAsset({
-          sourcePath: path,
-          assetId,
-          assetType: "image",
-          description: `Thumbnail for ${personaId}`,
-        });
-        return assetId;
-      } catch (e) {
-        console.error("Failed to import thumbnail:", e);
-        return null;
-      }
-    },
-    [],
-  );
+    try {
+      const hash = await hashPath(path);
+      const assetId = `image:local:${personaId}:${hash}`;
+      await assets.importAsset({
+        sourcePath: path,
+        assetId,
+        assetType: 'image',
+        description: `Thumbnail for ${personaId}`,
+      });
+      return assetId;
+    } catch (e) {
+      console.error('Failed to import thumbnail:', e);
+      return null;
+    }
+  }, []);
 
   return { importThumbnail };
 }
@@ -53,8 +50,8 @@ export function useThumbnailImport(): UseThumbnailImportReturn {
  */
 async function hashPath(path: string): Promise<string> {
   const bytes = new TextEncoder().encode(path);
-  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
   return Array.from(new Uint8Array(digest).slice(0, 8))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
 }

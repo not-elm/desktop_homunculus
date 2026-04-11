@@ -1,19 +1,19 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Settings, Menu } from "lucide-react";
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { Menu, Settings } from 'lucide-react';
+import { Button } from './button';
 import {
   Drawer,
-  DrawerTrigger,
-  DrawerContent,
-  DrawerHeader,
-  DrawerFooter,
-  DrawerTitle,
-  DrawerDescription,
   DrawerClose,
-} from "./drawer";
-import { Button } from "./button";
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from './drawer';
 
 const meta = {
-  title: "UI/Overlays/Drawer",
+  title: 'UI/Overlays/Drawer',
   component: Drawer,
 } satisfies Meta<typeof Drawer>;
 
@@ -62,9 +62,7 @@ export const WithForm: Story = {
       <DrawerContent>
         <DrawerHeader>
           <DrawerTitle>Display Settings</DrawerTitle>
-          <DrawerDescription>
-            Adjust the display settings for your mascot.
-          </DrawerDescription>
+          <DrawerDescription>Adjust the display settings for your mascot.</DrawerDescription>
         </DrawerHeader>
         <div className="grid gap-4 p-4">
           <div className="grid gap-2">
@@ -120,16 +118,14 @@ export const RightSide: Story = {
           <DrawerDescription>Browse through sections.</DrawerDescription>
         </DrawerHeader>
         <div className="flex flex-col gap-1 p-4">
-          {["Dashboard", "Characters", "Animations", "Effects", "Mods"].map(
-            (item) => (
-              <button
-                key={item}
-                className="rounded-md px-3 py-2 text-left text-sm hover:bg-accent transition-colors"
-              >
-                {item}
-              </button>
-            )
-          )}
+          {['Dashboard', 'Characters', 'Animations', 'Effects', 'Mods'].map((item) => (
+            <button
+              key={item}
+              className="rounded-md px-3 py-2 text-left text-sm hover:bg-accent transition-colors"
+            >
+              {item}
+            </button>
+          ))}
         </div>
         <DrawerFooter>
           <DrawerClose asChild>

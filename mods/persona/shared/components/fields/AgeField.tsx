@@ -1,5 +1,5 @@
-import { useRef } from "react";
-import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
+import * as RadioGroupPrimitive from '@radix-ui/react-radio-group';
+import { useRef } from 'react';
 
 interface AgeFieldProps {
   value: number | null;
@@ -12,11 +12,11 @@ export function AgeField({ value, onChange, disabled }: AgeFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const isUnknown = value == null;
-  const radioValue = isUnknown ? "unknown" : "specify";
+  const radioValue = isUnknown ? 'unknown' : 'specify';
 
   function handleModeChange(newMode: string) {
     if (disabled) return;
-    if (newMode === "unknown") {
+    if (newMode === 'unknown') {
       if (value != null) preservedAge.current = value;
       onChange(null);
     } else {
@@ -27,8 +27,8 @@ export function AgeField({ value, onChange, disabled }: AgeFieldProps) {
   }
 
   function handleInput(raw: string) {
-    const digits = raw.replace(/[^0-9]/g, "");
-    if (digits === "") {
+    const digits = raw.replace(/[^0-9]/g, '');
+    if (digits === '') {
       onChange(null);
       return;
     }
@@ -42,7 +42,7 @@ export function AgeField({ value, onChange, disabled }: AgeFieldProps) {
         className="settings-age-segments"
         value={radioValue}
         onValueChange={handleModeChange}
-        data-mode={radioValue === "unknown" ? "unknown" : "specify"}
+        data-mode={radioValue === 'unknown' ? 'unknown' : 'specify'}
         disabled={disabled}
       >
         <RadioGroupPrimitive.Item
@@ -66,9 +66,9 @@ export function AgeField({ value, onChange, disabled }: AgeFieldProps) {
         className="settings-age-value-area"
         role="status"
         aria-live="polite"
-        data-mode={radioValue === "unknown" ? "unknown" : "specify"}
+        data-mode={radioValue === 'unknown' ? 'unknown' : 'specify'}
       >
-        {radioValue === "unknown" ? (
+        {radioValue === 'unknown' ? (
           <span className="settings-age-unknown-readout">Unknown</span>
         ) : (
           <input
@@ -77,7 +77,7 @@ export function AgeField({ value, onChange, disabled }: AgeFieldProps) {
             inputMode="numeric"
             pattern="[0-9]*"
             className="settings-age-input"
-            value={value ?? ""}
+            value={value ?? ''}
             onChange={(e) => handleInput(e.target.value)}
             aria-label="Age value"
             placeholder="&#x2014;"

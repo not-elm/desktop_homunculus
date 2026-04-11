@@ -1,14 +1,14 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn } from "storybook/test";
-import * as React from "react";
-import { NumericSlider } from "./NumericSlider";
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import * as React from 'react';
+import { fn } from 'storybook/test';
+import { NumericSlider } from './NumericSlider';
 
 const meta = {
-  title: "Custom/NumericSlider",
+  title: 'Custom/NumericSlider',
   component: NumericSlider,
   args: {
     onValueChange: fn(),
-    label: "Value",
+    label: 'Value',
     value: [50],
     min: 0,
     max: 100,
@@ -16,19 +16,19 @@ const meta = {
   },
   argTypes: {
     label: {
-      control: "text",
+      control: 'text',
     },
     min: {
-      control: "number",
+      control: 'number',
     },
     max: {
-      control: "number",
+      control: 'number',
     },
     step: {
-      control: "number",
+      control: 'number',
     },
     disabled: {
-      control: "boolean",
+      control: 'boolean',
     },
   },
 } satisfies Meta<typeof NumericSlider>;

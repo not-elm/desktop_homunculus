@@ -24,7 +24,7 @@
  * @packageDocumentation
  */
 
-import { host } from "./host";
+import { host } from './host';
 
 /** Information about an active signal channel. */
 export interface SignalChannelInfo {
@@ -54,7 +54,7 @@ export namespace signals {
   const MAX_RECONNECT_DELAY = 5000;
 
   function wsUrl(): string {
-    const base = host.base().replace(/^http/, "ws");
+    const base = host.base().replace(/^http/, 'ws');
     return `${base}/signals/ws`;
   }
 
@@ -71,51 +71,52 @@ export namespace signals {
     const url = wsUrl();
 
     // Node.js: use `ws` package; Browser: use native WebSocket
-    const WS = typeof globalThis.WebSocket !== "undefined"
-      ? globalThis.WebSocket
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      : (require("ws") as typeof WebSocket);
+    const WS =
+      typeof globalThis.WebSocket !== 'undefined'
+        ? globalThis.WebSocket
+        : // eslint-disable-next-line @typescript-eslint/no-require-imports
+          (require('ws') as typeof WebSocket);
 
     ws = new WS(url);
 
     connectPromise = new Promise<void>((resolve) => {
-      ws!.addEventListener("open", () => {
+      ws?.addEventListener('open', () => {
         reconnectDelay = 1000;
         connectPromise = null;
 
         // Flush pending subscribes
         for (const ch of pendingSubscribes) {
-          sendFrame({ type: "subscribe", channel: ch });
+          sendFrame({ type: 'subscribe', channel: ch });
         }
         pendingSubscribes.length = 0;
 
         // Re-subscribe all active channels
         for (const channel of listeners.keys()) {
-          sendFrame({ type: "subscribe", channel });
+          sendFrame({ type: 'subscribe', channel });
         }
 
         resolve();
       });
     });
 
-    ws.addEventListener("message", (event: MessageEvent) => {
+    ws.addEventListener('message', (event: MessageEvent) => {
       try {
-        const msg = JSON.parse(typeof event.data === "string" ? event.data : event.data.toString());
-        if (msg.channel && "data" in msg) {
+        const msg = JSON.parse(typeof event.data === 'string' ? event.data : event.data.toString());
+        if (msg.channel && 'data' in msg) {
           dispatch(msg.channel, msg.data);
         }
       } catch (e) {
-        console.error("signals: failed to parse WS message", e);
+        console.error('signals: failed to parse WS message', e);
       }
     });
 
-    ws.addEventListener("close", () => {
+    ws.addEventListener('close', () => {
       ws = null;
       connectPromise = null;
       scheduleReconnect();
     });
 
-    ws.addEventListener("error", () => {
+    ws.addEventListener('error', () => {
       // Error is followed by close event, which handles reconnection
     });
   }
@@ -145,9 +146,7 @@ export namespace signals {
       try {
         const result = cb(data);
         if (result instanceof Promise) {
-          result.catch((e) =>
-            console.error(`Error processing signal ${channel}:`, e),
-          );
+          result.catch((e) => console.error(`Error processing signal ${channel}:`, e));
         }
       } catch (e) {
         console.error(`Error processing signal ${channel}:`, e);
@@ -171,7 +170,7 @@ export namespace signals {
    * ```
    */
   export async function list(): Promise<SignalChannelInfo[]> {
-    const response = await host.get(host.createUrl("signals"));
+    const response = await host.get(host.createUrl('signals'));
     return (await response.json()) as SignalChannelInfo[];
   }
 
@@ -196,10 +195,7 @@ export namespace signals {
    * sub.close();
    * ```
    */
-  export function stream<V>(
-    signal: string,
-    f: (payload: V) => void | Promise<void>,
-  ): Subscription {
+  export function stream<V>(signal: string, f: (payload: V) => void | Promise<void>): Subscription {
     const callback = f as Callback;
     let closed = false;
 
@@ -216,7 +212,7 @@ export namespace signals {
     if (isNewChannel) {
       ensureConnection();
       if (ws && ws.readyState === WebSocket.OPEN) {
-        sendFrame({ type: "subscribe", channel: signal });
+        sendFrame({ type: 'subscribe', channel: signal });
       } else {
         pendingSubscribes.push(signal);
       }
@@ -232,7 +228,7 @@ export namespace signals {
           channelCbs.delete(callback);
           if (channelCbs.size === 0) {
             listeners.delete(signal);
-            sendFrame({ type: "unsubscribe", channel: signal });
+            sendFrame({ type: 'unsubscribe', channel: signal });
           }
         }
       },

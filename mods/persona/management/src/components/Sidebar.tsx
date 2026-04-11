@@ -1,5 +1,5 @@
-import { Persona } from "@hmcs/sdk";
-import type { PersonaSnapshot } from "@hmcs/sdk";
+import type { PersonaSnapshot } from '@hmcs/sdk';
+import { Persona } from '@hmcs/sdk';
 
 interface SidebarProps {
   personas: PersonaSnapshot[];
@@ -8,12 +8,7 @@ interface SidebarProps {
   onCreateClick: () => void;
 }
 
-export default function Sidebar({
-  personas,
-  selectedId,
-  onSelect,
-  onCreateClick,
-}: SidebarProps) {
+export default function Sidebar({ personas, selectedId, onSelect, onCreateClick }: SidebarProps) {
   return (
     <div className="sidebar">
       <div className="sidebar-list">
@@ -42,11 +37,11 @@ function SidebarItem({
   selected: boolean;
   onSelect: () => void;
 }) {
-  const initial = persona.name?.charAt(0).toUpperCase() ?? "?";
+  const initial = persona.name?.charAt(0).toUpperCase() ?? '?';
 
   return (
     <button
-      className={`sidebar-item ${selected ? "sidebar-item--selected" : ""}`}
+      className={`sidebar-item ${selected ? 'sidebar-item--selected' : ''}`}
       onClick={onSelect}
     >
       <div className="sidebar-item-avatar">
@@ -54,8 +49,8 @@ function SidebarItem({
           src={new Persona(persona.id).thumbnailUrl() || undefined}
           alt=""
           onError={(e) => {
-            e.currentTarget.style.display = "none";
-            e.currentTarget.nextElementSibling?.classList.remove("hidden");
+            e.currentTarget.style.display = 'none';
+            e.currentTarget.nextElementSibling?.classList.remove('hidden');
           }}
         />
         <span className="sidebar-item-initial hidden">{initial}</span>
@@ -63,10 +58,8 @@ function SidebarItem({
       <div className="sidebar-item-info">
         <span className="sidebar-item-name">{persona.name}</span>
         <span className="sidebar-item-status">
-          <span
-            className={`status-dot ${persona.spawned ? "active" : "inactive"}`}
-          />
-          {persona.spawned ? "Spawned" : "Offline"}
+          <span className={`status-dot ${persona.spawned ? 'active' : 'inactive'}`} />
+          {persona.spawned ? 'Spawned' : 'Offline'}
         </span>
       </div>
     </button>

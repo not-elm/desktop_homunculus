@@ -1,19 +1,19 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn } from "storybook/test";
-import { AlertCircle, Info, Terminal } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "./alert";
-import { Button } from "./button";
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { AlertCircle, Info, Terminal } from 'lucide-react';
+import { fn } from 'storybook/test';
+import { Alert, AlertDescription, AlertTitle } from './alert';
+import { Button } from './button';
 
 const meta = {
-  title: "UI/Display/Alert",
+  title: 'UI/Display/Alert',
   component: Alert,
   args: {
     onClick: fn(),
   },
   argTypes: {
     variant: {
-      control: "select",
-      options: ["default", "destructive"],
+      control: 'select',
+      options: ['default', 'destructive'],
     },
   },
 } satisfies Meta<typeof Alert>;
@@ -27,9 +27,7 @@ export const Default: Story = {
     <Alert>
       <Terminal />
       <AlertTitle>Heads up!</AlertTitle>
-      <AlertDescription>
-        You can add components to your app using the CLI.
-      </AlertDescription>
+      <AlertDescription>You can add components to your app using the CLI.</AlertDescription>
     </Alert>
   ),
 };
@@ -40,9 +38,7 @@ export const Destructive: Story = {
     <Alert variant="destructive">
       <AlertCircle />
       <AlertTitle>Error</AlertTitle>
-      <AlertDescription>
-        Your session has expired. Please log in again.
-      </AlertDescription>
+      <AlertDescription>Your session has expired. Please log in again.</AlertDescription>
     </Alert>
   ),
 };
@@ -70,16 +66,12 @@ export const AllVariants: Story = {
       <Alert>
         <Info />
         <AlertTitle>Default</AlertTitle>
-        <AlertDescription>
-          This is a default alert for general information.
-        </AlertDescription>
+        <AlertDescription>This is a default alert for general information.</AlertDescription>
       </Alert>
       <Alert variant="destructive">
         <AlertCircle />
         <AlertTitle>Destructive</AlertTitle>
-        <AlertDescription>
-          This is a destructive alert for error states.
-        </AlertDescription>
+        <AlertDescription>This is a destructive alert for error states.</AlertDescription>
       </Alert>
     </div>
   ),

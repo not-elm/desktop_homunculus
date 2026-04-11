@@ -1,9 +1,9 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn } from "storybook/test";
-import { Avatar, AvatarFallback, AvatarImage } from "./avatar";
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { fn } from 'storybook/test';
+import { Avatar, AvatarFallback, AvatarImage } from './avatar';
 
 const meta = {
-  title: "UI/Display/Avatar",
+  title: 'UI/Display/Avatar',
   component: Avatar,
   args: {
     onClick: fn(),
@@ -26,7 +26,10 @@ export const Default: Story = {
 export const WithImage: Story = {
   render: () => (
     <Avatar>
-      <AvatarImage src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Crect width='32' height='32' fill='%236366f1'/%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' dominant-baseline='middle' fill='white' font-size='14'%3EH%3C/text%3E%3C/svg%3E" alt="User" />
+      <AvatarImage
+        src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Crect width='32' height='32' fill='%236366f1'/%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' dominant-baseline='middle' fill='white' font-size='14'%3EH%3C/text%3E%3C/svg%3E"
+        alt="User"
+      />
       <AvatarFallback>H</AvatarFallback>
     </Avatar>
   ),
