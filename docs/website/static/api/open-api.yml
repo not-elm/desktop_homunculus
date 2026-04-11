@@ -77,6 +77,34 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/AssetInfo'
+  /assets/file:
+    get:
+      tags:
+      - assets
+      summary: Get the raw file content of an asset by its ID.
+      description: |-
+        Returns the file bytes with a `Content-Type` header inferred from
+        the file extension. Unknown extensions fall back to
+        `application/octet-stream`.
+      operationId: get_asset_file
+      parameters:
+      - name: id
+        in: query
+        description: Asset ID (e.g. '@hmcs/elmer:thumbnail')
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Raw file content
+          content:
+            application/octet-stream: {}
+        '400':
+          description: Missing id parameter
+        '404':
+          description: Asset not found or file missing
+        '500':
+          description: IO error
   /assets/import:
     post:
       tags:
@@ -1237,17 +1265,8 @@ paths:
     get:
       tags:
       - personas
-      summary: Get persona thumbnail image.
-      description: |-
-        Resolution chain:
-        1. Custom thumbnail from `persona_metadata["thumbnail"]` path
-        2. Default 1x1 transparent PNG placeholder
-
-        # Note
-
-        VRM-embedded thumbnail extraction is not yet implemented and is planned
-        as a follow-up enhancement.
-      operationId: thumbnail
+      summary: Get the thumbnail asset ID of a persona.
+      operationId: get_thumbnail
       parameters:
       - name: id
         in: path
@@ -1257,11 +1276,41 @@ paths:
           type: string
       responses:
         '200':
-          description: Thumbnail image
+          description: ''
           content:
-            image/png: {}
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThumbnailBody'
         '404':
-          description: Persona not found
+          description: ''
+    put:
+      tags:
+      - personas
+      summary: Set (or clear) the thumbnail asset ID of a persona.
+      description: 'Sending `{ "thumbnail": null }` clears the field.'
+      operationId: put_thumbnail
+      parameters:
+      - name: id
+        in: path
+        description: Persona ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ThumbnailBody'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonaSnapshot'
+        '404':
+          description: ''
   /personas/{id}/transform:
     get:
       tags:
@@ -2569,6 +2618,14 @@ components:
           type:
           - string
           - 'null'
+        thumbnail:
+          type:
+          - string
+          - 'null'
+        vrmAssetId:
+          type:
+          - string
+          - 'null'
     DeregisterRequest:
       type: object
       description: Body for `POST /rpc/deregister`.
@@ -3038,6 +3095,14 @@ components:
           type:
           - string
           - 'null'
+        thumbnail:
+          type:
+          - string
+          - 'null'
+        vrmAssetId:
+          type:
+          - string
+          - 'null'
     Persona:
       type: object
       description: Persona data for a VRM character.
@@ -3074,6 +3139,10 @@ components:
           - 'null'
         profile:
           type: string
+        thumbnail:
+          type:
+          - string
+          - 'null'
         vrmAssetId:
           type:
           - string
@@ -3575,6 +3644,13 @@ components:
           type: number
           format: double
           description: Timestamp offset from request start (seconds, f64).
+    ThumbnailBody:
+      type: object
+      properties:
+        thumbnail:
+          type:
+          - string
+          - 'null'
     TimelineBody:
       allOf:
       - type:
@@ -3611,6 +3687,33 @@ components:
             format: float
           propertyNames:
             type: string
+    TransformArgs:
+      type: object
+      description: |-
+        Partial transform arguments for API requests.
+        All fields are optional — omitted fields retain their current value.
+      properties:
+        rotation:
+          type:
+          - array
+          - 'null'
+          items:
+            type: number
+            format: float
+        scale:
+          type:
+          - array
+          - 'null'
+          items:
+            type: number
+            format: float
+        translation:
+          type:
+          - array
+          - 'null'
+          items:
+            type: number
+            format: float
     TrayMenuItem:
       type: object
       description: |-
@@ -3735,6 +3838,29 @@ components:
           type: string
         playing:
           type: boolean
+    WebviewConstraints:
+      type: object
+      description: |-
+        API-facing constraint parameters for HTTP/MCP.
+        Maps to the fields of `TransformConstraint`.
+      properties:
+        lockScale:
+          type:
+          - boolean
+          - 'null'
+          description: Whether to lock scale at 1.0 regardless of parent scale.
+        maxTiltDegrees:
+          type:
+          - number
+          - 'null'
+          format: float
+          description: Maximum tilt angle from upright in degrees. 0.0 = no tilt allowed.
+        rotationFollow:
+          type:
+          - number
+          - 'null'
+          format: float
+          description: How much rotation to inherit from parent. 0.0 = billboard, 1.0 = full inherit.
     WebviewInfo:
       type: object
       description: Response for GET /webviews and GET /webviews/{entity}
@@ -3743,16 +3869,18 @@ components:
       - source
       - size
       - viewportSize
-      - offset
+      - transform
+      - constraints
       properties:
+        constraints:
+          $ref: '#/components/schemas/WebviewConstraints'
+          description: Active constraint parameters.
         entity:
           type: string
         linkedPersona:
           oneOf:
           - type: 'null'
           - $ref: '#/components/schemas/PersonaId'
-        offset:
-          $ref: '#/components/schemas/WebviewOffset'
         size:
           type: array
           items:
@@ -3760,6 +3888,9 @@ components:
             format: float
         source:
           $ref: '#/components/schemas/WebviewSourceInfo'
+        transform:
+          $ref: '#/components/schemas/TransformArgs'
+          description: Current transform (translation = intended offset from parent).
         viewportSize:
           type: array
           items:
@@ -3773,26 +3904,22 @@ components:
       properties:
         source:
           $ref: '#/components/schemas/WebviewSource'
-    WebviewOffset:
-      type: array
-      items:
-        type: number
-        format: float
     WebviewOpenOptions:
       type: object
       description: Request body for POST /webviews
       required:
       - source
       properties:
+        constraints:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/WebviewConstraints'
+            description: Transform constraint parameters for parent transform propagation.
         linkedPersona:
           oneOf:
           - type: 'null'
           - $ref: '#/components/schemas/PersonaId'
             description: Persona to link to this webview (optional).
-        offset:
-          oneOf:
-          - type: 'null'
-          - $ref: '#/components/schemas/WebviewOffset'
         size:
           type:
           - array
@@ -3804,6 +3931,11 @@ components:
         source:
           $ref: '#/components/schemas/WebviewSource'
           description: The source of the webview (URL, local path, or inline HTML).
+        transform:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/TransformArgs'
+            description: Transform for positioning. translation sets the offset from parent.
         viewportSize:
           type:
           - array
@@ -3816,10 +3948,11 @@ components:
       type: object
       description: Request for PATCH /webviews/{entity}
       properties:
-        offset:
+        constraints:
           oneOf:
           - type: 'null'
-          - $ref: '#/components/schemas/WebviewOffset'
+          - $ref: '#/components/schemas/WebviewConstraints'
+            description: Constraint parameters update (partial merge).
         size:
           type:
           - array
@@ -3827,6 +3960,11 @@ components:
           items:
             type: number
             format: float
+        transform:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/TransformArgs'
+            description: Transform update (translation updates the offset from parent).
         viewportSize:
           type:
           - array

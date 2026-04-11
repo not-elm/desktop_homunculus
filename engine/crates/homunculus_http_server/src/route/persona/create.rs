@@ -209,7 +209,10 @@ mod tests {
 
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let snap: PersonaSnapshot = serde_json::from_slice(&body).unwrap();
-        assert_eq!(snap.persona.vrm_asset_id.as_deref(), Some("vrm:example:model"));
+        assert_eq!(
+            snap.persona.vrm_asset_id.as_deref(),
+            Some("vrm:example:model")
+        );
     }
 
     #[tokio::test]
@@ -227,7 +230,10 @@ mod tests {
 
         let body = response.into_body().collect().await.unwrap().to_bytes();
         let snap: PersonaSnapshot = serde_json::from_slice(&body).unwrap();
-        assert_eq!(snap.persona.thumbnail.as_deref(), Some("image:example:thumb"));
+        assert_eq!(
+            snap.persona.thumbnail.as_deref(),
+            Some("image:example:thumb")
+        );
     }
 
     #[tokio::test]
