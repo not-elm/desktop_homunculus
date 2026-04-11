@@ -3,6 +3,7 @@ use homunculus_api::assets::AssetsApi;
 use homunculus_api::mods::ModsApi;
 use homunculus_api::persona::PersonaApi;
 use homunculus_api::preferences::PrefsApi;
+use homunculus_api::processes::ProcessesApi;
 use homunculus_api::prelude::{
     ApiReactor, AppApi, AudioBgmApi, AudioSeApi, CameraApi, EffectsApi, EntitiesApi, SettingsApi,
     ShadowPanelApi, SignalsApi, SpeechApi, VrmAnimationApi, WebviewApi,
@@ -33,6 +34,7 @@ pub struct HttpState {
     pub entities: EntitiesApi,
     pub assets: AssetsApi,
     pub mods: ModsApi,
+    pub processes: ProcessesApi,
     /// STT API — stateless speech recognition and model downloads.
     /// Bypasses ApiReactor; audio pipelines are managed internally.
     pub stt: SttApi,
@@ -64,6 +66,7 @@ impl HttpState {
             entities: EntitiesApi::from(reactor.clone()),
             assets: AssetsApi::from(reactor.clone()),
             mods: ModsApi::from(reactor.clone()),
+            processes: ProcessesApi::from(reactor.clone()),
             stt: SttApi::new(reactor.clone()),
             config,
             rpc_registry,

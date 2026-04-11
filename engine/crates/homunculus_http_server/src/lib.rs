@@ -116,6 +116,7 @@ use utoipa_axum::{router::OpenApiRouter, routes};
         (name = "displays", description = "Display information"),
         (name = "mods", description = "Mod management"),
         (name = "commands", description = "Command execution"),
+        (name = "processes", description = "Managed long-running processes"),
         (name = "assets", description = "Asset management"),
         (name = "rpc", description = "MOD service RPC registration and proxy"),
         (name = "stt", description = "Speech-to-text"),
@@ -232,6 +233,7 @@ fn build_openapi_router() -> OpenApiRouter<HttpState> {
         .nest("/effects", effects_router())
         .nest("/mods", mods_router())
         .nest("/commands", commands_router())
+        .nest("/processes", processes_router())
         .nest("/stt", stt_router())
         .nest("/dialog", dialog_router())
         .routes(routes!(assets::list))
@@ -325,6 +327,13 @@ fn dialog_router() -> OpenApiRouter<HttpState> {
 
 fn commands_router() -> OpenApiRouter<HttpState> {
     OpenApiRouter::new().routes(routes!(route::mods::execute_command))
+}
+
+fn processes_router() -> OpenApiRouter<HttpState> {
+    OpenApiRouter::new()
+        .routes(routes!(route::processes::list))
+        .routes(routes!(route::processes::start))
+        .routes(routes!(route::processes::stop))
 }
 
 fn entities_router() -> OpenApiRouter<HttpState> {

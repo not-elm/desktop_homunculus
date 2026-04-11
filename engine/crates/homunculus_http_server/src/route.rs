@@ -15,6 +15,7 @@ pub(crate) mod info;
 pub(crate) mod mods;
 pub(crate) mod persona;
 pub(crate) mod preferences;
+pub(crate) mod processes;
 pub(crate) mod rpc;
 pub(crate) mod settings;
 pub(crate) mod shadow_panel;
