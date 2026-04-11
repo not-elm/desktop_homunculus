@@ -172,6 +172,40 @@ impl PersonaApi {
         )
         .await
     }
+
+    /// Gets the thumbnail asset ID of a persona.
+    pub async fn get_thumbnail(&self, persona_id: PersonaId) -> ApiResult<Option<String>> {
+        let snap = self.get(persona_id).await?;
+        Ok(snap.persona.thumbnail)
+    }
+
+    /// Updates the thumbnail asset ID of a persona.
+    pub async fn set_thumbnail(
+        &self,
+        persona_id: PersonaId,
+        asset_id: String,
+    ) -> ApiResult<PersonaSnapshot> {
+        self.patch(
+            persona_id,
+            PatchPersona {
+                thumbnail: Some(Some(asset_id)),
+                ..Default::default()
+            },
+        )
+        .await
+    }
+
+    /// Clears the thumbnail of a persona.
+    pub async fn clear_thumbnail(&self, persona_id: PersonaId) -> ApiResult<PersonaSnapshot> {
+        self.patch(
+            persona_id,
+            PatchPersona {
+                thumbnail: Some(None),
+                ..Default::default()
+            },
+        )
+        .await
+    }
 }
 
 fn patch_persona(
