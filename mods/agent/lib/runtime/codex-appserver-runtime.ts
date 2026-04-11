@@ -9,8 +9,9 @@
  * @module
  */
 
-import type { AgentEvent, AgentResponse, AgentRuntime } from './agent-runtime.ts';
 import { AsyncQueue } from '../async-queue.ts';
+import type { AgentSettings } from '../types.ts';
+import type { AgentEvent, AgentResponse, AgentRuntime } from './agent-runtime.ts';
 import type { CodexAppServerProcess, ThreadHandler } from './codex-appserver-process.ts';
 import type {
   CommandExecutionRequestApprovalParams,
@@ -30,7 +31,6 @@ import type {
   TurnStartedNotification,
   TurnStartParams,
 } from './codex-appserver-types.ts';
-import type { AgentSettings } from '../types.ts';
 
 /** Internal message pushed into the event queue by the ThreadHandler. */
 type QueueMessage =
@@ -187,7 +187,15 @@ export class CodexAppServerRuntime implements AgentRuntime {
     const params: TurnStartParams = {
       threadId,
       input: [{ type: 'text', text, text_elements: [] }],
-      approvalPolicy: 'on-request',
+      approvalPolicy: {
+        granular: {
+          sandbox_approval: true,
+          rules: true,
+          skill_approval: true,
+          request_permissions: true,
+          mcp_elicitations: false,
+        },
+      },
     };
     await this.process.sendRequest('turn/start', params);
   }
