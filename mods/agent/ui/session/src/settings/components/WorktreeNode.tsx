@@ -52,7 +52,7 @@ export function WorktreeNode({
           onClick={onSelect}
           onKeyDown={onKeyDown}
         >
-          <span className="ws-radio" aria-hidden="true" aria-checked={isSelected}>
+          <span className="ws-radio" aria-hidden="true">
             {isSelected && <span className="ws-radio-dot" />}
           </span>
           <GitBranch className="ws-icon" />

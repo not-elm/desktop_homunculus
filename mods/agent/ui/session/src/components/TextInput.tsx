@@ -20,10 +20,10 @@ export function TextInput({ onSend, isInterruptible, onInterrupt }: TextInputPro
   const valueRef = useRef('');
   const isComposingRef = useRef(false);
 
-  const syncValue = (v: string) => {
+  const syncValue = useCallback((v: string) => {
     valueRef.current = v;
     setValue(v);
-  };
+  }, []);
 
   const handleChange = useCallback(
     (e: ChangeEvent<HTMLTextAreaElement>) => {
@@ -83,6 +83,7 @@ export function TextInput({ onSend, isInterruptible, onInterrupt }: TextInputPro
       {isInterruptible ? (
         <button
           className="hud-text-input-send hud-text-input-send--interrupt"
+          type="button"
           onClick={onInterrupt}
           title="Interrupt"
         >
@@ -91,6 +92,7 @@ export function TextInput({ onSend, isInterruptible, onInterrupt }: TextInputPro
       ) : (
         <button
           className="hud-text-input-send"
+          type="button"
           onClick={handleSend}
           disabled={sending || !value.trim()}
           title="Send"
@@ -104,7 +106,7 @@ export function TextInput({ onSend, isInterruptible, onInterrupt }: TextInputPro
 
 function SendIcon() {
   return (
-    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
       <path d="M2 10L10 6L2 2V5L7 6L2 7V10Z" fill="currentColor" />
     </svg>
   );
@@ -112,7 +114,7 @@ function SendIcon() {
 
 function InterruptIcon() {
   return (
-    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
       <rect x="2" y="2" width="6" height="6" rx="1" fill="currentColor" />
     </svg>
   );

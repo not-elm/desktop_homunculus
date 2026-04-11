@@ -65,10 +65,14 @@ function FallbackButtons({
 }) {
   return (
     <>
-      <button className="hud-btn hud-btn--approve" onClick={() => onApprove(requestId)}>
+      <button
+        className="hud-btn hud-btn--approve"
+        type="button"
+        onClick={() => onApprove(requestId)}
+      >
         Approve
       </button>
-      <button className="hud-btn hud-btn--deny" onClick={() => onDeny(requestId)}>
+      <button className="hud-btn hud-btn--deny" type="button" onClick={() => onDeny(requestId)}>
         Deny
       </button>
     </>
@@ -162,7 +166,7 @@ function DynamicDecisionButton({
   const handler = isApproval ? onApprove : onDeny;
 
   return (
-    <button className={className} onClick={() => handler(requestId, decision)}>
+    <button className={className} type="button" onClick={() => handler(requestId, decision)}>
       {label}
     </button>
   );

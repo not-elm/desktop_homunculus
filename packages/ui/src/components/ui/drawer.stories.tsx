@@ -120,6 +120,7 @@ export const RightSide: Story = {
         <div className="flex flex-col gap-1 p-4">
           {['Dashboard', 'Characters', 'Animations', 'Effects', 'Mods'].map((item) => (
             <button
+              type="button"
               key={item}
               className="rounded-md px-3 py-2 text-left text-sm hover:bg-accent transition-colors"
             >

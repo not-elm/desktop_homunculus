@@ -1,3 +1,4 @@
+import { audio, Webview } from '@hmcs/sdk';
 import {
   Dialog,
   DialogContent,
@@ -5,12 +6,12 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  Toolbar,
 } from '@hmcs/ui';
 import { useCallback, useRef, useState } from 'react';
 import CreateForm from './components/CreateForm';
 import DetailView from './components/DetailView';
 import Sidebar from './components/Sidebar';
-import Toolbar from './components/Toolbar';
 import { usePersonaManagement } from './hooks/usePersonaManagement';
 
 export default function App() {
@@ -18,6 +19,11 @@ export default function App() {
   const dirtyRef = useRef(false);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [discardOpen, setDiscardOpen] = useState(false);
+
+  const handleClose = useCallback(() => {
+    audio.se.play('se:close');
+    Webview.current()?.close();
+  }, []);
 
   const handleSelectPersona = useCallback(
     (id: string) => {
@@ -69,7 +75,7 @@ export default function App() {
   if (mgmt.loading) {
     return (
       <div className="management-panel">
-        <Toolbar />
+        <Toolbar title="Persona" onClose={handleClose} />
         <div className="main-loading">
           <div className="main-loading-text">Loading...</div>
         </div>
@@ -101,7 +107,7 @@ export default function App() {
           ) : (
             <div className="main-empty">
               <div className="main-empty-text">No personas yet</div>
-              <button className="management-btn" onClick={mgmt.enterCreateMode}>
+              <button type="button" className="management-btn" onClick={mgmt.enterCreateMode}>
                 + Create
               </button>
             </div>
@@ -135,10 +141,18 @@ function DiscardDialog({
           <DialogDescription>You have unsaved changes. Discard?</DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <button className="management-btn management-btn--secondary" onClick={onCancel}>
+          <button
+            type="button"
+            className="management-btn management-btn--secondary"
+            onClick={onCancel}
+          >
             Cancel
           </button>
-          <button className="management-btn management-btn--danger" onClick={onConfirm}>
+          <button
+            type="button"
+            className="management-btn management-btn--danger"
+            onClick={onConfirm}
+          >
             Discard
           </button>
         </DialogFooter>

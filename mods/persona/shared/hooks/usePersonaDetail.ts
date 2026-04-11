@@ -90,39 +90,42 @@ export function usePersonaDetail(
     callbacks.onDirtyChange(isDirty());
   }, [isDirty, callbacks]);
 
-  async function saveDraft(options?: { reload?: boolean }): Promise<boolean> {
-    if (!formValues) return false;
-    try {
-      const vrmChanged = vrmAssetId !== initialVrm.current;
-      const thumbnailChanged = thumbnail !== initialThumbnail.current;
-      await persona.patch({
-        name: formValues.name,
-        age: formValues.age,
-        gender: formValues.gender,
-        firstPersonPronoun: formValues.firstPersonPronoun || undefined,
-        profile: formValues.profile,
-        personality: formValues.personality || undefined,
-        vrmAssetId: vrmChanged ? (vrmAssetId ?? undefined) : undefined,
-        thumbnail: thumbnailChanged ? (thumbnail ?? undefined) : undefined,
-      });
+  const saveDraft = useCallback(
+    async (options?: { reload?: boolean }): Promise<boolean> => {
+      if (!formValues) return false;
+      try {
+        const vrmChanged = vrmAssetId !== initialVrm.current;
+        const thumbnailChanged = thumbnail !== initialThumbnail.current;
+        await persona.patch({
+          name: formValues.name,
+          age: formValues.age,
+          gender: formValues.gender,
+          firstPersonPronoun: formValues.firstPersonPronoun || undefined,
+          profile: formValues.profile,
+          personality: formValues.personality || undefined,
+          vrmAssetId: vrmChanged ? (vrmAssetId ?? undefined) : undefined,
+          thumbnail: thumbnailChanged ? (thumbnail ?? undefined) : undefined,
+        });
 
-      if (vrmChanged && snapshot?.spawned) {
-        if (vrmAssetId) {
-          await persona.attachVrm(vrmAssetId);
-        } else if (initialVrm.current) {
-          await persona.detachVrm();
+        if (vrmChanged && snapshot?.spawned) {
+          if (vrmAssetId) {
+            await persona.attachVrm(vrmAssetId);
+          } else if (initialVrm.current) {
+            await persona.detachVrm();
+          }
         }
-      }
 
-      if (options?.reload !== false) {
-        await loadSnapshot();
+        if (options?.reload !== false) {
+          await loadSnapshot();
+        }
+        return true;
+      } catch (e) {
+        console.error('Failed to save persona:', e);
+        return false;
       }
-      return true;
-    } catch (e) {
-      console.error('Failed to save persona:', e);
-      return false;
-    }
-  }
+    },
+    [formValues, vrmAssetId, thumbnail, snapshot, persona, loadSnapshot],
+  );
 
   const save = useCallback(async () => {
     if (saving) return;

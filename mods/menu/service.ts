@@ -56,7 +56,7 @@ async function setupPersonaEvents(p: Persona) {
   eventSources.set(p.id, es);
 
   es.on('pointer-click', async (e) => {
-    if ((e as any).button !== 'Secondary') return;
+    if ((e as unknown as { button: string }).button !== 'Secondary') return;
     if (isProcessing) return;
     isProcessing = true;
     try {

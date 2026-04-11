@@ -1,3 +1,9 @@
+export {
+  AssetSelect,
+  type AssetSelectGroup,
+  type AssetSelectItem,
+  type AssetSelectProps,
+} from './components/asset-select';
 export * from './components/sliders/NumericSlider';
 export * from './components/ui/accordion';
 export * from './components/ui/alert';
@@ -31,6 +37,8 @@ export * from './components/ui/separator';
 export * from './components/ui/settings-card';
 export * from './components/ui/slider';
 export * from './components/ui/textarea';
+export * from './components/ui/toolbar';
 export * from './components/ui/tooltip';
+export { useClickOutside } from './hooks/use-click-outside';
 import './index.css';
 import './animation.css';

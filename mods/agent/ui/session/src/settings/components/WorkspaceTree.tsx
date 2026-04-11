@@ -39,7 +39,7 @@ export function WorkspaceTree({
   onSelectionChange,
   onAddWorkspace,
   onRemoveWorkspace,
-  refreshKey,
+  refreshKey: _refreshKey,
 }: WorkspaceTreeProps) {
   const [workspaceData, setWorkspaceData] = useState<Map<string, WorkspaceData>>(new Map());
   const [dialogState, setDialogState] = useState<DialogState>({ type: 'none' });

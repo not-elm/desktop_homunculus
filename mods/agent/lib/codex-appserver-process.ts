@@ -183,7 +183,7 @@ export class CodexAppServerProcess {
 
     this.process = proc;
 
-    const rl = createInterface({ input: proc.stdout! });
+    const rl = createInterface({ input: proc.stdout as NodeJS.ReadableStream });
     this.readline = rl;
 
     rl.on('line', (line) => this.handleLine(line));

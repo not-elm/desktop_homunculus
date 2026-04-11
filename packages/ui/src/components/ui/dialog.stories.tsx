@@ -115,6 +115,7 @@ export const ScrollableContent: Story = {
         </DialogHeader>
         <div className="max-h-[300px] overflow-y-auto rounded-md border border-border p-4 text-sm text-muted-foreground">
           {Array.from({ length: 10 }, (_, i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: static list of identical paragraphs has no stable ID
             <p key={i} className="mb-4">
               Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
               incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud

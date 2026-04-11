@@ -1,4 +1,4 @@
-import * as React from 'react';
+import type * as React from 'react';
 import TextareaAutosizeComponent from 'react-textarea-autosize';
 import { cn } from '@/lib/utils';
 
@@ -19,17 +19,14 @@ function TextareaAutosize({
   className,
   ...props
 }: React.ComponentProps<typeof TextareaAutosizeComponent>) {
-  return React.useMemo(
-    () => (
-      <TextareaAutosizeComponent
-        data-slot="textarea"
-        autoComplete="off"
-        autoCorrect="off"
-        className={cn(textareaStyles, className)}
-        {...props}
-      />
-    ),
-    [className, props],
+  return (
+    <TextareaAutosizeComponent
+      data-slot="textarea"
+      autoComplete="off"
+      autoCorrect="off"
+      className={cn(textareaStyles, className)}
+      {...props}
+    />
   );
 }
 
