@@ -33,5 +33,6 @@ export * from './components/ui/settings-card';
 export * from './components/ui/slider';
 export * from './components/ui/textarea';
 export * from './components/ui/tooltip';
+export { AssetSelect, type AssetSelectItem, type AssetSelectGroup, type AssetSelectProps } from './components/asset-select';
 import './index.css';
 import './animation.css';
