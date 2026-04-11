@@ -659,9 +659,6 @@ importers:
       '@hmcs/persona':
         specifier: workspace:*
         version: link:../mods/persona
-      '@hmcs/sdk':
-        specifier: workspace:*
-        version: link:../packages/sdk
       '@hmcs/settings':
         specifier: workspace:*
         version: link:../mods/settings
