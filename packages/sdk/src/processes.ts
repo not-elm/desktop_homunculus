@@ -19,7 +19,7 @@
  * });
  *
  * // Stop and clean up
- * await proc[Symbol.asyncDispose]();
+ * await proc.stop();
  * ```
  *
  * @packageDocumentation
@@ -75,7 +75,8 @@ export interface ProcessHandle extends AsyncDisposable {
    * Register a callback for unexpected process termination.
    *
    * Multiple callbacks can be registered (addEventListener-style).
-   * Callbacks are NOT invoked when the process is stopped via `asyncDispose`.
+   * Callbacks are NOT invoked when the process is stopped via {@link stop}
+   * or `[Symbol.asyncDispose]`.
    *
    * @param callback - Function called with exit information
    *
@@ -89,6 +90,25 @@ export interface ProcessHandle extends AsyncDisposable {
    * ```
    */
   onExit(callback: (info: ProcessExitInfo) => void): void;
+
+  /**
+   * Stop the process and clean up the exit listener.
+   *
+   * Alias for `[Symbol.asyncDispose]()`. Idempotent — safe to call multiple times
+   * or on an already-exited process.
+   *
+   * If the process is still running, this sends a stop request to the engine
+   * and awaits shutdown. If the process has already exited, this only
+   * disconnects the exit listener. `onExit` callbacks are NOT invoked.
+   *
+   * @example
+   * ```typescript
+   * const proc = await processes.start({ command: "my-mod:script" });
+   * // ...later
+   * await proc.stop();
+   * ```
+   */
+  stop(): Promise<void>;
 }
 
 /** Signal payload shape for the process:exited channel. */
@@ -127,6 +147,20 @@ function createProcessHandle(handleId: string): ProcessHandle {
     subscription.close();
   });
 
+  async function stop(): Promise<void> {
+    if (disposed) return;
+    disposed = true;
+    subscription.close();
+
+    if (!exited) {
+      try {
+        await host.deleteMethod(host.createUrl(`processes/${handleId}`));
+      } catch {
+        // 404 = already exited — idempotent success
+      }
+    }
+  }
+
   return {
     handleId,
 
@@ -134,19 +168,9 @@ function createProcessHandle(handleId: string): ProcessHandle {
       exitCallbacks.push(callback);
     },
 
-    async [Symbol.asyncDispose](): Promise<void> {
-      if (disposed) return;
-      disposed = true;
-      subscription.close();
+    stop,
 
-      if (!exited) {
-        try {
-          await host.deleteMethod(host.createUrl(`processes/${handleId}`));
-        } catch {
-          // 404 = already exited — idempotent success
-        }
-      }
-    },
+    [Symbol.asyncDispose]: stop,
   };
 }
 
@@ -166,7 +190,7 @@ export namespace processes {
    *   command: "@hmcs/persona:default-behavior",
    *   args: ["persona-1"],
    * });
-   * await proc[Symbol.asyncDispose]();
+   * await proc.stop();
    * ```
    */
   export async function start(params: {
