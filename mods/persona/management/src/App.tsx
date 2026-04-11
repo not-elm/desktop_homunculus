@@ -5,12 +5,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  Toolbar,
 } from '@hmcs/ui';
+import { audio, Webview } from '@hmcs/sdk';
 import { useCallback, useRef, useState } from 'react';
 import CreateForm from './components/CreateForm';
 import DetailView from './components/DetailView';
 import Sidebar from './components/Sidebar';
-import Toolbar from './components/Toolbar';
 import { usePersonaManagement } from './hooks/usePersonaManagement';
 
 export default function App() {
@@ -18,6 +19,11 @@ export default function App() {
   const dirtyRef = useRef(false);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [discardOpen, setDiscardOpen] = useState(false);
+
+  const handleClose = useCallback(() => {
+    audio.se.play('se:close');
+    Webview.current()?.close();
+  }, []);
 
   const handleSelectPersona = useCallback(
     (id: string) => {
@@ -69,7 +75,7 @@ export default function App() {
   if (mgmt.loading) {
     return (
       <div className="management-panel">
-        <Toolbar />
+        <Toolbar title="Persona" onClose={handleClose} />
         <div className="main-loading">
           <div className="main-loading-text">Loading...</div>
         </div>
