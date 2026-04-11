@@ -168,7 +168,7 @@ function DisconnectedView({ onRetry }: { onRetry: () => void }) {
   return (
     <div className="voicevox-error">
       <div className="voicevox-error-text">Cannot connect to VOICEVOX</div>
-      <button className="voicevox-error-retry" onClick={onRetry}>
+      <button type="button" className="voicevox-error-retry" onClick={onRetry}>
         Retry
       </button>
     </div>
@@ -194,13 +194,13 @@ function SettingsForm({
         </div>
       )}
 
-      <label className="settings-label">
+      <label className="settings-label" htmlFor="voicevox-speaker-select">
         Speaker
         <Select
           value={settings.speakerId === -1 ? undefined : String(settings.speakerId)}
           onValueChange={(value) => onSettingsChange({ ...settings, speakerId: Number(value) })}
         >
-          <SelectTrigger className="w-full">
+          <SelectTrigger id="voicevox-speaker-select" className="w-full">
             <SelectValue placeholder="— Select a speaker —" />
           </SelectTrigger>
           <SelectContent>
@@ -267,13 +267,14 @@ function Footer({
 }) {
   return (
     <div className="settings-footer">
-      <button className="settings-close" onClick={onClose}>
+      <button type="button" className="settings-close" onClick={onClose}>
         Close
       </button>
-      <button className="settings-close" onClick={onReset}>
+      <button type="button" className="settings-close" onClick={onReset}>
         Reset
       </button>
       <button
+        type="button"
         className={`settings-save ${saved ? 'settings-save--success' : ''}`}
         onClick={onSave}
         disabled={saving || disabled}

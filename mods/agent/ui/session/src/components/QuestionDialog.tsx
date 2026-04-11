@@ -17,9 +17,9 @@ export function QuestionDialog({ question, onAnswer }: QuestionDialogProps) {
 
   return (
     <div className="hud-dialog">
-      {parsed.map((q, index) => (
+      {parsed.map((q) => (
         <QuestionItem
-          key={index}
+          key={q.question}
           question={q}
           onSelect={(answer) => onAnswer(question.requestId, { [q.question]: answer })}
         />
@@ -44,6 +44,7 @@ function QuestionItem({
             <button
               key={option}
               className="hud-btn hud-btn--option"
+              type="button"
               onClick={() => onSelect(option)}
             >
               {option}

@@ -14,7 +14,7 @@ export function KeyCaptureField({ label, description, pttKey, onChange }: KeyCap
   const [displayName, setDisplayName] = useState<string>(
     pttKey !== null ? formatPttKeyName(pttKey) : 'None',
   );
-  const containerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     setDisplayName(pttKey !== null ? formatPttKeyName(pttKey) : 'None');
@@ -26,7 +26,7 @@ export function KeyCaptureField({ label, description, pttKey, onChange }: KeyCap
   }, []);
 
   const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLDivElement>) => {
+    (e: React.KeyboardEvent<HTMLButtonElement>) => {
       if (!capturing) return;
       e.preventDefault();
       if (isModifierCode(e.code)) return;
@@ -37,7 +37,7 @@ export function KeyCaptureField({ label, description, pttKey, onChange }: KeyCap
   );
 
   const handleKeyUp = useCallback(
-    (e: React.KeyboardEvent<HTMLDivElement>) => {
+    (e: React.KeyboardEvent<HTMLButtonElement>) => {
       if (!capturing) return;
       if (!isModifierCode(e.code)) return;
       if (hasActiveModifiers(e)) return;
@@ -58,15 +58,14 @@ export function KeyCaptureField({ label, description, pttKey, onChange }: KeyCap
     <div className="settings-label">
       {label}
       {description && <span className="settings-label-desc">{description}</span>}
-      <div
+      <button
         ref={containerRef}
+        type="button"
         className={`agent-key-capture${capturing ? ' agent-key-capture--capturing' : ''}`}
-        tabIndex={0}
         onClick={startCapture}
         onKeyDown={handleKeyDown}
         onKeyUp={handleKeyUp}
         onBlur={handleBlur}
-        role="button"
         aria-label={
           capturing ? 'Press a key to capture' : `Current key: ${displayName}. Click to change.`
         }
@@ -75,7 +74,7 @@ export function KeyCaptureField({ label, description, pttKey, onChange }: KeyCap
         <span className="agent-key-hint">
           {capturing ? 'Press any key...' : 'Click to capture'}
         </span>
-      </div>
+      </button>
       {showWarning && (
         <span className="agent-key-warning">
           Modifier keys alone may trigger during normal typing

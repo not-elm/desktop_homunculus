@@ -24,8 +24,7 @@ const preview: Preview = {
     theme: themeGlobalType,
   },
   initialGlobals: defaultInitialGlobals,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  decorators: [withSceneLayer as any],
+  decorators: [withSceneLayer],
 };
 
 export default preview;

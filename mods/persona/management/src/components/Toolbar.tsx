@@ -10,8 +10,9 @@ export default function Toolbar() {
   return (
     <div className="toolbar">
       <span className="toolbar-title">Persona</span>
-      <button className="toolbar-close" onClick={handleClose} aria-label="Close">
+      <button type="button" className="toolbar-close" onClick={handleClose} aria-label="Close">
         <svg
+          aria-hidden="true"
           width="10"
           height="10"
           viewBox="0 0 10 10"

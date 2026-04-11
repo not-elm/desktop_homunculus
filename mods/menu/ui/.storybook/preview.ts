@@ -24,7 +24,7 @@ const preview: Preview = {
     theme: themeGlobalType,
   },
   initialGlobals: defaultInitialGlobals,
-  decorators: [withSceneLayer as any],
+  decorators: [withSceneLayer as unknown as NonNullable<Preview['decorators']>[number]],
 };
 
 export default preview;

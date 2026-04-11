@@ -67,8 +67,9 @@ export function WorkspaceNode({
       data-ws-index={index}
       onKeyDown={onKeyDown}
     >
-      <div className={rowClass} onClick={handleRowClick}>
-        <span className="ws-radio" aria-hidden="true" aria-checked={isSelected}>
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: click delegates to parent treeitem */}
+      <div className={rowClass} onClick={handleRowClick} onKeyDown={onKeyDown}>
+        <span className="ws-radio" aria-hidden="true">
           {isSelected && <span className="ws-radio-dot" />}
         </span>
         {hasChildren ? (
@@ -93,7 +94,8 @@ export function WorkspaceNode({
       {hasChildren && (
         <div className={`ws-children-wrapper${expanded ? '' : ' ws-children-wrapper--collapsed'}`}>
           <div className="ws-children-inner">
-            <div className="ws-connector" role="group">
+            {/* biome-ignore lint/a11y/useSemanticElements: group role is correct for tree children, fieldset is not appropriate */}
+            <div className="ws-connector" role="group" aria-label="Worktrees">
               {data?.worktrees.map((wt) => (
                 <WorktreeNode
                   key={wt.name}

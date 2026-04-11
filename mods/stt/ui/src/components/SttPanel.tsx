@@ -50,7 +50,7 @@ export function SttPanel() {
       </div>
 
       <div className="settings-footer">
-        <button className="settings-close" onClick={handleClose}>
+        <button type="button" className="settings-close" onClick={handleClose}>
           Close
         </button>
       </div>
@@ -73,7 +73,7 @@ function ModelCard({
   return (
     <div
       className={`stt-model-card${isReady ? ' stt-model-card--ready' : ''}`}
-      aria-label={`${model.label} model, ${model.fileSize}${
+      title={`${model.label} model, ${model.fileSize}${
         isReady ? ', ready' : isDownloading ? ', downloading' : ', not downloaded'
       }`}
     >
@@ -81,20 +81,9 @@ function ModelCard({
       <span className="stt-model-card__size">{model.fileSize}</span>
 
       {model.status === 'not_downloaded' && (
-        <span
-          className="stt-model-card__download"
-          role="button"
-          tabIndex={0}
-          onClick={onDownload}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              onDownload();
-            }
-          }}
-        >
+        <button type="button" className="stt-model-card__download" onClick={onDownload}>
           Download
-        </span>
+        </button>
       )}
 
       {isDownloading && (
@@ -107,20 +96,9 @@ function ModelCard({
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span className="stt-model-card__size">{Math.round(model.downloadProgress ?? 0)}%</span>
-            <span
-              className="stt-model-card__cancel"
-              role="button"
-              tabIndex={0}
-              onClick={onCancel}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  onCancel();
-                }
-              }}
-            >
+            <button type="button" className="stt-model-card__cancel" onClick={onCancel}>
               ✕
-            </span>
+            </button>
           </div>
         </>
       )}

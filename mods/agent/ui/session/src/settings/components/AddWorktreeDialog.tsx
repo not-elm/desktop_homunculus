@@ -87,8 +87,14 @@ export function AddWorktreeDialog({ workspacePath, onCreated, onCancel }: AddWor
             <div className="space-y-3">
               <p>Create a new worktree from an existing branch.</p>
               <div className="space-y-1">
-                <label className="text-xs font-medium text-muted-foreground">Name</label>
+                <label
+                  htmlFor="add-worktree-name"
+                  className="text-xs font-medium text-muted-foreground"
+                >
+                  Name
+                </label>
                 <input
+                  id="add-worktree-name"
                   className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm font-mono shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                   type="text"
                   placeholder="feature-name"
@@ -99,7 +105,12 @@ export function AddWorktreeDialog({ workspacePath, onCreated, onCancel }: AddWor
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-medium text-muted-foreground">Branch</label>
+                <label
+                  htmlFor="add-worktree-branch"
+                  className="text-xs font-medium text-muted-foreground"
+                >
+                  Branch
+                </label>
                 <Select value={selectedBranch} onValueChange={setSelectedBranch}>
                   <SelectTrigger className="font-mono text-xs">
                     <SelectValue />

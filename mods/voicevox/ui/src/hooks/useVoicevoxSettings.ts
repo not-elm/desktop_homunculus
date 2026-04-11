@@ -168,7 +168,7 @@ async function resolveLinkedPersona(): Promise<{
 
 async function fetchSpeakers(): Promise<VoicevoxSpeaker[] | null> {
   try {
-    const cefFetch = (globalThis as any).cef?.fetch;
+    const cefFetch = (globalThis as unknown as { cef?: { fetch: typeof fetch } }).cef?.fetch;
     const fetchFn = cefFetch ?? fetch;
     const response = await fetchFn(`${VOICEVOX_HOST}/speakers`, {
       signal: AbortSignal.timeout(10000),

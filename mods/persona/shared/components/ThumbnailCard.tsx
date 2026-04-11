@@ -8,7 +8,11 @@ interface ThumbnailCardProps {
 
 export function ThumbnailCard({ thumbnailUrl, onThumbnailChange, className }: ThumbnailCardProps) {
   return (
-    <div className={`detail-thumb${className ? ` ${className}` : ''}`} onClick={onThumbnailChange}>
+    <button
+      type="button"
+      className={`detail-thumb${className ? ` ${className}` : ''}`}
+      onClick={onThumbnailChange}
+    >
       {thumbnailUrl ? (
         <img src={thumbnailUrl} alt="Thumbnail" />
       ) : (
@@ -17,6 +21,6 @@ export function ThumbnailCard({ thumbnailUrl, onThumbnailChange, className }: Th
       <div className="change-overlay">
         <span>Change Image...</span>
       </div>
-    </div>
+    </button>
   );
 }
