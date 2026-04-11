@@ -70,16 +70,14 @@ function LogBody({ worker }: { worker: WorkerState }) {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [worker.log.length, worker.pendingPermission]);
+  }, []);
 
   return (
     <div className="flex-1 overflow-y-auto px-2 py-1.5">
-      {worker.log.map((entry, i) => (
-        <LogEntryRow key={i} entry={entry} />
+      {worker.log.map((entry) => (
+        <LogEntryRow key={`${entry.type}-${entry.timestamp}`} entry={entry} />
       ))}
-      {worker.pendingPermission && (
-        <PermissionPanel permission={worker.pendingPermission} />
-      )}
+      {worker.pendingPermission && <PermissionPanel permission={worker.pendingPermission} />}
       {isThinking(worker) && <ThinkingIndicator />}
       <div ref={bottomRef} />
     </div>

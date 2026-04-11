@@ -105,67 +105,49 @@ export function useWorkers(): UseWorkersReturn {
     removalTimers.current.set(taskId, timer);
   }, []);
 
-  useEffect(() => {
-    if (!personaId) return;
+  const handleWorkerEvent = useCallback(
+    (data: WorkerEventPayload) => {
+      const { taskId, event } = data;
 
-    const workerSub = signals.stream<WorkerEventPayload>(
-      'agent:worker-event',
-      (data) => {
-        if (data.personaId !== personaId) return;
-        handleWorkerEvent(data);
-      },
-    );
+      setWorkers((prev) => {
+        const next = new Map(prev);
+        const existing = next.get(taskId);
+        const worker = existing ?? createWorker(taskId);
+        const logEntry = eventToLogEntry(event);
 
-    const permSub = signals.stream<PermissionPayload>(
-      'agent:permission',
-      (data) => {
-        if (data.personaId !== personaId) return;
-        if (!data.taskId) return;
-        handlePermission(data);
-      },
-    );
+        const updatedWorker: WorkerState = {
+          ...worker,
+          status: deriveStatus(event, worker.status),
+          log: logEntry ? [...worker.log, logEntry] : worker.log,
+          pendingPermission:
+            event.type === 'permission_request' ? null : worker.pendingPermission,
+        };
 
-    return () => {
-      workerSub.close();
-      permSub.close();
-      for (const timer of removalTimers.current.values()) clearTimeout(timer);
-      removalTimers.current.clear();
-    };
-  }, [personaId, scheduleRemoval]);
+        next.set(taskId, updatedWorker);
+        return next;
+      });
 
-  function handleWorkerEvent(data: WorkerEventPayload) {
-    const { taskId, event } = data;
+      setSelectedId((prev) => prev ?? taskId);
 
-    setWorkers((prev) => {
-      const next = new Map(prev);
-      const existing = next.get(taskId);
-      const worker = existing ?? createWorker(taskId, data);
-      const logEntry = eventToLogEntry(event);
+      if (isTerminalEvent(data.event.type)) {
+        scheduleRemoval(taskId);
+      }
+    },
+    [scheduleRemoval],
+  );
 
-      const updatedWorker: WorkerState = {
-        ...worker,
-        status: deriveStatus(event, worker.status),
-        log: logEntry ? [...worker.log, logEntry] : worker.log,
-        pendingPermission:
-          event.type === 'permission_request' ? null : worker.pendingPermission,
-      };
-
-      next.set(taskId, updatedWorker);
-      return next;
-    });
-
-    setSelectedId((prev) => prev ?? taskId);
-
-    if (isTerminalEvent(data.event.type)) {
-      scheduleRemoval(taskId);
-    }
-  }
-
-  function handlePermission(data: PermissionPayload) {
-    const taskId = data.taskId!;
+  const handlePermission = useCallback((data: PermissionPayload) => {
+    const taskId = data.taskId;
+    if (!taskId) return;
 
     if (data.resolved) {
-      clearPermission(taskId);
+      setWorkers((prev) => {
+        const next = new Map(prev);
+        const worker = next.get(taskId);
+        if (!worker) return prev;
+        next.set(taskId, { ...worker, pendingPermission: null });
+        return next;
+      });
       return;
     }
 
@@ -185,22 +167,34 @@ export function useWorkers(): UseWorkersReturn {
       });
       return next;
     });
-  }
+  }, []);
 
-  function clearPermission(taskId: string) {
-    setWorkers((prev) => {
-      const next = new Map(prev);
-      const worker = next.get(taskId);
-      if (!worker) return prev;
-      next.set(taskId, { ...worker, pendingPermission: null });
-      return next;
+  useEffect(() => {
+    if (!personaId) return;
+
+    const workerSub = signals.stream<WorkerEventPayload>('agent:worker-event', (data) => {
+      if (data.personaId !== personaId) return;
+      handleWorkerEvent(data);
     });
-  }
+
+    const permSub = signals.stream<PermissionPayload>('agent:permission', (data) => {
+      if (data.personaId !== personaId) return;
+      if (!data.taskId) return;
+      handlePermission(data);
+    });
+
+    return () => {
+      workerSub.close();
+      permSub.close();
+      for (const timer of removalTimers.current.values()) clearTimeout(timer);
+      removalTimers.current.clear();
+    };
+  }, [personaId, handleWorkerEvent, handlePermission]);
 
   return { workers, selectedId, setSelectedId, personaId };
 }
 
-function createWorker(taskId: string, data: WorkerEventPayload): WorkerState {
+function createWorker(taskId: string): WorkerState {
   return {
     taskId,
     description: taskId,
@@ -210,9 +204,7 @@ function createWorker(taskId: string, data: WorkerEventPayload): WorkerState {
   };
 }
 
-function eventToLogEntry(
-  event: WorkerEventPayload['event'],
-): WorkerLogEntry | null {
+function eventToLogEntry(event: WorkerEventPayload['event']): WorkerLogEntry | null {
   const timestamp = Date.now();
 
   switch (event.type) {

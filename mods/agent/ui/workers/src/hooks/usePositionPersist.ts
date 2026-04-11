@@ -1,5 +1,5 @@
 import { preferences, Webview } from '@hmcs/sdk';
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 const POLL_INTERVAL = 1000;
 const DEBOUNCE_DELAY = 500;
@@ -14,6 +14,19 @@ const PREFS_KEY_PREFIX = 'agent::workers-position::';
 export function usePositionPersist(personaId: string | null): void {
   const lastPosition = useRef<string>('');
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const scheduleSave = useCallback((id: string, translation: unknown) => {
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+
+    debounceTimer.current = setTimeout(async () => {
+      debounceTimer.current = null;
+      try {
+        await preferences.save(`${PREFS_KEY_PREFIX}${id}`, translation);
+      } catch (err) {
+        console.error('[workers] Failed to persist position:', err);
+      }
+    }, DEBOUNCE_DELAY);
+  }, []);
 
   useEffect(() => {
     if (!personaId) return;
@@ -33,18 +46,5 @@ export function usePositionPersist(personaId: string | null): void {
       clearInterval(interval);
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
     };
-  }, [personaId]);
-
-  function scheduleSave(id: string, translation: unknown) {
-    if (debounceTimer.current) clearTimeout(debounceTimer.current);
-
-    debounceTimer.current = setTimeout(async () => {
-      debounceTimer.current = null;
-      try {
-        await preferences.save(`${PREFS_KEY_PREFIX}${id}`, translation);
-      } catch (err) {
-        console.error('[workers] Failed to persist position:', err);
-      }
-    }, DEBOUNCE_DELAY);
-  }
+  }, [personaId, scheduleSave]);
 }
