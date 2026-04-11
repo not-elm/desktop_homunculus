@@ -7,7 +7,23 @@ import { DEFAULT_PERMISSION_SE, resolvePermissionSeAsset } from './permission-se
 import type { AgentEvent, AgentResponse, AgentRuntime } from './runtime/agent-runtime.ts';
 import type { SessionHandle, SessionPersistence } from './session-persistence.ts';
 import { sanitizeForTts } from './tts.ts';
-import type { AgentSettings, AgentStatus, PersonaSessions, WorkerTask } from './types.ts';
+import {
+  type AgentSettings,
+  type AgentStatus,
+  DEFAULT_WORKER_LIMIT,
+  type PersonaSessions,
+  type WorkerTask,
+} from './types.ts';
+
+/** Options for delegating a task to a new Worker. */
+export interface DelegateTaskOptions {
+  personaId: string;
+  description: string;
+  worktreeName: string | null;
+  createRuntime: () => AgentRuntime;
+  /** Optional override for the concurrent-Worker limit. */
+  workerLimit?: number;
+}
 
 /**
  * Public API of SessionManager used by service.ts RPC handlers:
@@ -106,6 +122,58 @@ export class SessionManager {
 
   getPersonaSessions(personaId: string): PersonaSessions | undefined {
     return this.sessions.get(personaId);
+  }
+
+  /** Spawn a background Worker task for the given persona. */
+  async delegateTask(options: DelegateTaskOptions): Promise<{ taskId: string }> {
+    const limit = options.workerLimit ?? DEFAULT_WORKER_LIMIT;
+    const sessions = this.ensurePersonaSessions(options.personaId);
+
+    const running = [...sessions.workers.values()].filter((w) => w.status === 'running').length;
+    if (running >= limit) {
+      throw new Error(`Worker limit (${limit}) reached for persona "${options.personaId}"`);
+    }
+
+    const taskId = `task-${crypto.randomUUID()}`;
+    const controller = new AbortController();
+    const task: WorkerTask = {
+      taskId,
+      personaId: options.personaId,
+      controller,
+      sessionId: null,
+      status: 'running',
+      worktreeName: options.worktreeName,
+      description: options.description,
+      startedAt: new Date().toISOString(),
+      endedAt: null,
+      errorMessage: null,
+    };
+    sessions.workers.set(taskId, task);
+
+    const runtime = options.createRuntime();
+    this.runWorkerLoop(task, runtime).catch((err) => {
+      task.status = 'failed';
+      task.endedAt = new Date().toISOString();
+      task.errorMessage = err instanceof Error ? err.message : String(err);
+    });
+
+    return { taskId };
+  }
+
+  /** Cancel a running Worker task. */
+  cancelTask(personaId: string, taskId: string): void {
+    const task = this.sessions.get(personaId)?.workers.get(taskId);
+    if (!task) return;
+    if (task.status === 'running') {
+      task.controller.abort();
+      task.status = 'cancelled';
+      task.endedAt = new Date().toISOString();
+    }
+  }
+
+  /** Get the current status of a Worker task. */
+  getTaskStatus(personaId: string, taskId: string): WorkerTask | undefined {
+    return this.sessions.get(personaId)?.workers.get(taskId);
   }
 
   async stopPersonaSessions(personaId: string): Promise<void> {
@@ -285,6 +353,34 @@ export class SessionManager {
         body: { personaId, text: sentences },
       })
       .catch(() => this.emitLog(personaId, 'warning', 'TTS unavailable'));
+  }
+
+  private ensurePersonaSessions(personaId: string): PersonaSessions {
+    let sessions = this.sessions.get(personaId);
+    if (!sessions) {
+      sessions = { workers: new Map<string, WorkerTask>() };
+      this.sessions.set(personaId, sessions);
+    }
+    return sessions;
+  }
+
+  private async runWorkerLoop(task: WorkerTask, runtime: AgentRuntime): Promise<void> {
+    const gen = runtime.execute(task.description, null, task.controller.signal);
+    for await (const event of gen) {
+      if (task.controller.signal.aborted) break;
+      if (event.type === 'completed') {
+        task.sessionId = event.sessionId;
+        task.status = 'completed';
+        task.endedAt = new Date().toISOString();
+        return;
+      }
+      if (event.type === 'error') {
+        task.status = 'failed';
+        task.errorMessage = event.message;
+        task.endedAt = new Date().toISOString();
+        return;
+      }
+    }
   }
 
   private async waitForUserInput(
