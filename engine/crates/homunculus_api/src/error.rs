@@ -54,6 +54,8 @@ pub enum ApiError {
     },
     #[error("Conflict: {0}")]
     Conflict(String),
+    #[error("Too many requests: {0}")]
+    TooManyRequests(String),
 }
 
 pub trait ApiResultExt {
@@ -106,6 +108,7 @@ pub mod axum {
                 ApiError::MissingShadowPanel | ApiError::MissingName(_) => {
                     axum::http::StatusCode::BAD_REQUEST
                 }
+                ApiError::TooManyRequests(_) => axum::http::StatusCode::TOO_MANY_REQUESTS,
                 _ => axum::http::StatusCode::INTERNAL_SERVER_ERROR,
             };
             (

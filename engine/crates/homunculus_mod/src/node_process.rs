@@ -12,7 +12,7 @@ use std::time::Duration;
 /// [`Drop`] performs best-effort cleanup (kill + reap).
 /// For graceful shutdown, use [`NodeProcessHandle::shutdown`].
 #[derive(Component)]
-pub(crate) struct NodeProcessHandle {
+pub struct NodeProcessHandle {
     child: Child,
     #[cfg(windows)]
     job: Option<homunculus_utils::process::JobHandle>,
@@ -21,14 +21,24 @@ pub(crate) struct NodeProcessHandle {
 impl NodeProcessHandle {
     /// Create a new handle wrapping a child process.
     #[cfg(not(windows))]
-    pub(crate) fn new(child: Child) -> Self {
+    pub fn new(child: Child) -> Self {
         Self { child }
     }
 
     /// Create a new handle wrapping a child process with an optional Job Object.
     #[cfg(windows)]
-    pub(crate) fn new(child: Child, job: Option<homunculus_utils::process::JobHandle>) -> Self {
+    pub fn new(child: Child, job: Option<homunculus_utils::process::JobHandle>) -> Self {
         Self { child, job }
+    }
+
+    /// Check if the child process has exited without blocking.
+    pub fn try_wait_exited(&mut self) -> Option<std::process::ExitStatus> {
+        self.child.try_wait().ok().flatten()
+    }
+
+    /// Get the process ID.
+    pub fn pid(&self) -> u32 {
+        self.child.id()
     }
 
     /// Shut down the child process.
@@ -41,7 +51,7 @@ impl NodeProcessHandle {
     /// [`Drop`], which closes the Job Object handle (triggering
     /// `KILL_ON_JOB_CLOSE`). When no Job Object is available, falls back to
     /// `kill()` + `try_wait()` inline.
-    pub(crate) fn shutdown(&mut self, _grace: Duration) {
+    pub fn shutdown(&mut self, _grace: Duration) {
         if let Ok(Some(_)) = self.child.try_wait() {
             return;
         }

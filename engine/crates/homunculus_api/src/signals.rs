@@ -21,7 +21,9 @@ pub struct SignalInfo {
 }
 
 #[derive(Resource, Debug, Clone, Deref, DerefMut, Default)]
-struct SignalsChannels(HashMap<String, (Sender<serde_json::Value>, Receiver<serde_json::Value>)>);
+pub(crate) struct SignalsChannels(
+    HashMap<String, (Sender<serde_json::Value>, Receiver<serde_json::Value>)>,
+);
 
 api!(
     /// Provides access to the signals API.

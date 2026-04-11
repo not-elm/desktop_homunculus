@@ -44,6 +44,7 @@ mod error;
 pub mod mods;
 pub mod persona;
 pub mod preferences;
+pub mod processes;
 mod reactor;
 mod settings;
 mod shadow_panel;
@@ -57,6 +58,7 @@ mod webview;
 use crate::assets::AssetsApiPlugin;
 use crate::persona::PersonaApiPlugin;
 use crate::prelude::{ShadowPanelApiPlugin, WebviewApiPlugin};
+use crate::processes::ProcessesApiPlugin;
 use crate::reactor::ApiReactorPlugin;
 use crate::signals::SignalsApiPlugin;
 use crate::stt::SttPttPlugin;
@@ -76,6 +78,7 @@ pub mod prelude {
         mods::ModsApi,
         persona::PersonaApi,
         preferences::*,
+        processes::ProcessesApi,
         reactor::*,
         settings::*,
         shadow_panel::*,
@@ -115,6 +118,7 @@ impl PluginGroup for HomunculusApiPlugin {
             .add(PersonaApiPlugin)
             .add(AssetsApiPlugin)
             .add(SttPttPlugin)
+            .add(ProcessesApiPlugin)
             .build()
     }
 }

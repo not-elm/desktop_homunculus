@@ -4548,10 +4548,12 @@ dependencies = [
  "bevy_flurx",
  "bevy_tweening",
  "bevy_vrm1",
+ "chrono",
  "homunculus_audio",
  "homunculus_core",
  "homunculus_effects",
  "homunculus_microphone",
+ "homunculus_mod",
  "homunculus_power_saver",
  "homunculus_prefs",
  "homunculus_shadow_panel",
@@ -4722,10 +4724,13 @@ name = "homunculus_mod"
 version = "0.1.0-alpha.6-dev"
 dependencies = [
  "bevy",
+ "chrono",
  "futures-lite",
  "homunculus_core",
  "homunculus_utils",
  "libc",
+ "serde_json",
+ "uuid",
 ]
 
 [[package]]

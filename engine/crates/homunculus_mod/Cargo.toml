@@ -12,6 +12,9 @@ bevy = { workspace = true }
 homunculus_core = { workspace = true }
 homunculus_utils = { workspace = true }
 futures-lite = "2"
+uuid = { workspace = true }
+chrono = { workspace = true }
+serde_json = { workspace = true }
 
 [target.'cfg(unix)'.dependencies]
 libc = { workspace = true }

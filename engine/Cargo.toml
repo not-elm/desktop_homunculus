@@ -122,6 +122,7 @@ windows = "0.60"
 raw-window-handle = "0.6"
 num_cpus = "1"
 mime_guess = "2"
+chrono = { version = "0.4", features = ["serde"] }
 
 [build-dependencies]
 embed-resource = "3"

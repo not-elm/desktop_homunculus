@@ -70,7 +70,7 @@ fn run_mod_services(
 
 /// Append a child PID to `~/.homunculus/mod_pids` so stale processes can be
 /// detected and cleaned up on next launch.
-fn append_pid_file(pid: u32) {
+pub fn append_pid_file(pid: u32) {
     use std::io::Write;
     let path = homunculus_utils::path::homunculus_dir().join("mod_pids");
     if let Ok(mut f) = std::fs::OpenOptions::new()
@@ -107,9 +107,15 @@ fn launch_mod_service_process(
         .spawn()
 }
 
-fn build_process_handle(mut child: std::process::Child, mod_name: &str) -> NodeProcessHandle {
-    spawn_log_reader(child.stdout.take(), mod_name, false);
-    spawn_log_reader(child.stderr.take(), mod_name, true);
+/// Wraps a spawned child process in a [`NodeProcessHandle`], spawning
+/// background log reader threads for stdout and stderr.
+///
+/// On Windows, attaches the child to a Job Object so the entire process tree
+/// is terminated when the handle is dropped. The `log_prefix` is used as the
+/// tag for log lines emitted by the reader threads.
+pub fn build_process_handle(mut child: std::process::Child, log_prefix: &str) -> NodeProcessHandle {
+    spawn_log_reader(child.stdout.take(), log_prefix, false);
+    spawn_log_reader(child.stderr.take(), log_prefix, true);
 
     #[cfg(windows)]
     let job = homunculus_utils::process::create_job_for_child(&child);
@@ -127,15 +133,21 @@ fn allocate_ephemeral_port() -> std::io::Result<u16> {
     Ok(listener.local_addr()?.port())
 }
 
-fn spawn_log_reader<R: std::io::Read + Send + 'static>(
+/// Spawns a background thread that reads lines from `reader` and forwards
+/// them to the Bevy log with a `[{log_prefix}]` tag.
+///
+/// Stderr lines are logged at `warn` level; stdout at `info`. The thread
+/// exits when the reader reaches EOF or encounters an error. A `None`
+/// reader is a no-op.
+pub fn spawn_log_reader<R: std::io::Read + Send + 'static>(
     reader: Option<R>,
-    mod_name: &str,
+    log_prefix: &str,
     is_stderr: bool,
 ) {
     let Some(reader) = reader else { return };
     let stream = if is_stderr { "stderr" } else { "stdout" };
-    let thread_name = format!("mod-{mod_name}-{stream}");
-    let mod_name = mod_name.to_owned();
+    let thread_name = format!("mod-{log_prefix}-{stream}");
+    let log_prefix = log_prefix.to_owned();
     let result = std::thread::Builder::new()
         .name(thread_name)
         .spawn(move || {
@@ -154,9 +166,9 @@ fn spawn_log_reader<R: std::io::Read + Send + 'static>(
                         }
                         let line = String::from_utf8_lossy(&buf);
                         if is_stderr {
-                            warn!(target: "mod", "[{mod_name}] {line}");
+                            warn!(target: "mod", "[{log_prefix}] {line}");
                         } else {
-                            info!(target: "mod", "[{mod_name}] {line}");
+                            info!(target: "mod", "[{log_prefix}] {line}");
                         }
                     }
                     Err(_) => break,
