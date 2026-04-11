@@ -138,10 +138,7 @@ fn start_process(
 ///
 /// This is an exclusive system (`&mut World`) because `entity_mut().take::<T>()`
 /// requires immediate component removal (not deferred via `Commands`).
-fn take_and_despawn(
-    In(handle_id): In<String>,
-    world: &mut World,
-) -> ApiResult<NodeProcessHandle> {
+fn take_and_despawn(In(handle_id): In<String>, world: &mut World) -> ApiResult<NodeProcessHandle> {
     let entity = world
         .query::<(Entity, &ManagedProcess)>()
         .iter(world)
