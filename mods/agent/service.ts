@@ -6,9 +6,8 @@ import { rpc } from '@hmcs/sdk/rpc';
 import { z } from 'zod';
 import type { AgentEvent, AgentResponse, AgentRuntime } from './lib/runtime/agent-runtime.ts';
 import { AsyncQueue, Deferred } from './lib/async-queue.ts';
-import { ClaudeAgentRuntime } from './lib/runtime/claude-agent-runtime.ts';
 import { CodexAppServerProcess } from './lib/runtime/codex-appserver-process.ts';
-import { CodexAppServerRuntime } from './lib/runtime/codex-appserver-runtime.ts';
+import { createWorkerRuntime } from './lib/worker.ts';
 import { currentBranch, gitExec, isGitRepo, listBranches } from './lib/git.ts';
 import { type ResolvedPttKey, resolvePttKeycodes } from './lib/key-mapping.ts';
 import { isComboHeld, KeyboardHookService, waitForComboRelease } from './lib/keyboard-hook.ts';
@@ -178,7 +177,13 @@ async function startSession(
   }
 
   const prompt = buildPersonaPrompt(persona, worktreeCtx, sessionContext);
-  const runtime = createRuntime(settings, prompt, currentApiKey, workDir);
+  const runtime = createWorkerRuntime({
+    settings,
+    prompt,
+    apiKey: currentApiKey,
+    workDir,
+    appServerProcess: getAppServerProcess(),
+  });
 
   if (basePath && branchName) {
     const handle = await persistence.create({
@@ -324,21 +329,6 @@ async function resolveCurrentBranch(
   }
 }
 
-function createRuntime(
-  settings: AgentSettings,
-  prompt: string,
-  apiKey: string | null,
-  workDir: string,
-): AgentRuntime {
-  switch (settings.runtime) {
-    case 'codex':
-      return new CodexAppServerRuntime(prompt, settings, workDir, getAppServerProcess());
-    case 'sdk':
-      return new ClaudeAgentRuntime(prompt, settings, apiKey as string, workDir);
-    default:
-      throw new Error(`Runtime "${settings.runtime}" is not yet implemented.`);
-  }
-}
 
 async function stopSession(personaId: string): Promise<void> {
   const controller = activeSessions.get(personaId);
