@@ -1,7 +1,7 @@
-import { WorkspaceTree } from "./WorkspaceTree";
-import { SettingsNav } from "./SettingsNav";
-import type { SettingsCategory } from "../types";
-import type { WorkspaceSelection } from "../hooks/useSettingsDraft";
+import type { WorkspaceSelection } from '../hooks/useSettingsDraft';
+import type { SettingsCategory } from '../types';
+import { SettingsNav } from './SettingsNav';
+import { WorkspaceTree } from './WorkspaceTree';
 
 interface SidebarProps {
   paths: string[];
@@ -15,8 +15,14 @@ interface SidebarProps {
 }
 
 export function Sidebar({
-  paths, selection, onSelectionChange, onAddWorkspace, onRemoveWorkspace,
-  activeCategory, onCategorySelect, refreshKey,
+  paths,
+  selection,
+  onSelectionChange,
+  onAddWorkspace,
+  onRemoveWorkspace,
+  activeCategory,
+  onCategorySelect,
+  refreshKey,
 }: SidebarProps) {
   return (
     <aside className="stg-sidebar h-full">

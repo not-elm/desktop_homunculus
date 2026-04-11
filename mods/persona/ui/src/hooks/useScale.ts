@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Persona } from "@hmcs/sdk";
+import { Persona } from '@hmcs/sdk';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export interface UseScaleReturn {
   scale: number;
@@ -27,7 +27,7 @@ export function useScale(personaId: string): UseScaleReturn {
         setScale(transform.scale[0]);
         loadedRef.current = true;
       } catch (e) {
-        console.error("Failed to load transform:", e);
+        console.error('Failed to load transform:', e);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -48,7 +48,7 @@ export function useScale(personaId: string): UseScaleReturn {
         rotation: current.rotation,
       });
     } catch (e) {
-      console.error("Failed to save scale:", e);
+      console.error('Failed to save scale:', e);
     }
   }, [personaId, scale]);
 

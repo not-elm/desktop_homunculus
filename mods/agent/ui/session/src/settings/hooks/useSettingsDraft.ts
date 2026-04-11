@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
-import { preferences, Webview } from "@hmcs/sdk";
+import { preferences, Webview } from '@hmcs/sdk';
+import { useCallback, useEffect, useState } from 'react';
 
 // Re-define the types locally to avoid cross-entry-point import issues.
 // These match the shapes in useAgentSettings.ts from the session HUD.
@@ -15,7 +15,7 @@ export interface PttKey {
 }
 
 export interface AgentSettings {
-  runtime: "sdk" | "cli" | "codex";
+  runtime: 'sdk' | 'cli' | 'codex';
   workspaces: { paths: string[]; selection: WorkspaceSelection };
   pttKey: PttKey | null;
   approvalPhrases: string[];
@@ -26,14 +26,14 @@ export interface AgentSettings {
 }
 
 const DEFAULT_SETTINGS: AgentSettings = {
-  runtime: "codex",
+  runtime: 'codex',
   workspaces: { paths: [], selection: { workspaceIndex: 0, worktreeName: null } },
   pttKey: null,
   approvalPhrases: [],
   denyPhrases: [],
   allowList: [],
   disallowedTools: [],
-  claudeModel: "",
+  claudeModel: '',
 };
 
 export function useSettingsDraft() {
@@ -42,7 +42,7 @@ export function useSettingsDraft() {
   const [savedSettings, setSavedSettings] = useState<AgentSettings>(DEFAULT_SETTINGS);
   const [saving, setSaving] = useState(false);
   const [personaId, setPersonaId] = useState<string | null>(null);
-  const [apiKey, setApiKey] = useState("");
+  const [apiKey, setApiKey] = useState('');
   const [savingApiKey, setSavingApiKey] = useState(false);
 
   const isDirty = JSON.stringify(settings) !== JSON.stringify(savedSettings);
@@ -57,13 +57,13 @@ export function useSettingsDraft() {
       setPersonaId(id);
       const [loaded, loadedApiKey] = await Promise.all([
         id ? preferences.load<AgentSettings>(`agent::${id}`) : undefined,
-        preferences.load<string>("agent::api-key"),
+        preferences.load<string>('agent::api-key'),
       ]);
       if (cancelled) return;
       const merged = loaded ? { ...DEFAULT_SETTINGS, ...loaded } : DEFAULT_SETTINGS;
       setSettings(merged);
       setSavedSettings(merged);
-      setApiKey(loadedApiKey ?? "");
+      setApiKey(loadedApiKey ?? '');
       setLoading(false);
     })();
     return () => {
@@ -78,7 +78,7 @@ export function useSettingsDraft() {
       await preferences.save(`agent::${personaId}`, settings);
       setSavedSettings(settings);
     } catch (err) {
-      console.error("Failed to save settings:", err);
+      console.error('Failed to save settings:', err);
     } finally {
       setSaving(false);
     }
@@ -88,24 +88,27 @@ export function useSettingsDraft() {
     if (savingApiKey) return;
     setSavingApiKey(true);
     try {
-      await preferences.save("agent::api-key", apiKey);
+      await preferences.save('agent::api-key', apiKey);
     } catch (err) {
-      console.error("Failed to save API key:", err);
+      console.error('Failed to save API key:', err);
     } finally {
       setSavingApiKey(false);
     }
   }, [savingApiKey, apiKey]);
 
-  const autoSave = useCallback(async (newSettings: AgentSettings) => {
-    setSettings(newSettings);
-    setSavedSettings(newSettings);
-    if (!personaId) return;
-    try {
-      await preferences.save(`agent::${personaId}`, newSettings);
-    } catch (err) {
-      console.error("Failed to auto-save settings:", err);
-    }
-  }, [personaId]);
+  const autoSave = useCallback(
+    async (newSettings: AgentSettings) => {
+      setSettings(newSettings);
+      setSavedSettings(newSettings);
+      if (!personaId) return;
+      try {
+        await preferences.save(`agent::${personaId}`, newSettings);
+      } catch (err) {
+        console.error('Failed to auto-save settings:', err);
+      }
+    },
+    [personaId],
+  );
 
   return {
     loading,

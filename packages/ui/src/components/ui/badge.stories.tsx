@@ -1,22 +1,22 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn } from "storybook/test";
-import { Check, Star, Zap } from "lucide-react";
-import { Badge } from "./badge";
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { Check, Star, Zap } from 'lucide-react';
+import { fn } from 'storybook/test';
+import { Badge } from './badge';
 
 const meta = {
-  title: "UI/Display/Badge",
+  title: 'UI/Display/Badge',
   component: Badge,
   args: {
     onClick: fn(),
-    children: "Badge",
+    children: 'Badge',
   },
   argTypes: {
     variant: {
-      control: "select",
-      options: ["default", "secondary", "destructive", "outline"],
+      control: 'select',
+      options: ['default', 'secondary', 'destructive', 'outline'],
     },
     children: {
-      control: "text",
+      control: 'text',
     },
   },
 } satisfies Meta<typeof Badge>;

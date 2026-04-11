@@ -1,26 +1,26 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn } from "storybook/test";
-import { Mail, Search } from "lucide-react";
-import { Input } from "./input";
-import { Label } from "./label";
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { Mail, Search } from 'lucide-react';
+import { fn } from 'storybook/test';
+import { Input } from './input';
+import { Label } from './label';
 
 const meta = {
-  title: "UI/Forms/Input",
+  title: 'UI/Forms/Input',
   component: Input,
   args: {
     onChange: fn(),
-    placeholder: "Enter text...",
+    placeholder: 'Enter text...',
   },
   argTypes: {
     type: {
-      control: "select",
-      options: ["text", "email", "password", "number", "search", "tel", "url"],
+      control: 'select',
+      options: ['text', 'email', 'password', 'number', 'search', 'tel', 'url'],
     },
     disabled: {
-      control: "boolean",
+      control: 'boolean',
     },
     placeholder: {
-      control: "text",
+      control: 'text',
     },
   },
 } satisfies Meta<typeof Input>;
@@ -74,7 +74,7 @@ export const WithIcon: Story = {
 export const Disabled: Story = {
   args: {
     disabled: true,
-    placeholder: "Disabled input",
+    placeholder: 'Disabled input',
   },
 };
 
@@ -83,15 +83,8 @@ export const WithError: Story = {
   render: () => (
     <div className="grid w-80 gap-2">
       <Label htmlFor="error-input">Username</Label>
-      <Input
-        id="error-input"
-        aria-invalid="true"
-        defaultValue="ab"
-        placeholder="Username"
-      />
-      <p className="text-destructive text-sm">
-        Username must be at least 3 characters.
-      </p>
+      <Input id="error-input" aria-invalid="true" defaultValue="ab" placeholder="Username" />
+      <p className="text-destructive text-sm">Username must be at least 3 characters.</p>
     </div>
   ),
 };
@@ -99,7 +92,7 @@ export const WithError: Story = {
 /** File input variant */
 export const FileInput: Story = {
   args: {
-    type: "file",
+    type: 'file',
     placeholder: undefined,
   },
 };

@@ -9,17 +9,17 @@
  * @module
  */
 
-import { spawn, type ChildProcess } from "node:child_process";
-import { createRequire } from "node:module";
-import { createInterface, type Interface as ReadlineInterface } from "node:readline";
-import { Deferred } from "./async-queue.ts";
+import { type ChildProcess, spawn } from 'node:child_process';
+import { createRequire } from 'node:module';
+import { createInterface, type Interface as ReadlineInterface } from 'node:readline';
+import { Deferred } from './async-queue.ts';
 import type {
-  RequestId,
-  JsonRpcRequest,
-  JsonRpcNotification,
-  JsonRpcResponse,
   InitializeResponse,
-} from "./codex-appserver-types.ts";
+  JsonRpcNotification,
+  JsonRpcRequest,
+  JsonRpcResponse,
+  RequestId,
+} from './codex-appserver-types.ts';
 
 /**
  * Callback interface registered per-threadId for dispatching server messages.
@@ -104,7 +104,7 @@ export class CodexAppServerProcess {
    */
   async sendRequest<T = unknown>(method: string, params?: unknown): Promise<T> {
     const id = this.nextId++;
-    const message: JsonRpcRequest = { jsonrpc: "2.0", id, method, params };
+    const message: JsonRpcRequest = { jsonrpc: '2.0', id, method, params };
 
     const deferred = new Deferred<unknown>();
     this.pendingRequests.set(id, deferred);
@@ -121,7 +121,7 @@ export class CodexAppServerProcess {
    * @param params - Optional parameters for the notification.
    */
   sendNotification(method: string, params?: unknown): void {
-    const message: JsonRpcNotification = { jsonrpc: "2.0", method, params };
+    const message: JsonRpcNotification = { jsonrpc: '2.0', method, params };
     this.writeMessage(message);
   }
 
@@ -132,7 +132,7 @@ export class CodexAppServerProcess {
    * @param result - The result payload.
    */
   sendResponse(id: RequestId, result: unknown): void {
-    const message: JsonRpcResponse = { jsonrpc: "2.0", id, result };
+    const message: JsonRpcResponse = { jsonrpc: '2.0', id, result };
     this.writeMessage(message);
   }
 
@@ -145,7 +145,7 @@ export class CodexAppServerProcess {
    */
   sendErrorResponse(id: RequestId, code: number, message: string): void {
     const response: JsonRpcResponse = {
-      jsonrpc: "2.0",
+      jsonrpc: '2.0',
       id,
       error: { code, message },
     };
@@ -167,17 +167,17 @@ export class CodexAppServerProcess {
     this.readline = null;
 
     if (proc && !proc.killed) {
-      proc.kill("SIGTERM");
+      proc.kill('SIGTERM');
     }
 
-    this.rejectAllPending(new Error("AppServer process shut down"));
-    this.notifyAllHandlersOfError(new Error("AppServer process shut down"));
+    this.rejectAllPending(new Error('AppServer process shut down'));
+    this.notifyAllHandlersOfError(new Error('AppServer process shut down'));
   }
 
   private async spawnAndInitialize(): Promise<void> {
     const codexBinPath = resolveCodexBinPath();
-    const proc = spawn(process.execPath, [codexBinPath, "app-server", "--listen", "stdio://"], {
-      stdio: ["pipe", "pipe", "pipe"],
+    const proc = spawn(process.execPath, [codexBinPath, 'app-server', '--listen', 'stdio://'], {
+      stdio: ['pipe', 'pipe', 'pipe'],
       env: { ...process.env },
     });
 
@@ -186,19 +186,19 @@ export class CodexAppServerProcess {
     const rl = createInterface({ input: proc.stdout! });
     this.readline = rl;
 
-    rl.on("line", (line) => this.handleLine(line));
+    rl.on('line', (line) => this.handleLine(line));
 
-    proc.stderr?.on("data", (chunk: Buffer) => {
+    proc.stderr?.on('data', (chunk: Buffer) => {
       console.error(`[codex-appserver] stderr: ${chunk.toString().trimEnd()}`);
     });
 
-    proc.on("error", (err) => this.handleProcessError(err));
-    proc.on("exit", (code, signal) => this.handleProcessExit(code, signal));
+    proc.on('error', (err) => this.handleProcessError(err));
+    proc.on('exit', (code, signal) => this.handleProcessExit(code, signal));
 
-    const initResult = await this.sendRequest<InitializeResponse>("initialize", {
+    const initResult = await this.sendRequest<InitializeResponse>('initialize', {
       clientInfo: {
-        name: "homunculus",
-        version: "0.1.0",
+        name: 'homunculus',
+        version: '0.1.0',
         title: null,
       },
       capabilities: {
@@ -211,15 +211,15 @@ export class CodexAppServerProcess {
       `[codex-appserver] Initialized: ${initResult.userAgent} (${initResult.platformOs})`,
     );
 
-    this.sendNotification("initialized");
+    this.sendNotification('initialized');
   }
 
   private writeMessage(message: JsonRpcRequest | JsonRpcNotification | JsonRpcResponse): void {
     const proc = this.process;
     if (!proc?.stdin?.writable) {
-      throw new Error("AppServer process is not running");
+      throw new Error('AppServer process is not running');
     }
-    proc.stdin.write(JSON.stringify(message) + "\n");
+    proc.stdin.write(`${JSON.stringify(message)}\n`);
   }
 
   private handleLine(line: string): void {
@@ -238,8 +238,8 @@ export class CodexAppServerProcess {
   }
 
   private dispatchMessage(msg: Record<string, unknown>): void {
-    const hasId = "id" in msg && msg.id != null;
-    const hasMethod = "method" in msg && typeof msg.method === "string";
+    const hasId = 'id' in msg && msg.id != null;
+    const hasMethod = 'method' in msg && typeof msg.method === 'string';
 
     if (hasId && !hasMethod) {
       this.handleResponse(msg as unknown as JsonRpcResponse);
@@ -248,7 +248,7 @@ export class CodexAppServerProcess {
     } else if (!hasId && hasMethod) {
       this.handleServerNotification(msg.method as string, msg.params);
     } else {
-      console.warn("[codex-appserver] Unrecognized message:", JSON.stringify(msg));
+      console.warn('[codex-appserver] Unrecognized message:', JSON.stringify(msg));
     }
   }
 
@@ -278,9 +278,9 @@ export class CodexAppServerProcess {
       handler.onServerRequest(method, id, params);
     } else {
       console.warn(
-        `[codex-appserver] No handler for threadId=${threadId ?? "unknown"}, auto-declining request id=${id} method=${method}`,
+        `[codex-appserver] No handler for threadId=${threadId ?? 'unknown'}, auto-declining request id=${id} method=${method}`,
       );
-      this.sendErrorResponse(id, -32000, "No handler registered for this thread");
+      this.sendErrorResponse(id, -32000, 'No handler registered for this thread');
     }
   }
 
@@ -292,7 +292,7 @@ export class CodexAppServerProcess {
       handler.onServerNotification(method, params);
     } else {
       console.debug(
-        `[codex-appserver] No handler for notification threadId=${threadId ?? "unknown"} method=${method}`,
+        `[codex-appserver] No handler for notification threadId=${threadId ?? 'unknown'} method=${method}`,
       );
     }
   }
@@ -330,7 +330,7 @@ export class CodexAppServerProcess {
       try {
         handler.onProcessError(error);
       } catch (e) {
-        console.error("[codex-appserver] Error in handler.onProcessError:", e);
+        console.error('[codex-appserver] Error in handler.onProcessError:', e);
       }
     }
   }
@@ -346,13 +346,13 @@ export class CodexAppServerProcess {
 /** Resolve the absolute path to `@openai/codex/bin/codex.js` via the SDK package. */
 function resolveCodexBinPath(): string {
   const req = createRequire(import.meta.url);
-  return req.resolve("@openai/codex/bin/codex.js");
+  return req.resolve('@openai/codex/bin/codex.js');
 }
 
 export function extractThreadId(params: unknown): string | undefined {
-  if (params != null && typeof params === "object" && "threadId" in params) {
+  if (params != null && typeof params === 'object' && 'threadId' in params) {
     const value = (params as Record<string, unknown>).threadId;
-    return typeof value === "string" ? value : undefined;
+    return typeof value === 'string' ? value : undefined;
   }
   return undefined;
 }

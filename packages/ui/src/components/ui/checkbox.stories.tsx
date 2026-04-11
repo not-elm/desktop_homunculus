@@ -1,20 +1,20 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn } from "storybook/test";
-import { Checkbox } from "./checkbox";
-import { Label } from "./label";
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { fn } from 'storybook/test';
+import { Checkbox } from './checkbox';
+import { Label } from './label';
 
 const meta = {
-  title: "UI/Forms/Checkbox",
+  title: 'UI/Forms/Checkbox',
   component: Checkbox,
   args: {
     onCheckedChange: fn(),
   },
   argTypes: {
     disabled: {
-      control: "boolean",
+      control: 'boolean',
     },
     defaultChecked: {
-      control: "boolean",
+      control: 'boolean',
     },
   },
 } satisfies Meta<typeof Checkbox>;
@@ -86,9 +86,7 @@ export const WithError: Story = {
         <Checkbox id="error-terms" aria-invalid="true" {...args} />
         <Label htmlFor="error-terms">I agree to the terms</Label>
       </div>
-      <p className="text-destructive text-sm">
-        You must accept the terms to continue.
-      </p>
+      <p className="text-destructive text-sm">You must accept the terms to continue.</p>
     </div>
   ),
 };

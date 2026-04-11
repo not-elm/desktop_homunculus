@@ -1,32 +1,32 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import { audio, dialog, Webview } from "@hmcs/sdk";
-import { rpc } from "@hmcs/sdk/rpc";
-import { useAgentSession } from "./hooks/useAgentSession";
-import { useWebviewMode } from "./hooks/useWebviewMode";
-import { useCurrentBranch } from "./hooks/useCurrentBranch";
-import { useSettingsDraft } from "./settings/hooks/useSettingsDraft";
-import type { WorkspaceSelection, PttKey } from "./settings/hooks/useSettingsDraft";
-import { formatPttKeyName } from "./utils/format-ptt-key";
-import { Sidebar } from "./settings/components/Sidebar";
-import { SettingsFormView } from "./settings/components/SettingsFormView";
-import { ActivityLog } from "./components/ActivityLog";
-import { SessionHistory } from "./components/SessionHistory";
-import { PastSessionView } from "./components/PastSessionView";
-import { PermissionDialog } from "./components/PermissionDialog";
-import { QuestionDialog } from "./components/QuestionDialog";
-import { TextInput } from "./components/TextInput";
-import type { SettingsCategory, BodyContent } from "./settings/types";
-import type { AgentState } from "./hooks/useAgentSession";
+import { audio, dialog, Webview } from '@hmcs/sdk';
+import { rpc } from '@hmcs/sdk/rpc';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ActivityLog } from './components/ActivityLog';
+import { PastSessionView } from './components/PastSessionView';
+import { PermissionDialog } from './components/PermissionDialog';
+import { QuestionDialog } from './components/QuestionDialog';
+import { SessionHistory } from './components/SessionHistory';
+import { TextInput } from './components/TextInput';
+import type { AgentState } from './hooks/useAgentSession';
+import { useAgentSession } from './hooks/useAgentSession';
+import { useCurrentBranch } from './hooks/useCurrentBranch';
+import { useWebviewMode } from './hooks/useWebviewMode';
+import { SettingsFormView } from './settings/components/SettingsFormView';
+import { Sidebar } from './settings/components/Sidebar';
+import type { PttKey, WorkspaceSelection } from './settings/hooks/useSettingsDraft';
+import { useSettingsDraft } from './settings/hooks/useSettingsDraft';
+import type { BodyContent, SettingsCategory } from './settings/types';
+import { formatPttKeyName } from './utils/format-ptt-key';
 
 export function UnifiedView() {
   const draft = useSettingsDraft();
   const session = useAgentSession();
-  const isActive = session.state !== "idle";
+  const isActive = session.state !== 'idle';
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [sidebarWidth, setSidebarWidth] = useState(270);
   const [resizing, setResizing] = useState(false);
-  const [bodyContent, setBodyContent] = useState<BodyContent>({ kind: "sessionLog" });
+  const [bodyContent, setBodyContent] = useState<BodyContent>({ kind: 'sessionLog' });
   const [activeCategory, setActiveCategory] = useState<SettingsCategory | null>(null);
   const [prevActive, setPrevActive] = useState(false);
   const [minimized, setMinimized] = useState(false);
@@ -39,20 +39,20 @@ export function UnifiedView() {
   const currentBranch = useCurrentBranch(workspacePath, selection.worktreeName);
 
   // Geometry management
-  const geometryMode = sidebarOpen ? "expanded" : "collapsed";
+  const geometryMode = sidebarOpen ? 'expanded' : 'collapsed';
   useWebviewMode(draft.loading ? null : geometryMode);
 
   // Auto-collapse sidebar on session start, auto-expand on session stop
   useEffect(() => {
     if (isActive && !prevActive) {
       setSidebarOpen(false);
-      setBodyContent({ kind: "sessionLog" });
+      setBodyContent({ kind: 'sessionLog' });
       setActiveCategory(null);
     }
     if (!isActive && prevActive) {
       setSidebarOpen(true);
       if (workspacePath) {
-        setBodyContent({ kind: "sessionHistory" });
+        setBodyContent({ kind: 'sessionHistory' });
       }
     }
     setPrevActive(isActive);
@@ -65,38 +65,37 @@ export function UnifiedView() {
     function reportFocus() {
       const el = document.activeElement;
       const focused =
-        el instanceof HTMLElement &&
-        el.matches('textarea, input, [contenteditable="true"]');
+        el instanceof HTMLElement && el.matches('textarea, input, [contenteditable="true"]');
       if (focused) {
-        document.documentElement.setAttribute("data-input-focus", "true");
+        document.documentElement.setAttribute('data-input-focus', 'true');
       } else {
-        document.documentElement.removeAttribute("data-input-focus");
+        document.documentElement.removeAttribute('data-input-focus');
       }
       rpc
         .call({
-          modName: "@hmcs/agent",
-          method: "set-text-focus",
+          modName: '@hmcs/agent',
+          method: 'set-text-focus',
           body: { personaId: session.personaId, focused },
         })
         .catch(() => {});
     }
 
     reportFocus();
-    document.addEventListener("focusin", reportFocus);
-    document.addEventListener("focusout", reportFocus);
+    document.addEventListener('focusin', reportFocus);
+    document.addEventListener('focusout', reportFocus);
     return () => {
-      document.removeEventListener("focusin", reportFocus);
-      document.removeEventListener("focusout", reportFocus);
-      document.documentElement.removeAttribute("data-input-focus");
+      document.removeEventListener('focusin', reportFocus);
+      document.removeEventListener('focusout', reportFocus);
+      document.documentElement.removeAttribute('data-input-focus');
     };
   }, [session.personaId]);
 
   // Empty state when no workspaces, or session history when idle with workspaces
   useEffect(() => {
     if (!draft.loading && paths.length === 0) {
-      setBodyContent({ kind: "empty" });
+      setBodyContent({ kind: 'empty' });
     } else if (!draft.loading && paths.length > 0 && !isActive) {
-      setBodyContent({ kind: "sessionHistory" });
+      setBodyContent({ kind: 'sessionHistory' });
     }
   }, [draft.loading, paths.length, isActive]);
 
@@ -126,15 +125,13 @@ export function UnifiedView() {
 
   function handleSelectionChange(newSelection: WorkspaceSelection) {
     if (isActive && selectionDiffers(selection, newSelection)) {
-      const confirmed = window.confirm(
-        "Stop current session and switch worktree?",
-      );
+      const confirmed = window.confirm('Stop current session and switch worktree?');
       if (!confirmed) return;
       session.stopSession();
     }
     updateSelection(newSelection);
     setActiveCategory(null);
-    setBodyContent({ kind: "sessionHistory" });
+    setBodyContent({ kind: 'sessionHistory' });
   }
 
   function updateSelection(newSelection: WorkspaceSelection) {
@@ -146,12 +143,12 @@ export function UnifiedView() {
 
   function handleCategorySelect(category: SettingsCategory) {
     setActiveCategory(category);
-    setBodyContent({ kind: "settingsForm", category });
+    setBodyContent({ kind: 'settingsForm', category });
   }
 
   function handleBack() {
     setActiveCategory(null);
-    setBodyContent({ kind: "sessionLog" });
+    setBodyContent({ kind: 'sessionLog' });
   }
 
   function handleAddWorkspace(path: string) {
@@ -165,20 +162,20 @@ export function UnifiedView() {
       },
     });
     setActiveCategory(null);
-    setBodyContent({ kind: "sessionLog" });
+    setBodyContent({ kind: 'sessionLog' });
   }
 
   const handleAddWorkspaceFromPanel = useCallback(async () => {
     try {
       const path = await dialog.pickFolder({
-        title: "Select workspace directory",
+        title: 'Select workspace directory',
       });
       if (!path) return;
       handleAddWorkspace(path);
     } catch (e) {
-      console.error("pickFolder failed:", e);
+      console.error('pickFolder failed:', e);
     }
-  }, [paths, draft]);
+  }, [handleAddWorkspace]);
 
   function handleRemoveWorkspace(index: number) {
     const newPaths = paths.filter((_, i) => i !== index);
@@ -194,13 +191,13 @@ export function UnifiedView() {
       workspaces: { paths: newPaths, selection: newSelection },
     });
     if (newPaths.length === 0) {
-      setBodyContent({ kind: "empty" });
+      setBodyContent({ kind: 'empty' });
       setActiveCategory(null);
     }
   }
 
   async function handleClose() {
-    await audio.se.play("se:close");
+    await audio.se.play('se:close');
     await Webview.current()?.close();
   }
 
@@ -208,7 +205,7 @@ export function UnifiedView() {
     e.preventDefault();
     dragRef.current = { startX: e.clientX, startWidth: sidebarWidth };
     setResizing(true);
-    document.body.style.userSelect = "none";
+    document.body.style.userSelect = 'none';
 
     function onMouseMove(ev: MouseEvent) {
       if (!dragRef.current) return;
@@ -220,13 +217,13 @@ export function UnifiedView() {
     function onMouseUp() {
       dragRef.current = null;
       setResizing(false);
-      document.body.style.userSelect = "";
-      document.removeEventListener("mousemove", onMouseMove);
-      document.removeEventListener("mouseup", onMouseUp);
+      document.body.style.userSelect = '';
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
     }
 
-    document.addEventListener("mousemove", onMouseMove);
-    document.addEventListener("mouseup", onMouseUp);
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
   }
 
   if (draft.loading) return null;
@@ -234,16 +231,22 @@ export function UnifiedView() {
   return (
     <div
       className="stg-chrome"
-      data-sidebar={sidebarOpen ? "open" : "closed"}
+      data-sidebar={sidebarOpen ? 'open' : 'closed'}
       data-resizing={resizing || undefined}
       data-minimized={minimized || undefined}
       data-mounted={mounted || undefined}
       style={minimized ? undefined : { width: sidebarOpen ? sidebarWidth + 400 : 400 }}
       onClick={minimized ? handleRestore : undefined}
-      onKeyDown={minimized ? (e: React.KeyboardEvent) => { if (e.key === "Enter") handleRestore(); } : undefined}
-      role={minimized ? "button" : undefined}
+      onKeyDown={
+        minimized
+          ? (e: React.KeyboardEvent) => {
+              if (e.key === 'Enter') handleRestore();
+            }
+          : undefined
+      }
+      role={minimized ? 'button' : undefined}
       tabIndex={minimized ? 0 : undefined}
-      aria-label={minimized ? "Restore window" : undefined}
+      aria-label={minimized ? 'Restore window' : undefined}
     >
       <span className={`hud-collapsed-dot hud-collapsed-dot--${session.state}`} />
       <TitleBar
@@ -292,7 +295,7 @@ export function UnifiedView() {
             onAddWorkspace={handleAddWorkspaceFromPanel}
             workspacePath={workspacePath}
             branchName={currentBranch}
-            onSelectSession={(uuid) => setBodyContent({ kind: "pastSession", uuid })}
+            onSelectSession={(uuid) => setBodyContent({ kind: 'pastSession', uuid })}
             onBodyContentChange={setBodyContent}
           />
         </div>
@@ -324,7 +327,7 @@ function BodyPanel({
   onSelectSession: (uuid: string) => void;
   onBodyContentChange: (content: BodyContent) => void;
 }) {
-  if (content.kind === "empty") {
+  if (content.kind === 'empty') {
     return (
       <div className="stg-empty">
         <span className="stg-empty-text">No workspace configured</span>
@@ -339,7 +342,7 @@ function BodyPanel({
     );
   }
 
-  if (content.kind === "settingsForm") {
+  if (content.kind === 'settingsForm') {
     return (
       <div className="uv-form-wrapper">
         <div className="uv-form-subheader">
@@ -347,11 +350,11 @@ function BodyPanel({
             ←
           </button>
           <span className="uv-form-title">
-            {content.category === "phrases"
-              ? "Phrases"
-              : content.category === "backend"
-                ? "Backend"
-                : "Permissions"}
+            {content.category === 'phrases'
+              ? 'Phrases'
+              : content.category === 'backend'
+                ? 'Backend'
+                : 'Permissions'}
           </span>
         </div>
         <div className="uv-form-scroll">
@@ -365,7 +368,7 @@ function BodyPanel({
     );
   }
 
-  if (content.kind === "sessionHistory") {
+  if (content.kind === 'sessionHistory') {
     return (
       <div className="uv-session">
         {workspacePath && session.personaId && (
@@ -385,14 +388,14 @@ function BodyPanel({
     );
   }
 
-  if (content.kind === "pastSession") {
+  if (content.kind === 'pastSession') {
     return (
       <PastSessionView
-        workspacePath={workspacePath ?? ""}
+        workspacePath={workspacePath ?? ''}
         personaId={session.personaId}
         branchName={branchName}
         uuid={content.uuid}
-        onBack={() => onBodyContentChange({ kind: "sessionHistory" })}
+        onBack={() => onBodyContentChange({ kind: 'sessionHistory' })}
         onSendMessage={async (text, contextUuid) => {
           await session.sendMessage(text, contextUuid);
         }}
@@ -411,14 +414,13 @@ function BodyPanel({
         onApprove={session.approvePermission}
         onDeny={session.denyPermission}
       />
-      <QuestionDialog
-        question={session.question}
-        onAnswer={session.answerQuestion}
-      />
+      <QuestionDialog question={session.question} onAnswer={session.answerQuestion} />
       {!hasDialog && (
         <TextInput
           onSend={session.sendMessage}
-          isInterruptible={isActive && (session.state === "thinking" || session.state === "executing")}
+          isInterruptible={
+            isActive && (session.state === 'thinking' || session.state === 'executing')
+          }
           onInterrupt={session.interruptSession}
         />
       )}
@@ -459,24 +461,16 @@ function TitleBar({
       <span className="uv-runtime-label">/ {runtimeDisplayName(runtime)}</span>
       <div className="uv-header-spacer" />
       <button
-        className={`hud-session-toggle${isActive ? " hud-session-toggle--active" : ""}`}
+        className={`hud-session-toggle${isActive ? ' hud-session-toggle--active' : ''}`}
         onClick={onToggleSession}
-        title={isActive ? "Stop Session" : "Start Session"}
+        title={isActive ? 'Stop Session' : 'Start Session'}
       >
         {isActive ? <StopSquare /> : <PlayTriangle />}
       </button>
-      <button
-        className="hud-icon-btn"
-        onClick={onMinimize}
-        title="Minimize"
-      >
+      <button className="hud-icon-btn" onClick={onMinimize} title="Minimize">
         <MinimizeIcon />
       </button>
-      <button
-        className="hud-icon-btn hud-icon-btn--close"
-        onClick={onClose}
-        title="Close"
-      >
+      <button className="hud-icon-btn hud-icon-btn--close" onClick={onClose} title="Close">
         <CloseIcon />
       </button>
     </div>
@@ -515,16 +509,14 @@ function StatusStrip({
       ) : (
         <span className={`hud-status-dot hud-status-dot--${state}`} />
       )}
-      <span
-        className={`uv-status-label uv-status-label--${isRecording ? "listening" : state}`}
-      >
-        {isRecording ? "Listening..." : stateLabel(state)}
+      <span className={`uv-status-label uv-status-label--${isRecording ? 'listening' : state}`}>
+        {isRecording ? 'Listening...' : stateLabel(state)}
       </span>
       <span className="uv-timer">{formatElapsed(elapsedMs)}</span>
       {pttKey && (
         <>
           <span className="uv-strip-sep" />
-          <span className={`uv-ptt-badge${isRecording ? " uv-ptt-badge--active" : ""}`}>
+          <span className={`uv-ptt-badge${isRecording ? ' uv-ptt-badge--active' : ''}`}>
             ⌨ {formatPttKeyName(pttKey)}
           </span>
         </>
@@ -539,28 +531,22 @@ function StatusStrip({
   );
 }
 
-function selectionDiffers(
-  a: WorkspaceSelection,
-  b: WorkspaceSelection,
-): boolean {
-  return (
-    a.workspaceIndex !== b.workspaceIndex ||
-    a.worktreeName !== b.worktreeName
-  );
+function selectionDiffers(a: WorkspaceSelection, b: WorkspaceSelection): boolean {
+  return a.workspaceIndex !== b.workspaceIndex || a.worktreeName !== b.worktreeName;
 }
 
 function stateLabel(state: AgentState): string {
   switch (state) {
-    case "idle":
-      return "Standby";
-    case "thinking":
-      return "Thinking";
-    case "executing":
-      return "Working";
-    case "waiting":
-      return "Waiting";
-    case "listening":
-      return "Listening...";
+    case 'idle':
+      return 'Standby';
+    case 'thinking':
+      return 'Thinking';
+    case 'executing':
+      return 'Working';
+    case 'waiting':
+      return 'Waiting';
+    case 'listening':
+      return 'Listening...';
   }
 }
 
@@ -568,7 +554,7 @@ function formatElapsed(ms: number): string {
   const totalSec = Math.floor(ms / 1000);
   const mins = Math.floor(totalSec / 60);
   const secs = totalSec % 60;
-  return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+  return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 }
 
 function HamburgerIcon() {
@@ -603,12 +589,7 @@ function StopSquare() {
 function CloseIcon() {
   return (
     <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-      <path
-        d="M3 3L9 9M9 3L3 9"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-      />
+      <path d="M3 3L9 9M9 3L3 9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
     </svg>
   );
 }
@@ -624,23 +605,12 @@ function RecordingIndicator() {
           strokeWidth="1.1"
           strokeLinecap="round"
         />
-        <path
-          d="M6 9.5V11"
-          stroke="oklch(0.8 0.18 30)"
-          strokeWidth="1.1"
-          strokeLinecap="round"
-        />
+        <path d="M6 9.5V11" stroke="oklch(0.8 0.18 30)" strokeWidth="1.1" strokeLinecap="round" />
       </svg>
       <span className="hud-staggered-dots">
-        <span className="hud-staggered-dot" style={{ animationDelay: "0s" }} />
-        <span
-          className="hud-staggered-dot"
-          style={{ animationDelay: "0.2s" }}
-        />
-        <span
-          className="hud-staggered-dot"
-          style={{ animationDelay: "0.4s" }}
-        />
+        <span className="hud-staggered-dot" style={{ animationDelay: '0s' }} />
+        <span className="hud-staggered-dot" style={{ animationDelay: '0.2s' }} />
+        <span className="hud-staggered-dot" style={{ animationDelay: '0.4s' }} />
       </span>
     </span>
   );

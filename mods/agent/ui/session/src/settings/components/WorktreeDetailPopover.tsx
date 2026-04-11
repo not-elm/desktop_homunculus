@@ -1,6 +1,6 @@
-import { PopoverContent } from "@hmcs/ui";
-import type { WorktreeData } from "./WorktreeNode.tsx";
-import { WorktreeDetailContent } from "./WorktreeDetailContent.tsx";
+import { PopoverContent } from '@hmcs/ui';
+import { WorktreeDetailContent } from './WorktreeDetailContent.tsx';
+import type { WorktreeData } from './WorktreeNode.tsx';
 
 interface WorktreeDetailPopoverProps {
   worktree: WorktreeData;

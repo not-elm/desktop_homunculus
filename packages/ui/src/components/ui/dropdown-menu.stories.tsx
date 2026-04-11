@@ -1,36 +1,36 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn } from "storybook/test";
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
-  User,
-  Settings,
-  LogOut,
-  Plus,
+  Cloud,
   CreditCard,
   Keyboard,
-  Cloud,
   LifeBuoy,
+  LogOut,
   Mail,
-} from "lucide-react";
+  Plus,
+  Settings,
+  User,
+} from 'lucide-react';
+import { fn } from 'storybook/test';
+import { Button } from './button';
 import {
   DropdownMenu,
-  DropdownMenuTrigger,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuGroup,
-  DropdownMenuShortcut,
-  DropdownMenuSub,
-  DropdownMenuSubTrigger,
-  DropdownMenuSubContent,
-  DropdownMenuCheckboxItem,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
-} from "./dropdown-menu";
-import { Button } from "./button";
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from './dropdown-menu';
 
 const meta = {
-  title: "UI/Overlays/DropdownMenu",
+  title: 'UI/Overlays/DropdownMenu',
   component: DropdownMenu,
   args: {
     onOpenChange: fn(),
@@ -137,13 +137,9 @@ export const WithCheckboxItems: Story = {
       <DropdownMenuContent className="w-56">
         <DropdownMenuLabel>Appearance</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuCheckboxItem checked>
-          Show Status Bar
-        </DropdownMenuCheckboxItem>
+        <DropdownMenuCheckboxItem checked>Show Status Bar</DropdownMenuCheckboxItem>
         <DropdownMenuCheckboxItem>Show Activity Bar</DropdownMenuCheckboxItem>
-        <DropdownMenuCheckboxItem checked>
-          Show Side Panel
-        </DropdownMenuCheckboxItem>
+        <DropdownMenuCheckboxItem checked>Show Side Panel</DropdownMenuCheckboxItem>
       </DropdownMenuContent>
     </DropdownMenu>
   ),

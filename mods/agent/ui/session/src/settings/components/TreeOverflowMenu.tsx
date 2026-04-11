@@ -1,9 +1,4 @@
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@hmcs/ui";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@hmcs/ui';
 
 interface OverflowItem {
   label: string;
@@ -34,7 +29,7 @@ export function TreeOverflowMenu({ items }: TreeOverflowMenuProps) {
         {items.map((item) => (
           <DropdownMenuItem
             key={item.label}
-            variant={item.destructive ? "destructive" : "default"}
+            variant={item.destructive ? 'destructive' : 'default'}
             onClick={(e) => {
               e.stopPropagation();
               item.onClick();

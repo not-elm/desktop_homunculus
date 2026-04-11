@@ -1,4 +1,4 @@
-import type { Gender } from "@hmcs/sdk";
+import type { Gender } from '@hmcs/sdk';
 
 /** PTT key configuration. */
 export interface PttKey {
@@ -8,7 +8,7 @@ export interface PttKey {
 
 /** Agent settings stored in preferences. */
 export interface AgentSettings {
-  runtime: "sdk" | "cli" | "codex";
+  runtime: 'sdk' | 'cli' | 'codex';
   pttKey: PttKey | null;
   approvalPhrases: string[];
   denyPhrases: string[];
@@ -22,28 +22,23 @@ export interface AgentSettings {
 }
 
 /** Session lifecycle states. */
-export type SessionState = "idle" | "listening" | "thinking" | "executing";
+export type SessionState = 'idle' | 'listening' | 'thinking' | 'executing';
 
 /** Agent status signal payload — superset of SessionState for UI. */
-export type AgentStatus =
-  | "idle"
-  | "listening"
-  | "thinking"
-  | "executing"
-  | "waiting";
+export type AgentStatus = 'idle' | 'listening' | 'thinking' | 'executing' | 'waiting';
 
 /** Activity log entry types. */
 export type LogType =
-  | "read"
-  | "edit"
-  | "run"
-  | "tool"
-  | "assistant"
-  | "done"
-  | "error"
-  | "warning"
-  | "user"
-  | "interrupt";
+  | 'read'
+  | 'edit'
+  | 'run'
+  | 'tool'
+  | 'assistant'
+  | 'done'
+  | 'error'
+  | 'warning'
+  | 'user'
+  | 'interrupt';
 
 /** Activity log entry. */
 export interface LogEntry {
@@ -71,7 +66,7 @@ export interface WorkspaceSelection {
 }
 
 /** Worktree lifecycle state for the agent:worktree signal. */
-export type WorktreeState = "created" | "orphaned" | "error";
+export type WorktreeState = 'created' | 'orphaned' | 'error';
 
 /** Payload for the agent:worktree signal. */
 export interface WorktreeSignalPayload {
@@ -83,15 +78,24 @@ export interface WorktreeSignalPayload {
 }
 
 export const DEFAULT_SETTINGS: AgentSettings = {
-  runtime: "codex",
+  runtime: 'codex',
   pttKey: null,
-  approvalPhrases: ["はい", "yes", "ok", "allow"],
-  denyPhrases: ["いいえ", "no", "deny", "cancel"],
+  approvalPhrases: ['はい', 'yes', 'ok', 'allow'],
+  denyPhrases: ['いいえ', 'no', 'deny', 'cancel'],
   workspaces: { paths: [], selection: { workspaceIndex: 0, worktreeName: null } },
   allowList: [],
   disallowedTools: [],
-  commandAutoApprovePatterns: ["^(cat|head|tail|less|more)\\s", "^ls\\b", "^pwd$", "^echo\\s", "^wc\\s", "^find\\s", "^grep\\s", "^rg\\s"],
-  claudeModel: "",
+  commandAutoApprovePatterns: [
+    '^(cat|head|tail|less|more)\\s',
+    '^ls\\b',
+    '^pwd$',
+    '^echo\\s',
+    '^wc\\s',
+    '^find\\s',
+    '^grep\\s',
+    '^rg\\s',
+  ],
+  claudeModel: '',
 };
 
-export type { AgentEvent, AgentResponse, AgentRuntime } from "./agent-runtime.ts";
+export type { AgentEvent, AgentResponse, AgentRuntime } from './agent-runtime.ts';

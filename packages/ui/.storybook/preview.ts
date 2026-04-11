@@ -1,17 +1,17 @@
-import type { Preview } from "@storybook/react-vite";
+import type { Preview } from '@storybook/react-vite';
 import {
-  withSceneLayer,
+  defaultInitialGlobals,
   sceneGlobalType,
   themeGlobalType,
-  defaultInitialGlobals,
-} from "../src/storybook/preview";
+  withSceneLayer,
+} from '../src/storybook/preview';
 
-import "../src/index.css";
-import "./storybook.css";
+import '../src/index.css';
+import './storybook.css';
 
 const preview: Preview = {
   parameters: {
-    layout: "fullscreen",
+    layout: 'fullscreen',
     controls: {
       matchers: {
         color: /(background|color)$/i,

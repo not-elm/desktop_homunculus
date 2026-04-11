@@ -2,11 +2,7 @@
 .detail-thumb {
   width: 100%;
   aspect-ratio: 1 / 1;
-  background: linear-gradient(
-    135deg,
-    oklch(0.22 0.03 250),
-    oklch(0.17 0.02 260)
-  );
+  background: linear-gradient(135deg, oklch(0.22 0.03 250), oklch(0.17 0.02 260));
   border: 1px solid oklch(0.72 0.14 192 / 0.2);
   border-radius: 8px;
   display: flex;

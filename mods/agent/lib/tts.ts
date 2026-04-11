@@ -20,14 +20,14 @@ export function sanitizeForTts(text: string): SanitizeResult {
   if (!text) return { sentences: [], log: [] };
   const log: string[] = [];
   let cleaned = text;
-  cleaned = applyRule(cleaned, /```[\s\S]*?```/g, "", "fenced-code", log);
-  cleaned = applyRule(cleaned, /`[^`]+`/g, "", "inline-code", log);
-  cleaned = applyRule(cleaned, /#{1,6}\s/g, "", "heading", log);
-  cleaned = applyRule(cleaned, /[*_~]{1,3}/g, "", "emphasis", log);
-  cleaned = applyRule(cleaned, /\[([^\]]+)\]\([^)]+\)/g, "$1", "md-link", log);
-  cleaned = applyRule(cleaned, /https?:\/\/\S+/g, "URL省略", "bare-url", log);
+  cleaned = applyRule(cleaned, /```[\s\S]*?```/g, '', 'fenced-code', log);
+  cleaned = applyRule(cleaned, /`[^`]+`/g, '', 'inline-code', log);
+  cleaned = applyRule(cleaned, /#{1,6}\s/g, '', 'heading', log);
+  cleaned = applyRule(cleaned, /[*_~]{1,3}/g, '', 'emphasis', log);
+  cleaned = applyRule(cleaned, /\[([^\]]+)\]\([^)]+\)/g, '$1', 'md-link', log);
+  cleaned = applyRule(cleaned, /https?:\/\/\S+/g, 'URL省略', 'bare-url', log);
   cleaned = expandBrackets(cleaned, log);
-  cleaned = cleaned.replace(/\n{2,}/g, "\n").trim();
+  cleaned = cleaned.replace(/\n{2,}/g, '\n').trim();
   if (!cleaned) return { sentences: [], log };
   const sentences = cleaned
     .split(/(?<=[。！？\n])/)
@@ -45,8 +45,8 @@ export function sanitizeForTts(text: string): SanitizeResult {
  */
 function expandBrackets(text: string, log: string[]): string {
   return text.replace(/[（(]([^）)]*)[）)]/g, (match, content: string, offset: number) => {
-    if (!content) return "";
-    const truncated = match.length > 80 ? match.slice(0, 80) + "…" : match;
+    if (!content) return '';
+    const truncated = match.length > 80 ? `${match.slice(0, 80)}…` : match;
     log.push(`[bracket] expanded: ${truncated}`);
     return offset === 0 ? `${content}、` : `、${content}、`;
   });
@@ -62,7 +62,7 @@ function applyRule(
   const matches = text.match(pattern);
   if (!matches) return text;
   for (const match of matches) {
-    const truncated = match.length > 80 ? match.slice(0, 80) + "…" : match;
+    const truncated = match.length > 80 ? `${match.slice(0, 80)}…` : match;
     log.push(`[${ruleName}] removed: ${truncated}`);
   }
   return text.replace(pattern, replacement);

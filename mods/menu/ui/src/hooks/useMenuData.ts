@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Webview, mods } from "@hmcs/sdk";
+import { mods, Webview } from '@hmcs/sdk';
+import { useEffect, useState } from 'react';
 
 export interface MenuItemData {
   id: string;
@@ -10,7 +10,7 @@ export interface MenuItemData {
 
 export function useMenuData() {
   const [personaId, setPersonaId] = useState<string | null>(null);
-  const [characterName, setCharacterName] = useState<string>("");
+  const [characterName, setCharacterName] = useState<string>('');
   const [items, setItems] = useState<MenuItemData[]>([]);
 
   useEffect(() => {
@@ -26,7 +26,7 @@ export function useMenuData() {
         setPersonaId(linked.id);
         try {
           const name = await linked.name();
-          if (!cancelled) setCharacterName(name ?? "");
+          if (!cancelled) setCharacterName(name ?? '');
         } catch {
           /* name is optional for the HUD */
         }

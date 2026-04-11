@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import type { PttKey } from "../settings/hooks/useSettingsDraft";
-import { formatPttKeyName } from "../utils/format-ptt-key";
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { PttKey } from '../settings/hooks/useSettingsDraft';
+import { formatPttKeyName } from '../utils/format-ptt-key';
 
 interface KeyCaptureFieldProps {
   label: string;
@@ -9,20 +9,15 @@ interface KeyCaptureFieldProps {
   onChange: (key: PttKey | null) => void;
 }
 
-export function KeyCaptureField({
-  label,
-  description,
-  pttKey,
-  onChange,
-}: KeyCaptureFieldProps) {
+export function KeyCaptureField({ label, description, pttKey, onChange }: KeyCaptureFieldProps) {
   const [capturing, setCapturing] = useState(false);
   const [displayName, setDisplayName] = useState<string>(
-    pttKey !== null ? formatPttKeyName(pttKey) : "None",
+    pttKey !== null ? formatPttKeyName(pttKey) : 'None',
   );
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setDisplayName(pttKey !== null ? formatPttKeyName(pttKey) : "None");
+    setDisplayName(pttKey !== null ? formatPttKeyName(pttKey) : 'None');
   }, [pttKey]);
 
   const startCapture = useCallback(() => {
@@ -56,28 +51,29 @@ export function KeyCaptureField({
     setCapturing(false);
   }, []);
 
-  const showWarning = pttKey !== null && isModifierCode(pttKey.code) && pttKey.modifiers.length === 0;
+  const showWarning =
+    pttKey !== null && isModifierCode(pttKey.code) && pttKey.modifiers.length === 0;
 
   return (
     <div className="settings-label">
       {label}
-      {description && (
-        <span className="settings-label-desc">{description}</span>
-      )}
+      {description && <span className="settings-label-desc">{description}</span>}
       <div
         ref={containerRef}
-        className={`agent-key-capture${capturing ? " agent-key-capture--capturing" : ""}`}
+        className={`agent-key-capture${capturing ? ' agent-key-capture--capturing' : ''}`}
         tabIndex={0}
         onClick={startCapture}
         onKeyDown={handleKeyDown}
         onKeyUp={handleKeyUp}
         onBlur={handleBlur}
         role="button"
-        aria-label={capturing ? "Press a key to capture" : `Current key: ${displayName}. Click to change.`}
+        aria-label={
+          capturing ? 'Press a key to capture' : `Current key: ${displayName}. Click to change.`
+        }
       >
         <span className="agent-key-badge">{displayName}</span>
         <span className="agent-key-hint">
-          {capturing ? "Press any key..." : "Click to capture"}
+          {capturing ? 'Press any key...' : 'Click to capture'}
         </span>
       </div>
       {showWarning && (
@@ -90,10 +86,14 @@ export function KeyCaptureField({
 }
 
 const MODIFIER_CODES = new Set([
-  "ControlLeft", "ControlRight",
-  "ShiftLeft", "ShiftRight",
-  "AltLeft", "AltRight",
-  "MetaLeft", "MetaRight",
+  'ControlLeft',
+  'ControlRight',
+  'ShiftLeft',
+  'ShiftRight',
+  'AltLeft',
+  'AltRight',
+  'MetaLeft',
+  'MetaRight',
 ]);
 
 function isModifierCode(code: string): boolean {
@@ -106,9 +106,9 @@ function hasActiveModifiers(e: React.KeyboardEvent): boolean {
 
 function collectModifiers(e: React.KeyboardEvent): string[] {
   const mods: string[] = [];
-  if (e.ctrlKey) mods.push("ctrl");
-  if (e.shiftKey) mods.push("shift");
-  if (e.altKey) mods.push("alt");
-  if (e.metaKey) mods.push("meta");
+  if (e.ctrlKey) mods.push('ctrl');
+  if (e.shiftKey) mods.push('shift');
+  if (e.altKey) mods.push('alt');
+  if (e.metaKey) mods.push('meta');
   return mods;
 }

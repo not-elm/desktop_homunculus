@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
-import { audio, preferences, Webview } from "@hmcs/sdk";
+import { audio, preferences, Webview } from '@hmcs/sdk';
+import { useCallback, useEffect, useState } from 'react';
 
-const VOICEVOX_HOST = "http://localhost:50021";
+const VOICEVOX_HOST = 'http://localhost:50021';
 
 const DEFAULTS: VoicevoxSettings = {
   speakerId: 0,
@@ -43,7 +43,7 @@ export function useVoicevoxSettings() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [assetId, setAssetId] = useState<string | null>(null);
-  const [characterName, setCharacterName] = useState("");
+  const [characterName, setCharacterName] = useState('');
   const [invalidSpeaker, setInvalidSpeaker] = useState(false);
 
   const prefsKey = assetId ? `voicevox::${assetId}` : null;
@@ -66,7 +66,7 @@ export function useVoicevoxSettings() {
         ]);
         if (cancelled) return;
 
-        setCharacterName(linked?.name ?? "");
+        setCharacterName(linked?.name ?? '');
 
         if (speakersResult) {
           setConnected(true);
@@ -85,7 +85,7 @@ export function useVoicevoxSettings() {
           }
         }
       } catch (err) {
-        console.error("Failed to initialize:", err);
+        console.error('Failed to initialize:', err);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -103,7 +103,7 @@ export function useVoicevoxSettings() {
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch (err) {
-      console.error("Save failed:", err);
+      console.error('Save failed:', err);
     } finally {
       setSaving(false);
     }
@@ -115,7 +115,7 @@ export function useVoicevoxSettings() {
   }, []);
 
   const handleClose = useCallback(() => {
-    audio.se.play("se:close");
+    audio.se.play('se:close');
     Webview.current()?.close();
   }, []);
 
@@ -163,7 +163,7 @@ async function resolveLinkedPersona(): Promise<{
   const linked = await webview.linkedPersona();
   if (!linked) return null;
   const snapshot = await linked.snapshot();
-  return { name: snapshot.name ?? "", assetId: snapshot.vrmAssetId ?? null };
+  return { name: snapshot.name ?? '', assetId: snapshot.vrmAssetId ?? null };
 }
 
 async function fetchSpeakers(): Promise<VoicevoxSpeaker[] | null> {

@@ -1,21 +1,21 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn } from "storybook/test";
-import { Trash2, LogOut, AlertTriangle } from "lucide-react";
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { AlertTriangle, LogOut, Trash2 } from 'lucide-react';
+import { fn } from 'storybook/test';
 import {
   AlertDialog,
-  AlertDialogTrigger,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogFooter,
-  AlertDialogTitle,
-  AlertDialogDescription,
   AlertDialogAction,
   AlertDialogCancel,
-} from "./alert-dialog";
-import { Button } from "./button";
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from './alert-dialog';
+import { Button } from './button';
 
 const meta = {
-  title: "UI/Overlays/AlertDialog",
+  title: 'UI/Overlays/AlertDialog',
   component: AlertDialog,
   args: {
     onOpenChange: fn(),
@@ -36,8 +36,7 @@ export const Default: Story = {
         <AlertDialogHeader>
           <AlertDialogTitle>Are you sure?</AlertDialogTitle>
           <AlertDialogDescription>
-            This action cannot be undone. Please confirm that you want to
-            proceed.
+            This action cannot be undone. Please confirm that you want to proceed.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -62,8 +61,8 @@ export const Destructive: Story = {
         <AlertDialogHeader>
           <AlertDialogTitle>Delete Account</AlertDialogTitle>
           <AlertDialogDescription>
-            This will permanently delete your account and all associated data.
-            This action cannot be undone.
+            This will permanently delete your account and all associated data. This action cannot be
+            undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -90,8 +89,7 @@ export const SignOut: Story = {
         <AlertDialogHeader>
           <AlertDialogTitle>Sign out?</AlertDialogTitle>
           <AlertDialogDescription>
-            You will be signed out of your current session. Any unsaved changes
-            will be lost.
+            You will be signed out of your current session. Any unsaved changes will be lost.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -119,9 +117,8 @@ export const WithWarning: Story = {
             Reset All Settings
           </AlertDialogTitle>
           <AlertDialogDescription>
-            This will restore all settings to their default values. Your custom
-            keybindings, themes, and preferences will be lost. Installed mods
-            will not be affected.
+            This will restore all settings to their default values. Your custom keybindings, themes,
+            and preferences will be lost. Installed mods will not be affected.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

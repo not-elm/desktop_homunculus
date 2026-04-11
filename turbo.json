@@ -15,7 +15,6 @@
     "test": {
       "dependsOn": ["^build"]
     },
-    "lint": {},
     "docs#build": {
       "outputs": ["build/**"]
     },

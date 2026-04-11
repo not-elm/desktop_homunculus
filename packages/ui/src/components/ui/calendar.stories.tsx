@@ -1,11 +1,11 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn } from "storybook/test";
-import * as React from "react";
-import type { DateRange as DateRangeType } from "react-day-picker";
-import { Calendar } from "./calendar";
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import * as React from 'react';
+import type { DateRange as DateRangeType } from 'react-day-picker';
+import { fn } from 'storybook/test';
+import { Calendar } from './calendar';
 
 const meta = {
-  title: "UI/Display/Calendar",
+  title: 'UI/Display/Calendar',
   component: Calendar,
   args: {
     onDayClick: fn(),
@@ -22,13 +22,7 @@ export const Default: Story = {};
 export const WithSelectedDate: Story = {
   render: function SelectedDateStory() {
     const [date, setDate] = React.useState<Date | undefined>(new Date());
-    return (
-      <Calendar
-        mode="single"
-        selected={date}
-        onSelect={setDate}
-      />
-    );
+    return <Calendar mode="single" selected={date} onSelect={setDate} />;
   },
 };
 
@@ -44,13 +38,7 @@ export const DateRange: Story = {
       to: nextWeek,
     });
 
-    return (
-      <Calendar
-        mode="range"
-        selected={range}
-        onSelect={setRange}
-      />
-    );
+    return <Calendar mode="range" selected={range} onSelect={setRange} />;
   },
 };
 

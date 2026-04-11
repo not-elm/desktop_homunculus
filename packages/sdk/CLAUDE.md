@@ -12,7 +12,7 @@ TypeScript SDK (`@hmcs/sdk`) for building mods and extensions for Desktop Homunc
 pnpm install          # Install dependencies
 pnpm build            # Production build (tsc --noEmit type-check + Rollup bundle)
 pnpm dev              # Watch mode build
-pnpm lint             # ESLint
+pnpm lint             # Biome (runs from repo root)
 ```
 
 No test framework is configured.

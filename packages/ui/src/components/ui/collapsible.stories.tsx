@@ -1,11 +1,11 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn } from "storybook/test";
-import { ChevronsUpDown } from "lucide-react";
-import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "./collapsible";
-import { Button } from "./button";
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { ChevronsUpDown } from 'lucide-react';
+import { fn } from 'storybook/test';
+import { Button } from './button';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './collapsible';
 
 const meta = {
-  title: "UI/Layout/Collapsible",
+  title: 'UI/Layout/Collapsible',
   component: Collapsible,
   args: {
     onOpenChange: fn(),
@@ -32,12 +32,8 @@ export const Default: Story = {
         item-always-visible.vrm
       </div>
       <CollapsibleContent className="space-y-2">
-        <div className="rounded-md border border-border px-4 py-2 text-sm">
-          item-hidden-1.vrma
-        </div>
-        <div className="rounded-md border border-border px-4 py-2 text-sm">
-          item-hidden-2.vrma
-        </div>
+        <div className="rounded-md border border-border px-4 py-2 text-sm">item-hidden-1.vrma</div>
+        <div className="rounded-md border border-border px-4 py-2 text-sm">item-hidden-2.vrma</div>
       </CollapsibleContent>
     </Collapsible>
   ),
@@ -56,16 +52,12 @@ export const DefaultOpen: Story = {
           </Button>
         </CollapsibleTrigger>
       </div>
-      <div className="rounded-md border border-border px-4 py-2 text-sm">
-        Version: 1.0.0
-      </div>
+      <div className="rounded-md border border-border px-4 py-2 text-sm">Version: 1.0.0</div>
       <CollapsibleContent className="space-y-2">
         <div className="rounded-md border border-border px-4 py-2 text-sm">
           Author: Community Contributor
         </div>
-        <div className="rounded-md border border-border px-4 py-2 text-sm">
-          License: MIT
-        </div>
+        <div className="rounded-md border border-border px-4 py-2 text-sm">License: MIT</div>
         <div className="rounded-md border border-border px-4 py-2 text-sm">
           Dependencies: @homunculus/sdk
         </div>
@@ -96,9 +88,7 @@ export const Animated: Story = {
         </div>
         <div className="rounded-md border border-border p-4 text-sm">
           <p className="font-medium">Experimental Features</p>
-          <p className="text-muted-foreground">
-            Try out features that are still in development.
-          </p>
+          <p className="text-muted-foreground">Try out features that are still in development.</p>
         </div>
       </CollapsibleContent>
     </Collapsible>

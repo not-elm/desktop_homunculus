@@ -1,12 +1,12 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Persona, Webview, audio } from "@hmcs/sdk";
-import { PersonaDetailBody } from "@persona/shared/components/PersonaDetailBody";
-import { usePersonaDetail } from "@persona/shared/hooks/usePersonaDetail";
-import { useThumbnailImport } from "@persona/shared/hooks/useThumbnailImport";
-import { AppearanceTab } from "./components/AppearanceTab";
-import { useScale } from "./hooks/useScale";
+import { audio, Persona, Webview } from '@hmcs/sdk';
+import { PersonaDetailBody } from '@persona/shared/components/PersonaDetailBody';
+import { usePersonaDetail } from '@persona/shared/hooks/usePersonaDetail';
+import { useThumbnailImport } from '@persona/shared/hooks/useThumbnailImport';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { AppearanceTab } from './components/AppearanceTab';
+import { useScale } from './hooks/useScale';
 
-type Tab = "persona" | "appearance";
+type Tab = 'persona' | 'appearance';
 
 const NOOP = () => {};
 const DETAIL_CALLBACKS = { onDirtyChange: NOOP, onSaved: NOOP };
@@ -40,7 +40,7 @@ export function App() {
 }
 
 function SettingsContent({ personaId }: { personaId: string }) {
-  const [tab, setTab] = useState<Tab>("persona");
+  const [tab, setTab] = useState<Tab>('persona');
 
   const detail = usePersonaDetail(personaId, DETAIL_CALLBACKS);
   const scaleState = useScale(personaId);
@@ -51,7 +51,7 @@ function SettingsContent({ personaId }: { personaId: string }) {
   const [saved, setSaved] = useState(false);
 
   const handleClose = useCallback(() => {
-    audio.se.play("se:close");
+    audio.se.play('se:close');
     Webview.current()?.close();
   }, []);
 
@@ -64,7 +64,7 @@ function SettingsContent({ personaId }: { personaId: string }) {
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch (err) {
-      console.error("Save failed:", err);
+      console.error('Save failed:', err);
     } finally {
       setSaving(false);
     }
@@ -85,12 +85,12 @@ function SettingsContent({ personaId }: { personaId: string }) {
     );
   }
 
-  const autoSpawn = detail.snapshot.metadata?.["auto-spawn"] === true;
-  const name = detail.snapshot.name ?? "";
+  const autoSpawn = detail.snapshot.metadata?.['auto-spawn'] === true;
+  const name = detail.snapshot.name ?? '';
 
   const tabs: { id: Tab; label: string }[] = [
-    { id: "persona", label: "Persona" },
-    { id: "appearance", label: "Appearance" },
+    { id: 'persona', label: 'Persona' },
+    { id: 'appearance', label: 'Appearance' },
   ];
 
   return (
@@ -115,7 +115,7 @@ function SettingsContent({ personaId }: { personaId: string }) {
         {tabs.map((t) => (
           <button
             key={t.id}
-            className={`settings-tab ${tab === t.id ? "settings-tab--active" : ""}`}
+            className={`settings-tab ${tab === t.id ? 'settings-tab--active' : ''}`}
             onClick={() => setTab(t.id)}
           >
             {t.label}
@@ -125,7 +125,7 @@ function SettingsContent({ personaId }: { personaId: string }) {
 
       {/* Content */}
       <div className="settings-content">
-        {tab === "persona" && (
+        {tab === 'persona' && (
           <PersonaDetailBody
             personaId={personaId}
             thumbnailUrl={persona.thumbnailUrl(detail.thumbnail)}
@@ -138,11 +138,8 @@ function SettingsContent({ personaId }: { personaId: string }) {
             onFormChange={detail.setFormValues}
           />
         )}
-        {tab === "appearance" && (
-          <AppearanceTab
-            scale={scaleState.scale}
-            onScaleChange={scaleState.setScale}
-          />
+        {tab === 'appearance' && (
+          <AppearanceTab scale={scaleState.scale} onScaleChange={scaleState.setScale} />
         )}
       </div>
 
@@ -152,11 +149,11 @@ function SettingsContent({ personaId }: { personaId: string }) {
           Close
         </button>
         <button
-          className={`settings-save ${saved ? "settings-save--success" : ""}`}
+          className={`settings-save ${saved ? 'settings-save--success' : ''}`}
           onClick={handleSave}
           disabled={saving}
         >
-          {saving ? "Saving..." : saved ? "Saved!" : "Save"}
+          {saving ? 'Saving...' : saved ? 'Saved!' : 'Save'}
         </button>
       </div>
     </div>

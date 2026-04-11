@@ -1,5 +1,12 @@
-import { useState, useCallback, useRef, type KeyboardEvent, type ChangeEvent, type CompositionEvent } from "react";
-import { TextareaAutosize } from "@hmcs/ui";
+import { TextareaAutosize } from '@hmcs/ui';
+import {
+  type ChangeEvent,
+  type CompositionEvent,
+  type KeyboardEvent,
+  useCallback,
+  useRef,
+  useState,
+} from 'react';
 
 interface TextInputProps {
   onSend: (text: string) => Promise<void>;
@@ -8,9 +15,9 @@ interface TextInputProps {
 }
 
 export function TextInput({ onSend, isInterruptible, onInterrupt }: TextInputProps) {
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState('');
   const [sending, setSending] = useState(false);
-  const valueRef = useRef("");
+  const valueRef = useRef('');
   const isComposingRef = useRef(false);
 
   const syncValue = (v: string) => {
@@ -18,18 +25,24 @@ export function TextInput({ onSend, isInterruptible, onInterrupt }: TextInputPro
     setValue(v);
   };
 
-  const handleChange = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
-    syncValue(e.target.value);
-  }, []);
+  const handleChange = useCallback(
+    (e: ChangeEvent<HTMLTextAreaElement>) => {
+      syncValue(e.target.value);
+    },
+    [syncValue],
+  );
 
   const handleCompositionStart = useCallback(() => {
     isComposingRef.current = true;
   }, []);
 
-  const handleCompositionEnd = useCallback((e: CompositionEvent<HTMLTextAreaElement>) => {
-    isComposingRef.current = false;
-    syncValue(e.currentTarget.value);
-  }, []);
+  const handleCompositionEnd = useCallback(
+    (e: CompositionEvent<HTMLTextAreaElement>) => {
+      isComposingRef.current = false;
+      syncValue(e.currentTarget.value);
+    },
+    [syncValue],
+  );
 
   const handleSend = useCallback(async () => {
     const text = valueRef.current.trim();
@@ -37,18 +50,21 @@ export function TextInput({ onSend, isInterruptible, onInterrupt }: TextInputPro
     setSending(true);
     try {
       await onSend(text);
-      syncValue("");
+      syncValue('');
     } finally {
       setSending(false);
     }
-  }, [sending, onSend]);
+  }, [sending, onSend, syncValue]);
 
-  const handleKeyDown = useCallback((e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey && !isComposingRef.current) {
-      e.preventDefault();
-      handleSend();
-    }
-  }, [handleSend]);
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLTextAreaElement>) => {
+      if (e.key === 'Enter' && !e.shiftKey && !isComposingRef.current) {
+        e.preventDefault();
+        handleSend();
+      }
+    },
+    [handleSend],
+  );
 
   return (
     <div className="hud-text-input">

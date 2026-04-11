@@ -12,7 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 pnpm build           # Vite library build → dist/ (ES + UMD + rolled .d.ts)
 pnpm dev             # Vite build --watch
 pnpm check-types     # tsc --noEmit
-pnpm lint            # ESLint
+pnpm lint            # Biome (runs from repo root)
 ```
 
 After changes here, rebuild consumers: `pnpm turbo run build` from the repo root, or rebuild individual mod UIs.

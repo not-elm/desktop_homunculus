@@ -1,13 +1,13 @@
 import {
   AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogFooter,
-  AlertDialogTitle,
-  AlertDialogDescription,
   AlertDialogAction,
   AlertDialogCancel,
-} from "@hmcs/ui";
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@hmcs/ui';
 
 interface RemoveWorkspaceDialogProps {
   path: string;
@@ -23,7 +23,12 @@ export function RemoveWorkspaceDialog({
   onCancel,
 }: RemoveWorkspaceDialogProps) {
   return (
-    <AlertDialog open onOpenChange={(open) => { if (!open) onCancel(); }}>
+    <AlertDialog
+      open
+      onOpenChange={(open) => {
+        if (!open) onCancel();
+      }}
+    >
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Remove workspace from list?</AlertDialogTitle>
@@ -33,8 +38,7 @@ export function RemoveWorkspaceDialog({
               <>
                 <br />
                 This will also remove {worktreeCount} associated worktree
-                {worktreeCount > 1 ? "s" : ""} from the list. Files on disk are
-                not deleted.
+                {worktreeCount > 1 ? 's' : ''} from the list. Files on disk are not deleted.
               </>
             )}
           </AlertDialogDescription>

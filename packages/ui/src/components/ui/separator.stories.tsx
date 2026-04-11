@@ -1,20 +1,20 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn } from "storybook/test";
-import { Separator } from "./separator";
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { fn } from 'storybook/test';
+import { Separator } from './separator';
 
 const meta = {
-  title: "UI/Layout/Separator",
+  title: 'UI/Layout/Separator',
   component: Separator,
   args: {
     onClick: fn(),
   },
   argTypes: {
     orientation: {
-      control: "select",
-      options: ["horizontal", "vertical"],
+      control: 'select',
+      options: ['horizontal', 'vertical'],
     },
     decorative: {
-      control: "boolean",
+      control: 'boolean',
     },
   },
 } satisfies Meta<typeof Separator>;
@@ -39,23 +39,17 @@ export const Horizontal: Story = {
     <div className="w-[300px] space-y-4">
       <div>
         <h4 className="text-sm font-medium">Section One</h4>
-        <p className="text-sm text-muted-foreground">
-          First section content goes here.
-        </p>
+        <p className="text-sm text-muted-foreground">First section content goes here.</p>
       </div>
       <Separator />
       <div>
         <h4 className="text-sm font-medium">Section Two</h4>
-        <p className="text-sm text-muted-foreground">
-          Second section content goes here.
-        </p>
+        <p className="text-sm text-muted-foreground">Second section content goes here.</p>
       </div>
       <Separator />
       <div>
         <h4 className="text-sm font-medium">Section Three</h4>
-        <p className="text-sm text-muted-foreground">
-          Third section content goes here.
-        </p>
+        <p className="text-sm text-muted-foreground">Third section content goes here.</p>
       </div>
     </div>
   ),

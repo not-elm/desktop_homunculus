@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { Persona, type PersonaSnapshot } from "@hmcs/sdk";
-import type { PersonaFormValues } from "@persona/shared/components/PersonaFields";
+import { Persona, type PersonaSnapshot } from '@hmcs/sdk';
+import type { PersonaFormValues } from '@persona/shared/components/PersonaFields';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 export interface UsePersonaDetailReturn {
   snapshot: PersonaSnapshot | null;
@@ -20,12 +20,12 @@ export interface UsePersonaDetailReturn {
 
 function snapshotToFormValues(snapshot: PersonaSnapshot): PersonaFormValues {
   return {
-    name: snapshot.name ?? "",
+    name: snapshot.name ?? '',
     age: snapshot.age ?? null,
     gender: snapshot.gender,
-    firstPersonPronoun: snapshot.firstPersonPronoun ?? "",
+    firstPersonPronoun: snapshot.firstPersonPronoun ?? '',
     profile: snapshot.profile,
-    personality: snapshot.personality ?? "",
+    personality: snapshot.personality ?? '',
   };
 }
 
@@ -63,7 +63,7 @@ export function usePersonaDetail(
       initialVrm.current = snap.vrmAssetId ?? null;
       initialThumbnail.current = snap.thumbnail ?? null;
     } catch (e) {
-      console.error("Failed to load persona:", e);
+      console.error('Failed to load persona:', e);
     }
   }, [personaId]);
 
@@ -119,7 +119,7 @@ export function usePersonaDetail(
       }
       return true;
     } catch (e) {
-      console.error("Failed to save persona:", e);
+      console.error('Failed to save persona:', e);
       return false;
     }
   }
@@ -135,7 +135,7 @@ export function usePersonaDetail(
     } finally {
       setSaving(false);
     }
-  }, [saving, formValues, vrmAssetId, thumbnail, snapshot, callbacks]);
+  }, [saving, callbacks, saveDraft]);
 
   const toggleSpawn = useCallback(async () => {
     if (!snapshot) return;
@@ -150,21 +150,21 @@ export function usePersonaDetail(
       await loadSnapshot();
       callbacks.onSaved();
     } catch (e) {
-      console.error("Failed to toggle spawn:", e);
+      console.error('Failed to toggle spawn:', e);
     }
-  }, [snapshot, persona, formValues, vrmAssetId, callbacks, loadSnapshot]);
+  }, [snapshot, persona, callbacks, loadSnapshot, saveDraft]);
 
   const toggleAutoSpawn = useCallback(async () => {
     if (!snapshot) return;
-    const current = snapshot.metadata?.["auto-spawn"] === true;
+    const current = snapshot.metadata?.['auto-spawn'] === true;
     try {
       await persona.patch({
-        metadata: { ...(snapshot.metadata ?? {}), "auto-spawn": !current },
+        metadata: { ...(snapshot.metadata ?? {}), 'auto-spawn': !current },
       });
       await loadSnapshot();
       callbacks.onSaved();
     } catch (e) {
-      console.error("Failed to toggle auto-spawn:", e);
+      console.error('Failed to toggle auto-spawn:', e);
     }
   }, [snapshot, persona, loadSnapshot, callbacks]);
 

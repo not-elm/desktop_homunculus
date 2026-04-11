@@ -8,10 +8,10 @@ export type Decision = string | Record<string, unknown>;
  * requests, completion, and errors back to the caller.
  */
 export type AgentEvent =
-  | { type: "assistant_message"; text: string }
-  | { type: "tool_use"; tool: string; summary: string }
+  | { type: 'assistant_message'; text: string }
+  | { type: 'tool_use'; tool: string; summary: string }
   | {
-      type: "permission_request";
+      type: 'permission_request';
       requestId: string;
       tool: string;
       input: unknown;
@@ -24,14 +24,14 @@ export type AgentEvent =
       availableDecisions?: Decision[];
     }
   | {
-      type: "elicitation_request";
+      type: 'elicitation_request';
       requestId: string;
       serverName: string;
       message: string;
       schema?: unknown;
     }
-  | { type: "completed"; sessionId: string }
-  | { type: "error"; message: string };
+  | { type: 'completed'; sessionId: string }
+  | { type: 'error'; message: string };
 
 /**
  * Responses sent back into the generator via `next()`.
@@ -42,7 +42,7 @@ export type AgentEvent =
  */
 export type AgentResponse =
   | {
-      type: "permission";
+      type: 'permission';
       approved: boolean;
       message?: string;
       updatedPermissions?: unknown[];
@@ -50,8 +50,8 @@ export type AgentResponse =
       decision?: string | Record<string, unknown>;
     }
   | {
-      type: "elicitation";
-      action: "accept" | "decline" | "cancel";
+      type: 'elicitation';
+      action: 'accept' | 'decline' | 'cancel';
       values?: Record<string, string>;
       /** Structured content for MCP elicitation (AppServer only). */
       content?: unknown;

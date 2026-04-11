@@ -1,19 +1,19 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react-swc";
-import tailwindcss from "@tailwindcss/vite";
-import { viteSingleFile } from "vite-plugin-singlefile";
-import path from "path";
+import path from 'node:path';
+import tailwindcss from '@tailwindcss/vite';
+import react from '@vitejs/plugin-react-swc';
+import { defineConfig } from 'vite';
+import { viteSingleFile } from 'vite-plugin-singlefile';
 
 export default defineConfig({
   plugins: [react(), tailwindcss(), viteSingleFile()],
   resolve: {
     alias: {
-      "@persona/shared": path.resolve(__dirname, "../shared"),
+      '@persona/shared': path.resolve(__dirname, '../shared'),
     },
-    dedupe: ["react", "react-dom", "react/jsx-runtime"],
+    dedupe: ['react', 'react-dom', 'react/jsx-runtime'],
   },
   build: {
-    outDir: "dist",
+    outDir: 'dist',
     emptyOutDir: true,
     assetsInlineLimit: 100000,
     cssCodeSplit: false,

@@ -1,12 +1,7 @@
-import { useRef } from "react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@hmcs/ui";
-import { useMenuData } from "./hooks/useMenuData";
-import { useMenuActions } from "./hooks/useMenuActions";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@hmcs/ui';
+import { useRef } from 'react';
+import { useMenuActions } from './hooks/useMenuActions';
+import { useMenuData } from './hooks/useMenuData';
 
 export function App() {
   const { personaId, characterName, items } = useMenuData();
@@ -47,16 +42,12 @@ export function App() {
         )}
 
         {/* Action card grid */}
-        <div
-          className={
-            useGrid ? "menu-card-grid" : "menu-card-grid menu-card-grid--list"
-          }
-        >
+        <div className={useGrid ? 'menu-card-grid' : 'menu-card-grid menu-card-grid--list'}>
           {items.map((item, i) => (
             <DropdownMenuItem
               key={item.id}
               className="menu-card menu-card-stagger"
-              style={{ "--i": i } as React.CSSProperties}
+              style={{ '--i': i } as React.CSSProperties}
               onSelect={() => handleSelect(item)}
             >
               <span className="menu-card-label">{item.text}</span>

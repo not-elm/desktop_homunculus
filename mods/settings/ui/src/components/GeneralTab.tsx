@@ -39,9 +39,7 @@ export function GeneralTab({ fps, setFps, alpha, setAlpha }: GeneralTabProps) {
             value={alpha}
             onChange={(e) => setAlpha(Number(e.target.value))}
           />
-          <span className="settings-slider-value">
-            {Math.round(alpha * 100)}%
-          </span>
+          <span className="settings-slider-value">{Math.round(alpha * 100)}%</span>
         </div>
         <span className="settings-description">
           Controls the transparency of the shadow panel overlay behind the character.

@@ -1,10 +1,10 @@
-import { z } from "zod";
-import { Persona, type PersonaVrm, preferences } from "@hmcs/sdk";
-import { rpc } from "@hmcs/sdk/rpc";
-import { voicevoxToTimeline } from "./lib/timeline.ts";
-import { fetchWithTimeout } from "./lib/utils.ts";
+import { Persona, type PersonaVrm, preferences } from '@hmcs/sdk';
+import { rpc } from '@hmcs/sdk/rpc';
+import { z } from 'zod';
+import { voicevoxToTimeline } from './lib/timeline.ts';
+import { fetchWithTimeout } from './lib/utils.ts';
 
-const VOICEVOX_HOST = "http://localhost:50021";
+const VOICEVOX_HOST = 'http://localhost:50021';
 const FETCH_TIMEOUT_MS = 30_000;
 
 const DEFAULTS = {
@@ -67,11 +67,7 @@ async function ensureSpeakerInitialized(speakerId: number): Promise<void> {
 
 async function warmupSpeaker(speakerId: number): Promise<void> {
   const url = `${VOICEVOX_HOST}/initialize_speaker?speaker=${speakerId}`;
-  const response = await fetchWithTimeout(
-    url,
-    { method: "POST" },
-    FETCH_TIMEOUT_MS,
-  );
+  const response = await fetchWithTimeout(url, { method: 'POST' }, FETCH_TIMEOUT_MS);
   if (!response.ok) {
     throw new Error(`/initialize_speaker returned ${response.status}`);
   }
@@ -89,9 +85,7 @@ async function resolveAssetId(personaId: string): Promise<string | null> {
 
 async function loadSettings(assetId: string | null): Promise<VoicevoxSettings> {
   if (!assetId) return { ...DEFAULTS };
-  const saved = await preferences.load<VoicevoxSettings>(
-    `voicevox::${assetId}`,
-  );
+  const saved = await preferences.load<VoicevoxSettings>(`voicevox::${assetId}`);
   return saved ? { ...DEFAULTS, ...saved } : { ...DEFAULTS };
 }
 
@@ -111,27 +105,18 @@ async function speakSentence(
   }
 }
 
-async function fetchAudioQuery(
-  sentence: string,
-  speakerId: number,
-): Promise<any> {
+async function fetchAudioQuery(sentence: string, speakerId: number): Promise<any> {
   const url = `${VOICEVOX_HOST}/audio_query?speaker=${speakerId}&text=${encodeURIComponent(sentence)}`;
   let response: Response;
   try {
-    response = await fetchWithTimeout(
-      url,
-      { method: "POST" },
-      FETCH_TIMEOUT_MS,
-    );
+    response = await fetchWithTimeout(url, { method: 'POST' }, FETCH_TIMEOUT_MS);
   } catch (err) {
     clearInitializedSpeakers();
     const error = err as Error;
-    throw new Error(
-      `VoiceVox unreachable at ${VOICEVOX_HOST}: ${error.message}`,
-    );
+    throw new Error(`VoiceVox unreachable at ${VOICEVOX_HOST}: ${error.message}`);
   }
   if (!response.ok) {
-    const body = await response.text().catch(() => "");
+    const body = await response.text().catch(() => '');
     throw new Error(`audio_query failed (${response.status}): ${body}`);
   }
   return response.json();
@@ -162,8 +147,8 @@ async function synthesize(query: any, speakerId: number): Promise<ArrayBuffer> {
     response = await fetchWithTimeout(
       url,
       {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(query),
       },
       FETCH_TIMEOUT_MS,
@@ -171,12 +156,10 @@ async function synthesize(query: any, speakerId: number): Promise<ArrayBuffer> {
   } catch (err) {
     clearInitializedSpeakers();
     const error = err as Error;
-    throw new Error(
-      `VoiceVox unreachable at ${VOICEVOX_HOST}: ${error.message}`,
-    );
+    throw new Error(`VoiceVox unreachable at ${VOICEVOX_HOST}: ${error.message}`);
   }
   if (!response.ok) {
-    const body = await response.text().catch(() => "");
+    const body = await response.text().catch(() => '');
     throw new Error(`synthesis failed (${response.status}): ${body}`);
   }
   return response.arrayBuffer();
@@ -185,8 +168,7 @@ async function synthesize(query: any, speakerId: number): Promise<ArrayBuffer> {
 await rpc.serve({
   methods: {
     speak: rpc.method({
-      description:
-        "Make a character speak text with lip-synced audio via VoiceVox TTS",
+      description: 'Make a character speak text with lip-synced audio via VoiceVox TTS',
       timeout: 300_000,
       input: z.object({
         personaId: z.string().min(1),

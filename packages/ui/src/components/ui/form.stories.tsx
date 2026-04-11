@@ -1,8 +1,10 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn } from "storybook/test";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodResolver } from '@hookform/resolvers/zod';
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { useForm } from 'react-hook-form';
+import { fn } from 'storybook/test';
+import { z } from 'zod';
+import { Button } from './button';
+import { Checkbox } from './checkbox';
 import {
   Form,
   FormControl,
@@ -11,22 +13,14 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "./form";
-import { Input } from "./input";
-import { Textarea } from "./textarea";
-import { Checkbox } from "./checkbox";
-import { Label } from "./label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "./select";
-import { Button } from "./button";
+} from './form';
+import { Input } from './input';
+import { Label } from './label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './select';
+import { Textarea } from './textarea';
 
 const meta: Meta = {
-  title: "UI/Forms/Form",
+  title: 'UI/Forms/Form',
 };
 
 export default meta;
@@ -35,8 +29,8 @@ type Story = StoryObj;
 const onSubmitAction = fn();
 
 const basicSchema = z.object({
-  username: z.string().min(3, "Username must be at least 3 characters"),
-  email: z.string().email("Please enter a valid email address"),
+  username: z.string().min(3, 'Username must be at least 3 characters'),
+  email: z.string().email('Please enter a valid email address'),
 });
 
 type BasicFormValues = z.infer<typeof basicSchema>;
@@ -46,17 +40,14 @@ function BasicFormExample() {
     // @ts-expect-error — @hookform/resolvers@5.2.2 types incompatible with zod v4.3.x
     resolver: zodResolver(basicSchema),
     defaultValues: {
-      username: "",
-      email: "",
+      username: '',
+      email: '',
     },
   });
 
   return (
     <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmitAction)}
-        className="w-96 space-y-4"
-      >
+      <form onSubmit={form.handleSubmit(onSubmitAction)} className="w-96 space-y-4">
         <FormField
           control={form.control}
           name="username"
@@ -66,9 +57,7 @@ function BasicFormExample() {
               <FormControl>
                 <Input placeholder="Enter username" {...field} />
               </FormControl>
-              <FormDescription>
-                Your public display name.
-              </FormDescription>
+              <FormDescription>Your public display name.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -82,9 +71,7 @@ function BasicFormExample() {
               <FormControl>
                 <Input type="email" placeholder="you@example.com" {...field} />
               </FormControl>
-              <FormDescription>
-                We will never share your email.
-              </FormDescription>
+              <FormDescription>We will never share your email.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -101,11 +88,11 @@ export const Default: Story = {
 };
 
 const profileSchema = z.object({
-  displayName: z.string().min(2, "Display name is required"),
-  bio: z.string().max(160, "Bio must be 160 characters or less").optional(),
-  role: z.string().min(1, "Please select a role"),
+  displayName: z.string().min(2, 'Display name is required'),
+  bio: z.string().max(160, 'Bio must be 160 characters or less').optional(),
+  role: z.string().min(1, 'Please select a role'),
   agreeToTerms: z.literal(true, {
-    error: "You must agree to the terms",
+    error: 'You must agree to the terms',
   }),
 });
 
@@ -116,19 +103,16 @@ function ProfileFormExample() {
     // @ts-expect-error — @hookform/resolvers@5.2.2 types incompatible with zod v4.3.x
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      displayName: "",
-      bio: "",
-      role: "",
+      displayName: '',
+      bio: '',
+      role: '',
       agreeToTerms: undefined as unknown as true,
     },
   });
 
   return (
     <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmitAction)}
-        className="w-96 space-y-4"
-      >
+      <form onSubmit={form.handleSubmit(onSubmitAction)} className="w-96 space-y-4">
         <FormField
           control={form.control}
           name="displayName"
@@ -149,10 +133,7 @@ function ProfileFormExample() {
             <FormItem>
               <FormLabel>Bio</FormLabel>
               <FormControl>
-                <Textarea
-                  placeholder="Tell us about yourself"
-                  {...field}
-                />
+                <Textarea placeholder="Tell us about yourself" {...field} />
               </FormControl>
               <FormDescription>
                 Brief description for your profile. Max 160 characters.
@@ -190,10 +171,7 @@ function ProfileFormExample() {
             <FormItem>
               <div className="flex items-center gap-2">
                 <FormControl>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
+                  <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                 </FormControl>
                 <Label>I agree to the terms and conditions</Label>
               </div>
@@ -213,8 +191,8 @@ export const ProfileForm: Story = {
 };
 
 const prefilledSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  email: z.string().email("Invalid email"),
+  name: z.string().min(1, 'Name is required'),
+  email: z.string().email('Invalid email'),
 });
 
 type PrefilledFormValues = z.infer<typeof prefilledSchema>;
@@ -224,17 +202,14 @@ function PrefilledFormExample() {
     // @ts-expect-error — @hookform/resolvers@5.2.2 types incompatible with zod v4.3.x
     resolver: zodResolver(prefilledSchema),
     defaultValues: {
-      name: "Jane Doe",
-      email: "jane@example.com",
+      name: 'Jane Doe',
+      email: 'jane@example.com',
     },
   });
 
   return (
     <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmitAction)}
-        className="w-96 space-y-4"
-      >
+      <form onSubmit={form.handleSubmit(onSubmitAction)} className="w-96 space-y-4">
         <FormField
           control={form.control}
           name="name"
@@ -275,17 +250,14 @@ export const Prefilled: Story = {
 function FormWithDescriptionsExample() {
   const form = useForm({
     defaultValues: {
-      apiKey: "",
-      webhook: "",
+      apiKey: '',
+      webhook: '',
     },
   });
 
   return (
     <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmitAction)}
-        className="w-96 space-y-4"
-      >
+      <form onSubmit={form.handleSubmit(onSubmitAction)} className="w-96 space-y-4">
         <FormField
           control={form.control}
           name="apiKey"
@@ -295,9 +267,7 @@ function FormWithDescriptionsExample() {
               <FormControl>
                 <Input type="password" placeholder="sk-..." {...field} />
               </FormControl>
-              <FormDescription>
-                Your secret API key. Keep it safe.
-              </FormDescription>
+              <FormDescription>Your secret API key. Keep it safe.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -309,15 +279,9 @@ function FormWithDescriptionsExample() {
             <FormItem>
               <FormLabel>Webhook URL</FormLabel>
               <FormControl>
-                <Input
-                  type="url"
-                  placeholder="https://example.com/webhook"
-                  {...field}
-                />
+                <Input type="url" placeholder="https://example.com/webhook" {...field} />
               </FormControl>
-              <FormDescription>
-                Events will be sent to this URL via POST.
-              </FormDescription>
+              <FormDescription>Events will be sent to this URL via POST.</FormDescription>
               <FormMessage />
             </FormItem>
           )}

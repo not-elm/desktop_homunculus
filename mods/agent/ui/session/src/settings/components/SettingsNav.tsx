@@ -1,5 +1,5 @@
-import { MessageSquareText, Settings /* ShieldCheck */ } from "lucide-react";
-import type { SettingsCategory } from "../types";
+import { MessageSquareText, Settings /* ShieldCheck */ } from 'lucide-react';
+import type { SettingsCategory } from '../types';
 
 interface SettingsNavProps {
   activeCategory: SettingsCategory | null;
@@ -7,22 +7,22 @@ interface SettingsNavProps {
 }
 
 const NAV_ITEMS: { category: SettingsCategory; label: string; icon: React.ElementType }[] = [
-  { category: "phrases", label: "Phrases", icon: MessageSquareText },
+  { category: 'phrases', label: 'Phrases', icon: MessageSquareText },
   // { category: "permissions", label: "Permissions", icon: ShieldCheck },
-  { category: "backend", label: "Backend", icon: Settings },
+  { category: 'backend', label: 'Backend', icon: Settings },
 ];
 
 export function SettingsNav({ activeCategory, onSelect }: SettingsNavProps) {
   return (
     <nav className="stg-nav" aria-label="Settings">
       <div className="stg-nav-label">Settings</div>
-      <ul role="list" className="stg-nav-list">
+      <ul className="stg-nav-list">
         {NAV_ITEMS.map(({ category, label, icon: Icon }) => (
           <li key={category}>
             <button
-              className={`stg-nav-item${activeCategory === category ? " stg-nav-item--active" : ""}`}
+              className={`stg-nav-item${activeCategory === category ? ' stg-nav-item--active' : ''}`}
               type="button"
-              aria-current={activeCategory === category ? "true" : undefined}
+              aria-current={activeCategory === category ? 'true' : undefined}
               onClick={() => onSelect(category)}
             >
               <Icon className="stg-nav-icon" />
