@@ -30,6 +30,7 @@ test:
 
 fix-lint:
 	$(MAKE) -C engine fix-lint
+	pnpm lint:fix
 
 gen-open-api:
 	$(MAKE) -C engine gen-open-api
