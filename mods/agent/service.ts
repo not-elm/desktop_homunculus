@@ -12,13 +12,13 @@ import { CodexAppServerRuntime } from './lib/codex-appserver-runtime.ts';
 import { currentBranch, gitExec, isGitRepo, listBranches } from './lib/git.ts';
 import { type ResolvedPttKey, resolvePttKeycodes } from './lib/key-mapping.ts';
 import { isComboHeld, KeyboardHookService, waitForComboRelease } from './lib/keyboard-hook.ts';
+import { DEFAULT_PERMISSION_SE, resolvePermissionSeAsset } from './lib/permission-se.ts';
 import { buildPersonaPrompt, buildSessionContext, type WorktreeContext } from './lib/prompt.ts';
 import {
   type PersistLogEntry,
   type SessionHandle,
   SessionPersistence,
 } from './lib/session-persistence.ts';
-import { DEFAULT_PERMISSION_SE, resolvePermissionSeAsset } from './lib/permission-se.ts';
 import { sanitizeForTts } from './lib/tts.ts';
 import {
   type AgentSettings,

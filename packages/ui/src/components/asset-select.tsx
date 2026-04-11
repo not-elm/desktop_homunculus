@@ -28,9 +28,7 @@ export interface AssetSelectProps {
   className?: string;
 }
 
-function isGrouped(
-  items: AssetSelectItem[] | AssetSelectGroup[],
-): items is AssetSelectGroup[] {
+function isGrouped(items: AssetSelectItem[] | AssetSelectGroup[]): items is AssetSelectGroup[] {
   return items.length > 0 && 'label' in items[0];
 }
 
@@ -58,9 +56,7 @@ function ItemButton({
       <span className="flex flex-col">
         <span>{id}</span>
         {description && (
-          <span className="block text-[10px] font-sans text-muted-foreground">
-            {description}
-          </span>
+          <span className="block text-[10px] font-sans text-muted-foreground">{description}</span>
         )}
       </span>
     </button>
@@ -162,9 +158,7 @@ export function AssetSelect({
               !value && 'text-muted-foreground/60',
             )}
           >
-            <span className="truncate font-mono tracking-wide">
-              {value ?? placeholder}
-            </span>
+            <span className="truncate font-mono tracking-wide">{value ?? placeholder}</span>
             <ChevronDownIcon className="size-4 shrink-0 opacity-50" />
           </PopoverPrimitive.Trigger>
           {renderAction?.()}
@@ -180,15 +174,9 @@ export function AssetSelect({
             )}
           >
             {allowNone && (
-              <ItemButton
-                id={noneLabel}
-                selected={value === null}
-                onSelect={handleSelectNone}
-              />
+              <ItemButton id={noneLabel} selected={value === null} onSelect={handleSelectNone} />
             )}
-            {allowNone && hasItems && (
-              <div className="holo-separator -mx-1 my-1 h-px" />
-            )}
+            {allowNone && hasItems && <div className="holo-separator -mx-1 my-1 h-px" />}
             {isGrouped(items) ? (
               items.map((group) => (
                 <GroupSection

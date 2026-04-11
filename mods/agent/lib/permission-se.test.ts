@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { resolvePermissionSeAsset, DEFAULT_PERMISSION_SE } from './permission-se';
+import { DEFAULT_PERMISSION_SE, resolvePermissionSeAsset } from './permission-se';
 
 describe('resolvePermissionSeAsset', () => {
   it('returns default SE when metadata has no permissionSe key', () => {

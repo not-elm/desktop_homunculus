@@ -25,7 +25,12 @@ export function PermissionSeField() {
             <button
               type="button"
               className="settings-input"
-              style={{ padding: '4px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+              style={{
+                padding: '4px 8px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+              }}
               onClick={() => audio.se.play(value).catch(() => {})}
               title="Preview"
             >
