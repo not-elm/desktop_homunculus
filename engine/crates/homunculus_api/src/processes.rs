@@ -81,9 +81,7 @@ impl ProcessesApi {
     /// List all running managed processes.
     pub async fn list(&self) -> ApiResult<Vec<ProcessInfo>> {
         self.0
-            .schedule(move |task| async move {
-                task.will(Update, once::run(list_processes)).await
-            })
+            .schedule(move |task| async move { task.will(Update, once::run(list_processes)).await })
             .await
     }
 }

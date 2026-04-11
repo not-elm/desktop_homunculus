@@ -25,8 +25,8 @@
 //! ```
 
 mod load;
-mod mod_asset_reader;
 pub mod managed_process;
+mod mod_asset_reader;
 pub mod mod_service;
 pub mod node_process;
 
