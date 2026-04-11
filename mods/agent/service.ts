@@ -1,46 +1,24 @@
 import { mkdirSync } from 'node:fs';
 import { homedir } from 'node:os';
 import path from 'node:path';
-import { audio, preferences, Persona as SdkPersona, signals, stt } from '@hmcs/sdk';
+import { preferences, Persona as SdkPersona, signals } from '@hmcs/sdk';
 import { rpc } from '@hmcs/sdk/rpc';
 import { z } from 'zod';
-import type { AgentEvent, AgentResponse, AgentRuntime } from './lib/runtime/agent-runtime.ts';
-import { AsyncQueue, Deferred } from './lib/async-queue.ts';
-import { CodexAppServerProcess } from './lib/runtime/codex-appserver-process.ts';
-import { createWorkerRuntime } from './lib/worker.ts';
 import { currentBranch, gitExec, isGitRepo, listBranches } from './lib/git.ts';
 import { type ResolvedPttKey, resolvePttKeycodes } from './lib/key-mapping.ts';
-import { isComboHeld, KeyboardHookService, waitForComboRelease } from './lib/keyboard-hook.ts';
-import { DEFAULT_PERMISSION_SE, resolvePermissionSeAsset } from './lib/permission-se.ts';
+import { KeyboardHookService } from './lib/keyboard-hook.ts';
 import { buildPersonaPrompt, buildSessionContext, type WorktreeContext } from './lib/prompt.ts';
-import {
-  type PersistLogEntry,
-  type SessionHandle,
-  SessionPersistence,
-} from './lib/session-persistence.ts';
-import { sanitizeForTts } from './lib/tts.ts';
-import {
-  type AgentSettings,
-  type AgentStatus,
-  DEFAULT_SETTINGS,
-  type Persona,
-} from './lib/types.ts';
+import type { AgentRuntime } from './lib/runtime/agent-runtime.ts';
+import { CodexAppServerProcess } from './lib/runtime/codex-appserver-process.ts';
+import { SessionManager } from './lib/session-manager.ts';
+import { type PersistLogEntry, SessionPersistence } from './lib/session-persistence.ts';
+import { type AgentSettings, DEFAULT_SETTINGS, type Persona } from './lib/types.ts';
+import { createWorkerRuntime } from './lib/worker.ts';
 import { WORKTREE_NAME_PATTERN, WorktreeManager } from './lib/worktree-manager.ts';
 
 const keyboardHook = new KeyboardHookService();
-
-const activeSessions = new Map<string, AbortController>();
-const pendingApprovals = new Map<
-  string,
-  Deferred<{ approved: boolean; message?: string; decision?: string | Record<string, unknown> }>
->();
-const pendingQuestions = new Map<string, Deferred<Record<string, string>>>();
-const pendingInterrupts = new Map<string, Deferred<void>>();
-const textQueues = new Map<string, AsyncQueue<string>>();
-const textFocusedPersonas = new Set<string>();
-
 const persistence = new SessionPersistence();
-const activeSessionHandles = new Map<string, SessionHandle>();
+const sessionManager = new SessionManager(persistence, keyboardHook);
 
 let appServerProcess: CodexAppServerProcess | null = null;
 
@@ -77,21 +55,6 @@ async function loadPersonaSettings(personaId: string): Promise<AgentSettings> {
   return { ...DEFAULT_SETTINGS, ...(saved as Partial<AgentSettings>) };
 }
 
-function speakText(personaId: string, text: string): void {
-  const { sentences, log } = sanitizeForTts(text);
-  if (sentences.length === 0) return;
-  if (log.length > 0) {
-    emitLog(personaId, 'tts-sanitize', log.join('; '));
-  }
-  rpc
-    .call({
-      modName: '@hmcs/voicevox',
-      method: 'speak',
-      body: { personaId, text: sentences },
-    })
-    .catch(() => emitLog(personaId, 'warning', 'TTS unavailable'));
-}
-
 async function startKeyboardHook(): Promise<void> {
   const started = keyboardHook.start();
   if (!started) {
@@ -103,7 +66,7 @@ async function scanOrphanedWorktrees(): Promise<void> {
   const snapshots = await SdkPersona.list();
   for (const snapshot of snapshots) {
     const personaId = snapshot.id;
-    if (activeSessions.has(personaId)) continue;
+    if (sessionManager.hasFrontman(personaId)) continue;
     const settings = await loadPersonaSettings(personaId);
     for (const wsPath of settings.workspaces.paths) {
       try {
@@ -119,7 +82,7 @@ async function scanOrphanedWorktrees(): Promise<void> {
               worktreeName: wt.name,
               workspacePath: wsPath,
             });
-            emitLog(
+            sessionManager.emitLog(
               personaId,
               'warning',
               `Orphaned worktree detected: ${wt.name} in ${wsPath} (has uncommitted changes)`,
@@ -185,21 +148,20 @@ async function startSession(
     appServerProcess: getAppServerProcess(),
   });
 
+  sessionManager.startFrontman(personaId, runtime);
+  sessionManager.attachTextQueue(personaId);
+
   if (basePath && branchName) {
     const handle = await persistence.create({
       workspacePath: basePath,
       personaId,
       branchName,
     });
-    activeSessionHandles.set(personaId, handle);
+    sessionManager.attachSessionHandle(personaId, handle);
     persistence.cleanup(basePath, personaId).catch(() => {});
   }
 
-  const sessionAbort = new AbortController();
-  activeSessions.set(personaId, sessionAbort);
-  textQueues.set(personaId, new AsyncQueue<string>());
-
-  launchSessionLoop(personaId, runtime, sessionAbort, settings, resolvedKey);
+  launchSessionLoop(personaId, runtime, settings, resolvedKey);
   return replayEntries;
 }
 
@@ -207,7 +169,7 @@ function assertCanStartSession(personaId: string, settings: AgentSettings): void
   if (settings.runtime === 'sdk' && !currentApiKey) {
     throw new Error('API key not configured. Open Agent Settings to set your Anthropic API key.');
   }
-  if (activeSessions.has(personaId)) {
+  if (sessionManager.hasFrontman(personaId)) {
     throw new Error(`Session already active for "${personaId}".`);
   }
 }
@@ -215,32 +177,24 @@ function assertCanStartSession(personaId: string, settings: AgentSettings): void
 function launchSessionLoop(
   personaId: string,
   runtime: AgentRuntime,
-  sessionAbort: AbortController,
   settings: AgentSettings,
   resolvedKey: ResolvedPttKey | null,
 ): void {
-  runSession(personaId, runtime, sessionAbort, settings, resolvedKey).catch((err) =>
-    handleSessionCrash(personaId, err, settings),
-  );
+  sessionManager
+    .runFrontmanLoop(personaId, runtime, settings, resolvedKey)
+    .catch((err) => handleSessionCrash(personaId, err));
 }
 
-function handleSessionCrash(personaId: string, err: unknown, _settings: AgentSettings): void {
+function handleSessionCrash(personaId: string, err: unknown): void {
   if (!isAbortError(err)) {
     console.error(`[agent] Session error for ${personaId}:`, err);
-    emitLog(personaId, 'error', extractErrorMessage(err));
+    sessionManager.emitLog(personaId, 'error', extractErrorMessage(err));
   }
-  const handle = activeSessionHandles.get(personaId);
-  if (handle) {
-    persistence.close(handle).catch(() => {});
-    activeSessionHandles.delete(personaId);
+  // runFrontmanLoop's finally block already tore down persistence, queues, and
+  // tracking state. Just emit a terminal status if this wasn't a clean abort.
+  if (!isAbortError(err)) {
+    sessionManager.emitStatus(personaId, 'idle', 'crashed');
   }
-  const queue = textQueues.get(personaId);
-  if (queue) {
-    queue.rejectAll(new DOMException('Session crashed', 'AbortError'));
-    textQueues.delete(personaId);
-  }
-  activeSessions.delete(personaId);
-  emitStatus(personaId, 'idle', isAbortError(err) ? 'stopped' : 'crashed');
 }
 
 function resolvePttKeyOptional(settings: AgentSettings): ResolvedPttKey | null {
@@ -259,23 +213,6 @@ async function loadPersona(personaId: string): Promise<Persona> {
     profile: snapshot.profile ?? '',
     personality: snapshot.personality ?? null,
   };
-}
-
-async function playPermissionSe(personaId: string): Promise<void> {
-  let assetId: string | null;
-  try {
-    const p = await SdkPersona.load(personaId);
-    const metadata = await p.metadata();
-    assetId = resolvePermissionSeAsset(metadata);
-  } catch (e) {
-    console.error(`[agent] failed to load permission SE metadata, using default:`, e);
-    assetId = DEFAULT_PERMISSION_SE;
-  }
-  if (assetId) {
-    audio.se.play(assetId).catch((e) => {
-      console.error(`[agent] failed to play permission SE:`, e);
-    });
-  }
 }
 
 function resolveWorkingDirectory(personaId: string, settings: AgentSettings): string {
@@ -329,584 +266,15 @@ async function resolveCurrentBranch(
   }
 }
 
-
 async function stopSession(personaId: string): Promise<void> {
-  const controller = activeSessions.get(personaId);
-  if (!controller) return;
-
-  const handle = activeSessionHandles.get(personaId);
-  if (handle) {
-    await persistence.close(handle).catch(() => {});
-    activeSessionHandles.delete(personaId);
-  }
-
-  controller.abort();
-  const queue = textQueues.get(personaId);
-  if (queue) {
-    queue.rejectAll(new DOMException('Session stopped', 'AbortError'));
-    textQueues.delete(personaId);
-  }
-  activeSessions.delete(personaId);
-  emitStatus(personaId, 'idle', 'stopped');
+  if (!sessionManager.hasFrontman(personaId)) return;
+  await sessionManager.stopPersonaSessions(personaId);
+  sessionManager.emitStatus(personaId, 'idle', 'stopped');
 
   if (appServerProcess && appServerProcess.refCount === 0) {
     appServerProcess.shutdown();
     appServerProcess = null;
   }
-}
-
-async function interruptSession(personaId: string): Promise<void> {
-  const deferred = pendingInterrupts.get(personaId);
-  if (deferred) {
-    deferred.resolve();
-  }
-}
-
-interface UserInput {
-  text: string;
-  source: 'voice' | 'text';
-}
-
-async function runSession(
-  personaId: string,
-  runtime: AgentRuntime,
-  sessionAbort: AbortController,
-  settings: AgentSettings,
-  resolvedKey: ResolvedPttKey | null,
-): Promise<void> {
-  let sessionId: string | null = null;
-  const signal = sessionAbort.signal;
-
-  try {
-    while (!signal.aborted) {
-      emitStatus(personaId, 'listening');
-      const input = await waitForUserInput(personaId, resolvedKey, signal);
-      if (input === null) continue;
-
-      emitUserLog(personaId, input.text, input.source);
-      emitStatus(personaId, 'thinking');
-      const result = await executeOneRound(
-        personaId,
-        runtime,
-        input.text,
-        sessionId,
-        settings,
-        resolvedKey,
-        signal,
-      );
-      sessionId = result.sessionId;
-    }
-  } catch (e) {
-    if (!isAbortError(e)) throw e;
-  } finally {
-    activeSessions.delete(personaId);
-    textFocusedPersonas.delete(personaId);
-
-    const handle = activeSessionHandles.get(personaId);
-    if (handle) {
-      await persistence.close(handle).catch(() => {});
-      activeSessionHandles.delete(personaId);
-    }
-
-    emitStatus(personaId, 'idle', 'session-ended');
-  }
-}
-
-interface RoundResult {
-  sessionId: string | null;
-}
-
-async function executeOneRound(
-  personaId: string,
-  runtime: AgentRuntime,
-  text: string,
-  sessionId: string | null,
-  settings: AgentSettings,
-  resolvedKey: ResolvedPttKey | null,
-  sessionSignal: AbortSignal,
-): Promise<RoundResult> {
-  const interruptAbort = new AbortController();
-  const runtimeGen = runtime.execute(text, sessionId, interruptAbort.signal);
-  const interruptPromise = waitForInterrupt(personaId, resolvedKey, sessionSignal);
-
-  try {
-    return await driveRuntime(
-      personaId,
-      runtimeGen,
-      interruptPromise,
-      interruptAbort,
-      sessionId,
-      settings,
-      resolvedKey,
-      sessionSignal,
-    );
-  } catch (e) {
-    if (!isAbortError(e)) throw e;
-    return { sessionId };
-  }
-}
-
-async function driveRuntime(
-  personaId: string,
-  runtimeGen: AsyncGenerator<AgentEvent, void, AgentResponse | undefined>,
-  interruptPromise: Promise<'ptt' | 'ui'>,
-  interruptAbort: AbortController,
-  sessionId: string | null,
-  settings: AgentSettings,
-  resolvedKey: ResolvedPttKey | null,
-  sessionSignal: AbortSignal,
-): Promise<RoundResult> {
-  let lastSessionId = sessionId;
-  let response: AgentResponse | undefined;
-
-  while (true) {
-    const raceResult = await raceInterrupt(runtimeGen.next(response), interruptPromise);
-
-    if (raceResult.interrupted) {
-      lastSessionId = await abortExecution(personaId, runtimeGen, interruptAbort, lastSessionId);
-
-      if (raceResult.source === 'ptt' && resolvedKey) {
-        const voiceText = await recognizeWhileHeld(personaId, resolvedKey, sessionSignal);
-        if (voiceText) {
-          const queue = textQueues.get(personaId);
-          if (queue) {
-            queue.clear();
-            queue.push(voiceText);
-          }
-        }
-      }
-
-      return { sessionId: lastSessionId };
-    }
-    if (raceResult.done) break;
-
-    const event = raceResult.value as AgentEvent;
-    response = await handleAgentEvent(personaId, event, settings, sessionSignal);
-    if (event.type === 'completed' || event.type === 'error') {
-      if (event.type === 'completed') lastSessionId = event.sessionId;
-      break;
-    }
-  }
-
-  await runtimeGen.return(undefined);
-  return { sessionId: lastSessionId };
-}
-
-async function abortExecution(
-  personaId: string,
-  runtimeGen: AsyncGenerator<AgentEvent, void, AgentResponse | undefined>,
-  interruptAbort: AbortController,
-  lastSessionId: string | null,
-): Promise<string | null> {
-  interruptAbort.abort();
-  await runtimeGen.return(undefined);
-  emitInterruptLog(personaId);
-  return lastSessionId;
-}
-
-interface RaceResultDone {
-  interrupted: false;
-  done: true;
-  value: undefined;
-}
-
-interface RaceResultEvent {
-  interrupted: false;
-  done: false;
-  value: AgentEvent;
-}
-
-interface RaceResultInterrupted {
-  interrupted: true;
-  source: 'ptt' | 'ui';
-}
-
-type RaceResult = RaceResultDone | RaceResultEvent | RaceResultInterrupted;
-
-async function raceInterrupt(
-  nextResult: Promise<IteratorResult<AgentEvent, void>>,
-  interruptPromise: Promise<'ptt' | 'ui'>,
-): Promise<RaceResult> {
-  const runtimeSide = nextResult.then((r): RaceResultDone | RaceResultEvent =>
-    r.done
-      ? { interrupted: false, done: true, value: undefined }
-      : { interrupted: false, done: false, value: r.value as AgentEvent },
-  );
-  // Suppress unhandled rejection on the losing side of the race.
-  runtimeSide.catch(() => {});
-
-  return Promise.race([
-    runtimeSide,
-    interruptPromise.then((source): RaceResultInterrupted => ({ interrupted: true, source })),
-  ]);
-}
-
-async function handleAgentEvent(
-  personaId: string,
-  event: AgentEvent,
-  settings: AgentSettings,
-  signal: AbortSignal,
-): Promise<AgentResponse | undefined> {
-  switch (event.type) {
-    case 'assistant_message':
-      return handleAssistantMessage(personaId, event.text);
-    case 'tool_use':
-      return handleToolUse(personaId, event.summary);
-    case 'permission_request':
-      return await handlePermissionRequest(personaId, event, settings, signal);
-    case 'elicitation_request':
-      return await handleElicitationRequest(personaId, event, signal);
-    case 'completed':
-      return handleCompleted(personaId, event.sessionId);
-    case 'error':
-      return handleError(personaId, event.message, settings);
-  }
-}
-
-function handleAssistantMessage(personaId: string, text: string): undefined {
-  emitStatus(personaId, 'thinking');
-  emitLog(personaId, 'assistant', text);
-  speakText(personaId, text);
-  return undefined;
-}
-
-function handleToolUse(personaId: string, summary: string): undefined {
-  emitStatus(personaId, 'executing');
-  emitLog(personaId, 'tool', summary);
-  return undefined;
-}
-
-async function handlePermissionRequest(
-  personaId: string,
-  event: AgentEvent & { type: 'permission_request' },
-  settings: AgentSettings,
-  signal: AbortSignal,
-): Promise<AgentResponse> {
-  emitStatus(personaId, 'waiting');
-  return await resolvePermission(personaId, event, settings, signal);
-}
-
-async function handleElicitationRequest(
-  personaId: string,
-  event: AgentEvent & { type: 'elicitation_request' },
-  signal: AbortSignal,
-): Promise<AgentResponse> {
-  emitStatus(personaId, 'waiting');
-  return await resolveElicitation(personaId, event, signal);
-}
-
-function handleCompleted(_personaId: string, _sessionId: string): undefined {
-  return undefined;
-}
-
-function handleError(personaId: string, message: string, _settings: AgentSettings): undefined {
-  console.error(`[agent] ${personaId}: error — ${message}`);
-  emitLog(personaId, 'error', message);
-  return undefined;
-}
-
-async function resolvePermission(
-  personaId: string,
-  event: AgentEvent & { type: 'permission_request' },
-  settings: AgentSettings,
-  signal: AbortSignal,
-): Promise<AgentResponse> {
-  const deferred = new Deferred<{
-    approved: boolean;
-    message?: string;
-    decision?: string | Record<string, unknown>;
-  }>();
-  const permAbort = new AbortController();
-  const combined = AbortSignal.any([signal, permAbort.signal]);
-
-  pendingApprovals.set(event.requestId, deferred);
-
-  const permissionPayload = {
-    personaId,
-    requestId: event.requestId,
-    action: event.tool,
-    target: JSON.stringify(event.input),
-    availableDecisions: event.availableDecisions,
-  };
-  console.log(
-    `[agent] resolvePermission: ${event.tool} (${event.requestId})`,
-    JSON.stringify(permissionPayload, null, 2),
-  );
-
-  playPermissionSe(personaId);
-
-  signals.send('agent:permission', permissionPayload);
-
-  const timer = setTimeout(
-    () => deferred.resolve({ approved: false, message: 'Permission request timed out' }),
-    60_000,
-  );
-
-  const onAbort = () => deferred.reject(signal.reason);
-  signal.addEventListener('abort', onAbort, { once: true });
-
-  const resolvedKey = resolvePttKeycodes(settings.pttKey as NonNullable<typeof settings.pttKey>);
-  if (resolvedKey) {
-    runVoiceApproval(personaId, resolvedKey, settings, combined, deferred);
-  }
-
-  try {
-    const result = await deferred.promise;
-    console.log(
-      `[agent] permission result: approved=${result.approved}, message=${result.message}`,
-    );
-    return {
-      type: 'permission',
-      approved: result.approved,
-      message: result.message,
-      decision: result.decision,
-    };
-  } finally {
-    clearTimeout(timer);
-    signal.removeEventListener('abort', onAbort);
-    permAbort.abort();
-    pendingApprovals.delete(event.requestId);
-  }
-}
-
-function runVoiceApproval(
-  personaId: string,
-  resolvedKey: ResolvedPttKey,
-  settings: AgentSettings,
-  signal: AbortSignal,
-  deferred: Deferred<{
-    approved: boolean;
-    message?: string;
-    decision?: string | Record<string, unknown>;
-  }>,
-): void {
-  (async () => {
-    try {
-      await waitForComboPress(personaId, resolvedKey, signal);
-      const text = await recognizeWhileHeld(personaId, resolvedKey, signal);
-      if (text === null) {
-        deferred.resolve({ approved: false, message: 'No speech detected' });
-      } else {
-        deferred.resolve(evaluateApprovalPhrase(text, settings));
-      }
-    } catch {
-      // Voice approval failed (aborted or error) — UI/timeout will handle it
-    }
-  })();
-}
-
-function evaluateApprovalPhrase(
-  text: string,
-  settings: AgentSettings,
-): { approved: boolean; message?: string } {
-  const lower = text.toLowerCase();
-  const isApproval = settings.approvalPhrases.some((p) => lower.includes(p.toLowerCase()));
-  if (isApproval) return { approved: true };
-  const isDenial = settings.denyPhrases.some((p) => lower.includes(p.toLowerCase()));
-  if (isDenial) return { approved: false, message: `Denied: "${text}"` };
-  return { approved: false, message: `Unrecognized: "${text}"` };
-}
-
-async function resolveElicitation(
-  personaId: string,
-  event: AgentEvent & { type: 'elicitation_request' },
-  signal: AbortSignal,
-): Promise<AgentResponse> {
-  signals.send('agent:question', {
-    personaId,
-    requestId: event.requestId,
-    message: event.message,
-    schema: event.schema,
-  });
-
-  const deferred = new Deferred<Record<string, string>>();
-  pendingQuestions.set(event.requestId, deferred);
-
-  try {
-    const answers = await Promise.race([
-      deferred.promise,
-      abortToReject(signal),
-      timeoutReject(60_000),
-    ]);
-    return { type: 'elicitation', action: 'accept', values: answers };
-  } catch {
-    return { type: 'elicitation', action: 'decline' };
-  } finally {
-    pendingQuestions.delete(event.requestId);
-  }
-}
-
-function abortToReject(signal: AbortSignal): Promise<never> {
-  return new Promise((_, reject) => {
-    signal.addEventListener('abort', () => reject(signal.reason), {
-      once: true,
-    });
-  });
-}
-
-function timeoutReject(ms: number): Promise<never> {
-  return new Promise((_, reject) => {
-    setTimeout(() => reject(new Error('Timed out')), ms);
-  });
-}
-
-async function waitForInterrupt(
-  personaId: string,
-  resolvedKey: ResolvedPttKey | null,
-  sessionSignal: AbortSignal,
-): Promise<'ptt' | 'ui'> {
-  const pttPromise = resolvedKey
-    ? waitForComboPress(personaId, resolvedKey, sessionSignal).then(() => 'ptt' as const)
-    : new Promise<never>(() => {});
-
-  return Promise.race([
-    pttPromise,
-    waitForInterruptRpc(personaId, sessionSignal).then(() => 'ui' as const),
-  ]);
-}
-
-async function waitForInterruptRpc(personaId: string, signal: AbortSignal): Promise<void> {
-  const deferred = new Deferred<void>();
-  pendingInterrupts.set(personaId, deferred);
-
-  try {
-    await Promise.race([deferred.promise, abortToReject(signal)]);
-  } finally {
-    pendingInterrupts.delete(personaId);
-  }
-}
-
-async function waitForUserInput(
-  personaId: string,
-  resolvedKey: ResolvedPttKey | null,
-  signal: AbortSignal,
-): Promise<UserInput | null> {
-  const queue = textQueues.get(personaId);
-  if (!queue) return null;
-
-  if (!resolvedKey) {
-    const text = await queue.shift(signal);
-    return { text, source: 'text' };
-  }
-
-  const inputAbort = new AbortController();
-  const combined = AbortSignal.any([signal, inputAbort.signal]);
-
-  const voicePromise = recognizeOneSentenceVoice(personaId, resolvedKey, combined).then(
-    (text): UserInput | null => (text ? { text, source: 'voice' } : null),
-  );
-  const textPromise = queue.shift(combined).then((text): UserInput => ({ text, source: 'text' }));
-
-  try {
-    return await Promise.race([voicePromise, textPromise]);
-  } finally {
-    inputAbort.abort();
-    suppressRejection(voicePromise);
-    suppressRejection(textPromise);
-  }
-}
-
-async function recognizeOneSentenceVoice(
-  personaId: string,
-  resolvedKey: ResolvedPttKey,
-  signal: AbortSignal,
-): Promise<string | null> {
-  await waitForComboPress(personaId, resolvedKey, signal);
-  return await recognizeWhileHeld(personaId, resolvedKey, signal);
-}
-
-function suppressRejection(promise: Promise<unknown>): void {
-  promise.catch(() => {});
-}
-
-async function recognizeWhileHeld(
-  personaId: string,
-  resolvedKey: ResolvedPttKey,
-  signal: AbortSignal,
-): Promise<string | null> {
-  emitRecording(personaId, true);
-  let session: stt.ptt.PttSession | null = null;
-
-  try {
-    session = await stt.ptt.start({ language: 'ja' });
-    await waitForComboRelease(keyboardHook, resolvedKey, signal);
-    const result = await session.stop();
-    return result.text?.trim() || null;
-  } catch (e) {
-    if (session) {
-      try {
-        await session.stop();
-      } catch {
-        /* best-effort cleanup */
-      }
-    }
-    throw e;
-  } finally {
-    emitRecording(personaId, false);
-  }
-}
-
-function waitForComboPress(
-  personaId: string,
-  resolvedKey: ResolvedPttKey,
-  signal: AbortSignal,
-): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (signal.aborted) {
-      reject(signal.reason);
-      return;
-    }
-
-    const unsubscribe = keyboardHook.subscribeCombo({
-      onKeyEvent(pressedKeys) {
-        if (textFocusedPersonas.has(personaId)) return;
-        if (isComboHeld(pressedKeys, resolvedKey)) {
-          cleanup();
-          resolve();
-        }
-      },
-    });
-
-    const onAbort = () => {
-      cleanup();
-      reject(signal.reason);
-    };
-    signal.addEventListener('abort', onAbort, { once: true });
-
-    function cleanup() {
-      unsubscribe();
-      signal.removeEventListener('abort', onAbort);
-    }
-  });
-}
-
-function emitStatus(personaId: string, state: AgentStatus, reason?: string): void {
-  signals.send('agent:status', { personaId, state, reason });
-  console.debug(`[agent] ${personaId}: ${state}${reason ? ` (${reason})` : ''}`);
-}
-
-function emitLog(personaId: string, type: string, message: string): void {
-  const entry = { type, message, timestamp: Date.now() };
-  signals.send('agent:log', { personaId, ...entry });
-
-  const handle = activeSessionHandles.get(personaId);
-  if (handle) persistence.append(handle, entry);
-}
-
-function emitUserLog(personaId: string, text: string, source: 'voice' | 'text'): void {
-  const entry = { type: 'user' as const, message: text, timestamp: Date.now(), source };
-  signals.send('agent:log', { personaId, ...entry });
-
-  const handle = activeSessionHandles.get(personaId);
-  if (handle) persistence.append(handle, entry);
-}
-
-function emitInterruptLog(personaId: string): void {
-  emitLog(personaId, 'interrupt', '中断しました');
-}
-
-function emitRecording(personaId: string, recording: boolean): void {
-  signals.send('agent:recording', { personaId, recording });
 }
 
 function isAbortError(e: unknown): boolean {
@@ -929,11 +297,10 @@ function buildRpcMethods() {
         decision: z.union([z.string(), z.record(z.unknown())]).optional(),
       }),
       handler: async ({ requestId, approved, decision }) => {
-        const deferred = pendingApprovals.get(requestId);
-        if (!deferred) {
+        const ok = sessionManager.resolvePermission(requestId, { approved, decision });
+        if (!ok) {
           throw new Error('No pending approval for this request');
         }
-        deferred.resolve({ approved, decision });
         return {};
       },
     }),
@@ -944,10 +311,7 @@ function buildRpcMethods() {
         answers: z.record(z.string()),
       }),
       handler: async ({ requestId, answers }) => {
-        const deferred = pendingQuestions.get(requestId);
-        if (deferred) {
-          deferred.resolve(answers);
-        }
+        sessionManager.resolveQuestion(requestId, answers);
         return {};
       },
     }),
@@ -960,16 +324,11 @@ function buildRpcMethods() {
       }),
       handler: async ({ personaId, text, contextSessionUuid }) => {
         let replayEntries: PersistLogEntry[] = [];
-        if (!activeSessions.has(personaId)) {
+        if (!sessionManager.hasFrontman(personaId)) {
           replayEntries = await startSession(personaId, contextSessionUuid);
         }
-        const queue = textQueues.get(personaId);
-        if (!queue) {
-          throw new Error('No active session');
-        }
-        await interruptSession(personaId);
-        queue.clear();
-        queue.push(text);
+        sessionManager.resolveInterrupt(personaId);
+        sessionManager.sendMessage(personaId, text);
         return { replayEntries };
       },
     }),
@@ -980,11 +339,7 @@ function buildRpcMethods() {
         focused: z.boolean(),
       }),
       handler: async ({ personaId, focused }) => {
-        if (focused) {
-          textFocusedPersonas.add(personaId);
-        } else {
-          textFocusedPersonas.delete(personaId);
-        }
+        sessionManager.setTextFocus(personaId, focused);
         return {};
       },
     }),
@@ -992,7 +347,7 @@ function buildRpcMethods() {
       description: 'Get the current session state for all personas',
       handler: async () => {
         const result: Record<string, string> = {};
-        for (const [id] of activeSessions) {
+        for (const id of sessionManager.listActivePersonas()) {
           result[id] = 'active';
         }
         return result;
@@ -1002,7 +357,7 @@ function buildRpcMethods() {
       description: 'Get the session status for a specific persona',
       input: z.object({ personaId: z.string() }),
       handler: async ({ personaId }) => {
-        const status = activeSessions.has(personaId) ? 'active' : 'idle';
+        const status = sessionManager.hasFrontman(personaId) ? 'active' : 'idle';
         return { status } as const;
       },
     }),
@@ -1026,7 +381,7 @@ function buildRpcMethods() {
       description: 'Interrupt the current agent execution for a persona',
       input: z.object({ personaId: z.string() }),
       handler: async ({ personaId }) => {
-        await interruptSession(personaId);
+        sessionManager.resolveInterrupt(personaId);
         return {};
       },
     }),
@@ -1145,10 +500,7 @@ function buildRpcMethods() {
 
 async function shutdown(): Promise<void> {
   console.log('[agent] Shutting down...');
-  for (const [, controller] of activeSessions) {
-    controller.abort();
-  }
-  activeSessions.clear();
+  sessionManager.stopAllSessions();
   keyboardHook.stop();
 
   if (appServerProcess) {

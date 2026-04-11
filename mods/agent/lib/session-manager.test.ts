@@ -1,12 +1,18 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { SessionManager } from './session-manager.ts';
+import { KeyboardHookService } from './keyboard-hook.ts';
 import { MockAgentRuntime } from './runtime/mock-agent-runtime.ts';
+import { SessionManager } from './session-manager.ts';
+import { SessionPersistence } from './session-persistence.ts';
+
+function createManager(): SessionManager {
+  return new SessionManager(new SessionPersistence(), new KeyboardHookService());
+}
 
 describe('SessionManager', () => {
   let manager: SessionManager;
 
   beforeEach(() => {
-    manager = new SessionManager();
+    manager = createManager();
   });
 
   it('tracks an active Frontman per persona', () => {
