@@ -10,7 +10,7 @@
  */
 
 import type { AgentEvent, AgentResponse, AgentRuntime } from './agent-runtime.ts';
-import { AsyncQueue } from './async-queue.ts';
+import { AsyncQueue } from '../async-queue.ts';
 import type { CodexAppServerProcess, ThreadHandler } from './codex-appserver-process.ts';
 import type {
   CommandExecutionRequestApprovalParams,
@@ -30,7 +30,7 @@ import type {
   TurnStartedNotification,
   TurnStartParams,
 } from './codex-appserver-types.ts';
-import type { AgentSettings } from './types.ts';
+import type { AgentSettings } from '../types.ts';
 
 /** Internal message pushed into the event queue by the ThreadHandler. */
 type QueueMessage =

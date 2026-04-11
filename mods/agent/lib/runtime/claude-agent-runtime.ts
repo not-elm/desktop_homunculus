@@ -7,8 +7,8 @@ import type {
 } from '@anthropic-ai/claude-agent-sdk';
 import { query } from '@anthropic-ai/claude-agent-sdk';
 import type { AgentEvent, AgentResponse, AgentRuntime } from './agent-runtime.ts';
-import { AsyncQueue, Deferred } from './async-queue.ts';
-import type { AgentSettings } from './types.ts';
+import { AsyncQueue, Deferred } from '../async-queue.ts';
+import type { AgentSettings } from '../types.ts';
 
 /** Item enqueued by canUseTool; awaited by mergeStreams. */
 interface PermissionQueueItem {

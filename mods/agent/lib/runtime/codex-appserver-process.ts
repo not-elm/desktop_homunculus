@@ -12,7 +12,7 @@
 import { type ChildProcess, spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { createInterface, type Interface as ReadlineInterface } from 'node:readline';
-import { Deferred } from './async-queue.ts';
+import { Deferred } from '../async-queue.ts';
 import type {
   InitializeResponse,
   JsonRpcNotification,

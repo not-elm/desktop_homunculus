@@ -1,5 +1,5 @@
 import type { Gender } from '@hmcs/sdk';
-import type { AgentEvent } from './agent-runtime.ts';
+import type { AgentEvent } from './runtime/agent-runtime.ts';
 
 /** PTT key configuration. */
 export interface PttKey {
@@ -147,4 +147,4 @@ export const DEFAULT_SETTINGS: AgentSettings = {
   claudeModel: '',
 };
 
-export type { AgentEvent, AgentResponse, AgentRuntime } from './agent-runtime.ts';
+export type { AgentEvent, AgentResponse, AgentRuntime } from './runtime/agent-runtime.ts';
