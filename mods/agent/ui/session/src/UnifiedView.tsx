@@ -7,10 +7,12 @@ import { PermissionDialog } from './components/PermissionDialog';
 import { QuestionDialog } from './components/QuestionDialog';
 import { SessionHistory } from './components/SessionHistory';
 import { TextInput } from './components/TextInput';
+import { WorkersIconButton } from './components/WorkersIconButton';
 import type { AgentState } from './hooks/useAgentSession';
 import { useAgentSession } from './hooks/useAgentSession';
 import { useCurrentBranch } from './hooks/useCurrentBranch';
 import { useWebviewMode } from './hooks/useWebviewMode';
+import { useWorkerBadge } from './hooks/useWorkerBadge';
 import { SettingsFormView } from './settings/components/SettingsFormView';
 import { Sidebar } from './settings/components/Sidebar';
 import type { PttKey, WorkspaceSelection } from './settings/hooks/useSettingsDraft';
@@ -21,6 +23,7 @@ import { formatPttKeyName } from './utils/format-ptt-key';
 export function UnifiedView() {
   const draft = useSettingsDraft();
   const session = useAgentSession();
+  const workerBadge = useWorkerBadge();
   const isActive = session.state !== 'idle';
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -206,6 +209,14 @@ export function UnifiedView() {
     }
   }
 
+  async function handleToggleWorkers() {
+    try {
+      await rpc.call({ modName: '@hmcs/agent', method: 'toggle-workers-webview', body: {} });
+    } catch (err) {
+      console.warn('[session-ui] Failed to toggle workers:', err);
+    }
+  }
+
   async function handleClose() {
     await audio.se.play('se:close');
     await Webview.current()?.close();
@@ -266,6 +277,8 @@ export function UnifiedView() {
         isActive={isActive}
         onToggleSidebar={handleSidebarToggle}
         onToggleSession={isActive ? session.stopSession : session.startSession}
+        workerBadge={workerBadge}
+        onToggleWorkers={handleToggleWorkers}
         onMinimize={handleMinimize}
         onClose={handleClose}
         inert={minimized}
@@ -446,6 +459,8 @@ interface TitleBarProps {
   isActive: boolean;
   onToggleSidebar: () => void;
   onToggleSession: () => void;
+  workerBadge: { runningCount: number; hasPendingPermission: boolean };
+  onToggleWorkers: () => void;
   onMinimize: () => void;
   onClose: () => void;
   inert?: boolean;
@@ -456,6 +471,8 @@ function TitleBar({
   isActive,
   onToggleSidebar,
   onToggleSession,
+  workerBadge,
+  onToggleWorkers,
   onMinimize,
   onClose,
   inert,
@@ -481,6 +498,12 @@ function TitleBar({
       >
         {isActive ? <StopSquare /> : <PlayTriangle />}
       </button>
+      <WorkersIconButton
+        runningCount={workerBadge.runningCount}
+        hasPendingPermission={workerBadge.hasPendingPermission}
+        disabled={workerBadge.runningCount === 0 && !workerBadge.hasPendingPermission}
+        onClick={onToggleWorkers}
+      />
       <button className="hud-icon-btn" type="button" onClick={onMinimize} title="Minimize">
         <MinimizeIcon />
       </button>
