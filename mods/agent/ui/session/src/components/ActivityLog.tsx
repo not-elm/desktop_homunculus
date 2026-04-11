@@ -29,6 +29,7 @@ export function ActivityLog({ entries }: ActivityLogProps) {
 
 function LogRow({ entry }: { entry: LogEntry }) {
   if (entry.type === 'user') return <UserBubble entry={entry} />;
+  if (entry.type === 'peer') return <PeerBubble entry={entry} />;
   if (isSystemEvent(entry.type)) return <SystemRow entry={entry} />;
   if (entry.type === 'assistant') return <AssistantRow entry={entry} />;
   return <StandardRow entry={entry} />;
@@ -44,6 +45,17 @@ function UserBubble({ entry }: { entry: LogEntry }) {
       <span className="hud-log-icon">
         {entry.source === 'text' ? <KeyboardIcon /> : <MicIcon />}
       </span>
+    </div>
+  );
+}
+
+function PeerBubble({ entry }: { entry: LogEntry }) {
+  return (
+    <div
+      className="hud-log-entry hud-log-entry--peer"
+      style={{ animation: 'fade-in 300ms ease both' }}
+    >
+      <span className="hud-log-entry__message">{entry.message}</span>
     </div>
   );
 }

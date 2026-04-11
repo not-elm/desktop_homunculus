@@ -14,7 +14,8 @@ export type LogType =
   | 'error'
   | 'warning'
   | 'user'
-  | 'interrupt';
+  | 'interrupt'
+  | 'peer';
 
 /** A decision can be a simple string ("accept", "decline") or a tagged-union object from the AppServer. */
 export type Decision = string | Record<string, unknown>;
@@ -107,6 +108,9 @@ export function useAgentSession() {
       }),
       subscribeToRecording(personaId, setIsRecording),
       subscribeToWorktree(personaId, setWorktreeInfo),
+      subscribeToPeerMessage(personaId, (entry) => {
+        setEntries((prev) => [...prev.slice(-99), entry]);
+      }),
     ];
     return () =>
       sources.forEach((s) => {
@@ -347,4 +351,19 @@ function subscribeToWorktree(
       }
     },
   );
+}
+
+function subscribeToPeerMessage(id: string, onEntry: (entry: LogEntry) => void) {
+  return signals.stream<{
+    personaId: string;
+    message: { from: string; to: string; message: string; timestamp: string };
+  }>('agent:peer-message', (data) => {
+    if (data.personaId !== id) return;
+    onEntry({
+      id: crypto.randomUUID(),
+      type: 'peer',
+      message: `${data.message.from}: ${data.message.message}`,
+      timestamp: new Date(data.message.timestamp).getTime(),
+    });
+  });
 }
