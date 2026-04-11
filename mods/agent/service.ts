@@ -5,7 +5,7 @@ import { preferences, Persona as SdkPersona, signals } from '@hmcs/sdk';
 import { rpc } from '@hmcs/sdk/rpc';
 import { z } from 'zod';
 import { buildFrontmanPrompt, createFrontmanRuntime } from './lib/frontman.ts';
-import { currentBranch, isGitRepo, listBranches } from './lib/git.ts';
+import { currentBranch, gitExec, isGitRepo, listBranches } from './lib/git.ts';
 import { type ResolvedPttKey, resolvePttKeycodes } from './lib/key-mapping.ts';
 import { KeyboardHookService } from './lib/keyboard-hook.ts';
 import type { AgentRuntime } from './lib/runtime/agent-runtime.ts';
@@ -13,8 +13,8 @@ import { CodexAppServerProcess } from './lib/runtime/codex-appserver-process.ts'
 import { SessionManager } from './lib/session-manager.ts';
 import { type PersistLogEntry, SessionPersistence } from './lib/session-persistence.ts';
 import { type AgentSettings, DEFAULT_SETTINGS, type Persona } from './lib/types.ts';
-// biome-ignore lint/correctness/noUnusedImports: reserved for delegate-task RPC (Phase 5)
-import { createWorkerRuntime } from './lib/worker.ts';
+import type { WorktreeContext } from './lib/prompt.ts';
+import { buildWorkerPrompt, createWorkerRuntime } from './lib/worker.ts';
 import { WORKTREE_NAME_PATTERN, WorktreeManager } from './lib/worktree-manager.ts';
 
 const keyboardHook = new KeyboardHookService();
@@ -262,6 +262,36 @@ function extractErrorMessage(err: unknown): string {
   return `${err.message}${cause}`;
 }
 
+function resolveWorkerWorkDir(
+  personaId: string,
+  settings: AgentSettings,
+  worktreeName: string | null,
+): string {
+  if (worktreeName) {
+    const basePath = settings.workspaces.paths[settings.workspaces.selection.workspaceIndex];
+    if (!basePath) return path.join(homedir(), '.homunculus', 'agents', personaId);
+    return path.join(basePath, '.hmcs/worktrees', worktreeName);
+  }
+  return resolveWorkingDirectory(personaId, settings);
+}
+
+async function readWorktreeBaseBranch(worktreePath: string): Promise<string> {
+  try {
+    const result = await gitExec(worktreePath, ['config', 'hmcs.baseBranch']);
+    return result.trim() || 'main';
+  } catch {
+    return 'main';
+  }
+}
+
+async function buildWorktreeContext(
+  worktreeName: string,
+  workDir: string,
+): Promise<WorktreeContext> {
+  const baseBranch = await readWorktreeBaseBranch(workDir);
+  return { worktreeName, baseBranch, worktreePath: workDir };
+}
+
 function buildRpcMethods() {
   return {
     'approve-permission': rpc.method({
@@ -468,6 +498,76 @@ function buildRpcMethods() {
       handler: async ({ workspacePath, personaId, branchName, uuid }) => {
         const entries = await persistence.read(workspacePath, personaId, branchName, uuid);
         return { entries };
+      },
+    }),
+    'delegate-task': rpc.method({
+      description:
+        'Spawn a Worker to execute an implementation task. Returns a taskId for tracking.',
+      input: z.object({
+        personaId: z.string(),
+        description: z.string().min(1),
+        worktreeName: z.string().nullable(),
+      }),
+      handler: async ({ personaId, description, worktreeName }) => {
+        const settings = await loadPersonaSettings(personaId);
+        const persona = await loadPersona(personaId);
+
+        const workDir = resolveWorkerWorkDir(personaId, settings, worktreeName);
+
+        const worktreeCtx = worktreeName
+          ? await buildWorktreeContext(worktreeName, workDir)
+          : undefined;
+
+        const prompt = buildWorkerPrompt(persona, {
+          taskDescription: description,
+          worktree: worktreeCtx,
+        });
+
+        const { taskId } = await sessionManager.delegateTask({
+          personaId,
+          description,
+          worktreeName,
+          createRuntime: () =>
+            createWorkerRuntime({
+              settings,
+              prompt,
+              apiKey: currentApiKey,
+              workDir,
+              appServerProcess: getAppServerProcess(),
+            }),
+        });
+        return { taskId };
+      },
+    }),
+    'cancel-task': rpc.method({
+      description: 'Cancel a running Worker task.',
+      input: z.object({
+        personaId: z.string(),
+        taskId: z.string(),
+      }),
+      handler: async ({ personaId, taskId }) => {
+        sessionManager.cancelTask(personaId, taskId);
+        return {};
+      },
+    }),
+    'get-task-status': rpc.method({
+      description: 'Get the status of a Worker task.',
+      input: z.object({
+        personaId: z.string(),
+        taskId: z.string(),
+      }),
+      handler: async ({ personaId, taskId }) => {
+        const task = sessionManager.getTaskStatus(personaId, taskId);
+        if (!task) return { found: false };
+        return {
+          found: true,
+          status: task.status,
+          description: task.description,
+          worktreeName: task.worktreeName,
+          startedAt: task.startedAt,
+          endedAt: task.endedAt,
+          errorMessage: task.errorMessage,
+        };
       },
     }),
   };
