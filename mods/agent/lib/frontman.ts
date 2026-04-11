@@ -5,6 +5,12 @@ import type { CodexAppServerProcess } from './runtime/codex-appserver-process.ts
 import { CodexAppServerRuntime } from './runtime/codex-appserver-runtime.ts';
 import type { AgentSettings, Persona } from './types.ts';
 
+/** Lightweight model for SDK (Claude) runtime — always used for Frontman. */
+const FRONTMAN_MODEL_SDK = 'claude-haiku-4-5-20251001';
+
+/** Lightweight model for Codex AppServer runtime — always used for Frontman. */
+const FRONTMAN_MODEL_CODEX = 'gpt-5.1-codex-mini';
+
 const FRONTMAN_INSTRUCTIONS = `
 ## Your role
 
@@ -48,8 +54,11 @@ export interface FrontmanRuntimeOptions {
  */
 export function createFrontmanRuntime(options: FrontmanRuntimeOptions): AgentRuntime {
   const { settings, prompt, apiKey, workDir, appServerProcess } = options;
+  const frontmanModel =
+    settings.runtime === 'codex' ? FRONTMAN_MODEL_CODEX : FRONTMAN_MODEL_SDK;
   const frontmanSettings: AgentSettings = {
     ...settings,
+    claudeModel: frontmanModel,
     disallowedTools: [...(settings.disallowedTools ?? []), 'Bash', 'Write', 'Edit'],
   };
   switch (frontmanSettings.runtime) {

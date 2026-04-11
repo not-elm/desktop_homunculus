@@ -122,6 +122,7 @@ export class CodexAppServerRuntime implements AgentRuntime {
       sandbox: 'workspace-write',
       experimentalRawEvents: false,
       persistExtendedHistory: false,
+      model: this.settings.claudeModel || undefined,
       config: {
         mcp_servers: {
           homunculus: { url: 'http://localhost:3100/mcp' },
@@ -147,6 +148,7 @@ export class CodexAppServerRuntime implements AgentRuntime {
       personality: 'none',
       sandbox: 'workspace-write',
       persistExtendedHistory: false,
+      model: this.settings.claudeModel || undefined,
       config: {
         mcp_servers: {
           homunculus: { url: 'http://localhost:3100/mcp' },
