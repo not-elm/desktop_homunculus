@@ -214,6 +214,56 @@ describe('Worker permission routing', () => {
   });
 });
 
+describe('permission timeout behavior', () => {
+  let manager: SessionManager;
+  let sendSpy: ReturnType<typeof vi.spyOn>;
+  const sent: { channel: string; payload: unknown }[] = [];
+
+  beforeEach(() => {
+    sent.length = 0;
+    manager = createManager();
+    sendSpy = vi.spyOn(signals, 'send').mockImplementation(async (channel: string, payload: unknown) => {
+      sent.push({ channel, payload });
+    });
+  });
+
+  afterEach(() => {
+    sendSpy.mockRestore();
+  });
+
+  it('does not auto-decline permission requests within 60s', async () => {
+    // This test verifies the 60s auto-decline is gone.
+    // We can't actually wait 60s in a test, but we verify that after a short
+    // delay the permission is still pending (not auto-declined).
+
+    // Use a runtime that emits a permission_request then waits
+    const runtime = new MockAgentRuntime([
+      { type: 'permission_request', requestId: 'r1', tool: 'bash', input: {} },
+      { type: 'completed', sessionId: 's1' },
+    ]);
+
+    const { taskId } = await manager.delegateTask({
+      personaId: 'alice',
+      description: 'test permission',
+      worktreeName: null,
+      createRuntime: () => runtime,
+    });
+
+    // Wait a bit — old code would have set a 60s timer
+    await new Promise((r) => setTimeout(r, 200));
+
+    // Worker should still be running (blocked on permission)
+    const task = manager.getTaskStatus('alice', taskId);
+    expect(task?.status).toBe('running');
+
+    // Now resolve it manually
+    manager.resolveWorkerPermission('r1', { type: 'permission', approved: true });
+    await new Promise((r) => setTimeout(r, 50));
+
+    expect(manager.getTaskStatus('alice', taskId)?.status).toBe('completed');
+  });
+});
+
 describe('peer message delivery', () => {
   let manager: SessionManager;
   let messageRouter: MessageRouter;

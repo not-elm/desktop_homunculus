@@ -657,11 +657,6 @@ export class SessionManager {
 
     signals.send('agent:permission', permissionPayload);
 
-    const timer = setTimeout(
-      () => deferred.resolve({ approved: false, message: 'Permission request timed out' }),
-      60_000,
-    );
-
     const onAbort = () => deferred.reject(signal.reason);
     signal.addEventListener('abort', onAbort, { once: true });
 
@@ -682,7 +677,6 @@ export class SessionManager {
         decision: result.decision,
       };
     } finally {
-      clearTimeout(timer);
       signal.removeEventListener('abort', onAbort);
       permAbort.abort();
       this.pendingApprovals.delete(event.requestId);
