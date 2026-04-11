@@ -1,7 +1,7 @@
 import { mkdirSync } from 'node:fs';
 import { homedir } from 'node:os';
 import path from 'node:path';
-import { preferences, Persona as SdkPersona, signals, stt } from '@hmcs/sdk';
+import { audio, preferences, Persona as SdkPersona, signals, stt } from '@hmcs/sdk';
 import { rpc } from '@hmcs/sdk/rpc';
 import { z } from 'zod';
 import type { AgentEvent, AgentResponse, AgentRuntime } from './lib/agent-runtime.ts';
@@ -18,6 +18,7 @@ import {
   type SessionHandle,
   SessionPersistence,
 } from './lib/session-persistence.ts';
+import { DEFAULT_PERMISSION_SE, resolvePermissionSeAsset } from './lib/permission-se.ts';
 import { sanitizeForTts } from './lib/tts.ts';
 import {
   type AgentSettings,
@@ -253,6 +254,23 @@ async function loadPersona(personaId: string): Promise<Persona> {
     profile: snapshot.profile ?? '',
     personality: snapshot.personality ?? null,
   };
+}
+
+async function playPermissionSe(personaId: string): Promise<void> {
+  let assetId: string | null;
+  try {
+    const p = await SdkPersona.load(personaId);
+    const metadata = await p.metadata();
+    assetId = resolvePermissionSeAsset(metadata);
+  } catch (e) {
+    console.error(`[agent] failed to load permission SE metadata, using default:`, e);
+    assetId = DEFAULT_PERMISSION_SE;
+  }
+  if (assetId) {
+    audio.se.play(assetId).catch((e) => {
+      console.error(`[agent] failed to play permission SE:`, e);
+    });
+  }
 }
 
 function resolveWorkingDirectory(personaId: string, settings: AgentSettings): string {
@@ -624,6 +642,8 @@ async function resolvePermission(
     `[agent] resolvePermission: ${event.tool} (${event.requestId})`,
     JSON.stringify(permissionPayload, null, 2),
   );
+
+  playPermissionSe(personaId);
 
   signals.send('agent:permission', permissionPayload);
 
