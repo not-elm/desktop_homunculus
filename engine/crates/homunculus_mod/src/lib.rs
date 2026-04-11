@@ -26,8 +26,8 @@
 
 mod load;
 mod mod_asset_reader;
-mod mod_service;
-mod node_process;
+pub mod mod_service;
+pub mod node_process;
 
 use crate::load::ModLoadPlugin;
 use crate::mod_asset_reader::ModAssetReader;

@@ -70,7 +70,7 @@ fn run_mod_services(
 
 /// Append a child PID to `~/.homunculus/mod_pids` so stale processes can be
 /// detected and cleaned up on next launch.
-fn append_pid_file(pid: u32) {
+pub fn append_pid_file(pid: u32) {
     use std::io::Write;
     let path = homunculus_utils::path::homunculus_dir().join("mod_pids");
     if let Ok(mut f) = std::fs::OpenOptions::new()
@@ -107,7 +107,7 @@ fn launch_mod_service_process(
         .spawn()
 }
 
-fn build_process_handle(mut child: std::process::Child, mod_name: &str) -> NodeProcessHandle {
+pub fn build_process_handle(mut child: std::process::Child, mod_name: &str) -> NodeProcessHandle {
     spawn_log_reader(child.stdout.take(), mod_name, false);
     spawn_log_reader(child.stderr.take(), mod_name, true);
 
@@ -127,7 +127,7 @@ fn allocate_ephemeral_port() -> std::io::Result<u16> {
     Ok(listener.local_addr()?.port())
 }
 
-fn spawn_log_reader<R: std::io::Read + Send + 'static>(
+pub fn spawn_log_reader<R: std::io::Read + Send + 'static>(
     reader: Option<R>,
     mod_name: &str,
     is_stderr: bool,

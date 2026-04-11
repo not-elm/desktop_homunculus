@@ -4722,10 +4722,12 @@ name = "homunculus_mod"
 version = "0.1.0-alpha.6-dev"
 dependencies = [
  "bevy",
+ "chrono",
  "futures-lite",
  "homunculus_core",
  "homunculus_utils",
  "libc",
+ "uuid",
 ]
 
 [[package]]
