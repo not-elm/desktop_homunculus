@@ -682,6 +682,20 @@ body {
   border-radius: 12px 12px 4px 12px;
 }
 
+.hud-log-entry--peer {
+  display: flex;
+  justify-content: flex-end;
+  padding: var(--hud-space-sm) var(--hud-space-lg);
+}
+.hud-log-entry--peer .hud-log-entry__message {
+  background: oklch(0.16 0.02 280 / 0.7);
+  color: oklch(0.85 0.10 280);
+  padding: var(--hud-space-sm) var(--hud-space-md);
+  border-radius: 8px;
+  max-width: 85%;
+  font-size: var(--hud-text-sm);
+}
+
 .hud-log-entry--system {
   font-size: var(--hud-font-size-sm);
   font-weight: 300;
@@ -1060,6 +1074,50 @@ h3.hud-md-heading {
   color: var(--hud-status-error);
   background: oklch(0.65 0.2 15 / 0.12);
   border-color: oklch(0.65 0.2 15 / 0.25);
+}
+
+/* ━━ Workers Icon Button ━━ */
+
+.hud-workers-btn {
+  position: relative;
+}
+
+.hud-workers-btn--disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.hud-workers-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 14px;
+  height: 14px;
+  border-radius: 7px;
+  background: oklch(0.65 0.18 145);
+  color: oklch(0.98 0 0);
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 14px;
+  text-align: center;
+  padding: 0 3px;
+  pointer-events: none;
+}
+
+.hud-workers-badge--alert {
+  background: oklch(0.65 0.2 20);
+  animation: workers-badge-pulse 1s ease-in-out infinite;
+}
+
+@keyframes workers-badge-pulse {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 4px oklch(0.65 0.2 20);
+  }
+  50% {
+    opacity: 0.7;
+    box-shadow: 0 0 8px oklch(0.65 0.2 20);
+  }
 }
 
 /* ━━ Session Toggle Button ━━ */
