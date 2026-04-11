@@ -16,7 +16,9 @@ async-channel = { workspace = true }
 async-broadcast = { workspace = true }
 bevy_vrm1 = { workspace = true }
 homunculus_core = { workspace = true }
+homunculus_mod = { workspace = true }
 homunculus_audio = { workspace = true }
+chrono = { workspace = true }
 homunculus_effects = { workspace = true }
 homunculus_prefs = { workspace = true }
 homunculus_shadow_panel = { workspace = true }
