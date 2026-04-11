@@ -304,6 +304,14 @@ function buildRpcMethods() {
         decision: z.union([z.string(), z.record(z.unknown())]).optional(),
       }),
       handler: async ({ requestId, approved, decision }) => {
+        // Try Worker permission first, then fall back to Frontman
+        const workerResolved = sessionManager.resolveWorkerPermission(requestId, {
+          type: 'permission',
+          approved,
+          decision,
+        });
+        if (workerResolved) return {};
+
         const ok = sessionManager.resolvePermission(requestId, { approved, decision });
         if (!ok) {
           throw new Error('No pending approval for this request');

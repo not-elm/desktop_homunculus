@@ -377,10 +377,33 @@ export class SessionManager {
     return sessions;
   }
 
+  private readonly pendingWorkerApprovals = new Map<string, Deferred<AgentResponse>>();
+
+  /** Resolve a pending Worker permission request. Returns false if not found. */
+  resolveWorkerPermission(requestId: string, response: AgentResponse): boolean {
+    const pending = this.pendingWorkerApprovals.get(requestId);
+    if (!pending) return false;
+    pending.resolve(response);
+    this.pendingWorkerApprovals.delete(requestId);
+    return true;
+  }
+
   private async runWorkerLoop(task: WorkerTask, runtime: AgentRuntime): Promise<void> {
     const gen = runtime.execute(task.description, null, task.controller.signal);
-    for await (const event of gen) {
+    let nextResponse: AgentResponse | undefined;
+
+    while (true) {
       if (task.controller.signal.aborted) break;
+      const { done, value: event } = await gen.next(nextResponse);
+      nextResponse = undefined;
+      if (done) break;
+
+      await signals.send('agent:worker-event', {
+        personaId: task.personaId,
+        taskId: task.taskId,
+        event,
+      });
+
       if (event.type === 'completed') {
         task.sessionId = event.sessionId;
         task.status = 'completed';
@@ -393,6 +416,32 @@ export class SessionManager {
         task.endedAt = new Date().toISOString();
         return;
       }
+      if (event.type === 'permission_request') {
+        nextResponse = await this.waitForWorkerPermission(task, event);
+      }
+    }
+  }
+
+  private async waitForWorkerPermission(
+    task: WorkerTask,
+    event: AgentEvent & { type: 'permission_request' },
+  ): Promise<AgentResponse> {
+    const deferred = new Deferred<AgentResponse>();
+    this.pendingWorkerApprovals.set(event.requestId, deferred);
+
+    await signals.send('agent:permission', {
+      personaId: task.personaId,
+      taskId: task.taskId,
+      requestId: event.requestId,
+      action: event.tool,
+      target: JSON.stringify(event.input),
+      availableDecisions: event.availableDecisions,
+    });
+
+    try {
+      return await deferred.promise;
+    } finally {
+      this.pendingWorkerApprovals.delete(event.requestId);
     }
   }
 
@@ -593,6 +642,7 @@ export class SessionManager {
 
     const permissionPayload = {
       personaId,
+      taskId: null,
       requestId: event.requestId,
       action: event.tool,
       target: JSON.stringify(event.input),
