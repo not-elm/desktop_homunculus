@@ -6,7 +6,7 @@
   "author": "notelm",
   "type": "module",
   "scripts": {
-    "build": "pnpm exec vite build ui/session",
+    "build": "pnpm exec vite build ui/session && pnpm exec vite build ui/workers",
     "dev": "pnpm exec vite dev ui/session",
     "test": "vitest run"
   },
@@ -24,6 +24,11 @@
         "path": "ui/session/dist/index.html",
         "type": "html",
         "description": "Agent session HUD"
+      },
+      "agent:workers-ui": {
+        "path": "ui/workers/dist/index.html",
+        "type": "html",
+        "description": "Worker activity viewer WebView"
       },
       "agent:request-permissions": {
         "path": "assets/request_permissions.mp3",

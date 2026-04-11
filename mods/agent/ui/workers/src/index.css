@@ -1,0 +1,10 @@
+@import "tailwindcss";
+@import "@hmcs/ui/dist/index.css";
+
+@import "../../shared/tokens.css";
+
+body {
+  margin: 0;
+  background: transparent;
+  backdrop-filter: blur(10px);
+}
