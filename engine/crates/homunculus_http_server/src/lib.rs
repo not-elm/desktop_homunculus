@@ -35,6 +35,8 @@
 //! - `DELETE /personas/{id}` - Delete persona
 //! - `GET /personas/{id}/events` - SSE event stream
 //! - `GET /personas/stream` - Combined SSE stream for all personas
+//! - `GET /personas/{id}/thumbnail` - Get thumbnail asset ID
+//! - `PUT /personas/{id}/thumbnail` - Set (or clear with `null`) thumbnail asset ID
 //!
 //! ### VRM Operations (via persona)
 //! - `POST /personas/{id}/vrm` - Attach VRM model
@@ -381,6 +383,10 @@ fn persona_id_router() -> OpenApiRouter<HttpState> {
         .routes(routes!(
             persona::fields::get_metadata,
             persona::fields::put_metadata
+        ))
+        .routes(routes!(
+            persona::fields::get_thumbnail,
+            persona::fields::put_thumbnail
         ))
         .routes(routes!(
             persona::fields::get_transform,
