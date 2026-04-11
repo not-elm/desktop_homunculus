@@ -26,6 +26,10 @@ pub struct CreatePersona {
     #[serde(default)]
     pub personality: Option<String>,
     #[serde(default)]
+    pub vrm_asset_id: Option<String>,
+    #[serde(default)]
+    pub thumbnail: Option<String>,
+    #[serde(default)]
     #[cfg_attr(feature = "openapi", schema(value_type = Option<std::collections::HashMap<String, Object>>))]
     pub metadata: Option<HashMap<String, serde_json::Value>>,
 }
@@ -71,8 +75,8 @@ fn build_persona(persona_id: &PersonaId, args: &CreatePersona) -> Persona {
         first_person_pronoun: args.first_person_pronoun.clone(),
         profile: args.profile.clone().unwrap_or_default(),
         personality: args.personality.clone(),
-        vrm_asset_id: None,
-        thumbnail: None,
+        vrm_asset_id: args.vrm_asset_id.clone(),
+        thumbnail: args.thumbnail.clone(),
         metadata: args.metadata.clone().unwrap_or_default(),
     }
 }
