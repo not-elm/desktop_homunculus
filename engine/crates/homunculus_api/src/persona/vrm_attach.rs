@@ -19,12 +19,17 @@ impl PersonaApi {
     ) -> ApiResult<PersonaSnapshot> {
         self.0
             .schedule(move |task| async move {
-                let (snapshot, entity) = task
+                let (snapshot, entity, asset_id) = task
                     .will(Update, once::run(attach).with((persona_id, asset_id)))
                     .await
                     .ok()?;
                 task.will(Update, wait::until(initialized).with(entity))
                     .await;
+                task.will(
+                    Update,
+                    once::run(broadcast_attached).with((entity, asset_id)),
+                )
+                .await;
                 Some(snapshot)
             })
             .await?
@@ -42,10 +47,9 @@ fn attach(
     asset_resolver: AssetResolver,
     cameras: Cameras,
     prefs: NonSend<PrefsDatabase>,
-    tx_attached: Option<Res<VrmEventSender<VrmAttachedEvent>>>,
     tx_detached: Option<Res<VrmEventSender<VrmDetachedEvent>>>,
     tx_change: Option<Res<VrmEventSender<PersonaChangeEvent>>>,
-) -> ApiResult<(PersonaSnapshot, Entity)> {
+) -> ApiResult<(PersonaSnapshot, Entity, String)> {
     let entity = index.get(&persona_id).ok_or(ApiError::EntityNotFound)?;
 
     if vrm_handles.get(entity).is_ok() {
@@ -77,14 +81,7 @@ fn attach(
     let updated = persona.clone();
     let state_str = state.0.clone();
 
-    persist_and_broadcast(
-        &prefs,
-        &tx_attached,
-        &tx_change,
-        entity,
-        &updated,
-        &asset_id,
-    );
+    persist_and_broadcast_change(&prefs, &tx_change, entity, &updated);
 
     Ok((
         PersonaSnapshot {
@@ -93,28 +90,19 @@ fn attach(
             spawned: true,
         },
         entity,
+        asset_id,
     ))
 }
 
-/// Persists persona to DB and broadcasts attach/change events.
-fn persist_and_broadcast(
+/// Persists persona to DB and broadcasts a change event.
+fn persist_and_broadcast_change(
     prefs: &PrefsDatabase,
-    tx_attached: &Option<Res<VrmEventSender<VrmAttachedEvent>>>,
     tx_change: &Option<Res<VrmEventSender<PersonaChangeEvent>>>,
     entity: Entity,
     persona: &Persona,
-    asset_id: &str,
 ) {
     if let Err(e) = prefs.update_persona(persona) {
         warn!("Failed to persist persona after VRM attach: {e}");
-    }
-    if let Some(tx) = tx_attached {
-        let _ = tx.try_broadcast(VrmEvent {
-            vrm: entity,
-            payload: VrmAttachedEvent {
-                asset_id: asset_id.to_string(),
-            },
-        });
     }
     if let Some(tx) = tx_change {
         let _ = tx.try_broadcast(VrmEvent {
@@ -122,6 +110,19 @@ fn persist_and_broadcast(
             payload: PersonaChangeEvent {
                 persona: persona.clone(),
             },
+        });
+    }
+}
+
+/// Broadcasts [`VrmAttachedEvent`] after the VRM entity is fully initialized.
+fn broadcast_attached(
+    In((entity, asset_id)): In<(Entity, String)>,
+    tx: Option<Res<VrmEventSender<VrmAttachedEvent>>>,
+) {
+    if let Some(tx) = tx {
+        let _ = tx.try_broadcast(VrmEvent {
+            vrm: entity,
+            payload: VrmAttachedEvent { asset_id },
         });
     }
 }
