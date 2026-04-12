@@ -3,7 +3,7 @@ import {
   DEFAULT_ANIMATIONS,
   resolveBehaviorConfig,
   type BehaviorAnimations,
-} from '@persona/shared/behavior-config';
+} from '../shared/behavior-config.ts';
 
 const personaId = process.argv[2];
 if (!personaId) {

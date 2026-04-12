@@ -1,5 +1,5 @@
 import { host, Persona, type PersonaSnapshot, processes, type ProcessHandle } from '@hmcs/sdk';
-import { resolveProcessCommand, resolveBehaviorConfig } from '@persona/shared/behavior-config';
+import { resolveProcessCommand, resolveBehaviorConfig } from './shared/behavior-config.ts';
 import { EventSource } from 'eventsource';
 
 const handleMap = new Map<string, ProcessHandle>();
