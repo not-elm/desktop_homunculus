@@ -13,7 +13,7 @@ use super::PersonaPath;
         (status = 200, description = "List of personas", body = Vec<PersonaSnapshot>),
     ),
 )]
-pub async fn list(State(api): State<PersonaApi>) -> HttpResult<Vec<PersonaSnapshot>> {
+pub async fn list_personas(State(api): State<PersonaApi>) -> HttpResult<Vec<PersonaSnapshot>> {
     api.list().await.into_http_result()
 }
 
@@ -28,6 +28,6 @@ pub async fn list(State(api): State<PersonaApi>) -> HttpResult<Vec<PersonaSnapsh
         (status = 404, description = "Persona not found"),
     ),
 )]
-pub async fn get(State(api): State<PersonaApi>, path: PersonaPath) -> HttpResult<PersonaSnapshot> {
+pub async fn get_persona(State(api): State<PersonaApi>, path: PersonaPath) -> HttpResult<PersonaSnapshot> {
     api.get(path.persona_id).await.into_http_result()
 }

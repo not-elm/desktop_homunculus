@@ -21,7 +21,7 @@ use tokio::task::JoinHandle;
         (status = 200, description = "List of active signal channels", body = Vec<SignalInfo>),
     ),
 )]
-pub async fn list(State(api): State<SignalsApi>) -> HttpResult<Vec<SignalInfo>> {
+pub async fn list_signals(State(api): State<SignalsApi>) -> HttpResult<Vec<SignalInfo>> {
     api.list().await.into_http_result()
 }
 

@@ -56,7 +56,7 @@ pub async fn stop(
         (status = 200, description = "List of running processes", body = Vec<ProcessInfo>),
     ),
 )]
-pub async fn list(State(api): State<ProcessesApi>) -> HttpResult<Vec<ProcessInfo>> {
+pub async fn list_processes(State(api): State<ProcessesApi>) -> HttpResult<Vec<ProcessInfo>> {
     api.list().await.into_http_result()
 }
 

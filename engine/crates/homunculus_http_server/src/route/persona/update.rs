@@ -17,7 +17,7 @@ use super::PersonaPath;
         (status = 404, description = "Persona not found"),
     ),
 )]
-pub async fn patch(
+pub async fn update_persona(
     State(api): State<PersonaApi>,
     path: PersonaPath,
     Json(body): Json<PatchPersona>,
