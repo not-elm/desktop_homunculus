@@ -234,6 +234,9 @@ pub async fn reload(State(api): State<WebviewApi>, EntityId(entity): EntityId) -
         (status = 404, description = "Webview not found"),
     ),
 )]
-pub async fn delete_webview(State(api): State<WebviewApi>, EntityId(entity): EntityId) -> HttpResult {
+pub async fn delete_webview(
+    State(api): State<WebviewApi>,
+    EntityId(entity): EntityId,
+) -> HttpResult {
     api.close(entity).await.into_http_result()
 }

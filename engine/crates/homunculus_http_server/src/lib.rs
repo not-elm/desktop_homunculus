@@ -356,7 +356,10 @@ fn entities_router() -> OpenApiRouter<HttpState> {
 
 fn entities_id_router() -> OpenApiRouter<HttpState> {
     OpenApiRouter::new()
-        .routes(routes!(entities::transform::get_transform, entities::transform::set_transform))
+        .routes(routes!(
+            entities::transform::get_transform,
+            entities::transform::set_transform
+        ))
         .routes(routes!(entities::name::get_entity_name))
         .routes(routes!(entities::move_to::move_to))
         .routes(routes!(entities::tween::tween_position))
@@ -366,7 +369,10 @@ fn entities_id_router() -> OpenApiRouter<HttpState> {
 
 fn persona_router() -> OpenApiRouter<HttpState> {
     OpenApiRouter::new()
-        .routes(routes!(persona::get::list_personas, persona::create::create))
+        .routes(routes!(
+            persona::get::list_personas,
+            persona::create::create
+        ))
         .routes(routes!(persona::snapshot::snapshot))
         .routes(routes!(persona::stream::stream))
         .nest("/{id}", persona_id_router())
@@ -400,7 +406,10 @@ fn persona_id_router() -> OpenApiRouter<HttpState> {
             persona::fields::get_personality,
             persona::fields::put_personality
         ))
-        .routes(routes!(persona::state::get_persona_state, persona::state::set_persona_state))
+        .routes(routes!(
+            persona::state::get_persona_state,
+            persona::state::set_persona_state
+        ))
         .routes(routes!(
             persona::fields::get_metadata,
             persona::fields::put_metadata
@@ -449,13 +458,20 @@ fn settings_router() -> OpenApiRouter<HttpState> {
 }
 
 fn shadow_panel_router() -> OpenApiRouter<HttpState> {
-    OpenApiRouter::new().routes(routes!(shadow_panel::alpha::get_shadow_alpha, shadow_panel::alpha::set_shadow_alpha))
+    OpenApiRouter::new().routes(routes!(
+        shadow_panel::alpha::get_shadow_alpha,
+        shadow_panel::alpha::set_shadow_alpha
+    ))
 }
 
 fn webviews_router() -> OpenApiRouter<HttpState> {
     OpenApiRouter::new()
         .routes(routes!(webviews::list_webviews, webviews::open))
-        .routes(routes!(webviews::get_webview, webviews::update_webview, webviews::delete_webview))
+        .routes(routes!(
+            webviews::get_webview,
+            webviews::update_webview,
+            webviews::delete_webview
+        ))
         .routes(routes!(webviews::is_closed))
         .routes(routes!(webviews::navigate))
         .routes(routes!(webviews::navigate_back))

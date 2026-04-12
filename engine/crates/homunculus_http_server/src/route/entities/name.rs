@@ -14,7 +14,10 @@ use homunculus_api::prelude::axum::{HttpResult, IntoHttpResult};
         (status = 404, description = "Entity not found"),
     ),
 )]
-pub async fn get_entity_name(State(api): State<EntitiesApi>, EntityId(entity): EntityId) -> HttpResult<String> {
+pub async fn get_entity_name(
+    State(api): State<EntitiesApi>,
+    EntityId(entity): EntityId,
+) -> HttpResult<String> {
     api.name(entity).await.into_http_result()
 }
 
