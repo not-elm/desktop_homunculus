@@ -11,11 +11,12 @@ const running = await processes.list();
 const runningArgs = new Set(running.map((p) => p.args[0]));
 
 for (const snapshot of personas) {
-  if (snapshot.metadata?.['auto-spawn'] === true) {
-    await spawnIfNeeded(snapshot);
-  }
-  if (snapshot.spawned && !runningArgs.has(snapshot.id)) {
-    await startBehaviorProcess(snapshot);
+  const effective = snapshot.metadata?.['auto-spawn'] === true
+    ? await spawnIfNeeded(snapshot)
+    : snapshot;
+
+  if (effective.spawned && !runningArgs.has(effective.id)) {
+    await startBehaviorProcess(effective);
   }
 }
 
@@ -26,6 +27,7 @@ const source = new EventSource(streamUrl.toString());
 
 source.addEventListener('persona-spawned', async (event) => {
   const data = JSON.parse(event.data) as { personaId: string };
+  if (handleMap.has(data.personaId)) return;
   const snap = await new Persona(data.personaId).snapshot();
   await startBehaviorProcess(snap);
 });
@@ -51,13 +53,14 @@ process.on('SIGTERM', async () => {
 
 // --- Helpers ---
 
-async function spawnIfNeeded(snapshot: PersonaSnapshot): Promise<void> {
-  if (snapshot.spawned) return;
+async function spawnIfNeeded(snapshot: PersonaSnapshot): Promise<PersonaSnapshot> {
+  if (snapshot.spawned) return snapshot;
   const p = new Persona(snapshot.id);
   try {
-    await p.spawn();
+    return await p.spawn();
   } catch {
-    // Already spawned — continue
+    // Already spawned or failed — return fresh snapshot
+    return await p.snapshot();
   }
 }
 
