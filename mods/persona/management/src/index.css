@@ -765,7 +765,7 @@ body {
 }
 
 .settings-section-heading::before {
-  content: '';
+  content: "";
   display: inline-block;
   width: 3px;
   height: 12px;
@@ -797,9 +797,15 @@ body {
   vertical-align: middle;
 }
 
-.settings-state-dot--idle { background: oklch(0.72 0.14 192); }
-.settings-state-dot--drag { background: oklch(0.7 0.16 350); }
-.settings-state-dot--sitting { background: oklch(0.65 0.18 285); }
+.settings-state-dot--idle {
+  background: oklch(0.72 0.14 192);
+}
+.settings-state-dot--drag {
+  background: oklch(0.7 0.16 350);
+}
+.settings-state-dot--sitting {
+  background: oklch(0.65 0.18 285);
+}
 
 .settings-behavior-hint {
   margin-top: var(--hud-space-lg);

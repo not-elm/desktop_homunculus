@@ -1,6 +1,6 @@
-import { host, Persona, type PersonaSnapshot, processes, type ProcessHandle } from '@hmcs/sdk';
-import { resolveProcessCommand, resolveBehaviorConfig } from './shared/behavior-config.ts';
+import { host, Persona, type PersonaSnapshot, type ProcessHandle, processes } from '@hmcs/sdk';
 import { EventSource } from 'eventsource';
+import { resolveBehaviorConfig, resolveProcessCommand } from './shared/behavior-config.ts';
 
 const handleMap = new Map<string, ProcessHandle>();
 
@@ -11,9 +11,8 @@ const running = await processes.list();
 const runningArgs = new Set(running.map((p) => p.args[0]));
 
 for (const snapshot of personas) {
-  const effective = snapshot.metadata?.['auto-spawn'] === true
-    ? await spawnIfNeeded(snapshot)
-    : snapshot;
+  const effective =
+    snapshot.metadata?.['auto-spawn'] === true ? await spawnIfNeeded(snapshot) : snapshot;
 
   if (effective.spawned && !runningArgs.has(effective.id)) {
     await startBehaviorProcess(effective);

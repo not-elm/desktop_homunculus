@@ -1,10 +1,10 @@
 import { Persona, type PersonaSnapshot } from '@hmcs/sdk';
-import type { PersonaFormValues } from '@persona/shared/components/PersonaFields';
 import {
   type BehaviorAnimations,
   DEFAULT_ANIMATIONS,
   resolveBehaviorConfig,
 } from '@persona/shared/behavior-config';
+import type { PersonaFormValues } from '@persona/shared/components/PersonaFields';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 export interface UsePersonaDetailReturn {
@@ -58,7 +58,8 @@ export function usePersonaDetail(
   const initialVrm = useRef<string | null>(null);
   const initialThumbnail = useRef<string | null>(null);
   const [behaviorProcess, setBehaviorProcess] = useState<string | null>(null);
-  const [behaviorAnimations, setBehaviorAnimations] = useState<BehaviorAnimations>(DEFAULT_ANIMATIONS);
+  const [behaviorAnimations, setBehaviorAnimations] =
+    useState<BehaviorAnimations>(DEFAULT_ANIMATIONS);
   const initialBehaviorProcess = useRef<string | null>(null);
   const initialBehaviorAnimations = useRef<BehaviorAnimations>(DEFAULT_ANIMATIONS);
 
@@ -153,7 +154,16 @@ export function usePersonaDetail(
         return false;
       }
     },
-    [formValues, vrmAssetId, thumbnail, snapshot, persona, loadSnapshot, behaviorProcess, behaviorAnimations],
+    [
+      formValues,
+      vrmAssetId,
+      thumbnail,
+      snapshot,
+      persona,
+      loadSnapshot,
+      behaviorProcess,
+      behaviorAnimations,
+    ],
   );
 
   const save = useCallback(async () => {

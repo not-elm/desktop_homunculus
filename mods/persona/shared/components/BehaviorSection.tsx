@@ -1,7 +1,11 @@
 import { assets } from '@hmcs/sdk';
 import { AssetSelect, type AssetSelectGroup } from '@hmcs/ui';
-import { DEFAULT_PROCESS, isDefaultProcess, type BehaviorAnimations } from '@persona/shared/behavior-config';
-import { useBehaviorCommands, type BehaviorCommandItem } from '@persona/shared/hooks/useBehaviorCommands';
+import {
+  type BehaviorAnimations,
+  DEFAULT_PROCESS,
+  isDefaultProcess,
+} from '@persona/shared/behavior-config';
+import { useBehaviorCommands } from '@persona/shared/hooks/useBehaviorCommands';
 import { useEffect, useState } from 'react';
 
 export interface BehaviorSectionProps {

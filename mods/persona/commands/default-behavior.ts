@@ -1,8 +1,5 @@
-import { Persona, repeat, sleep } from '@hmcs/sdk';
-import {
-  resolveBehaviorConfig,
-  type BehaviorAnimations,
-} from '../shared/behavior-config.ts';
+import { Persona, type PersonaSnapshot, repeat, sleep } from '@hmcs/sdk';
+import { type BehaviorAnimations, resolveBehaviorConfig } from '../shared/behavior-config.ts';
 
 const personaId = process.argv[2];
 if (!personaId) {
@@ -12,7 +9,7 @@ if (!personaId) {
 
 const persona = new Persona(personaId);
 
-let snapshot;
+let snapshot: PersonaSnapshot;
 try {
   snapshot = await persona.snapshot();
 } catch {
@@ -42,7 +39,7 @@ events.on('vrm-attached', async (e) => {
 events.on('vrm-detached', async (e) => {
   console.log(`[default-behavior] EVENT vrm-detached:`, JSON.stringify(e));
 });
-events.on('persona-change', async (e) => {
+events.on('persona-change', async (_e) => {
   console.log(`[default-behavior] EVENT persona-change received`);
 });
 
@@ -53,11 +50,7 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-async function applyBehavior(
-  p: Persona,
-  state: string,
-  anims: BehaviorAnimations,
-): Promise<void> {
+async function applyBehavior(p: Persona, state: string, anims: BehaviorAnimations): Promise<void> {
   const vrm = p.vrm();
   const option = { repeat: repeat.forever(), transitionSecs: 0.5 } as const;
 

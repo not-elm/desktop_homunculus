@@ -20,7 +20,7 @@ export const DEFAULT_ANIMATIONS: BehaviorAnimations = {
 };
 
 export function resolveBehaviorConfig(snapshot: PersonaSnapshot): BehaviorConfig {
-  const raw = snapshot.metadata?.['behavior'] as Partial<BehaviorConfig> | undefined;
+  const raw = snapshot.metadata?.behavior as Partial<BehaviorConfig> | undefined;
   return {
     process: raw?.process ?? null,
     animations: {
