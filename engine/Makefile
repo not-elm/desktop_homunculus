@@ -30,7 +30,7 @@ BUNDLE_ID_BASE    := not.elm.homunculus.desktop
 
 # --- Existing targets ---
 
-.PHONY: setup setup-ci setup-cef debug gen-open-api fix-lint test gen-credits
+.PHONY: setup setup-ci setup-cef debug gen-open-api fix-lint test gen-credits stage-runtime install-cli
 
 setup:
 	$(PYTHON) scripts/setup.py
@@ -61,6 +61,12 @@ test:
 gen-credits:
 	mkdir -p credits/licenses
 	cargo about generate --workspace --locked --config about.toml --output-file $(RUST_LICENSES_OUTPUT) about.hbs
+
+stage-runtime: ## Download and stage Node.js, pnpm, tsx for bundling
+	$(PYTHON) scripts/stage_runtime.py
+
+install-cli: ## Install hmcs CLI via cargo install
+	cargo install --path crates/homunculus_cli
 
 # --- Release targets ---
 
