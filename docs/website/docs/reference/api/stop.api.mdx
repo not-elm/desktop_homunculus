@@ -1,12 +1,12 @@
 ---
 id: stop
-title: "Stop a VRM animation."
-description: "Stop a VRM animation."
-sidebar_label: "Stop a VRM animation."
+title: "Stop a managed process."
+description: "Stop a managed process."
+sidebar_label: "Stop a managed process."
 hide_title: true
 hide_table_of_contents: true
-api: eJx1VNty00gQ/ZWpflqqJrZZeNLTBkIt3gqQisPykLiKtqZtDcyNmZEdodK/b/VIOBezfrHU6us5p7uHjLsE1S3so4W1BB8oYtbeLRVUkLIPICFgREuZInv24NASVEAu69yBBO2ggoC5AQmKUh114AxQwbviIpYXICHSj1ZHUlDl2JKEVDdkEaoecheoFIva7WAY1qMzpfzGq449au8yucyPGILRdWlx/i1xlf40ld98ozo/KXoLmBJlnjFEnjJrSiVhMZ+08XyUc5Fy9G5nujN2VKLECa0Yhq2mOLtzd+5LxJAEiq+rkuWr2LRZhOj3WlESHCgSbil3InmBcaNzxNiJsWYSNTrns9jQnQucX4lDQ5EEuqnc8kLoJOg+UJ1JzcSKokajf3LyiC4FjOSy6QRyF8Ggdnfun9Wnj1MJLpsbEu9vbq7mxX5+tRQjfpy5dXWDbkdqBhKyzoYROefSSwXD8Mx2PbIEA395ym8xpOBdGlH+c7Hgv2eYOm0Lk4KFFkjBIOH14vWp5yQkHwUeYxiprW/d2NhT/1X2QaD49/rDQwCPZCk3npUdfMpF2bmBCub7aOf9KOiBX3A+ST9R3P/SfRsNVNDkHKr53PgaTeNTrl69XCxO5HLJn4WiPRkfLGuXZc2CvX6Q9rt7tIHhPKrwuAS8VVtfZDkh/t7b1tWtaRNzdlLwgtJ3HvqRG5Nc+N36KHiFojeGRcCw1A1GrHmnpTjQZq/pkKTAVmkvBTolrI/EkHEg1mVDpsV3PpOxIIEsaoaEjA3R7yJabvqvHZtntbc8htE1uUSPwi//vro8ezVbnHlnOnZhgMchXs4WswWbmB6L7lHU/zH6BIXjEme6z/Mif85WiOsnssdTJ6E63i/mm6lmxtcSmFR26/sNJvoczTCw+UdLsYPqdi1hj1Hjhlm57UHpxM8Kqi2aRCcdHW8X/HE9rcgL8fgw/rblyYiuNIim5TeQ8J26h9M7rAcJDaGiWFoZP74dC57dcIqH4JPDyYI87sPVp9UNSNhMB9d6xTERD3xE8TAW92Woss/F1oNBt2txx75jTv79Bxf/LqA=
-sidebar_class_name: "post api-method"
+api: eJx1k81u2zAQhF+FmFMLMLbS5MRTCyRoAriAkaa9BEZBi2uLCP9CUk4NQe9erO2kTp2eJK2Gy+E3ywFVrwvUA1KOLZVCBQuJmCjramO4NVAoNSZIJJ21p0qZ9QOC9gSFTgfj6Jc1kLABCknXDhKGSptt4iZQmO+7i71a3F5BItNTbzMZqJp7kihtR15DDajbRLt9sw1rjOOCxSXFwPbUgE9Nw4/3t2C3iQxGicvm8lR3s7cQYhWr2AeDcfzX7fcak9DC66DXZMQBzQQSnmoXmYkhR5V2VGoHhekrv+nwimSERKG8eUHWZ8fEak1qOnWx1a6LpaqL86Y5ITbj38LQhlxMnkIFY7BhFXeEbHWM6Cb6PrS964v4Mr89aXJF5ZHPciS7ub+fs1asYhZtDDVH52xYi59330Tb6axbjliKZ1puLD0XKXRvbJRCByN8zMQceKFuK1s5zEGIlZyHBHlt+ZjkfMpxnbVn05/XXJ600XMwzrYUCh0tn32dz84uJs1ZDG7LEoa2P8T5pJk0XEqxVK/D0ar/B/WGw+tEVfpdp8lpG7jfLo7hkODxDZBQf8d6IcEpsWIYlrrQj+zGkctPPeUt1MNCYqOz1UuO5GGAsYXfDdRKu0InZhgeB6rw4e5wBz6K927Iu64PRR224H1dz1+QeKTtm+s4Lsajeb26nl3fX2Mc/wABMle6
+sidebar_class_name: "delete api-method"
 info_path: reference/api/homunculus-api
 custom_edit_url: null
 ---
@@ -23,13 +23,13 @@ import Translate from "@docusaurus/Translate";
 <Heading
   as={"h1"}
   className={"openapi__heading"}
-  children={"Stop a VRM animation."}
+  children={"Stop a managed process."}
 >
 </Heading>
 
 <MethodEndpoint
-  method={"post"}
-  path={"/vrm/{entity}/vrma/stop"}
+  method={"delete"}
+  path={"/processes/{handle_id}"}
   context={"endpoint"}
 >
   
@@ -37,7 +37,7 @@ import Translate from "@docusaurus/Translate";
 
 
 
-Stop a VRM animation.
+Stop a managed process.
 
 <Heading
   id={"request"}

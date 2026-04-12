@@ -1,12 +1,12 @@
 ---
 id: despawn
-title: "Despawn a VRM model."
-description: "Despawn a VRM model."
-sidebar_label: "Despawn a VRM model."
+title: "Despawn persona entity, retaining DB record."
+description: "Despawn persona entity, retaining DB record."
+sidebar_label: "Despawn persona entity, retaining DB record."
 hide_title: true
 hide_table_of_contents: true
-api: eJx1U01v2zAM/SsCTxugJu7ak04bkGAtkAFB0e1S5MDaTCxUX5VoZ4Hh/z4w8bp02U6WqceHx/eoARh3BcwT9NnDRkNMlJFtDPcNGGioJNwH0JAwoyemLOABAnoCAxTY8gE02AAGEnILWprqbJOQgIHlEaLuF6Ah02tnMzVgOHekodQteQQzAB+S8BXONuxgHDcCLimGQkXuP1WVfN5T/3j4pnxsyKlJJzUwaritbi+xk4wQWW1jFxoYx7+VLk4kCtUb8Qw0eOI2nsxwxHT0glswMO+znw8nC0bQUCj3v/3psgMDLXMy87mLNbo2FjY311V14dBKrlVDPbmYPAUGGd+GbTw6Y9mJNXfRd6HuXFfUl/X9BcmCygvHpM5gd4+Pa8GqbcyqjoFzdM6G3XG8usWMteSp1Z6ee0v7ohV2jY1aYWiUj5lkfGnEmkXKFHqITM6DBvJoZUxyPuW4y+hF9OedlGd19BKGszWFQmftq6/r1dXNrLqKwR0EIqadhrieVbNKSikW9hjOuv4TzjsT3taI6SfPk0MbhOyYxTCldlp0DWZa3Y0GSUYuhuEZC33Pbhyl/NpRPoB52mjoMVt8lhieBmhskXMDZouu0IUGMUxCNPDhYdr3j+r8FfxT5FTEIK+pR9fJH2h4ocOfdzZuxrN9XCxXy8cljOMv0ypFmA==
-sidebar_class_name: "delete api-method"
+api: eJyVk01v2zAMhv+KwNMGqLG79qTTNgRYA2Rb0HW7BDkwNhsL1VclOl1g+L8PTNIuXXrZyTb9kqKelxyAcVPALCFRLjFggZWGmCgj2xhmLRhoqSR8CqAhYUZPTFkyBgjoCQzYFjTYAAYScgdaEppskxQAA4tDYTWbgoZMj73N1ILh3JOG0nTkEcwAvEtSrHC2YQPjuBJxSTEUKvL/Q13L4+3axxaphVHDdX19rvwWWb1oxn97nB7y1RGCosCWd1plYrTBho2aflaZmpjbCWjwxF0UNCkW3nPhDgxUzwyrwbZj9Zdbobx9htZnBwY65mSqysUGXRcLm6vLuj5DN5ffqqUtuZg8BQbBYsN93BOz7ATZTfR9aHrXF/VpMTsrMqXywDGpE9nN3d1CtOo+ZtXEwDk6J7f8dftVNR1mbMRkrZ5ovbX0VLTCvrVRKwyt8jGTUJBEbFhaOU5CiEzOgwbyaOWa5HzKcZPRS9MfNxKeNNGLTc42FAqdpM+/LOYXV5P6Iga3E4lAO1ziclJPagkJcY/hJOs/vXsF52XsmH5zlRzaIIfsPRqOtp6shgazH/ZnZ1caxDzRDMMaC/3Mbhwl/NhT3oFZrjRsMVtci1PLAVpb5L0Fc4+u0Fk7wlR8NvDu9rgq79WrDXqz4WMQww7kQNfLF2h4oN1hQcfVeDK2i+8/7mAc/wDk0ltE
+sidebar_class_name: "post api-method"
 info_path: reference/api/homunculus-api
 custom_edit_url: null
 ---
@@ -23,13 +23,13 @@ import Translate from "@docusaurus/Translate";
 <Heading
   as={"h1"}
   className={"openapi__heading"}
-  children={"Despawn a VRM model."}
+  children={"Despawn persona entity, retaining DB record."}
 >
 </Heading>
 
 <MethodEndpoint
-  method={"delete"}
-  path={"/vrm/{entity}"}
+  method={"post"}
+  path={"/personas/{id}/despawn"}
   context={"endpoint"}
 >
   
@@ -37,7 +37,7 @@ import Translate from "@docusaurus/Translate";
 
 
 
-Despawn a VRM model.
+Despawn persona entity, retaining DB record.
 
 <Heading
   id={"request"}

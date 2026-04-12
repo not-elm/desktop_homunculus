@@ -1,1 +1,1 @@
-{"responses":{"200":{"description":"SSE stream of VRM events","content":{"text/event-stream":{}}}}}
+{"responses":{"200":{"description":"SSE stream of persona events","content":{"text/event-stream":{}}}}}

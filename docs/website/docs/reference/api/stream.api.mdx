@@ -1,11 +1,11 @@
 ---
 id: stream
-title: "Stream events for a specific signal via SSE."
-description: "The signals are sent via `POST /signals/{signal}` API."
-sidebar_label: "Stream events for a specific signal via SSE."
+title: "Subscribe to a combined SSE stream of events from ALL personas."
+description: "Each event is wrapped in `PersonaEvent<E>` containing the source `personaId`."
+sidebar_label: "Subscribe to a combined SSE stream of events from ALL personas."
 hide_title: true
 hide_table_of_contents: true
-api: eJydU8Fu2zAM/RWBpw1QE3e9+bQCK9oCHRY02S5FgLIyYwuVJVWS0wWG/n2g4jVBU+ywk2U9UuTjexwhYRuhfoCoW4smwlpCQ1EF7ZN2FmpYdSQmUGAgEckmsdUoHhc/lisxn7D5uD/kR3G5uJ2BBOcpID9y20ANMQXCHiR4DNhTosBlR7DYE8MlGSRorukxdfC+kWUJEapDa8mIkigh0MugAzVQpzCQhKg66hHqEdLO076wti3kvObg6J2NFBn/UlX8eVdkeSVoyxTfGlbOJrKpPEm/07zAZxNcjznnLKGn1Dnm2VIqJFMHNZwMByRECtu/5IdgoIYuJV/P58YpNJ2Lqb44r6oT+ncMi4a2ZJzvuSFmpO3Glc50Msz2xvWDVYMZIstw8sg3is/JeXEUdrNaLThWbFwQzDU4Y7Rtxa/77zzsgIrFkuKVnraaXqMUODTaSYG2Eb0LNJuGhKoMaVLUukSG50c9aqZJpvfBtQF7bvpry9cz5XrIEoxWZCMdpd9dL+7OLmbVmbNmxyE8tD2J81k1q/jKu5h6tEdZy6LKXsFYGKGInpTeaDW5uHh3ubyavR/OeFD6/00/ma4YxRvUlvssMo+TKQ6rJqGebL+WwMIzOI5PGOlnMDnz9ctAYQf1w1rCFoPGJ1b5YYRGRz43UG/QRPoHlU/304Z8Fh9v0IctT5dod8CVzcB/IOGZdodtzessoSNsKJSm9uClUuTTUdrp1rBz3zbm+moFOf8BN9eMNw==
+api: eJzVU9tu2zAM/RWCz0rirm/GMKzYgjZABgRrt5ctQBiZiYXKkibJ7gLD/z7QuSzd9gN7MkyK5DmHhz1m2icsv2HgmLyjhGuFFScdTcjGOyxxTroG7thlMAleIoXAFRgHm9WxZi65t/N3G9DeZTLOuD3kmiH5NmqGzan3otpMv7uF07atOF3Ck4otZ642xyEJck0ZKDI4n4E6Mpa2lsE7CBwnpypIOTI1aYoKfeBIgnZRYYnHBCqMnIJ3iROWPb4pCvm8pvbBN1vjuILHx/mpIfgdkLVwHnPEhAqFG7ssTTL/zLMxMTkNK/thGAaFDefaC4g9Z1QYKNdY4uws7uyCLXHsOIryPbbRYol1zqGczazXZGufcnl7UxT45zKWkoaKO7Y+NIJnWCs0budHYCZbxhIffNM63do2wd1q8VeTj5yesw9w9ezh6Wklb2Hn47jG6K2VPX79/Al0TZF05pgUvPC2M/ySFFBbGa+AXAWNjzw9aUR61MhRI0icz2yFMDdkhCbbJkS/j9QI6Pd7CU+1b3BQaI1ml/iqfHm/Wk5up8XEO3uQJyLakcTNtJgWEgo+5YbcVdVjuxW6W4bsgUD/e8snt+2ib+BuuTxvfHTUK73637v/D44hH4JoMHo0WDJONBot1p/8eHXs6nwta4ViOkn2/ZYSf4l2GCT8o+V4wPLbWmFH0ch0+RsU1kwVx9HCz3zAEu+05iC+78i2FxCvDkXcejmS+/kTDsMvU3uUEQ==
 sidebar_class_name: "get api-method"
 info_path: reference/api/homunculus-api
 custom_edit_url: null
@@ -23,13 +23,13 @@ import Translate from "@docusaurus/Translate";
 <Heading
   as={"h1"}
   className={"openapi__heading"}
-  children={"Stream events for a specific signal via SSE."}
+  children={"Subscribe to a combined SSE stream of events from ALL personas."}
 >
 </Heading>
 
 <MethodEndpoint
   method={"get"}
-  path={"/signals/{signal}"}
+  path={"/personas/stream"}
   context={"endpoint"}
 >
   
@@ -37,18 +37,11 @@ import Translate from "@docusaurus/Translate";
 
 
 
-The signals are sent via `POST /signals/{signal}` API.
-
-<Heading
-  id={"request"}
-  as={"h2"}
-  className={"openapi-tabs__heading"}
->
-  <Translate id="theme.openapi.request.title">Request</Translate>
-</Heading>
+Each event is wrapped in `PersonaEvent<E>` containing the source `personaId`.
+Includes `persona-deleted` events that are not available on per-persona streams.
 
 <ParamsDetails
-  {...require("./stream.ParamsDetails.json")}
+  parameters={undefined}
 >
   
 </ParamsDetails>

@@ -1,1 +1,0 @@
-{"parameters":[{"name":"type","in":"query","description":"Filter by asset type","required":false,"schema":{"type":"string"}},{"name":"mod","in":"query","description":"Filter by mod name","required":false,"schema":{"type":"string"}}]}
