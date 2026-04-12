@@ -5,7 +5,7 @@ use bevy::prelude::*;
 use bevy_flurx::prelude::*;
 use bevy_vrm1::prelude::{BodyTracking, Cameras, LookAt, RequestDetachVrm, VrmHandle};
 use homunculus_core::prelude::{
-    AssetIdComponent, AssetResolver, Persona, PersonaChangeEvent, PersonaId, PersonaIndex,
+    AssetResolver, Persona, PersonaChangeEvent, PersonaId, PersonaIndex,
     PersonaState, VrmAttachedEvent, VrmDetachedEvent, VrmEvent, VrmEventSender,
 };
 use homunculus_prefs::prelude::PrefsDatabase;
@@ -67,7 +67,6 @@ impl PersonaApi {
 /// Phase 1: Detach old VRM and despawn stale VRMA children.
 ///
 /// Returns the persona snapshot and entity for the attach phase.
-#[allow(clippy::too_many_arguments)]
 fn detach_phase(
     In((persona_id, asset_id)): In<(PersonaId, String)>,
     mut commands: Commands,
@@ -77,13 +76,13 @@ fn detach_phase(
     prefs: NonSend<PrefsDatabase>,
     tx_detached: Option<Res<VrmEventSender<VrmDetachedEvent>>>,
     tx_change: Option<Res<VrmEventSender<PersonaChangeEvent>>>,
-    children_query: Query<&Children>,
-    vrma_entities: Query<Entity, With<AssetIdComponent>>,
 ) -> ApiResult<(PersonaSnapshot, Entity)> {
     let entity = index.get(&persona_id).ok_or(ApiError::EntityNotFound)?;
 
     if vrm_handles.get(entity).is_ok() {
-        despawn_vrma_children(&mut commands, &children_query, &vrma_entities, entity);
+        // VRMA children are despawned by RequestDetachVrm observer (bevy_vrm1 detach.rs).
+        // Explicit pre-despawn was removed (was commit 2eaa68b) — it was redundant with the
+        // observer's catch-all despawn_children, and created a ghost-entity window with fetch_vrma.
         auto_detach(
             &mut commands,
             &mut personas,
@@ -163,22 +162,6 @@ fn broadcast_attached(
             vrm: entity,
             payload: VrmAttachedEvent { asset_id },
         });
-    }
-}
-
-/// Despawns VRMA child entities before VRM detach.
-fn despawn_vrma_children(
-    commands: &mut Commands,
-    children_query: &Query<&Children>,
-    vrma_entities: &Query<Entity, With<AssetIdComponent>>,
-    entity: Entity,
-) {
-    if let Ok(children) = children_query.get(entity) {
-        for child in children.iter() {
-            if vrma_entities.get(child).is_ok() {
-                commands.entity(child).despawn();
-            }
-        }
     }
 }
 
