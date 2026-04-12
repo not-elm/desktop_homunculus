@@ -1,0 +1,1 @@
+{"title":"Body","body":{"content":{"application/json":{"schema":{"type":"object","required":["alpha"],"properties":{"alpha":{"type":"number","format":"float","description":"The alpha value for the shadow panel.\n\nRange: `0.0` (fully transparent) to `1.0` (fully opaque)."}},"title":"ShadowPanelPutBody"}}},"required":true}}

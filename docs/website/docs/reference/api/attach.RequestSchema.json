@@ -1,0 +1,1 @@
+{"title":"Body","body":{"content":{"application/json":{"schema":{"type":"object","required":["assetId"],"properties":{"assetId":{"type":"string","description":"The asset ID of the VRM model to attach."}},"title":"AttachVrmBody"}}},"required":true}}

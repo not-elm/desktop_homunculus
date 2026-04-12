@@ -1,0 +1,1 @@
+{"responses":{"200":{"description":"VRM position data","content":{"application/json":{"schema":{"type":"object","required":["world"],"properties":{"globalViewport":{"type":["object","null"]},"world":{"type":"array","items":{"type":"number","format":"float"}}},"title":"PositionResponse"}}}},"404":{"description":"Persona or VRM not found"}}}

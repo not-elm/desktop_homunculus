@@ -36,9 +36,52 @@ const config: Config = {
           homunculus: {
             specPath: "static/api/open-api.yml",
             outputDir: "docs/reference/api",
-            sidebarOptions: {
-              groupPathsBy: "tag",
+          sidebarOptions: {
+            groupPathsBy: "tag",
+            sidebarGenerators: {
+              createDocItem(item, { sidebarOptions, basePath }) {
+                const id = basePath
+                  ? `${basePath}/${item.id}`
+                  : item.id;
+
+                if (item.type === "schema") {
+                  return {
+                    type: "doc" as const,
+                    id,
+                    label: item.title ?? item.id,
+                    customProps: sidebarOptions.customProps ?? undefined,
+                  };
+                }
+
+                if (!item.api?.path) {
+                  return {
+                    type: "doc" as const,
+                    id,
+                    label: item.title ?? item.id,
+                    customProps: sidebarOptions.customProps ?? undefined,
+                  };
+                }
+
+                const path = item.api.path;
+                const tag = item.api.tags?.[0] ?? "";
+                const prefix = `/${tag}/`;
+                const shortPath =
+                  path === `/${tag}`
+                    ? "/"
+                    : path.startsWith(prefix)
+                      ? "/" + path.slice(prefix.length)
+                      : path;
+
+                return {
+                  type: "doc" as const,
+                  id,
+                  label: shortPath,
+                  className: `api-method ${item.api.method}`,
+                  customProps: sidebarOptions.customProps ?? undefined,
+                };
+              },
             },
+          },
           },
         },
       },

@@ -1,0 +1,71 @@
+---
+id: get-asset-file
+title: "Get the raw file content of an asset by its ID."
+description: "Returns the file bytes with a `Content-Type` header inferred from"
+sidebar_label: "Get the raw file content of an asset by its ID."
+hide_title: true
+hide_table_of_contents: true
+api: eJzNlE1P40AMhv+K5QsghbQs7CUn0LKCSqBFCPYCFUwTpxl1PsKM01JF+e8rJwUqPlZ73FOiGdtjP37tFlnNI2Z3qGIkjjhNsKCYB12z9g4zvCZugovAFUGpDcFszRRhpbkCBY8/vGNyvH+zrukRKlIFBdCupBCogDJ4e+9eXemZyUXtXQq3buH8yr0dRSiVMTBT+QLY37tHVddG50rSGPmcifcjB1L2McUEfU2hv5oUmOGc+KHP/0GewQRrFZQlpiClteiUJcxQF5iglqKeGgprfF/qiYSAySnsUjpPYee4snkckbEUMq4aO3NKm509TDDQU6MDFZhxaCjBmFdkFWYt8rqWpyIH7ebYdVMxjrV3kaLcfxuP5fOOsVoNgPKBJib48pe1+BUIzNqu6xI8+izkpY5RuznoAl5hYG989NF4KNx5htI3rgAfhnTsEET8vn/2yOQXUAg+oKRhiSu/6UbfAq4ww9Ggq9GmMZHC8qUrTTCYYcVcZ6OR8bkylY+cHR6Mxx9acyHXUNCSjK+tgBGy2pW+h67ZCPVzbxuXN6aJcHI1+RDklOKCfQ1bZuc3N1diC6UPPf3gjRFuv68vIa9UULmoKIEVzZaaVjEB1RTaJ6BcAdYHSjfNUnnfrI3UnGcyFhMkq7SUScbWwc+DspL08VyO09xbYWt0Ti7SlvvF2dXF/mE63vfOrMVEoA1FHKTjdCxHtY9sldvyOiPuxzS8kxP4EpSDvhMwW4PmCJPT9D2f9k10/+nUb4aL6ZlHtVHaCYdeRu1Gb697LMFecdMERVRy0bYzFek2mK6T42EFiA4LHdXMyDCXykT6C5Xd683c78G/74pPk17Q+mUhLZVpxKBX9FIFLclgdjftEhzI9lkOHid5TjVveX25HCTa60ie/bzBrvsDOhcMEA==
+sidebar_class_name: "get api-method"
+info_path: reference/api/homunculus-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Get the raw file content of an asset by its ID."}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/assets/file"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Returns the file bytes with a `Content-Type` header inferred from
+the file extension. Unknown extensions fall back to
+`application/octet-stream`.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  {...require("./get-asset-file.ParamsDetails.json")}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./get-asset-file.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./get-asset-file.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

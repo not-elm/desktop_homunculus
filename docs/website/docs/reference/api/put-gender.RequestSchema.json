@@ -1,0 +1,1 @@
+{"title":"Body","body":{"content":{"application/json":{"schema":{"type":"object","required":["gender"],"properties":{"gender":{"type":"string","description":"Gender identity for a VRM character.","enum":["male","female","other","unknown"],"title":"Gender"}},"title":"GenderBody"}}},"required":true}}

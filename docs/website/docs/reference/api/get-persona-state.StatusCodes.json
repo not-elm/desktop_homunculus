@@ -1,0 +1,1 @@
+{"responses":{"200":{"description":"Persona state","content":{"application/json":{"schema":{"type":"object","required":["state"],"properties":{"state":{"type":"object"}},"title":"StateBody"}}}},"404":{"description":"Persona not found"}}}
