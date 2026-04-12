@@ -1,0 +1,12 @@
+#!/bin/bash
+# preuninstall — runs before the .app is removed.
+# Cleans up the hmcs CLI symlink.
+set -euo pipefail
+
+SYMLINK="/usr/local/bin/hmcs"
+if [ -L "$SYMLINK" ]; then
+    rm -f "$SYMLINK"
+    echo "Removed hmcs symlink from /usr/local/bin"
+fi
+
+exit 0

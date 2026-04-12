@@ -1,0 +1,112 @@
+#!/bin/bash
+# postinstall — runs after the .app is placed in /Applications.
+#
+# 1. Symlinks hmcs CLI into /usr/local/bin
+# 2. Installs official MODs for the installing user
+#
+# This script runs as root. User-context operations use sudo -u.
+set -euo pipefail
+
+APP_PATH="/Applications/DesktopHomunculus.app"
+RUNTIME_DIR="$APP_PATH/Contents/Resources/runtime"
+NODE="$RUNTIME_DIR/node/bin/node"
+PNPM_CJS="$RUNTIME_DIR/pnpm/bin/pnpm.cjs"
+
+# ── 1. Symlink hmcs CLI ─────────────────────────────────────────────────
+HMCS_BIN="$APP_PATH/Contents/MacOS/hmcs"
+if [ -f "$HMCS_BIN" ]; then
+    mkdir -p /usr/local/bin
+    ln -sf "$HMCS_BIN" /usr/local/bin/hmcs
+    echo "Linked hmcs → /usr/local/bin/hmcs"
+fi
+
+# ── 2. Resolve the installing user (not root) ───────────────────────────
+INSTALL_USER="${USER:-$(stat -f '%Su' /dev/console)}"
+INSTALL_HOME=$(dscl . -read /Users/"$INSTALL_USER" NFSHomeDirectory 2>/dev/null | awk '{print $2}')
+if [ -z "$INSTALL_HOME" ]; then
+    echo "WARNING: Could not resolve home directory for user '$INSTALL_USER'. Skipping MOD install."
+    exit 0
+fi
+
+MODS_DIR="$INSTALL_HOME/.homunculus/mods"
+
+# ── 3. Create mods directory ────────────────────────────────────────────
+sudo -u "$INSTALL_USER" mkdir -p "$MODS_DIR"
+
+# Initialize package.json if not present
+if [ ! -f "$MODS_DIR/package.json" ]; then
+    sudo -u "$INSTALL_USER" sh -c "echo '{}' > '$MODS_DIR/package.json'"
+fi
+
+# ── 4. Verify bundled runtime exists ────────────────────────────────────
+if [ ! -x "$NODE" ]; then
+    echo "WARNING: Bundled Node.js not found at $NODE. Skipping MOD install."
+    exit 0
+fi
+
+# ── 5. Dynamic MOD discovery ────────────────────────────────────────────
+# Query the npm registry for all @hmcs/ scoped packages, then filter
+# to only those with a "homunculus" field in their package.json (= MODs).
+echo "Discovering official MODs from npm registry..."
+
+OFFICIAL_MODS=$(sudo -u "$INSTALL_USER" "$NODE" -e "
+const https = require('https');
+
+function fetch(url) {
+    return new Promise((resolve, reject) => {
+        https.get(url, { timeout: 30000 }, (res) => {
+            let data = '';
+            res.on('data', (chunk) => data += chunk);
+            res.on('end', () => resolve({ status: res.statusCode, body: data }));
+        }).on('error', reject);
+    });
+}
+
+async function main() {
+    // Search for all @hmcs/ packages
+    const searchRes = await fetch('https://registry.npmjs.org/-/v1/search?text=scope:hmcs&size=250');
+    if (searchRes.status !== 200) {
+        process.stderr.write('npm search failed: HTTP ' + searchRes.status + '\n');
+        process.exit(1);
+    }
+
+    const results = JSON.parse(searchRes.body);
+    const packages = results.objects.map(o => o.package.name);
+
+    // For each package, check if it has a 'homunculus' field
+    const mods = [];
+    for (const name of packages) {
+        try {
+            const pkgRes = await fetch('https://registry.npmjs.org/' + encodeURIComponent(name) + '/latest');
+            if (pkgRes.status !== 200) continue;
+            const pkg = JSON.parse(pkgRes.body);
+            if (pkg.homunculus) {
+                mods.push(name);
+            }
+        } catch (_) {
+            // Skip packages that fail to fetch
+        }
+    }
+
+    process.stdout.write(mods.join(' '));
+}
+
+main().catch((e) => {
+    process.stderr.write('MOD discovery failed: ' + e.message + '\n');
+    process.exit(1);
+});
+" 2>/dev/null) || true
+
+# ── 6. Install discovered MODs ──────────────────────────────────────────
+if [ -n "$OFFICIAL_MODS" ]; then
+    echo "Installing official MODs: $OFFICIAL_MODS"
+    # shellcheck disable=SC2086
+    sudo -u "$INSTALL_USER" "$NODE" "$PNPM_CJS" \
+        -C "$MODS_DIR" add --ignore-scripts $OFFICIAL_MODS \
+        || echo "WARNING: MOD installation failed. Run 'hmcs mod install' manually after launch."
+else
+    echo "WARNING: Could not discover official MODs. They can be installed later."
+fi
+
+echo "postinstall complete."
+exit 0
