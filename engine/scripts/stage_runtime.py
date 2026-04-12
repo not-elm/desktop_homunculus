@@ -54,16 +54,25 @@ def load_versions() -> dict[str, str]:
 
 
 def detect_platform() -> tuple[str, str]:
-    """Detect (os, arch) for Node.js download naming."""
+    """Detect (os, arch) for Node.js download naming.
+
+    Honors the ``TARGET_ARCH`` environment variable (``arm64`` or ``x64``)
+    so that cross-architecture builds (e.g. building x86 on Apple Silicon)
+    bundle the correct Node.js binary.
+    """
     system = platform.system()
-    machine = platform.machine().lower()
+    target_arch = os.environ.get("TARGET_ARCH", "").lower()
 
     if system == "Darwin":
         node_os = "darwin"
-        node_arch = "arm64" if machine == "arm64" else "x64"
+        if target_arch in ("arm64", "x64"):
+            node_arch = target_arch
+        else:
+            machine = platform.machine().lower()
+            node_arch = "arm64" if machine == "arm64" else "x64"
     elif system == "Windows":
         node_os = "win"
-        node_arch = "x64"
+        node_arch = target_arch if target_arch in ("x64",) else "x64"
     else:
         error(f"Unsupported platform: {system}")
 

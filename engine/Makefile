@@ -87,7 +87,7 @@ release-macos-arm: ## Build for Apple Silicon, bundle .app, create pkg
 		cargo build --profile dist --target=aarch64-apple-darwin --locked
 	SDKROOT=$$(xcrun -sdk macosx --show-sdk-path) \
 		cargo build -p homunculus_cli --profile dist --target=aarch64-apple-darwin --locked
-	$(MAKE) bundle-macos-app BIN_SOURCE=target/aarch64-apple-darwin/dist/$(BIN_NAME) CLI_SOURCE=target/aarch64-apple-darwin/dist/hmcs
+	$(MAKE) bundle-macos-app BIN_SOURCE=target/aarch64-apple-darwin/dist/$(BIN_NAME) CLI_SOURCE=target/aarch64-apple-darwin/dist/hmcs TARGET_ARCH=arm64
 	$(MAKE) package-macos-pkg
 
 release-macos-x86: ## Build for Intel Mac, bundle .app, create pkg
@@ -95,7 +95,7 @@ release-macos-x86: ## Build for Intel Mac, bundle .app, create pkg
 		cargo build --profile dist --target=x86_64-apple-darwin --locked
 	SDKROOT=$$(xcrun -sdk macosx --show-sdk-path) \
 		cargo build -p homunculus_cli --profile dist --target=x86_64-apple-darwin --locked
-	$(MAKE) bundle-macos-app BIN_SOURCE=target/x86_64-apple-darwin/dist/$(BIN_NAME) CLI_SOURCE=target/x86_64-apple-darwin/dist/hmcs
+	$(MAKE) bundle-macos-app BIN_SOURCE=target/x86_64-apple-darwin/dist/$(BIN_NAME) CLI_SOURCE=target/x86_64-apple-darwin/dist/hmcs TARGET_ARCH=x64
 	$(MAKE) package-macos-pkg
 
 release-macos-universal: ## Build universal binary, bundle .app, create pkg
@@ -140,7 +140,7 @@ endif
 
 bundle-macos-runtime: ## Stage and copy runtime into .app bundle (internal)
 	@echo "==> Bundling runtime (Node.js, pnpm, tsx)..."
-	$(MAKE) stage-runtime
+	TARGET_ARCH=$(TARGET_ARCH) $(MAKE) stage-runtime
 	cp -r $(BUNDLE_DIR)/runtime $(CONTENTS)/Resources/runtime
 	@echo "==> Runtime bundling complete."
 

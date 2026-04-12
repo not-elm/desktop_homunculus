@@ -21,7 +21,16 @@ if [ -f "$HMCS_BIN" ]; then
 fi
 
 # ── 2. Resolve the installing user (not root) ───────────────────────────
-INSTALL_USER="${USER:-$(stat -f '%Su' /dev/console)}"
+# postinstall runs as root, so $USER is typically "root".
+# Resolve the actual console (GUI) user first.
+INSTALL_USER="$(stat -f '%Su' /dev/console 2>/dev/null || echo '')"
+if [ -z "$INSTALL_USER" ] || [ "$INSTALL_USER" = "root" ]; then
+    INSTALL_USER="${SUDO_USER:-${USER:-}}"
+fi
+if [ -z "$INSTALL_USER" ] || [ "$INSTALL_USER" = "root" ]; then
+    echo "WARNING: Could not determine non-root installing user. Skipping MOD install."
+    exit 0
+fi
 INSTALL_HOME=$(dscl . -read /Users/"$INSTALL_USER" NFSHomeDirectory 2>/dev/null | awk '{print $2}')
 if [ -z "$INSTALL_HOME" ]; then
     echo "WARNING: Could not resolve home directory for user '$INSTALL_USER'. Skipping MOD install."
