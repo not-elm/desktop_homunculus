@@ -1,6 +1,5 @@
-import { Persona, repeat, sleep } from '@hmcs/sdk';
+import { HomunculusApiError, Persona, repeat, sleep } from '@hmcs/sdk';
 import {
-  DEFAULT_ANIMATIONS,
   resolveBehaviorConfig,
   type BehaviorAnimations,
 } from '../shared/behavior-config.ts';
@@ -23,16 +22,17 @@ try {
 
 const config = resolveBehaviorConfig(snapshot);
 const animations: BehaviorAnimations = config.animations;
+let currentState = snapshot.state;
 
-await applyBehavior(persona, snapshot.state, animations);
+await applyBehaviorWithLogging(persona, currentState, animations, 'startup');
 
 const events = persona.events();
 events.on('state-change', async (e) => {
-  await applyBehavior(persona, e.state, animations);
+  currentState = e.state;
+  await applyBehaviorWithLogging(persona, currentState, animations, 'state-change');
 });
 events.on('vrm-attached', async () => {
-  const current = await persona.state();
-  await applyBehavior(persona, current, animations);
+  await applyBehaviorAfterAttach(persona, () => currentState, animations);
 });
 
 process.on('SIGTERM', () => {
@@ -48,20 +48,56 @@ async function applyBehavior(
   const vrm = p.vrm();
   const option = { repeat: repeat.forever(), transitionSecs: 0.5 } as const;
 
-  try {
-    if (state === 'idle') {
-      await vrm.playVrma({ asset: anims.idle, ...option });
-      await sleep(500);
-      await vrm.lookAtCursor();
-    } else if (state === 'drag') {
-      await vrm.unlook();
-      await vrm.playVrma({ asset: anims.drag, ...option, resetSpringBones: true });
-    } else if (state === 'sitting') {
-      await vrm.playVrma({ asset: anims.sitting, ...option });
-      await sleep(500);
-      await vrm.lookAtCursor();
-    }
-  } catch {
-    // VRM not attached or play failed — skip
+  if (state === 'idle') {
+    await vrm.playVrma({ asset: anims.idle, ...option });
+    await sleep(500);
+    await vrm.lookAtCursor();
+  } else if (state === 'drag') {
+    await vrm.unlook();
+    await vrm.playVrma({ asset: anims.drag, ...option, resetSpringBones: true });
+  } else if (state === 'sitting') {
+    await vrm.playVrma({ asset: anims.sitting, ...option });
+    await sleep(500);
+    await vrm.lookAtCursor();
   }
+}
+
+async function applyBehaviorWithLogging(
+  p: Persona,
+  state: string,
+  anims: BehaviorAnimations,
+  source: string,
+): Promise<void> {
+  try {
+    await applyBehavior(p, state, anims);
+  } catch (err) {
+    if (isExpectedVrmTimingError(err)) return;
+    console.error(`[default-behavior] applyBehavior failed (${source}):`, err);
+  }
+}
+
+async function applyBehaviorAfterAttach(
+  p: Persona,
+  getState: () => string,
+  anims: BehaviorAnimations,
+): Promise<void> {
+  const delaysMs = [0, 100, 250, 500, 1000];
+
+  for (let i = 0; i < delaysMs.length; i++) {
+    if (delaysMs[i] > 0) await sleep(delaysMs[i]);
+
+    try {
+      await applyBehavior(p, getState(), anims);
+      return;
+    } catch (err) {
+      if (!isExpectedVrmTimingError(err) || i === delaysMs.length - 1) {
+        console.error('[default-behavior] failed to reapply after vrm-attached:', err);
+        return;
+      }
+    }
+  }
+}
+
+function isExpectedVrmTimingError(err: unknown): boolean {
+  return err instanceof HomunculusApiError && err.statusCode === 404;
 }
