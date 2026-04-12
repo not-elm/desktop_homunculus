@@ -42,11 +42,11 @@ setup-cef:
 	$(PYTHON) scripts/setup_cef.py
 
 debug:
-	cargo run --features develop
+	HMCS_MODS_DIR=$(CURDIR)/../sandbox cargo run --features develop
 
 debug-cuda:
 	$(PYTHON) scripts/patch_whisper_cuda.py
-	cargo run --features develop,stt-cuda
+	HMCS_MODS_DIR=$(CURDIR)/../sandbox cargo run --features develop,stt-cuda
 
 gen-open-api:
 	cargo run -p homunculus_http_server --bin gen_openapi -- --output $(OPENAPI_OUTPUT)
