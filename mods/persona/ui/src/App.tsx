@@ -140,7 +140,14 @@ function SettingsContent({ personaId }: { personaId: string }) {
           />
         )}
         {tab === 'appearance' && (
-          <AppearanceTab scale={scaleState.scale} onScaleChange={scaleState.setScale} />
+          <AppearanceTab
+            scale={scaleState.scale}
+            onScaleChange={scaleState.setScale}
+            behaviorProcess={detail.behaviorProcess}
+            behaviorAnimations={detail.behaviorAnimations}
+            onBehaviorProcessChange={detail.setBehaviorProcess}
+            onBehaviorAnimationsChange={detail.setBehaviorAnimations}
+          />
         )}
       </div>
 
