@@ -5,8 +5,8 @@ use bevy::prelude::*;
 use bevy_flurx::prelude::*;
 use bevy_vrm1::prelude::{BodyTracking, Cameras, LookAt, RequestDetachVrm, VrmHandle};
 use homunculus_core::prelude::{
-    AssetResolver, Persona, PersonaChangeEvent, PersonaId, PersonaIndex, PersonaState,
-    VrmAttachedEvent, VrmDetachedEvent, VrmEvent, VrmEventSender,
+    AssetIdComponent, AssetResolver, Persona, PersonaChangeEvent, PersonaId, PersonaIndex,
+    PersonaState, VrmAttachedEvent, VrmDetachedEvent, VrmEvent, VrmEventSender,
 };
 use homunculus_prefs::prelude::PrefsDatabase;
 
@@ -49,10 +49,13 @@ fn attach(
     prefs: NonSend<PrefsDatabase>,
     tx_detached: Option<Res<VrmEventSender<VrmDetachedEvent>>>,
     tx_change: Option<Res<VrmEventSender<PersonaChangeEvent>>>,
+    children_query: Query<&Children>,
+    vrma_entities: Query<Entity, With<AssetIdComponent>>,
 ) -> ApiResult<(PersonaSnapshot, Entity, String)> {
     let entity = index.get(&persona_id).ok_or(ApiError::EntityNotFound)?;
 
     if vrm_handles.get(entity).is_ok() {
+        despawn_vrma_children(&mut commands, &children_query, &vrma_entities, entity);
         auto_detach(
             &mut commands,
             &mut personas,
@@ -124,6 +127,28 @@ fn broadcast_attached(
             vrm: entity,
             payload: VrmAttachedEvent { asset_id },
         });
+    }
+}
+
+/// Despawns VRMA child entities before VRM detach.
+///
+/// VRMA entities (identified by [`AssetIdComponent`]) are children of the
+/// VRM/persona entity. They must be removed before VRM detach+reattach
+/// because `RequestDetachVrm` is a deferred trigger — the old VRMA entities
+/// can survive until the next command flush, causing `fetch_vrma` to return
+/// stale entities with invalid animation graph connections.
+fn despawn_vrma_children(
+    commands: &mut Commands,
+    children_query: &Query<&Children>,
+    vrma_entities: &Query<Entity, With<AssetIdComponent>>,
+    entity: Entity,
+) {
+    if let Ok(children) = children_query.get(entity) {
+        for child in children.iter() {
+            if vrma_entities.get(child).is_ok() {
+                commands.entity(child).despawn();
+            }
+        }
     }
 }
 
