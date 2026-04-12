@@ -1,5 +1,6 @@
 import {
   audio,
+  host,
   isWebviewSourceInfoLocal,
   Persona,
   signals,
@@ -8,6 +9,7 @@ import {
   type WebviewSourceInfo,
   webviewSource,
 } from '@hmcs/sdk';
+import { EventSource } from 'eventsource';
 
 const menuUIAssetId = 'menu:ui';
 let isProcessing = false;
@@ -86,7 +88,29 @@ async function setupPersonaEvents(p: Persona) {
   });
 }
 
+// --- Startup: set up events for already-spawned personas ---
+
 const snapshots = await Persona.list();
 for (const snapshot of snapshots) {
-  await setupPersonaEvents(new Persona(snapshot.id));
+  if (snapshot.spawned) {
+    await setupPersonaEvents(new Persona(snapshot.id));
+  }
 }
+
+// --- Listen for newly spawned/despawned personas ---
+
+const personaStream = new EventSource(host.createUrl('personas/stream').toString());
+
+personaStream.addEventListener('persona-spawned', async (event) => {
+  const data = JSON.parse(event.data) as { personaId: string };
+  await setupPersonaEvents(new Persona(data.personaId));
+});
+
+personaStream.addEventListener('persona-despawned', async (event) => {
+  const data = JSON.parse(event.data) as { personaId: string };
+  const es = eventSources.get(data.personaId);
+  if (es) {
+    es.close();
+    eventSources.delete(data.personaId);
+  }
+});
