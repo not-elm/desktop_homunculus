@@ -18,7 +18,6 @@ jobs:
       version: ${{ steps.check.outputs.version }}
       is_prerelease: ${{ steps.check.outputs.is_prerelease }}
       sdk_version: ${{ steps.check.outputs.sdk_version }}
-      cli_tag: ${{ steps.check.outputs.cli_tag }}
       sdk_tag: ${{ steps.check.outputs.sdk_tag }}
       ui_version: ${{ steps.check.outputs.ui_version }}
       ui_tag: ${{ steps.check.outputs.ui_tag }}
@@ -55,7 +54,6 @@ jobs:
           fi
 
           # Per-package dist-tag computation
-          CLI_TAG="$(.github/scripts/compute-tag.sh "$VERSION")"
           SDK_TAG="$(.github/scripts/compute-tag.sh "$SDK_VERSION")"
           UI_TAG="$(.github/scripts/compute-tag.sh "$UI_VERSION")"
 
@@ -63,68 +61,14 @@ jobs:
             echo "version=$VERSION"
             echo "sdk_version=$SDK_VERSION"
             echo "is_prerelease=$IS_PRERELEASE"
-            echo "cli_tag=$CLI_TAG"
             echo "sdk_tag=$SDK_TAG"
             echo "ui_version=$UI_VERSION"
             echo "ui_tag=$UI_TAG"
           } >> "$GITHUB_OUTPUT"
 
-  build-cli:
-    needs: validate
-    timeout-minutes: 45
-    permissions:
-      contents: read
-    strategy:
-      matrix:
-        include:
-          - os: macos-14
-            target: aarch64-apple-darwin
-            platform-name: darwin-arm64
-            exe-suffix: ""
-          #  The build is too slow and times out, so it has been temporarily excluded.
-          # - os: macos-15-intel
-          #   target: x86_64-apple-darwin
-          #   platform-name: darwin-x64
-          #   exe-suffix: ""
-          - os: windows-2022
-            target: x86_64-pc-windows-msvc
-            platform-name: win32-x64
-            exe-suffix: ".exe"
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.target }}
-
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: "engine -> target"
-          shared-key: ${{ matrix.platform-name }}-dist
-
-      - name: Build hmcs binary
-        working-directory: engine
-        run: cargo build -p homunculus_cli --profile dist --target ${{ matrix.target }} --locked
-
-      - name: Verify binary (non-Windows)
-        if: matrix.exe-suffix == ''
-        working-directory: engine
-        run: |
-          chmod +x target/${{ matrix.target }}/dist/hmcs
-          target/${{ matrix.target }}/dist/hmcs --version
-
-      - name: Verify binary (Windows)
-        if: matrix.exe-suffix == '.exe'
-        working-directory: engine
-        run: target/${{ matrix.target }}/dist/hmcs.exe --version
-
-      - name: Upload binary artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: hmcs-${{ matrix.platform-name }}
-          path: engine/target/${{ matrix.target }}/dist/hmcs${{ matrix.exe-suffix }}
+  # NOTE: build-cli job removed — hmcs CLI is now built as part of
+  # build-engine (macOS) and build-engine-windows, and distributed
+  # via the installer instead of npm.
 
   build-engine:
     needs: validate
@@ -151,7 +95,13 @@ jobs:
           shared-key: ${{ matrix.arch }}-engine-dist
           cef-cache-key: cef-${{ matrix.arch }}-144.4.0
 
-      - name: Build engine binary
+      - name: Cache runtime downloads
+        uses: actions/cache@v4
+        with:
+          path: engine/target/bundle/runtime-cache
+          key: runtime-${{ hashFiles('engine/runtime-versions.toml') }}-${{ matrix.arch }}
+
+      - name: Build engine and CLI binaries
         run: |
           # Verify sccache is working; fall back to plain cargo if not
           if ! sccache --start-server 2>/dev/null && ! sccache --show-stats 2>/dev/null; then
@@ -160,27 +110,25 @@ jobs:
           fi
           SDKROOT=$(xcrun -sdk macosx --show-sdk-path) \
             cargo build --profile dist --target=${{ matrix.target }} --locked
+          SDKROOT=$(xcrun -sdk macosx --show-sdk-path) \
+            cargo build -p homunculus_cli --profile dist --target=${{ matrix.target }} --locked
         env:
           CARGO_PROFILE_DIST_CODEGEN_UNITS: ${{ matrix.arch == 'x86_64' && '8' || '2' }}
 
-      - name: Bundle .app and create DMG
+      - name: Bundle .app and create pkg
         run: |
-          make bundle-macos-app BIN_SOURCE=target/${{ matrix.target }}/dist/desktop_homunculus
-          make package-macos-dmg
+          make bundle-macos-app \
+            BIN_SOURCE=target/${{ matrix.target }}/dist/desktop_homunculus \
+            CLI_SOURCE=target/${{ matrix.target }}/dist/hmcs
+          make package-macos-pkg
         env:
           SKIP_GEN_CREDITS: "1"
 
-      - name: Rename DMG with arch suffix
-        run: |
-          VERSION="${{ needs.validate.outputs.version }}"
-          mv target/bundle/desktop_homunculus.dmg \
-             target/bundle/desktop-homunculus-${VERSION}-${{ matrix.arch }}.dmg
-
-      - name: Upload DMG artifact
+      - name: Upload pkg artifact
         uses: actions/upload-artifact@v4
         with:
           name: engine-macos-${{ matrix.arch }}
-          path: engine/target/bundle/desktop-homunculus-${{ needs.validate.outputs.version }}-${{ matrix.arch }}.dmg
+          path: engine/target/bundle/desktop_homunculus-${{ needs.validate.outputs.version }}-*.pkg
 
   build-engine-windows:
     needs: validate
@@ -198,6 +146,12 @@ jobs:
         with:
           shared-key: x64-engine-dist
           cef-cache-key: cef-windows-x64-144.4.0
+
+      - name: Cache runtime downloads
+        uses: actions/cache@v4
+        with:
+          path: engine/target/bundle/runtime-cache
+          key: runtime-${{ hashFiles('engine/runtime-versions.toml') }}-windows-x64
 
       - name: Clean stale CEF files from target cache
         run: |
@@ -217,7 +171,7 @@ jobs:
           path: engine/target/bundle/desktop-homunculus-${{ needs.validate.outputs.version }}-x64.msi
 
   publish-npm:
-    needs: [validate, build-cli, build-engine, build-engine-windows]
+    needs: [validate, build-engine, build-engine-windows]
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     environment: npm-publish
@@ -236,12 +190,6 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
-      - name: Download CLI artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-          pattern: hmcs-*
 
       # --- Publish @hmcs/sdk ---
       - uses: ./.github/actions/publish-npm-package
@@ -264,115 +212,8 @@ jobs:
         with:
           npm-token: ${{ secrets.NPM_TOKEN }}
 
-      # --- Publish CLI platform packages ---
-      - name: Publish CLI platform packages
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          publish_with_retry() {
-            local max_attempts=5
-            local delay=10
-            for attempt in $(seq 1 $max_attempts); do
-              if "$@"; then
-                return 0
-              fi
-              if [ "$attempt" -lt "$max_attempts" ]; then
-                echo "Publish failed (attempt $attempt/$max_attempts). Retrying in ${delay}s..."
-                sleep "$delay"
-                delay=$((delay * 2))
-              fi
-            done
-            echo "::error::Publish failed after $max_attempts attempts"
-            return 1
-          }
-
-          VERSION="${{ needs.validate.outputs.version }}"
-          TAG="${{ needs.validate.outputs.cli_tag }}"
-
-          declare -A PLATFORMS=(
-            ["darwin-arm64"]="darwin arm64 "
-            ["win32-x64"]="win32 x64 .exe"
-          )
-
-          for PLATFORM_NAME in "${!PLATFORMS[@]}"; do
-            read -r OS CPU EXE_SUFFIX <<< "${PLATFORMS[$PLATFORM_NAME]}"
-            PKG_NAME="@hmcs/cli-${PLATFORM_NAME}"
-
-            echo "--- Publishing ${PKG_NAME}@${VERSION} ---"
-
-            if npm view "${PKG_NAME}@${VERSION}" version 2>/dev/null; then
-              echo "Already published, skipping."
-              continue
-            fi
-
-            STAGE_DIR="$(mktemp -d)"
-
-            # Generate package.json from template
-            sed -e "s/{{PLATFORM_NAME}}/${PLATFORM_NAME}/g" \
-                -e "s/{{VERSION}}/${VERSION}/g" \
-                -e "s/{{OS}}/${OS}/g" \
-                -e "s/{{CPU}}/${CPU}/g" \
-                -e "s/{{EXE_SUFFIX}}/${EXE_SUFFIX}/g" \
-                packages/cli-platform/package.json.tmpl > "${STAGE_DIR}/package.json"
-
-            # Copy binary from artifact
-            cp "artifacts/hmcs-${PLATFORM_NAME}/hmcs${EXE_SUFFIX}" "${STAGE_DIR}/"
-            chmod +x "${STAGE_DIR}/hmcs${EXE_SUFFIX}" 2>/dev/null || true
-
-            cp packages/cli-platform/README.md "${STAGE_DIR}/"
-
-            echo "Contents of package:"
-            (cd "${STAGE_DIR}" && npm pack --dry-run)
-
-            (cd "${STAGE_DIR}" && publish_with_retry npm publish --provenance --access public --tag "${TAG}")
-          done
-
-      # --- Publish @hmcs/cli main package ---
-      - name: Publish @hmcs/cli
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          publish_with_retry() {
-            local max_attempts=5
-            local delay=10
-            for attempt in $(seq 1 $max_attempts); do
-              if "$@"; then
-                return 0
-              fi
-              if [ "$attempt" -lt "$max_attempts" ]; then
-                echo "Publish failed (attempt $attempt/$max_attempts). Retrying in ${delay}s..."
-                sleep "$delay"
-                delay=$((delay * 2))
-              fi
-            done
-            echo "::error::Publish failed after $max_attempts attempts"
-            return 1
-          }
-
-          VERSION="${{ needs.validate.outputs.version }}"
-          TAG="${{ needs.validate.outputs.cli_tag }}"
-          PKG_NAME="@hmcs/cli"
-
-          if npm view "${PKG_NAME}@${VERSION}" version 2>/dev/null; then
-            echo "Already published, skipping."
-            exit 0
-          fi
-
-          STAGE_DIR="$(mktemp -d)"
-          cp packages/cli/package.json "${STAGE_DIR}/"
-          cp -r packages/cli/bin "${STAGE_DIR}/"
-          cp packages/cli/README.md "${STAGE_DIR}/"
-          cp packages/cli/LICENSE "${STAGE_DIR}/"
-
-          cd "${STAGE_DIR}"
-          npm pkg set version="${VERSION}"
-          npm pkg set "optionalDependencies.@hmcs/cli-darwin-arm64"="${VERSION}"
-          npm pkg set "optionalDependencies.@hmcs/cli-win32-x64"="${VERSION}"
-
-          echo "Contents of package:"
-          npm pack --dry-run
-
-          publish_with_retry npm publish --provenance --access public --tag "${TAG}"
+      # NOTE: @hmcs/cli and @hmcs/cli-platform-* npm packages are no longer
+      # published. The hmcs CLI is now distributed via the installer (pkg/MSI).
 
   create-release:
     needs: [validate, publish-npm]
@@ -398,20 +239,22 @@ jobs:
           IS_PRERELEASE="${{ needs.validate.outputs.is_prerelease }}"
 
           # Collect installer files
-          ARM64_DMG="artifacts/engine-macos-arm64/desktop-homunculus-${VERSION}-arm64.dmg"
+          ARM64_PKG=$(find artifacts/engine-macos-arm64/ -name '*.pkg' | head -1)
           X64_MSI="artifacts/engine-windows-x64/desktop-homunculus-${VERSION}-x64.msi"
 
           # Validate all installer artifacts exist
           MISSING=0
-          for FILE in "$ARM64_DMG" "$X64_MSI"; do
-            if [ ! -f "$FILE" ]; then
-              echo "::error::Missing expected artifact: $FILE"
-              MISSING=1
-            fi
-          done
+          if [ -z "$ARM64_PKG" ] || [ ! -f "$ARM64_PKG" ]; then
+            echo "::error::Missing expected artifact: macOS arm64 pkg"
+            MISSING=1
+          fi
+          if [ ! -f "$X64_MSI" ]; then
+            echo "::error::Missing expected artifact: $X64_MSI"
+            MISSING=1
+          fi
           [ "$MISSING" -eq 0 ] || exit 1
 
-          INSTALLERS=("$ARM64_DMG" "$X64_MSI")
+          INSTALLERS=("$ARM64_PKG" "$X64_MSI")
 
           # Build gh release create args
           ARGS=(

@@ -8,27 +8,32 @@ import TabItem from '@theme/TabItem';
 
 # Installation
 
-Follow these steps to install Desktop Homunculus and set up your MOD environment.
+Download and install Desktop Homunculus. The installer includes everything you need — the engine, Node.js runtime, `hmcs` CLI, and all official MODs are set up automatically.
 
 ## System Requirements
 
 |                | macOS                        | Windows             |
 | -------------- | ---------------------------- | ------------------- |
-| **OS**         | macOS 12 (Monterey) or later | Windows 10 or later |
+| **OS**         | macOS 11 (Big Sur) or later  | Windows 10 or later |
 | **CPU**        | Apple Silicon or Intel       | x86_64              |
-| **Node.js**    | 22 or later                  | 22 or later         |
-| **Disk Space** | 500 MB or more               | 500 MB or more      |
+| **Disk Space** | 600 MB or more               | 600 MB or more      |
+| **Network**    | Required for initial setup   | Required for initial setup |
 
-## Step 1: Install Desktop Homunculus
+## Install Desktop Homunculus
 
 Download the latest release from the [GitHub Releases page](https://github.com/not-elm/desktop-homunculus/releases).
 
 <Tabs>
 <TabItem value="macos" label="macOS" default>
 
-1. Download the `.dmg` file
-2. Open the DMG and drag **Desktop Homunculus** into your `/Applications` folder
+1. Download the `.pkg` file
+2. Open the installer and follow the prompts
 3. Launch the app from Applications
+
+The installer will:
+- Install the Desktop Homunculus app to `/Applications`
+- Add the `hmcs` CLI to your PATH (`/usr/local/bin/hmcs`)
+- Automatically discover and install all official MODs
 
 :::warning[Gatekeeper Warning]
 If macOS shows "Desktop Homunculus can't be opened because it is from an unidentified developer":
@@ -36,7 +41,7 @@ If macOS shows "Desktop Homunculus can't be opened because it is from an unident
 1. Open **System Settings** > **Privacy & Security**
 2. Scroll down and click **Open Anyway**
 3. Click **Open** in the confirmation dialog
-   :::
+:::
 
 </TabItem>
 <TabItem value="windows" label="Windows">
@@ -57,68 +62,25 @@ This must be done **before first launch**.
 2. Run the installer and follow the prompts
 3. Launch **Desktop Homunculus** from the Start Menu
 
+The installer will:
+- Install the app and bundled Node.js runtime
+- Add the `hmcs` CLI to your system PATH
+- Automatically discover and install all official MODs
+
 </TabItem>
 </Tabs>
 
-## Step 2: Install Node.js
-
-Desktop Homunculus MODs require **Node.js 22 or later** to run TypeScript scripts directly using tsx.
-
-1. Visit the [Node.js download page](https://nodejs.org/en/download)
-2. Download and install the **LTS** version (22 or later)
-3. Verify the installation:
-
-```shell
-node -v
-```
-
-The output should show `v22.0.0` or higher.
-
-:::tip
-If you already have Node.js installed, check the version with `node -v`. If it's below v22, update to the latest LTS version.
-:::
-
-## Step 3: Install MOD Management Tools
-
-Install **pnpm** (package manager) and **@hmcs/cli** (MOD management CLI) globally:
-
-```shell
-npm install -g pnpm @hmcs/cli
-```
-
-Verify the installation:
-
-```shell
-pnpm -v
-hmcs --version
-```
-
-:::warning[Permission Error]
-If you see `EACCES` permission errors, see the [npm docs on resolving permission errors](https://docs.npmjs.com/resolving-eacces-permissions-errors-when-installing-packages-globally).
-:::
-
-## Step 4: Install Official MODs
-
-Install the recommended set of official MODs:
-
-```shell
-hmcs mod install @hmcs/assets @hmcs/elmer @hmcs/menu @hmcs/character-settings @hmcs/settings @hmcs/app-exit
-```
-
-| MOD                        | Description                                                       |
-| -------------------------- | ----------------------------------------------------------------- |
-| `@hmcs/assets`             | Default animations and sound effects                              |
-| `@hmcs/elmer`              | Default character model                                           |
-| `@hmcs/menu`               | Right-click context menu                                          |
-| `@hmcs/character-settings` | Per-character settings panel                                      |
-| `@hmcs/settings`           | Application settings (frame rate, shadow opacity) via system tray |
-| `@hmcs/app-exit`           | Exit menu in the system tray                                      |
-
-## Step 5: Verify Installation
+## Verify Installation
 
 1. Launch **Desktop Homunculus**
 2. A character should appear on your desktop
 3. Right-click the character to open the context menu
+
+You can also verify the CLI is available:
+
+```shell
+hmcs --version
+```
 
 If everything works, you're all set!
 
@@ -126,34 +88,42 @@ If everything works, you're all set!
 Head over to the [Quick Start](./quick-start.md) guide to learn how to interact with your character.
 :::
 
+## For Developers
+
+If you're developing Desktop Homunculus or building MODs from source, install the CLI via Cargo instead:
+
+```shell
+# From the engine/ directory
+make install-cli
+```
+
+This installs `hmcs` to `~/.cargo/bin/hmcs`.
+
 ## Troubleshooting
 
 ### `hmcs: command not found`
 
-Your terminal doesn't recognize the `hmcs` command.
+- **macOS**: Restart your terminal. The installer creates a symlink at `/usr/local/bin/hmcs`.
+- **Windows**: Restart your terminal or sign out and back in. The installer adds the bin directory to your system PATH.
 
-- **Restart your terminal** — the `PATH` may not have been updated
-- Verify the global npm bin directory is in your PATH:
-  ```shell
-  npm bin -g
-  ```
+### App blocked by Gatekeeper (macOS)
 
-### Node.js version is below 22
-
-MODs require Node.js 22+ to run TypeScript scripts directly via tsx. Download the latest LTS from [nodejs.org](https://nodejs.org/download).
-
-### App blocked by Gatekeeper
-
-See [Step 1](#step-1-install-desktop-homunculus) for instructions on allowing the app.
+See the installation instructions above for allowing the app through Gatekeeper.
 
 ### Black/opaque window background on Windows
 
-If the window background appears black instead of transparent on Windows, you likely have an NVIDIA GPU that requires a configuration change. See the [NVIDIA GPU setup instructions](#step-1-install-desktop-homunculus) in Step 1 (Windows tab).
+If the window background appears black instead of transparent on Windows, you likely have an NVIDIA GPU that requires a configuration change. See the NVIDIA GPU setup instructions above.
 
-### No character appears after installing MODs
+### No character appears after launch
 
-Restart Desktop Homunculus. MOD changes take effect after a restart.
+If official MODs failed to install during setup (e.g., due to network issues), install them manually:
+
+```shell
+hmcs mod install @hmcs/assets @hmcs/persona @hmcs/menu @hmcs/settings @hmcs/app-exit
+```
+
+Then restart Desktop Homunculus.
 
 ### MOD installation fails
 
-Check your network connection and try again.
+Check your network connection and try again. MOD installation requires access to the npm registry.
