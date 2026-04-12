@@ -12,6 +12,10 @@ use homunculus_prefs::prelude::PrefsDatabase;
 
 impl PersonaApi {
     /// Attaches a VRM model to an existing persona entity.
+    ///
+    /// If a VRM is already attached, it is detached first. The method waits
+    /// for deferred despawn commands to flush between detach and attach phases
+    /// to prevent stale VRMA entity reuse.
     pub async fn attach_vrm(
         &self,
         persona_id: PersonaId,
@@ -19,17 +23,40 @@ impl PersonaApi {
     ) -> ApiResult<PersonaSnapshot> {
         self.0
             .schedule(move |task| async move {
-                let (snapshot, entity, asset_id) = task
-                    .will(Update, once::run(attach).with((persona_id, asset_id)))
+                // Phase 1: detach old VRM + despawn old VRMA children (all deferred)
+                let (snapshot, entity) = task
+                    .will(
+                        Update,
+                        once::run(detach_phase).with((persona_id, asset_id.clone())),
+                    )
                     .await
                     .ok()?;
+
+                // Flush deferred commands (despawn old children, trigger RequestDetachVrm)
+                task.will(Update, once::run(|| {})).await;
+
+                // Phase 2: insert new VRM handle (now that old children are gone)
+                task.will(
+                    Update,
+                    once::run(attach_phase).with((entity, asset_id.clone())),
+                )
+                .await;
+
+                // Wait for VRM initialization
                 task.will(Update, wait::until(initialized).with(entity))
                     .await;
+
+                // Wait for animation graph construction
+                // (RequestUpdateAnimationGraph is a deferred trigger from trigger_loaded)
+                task.will(Update, once::run(|| {})).await;
+
+                // Broadcast VrmAttachedEvent after everything is ready
                 task.will(
                     Update,
                     once::run(broadcast_attached).with((entity, asset_id)),
                 )
                 .await;
+
                 Some(snapshot)
             })
             .await?
@@ -37,21 +64,22 @@ impl PersonaApi {
     }
 }
 
+/// Phase 1: Detach old VRM and despawn stale VRMA children.
+///
+/// Returns the persona snapshot and entity for the attach phase.
 #[allow(clippy::too_many_arguments)]
-fn attach(
+fn detach_phase(
     In((persona_id, asset_id)): In<(PersonaId, String)>,
     mut commands: Commands,
     index: Res<PersonaIndex>,
     mut personas: Query<(&mut Persona, &PersonaState)>,
     vrm_handles: Query<&VrmHandle>,
-    asset_resolver: AssetResolver,
-    cameras: Cameras,
     prefs: NonSend<PrefsDatabase>,
     tx_detached: Option<Res<VrmEventSender<VrmDetachedEvent>>>,
     tx_change: Option<Res<VrmEventSender<PersonaChangeEvent>>>,
     children_query: Query<&Children>,
     vrma_entities: Query<Entity, With<AssetIdComponent>>,
-) -> ApiResult<(PersonaSnapshot, Entity, String)> {
+) -> ApiResult<(PersonaSnapshot, Entity)> {
     let entity = index.get(&persona_id).ok_or(ApiError::EntityNotFound)?;
 
     if vrm_handles.get(entity).is_ok() {
@@ -66,21 +94,11 @@ fn attach(
         )?;
     }
 
-    let handle = asset_resolver
-        .load(&asset_id)
-        .map_err(|_| ApiError::AssetNotFound(asset_id.clone().into()))?;
-
-    commands.entity(entity).try_insert((
-        VrmHandle(handle),
-        LookAt::Cursor,
-        BodyTracking::default(),
-        cameras.all_layers(),
-    ));
-
+    // Update persona DB record with new VRM asset ID
     let (mut persona, state) = personas
         .get_mut(entity)
         .map_err(|_| ApiError::EntityNotFound)?;
-    persona.vrm_asset_id = Some(asset_id.clone());
+    persona.vrm_asset_id = Some(asset_id);
     let updated = persona.clone();
     let state_str = state.0.clone();
 
@@ -93,8 +111,26 @@ fn attach(
             spawned: true,
         },
         entity,
-        asset_id,
     ))
+}
+
+/// Phase 2: Insert the new VRM handle (runs after deferred despawn has flushed).
+fn attach_phase(
+    In((entity, asset_id)): In<(Entity, String)>,
+    mut commands: Commands,
+    asset_resolver: AssetResolver,
+    cameras: Cameras,
+) {
+    let Ok(handle) = asset_resolver.load(&asset_id) else {
+        error!("Failed to load VRM asset: {asset_id}");
+        return;
+    };
+    commands.entity(entity).try_insert((
+        VrmHandle(handle),
+        LookAt::Cursor,
+        BodyTracking::default(),
+        cameras.all_layers(),
+    ));
 }
 
 /// Persists persona to DB and broadcasts a change event.
@@ -131,12 +167,6 @@ fn broadcast_attached(
 }
 
 /// Despawns VRMA child entities before VRM detach.
-///
-/// VRMA entities (identified by [`AssetIdComponent`]) are children of the
-/// VRM/persona entity. They must be removed before VRM detach+reattach
-/// because `RequestDetachVrm` is a deferred trigger — the old VRMA entities
-/// can survive until the next command flush, causing `fetch_vrma` to return
-/// stale entities with invalid animation graph connections.
 fn despawn_vrma_children(
     commands: &mut Commands,
     children_query: &Query<&Children>,
