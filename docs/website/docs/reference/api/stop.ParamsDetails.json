@@ -1,1 +1,1 @@
-{"parameters":[{"name":"entity","in":"path","description":"Entity ID","required":true,"schema":{"type":"string"}}]}
+{"parameters":[{"name":"handle_id","in":"path","description":"Process handle ID","required":true,"schema":{"type":"string"}}]}

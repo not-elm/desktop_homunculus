@@ -37,7 +37,7 @@ pub struct AppInfo {
         (status = 200, description = "Application info", body = AppInfo),
     ),
 )]
-pub async fn get(State(mods_api): State<ModsApi>) -> HttpResult<AppInfo> {
+pub async fn get_app_info(State(mods_api): State<ModsApi>) -> HttpResult<AppInfo> {
     let mod_list = mods_api.list().await?;
     Ok(Json(AppInfo {
         version: env!("CARGO_PKG_VERSION").to_string(),

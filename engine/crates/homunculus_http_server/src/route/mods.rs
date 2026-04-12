@@ -26,7 +26,7 @@ use utoipa::ToSchema;
         (status = 200, description = "List of loaded mods", body = Vec<ModInfo>),
     ),
 )]
-pub async fn list(State(api): State<ModsApi>) -> HttpResult<Vec<ModInfo>> {
+pub async fn list_mods(State(api): State<ModsApi>) -> HttpResult<Vec<ModInfo>> {
     api.list().await.into_http_result()
 }
 

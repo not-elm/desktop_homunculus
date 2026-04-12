@@ -41,7 +41,7 @@ paths:
       tags:
       - app
       summary: Returns application metadata including version, platform, features, and loaded mods.
-      operationId: get
+      operationId: get_app_info
       responses:
         '200':
           description: Application info
@@ -54,7 +54,7 @@ paths:
       tags:
       - assets
       summary: List available assets, optionally filtered by type or mod name.
-      operationId: list
+      operationId: list_assets
       parameters:
       - name: type
         in: query
@@ -426,7 +426,7 @@ paths:
       - entities
       summary: Find an entity by its name.
       description: If `root` entity is specified, it will search recursively from that entity's children.
-      operationId: get
+      operationId: find_entity
       parameters:
       - name: name
         in: query
@@ -480,7 +480,7 @@ paths:
       tags:
       - entities
       summary: Get the entity name.
-      operationId: get
+      operationId: get_entity_name
       parameters:
       - name: entity
         in: path
@@ -502,7 +502,7 @@ paths:
       tags:
       - entities
       summary: Get the transform of an entity.
-      operationId: get
+      operationId: get_transform
       parameters:
       - name: entity
         in: path
@@ -523,7 +523,7 @@ paths:
       tags:
       - entities
       summary: Set the transform of an entity.
-      operationId: put
+      operationId: set_transform
       parameters:
       - name: entity
         in: path
@@ -629,7 +629,7 @@ paths:
       tags:
       - mods
       summary: List all loaded mods.
-      operationId: list
+      operationId: list_mods
       responses:
         '200':
           description: List of loaded mods
@@ -681,7 +681,7 @@ paths:
       tags:
       - personas
       summary: List all personas.
-      operationId: list
+      operationId: list_personas
       responses:
         '200':
           description: List of personas
@@ -747,7 +747,7 @@ paths:
       tags:
       - personas
       summary: Get a single persona by ID.
-      operationId: get
+      operationId: get_persona
       parameters:
       - name: id
         in: path
@@ -768,7 +768,7 @@ paths:
       tags:
       - personas
       summary: Delete a persona.
-      operationId: delete
+      operationId: delete_persona
       parameters:
       - name: id
         in: path
@@ -785,7 +785,7 @@ paths:
       tags:
       - personas
       summary: Partially update a persona.
-      operationId: patch
+      operationId: update_persona
       parameters:
       - name: id
         in: path
@@ -1221,7 +1221,7 @@ paths:
       tags:
       - personas
       summary: Get the state of a persona.
-      operationId: get
+      operationId: get_persona_state
       parameters:
       - name: id
         in: path
@@ -1242,7 +1242,7 @@ paths:
       tags:
       - personas
       summary: Set the state of a persona.
-      operationId: put
+      operationId: set_persona_state
       parameters:
       - name: id
         in: path
@@ -1316,7 +1316,7 @@ paths:
       tags:
       - personas
       summary: Get the transform of a persona.
-      operationId: get_transform
+      operationId: get_persona_transform
       parameters:
       - name: id
         in: path
@@ -1337,7 +1337,7 @@ paths:
       tags:
       - personas
       summary: Set the transform of a persona.
-      operationId: put_transform
+      operationId: set_persona_transform
       parameters:
       - name: id
         in: path
@@ -1734,7 +1734,7 @@ paths:
       tags:
       - preferences
       summary: List all saved preference keys.
-      operationId: list
+      operationId: list_preferences
       responses:
         '200':
           description: List of preference keys
@@ -1792,7 +1792,7 @@ paths:
       tags:
       - processes
       summary: List all running managed processes.
-      operationId: list
+      operationId: list_processes
       responses:
         '200':
           description: List of running processes
@@ -1937,7 +1937,7 @@ paths:
       tags:
       - settings
       summary: Get the current frame rate (FPS).
-      operationId: get
+      operationId: get_fps
       responses:
         '200':
           description: Current FPS
@@ -1950,7 +1950,7 @@ paths:
       tags:
       - settings
       summary: Set the frame rate (FPS). Persists and applies immediately.
-      operationId: put
+      operationId: set_fps
       requestBody:
         content:
           application/json:
@@ -1965,7 +1965,7 @@ paths:
       tags:
       - shadow-panel
       summary: Get the current alpha value of the shadow panel.
-      operationId: get
+      operationId: get_shadow_alpha
       responses:
         '200':
           description: Current alpha value
@@ -1983,7 +1983,7 @@ paths:
       description: |-
         The value set here is saved in the internal database under the key `shadow_panel::alpha`.
         When the application starts, the alpha value is read from this key and applied to the shadow panel's material.
-      operationId: put
+      operationId: set_shadow_alpha
       requestBody:
         content:
           application/json:
@@ -2000,7 +2000,7 @@ paths:
       tags:
       - signals
       summary: List all active signal channels.
-      operationId: list
+      operationId: list_signals
       responses:
         '200':
           description: List of active signal channels
@@ -2215,7 +2215,7 @@ paths:
       tags:
       - webviews
       summary: List all open webviews.
-      operationId: list
+      operationId: list_webviews
       responses:
         '200':
           description: List of open webviews
@@ -2248,7 +2248,7 @@ paths:
       tags:
       - webviews
       summary: Get detailed info for a specific webview.
-      operationId: get
+      operationId: get_webview
       parameters:
       - name: entity
         in: path
@@ -2269,7 +2269,7 @@ paths:
       tags:
       - webviews
       summary: Delete (close) a webview.
-      operationId: delete
+      operationId: delete_webview
       parameters:
       - name: entity
         in: path
@@ -2286,7 +2286,7 @@ paths:
       tags:
       - webviews
       summary: Partial update of a webview.
-      operationId: patch
+      operationId: update_webview
       parameters:
       - name: entity
         in: path

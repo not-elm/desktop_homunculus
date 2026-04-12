@@ -246,7 +246,7 @@ fn build_openapi_router() -> OpenApiRouter<HttpState> {
         .nest("/processes", processes_router())
         .nest("/stt", stt_router())
         .nest("/dialog", dialog_router())
-        .routes(routes!(assets::list))
+        .routes(routes!(assets::list_assets))
         .routes(routes!(assets::import))
         .routes(routes!(assets::get_asset_file))
         .nest("/rpc", rpc_openapi_router())
@@ -290,7 +290,7 @@ fn rpc_openapi_router() -> OpenApiRouter<HttpState> {
 fn app_router() -> OpenApiRouter<HttpState> {
     OpenApiRouter::new()
         .routes(routes!(route::health))
-        .routes(routes!(info::get))
+        .routes(routes!(info::get_app_info))
         .routes(routes!(route::app::exit))
 }
 
@@ -313,7 +313,7 @@ fn effects_router() -> OpenApiRouter<HttpState> {
 
 fn mods_router() -> OpenApiRouter<HttpState> {
     OpenApiRouter::new()
-        .routes(routes!(route::mods::list))
+        .routes(routes!(route::mods::list_mods))
         .routes(routes!(route::mods::list_menus))
         .routes(routes!(route::mods::get_one))
 }
@@ -343,21 +343,21 @@ fn commands_router() -> OpenApiRouter<HttpState> {
 
 fn processes_router() -> OpenApiRouter<HttpState> {
     OpenApiRouter::new()
-        .routes(routes!(route::processes::list))
+        .routes(routes!(route::processes::list_processes))
         .routes(routes!(route::processes::start))
         .routes(routes!(route::processes::stop))
 }
 
 fn entities_router() -> OpenApiRouter<HttpState> {
     OpenApiRouter::new()
-        .routes(routes!(entities::get))
+        .routes(routes!(entities::find_entity))
         .nest("/{entity}", entities_id_router())
 }
 
 fn entities_id_router() -> OpenApiRouter<HttpState> {
     OpenApiRouter::new()
-        .routes(routes!(entities::transform::get, entities::transform::put))
-        .routes(routes!(entities::name::get))
+        .routes(routes!(entities::transform::get_transform, entities::transform::set_transform))
+        .routes(routes!(entities::name::get_entity_name))
         .routes(routes!(entities::move_to::move_to))
         .routes(routes!(entities::tween::tween_position))
         .routes(routes!(entities::tween::tween_rotation))
@@ -366,7 +366,7 @@ fn entities_id_router() -> OpenApiRouter<HttpState> {
 
 fn persona_router() -> OpenApiRouter<HttpState> {
     OpenApiRouter::new()
-        .routes(routes!(persona::get::list, persona::create::create))
+        .routes(routes!(persona::get::list_personas, persona::create::create))
         .routes(routes!(persona::snapshot::snapshot))
         .routes(routes!(persona::stream::stream))
         .nest("/{id}", persona_id_router())
@@ -375,9 +375,9 @@ fn persona_router() -> OpenApiRouter<HttpState> {
 fn persona_id_router() -> OpenApiRouter<HttpState> {
     OpenApiRouter::new()
         .routes(routes!(
-            persona::get::get,
-            persona::update::patch,
-            persona::delete::delete
+            persona::get::get_persona,
+            persona::update::update_persona,
+            persona::delete::delete_persona
         ))
         .routes(routes!(
             persona::fields::get_name,
@@ -400,7 +400,7 @@ fn persona_id_router() -> OpenApiRouter<HttpState> {
             persona::fields::get_personality,
             persona::fields::put_personality
         ))
-        .routes(routes!(persona::state::get, persona::state::put))
+        .routes(routes!(persona::state::get_persona_state, persona::state::set_persona_state))
         .routes(routes!(
             persona::fields::get_metadata,
             persona::fields::put_metadata
@@ -410,8 +410,8 @@ fn persona_id_router() -> OpenApiRouter<HttpState> {
             persona::fields::put_thumbnail
         ))
         .routes(routes!(
-            persona::fields::get_transform,
-            persona::fields::put_transform
+            persona::fields::get_persona_transform,
+            persona::fields::set_persona_transform
         ))
         .routes(routes!(persona::spawn::spawn))
         .routes(routes!(persona::spawn::despawn))
@@ -445,17 +445,17 @@ fn coordinates_router() -> OpenApiRouter<HttpState> {
 }
 
 fn settings_router() -> OpenApiRouter<HttpState> {
-    OpenApiRouter::new().routes(routes!(settings::get, settings::put))
+    OpenApiRouter::new().routes(routes!(settings::get_fps, settings::set_fps))
 }
 
 fn shadow_panel_router() -> OpenApiRouter<HttpState> {
-    OpenApiRouter::new().routes(routes!(shadow_panel::alpha::get, shadow_panel::alpha::put))
+    OpenApiRouter::new().routes(routes!(shadow_panel::alpha::get_shadow_alpha, shadow_panel::alpha::set_shadow_alpha))
 }
 
 fn webviews_router() -> OpenApiRouter<HttpState> {
     OpenApiRouter::new()
-        .routes(routes!(webviews::list, webviews::open))
-        .routes(routes!(webviews::get, webviews::patch, webviews::delete))
+        .routes(routes!(webviews::list_webviews, webviews::open))
+        .routes(routes!(webviews::get_webview, webviews::update_webview, webviews::delete_webview))
         .routes(routes!(webviews::is_closed))
         .routes(routes!(webviews::navigate))
         .routes(routes!(webviews::navigate_back))
@@ -470,7 +470,7 @@ fn webviews_router() -> OpenApiRouter<HttpState> {
 
 fn preferences_router() -> OpenApiRouter<HttpState> {
     OpenApiRouter::new()
-        .routes(routes!(preferences::list))
+        .routes(routes!(preferences::list_preferences))
         .routes(routes!(preferences::load, preferences::save))
 }
 
@@ -480,7 +480,7 @@ fn display_router() -> OpenApiRouter<HttpState> {
 
 fn signals_router() -> OpenApiRouter<HttpState> {
     OpenApiRouter::new()
-        .routes(routes!(route::signals::list))
+        .routes(routes!(route::signals::list_signals))
         .routes(routes!(route::signals::send))
         .route("/ws", axum::routing::get(route::signals::ws_handler))
 }

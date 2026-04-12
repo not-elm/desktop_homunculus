@@ -1,0 +1,1 @@
+{"title":"Body","body":{"content":{"application/json":{"schema":{"type":"object","required":["fps"],"properties":{"fps":{"type":"number","format":"double","description":"Frame rate in frames per second."}},"title":"SetFpsBody"}}},"required":true}}

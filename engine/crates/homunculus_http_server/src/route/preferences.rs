@@ -14,7 +14,7 @@ use homunculus_api::prelude::axum::{HttpResult, IntoHttpResult};
         (status = 200, description = "List of preference keys", body = Vec<String>),
     ),
 )]
-pub async fn list(State(api): State<PrefsApi>) -> HttpResult<Vec<String>> {
+pub async fn list_preferences(State(api): State<PrefsApi>) -> HttpResult<Vec<String>> {
     api.list().await.into_http_result()
 }
 

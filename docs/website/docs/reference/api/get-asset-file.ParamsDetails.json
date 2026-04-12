@@ -1,0 +1,1 @@
+{"parameters":[{"name":"id","in":"query","description":"Asset ID (e.g. '@hmcs/elmer:thumbnail')","required":true,"schema":{"type":"string"}}]}

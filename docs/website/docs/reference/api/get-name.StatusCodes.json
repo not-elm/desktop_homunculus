@@ -1,0 +1,1 @@
+{"responses":{"200":{"description":"","content":{"application/json":{"schema":{"type":"object","properties":{"name":{"type":["string","null"]}},"title":"NameBody"}}}},"404":{"description":""}}}

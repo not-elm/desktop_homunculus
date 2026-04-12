@@ -15,7 +15,7 @@ use utoipa::ToSchema;
         (status = 400, description = "Shadow panel not available"),
     ),
 )]
-pub async fn get(State(api): State<ShadowPanelApi>) -> HttpResult<f32> {
+pub async fn get_shadow_alpha(State(api): State<ShadowPanelApi>) -> HttpResult<f32> {
     api.alpha().await.into_http_result()
 }
 
@@ -33,7 +33,7 @@ pub async fn get(State(api): State<ShadowPanelApi>) -> HttpResult<f32> {
         (status = 400, description = "Shadow panel not available"),
     ),
 )]
-pub async fn put(
+pub async fn set_shadow_alpha(
     State(api): State<ShadowPanelApi>,
     Json(body): Json<ShadowPanelPutBody>,
 ) -> HttpResult {
