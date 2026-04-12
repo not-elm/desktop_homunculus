@@ -7,10 +7,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@hmcs/ui';
+import { BehaviorSection } from '@persona/shared/components/BehaviorSection';
 import { PersonaDetailBody } from '@persona/shared/components/PersonaDetailBody';
 import { usePersonaDetail } from '@persona/shared/hooks/usePersonaDetail';
 import { useThumbnailImport } from '@persona/shared/hooks/useThumbnailImport';
 import { useMemo, useState } from 'react';
+
+type Tab = 'persona' | 'appearance';
+
+const TABS: { id: Tab; label: string }[] = [
+  { id: 'persona', label: 'Persona' },
+  { id: 'appearance', label: 'Appearance' },
+];
 
 interface DetailViewProps {
   personaId: string;
@@ -39,10 +47,15 @@ export default function DetailView({
     save,
     toggleSpawn,
     toggleAutoSpawn,
+    behaviorProcess,
+    behaviorAnimations,
+    setBehaviorProcess,
+    setBehaviorAnimations,
   } = usePersonaDetail(personaId, callbacks);
 
   const persona = useMemo(() => new Persona(personaId), [personaId]);
   const { importThumbnail } = useThumbnailImport();
+  const [tab, setTab] = useState<Tab>('persona');
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   if (!snapshot || !formValues) {
@@ -82,17 +95,42 @@ export default function DetailView({
         saved={saved}
       />
 
-      <PersonaDetailBody
-        personaId={personaId}
-        thumbnailUrl={persona.thumbnailUrl(thumbnail)}
-        onThumbnailChange={handleThumbnailChange}
-        vrmAssetId={vrmAssetId}
-        onVrmChange={setVrmAssetId}
-        autoSpawn={autoSpawn}
-        onAutoSpawnToggle={toggleAutoSpawn}
-        formValues={formValues}
-        onFormChange={setFormValues}
-      />
+      <div className="settings-tabs">
+        {TABS.map((t) => (
+          <button
+            type="button"
+            key={t.id}
+            className={`settings-tab ${tab === t.id ? 'settings-tab--active' : ''}`}
+            onClick={() => setTab(t.id)}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="detail-tab-content">
+        {tab === 'persona' && (
+          <PersonaDetailBody
+            personaId={personaId}
+            thumbnailUrl={persona.thumbnailUrl(thumbnail)}
+            onThumbnailChange={handleThumbnailChange}
+            vrmAssetId={vrmAssetId}
+            onVrmChange={setVrmAssetId}
+            autoSpawn={autoSpawn}
+            onAutoSpawnToggle={toggleAutoSpawn}
+            formValues={formValues}
+            onFormChange={setFormValues}
+          />
+        )}
+        {tab === 'appearance' && (
+          <BehaviorSection
+            process={behaviorProcess}
+            animations={behaviorAnimations}
+            onProcessChange={setBehaviorProcess}
+            onAnimationsChange={setBehaviorAnimations}
+          />
+        )}
+      </div>
 
       <DeleteSection onDelete={() => setDeleteOpen(true)} />
 
