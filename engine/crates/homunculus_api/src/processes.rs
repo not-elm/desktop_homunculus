@@ -11,8 +11,8 @@ use bevy::prelude::*;
 use bevy_flurx::prelude::*;
 use homunculus_core::prelude::{HomunculusConfig, ModRegistry};
 use homunculus_mod::managed_process::{MAX_PROCESSES, ManagedProcess};
-use homunculus_utils::runtime::RuntimeResolver;
 use homunculus_mod::node_process::NodeProcessHandle;
+use homunculus_utils::runtime::RuntimeResolver;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 

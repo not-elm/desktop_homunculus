@@ -17,9 +17,7 @@ pub fn list_installation_mods() -> UtilResult<Vec<ModInfo>> {
 }
 
 /// Retrieves list of installation mods using the given [`RuntimeResolver`].
-pub fn list_installation_mods_with_runtime(
-    runtime: &RuntimeResolver,
-) -> UtilResult<Vec<ModInfo>> {
+pub fn list_installation_mods_with_runtime(runtime: &RuntimeResolver) -> UtilResult<Vec<ModInfo>> {
     let mods = list_candidate_paths_with_runtime(runtime)?;
     Ok(list_mods(&mods))
 }

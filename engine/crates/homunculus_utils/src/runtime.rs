@@ -240,11 +240,7 @@ fn tsx_import_path(runtime_dir: &Path) -> PathBuf {
 
 /// Returns the correct program name for pnpm on the current platform.
 fn pnpm_system_program() -> &'static str {
-    if cfg!(windows) {
-        "pnpm.cmd"
-    } else {
-        "pnpm"
-    }
+    if cfg!(windows) { "pnpm.cmd" } else { "pnpm" }
 }
 
 /// Parse the major version number from a Node.js version string (e.g. `v22.16.0`).
