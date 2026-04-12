@@ -7,6 +7,10 @@ use homunculus_core::prelude::{AssetId, AssetIdComponent, AssetResolver};
 
 impl VrmApi {
     /// Fetches the VRMA from the asset server if it exists, or spawns a new entity with the VRMA asset if it does not.
+    ///
+    /// Waits for both `Initialized` and the animation graph to be fully constructed
+    /// before returning. This ensures that `PlayVrma` triggers will find the
+    /// required `VrmAnimationNodeIndex` and `AnimationPlayer` components.
     pub async fn vrma(&self, vrm_entity: Entity, asset_id: AssetId) -> ApiResult<Entity> {
         self.0
             .schedule(move |task| async move {
@@ -15,6 +19,9 @@ impl VrmApi {
                     .await?;
                 task.will(Update, wait::until(initialized).with(vrma_entity))
                     .await;
+                // Wait one additional frame for `RequestUpdateAnimationGraph`
+                // (a deferred trigger) to complete and build the animation graph.
+                task.will(Update, once::run(|| {})).await;
                 Some(vrma_entity)
             })
             .await
