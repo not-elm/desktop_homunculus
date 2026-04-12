@@ -1,5 +1,11 @@
 import { Persona, type PersonaSnapshot } from '@hmcs/sdk';
 import type { PersonaFormValues } from '@persona/shared/components/PersonaFields';
+import {
+  type BehaviorAnimations,
+  DEFAULT_ANIMATIONS,
+  resolveBehaviorConfig,
+  isDefaultProcess,
+} from '@persona/shared/behavior-config';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 export interface UsePersonaDetailReturn {
@@ -16,6 +22,10 @@ export interface UsePersonaDetailReturn {
   save: () => Promise<void>;
   toggleSpawn: () => Promise<void>;
   toggleAutoSpawn: () => Promise<void>;
+  behaviorProcess: string | null;
+  behaviorAnimations: BehaviorAnimations;
+  setBehaviorProcess: (process: string | null) => void;
+  setBehaviorAnimations: (animations: BehaviorAnimations) => void;
 }
 
 function snapshotToFormValues(snapshot: PersonaSnapshot): PersonaFormValues {
@@ -48,6 +58,10 @@ export function usePersonaDetail(
   const initialValues = useRef<PersonaFormValues | null>(null);
   const initialVrm = useRef<string | null>(null);
   const initialThumbnail = useRef<string | null>(null);
+  const [behaviorProcess, setBehaviorProcess] = useState<string | null>(null);
+  const [behaviorAnimations, setBehaviorAnimations] = useState<BehaviorAnimations>(DEFAULT_ANIMATIONS);
+  const initialBehaviorProcess = useRef<string | null>(null);
+  const initialBehaviorAnimations = useRef<BehaviorAnimations>(DEFAULT_ANIMATIONS);
 
   const persona = useMemo(() => new Persona(personaId), [personaId]);
 
@@ -62,6 +76,11 @@ export function usePersonaDetail(
       initialValues.current = values;
       initialVrm.current = snap.vrmAssetId ?? null;
       initialThumbnail.current = snap.thumbnail ?? null;
+      const behavior = resolveBehaviorConfig(snap);
+      setBehaviorProcess(behavior.process);
+      setBehaviorAnimations(behavior.animations);
+      initialBehaviorProcess.current = behavior.process;
+      initialBehaviorAnimations.current = behavior.animations;
     } catch (e) {
       console.error('Failed to load persona:', e);
     }
@@ -82,9 +101,13 @@ export function usePersonaDetail(
       formValues.profile !== iv.profile ||
       formValues.personality !== iv.personality ||
       vrmAssetId !== initialVrm.current ||
-      thumbnail !== initialThumbnail.current
+      thumbnail !== initialThumbnail.current ||
+      behaviorProcess !== initialBehaviorProcess.current ||
+      behaviorAnimations.idle !== initialBehaviorAnimations.current.idle ||
+      behaviorAnimations.drag !== initialBehaviorAnimations.current.drag ||
+      behaviorAnimations.sitting !== initialBehaviorAnimations.current.sitting
     );
-  }, [formValues, vrmAssetId, thumbnail]);
+  }, [formValues, vrmAssetId, thumbnail, behaviorProcess, behaviorAnimations]);
 
   useEffect(() => {
     callbacks.onDirtyChange(isDirty());
@@ -105,6 +128,13 @@ export function usePersonaDetail(
           personality: formValues.personality || undefined,
           vrmAssetId: vrmChanged ? (vrmAssetId ?? undefined) : undefined,
           thumbnail: thumbnailChanged ? (thumbnail ?? undefined) : undefined,
+          metadata: {
+            ...(snapshot?.metadata ?? {}),
+            behavior: {
+              process: behaviorProcess,
+              animations: behaviorAnimations,
+            },
+          },
         });
 
         if (vrmChanged && snapshot?.spawned) {
@@ -124,7 +154,7 @@ export function usePersonaDetail(
         return false;
       }
     },
-    [formValues, vrmAssetId, thumbnail, snapshot, persona, loadSnapshot],
+    [formValues, vrmAssetId, thumbnail, snapshot, persona, loadSnapshot, behaviorProcess, behaviorAnimations],
   );
 
   const save = useCallback(async () => {
@@ -185,5 +215,9 @@ export function usePersonaDetail(
     save,
     toggleSpawn,
     toggleAutoSpawn,
+    behaviorProcess,
+    behaviorAnimations,
+    setBehaviorProcess,
+    setBehaviorAnimations,
   };
 }
