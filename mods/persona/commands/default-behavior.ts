@@ -1,4 +1,4 @@
-import { HomunculusApiError, Persona, repeat, sleep } from '@hmcs/sdk';
+import { Persona, repeat, sleep } from '@hmcs/sdk';
 import {
   resolveBehaviorConfig,
   type BehaviorAnimations,
@@ -24,16 +24,29 @@ const config = resolveBehaviorConfig(snapshot);
 const animations: BehaviorAnimations = config.animations;
 let currentState = snapshot.state;
 
+console.log(`[default-behavior] Applying initial behavior: state=${currentState}`);
 await applyBehaviorWithLogging(persona, currentState, animations, 'startup');
 
 const events = persona.events();
+console.log(`[default-behavior] Subscribing to events...`);
+
 events.on('state-change', async (e) => {
+  console.log(`[default-behavior] EVENT state-change: ${e.state}`);
   currentState = e.state;
   await applyBehaviorWithLogging(persona, currentState, animations, 'state-change');
 });
-events.on('vrm-attached', async () => {
+events.on('vrm-attached', async (e) => {
+  console.log(`[default-behavior] EVENT vrm-attached:`, JSON.stringify(e));
   await applyBehaviorAfterAttach(persona, () => currentState, animations);
 });
+events.on('vrm-detached', async (e) => {
+  console.log(`[default-behavior] EVENT vrm-detached:`, JSON.stringify(e));
+});
+events.on('persona-change', async (e) => {
+  console.log(`[default-behavior] EVENT persona-change received`);
+});
+
+console.log(`[default-behavior] Ready and listening for events`);
 
 process.on('SIGTERM', () => {
   events.close();
@@ -71,7 +84,6 @@ async function applyBehaviorWithLogging(
   try {
     await applyBehavior(p, state, anims);
   } catch (err) {
-    if (isExpectedVrmTimingError(err)) return;
     console.error(`[default-behavior] applyBehavior failed (${source}):`, err);
   }
 }
@@ -81,23 +93,12 @@ async function applyBehaviorAfterAttach(
   getState: () => string,
   anims: BehaviorAnimations,
 ): Promise<void> {
-  const delaysMs = [0, 100, 250, 500, 1000];
-
-  for (let i = 0; i < delaysMs.length; i++) {
-    if (delaysMs[i] > 0) await sleep(delaysMs[i]);
-
-    try {
-      await applyBehavior(p, getState(), anims);
-      return;
-    } catch (err) {
-      if (!isExpectedVrmTimingError(err) || i === delaysMs.length - 1) {
-        console.error('[default-behavior] failed to reapply after vrm-attached:', err);
-        return;
-      }
-    }
+  try {
+    const state = getState();
+    console.log(`[default-behavior] vrm-attach: applying state=${state}`);
+    await applyBehavior(p, state, anims);
+    console.log(`[default-behavior] vrm-attach: SUCCESS`);
+  } catch (err) {
+    console.error('[default-behavior] failed to apply after vrm-attached:', err);
   }
-}
-
-function isExpectedVrmTimingError(err: unknown): boolean {
-  return err instanceof HomunculusApiError && err.statusCode === 404;
 }

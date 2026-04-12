@@ -46,10 +46,6 @@ impl PersonaApi {
                 task.will(Update, wait::until(initialized).with(entity))
                     .await;
 
-                // Wait for animation graph construction
-                // (RequestUpdateAnimationGraph is a deferred trigger from trigger_loaded)
-                task.will(Update, once::run(|| {})).await;
-
                 // Broadcast VrmAttachedEvent after everything is ready
                 task.will(
                     Update,
