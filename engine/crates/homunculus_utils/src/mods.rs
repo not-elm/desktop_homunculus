@@ -55,51 +55,6 @@ fn validate_package_name(spec: &str) -> UtilResult {
     Ok(())
 }
 
-/// Pinned tsx version for deterministic mod service execution.
-const TSX_PACKAGE: &str = "tsx@4.21.0";
-
-/// Ensure tsx is installed in the mods directory.
-///
-/// Runs `pnpm -C <mods_dir> add --save-dev --save-exact tsx@4.21.0` on every
-/// app startup. If the pinned version is already installed, pnpm resolves
-/// quickly without network access.
-/// The installed tsx is used by mod services via `node --import tsx`.
-pub fn ensure_tsx() -> UtilResult {
-    ensure_tsx_with_runtime(&RuntimeResolver::detect())
-}
-
-/// Ensure tsx is installed, using the given [`RuntimeResolver`].
-///
-/// In bundled mode, tsx is already included in the runtime directory, so this
-/// is a no-op. In fallback mode, installs tsx via pnpm.
-pub fn ensure_tsx_with_runtime(runtime: &RuntimeResolver) -> UtilResult {
-    if runtime.is_bundled() {
-        return Ok(());
-    }
-
-    let config = HomunculusConfig::load()?;
-    let package_json = config.mods_dir.join("package.json");
-    if !package_json.exists() {
-        std::fs::write(&package_json, "{}\n")
-            .map_err(|e| UtilError::Mods(ModsError::Install(e)))?;
-    }
-
-    let status = create_pnpm_command_with_runtime(runtime, &config.mods_dir)?
-        .no_window()
-        .arg("add")
-        .arg("--save-dev")
-        .arg("--save-exact")
-        .arg(TSX_PACKAGE)
-        .status()
-        .map_err(|e| UtilError::Mods(ModsError::Install(e)))?;
-
-    if !status.success() {
-        return Err(UtilError::ForkProcess(format!(
-            "pnpm add {TSX_PACKAGE} failed with status: {status}"
-        )));
-    }
-    Ok(())
-}
 
 /// Install the mod.
 /// The argument `pkg` is same as `pnpm add <pkg>`.

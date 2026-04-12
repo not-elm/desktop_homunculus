@@ -66,10 +66,6 @@ jobs:
             echo "ui_tag=$UI_TAG"
           } >> "$GITHUB_OUTPUT"
 
-  # NOTE: build-cli job removed — hmcs CLI is now built as part of
-  # build-engine (macOS) and build-engine-windows, and distributed
-  # via the installer instead of npm.
-
   build-engine:
     needs: validate
     timeout-minutes: 90
@@ -211,9 +207,6 @@ jobs:
       - uses: ./.github/actions/publish-npm-mods
         with:
           npm-token: ${{ secrets.NPM_TOKEN }}
-
-      # NOTE: @hmcs/cli and @hmcs/cli-platform-* npm packages are no longer
-      # published. The hmcs CLI is now distributed via the installer (pkg/MSI).
 
   create-release:
     needs: [validate, publish-npm]

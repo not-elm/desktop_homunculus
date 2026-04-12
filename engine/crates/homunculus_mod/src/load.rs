@@ -28,9 +28,6 @@ fn discover_mods(
     info!("Mods root: {}", mods_root.display());
     create_dir_all_if_need(&mods_root);
 
-    if let Err(e) = homunculus_utils::mods::ensure_tsx_with_runtime(&runtime) {
-        warn!("Failed to install tsx in mods directory: {e}");
-    }
     let mods = match homunculus_utils::mods::list::list_installation_mods_with_runtime(&runtime) {
         Ok(mods) => mods,
         Err(e) => {
