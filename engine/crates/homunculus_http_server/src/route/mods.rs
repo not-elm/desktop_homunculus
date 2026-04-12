@@ -175,10 +175,10 @@ pub async fn execute_command(
         #[cfg(windows)]
         {
             cmd.creation_flags(0x08000000);
-            if !runtime.is_bundled() {
-                if let Some(path) = homunculus_utils::process::path_with_node_prepended() {
-                    cmd.env("PATH", path);
-                }
+            if !runtime.is_bundled()
+                && let Some(path) = homunculus_utils::process::path_with_node_prepended()
+            {
+                cmd.env("PATH", path);
             }
         }
         let mut child = match cmd.spawn() {

@@ -126,10 +126,10 @@ impl HomunculusMcpHandler {
         #[cfg(windows)]
         {
             cmd.creation_flags(CREATE_NO_WINDOW);
-            if !self.runtime.is_bundled() {
-                if let Some(path) = homunculus_utils::process::path_with_node_prepended() {
-                    cmd.env("PATH", path);
-                }
+            if !self.runtime.is_bundled()
+                && let Some(path) = homunculus_utils::process::path_with_node_prepended()
+            {
+                cmd.env("PATH", path);
             }
         }
         cmd
