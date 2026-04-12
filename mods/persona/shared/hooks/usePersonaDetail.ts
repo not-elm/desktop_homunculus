@@ -4,7 +4,6 @@ import {
   type BehaviorAnimations,
   DEFAULT_ANIMATIONS,
   resolveBehaviorConfig,
-  isDefaultProcess,
 } from '@persona/shared/behavior-config';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
