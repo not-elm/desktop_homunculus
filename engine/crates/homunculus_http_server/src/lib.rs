@@ -87,6 +87,7 @@ use bevy_flurx::prelude::Reactor;
 use homunculus_api::prelude::ApiReactor;
 use homunculus_core::rpc_registry::{RpcRegistry, SharedRpcRegistry};
 use homunculus_utils::config::HomunculusConfig;
+use homunculus_utils::runtime::RuntimeResolver;
 use route::entities;
 use std::sync::{Arc, RwLock};
 use tower_http::cors::{Any, CorsLayer};
@@ -184,17 +185,21 @@ fn setup(
     mut commands: Commands,
     reactor: Res<ApiReactor>,
     config: Res<HomunculusConfig>,
+    runtime: Res<RuntimeResolver>,
     rpc_registry: Res<SharedRpcRegistry>,
 ) {
     let reactor = reactor.clone();
     let config = config.clone();
+    let runtime = runtime.clone();
     let addr = config.host();
     let rpc_registry = rpc_registry.0.clone();
     commands.spawn(Reactor::schedule(|task| async move {
         task.will(
             Update,
             side_effect::tokio::spawn(async move {
-                if let Err(e) = start_http_server(reactor, config, rpc_registry, addr).await {
+                if let Err(e) =
+                    start_http_server(reactor, config, runtime, rpc_registry, addr).await
+                {
                     error!("Failed to start http server: {e}");
                 }
             }),
@@ -206,12 +211,17 @@ fn setup(
 async fn start_http_server(
     reactor: ApiReactor,
     config: HomunculusConfig,
+    runtime: RuntimeResolver,
     rpc_registry: Arc<RwLock<RpcRegistry>>,
     addr: String,
 ) -> std::io::Result<()> {
     let listener = tokio::net::TcpListener::bind(&addr).await?;
     info!("HTTP server listening on {addr}");
-    axum::serve(listener, create_router(reactor, config, rpc_registry)).await?;
+    axum::serve(
+        listener,
+        create_router(reactor, config, runtime, rpc_registry),
+    )
+    .await?;
     Ok(())
 }
 
@@ -245,6 +255,7 @@ fn build_openapi_router() -> OpenApiRouter<HttpState> {
 fn create_router(
     reactor: ApiReactor,
     config: HomunculusConfig,
+    runtime: RuntimeResolver,
     rpc_registry: Arc<RwLock<RpcRegistry>>,
 ) -> Router {
     let (router, _openapi) = build_openapi_router().split_for_parts();
@@ -252,11 +263,12 @@ fn create_router(
         .with_state(HttpState::new(
             reactor.clone(),
             config.clone(),
+            runtime.clone(),
             rpc_registry.clone(),
         ))
         .nest_service(
             "/mcp",
-            homunculus_mcp::create_mcp_service(reactor, config, rpc_registry),
+            homunculus_mcp::create_mcp_service(reactor, config, runtime, rpc_registry),
         )
         .layer(
             CorsLayer::new()
@@ -491,6 +503,7 @@ mod tests {
     use homunculus_prefs::PrefsDatabase;
     use homunculus_utils::config::HomunculusConfig;
     use homunculus_utils::prelude::{AssetDeclaration, AssetType};
+    use homunculus_utils::runtime::RuntimeResolver;
     use http_body_util::BodyExt;
     use serde::de::DeserializeOwned;
     use std::collections::HashMap;
@@ -522,11 +535,14 @@ mod tests {
         app.init_resource::<ModMenuMetadataList>();
         app.init_resource::<homunculus_core::prelude::PersonaIndex>();
         let config = HomunculusConfig::default();
+        let runtime = RuntimeResolver::detect();
         app.insert_resource(config.clone());
+        app.insert_resource(runtime.clone());
         let rpc_registry = Arc::new(RwLock::new(RpcRegistry::default()));
         let router = create_router(
             app.world().resource::<ApiReactor>().clone(),
             config,
+            runtime,
             rpc_registry,
         );
         (app, router)

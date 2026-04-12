@@ -11,6 +11,7 @@ use bevy::prelude::*;
 use bevy_flurx::prelude::*;
 use homunculus_core::prelude::{HomunculusConfig, ModRegistry};
 use homunculus_mod::managed_process::{MAX_PROCESSES, ManagedProcess};
+use homunculus_utils::runtime::RuntimeResolver;
 use homunculus_mod::node_process::NodeProcessHandle;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
@@ -112,6 +113,7 @@ fn start_process(
     mut commands: Commands,
     registry: Res<ModRegistry>,
     config: Res<HomunculusConfig>,
+    runtime: Res<RuntimeResolver>,
     existing: Query<&ManagedProcess>,
 ) -> ApiResult<StartProcessResponse> {
     if existing.iter().count() >= MAX_PROCESSES {
@@ -124,6 +126,7 @@ fn start_process(
         &mut commands,
         &registry,
         &config,
+        &runtime,
         &req.command,
         req.args,
     )

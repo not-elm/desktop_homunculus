@@ -37,6 +37,7 @@ use homunculus_sitting::HomunculusSittingPlugin;
 use homunculus_speech::HomunculusSpeechPlugin;
 use homunculus_tray::HomunculusTrayPlugin;
 use homunculus_utils::config::HomunculusConfig;
+use homunculus_utils::runtime::RuntimeResolver;
 use homunculus_windows::HomunculusWindowsPlugin;
 use std::sync::OnceLock;
 use tracing_appender::non_blocking::WorkerGuard;
@@ -50,8 +51,14 @@ fn main() {
         HomunculusConfig::default()
     });
 
+    let runtime = RuntimeResolver::detect();
+    if let Err(e) = runtime.validate_node_version() {
+        eprintln!("Node.js version check: {e}");
+    }
+
     let mut app = App::new();
-    app.insert_resource(config)
+    app.insert_resource(runtime)
+        .insert_resource(config)
         .insert_resource(ClearColor(Color::NONE))
         .add_plugins((
             HomunculusModPlugin,

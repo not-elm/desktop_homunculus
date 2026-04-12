@@ -12,6 +12,7 @@ use homunculus_api::stt::SttApi;
 use homunculus_api::vrm::VrmApi;
 use homunculus_core::rpc_registry::RpcRegistry;
 use homunculus_utils::config::HomunculusConfig;
+use homunculus_utils::runtime::RuntimeResolver;
 use std::sync::{Arc, RwLock};
 
 #[derive(Clone, FromRef)]
@@ -39,6 +40,7 @@ pub struct HttpState {
     /// Bypasses ApiReactor; audio pipelines are managed internally.
     pub stt: SttApi,
     pub config: HomunculusConfig,
+    pub runtime: RuntimeResolver,
     pub rpc_registry: Arc<RwLock<RpcRegistry>>,
 }
 
@@ -46,6 +48,7 @@ impl HttpState {
     pub fn new(
         reactor: ApiReactor,
         config: HomunculusConfig,
+        runtime: RuntimeResolver,
         rpc_registry: Arc<RwLock<RpcRegistry>>,
     ) -> Self {
         Self {
@@ -69,6 +72,7 @@ impl HttpState {
             processes: ProcessesApi::from(reactor.clone()),
             stt: SttApi::new(reactor.clone()),
             config,
+            runtime,
             rpc_registry,
             reactor,
         }

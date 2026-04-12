@@ -6,6 +6,7 @@ use homunculus_core::prelude::{
     AssetEntry, AssetId, AssetRegistry, HomunculusConfig, ModInfo, ModMenuMetadata,
     ModMenuMetadataList, ModRegistry, create_dir_all_if_need,
 };
+use homunculus_utils::runtime::RuntimeResolver;
 
 pub(crate) struct ModLoadPlugin;
 
@@ -21,15 +22,16 @@ fn discover_mods(
     mut registry: ResMut<AssetRegistry>,
     mut mod_registry: ResMut<ModRegistry>,
     config: Res<HomunculusConfig>,
+    runtime: Res<RuntimeResolver>,
 ) {
     let mods_root = config.mods_dir.clone();
     info!("Mods root: {}", mods_root.display());
     create_dir_all_if_need(&mods_root);
 
-    if let Err(e) = homunculus_utils::mods::ensure_tsx() {
+    if let Err(e) = homunculus_utils::mods::ensure_tsx_with_runtime(&runtime) {
         warn!("Failed to install tsx in mods directory: {e}");
     }
-    let mods = match homunculus_utils::mods::list::list_installation_mods() {
+    let mods = match homunculus_utils::mods::list::list_installation_mods_with_runtime(&runtime) {
         Ok(mods) => mods,
         Err(e) => {
             error!("{e}");

@@ -2,10 +2,11 @@ use crate::node_process::{NodeAvailable, NodeProcessHandle};
 use bevy::prelude::*;
 use homunculus_core::prelude::SharedRpcRegistry;
 use homunculus_utils::process::CommandNoWindow;
+use homunculus_utils::runtime::RuntimeResolver;
 use std::io::{BufRead, BufReader};
 use std::net::TcpListener;
 use std::path::PathBuf;
-use std::process::{Command, Stdio};
+use std::process::Stdio;
 
 /// A MOD service identified by its absolute filesystem path.
 ///
@@ -33,6 +34,7 @@ fn run_mod_services(
     mut commands: Commands,
     services: Query<(Entity, &ModService)>,
     rpc_registry: Res<SharedRpcRegistry>,
+    runtime: Res<RuntimeResolver>,
 ) {
     for (entity, service) in services.iter() {
         info!("Starting mod service: {}", service.script_path.display());
@@ -51,7 +53,7 @@ fn run_mod_services(
 
         pre_register_rpc_port(&rpc_registry, &service.mod_name, rpc_port);
 
-        match launch_mod_service_process(service, rpc_port) {
+        match launch_mod_service_process(service, rpc_port, &runtime) {
             Ok(child) => {
                 append_pid_file(child.id());
                 commands.spawn(build_process_handle(child, &service.mod_name));
@@ -93,13 +95,13 @@ fn pre_register_rpc_port(rpc_registry: &SharedRpcRegistry, mod_name: &str, rpc_p
 fn launch_mod_service_process(
     service: &ModService,
     rpc_port: u16,
+    runtime: &RuntimeResolver,
 ) -> std::io::Result<std::process::Child> {
-    Command::new("node")
+    runtime
+        .node_command_with_tsx()
         .no_window_process_group()
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
-        .arg("--import")
-        .arg("tsx")
         .arg(&service.script_path)
         .current_dir(&service.mods_dir)
         .env("HMCS_MOD_NAME", &service.mod_name)

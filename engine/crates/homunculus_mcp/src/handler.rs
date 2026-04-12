@@ -18,6 +18,7 @@ use homunculus_api::prelude::{
 use homunculus_core::prelude::{Persona, PersonaId};
 use homunculus_core::rpc_registry::RpcRegistry;
 use homunculus_utils::config::HomunculusConfig;
+use homunculus_utils::runtime::RuntimeResolver;
 use rmcp::handler::server::router::tool::ToolRouter;
 use rmcp::model::{
     GetPromptRequestParams, GetPromptResult, Implementation, ListPromptsResult,
@@ -62,6 +63,7 @@ pub struct HomunculusMcpHandler {
     /// Stores the active persona's [`PersonaId`] for character resolution.
     pub(crate) active_character: Arc<Mutex<Option<PersonaId>>>,
     pub(crate) config: HomunculusConfig,
+    pub(crate) runtime: RuntimeResolver,
     /// Tracks open webview IDs so they can be cleaned up when the MCP session ends.
     pub(crate) open_webviews: Arc<Mutex<Vec<u64>>>,
     pub(crate) rpc_registry: Arc<RwLock<RpcRegistry>>,
@@ -73,6 +75,7 @@ impl HomunculusMcpHandler {
     pub fn new(
         reactor: ApiReactor,
         config: HomunculusConfig,
+        runtime: RuntimeResolver,
         rpc_registry: Arc<RwLock<RpcRegistry>>,
     ) -> Self {
         Self {
@@ -87,6 +90,7 @@ impl HomunculusMcpHandler {
             assets_api: AssetsApi::from(reactor),
             active_character: Arc::new(Mutex::new(None)),
             config,
+            runtime,
             open_webviews: Arc::new(Mutex::new(Vec::new())),
             rpc_registry,
             tool_router: tools::tool_router(),
@@ -239,7 +243,8 @@ mod tests {
             ..Default::default()
         };
         let rpc_registry = Arc::new(RwLock::new(RpcRegistry::default()));
-        HomunculusMcpHandler::new(reactor, config, rpc_registry)
+        let runtime = RuntimeResolver::detect();
+        HomunculusMcpHandler::new(reactor, config, runtime, rpc_registry)
     }
 
     #[test]
