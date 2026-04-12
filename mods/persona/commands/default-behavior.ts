@@ -30,6 +30,10 @@ const events = persona.events();
 events.on('state-change', async (e) => {
   await applyBehavior(persona, e.state, animations);
 });
+events.on('vrm-attached', async () => {
+  const current = await persona.state();
+  await applyBehavior(persona, current, animations);
+});
 
 process.on('SIGTERM', () => {
   events.close();
