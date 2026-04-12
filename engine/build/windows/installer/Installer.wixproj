@@ -38,4 +38,22 @@
         </HarvestDirectory>
         <BindPath Include="cef_runtime" />
     </ItemGroup>
+
+    <ItemGroup>
+        <HarvestDirectory Include="runtime">
+              <ComponentGroupName>RuntimeDirectory</ComponentGroupName>
+              <DirectoryRefId>INSTALLFOLDER</DirectoryRefId>
+              <SuppressRootDirectory>false</SuppressRootDirectory>
+        </HarvestDirectory>
+        <BindPath Include="runtime" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <HarvestDirectory Include="bin">
+              <ComponentGroupName>BinDirectory</ComponentGroupName>
+              <DirectoryRefId>INSTALLFOLDER</DirectoryRefId>
+              <SuppressRootDirectory>false</SuppressRootDirectory>
+        </HarvestDirectory>
+        <BindPath Include="bin" />
+    </ItemGroup>
 </Project>
