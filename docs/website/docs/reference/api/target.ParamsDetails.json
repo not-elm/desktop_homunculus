@@ -1,1 +1,0 @@
-{"parameters":[{"name":"entity","in":"path","description":"VRM entity ID","required":true,"schema":{"type":"string"}},{"name":"target","in":"path","description":"Target entity ID","required":true,"schema":{"type":"string"}}]}

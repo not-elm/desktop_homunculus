@@ -14,7 +14,7 @@ use utoipa::ToSchema;
         (status = 200, description = "Current FPS", body = f64),
     ),
 )]
-pub async fn get(State(api): State<SettingsApi>) -> HttpResult<f64> {
+pub async fn get_fps(State(api): State<SettingsApi>) -> HttpResult<f64> {
     Ok(api.fps().await).into_http_result()
 }
 
@@ -28,7 +28,7 @@ pub async fn get(State(api): State<SettingsApi>) -> HttpResult<f64> {
         (status = 200, description = "FPS updated"),
     ),
 )]
-pub async fn put(State(api): State<SettingsApi>, Json(body): Json<SetFpsBody>) -> HttpResult {
+pub async fn set_fps(State(api): State<SettingsApi>, Json(body): Json<SetFpsBody>) -> HttpResult {
     api.set_fps(body.fps).await.into_http_result()
 }
 

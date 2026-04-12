@@ -26,7 +26,7 @@ use utoipa::ToSchema;
         (status = 404, description = "Entity not found"),
     ),
 )]
-pub async fn get(
+pub async fn find_entity(
     State(api): State<EntitiesApi>,
     Query(query): Query<EntitiesFindQuery>,
 ) -> HttpResult<Entity> {

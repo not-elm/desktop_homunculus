@@ -1,0 +1,1 @@
+{"responses":{"200":{"description":"Current alpha value","content":{"text/plain":{"schema":{"type":"number","format":"float"}}}},"400":{"description":"Shadow panel not available"}}}

@@ -1,0 +1,1 @@
+{"responses":{"200":{"description":"Raw file content","content":{"application/octet-stream":{}}},"400":{"description":"Missing id parameter"},"404":{"description":"Asset not found or file missing"},"500":{"description":"IO error"}}}

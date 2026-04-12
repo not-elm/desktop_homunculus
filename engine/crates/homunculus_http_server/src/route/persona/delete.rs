@@ -15,7 +15,7 @@ use super::PersonaPath;
         (status = 404, description = "Persona not found"),
     ),
 )]
-pub async fn delete(
+pub async fn delete_persona(
     axum::extract::State(api): axum::extract::State<PersonaApi>,
     path: PersonaPath,
 ) -> Response {

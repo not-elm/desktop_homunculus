@@ -1,0 +1,1 @@
+{"title":"Body","body":{"content":{"application/json":{"schema":{"type":"object","properties":{"age":{"type":["integer","null"],"format":"int32","minimum":0}},"title":"AgeBody"}}},"required":true}}

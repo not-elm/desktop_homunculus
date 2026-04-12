@@ -1,0 +1,1 @@
+{"responses":{"200":{"description":"Bone entity ID","content":{"text/plain":{"schema":{"type":"string"}}}},"404":{"description":"Persona, VRM, or bone not found"}}}
