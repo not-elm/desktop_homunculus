@@ -398,8 +398,8 @@ fn persona_id_router() -> OpenApiRouter<HttpState> {
             persona::fields::put_thumbnail
         ))
         .routes(routes!(
-            persona::fields::get_transform,
-            persona::fields::put_transform
+            persona::fields::get_persona_transform,
+            persona::fields::set_persona_transform
         ))
         .routes(routes!(persona::spawn::spawn))
         .routes(routes!(persona::spawn::despawn))
