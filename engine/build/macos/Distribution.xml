@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<installer-gui-script minSpecVersion="2">
+    <title>Desktop Homunculus</title>
+    <organization>not.elm.homunculus</organization>
+    <domains enable_localSystem="true"/>
+    <options customize="never" require-scripts="true" rootVolumeOnly="true"/>
+
+    <!-- Minimum macOS version (matches Info.plist LSMinimumSystemVersion) -->
+    <volume-check>
+        <allowed-os-versions>
+            <os-version min="11.0"/>
+        </allowed-os-versions>
+    </volume-check>
+
+    <choices-outline>
+        <line choice="default">
+            <line choice="not.elm.homunculus.desktop.pkg"/>
+        </line>
+    </choices-outline>
+
+    <choice id="default"/>
+    <choice id="not.elm.homunculus.desktop.pkg" visible="false">
+        <pkg-ref id="not.elm.homunculus.desktop.pkg"/>
+    </choice>
+
+    <pkg-ref id="not.elm.homunculus.desktop.pkg"
+             version="__VERSION__"
+             onConclusion="none">DesktopHomunculus.pkg</pkg-ref>
+</installer-gui-script>

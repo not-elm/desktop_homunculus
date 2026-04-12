@@ -21,15 +21,18 @@
             <Directory Id="INSTALLFOLDER" Name="!(bind.Property.ProductName)" />
         </StandardDirectory>
 
-         <!-- Shows a UI that allows customizing the install location -->
+        <!-- Shows a UI that allows customizing the install location -->
         <ui:WixUI Id="WixUI_InstallDir" InstallDirectory="INSTALLFOLDER" />
 
         <Feature Id="Main">
             <ComponentGroupRef Id="MainComponent" />
             <ComponentRef Id="StartMenuShortcut" />
+            <ComponentRef Id="HmcsPath" />
             <ComponentGroupRef Id="AssetsDirectory" />
             <ComponentGroupRef Id="CreditsDirectory" />
             <ComponentGroupRef Id="CefDirectory" />
+            <ComponentGroupRef Id="RuntimeDirectory" />
+            <ComponentGroupRef Id="BinDirectory" />
         </Feature>
 
         <!-- Installs the actual files -->
@@ -37,15 +40,37 @@
             <Component>
                 <File Id="Executable" Source="..\..\..\target\dist\desktop_homunculus.exe" Vital="true" />
             </Component>
+            <Component>
+                <File Id="InstallMods" Source="install_mods.ps1" Vital="false" />
+            </Component>
         </ComponentGroup>
 
+        <!-- hmcs CLI PATH registration -->
+        <Component Id="HmcsPath" Directory="INSTALLFOLDER" Guid="a1b2c3d4-e5f6-7890-abcd-ef1234567890">
+            <Environment Id="PATH" Name="PATH" Value="[INSTALLFOLDER]bin"
+                         Action="set" Part="last" System="yes" />
+        </Component>
+
         <!-- Start menu shortcut -->
-        <!-- Source: https://wixtoolset.org/docs/v3/howtos/files_and_registry/create_start_menu_shortcut/ -->
         <StandardDirectory Id="ProgramMenuFolder">
             <Component Id="StartMenuShortcut" Guid="*">
                 <Shortcut Id="ApplicationStartMenuShortcut" Name="!(bind.Property.ProductName)" Target="[!Executable]" WorkingDirectory="INSTALLFOLDER" />
                 <RegistryValue Root="HKCU" Key="Software\!(bind.Property.ProductName)" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
-          </Component>
-      </StandardDirectory>
-  </Package>
+            </Component>
+        </StandardDirectory>
+
+        <!-- MOD installation custom action (runs after install, best-effort) -->
+        <!-- Runs PowerShell as the installing user (Impersonate=yes) so
+             %USERPROFILE% resolves correctly for ~/.homunculus/mods/ -->
+        <CustomAction Id="InstallModsAction"
+                      Directory="INSTALLFOLDER"
+                      ExeCommand="powershell.exe -NoProfile -ExecutionPolicy Bypass -File &quot;[INSTALLFOLDER]install_mods.ps1&quot; -InstallDir &quot;[INSTALLFOLDER]&quot;"
+                      Execute="deferred"
+                      Impersonate="yes"
+                      Return="ignore" />
+
+        <InstallExecuteSequence>
+            <Custom Action="InstallModsAction" After="InstallFiles">NOT Installed OR REINSTALL</Custom>
+        </InstallExecuteSequence>
+    </Package>
 </Wix>

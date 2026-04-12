@@ -9,7 +9,7 @@ endif
 
 .PHONY: setup debug test fix-lint gen-open-api \
         release-macos release-macos-arm release-macos-x86 release-macos-universal \
-        bump-version check-version
+        bump-version check-version install-cli stage-runtime
 
 setup:
 	pnpm install
@@ -56,6 +56,12 @@ release-macos-x86:
 release-macos-universal:
 	pnpm build
 	$(MAKE) -C engine release-macos-universal
+
+install-cli: ## Install hmcs CLI via cargo install
+	$(MAKE) -C engine install-cli
+
+stage-runtime: ## Download and stage Node.js, pnpm, tsx for bundling
+	$(MAKE) -C engine stage-runtime
 
 bump-version:
 	$(PYTHON) scripts/bump_version.py

@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use homunculus_utils::process::CommandNoWindow;
+use homunculus_utils::runtime::RuntimeResolver;
 use std::process::{Child, Command};
 use std::time::Duration;
 
@@ -208,8 +209,12 @@ fn kill_if_mod_service(_pid: u32) {
     // Unsupported platform — best-effort, skip.
 }
 
-fn check_node_available(mut commands: Commands) {
-    match Command::new("node").no_window().arg("--version").output() {
+fn check_node_available(mut commands: Commands, runtime: Res<RuntimeResolver>) {
+    match Command::new(runtime.node())
+        .no_window()
+        .arg("--version")
+        .output()
+    {
         Ok(output) if output.status.success() => {
             let version = String::from_utf8_lossy(&output.stdout);
             info!("Node.js available: {}", version.trim());

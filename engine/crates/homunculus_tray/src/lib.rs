@@ -13,6 +13,7 @@ use bevy_tray_icon::plugin::TrayIconPlugin;
 use bevy_tray_icon::plugin::menu_event::MenuMessage;
 use bevy_tray_icon::resource::{Menu, MenuItem, TrayIcon};
 use homunculus_core::prelude::{HomunculusConfig, ModRegistry, TrayMenuItem};
+use homunculus_utils::runtime::RuntimeResolver;
 use tracing::{error, info};
 
 /// Maps prefixed menu IDs (`"{mod_name}::{item_id}"`) to the mod name and
@@ -85,6 +86,7 @@ fn handle_tray_clicks(
     mut mr: MessageReader<MenuMessage>,
     registry: Option<Res<TrayMenuRegistry>>,
     config: Res<HomunculusConfig>,
+    runtime: Res<RuntimeResolver>,
 ) {
     let Some(registry) = registry else {
         return;
@@ -95,10 +97,11 @@ fn handle_tray_clicks(
         if let Some((_mod_name, command)) = registry.lookup(id) {
             let mods_dir = mods_dir.clone();
             let command = command.clone();
+            let runtime = runtime.clone();
             info!("Tray menu clicked: id={id}, command={command}");
             IoTaskPool::get()
                 .spawn(async move {
-                    execute_command(mods_dir, command).await;
+                    execute_command(mods_dir, command, &runtime).await;
                 })
                 .detach();
         } else {
@@ -110,17 +113,21 @@ fn handle_tray_clicks(
 /// Execute a mod command via `pnpm exec` in the mods directory.
 ///
 /// Stdout is discarded; stderr is piped and logged on failure.
-async fn execute_command(mods_dir: PathBuf, command: String) {
+async fn execute_command(mods_dir: PathBuf, command: String, runtime: &RuntimeResolver) {
     use homunculus_utils::process::CommandNoWindow;
-    let mut cmd = std::process::Command::new(homunculus_utils::mods::pnpm_program());
+    let (program, pnpm_args) = runtime.pnpm_program_and_args();
+    let mut cmd = std::process::Command::new(program);
     cmd.no_window()
+        .args(&pnpm_args)
         .arg("exec")
         .arg(&command)
         .current_dir(&mods_dir)
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped());
     #[cfg(windows)]
-    if let Some(path) = homunculus_utils::process::path_with_node_prepended() {
+    if !runtime.is_bundled()
+        && let Some(path) = homunculus_utils::process::path_with_node_prepended()
+    {
         cmd.env("PATH", path);
     }
     let result = cmd.output();

@@ -11,8 +11,9 @@ use chrono::{DateTime, Utc};
 use homunculus_core::prelude::{HomunculusConfig, ModRegistry};
 use homunculus_utils::prelude::ModInfo;
 use homunculus_utils::process::CommandNoWindow;
+use homunculus_utils::runtime::RuntimeResolver;
 use std::path::{Path, PathBuf};
-use std::process::{Child, Command, Stdio};
+use std::process::{Child, Stdio};
 
 /// Maximum number of concurrent managed processes.
 pub const MAX_PROCESSES: usize = 64;
@@ -52,6 +53,7 @@ pub fn spawn_managed_process(
     commands: &mut Commands,
     registry: &ModRegistry,
     config: &HomunculusConfig,
+    runtime: &RuntimeResolver,
     command: &str,
     args: Vec<String>,
 ) -> Result<SpawnResult, String> {
@@ -62,7 +64,7 @@ pub fn spawn_managed_process(
 
     let bin_script = find_bin_script(mod_info, bin_name)?;
 
-    let child = spawn_node_process(&bin_script, &args, &config.mods_dir, mod_name)?;
+    let child = spawn_node_process(runtime, &bin_script, &args, &config.mods_dir, mod_name)?;
     let pid = child.id();
     let handle_id = uuid::Uuid::new_v4().to_string();
     let started_at = Utc::now();
@@ -116,17 +118,17 @@ fn find_bin_script(mod_info: &ModInfo, bin_name: &str) -> Result<PathBuf, String
 }
 
 fn spawn_node_process(
+    runtime: &RuntimeResolver,
     script_path: &Path,
     args: &[String],
     mods_dir: &Path,
     mod_name: &str,
 ) -> Result<Child, String> {
-    Command::new("node")
+    runtime
+        .node_command_with_tsx()
         .no_window_process_group()
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
-        .arg("--import")
-        .arg("tsx")
         .arg(script_path)
         .args(args)
         .current_dir(mods_dir)
