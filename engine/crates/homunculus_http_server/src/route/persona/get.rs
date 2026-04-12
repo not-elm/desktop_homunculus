@@ -28,6 +28,9 @@ pub async fn list_personas(State(api): State<PersonaApi>) -> HttpResult<Vec<Pers
         (status = 404, description = "Persona not found"),
     ),
 )]
-pub async fn get_persona(State(api): State<PersonaApi>, path: PersonaPath) -> HttpResult<PersonaSnapshot> {
+pub async fn get_persona(
+    State(api): State<PersonaApi>,
+    path: PersonaPath,
+) -> HttpResult<PersonaSnapshot> {
     api.get(path.persona_id).await.into_http_result()
 }

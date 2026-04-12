@@ -19,7 +19,10 @@ use super::PersonaPath;
         (status = 404, description = "Persona not found"),
     ),
 )]
-pub async fn get_persona_state(State(api): State<PersonaApi>, path: PersonaPath) -> HttpResult<StateBody> {
+pub async fn get_persona_state(
+    State(api): State<PersonaApi>,
+    path: PersonaPath,
+) -> HttpResult<StateBody> {
     let state = api.state(path.persona_id).await?;
     Ok(Json(StateBody { state }))
 }
