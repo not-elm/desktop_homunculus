@@ -8,6 +8,7 @@ use std::sync::{Arc, RwLock};
 use homunculus_api::prelude::ApiReactor;
 use homunculus_core::rpc_registry::RpcRegistry;
 use homunculus_utils::config::HomunculusConfig;
+use homunculus_utils::runtime::RuntimeResolver;
 use rmcp::transport::streamable_http_server::{
     StreamableHttpServerConfig, StreamableHttpService, session::local::LocalSessionManager,
 };
@@ -24,6 +25,7 @@ use crate::handler::HomunculusMcpHandler;
 pub fn create_mcp_service(
     reactor: ApiReactor,
     config: HomunculusConfig,
+    runtime: RuntimeResolver,
     rpc_registry: Arc<RwLock<RpcRegistry>>,
 ) -> StreamableHttpService<HomunculusMcpHandler, LocalSessionManager> {
     let server_config = StreamableHttpServerConfig::default();
@@ -36,6 +38,7 @@ pub fn create_mcp_service(
             Ok(HomunculusMcpHandler::new(
                 reactor.clone(),
                 config.clone(),
+                runtime.clone(),
                 rpc_registry.clone(),
             ))
         },

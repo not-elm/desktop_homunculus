@@ -1,0 +1,10 @@
+# Pinned runtime versions for bundled installer.
+#
+# These versions are downloaded by `scripts/stage_runtime.py` and bundled
+# inside the application installer (pkg/MSI). The build pipeline reads
+# this file as the single source of truth for runtime dependencies.
+
+[runtime]
+node = "22.12.0"
+pnpm = "10.12.1"
+tsx = "4.21.0"

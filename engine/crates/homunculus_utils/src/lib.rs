@@ -9,6 +9,7 @@ pub mod error;
 pub mod mods;
 pub mod path;
 pub mod process;
+pub mod runtime;
 pub mod schema;
 
 pub mod prelude {
