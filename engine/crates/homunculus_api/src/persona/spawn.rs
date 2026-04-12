@@ -27,11 +27,16 @@ impl PersonaApi {
                 if let Some(asset_id) = vrm_asset_id {
                     task.will(
                         Update,
-                        once::run(attach_vrm_to_entity).with((entity, asset_id)),
+                        once::run(attach_vrm_to_entity).with((entity, asset_id.clone())),
                     )
                     .await?;
                     task.will(Update, wait::until(initialized).with(entity))
                         .await;
+                    task.will(
+                        Update,
+                        once::run(broadcast_vrm_attached).with((entity, asset_id)),
+                    )
+                    .await;
                 }
 
                 Ok(snapshot)
@@ -98,12 +103,12 @@ fn spawn_entity(
 ///
 /// Unlike the full `attach` in `vrm_attach`, this skips auto-detach (the entity
 /// is freshly spawned) and DB persistence (the `vrm_asset_id` is already set).
+/// Note: VrmAttachedEvent is broadcast separately after initialization.
 fn attach_vrm_to_entity(
     In((entity, asset_id)): In<(Entity, String)>,
     mut commands: Commands,
     asset_resolver: AssetResolver,
     cameras: Cameras,
-    tx_attached: Option<Res<VrmEventSender<VrmAttachedEvent>>>,
 ) -> ApiResult<()> {
     let handle = asset_resolver
         .load(&asset_id)
@@ -116,14 +121,20 @@ fn attach_vrm_to_entity(
         cameras.all_layers(),
     ));
 
-    if let Some(tx) = &tx_attached {
+    Ok(())
+}
+
+/// Broadcasts [`VrmAttachedEvent`] after VRM initialization is complete.
+fn broadcast_vrm_attached(
+    In((entity, asset_id)): In<(Entity, String)>,
+    tx: Option<Res<VrmEventSender<VrmAttachedEvent>>>,
+) {
+    if let Some(tx) = tx {
         let _ = tx.try_broadcast(VrmEvent {
             vrm: entity,
             payload: VrmAttachedEvent { asset_id },
         });
     }
-
-    Ok(())
 }
 
 fn despawn(
