@@ -1,0 +1,69 @@
+---
+id: import
+title: "Import a local file as a managed asset."
+description: "Copies the file to `~/.homunculus/assets/`, registers it in the"
+hide_title: true
+hide_table_of_contents: true
+api: eJzFVt1v40QQ/1dW8wSS4+Q4nvxE4RAXVGjV9uChiZSJdxLv3X51d53WROZvR7N2mrQBTiAk8pBsxvP1m/nNrPeQcBuhugeMkVKEZQGSYh2UT8pZqOA75xVFkRoSG6VJJCdWv0/LxpnW1q1u43SwnK4KEWirYqIQhUpCWTZa2Px4fBS6QqCVwlOIKqbBbaDaBTnqC4kJ1xiphAKcp4Ccx1xCBcp4FxIUEOihpZi+dbKDag+1s4ls4iN6r1WdTaYfI+e/h1g3ZJBPqfMEFbj1R6rZz0ugN4NXsXayExsXxOr66vZOHOAN0VflGF8Fkly26NpQ0zWmBoqhhnN5ON1xvGUBPjCQpCjmHEelY0IxBWW3Zwl9sOqhJTHUT0mySW0UBfEFldtSrBawC6bSrkZdmW7CJXUWF7D6soT+NIPPBmIt4TbCODlEY5BkW8MAd8FAwd8IBaO1DE8Z3BIU0CSjGWFSSXOAi+eg/asghxzuj0nYVutzvl3lA2rRtAbtJBBKXGsSJ1oZ30nhPwvwYh2dbhMJj6lhBjPRBgcDqd3AvVzMLIldTGRK6PsjuHlmQIYIPT848iCFlrIgemfj0OevZjP+eZXJ0MzsiaSIbV1TjJtW6w6K/47JQxr/kMoHYv57xl6ImIKzW91NWFGecbdc2IX9NaCPAsXqNntZiXWbhA9upyQvGiZjxA2lTkQnMKxVChg6McSMokZrXRJrWljP/qV4bCiQQDuGm78TKgp68lQnkqW4paBQq9/YeUAbPQaySXcCOQuvUdmF/fH26ucxBIdlNry/u7ueZvnF9VwMxWfPra0btFuSXMAXzJ/LvyLMoSVMnL6Ar/+MG3O7Q63kgZiZqy4IjwEN8VbNzg2lxvE69C5y632eAHjZWx5VCju2qe730AYNFTQp+Wo6zSRvXEzV2zez2VkPL/MMSNqRdt4wG/tlAUzBm+Pa/f4Jjdf0ghxHUpysnnF9vAzxrHg6wwdpX4CyG5fJNtbx/fNdw504c/eO4qfkvDhR49blrjH5eaqC05pb+8vNT6JuMGDNBS3EI613ih5jIbCVyg23k3EhXz9siHUeR4uGM7EukWZAZFBxTUkbH9w2oOGkv9myuKydYRha1cQtP5pf/nB9OXlbzibO6o5VuEMDiDflrJyxiNtq0J5YDTQSeLKeBuoatLilk539auM+r5P/9RIfV0aipzTNw8YoMyP3I3mfXz6Kwx2/LIAZyo/2e3b0Iei+Z/FDS6GD6n5ZwA6D4quB//UFNISSQub7J+oy6Ax/kpnI6rrlRM42a18cLC7qmnz6W93lyQTyUoUC1uN7iHGSbQI+8mLFR6ggv8Owdd6jWbYHjXbb8v1ZweCTP38ACYZVOA==
+sidebar_class_name: "post api-method"
+info_path: reference/api/homunculus-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Import a local file as a managed asset."}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/assets/import"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Copies the file to `~/.homunculus/assets/`, registers it in the
+asset registry, and persists the record in the database.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  parameters={undefined}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./import.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./import.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

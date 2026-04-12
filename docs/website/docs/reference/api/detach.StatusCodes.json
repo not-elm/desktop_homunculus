@@ -1,0 +1,1 @@
+{"responses":{"204":{"description":"VRM detached"},"404":{"description":"Persona not found"},"409":{"description":"No VRM attached"}}}

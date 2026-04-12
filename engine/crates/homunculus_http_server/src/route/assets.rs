@@ -19,7 +19,7 @@ use serde::Deserialize;
         (status = 200, description = "List of assets", body = Vec<AssetInfo>),
     ),
 )]
-pub async fn list(
+pub async fn list_assets(
     State(api): State<AssetsApi>,
     Query(filter): Query<AssetFilter>,
 ) -> HttpResult<Vec<AssetInfo>> {

@@ -1,0 +1,1 @@
+{"responses":{"200":{"description":"Linked persona ID","content":{"application/json":{"schema":{"oneOf":[{"type":"null"},{"type":"string","description":"URL-safe unique identifier for a persona.\nValidation: non-empty, `[a-zA-Z0-9_-]`, max 64 characters.","title":"PersonaId"}]}}}}}}

@@ -1,1 +1,1 @@
-{"responses":{"200":{"description":"SSE event stream","content":{"text/event-stream":{}}}}}
+{"responses":{"200":{"description":"Combined SSE stream of all persona events","content":{"text/event-stream":{}}}}}

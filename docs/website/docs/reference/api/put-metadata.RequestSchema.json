@@ -1,0 +1,1 @@
+{"title":"Body","body":{"content":{"application/json":{"schema":{"type":"object","required":["metadata"],"properties":{"metadata":{"type":"object","additionalProperties":{"type":"object"},"propertyNames":{"type":"string"}}},"title":"MetadataBody"}}},"required":true}}
