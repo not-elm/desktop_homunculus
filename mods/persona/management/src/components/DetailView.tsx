@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@hmcs/ui';
+import { BehaviorSection } from '@persona/shared/components/BehaviorSection';
 import { PersonaDetailBody } from '@persona/shared/components/PersonaDetailBody';
 import { usePersonaDetail } from '@persona/shared/hooks/usePersonaDetail';
 import { useThumbnailImport } from '@persona/shared/hooks/useThumbnailImport';
@@ -39,6 +40,10 @@ export default function DetailView({
     save,
     toggleSpawn,
     toggleAutoSpawn,
+    behaviorProcess,
+    behaviorAnimations,
+    setBehaviorProcess,
+    setBehaviorAnimations,
   } = usePersonaDetail(personaId, callbacks);
 
   const persona = useMemo(() => new Persona(personaId), [personaId]);
@@ -92,6 +97,14 @@ export default function DetailView({
         onAutoSpawnToggle={toggleAutoSpawn}
         formValues={formValues}
         onFormChange={setFormValues}
+      />
+
+      <div className="settings-separator" />
+      <BehaviorSection
+        process={behaviorProcess}
+        animations={behaviorAnimations}
+        onProcessChange={setBehaviorProcess}
+        onAnimationsChange={setBehaviorAnimations}
       />
 
       <DeleteSection onDelete={() => setDeleteOpen(true)} />
