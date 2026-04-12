@@ -5,8 +5,8 @@ use bevy::prelude::*;
 use bevy_flurx::prelude::*;
 use bevy_vrm1::prelude::{BodyTracking, Cameras, LookAt, RequestDetachVrm, VrmHandle};
 use homunculus_core::prelude::{
-    AssetResolver, Persona, PersonaChangeEvent, PersonaId, PersonaIndex,
-    PersonaState, VrmAttachedEvent, VrmDetachedEvent, VrmEvent, VrmEventSender,
+    AssetResolver, Persona, PersonaChangeEvent, PersonaId, PersonaIndex, PersonaState,
+    VrmAttachedEvent, VrmDetachedEvent, VrmEvent, VrmEventSender,
 };
 use homunculus_prefs::prelude::PrefsDatabase;
 
