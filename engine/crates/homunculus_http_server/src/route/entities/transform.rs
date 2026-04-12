@@ -17,7 +17,7 @@ use homunculus_api::vrm::OptionalTransform;
         (status = 404, description = "Entity not found"),
     ),
 )]
-pub async fn get(
+pub async fn get_transform(
     State(api): State<EntitiesApi>,
     EntityId(entity): EntityId,
 ) -> HttpResult<Transform> {
@@ -36,7 +36,7 @@ pub async fn get(
         (status = 404, description = "Entity not found"),
     ),
 )]
-pub async fn put(
+pub async fn set_transform(
     State(api): State<EntitiesApi>,
     EntityId(entity): EntityId,
     Json(body): Json<OptionalTransform>,

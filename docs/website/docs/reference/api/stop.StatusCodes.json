@@ -1,1 +1,1 @@
-{"responses":{"200":{"description":"Animation stopped"},"404":{"description":"Entity or animation not found"}}}
+{"responses":{"200":{"description":"Process stopped"},"404":{"description":"Handle not found"}}}

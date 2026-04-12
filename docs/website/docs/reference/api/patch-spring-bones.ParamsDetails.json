@@ -1,0 +1,1 @@
+{"parameters":[{"name":"id","in":"path","description":"Persona ID","required":true,"schema":{"type":"string"}},{"name":"chain_id","in":"path","description":"Spring bone chain entity ID","required":true,"schema":{"type":"string"}}]}

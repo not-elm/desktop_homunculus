@@ -315,7 +315,7 @@ pub struct MetadataBody {
     params(("id" = String, Path, description = "Persona ID")),
     responses((status = 200, body = OptionalTransform), (status = 404)),
 )]
-pub async fn get_transform(
+pub async fn get_persona_transform(
     State(entities): State<homunculus_api::prelude::EntitiesApi>,
     path: SpawnedPersonaPath,
 ) -> HttpResult<bevy::prelude::Transform> {
@@ -329,7 +329,7 @@ pub async fn get_transform(
     request_body = OptionalTransform,
     responses((status = 200, body = OptionalTransform), (status = 404)),
 )]
-pub async fn put_transform(
+pub async fn set_persona_transform(
     State(entities): State<homunculus_api::prelude::EntitiesApi>,
     path: SpawnedPersonaPath,
     Json(body): Json<homunculus_api::vrm::OptionalTransform>,

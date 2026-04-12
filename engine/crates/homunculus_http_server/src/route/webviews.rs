@@ -114,7 +114,7 @@ pub async fn unlink_persona(
         (status = 200, description = "List of open webviews", body = Vec<WebviewInfo>),
     ),
 )]
-pub async fn list(State(api): State<WebviewApi>) -> HttpResult<Vec<WebviewInfo>> {
+pub async fn list_webviews(State(api): State<WebviewApi>) -> HttpResult<Vec<WebviewInfo>> {
     api.list().await.into_http_result()
 }
 
@@ -129,7 +129,7 @@ pub async fn list(State(api): State<WebviewApi>) -> HttpResult<Vec<WebviewInfo>>
         (status = 404, description = "Webview not found"),
     ),
 )]
-pub async fn get(
+pub async fn get_webview(
     State(api): State<WebviewApi>,
     EntityId(entity): EntityId,
 ) -> HttpResult<WebviewInfo> {
@@ -148,7 +148,7 @@ pub async fn get(
         (status = 404, description = "Webview not found"),
     ),
 )]
-pub async fn patch(
+pub async fn update_webview(
     State(api): State<WebviewApi>,
     EntityId(entity): EntityId,
     Json(body): Json<WebviewPatchRequest>,
@@ -234,6 +234,9 @@ pub async fn reload(State(api): State<WebviewApi>, EntityId(entity): EntityId) -
         (status = 404, description = "Webview not found"),
     ),
 )]
-pub async fn delete(State(api): State<WebviewApi>, EntityId(entity): EntityId) -> HttpResult {
+pub async fn delete_webview(
+    State(api): State<WebviewApi>,
+    EntityId(entity): EntityId,
+) -> HttpResult {
     api.close(entity).await.into_http_result()
 }
