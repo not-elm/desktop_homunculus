@@ -73,16 +73,20 @@ impl HomunculusConfig {
     /// Loads config from `~/.homunculus/config.toml`.
     ///
     /// Returns `HomunculusConfig::default()` if the file doesn't exist.
+    /// If `HMCS_MODS_DIR` is set, it overrides the `mods_dir` field.
     pub fn load() -> UtilResult<Self> {
         let path = Self::path();
-        if path.exists() {
+        let mut config = if path.exists() {
             let content =
                 std::fs::read_to_string(&path).map_err(|e| ConfigError::Read(path.clone(), e))?;
-            let config = toml::from_str(&content).map_err(|e| ConfigError::Parse(path, e))?;
-            return Ok(config);
-        }
+            toml::from_str(&content).map_err(|e| ConfigError::Parse(path, e))?
+        } else {
+            Self::default()
+        };
 
-        Ok(Self::default())
+        apply_env_overrides(&mut config);
+
+        Ok(config)
     }
 
     /// Loads the raw TOML table from `~/.homunculus/config.toml`.
@@ -120,9 +124,24 @@ impl HomunculusConfig {
     }
 }
 
+/// Applies environment variable overrides to the config.
+///
+/// - `HMCS_MODS_DIR`: overrides `mods_dir`.
+fn apply_env_overrides(config: &mut HomunculusConfig) {
+    if let Ok(dir) = std::env::var("HMCS_MODS_DIR") {
+        log::info!("mods_dir overridden by HMCS_MODS_DIR: {dir}");
+        config.mods_dir = PathBuf::from(dir);
+    }
+}
+
 #[cfg(test)]
 mod tests {
+    use std::sync::Mutex;
+
     use super::*;
+
+    /// Serializes tests that mutate process-global environment variables.
+    static ENV_LOCK: Mutex<()> = Mutex::new(());
 
     #[test]
     fn test_default_config() {
@@ -243,5 +262,15 @@ mod tests {
         assert_eq!(config.default_model, None);
         assert_eq!(config.no_speech_threshold, None);
         assert_eq!(config.inference_energy_threshold, None);
+    }
+
+    #[test]
+    fn test_load_respects_hmcs_mods_dir_env() {
+        let _guard = ENV_LOCK.lock().unwrap();
+        let custom_dir = "/tmp/test-hmcs-mods";
+        unsafe { std::env::set_var("HMCS_MODS_DIR", custom_dir) };
+        let config = HomunculusConfig::load().unwrap();
+        unsafe { std::env::remove_var("HMCS_MODS_DIR") };
+        assert_eq!(config.mods_dir, PathBuf::from(custom_dir));
     }
 }
