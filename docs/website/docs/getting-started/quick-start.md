@@ -1,6 +1,6 @@
 ---
 title: "Quick Start"
-sidebar_position: 3
+sidebar_position: 4
 ---
 
 # Quick Start
@@ -11,7 +11,11 @@ Make sure you have completed the [Installation](/getting-started/installation) g
 
 ## Create Your First Persona
 
-When you first launch Desktop Homunculus, no character appears on screen — you need to create a **persona** first. A persona is a VRM 3D character with its own identity, personality, and behavior settings, rendered in a transparent window that floats above your other applications.
+:::tip[New to Desktop Homunculus?]
+Learn what personas, MODs, and assets are in the [Core Concepts](./concepts) page.
+:::
+
+When you first launch Desktop Homunculus, no character appears on screen — you need to create a **persona** first.
 
 1. Click the **Desktop Homunculus** icon in the **system tray** (notification area)
 2. Select **"Persona"** to open the Persona Management dashboard
