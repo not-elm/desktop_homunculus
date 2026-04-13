@@ -10,10 +10,13 @@ Desktop Homunculus is a cross-platform desktop mascot application built with the
 ## Key Features
 
 - **VRM 3D character rendering** — Characters render on your desktop, blending seamlessly with your workspace
+- **Persona system** — Manage multiple characters with individual identities (name, age, gender, personality) and persistent settings
 - **MOD system** — Install and create MODs to add characters, animations, sound effects, UI panels, and custom behaviors. MODs are npm packages managed with pnpm
+- **AI Agent** — Characters act as autonomous AI agents via Claude or Codex integration, with voice input and workspace awareness
+- **Speech-to-Text** — Whisper-based voice recognition with Push-to-Talk support for hands-free interaction
 - **AI integration via MCP** — Connect AI assistants (such as Claude) to control your character through the Model Context Protocol (MCP) server
 - **WebView-based UI overlays** — Settings panels, context menus, and custom UIs are React apps rendered inside the engine via Chromium Embedded Framework (CEF)
-- **Extensible TypeScript SDK** — The `@hmcs/sdk` package gives MOD developers control over characters, WebView UI, audio, and settings
+- **Extensible TypeScript SDK** — The `@hmcs/sdk` package gives MOD developers control over personas, WebView UI, audio, and settings
 
 :::info[What is VRM?]
 [VRM](https://vrm.dev/en/) is an open file format for 3D humanoid avatars. Desktop Homunculus uses VRM 1.0 models as its character format. You can create VRM models with tools like [VRoid Studio](https://vroid.com/en/studio) or find them on platforms like [VRoid Hub](https://hub.vroid.com/en/).
@@ -33,7 +36,7 @@ Desktop Homunculus is currently in **alpha**. APIs and MOD specifications may ch
 
 ## Next Steps
 
-- **[Installation](/getting-started/installation)** — Download the app and set up your MOD environment
+- **[Installation](/getting-started/installation)** — Download the app and set up your environment
 - **[Quick Start](/getting-started/quick-start)** — Get up and running in minutes: configure settings, interact with your character, and explore [official MODs](/mods/)
 - **[MOD Development](/mod-development)** — Build your own MODs with the TypeScript SDK
-- **[AI Integration](/ai-integration)** — Connect AI assistants to your character via MCP
+- **[AI Integration](/ai-integration)** — Connect AI assistants to your character via MCP, or use the built-in AI Agent
