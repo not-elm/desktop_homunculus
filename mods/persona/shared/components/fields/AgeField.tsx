@@ -1,5 +1,7 @@
 import * as RadioGroupPrimitive from '@radix-ui/react-radio-group';
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+
+type Mode = 'specify' | 'unknown';
 
 interface AgeFieldProps {
   value: number | null;
@@ -10,16 +12,24 @@ interface AgeFieldProps {
 export function AgeField({ value, onChange, disabled }: AgeFieldProps) {
   const preservedAge = useRef<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const prevValue = useRef(value);
+  const [mode, setMode] = useState<Mode>(value == null ? 'unknown' : 'specify');
 
-  const isUnknown = value == null;
-  const radioValue = isUnknown ? 'unknown' : 'specify';
+  useEffect(() => {
+    if (prevValue.current !== value) {
+      setMode(value == null ? 'unknown' : 'specify');
+      prevValue.current = value;
+    }
+  }, [value]);
 
   function handleModeChange(newMode: string) {
     if (disabled) return;
     if (newMode === 'unknown') {
       if (value != null) preservedAge.current = value;
+      setMode('unknown');
       onChange(null);
     } else {
+      setMode('specify');
       const restored = preservedAge.current;
       if (restored != null) onChange(restored);
       requestAnimationFrame(() => inputRef.current?.focus());
@@ -32,7 +42,9 @@ export function AgeField({ value, onChange, disabled }: AgeFieldProps) {
       onChange(null);
       return;
     }
-    onChange(Math.min(parseInt(digits, 10), 999));
+    const age = Math.min(parseInt(digits, 10), 999);
+    preservedAge.current = age;
+    onChange(age);
   }
 
   return (
@@ -40,9 +52,9 @@ export function AgeField({ value, onChange, disabled }: AgeFieldProps) {
       <legend className="settings-age-legend">Age</legend>
       <RadioGroupPrimitive.Root
         className="settings-age-segments"
-        value={radioValue}
+        value={mode}
         onValueChange={handleModeChange}
-        data-mode={radioValue === 'unknown' ? 'unknown' : 'specify'}
+        data-mode={mode}
         disabled={disabled}
       >
         <RadioGroupPrimitive.Item
@@ -66,9 +78,9 @@ export function AgeField({ value, onChange, disabled }: AgeFieldProps) {
         className="settings-age-value-area"
         role="status"
         aria-live="polite"
-        data-mode={radioValue === 'unknown' ? 'unknown' : 'specify'}
+        data-mode={mode}
       >
-        {radioValue === 'unknown' ? (
+        {mode === 'unknown' ? (
           <span className="settings-age-unknown-readout">Unknown</span>
         ) : (
           <input
