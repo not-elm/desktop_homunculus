@@ -527,6 +527,17 @@ export class Webview {
    *   transform: { translation: [0, 1.5, 10.0] },
    * });
    *
+   * // Open with inline HTML
+   * const inline = await Webview.open({
+   *   source: webviewSource.html("<h1>Hello World</h1>"),
+   * });
+   *
+   * // Open with a local asset
+   * const local = await Webview.open({
+   *   source: webviewSource.local("my-mod::panel.html"),
+   *   transform: { translation: [0.5, 1.5, 10.0] },
+   * });
+   *
    * // Open with drag-to-resize enabled
    * const resizable = await Webview.open({
    *   source: webviewSource.local("my-mod:panel"),
