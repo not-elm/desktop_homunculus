@@ -6,9 +6,11 @@ import { NameField } from './fields/NameField';
 import { PersonalityField } from './fields/PersonalityField';
 import { ProfileField } from './fields/ProfileField';
 
+export type AgeValue = { type: 'specify'; age: number } | { type: 'unknown' };
+
 export interface PersonaFormValues {
   name: string;
-  age: number | null;
+  age: AgeValue;
   gender: Gender;
   firstPersonPronoun: string;
   profile: string;

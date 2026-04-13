@@ -1,37 +1,26 @@
 import * as RadioGroupPrimitive from '@radix-ui/react-radio-group';
-import { useEffect, useRef, useState } from 'react';
-
-type Mode = 'specify' | 'unknown';
+import { useRef } from 'react';
+import type { AgeValue } from '../PersonaFields';
 
 interface AgeFieldProps {
-  value: number | null;
-  onChange: (age: number | null) => void;
+  value: AgeValue;
+  onChange: (age: AgeValue) => void;
   disabled?: boolean;
 }
 
 export function AgeField({ value, onChange, disabled }: AgeFieldProps) {
-  const preservedAge = useRef<number | null>(null);
+  const preservedAge = useRef(0);
   const inputRef = useRef<HTMLInputElement>(null);
-  const prevValue = useRef(value);
-  const [mode, setMode] = useState<Mode>(value == null ? 'unknown' : 'specify');
 
-  useEffect(() => {
-    if (prevValue.current !== value) {
-      setMode(value == null ? 'unknown' : 'specify');
-      prevValue.current = value;
-    }
-  }, [value]);
+  const mode = value.type;
 
   function handleModeChange(newMode: string) {
     if (disabled) return;
     if (newMode === 'unknown') {
-      if (value != null) preservedAge.current = value;
-      setMode('unknown');
-      onChange(null);
+      if (value.type === 'specify') preservedAge.current = value.age;
+      onChange({ type: 'unknown' });
     } else {
-      setMode('specify');
-      const restored = preservedAge.current;
-      if (restored != null) onChange(restored);
+      onChange({ type: 'specify', age: preservedAge.current });
       requestAnimationFrame(() => inputRef.current?.focus());
     }
   }
@@ -39,12 +28,12 @@ export function AgeField({ value, onChange, disabled }: AgeFieldProps) {
   function handleInput(raw: string) {
     const digits = raw.replace(/[^0-9]/g, '');
     if (digits === '') {
-      onChange(null);
+      onChange({ type: 'specify', age: 0 });
       return;
     }
-    const age = Math.min(parseInt(digits, 10), 999);
+    const age = parseInt(digits, 10);
     preservedAge.current = age;
-    onChange(age);
+    onChange({ type: 'specify', age });
   }
 
   return (
@@ -84,10 +73,9 @@ export function AgeField({ value, onChange, disabled }: AgeFieldProps) {
             inputMode="numeric"
             pattern="[0-9]*"
             className="settings-age-input"
-            value={value ?? ''}
+            value={String(value.age)}
             onChange={(e) => handleInput(e.target.value)}
             aria-label="Age value"
-            placeholder="&#x2014;"
             disabled={disabled}
           />
         )}

@@ -30,7 +30,7 @@ export interface UsePersonaDetailReturn {
 function snapshotToFormValues(snapshot: PersonaSnapshot): PersonaFormValues {
   return {
     name: snapshot.name ?? '',
-    age: snapshot.age ?? null,
+    age: snapshot.age != null ? { type: 'specify' as const, age: snapshot.age } : { type: 'unknown' as const },
     gender: snapshot.gender,
     firstPersonPronoun: snapshot.firstPersonPronoun ?? '',
     profile: snapshot.profile,
@@ -95,7 +95,8 @@ export function usePersonaDetail(
     const iv = initialValues.current;
     return (
       formValues.name !== iv.name ||
-      formValues.age !== iv.age ||
+      formValues.age.type !== iv.age.type ||
+      (formValues.age.type === 'specify' && iv.age.type === 'specify' && formValues.age.age !== iv.age.age) ||
       formValues.gender !== iv.gender ||
       formValues.firstPersonPronoun !== iv.firstPersonPronoun ||
       formValues.profile !== iv.profile ||
@@ -121,7 +122,7 @@ export function usePersonaDetail(
         const thumbnailChanged = thumbnail !== initialThumbnail.current;
         await persona.patch({
           name: formValues.name,
-          age: formValues.age,
+          age: formValues.age.type === 'specify' ? formValues.age.age : null,
           gender: formValues.gender,
           firstPersonPronoun: formValues.firstPersonPronoun || undefined,
           profile: formValues.profile,
