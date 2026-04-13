@@ -44,6 +44,7 @@ const sidebars: SidebarsConfig = {
         {
           type: "category",
           label: "API",
+          link: { type: "doc", id: "reference/api/homunculus-api" },
           items: apiSidebarWithKeys,
         },
         {

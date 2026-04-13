@@ -77,6 +77,21 @@ const config: Config = {
         },
       },
     ],
+    [
+      "@docusaurus/plugin-client-redirects",
+      {
+        redirects: [
+          {
+            from: "/mods/character-settings",
+            to: "/mods/persona",
+          },
+          {
+            from: "/mods/elmer",
+            to: "/mods/persona",
+          },
+        ],
+      },
+    ],
   ],
 
   themes: [

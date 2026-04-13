@@ -80,5 +80,5 @@ Do **not** import `@hmcs/sdk/commands` from a MOD's main script or from browser-
 
 ## Next Steps
 
-- **[SDK Reference](/reference/sdk)** -- Full module map with all 18 modules
+- **[SDK Reference](/reference/sdk)** -- Full module map with all available modules
 - **[MOD Quick Start](./quick-start)** -- End-to-end MOD creation tutorial
