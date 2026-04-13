@@ -40,6 +40,7 @@ Add a `tray` object to the `homunculus` field in your `package.json`. Each entry
 | `id` | `string` | Unique identifier for this tray item within the MOD |
 | `text` | `string` | Label displayed in the tray menu |
 | `command` | `string` | MOD command to execute when selected (must match a key in `bin`) |
+| `position` | `number` | (Optional) Sort order — lower numbers appear higher in the menu. Default: `0` |
 | `items` | `TrayItem[]` | (Optional) Nested child items for creating a submenu |
 
 :::warning
