@@ -223,6 +223,44 @@ export interface WebviewConstraints {
 }
 
 /**
+ * Aspect ratio lock behavior during resize drag.
+ *
+ * @example
+ * ```typescript
+ * const mode: AspectLockMode = "lockOnShift";
+ * ```
+ */
+export type AspectLockMode = 'lockOnShift' | 'always' | 'never';
+
+/**
+ * Options for enabling drag-to-resize on a webview.
+ * All fields are optional; omitted fields use bevy_cef defaults.
+ *
+ * @example
+ * ```typescript
+ * // Enable resize with defaults
+ * const resizable: WebviewResizableOptions = {};
+ *
+ * // Custom resize constraints
+ * const custom: WebviewResizableOptions = {
+ *   minSize: [200, 200],
+ *   maxSize: [1200, 900],
+ *   aspectLock: "always",
+ * };
+ * ```
+ */
+export interface WebviewResizableOptions {
+  /** Width of the invisible resize border in texture pixels. Default: 16. */
+  edgeThickness?: number;
+  /** Minimum texture size in pixels. Default: [100, 100]. */
+  minSize?: Vec2;
+  /** Maximum texture size in pixels. Omit for no limit. */
+  maxSize?: Vec2;
+  /** Aspect ratio lock mode. Default: "lockOnShift". */
+  aspectLock?: AspectLockMode;
+}
+
+/**
  * Options for opening a webview.
  *
  * @example
@@ -245,6 +283,14 @@ export interface WebviewOpenOptions {
   constraints?: WebviewConstraints;
   /** The persona ID to link to this webview. */
   linkedPersona?: string;
+  /**
+   * Enable drag-to-resize on this webview.
+   * Omit or set to null to disable resizing.
+   *
+   * Note: If resizing is enabled, programmatic size/viewportSize changes via
+   * `patch()` will be overwritten by the next user drag-resize operation.
+   */
+  resizable?: WebviewResizableOptions;
 }
 
 /** Request body for patching webview properties. */
@@ -481,15 +527,10 @@ export class Webview {
    *   transform: { translation: [0, 1.5, 10.0] },
    * });
    *
-   * // Open with inline HTML
-   * const inline = await Webview.open({
-   *   source: webviewSource.html("<h1>Hello World</h1>"),
-   * });
-   *
-   * // Open with a local asset
-   * const local = await Webview.open({
-   *   source: webviewSource.local("my-mod::panel.html"),
-   *   transform: { translation: [0.5, 1.5, 10.0] },
+   * // Open with drag-to-resize enabled
+   * const resizable = await Webview.open({
+   *   source: webviewSource.local("my-mod:panel"),
+   *   resizable: { minSize: [200, 200], aspectLock: "always" },
    * });
    * ```
    */
