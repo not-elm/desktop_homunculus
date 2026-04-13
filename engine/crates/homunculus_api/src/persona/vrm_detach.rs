@@ -9,6 +9,24 @@ use homunculus_core::prelude::{
 };
 use homunculus_prefs::prelude::PrefsDatabase;
 
+/// Clears VRM from persona and triggers [`RequestDetachVrm`].
+///
+/// This is a mutation-only helper shared by both the standalone `detach_vrm`
+/// API and the auto-detach path inside `attach_vrm`. Persistence and event
+/// broadcasting are left to the caller so each call-site can choose its own
+/// policy (e.g. attach skips the intermediate persist).
+///
+/// Returns the old `asset_id` if a VRM was attached, or `None` otherwise.
+pub(super) fn detach_core(
+    commands: &mut Commands,
+    persona: &mut Persona,
+    entity: Entity,
+) -> Option<String> {
+    let old_asset_id = persona.vrm_asset_id.take()?;
+    commands.entity(entity).trigger(RequestDetachVrm);
+    Some(old_asset_id)
+}
+
 impl PersonaApi {
     /// Detaches the VRM model from a persona, keeping the persona entity intact.
     pub async fn detach_vrm(&self, persona_id: PersonaId) -> ApiResult {
@@ -35,14 +53,10 @@ fn detach(
         .get_mut(entity)
         .map_err(|_| ApiError::EntityNotFound)?;
 
-    let asset_id = persona
-        .vrm_asset_id
-        .take()
+    let asset_id = detach_core(&mut commands, &mut persona, entity)
         .ok_or_else(|| ApiError::Conflict("No VRM attached to this persona".to_string()))?;
 
     let updated = persona.clone();
-
-    commands.entity(entity).trigger(RequestDetachVrm);
     persist_and_broadcast(
         &prefs,
         &tx_detached,

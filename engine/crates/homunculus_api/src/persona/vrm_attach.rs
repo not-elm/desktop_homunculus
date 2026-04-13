@@ -1,9 +1,10 @@
 use crate::error::{ApiError, ApiResult};
+use crate::persona::vrm_detach::detach_core;
 use crate::persona::{PersonaApi, PersonaSnapshot};
 use crate::prelude::initialized;
 use bevy::prelude::*;
 use bevy_flurx::prelude::*;
-use bevy_vrm1::prelude::{BodyTracking, Cameras, LookAt, RequestDetachVrm, VrmHandle};
+use bevy_vrm1::prelude::{BodyTracking, Cameras, LookAt, VrmHandle};
 use homunculus_core::prelude::{
     AssetResolver, Persona, PersonaChangeEvent, PersonaId, PersonaIndex, PersonaState,
     VrmAttachedEvent, VrmDetachedEvent, VrmEvent, VrmEventSender,
@@ -62,6 +63,10 @@ impl PersonaApi {
 
 /// Phase 1: Detach old VRM and despawn stale VRMA children.
 ///
+/// Uses [`detach_core`] for the detach step and persists only once — after the
+/// new `asset_id` has been set — so SSE consumers never see a transient
+/// `vrm_asset_id = None` state.
+///
 /// Returns the persona snapshot and entity for the attach phase.
 fn detach_phase(
     In((persona_id, asset_id)): In<(PersonaId, String)>,
@@ -75,29 +80,33 @@ fn detach_phase(
 ) -> ApiResult<(PersonaSnapshot, Entity)> {
     let entity = index.get(&persona_id).ok_or(ApiError::EntityNotFound)?;
 
-    if vrm_handles.get(entity).is_ok() {
-        // VRMA children are despawned by RequestDetachVrm observer (bevy_vrm1 detach.rs).
-        // Explicit pre-despawn was removed (was commit 2eaa68b) — it was redundant with the
-        // observer's catch-all despawn_children, and created a ghost-entity window with fetch_vrma.
-        auto_detach(
-            &mut commands,
-            &mut personas,
-            &prefs,
-            &tx_detached,
-            &tx_change,
-            entity,
-        )?;
-    }
-
-    // Update persona DB record with new VRM asset ID
     let (mut persona, state) = personas
         .get_mut(entity)
         .map_err(|_| ApiError::EntityNotFound)?;
+
+    // Detach old VRM if present (no intermediate persist/broadcast)
+    let old_asset_id = if vrm_handles.get(entity).is_ok() {
+        detach_core(&mut commands, &mut persona, entity)
+    } else {
+        None
+    };
+
+    // Set new asset_id and persist once
     persona.vrm_asset_id = Some(asset_id);
     let updated = persona.clone();
     let state_str = state.0.clone();
 
     persist_and_broadcast_change(&prefs, &tx_change, entity, &updated);
+
+    // Broadcast detach event if old VRM was removed
+    if let Some(old_id) = old_asset_id
+        && let Some(tx) = &tx_detached
+    {
+        let _ = tx.try_broadcast(VrmEvent {
+            vrm: entity,
+            payload: VrmDetachedEvent { asset_id: old_id },
+        });
+    }
 
     Ok((
         PersonaSnapshot {
@@ -159,43 +168,4 @@ fn broadcast_attached(
             payload: VrmAttachedEvent { asset_id },
         });
     }
-}
-
-/// Detaches the currently attached VRM before a new one is attached.
-fn auto_detach(
-    commands: &mut Commands,
-    personas: &mut Query<(&mut Persona, &PersonaState)>,
-    prefs: &PrefsDatabase,
-    tx_detached: &Option<Res<VrmEventSender<VrmDetachedEvent>>>,
-    tx_change: &Option<Res<VrmEventSender<PersonaChangeEvent>>>,
-    entity: Entity,
-) -> ApiResult<()> {
-    let (mut persona, _) = personas
-        .get_mut(entity)
-        .map_err(|_| ApiError::EntityNotFound)?;
-
-    let old_asset_id = persona.vrm_asset_id.take().unwrap_or_default();
-    let updated = persona.clone();
-
-    commands.entity(entity).trigger(RequestDetachVrm);
-
-    if let Err(e) = prefs.update_persona(&updated) {
-        warn!("Failed to persist persona after VRM auto-detach: {e}");
-    }
-    if let Some(tx) = tx_detached {
-        let _ = tx.try_broadcast(VrmEvent {
-            vrm: entity,
-            payload: VrmDetachedEvent {
-                asset_id: old_asset_id,
-            },
-        });
-    }
-    if let Some(tx) = tx_change {
-        let _ = tx.try_broadcast(VrmEvent {
-            vrm: entity,
-            payload: PersonaChangeEvent { persona: updated },
-        });
-    }
-
-    Ok(())
 }
