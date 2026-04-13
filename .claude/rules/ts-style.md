@@ -10,27 +10,26 @@
 
 ## Function Granularity
 
-- Extract functions at a granularity where the calling code reads naturally as prose.
-- 関数本体が自然言語のように読めるよう、意図を名前で表現したヘルパー関数に処理を切り出す。呼び出す側は「何をするか」を述べ、ヘルパーは「どうするか」を担当する。
+- Extract functions at a granularity where the calling code reads naturally as prose. The caller states "what" to do; the helper handles "how".
 - Aim for function bodies under 20 lines. If a function exceeds this, look for a named sub-operation to extract.
 - Inline callbacks (request handlers, Promise executors, etc.) that exceed 5 lines should be extracted as named functions.
 
 ## Item Ordering
 
-ファイル内のアイテムはトップダウンに配置する。上に高位の部品、下に行くほど低位の詳細。
+Arrange items top-down within a file. High-level components go at the top; lower-level details go toward the bottom.
 
-### ファイル内の配置順序
+### File-level ordering
 
-1. インポート (`import`)
-2. 定数・型定義・モジュールレベルの状態
-3. 関数定義（呼び出す側が上、呼ばれる側が下）
-4. トップレベル実行コード（エントリポイント、副作用登録）
+1. Imports (`import`)
+2. Constants, type definitions, and module-level state
+3. Function definitions (callers above, callees below)
+4. Top-level execution code (entry points, side-effect registrations)
 
-### 原則
+### Principles
 
-- **呼び出す側が上、呼ばれる側が下。**
-- ヘルパー関数は、それを呼び出す関数より下に配置する。
-- モジュールレベルのヘルパー関数は function 宣言を使う（hoistされるため、定義より上で呼び出し可能）。arrow function はコールバックや lexical this が必要な場面で使う。
+- **Callers above, callees below.**
+- Helper functions must be placed below the functions that call them.
+- Use function declarations for module-level helpers (they are hoisted, so they can be called before their textual definition). Use arrow functions only when lexical `this` or callback semantics are needed.
 
 ## Custom Hooks
 
