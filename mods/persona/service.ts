@@ -1,75 +1,94 @@
-import { host, Persona, type PersonaSnapshot, repeat, sleep } from '@hmcs/sdk';
+import { host, Persona, type PersonaSnapshot, type ProcessHandle, processes } from '@hmcs/sdk';
 import { EventSource } from 'eventsource';
+import { resolveBehaviorConfig, resolveProcessCommand } from './shared/behavior-config.ts';
 
-// --- Startup: spawn all auto-spawn personas ---
+const handleMap = new Map<string, ProcessHandle>();
 
-const personas = await Persona.list();
+async function startupPersonas() {
+  const personas = await Persona.list();
+  const running = await processes.list();
+  const runningArgs = new Set(running.map((p) => p.args[0]));
 
-for (const snapshot of personas) {
-  if (snapshot.metadata?.['auto-spawn'] === true) {
-    await spawnAndManage(snapshot);
-  }
-}
+  for (const snapshot of personas) {
+    const effective =
+      snapshot.metadata?.['auto-spawn'] === true ? await spawnIfNeeded(snapshot) : snapshot;
 
-// --- Dynamic management via SSE combined stream ---
-
-const streamUrl = host.createUrl('personas/stream');
-const source = new EventSource(streamUrl.toString());
-
-source.addEventListener('persona-spawned', async (event) => {
-  const data = JSON.parse(event.data) as { personaId: string };
-  await manageBehavior(data.personaId);
-});
-
-// --- Helpers ---
-
-async function spawnAndManage(snapshot: PersonaSnapshot): Promise<void> {
-  const p = new Persona(snapshot.id);
-  try {
-    await p.spawn();
-  } catch {
-    // Already spawned — continue to manage behavior
-  }
-  await manageBehavior(snapshot.id);
-}
-
-async function manageBehavior(personaId: string): Promise<void> {
-  const p = new Persona(personaId);
-  const vrm = p.vrm();
-
-  try {
-    await vrm.playVrma({
-      asset: 'vrma:idle-maid',
-      repeat: repeat.forever(),
-      transitionSecs: 0.5,
-    });
-    await vrm.lookAtCursor();
-  } catch {
-    // VRM not attached or play failed — skip animation
-  }
-
-  p.events().on('state-change', async (e) => {
-    const v = p.vrm();
-    const option = {
-      repeat: repeat.forever(),
-      transitionSecs: 0.5,
-    } as const;
-
-    if (e.state === 'idle') {
-      await v.playVrma({ asset: 'vrma:idle-maid', ...option });
-      await sleep(500);
-      await v.lookAtCursor();
-    } else if (e.state === 'drag') {
-      await v.unlook();
-      await v.playVrma({
-        asset: 'vrma:grabbed',
-        ...option,
-        resetSpringBones: true,
-      });
-    } else if (e.state === 'sitting') {
-      await v.playVrma({ asset: 'vrma:idle-sitting', ...option });
-      await sleep(500);
-      await v.lookAtCursor();
+    if (effective.spawned && !runningArgs.has(effective.id)) {
+      await startBehaviorProcess(effective);
     }
+  }
+}
+
+function listenPersonaStream(): EventSource {
+  const streamUrl = host.createUrl('personas/stream');
+  const source = new EventSource(streamUrl.toString());
+
+  source.addEventListener('persona-spawned', async (event) => {
+    const data = JSON.parse(event.data) as { personaId: string };
+    if (handleMap.has(data.personaId)) return;
+    const snap = await new Persona(data.personaId).snapshot();
+    await startBehaviorProcess(snap);
+  });
+
+  source.addEventListener('persona-despawned', async (event) => {
+    const data = JSON.parse(event.data) as { personaId: string };
+    await stopBehaviorProcess(data.personaId);
+  });
+
+  source.addEventListener('persona-deleted', async (event) => {
+    const data = JSON.parse(event.data) as { personaId: string };
+    await stopBehaviorProcess(data.personaId);
+  });
+
+  return source;
+}
+
+function registerCleanupHandler(source: EventSource) {
+  process.on('SIGTERM', async () => {
+    source.close();
+    const stops = [...handleMap.values()].map((h) => h.stop());
+    await Promise.allSettled(stops);
+    process.exit(0);
   });
 }
+
+async function spawnIfNeeded(snapshot: PersonaSnapshot): Promise<PersonaSnapshot> {
+  if (snapshot.spawned) return snapshot;
+  const p = new Persona(snapshot.id);
+  try {
+    return await p.spawn();
+  } catch {
+    // Already spawned or failed — return fresh snapshot
+    return await p.snapshot();
+  }
+}
+
+async function startBehaviorProcess(snapshot: PersonaSnapshot): Promise<void> {
+  if (handleMap.has(snapshot.id)) return;
+  const config = resolveBehaviorConfig(snapshot);
+  const command = resolveProcessCommand(config);
+  try {
+    const handle = await processes.start({
+      command,
+      args: [snapshot.id],
+    });
+    handleMap.set(snapshot.id, handle);
+  } catch (e) {
+    console.error(`Failed to start behavior for ${snapshot.id}:`, e);
+  }
+}
+
+async function stopBehaviorProcess(personaId: string): Promise<void> {
+  const handle = handleMap.get(personaId);
+  if (!handle) return;
+  handleMap.delete(personaId);
+  try {
+    await handle.stop();
+  } catch {
+    // Already stopped
+  }
+}
+
+await startupPersonas();
+const source = listenPersonaStream();
+registerCleanupHandler(source);
