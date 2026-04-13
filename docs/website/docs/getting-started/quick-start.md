@@ -11,9 +11,9 @@ Make sure you have completed the [Installation](/getting-started/installation) g
 
 ## Meet Elmer
 
-When you launch Desktop Homunculus with the official MODs installed, **Elmer** appears on your desktop. Elmer is the default character -- a VRM 3D model rendered in a transparent window that floats above your other applications.
+When you launch Desktop Homunculus with the official MODs installed, **Elmer** appears on your desktop. Elmer is the default persona — a VRM 3D character with its own identity, personality, and behavior settings, rendered in a transparent window that floats above your other applications.
 
-Elmer comes with built-in animations and behaviors powered by the `@hmcs/elmer` and `@hmcs/assets` MODs. The character will idle, react when grabbed, and follow your cursor.
+Elmer comes with built-in animations and behaviors powered by the `@hmcs/elmer`, `@hmcs/assets`, and `@hmcs/persona` MODs. The character will idle, react when grabbed, and follow your cursor.
 
 ## Interact with Your Character
 
@@ -39,6 +39,16 @@ Right-click the character to open the context menu overlay. From here you can ac
 
 Open the Settings panel through the right-click context menu. The settings UI lets you configure the application and MOD-specific options.
 
+### Persona Settings
+
+Right-click the character and select **"Persona"** to open the per-persona settings panel. Here you can configure the character's identity (name, age, gender, personality) and appearance (bone scale adjustments).
+
+To manage all your personas (create new ones, delete old ones), open the **system tray** → **"Persona"** to access the Persona Management dashboard.
+
+### Speech to Text
+
+If you have the `@hmcs/stt` MOD installed, open the **system tray** → **"Speech to Text"** to access the STT control panel. Download a Whisper model, configure your preferred language, and use voice input with the AI Agent.
+
 ### Exiting the App
 
 1. Find the **Desktop Homunculus** icon in the **system tray** (notification area)
@@ -57,7 +67,7 @@ Desktop Homunculus ships with a set of official MODs under the `@hmcs` scope:
 |---|---|
 | `@hmcs/elmer` | Controls the default character (Elmer) — spawns the character, manages animations and cursor tracking |
 | `@hmcs/assets` | Default VRMA animations (`idle-maid`, `grabbed`, `idle-sitting`) and sound effects |
-| `@hmcs/character-settings` | Per-character settings panel accessible from the context menu |
+| `@hmcs/persona` | Persona management UI and default behavior service — configure identity, personality, and appearance |
 | `@hmcs/settings` | Application settings panel accessible from the system tray |
 | `@hmcs/app-exit` | Exit menu in the system tray (required on Windows) |
 | `@hmcs/menu` | Right-click context menu overlay |
@@ -69,13 +79,15 @@ You can extend Desktop Homunculus with optional MODs. Install any of them at any
 | MOD | Description |
 |---|---|
 | `@hmcs/voicevox` | Text-to-speech integration using the [VoiceVox](https://voicevox.hiroshiba.jp/) engine |
+| `@hmcs/agent` | AI Agent — personas act as autonomous agents via Claude or Codex ([details](../mods/agent)) |
+| `@hmcs/stt` | Speech-to-text with Whisper-based voice recognition ([details](../mods/stt)) |
 
 :::info[VoiceVox Setup]
 The `@hmcs/voicevox` MOD requires the VoiceVox engine to be installed and running separately. Visit the [VoiceVox website](https://voicevox.hiroshiba.jp/) for installation instructions.
 :::
 
 ```shell
-hmcs mod install @hmcs/voicevox
+hmcs mod install @hmcs/voicevox @hmcs/agent @hmcs/stt
 ```
 
 ## What's Next?
