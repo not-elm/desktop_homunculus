@@ -74,12 +74,7 @@ export function AgeField({ value, onChange, disabled }: AgeFieldProps) {
           Unknown
         </RadioGroupPrimitive.Item>
       </RadioGroupPrimitive.Root>
-      <div
-        className="settings-age-value-area"
-        role="status"
-        aria-live="polite"
-        data-mode={mode}
-      >
+      <div className="settings-age-value-area" role="status" aria-live="polite" data-mode={mode}>
         {mode === 'unknown' ? (
           <span className="settings-age-unknown-readout">Unknown</span>
         ) : (
