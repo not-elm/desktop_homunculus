@@ -84,7 +84,7 @@ hmcs --version
 If everything works, you're all set!
 
 :::tip[Next Steps]
-Head over to the [Quick Start](./quick-start.md) guide to create your first persona and start interacting with your character.
+Head over to [Core Concepts](./concepts) to learn about personas and MODs, then follow the [Quick Start](./quick-start) guide.
 :::
 
 ## For Developers
