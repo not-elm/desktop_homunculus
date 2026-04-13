@@ -113,6 +113,10 @@ character.events().on("state-change", async (e) => {
 });
 ```
 
+:::tip
+The `@hmcs/persona` MOD already handles idle/drag/sitting animation switching for all spawned personas. If you're building a MOD that creates personas and you have `@hmcs/persona` installed, you can skip the `state-change` event handling — the persona service takes care of it. The example above shows the full pattern for MODs that want custom state handling.
+:::
+
 This script does three things:
 
 1. **Creates** a persona and **attaches** the VRM model registered as `my-character:vrm`
