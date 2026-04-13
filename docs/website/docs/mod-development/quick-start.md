@@ -11,13 +11,11 @@ Build your first Desktop Homunculus MOD from scratch. By the end of this guide, 
 
 Before you begin, make sure you have:
 
-- **Node.js 22 or later** -- required for TypeScript support via tsx
-- **pnpm** -- the package manager used by the MOD system
-- **Desktop Homunculus** running on your machine
-- **`hmcs` CLI** installed globally (see [Installation](/getting-started/installation))
+- **Desktop Homunculus** installed and running (the installer bundles Node.js and pnpm)
+- **`hmcs` CLI** available in your terminal (see [Installation](/getting-started/installation))
 
 :::tip
-Run `node -v` and `hmcs --version` to verify your setup before continuing.
+Run `hmcs --version` to verify your setup before continuing.
 :::
 
 ## Step 1: Create the Project

@@ -27,8 +27,6 @@ Desktop Homunculus is a cross-platform desktop mascot application built with the
 | Requirement | Version |
 |---|---|
 | **OS** | macOS 12+ / Windows 10+ |
-| **Node.js** | 22 or later |
-| **pnpm** | 10.x |
 
 :::info[Alpha Status]
 Desktop Homunculus is currently in **alpha**. APIs and MOD specifications may change between releases. We welcome feedback and contributions.
