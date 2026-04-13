@@ -57,7 +57,7 @@ The service runs automatically when Desktop Homunculus starts. It handles two re
 
 ### Auto-Spawn
 
-Personas with `metadata['auto-spawn']` set to `true` are automatically spawned at startup. The official `@hmcs/elmer` MOD sets this flag on its persona.
+Personas with `metadata['auto-spawn']` set to `true` are automatically spawned at startup. The installer creates a default Elmer persona with this flag set during initial setup.
 
 ### Animation State Machine
 

@@ -51,18 +51,18 @@ Declares files bundled with the MOD. Each entry maps an **asset ID** to a file d
 | `image` | `.png`, `.jpg`, `.svg` | Image file |
 | `html` | `.html` | WebView UI entry point |
 
-**Example** -- `@hmcs/elmer`, a MOD that spawns a desktop character:
+**Example** -- a MOD that bundles character assets:
 
 ```json
 {
   "homunculus": {
     "assets": {
-      "elmer:vrm": {
-        "path": "assets/Elmer.vrm",
+      "my-mod:vrm": {
+        "path": "assets/MyModel.vrm",
         "type": "vrm",
-        "description": "VRM model named Elmer"
+        "description": "Custom VRM character model"
       },
-      "elmer:open": {
+      "my-mod:open": {
         "path": "assets/open.mp3",
         "type": "sound",
         "description": "Sound effect for opening action"

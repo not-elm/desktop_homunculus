@@ -20,7 +20,7 @@ The Assets MOD (`@hmcs/assets`) provides the default resources that other MODs d
 
 ## Features
 
-These assets are referenced by their asset ID in other MODs and SDK calls. For example, the Elmer MOD spawns the default character with:
+These assets are referenced by their asset ID in other MODs and SDK calls. For example, the Persona MOD spawns the default character with:
 
 ```ts
 import { persona } from "@hmcs/sdk";
@@ -34,5 +34,5 @@ MOD developers can reference these assets in their own MODs using the same IDs. 
 ## Notes
 
 - This MOD has no service — it only provides static asset files.
-- The `@hmcs/elmer` MOD depends on this MOD — it uses `vrm:elmer`, `vrma:idle-maid`, `vrma:grabbed`, and `vrma:idle-sitting` to spawn and animate the default character.
-- Removing this MOD will break the Elmer MOD and any other MODs that reference these asset IDs.
+- The `@hmcs/persona` MOD depends on this MOD — it uses `vrm:elmer`, `vrma:idle-maid`, `vrma:grabbed`, and `vrma:idle-sitting` to spawn and animate the default character.
+- Removing this MOD will break the Persona MOD and any other MODs that reference these asset IDs.

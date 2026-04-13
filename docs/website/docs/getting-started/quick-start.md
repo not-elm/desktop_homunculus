@@ -13,7 +13,7 @@ Make sure you have completed the [Installation](/getting-started/installation) g
 
 When you launch Desktop Homunculus with the official MODs installed, **Elmer** appears on your desktop. Elmer is the default persona — a VRM 3D character with its own identity, personality, and behavior settings, rendered in a transparent window that floats above your other applications.
 
-Elmer comes with built-in animations and behaviors powered by the `@hmcs/elmer`, `@hmcs/assets`, and `@hmcs/persona` MODs. The character will idle, react when grabbed, and follow your cursor.
+Elmer comes with built-in animations and behaviors powered by the `@hmcs/assets` and `@hmcs/persona` MODs. The character will idle, react when grabbed, and follow your cursor.
 
 ## Interact with Your Character
 
@@ -65,7 +65,6 @@ Desktop Homunculus ships with a set of official MODs under the `@hmcs` scope:
 
 | MOD | Description |
 |---|---|
-| `@hmcs/elmer` | Controls the default character (Elmer) — spawns the character, manages animations and cursor tracking |
 | `@hmcs/assets` | Default VRMA animations (`idle-maid`, `grabbed`, `idle-sitting`) and sound effects |
 | `@hmcs/persona` | Persona management UI and default behavior service — configure identity, personality, and appearance |
 | `@hmcs/settings` | Application settings panel accessible from the system tray |

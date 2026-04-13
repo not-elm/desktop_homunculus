@@ -19,12 +19,12 @@ The engine treats asset IDs as opaque strings — it does not validate or parse 
 
 | Part | Source | Example |
 |---|---|---|
-| `mod-name` | Derived from the `name` field in `package.json` | `@hmcs/elmer` becomes `elmer` |
+| `mod-name` | Derived from the `name` field in `package.json` | `@hmcs/assets` becomes `assets` |
 | `asset-name` | The key in the `homunculus.assets` object | `vrm`, `open`, `ui` |
 
 The **mod name** is extracted from the package name by stripping the scope prefix. For example:
 
-- `@hmcs/elmer` -- mod name is `elmer`
+- `@hmcs/assets` -- mod name is `assets`
 - `@hmcs/settings` -- mod name is `settings`
 - `my-character` -- mod name is `my-character` (no scope to strip)
 
@@ -36,15 +36,15 @@ Given this `package.json`:
 
 ```json
 {
-  "name": "@hmcs/elmer",
+  "name": "my-character",
   "homunculus": {
     "assets": {
-      "elmer:vrm": {
-        "path": "assets/Elmer.vrm",
+      "my-character:vrm": {
+        "path": "assets/MyModel.vrm",
         "type": "vrm",
-        "description": "VRM model named Elmer"
+        "description": "Custom VRM character model"
       },
-      "elmer:open": {
+      "my-character:open": {
         "path": "assets/open.mp3",
         "type": "sound",
         "description": "Sound effect for opening action"
@@ -54,7 +54,7 @@ Given this `package.json`:
 }
 ```
 
-The asset IDs are `elmer:vrm` and `elmer:open`. You use these strings anywhere the SDK or API expects an asset reference.
+The asset IDs are `my-character:vrm` and `my-character:open`. You use these strings anywhere the SDK or API expects an asset reference.
 
 ## Built-in Assets
 
