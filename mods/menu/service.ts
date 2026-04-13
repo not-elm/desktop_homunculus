@@ -88,29 +88,32 @@ async function setupPersonaEvents(p: Persona) {
   });
 }
 
-// --- Startup: set up events for already-spawned personas ---
-
-const snapshots = await Persona.list();
-for (const snapshot of snapshots) {
-  if (snapshot.spawned) {
-    await setupPersonaEvents(new Persona(snapshot.id));
+async function setupSpawnedPersonas() {
+  const snapshots = await Persona.list();
+  for (const snapshot of snapshots) {
+    if (snapshot.spawned) {
+      await setupPersonaEvents(new Persona(snapshot.id));
+    }
   }
 }
 
-// --- Listen for newly spawned/despawned personas ---
+function listenPersonaLifecycle() {
+  const personaStream = new EventSource(host.createUrl('personas/stream').toString());
 
-const personaStream = new EventSource(host.createUrl('personas/stream').toString());
+  personaStream.addEventListener('persona-spawned', async (event) => {
+    const data = JSON.parse(event.data) as { personaId: string };
+    await setupPersonaEvents(new Persona(data.personaId));
+  });
 
-personaStream.addEventListener('persona-spawned', async (event) => {
-  const data = JSON.parse(event.data) as { personaId: string };
-  await setupPersonaEvents(new Persona(data.personaId));
-});
+  personaStream.addEventListener('persona-despawned', async (event) => {
+    const data = JSON.parse(event.data) as { personaId: string };
+    const es = eventSources.get(data.personaId);
+    if (es) {
+      es.close();
+      eventSources.delete(data.personaId);
+    }
+  });
+}
 
-personaStream.addEventListener('persona-despawned', async (event) => {
-  const data = JSON.parse(event.data) as { personaId: string };
-  const es = eventSources.get(data.personaId);
-  if (es) {
-    es.close();
-    eventSources.delete(data.personaId);
-  }
-});
+await setupSpawnedPersonas();
+listenPersonaLifecycle();

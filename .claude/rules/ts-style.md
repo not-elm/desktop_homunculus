@@ -4,6 +4,10 @@
 
 - Always use `@hmcs/ui` components (Select, Button, Label, etc.) instead of native HTML elements (`<select>`, `<button>`, etc.) in MOD WebView UIs. The `@hmcs/ui` library provides glassmorphism-styled components that render correctly in CEF WebViews. Native elements may not display properly in the transparent window context.
 
+## Comments
+
+- Do NOT use region-divider comments (e.g. `// --- Section Name ---`). Extract named functions instead, so the code self-documents through function names.
+
 ## Function Granularity
 
 - Extract functions at a granularity where the calling code reads naturally as prose.
