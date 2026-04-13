@@ -30,7 +30,10 @@ export interface UsePersonaDetailReturn {
 function snapshotToFormValues(snapshot: PersonaSnapshot): PersonaFormValues {
   return {
     name: snapshot.name ?? '',
-    age: snapshot.age != null ? { type: 'specify' as const, age: snapshot.age } : { type: 'unknown' as const },
+    age:
+      snapshot.age != null
+        ? { type: 'specify' as const, age: snapshot.age }
+        : { type: 'unknown' as const },
     gender: snapshot.gender,
     firstPersonPronoun: snapshot.firstPersonPronoun ?? '',
     profile: snapshot.profile,
@@ -96,7 +99,9 @@ export function usePersonaDetail(
     return (
       formValues.name !== iv.name ||
       formValues.age.type !== iv.age.type ||
-      (formValues.age.type === 'specify' && iv.age.type === 'specify' && formValues.age.age !== iv.age.age) ||
+      (formValues.age.type === 'specify' &&
+        iv.age.type === 'specify' &&
+        formValues.age.age !== iv.age.age) ||
       formValues.gender !== iv.gender ||
       formValues.firstPersonPronoun !== iv.firstPersonPronoun ||
       formValues.profile !== iv.profile ||
