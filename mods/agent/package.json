@@ -43,23 +43,23 @@
     "@hmcs/ui": "workspace:*",
     "@openai/codex": "^0.117.0",
     "lucide-react": "^0.525.0",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
     "uiohook-napi": "^1.5.4",
     "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.2.1",
+    "@tailwindcss/vite": "catalog:",
     "@types/node": "^25.3.3",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react-swc": "^4.2.3",
-    "tailwindcss": "^4.2.1",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react-swc": "catalog:",
+    "tailwindcss": "catalog:",
     "typescript": "^5.9.3",
-    "vite": "^6.4.1",
-    "vite-plugin-singlefile": "^2.3.0",
+    "vite": "catalog:",
+    "vite-plugin-singlefile": "catalog:",
     "vitest": "^3.2.3"
   }
 }

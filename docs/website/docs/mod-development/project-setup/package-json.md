@@ -51,18 +51,18 @@ Declares files bundled with the MOD. Each entry maps an **asset ID** to a file d
 | `image` | `.png`, `.jpg`, `.svg` | Image file |
 | `html` | `.html` | WebView UI entry point |
 
-**Example** -- `@hmcs/elmer`, a MOD that spawns a desktop character:
+**Example** -- a MOD that bundles character assets:
 
 ```json
 {
   "homunculus": {
     "assets": {
-      "elmer:vrm": {
-        "path": "assets/Elmer.vrm",
+      "my-mod:vrm": {
+        "path": "assets/MyModel.vrm",
         "type": "vrm",
-        "description": "VRM model named Elmer"
+        "description": "Custom VRM character model"
       },
-      "elmer:open": {
+      "my-mod:open": {
         "path": "assets/open.mp3",
         "type": "sound",
         "description": "Sound effect for opening action"
@@ -94,15 +94,15 @@ Declares entries for the right-click context menu. Each menu entry triggers a `b
 }
 ```
 
-**Example** -- the `@hmcs/character-settings` MOD adds a "Character Settings" entry to the context menu:
+**Example** -- the `@hmcs/persona` MOD adds a "Persona" entry to the context menu:
 
 ```json
 {
   "homunculus": {
     "menus": [
       {
-        "id": "open-character-settings",
-        "text": "Character Settings",
+        "id": "open-persona",
+        "text": "Persona",
         "command": "open-ui"
       }
     ]
@@ -110,7 +110,7 @@ Declares entries for the right-click context menu. Each menu entry triggers a `b
 }
 ```
 
-When the user right-clicks the character and selects "Character Settings", the engine invokes the `open-ui` MOD command.
+When the user right-clicks the character and selects "Persona", the engine invokes the `open-ui` MOD command.
 
 ### `tray`
 

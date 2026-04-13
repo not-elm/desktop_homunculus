@@ -30,18 +30,18 @@
   "dependencies": {
     "@hmcs/sdk": "workspace:*",
     "@hmcs/ui": "workspace:*",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4"
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.2.1",
+    "@tailwindcss/vite": "catalog:",
     "@types/node": "^25.3.3",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react-swc": "^4.2.3",
-    "tailwindcss": "^4.2.1",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react-swc": "catalog:",
+    "tailwindcss": "catalog:",
     "typescript": "^5.9.3",
-    "vite": "^6.4.1",
-    "vite-plugin-singlefile": "^2.3.0"
+    "vite": "catalog:",
+    "vite-plugin-singlefile": "catalog:"
   }
 }
