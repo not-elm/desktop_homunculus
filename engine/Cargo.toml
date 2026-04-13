@@ -169,9 +169,6 @@ lto = "thin"
 codegen-units = 2
 strip = true
 
-[patch.crates-io]
-bevy_vrm1 = { path = "/Users/notelm/workspace/bevy_vrm1" }
-
 [workspace.lints.clippy]
 type_complexity = "allow"
 too_many_arguments = "allow"
