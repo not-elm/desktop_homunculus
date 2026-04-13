@@ -75,7 +75,7 @@ If you're building a custom MOD that creates personas, you don't need to reimple
 
 ## SDK Reference
 
-For programmatic persona management, see the [Persona SDK reference](/reference/sdk/persona).
+For programmatic persona management, see the [SDK guide](/mod-development/sdk) and the [`Persona` class](/reference/sdk/vrm/persona) in the VRM module reference.
 
 ## Notes
 
