@@ -9,17 +9,23 @@ sidebar_position: 3
 Make sure you have completed the [Installation](/getting-started/installation) guide. Desktop Homunculus and the official MODs should be installed and the app should be running.
 :::
 
-## Meet Elmer
+## Create Your First Persona
 
-When you launch Desktop Homunculus with the official MODs installed, **Elmer** appears on your desktop. Elmer is the default persona — a VRM 3D character with its own identity, personality, and behavior settings, rendered in a transparent window that floats above your other applications.
+When you first launch Desktop Homunculus, no character appears on screen — you need to create a **persona** first. A persona is a VRM 3D character with its own identity, personality, and behavior settings, rendered in a transparent window that floats above your other applications.
 
-Elmer comes with built-in animations and behaviors powered by the `@hmcs/assets` and `@hmcs/persona` MODs. The character will idle, react when grabbed, and follow your cursor.
+1. Click the **Desktop Homunculus** icon in the **system tray** (notification area)
+2. Select **"Persona"** to open the Persona Management dashboard
+3. Enter an **ID** (e.g. `elmer`) and a **Name**, then click **Create**
+4. Select a VRM model — the official `@hmcs/assets` MOD provides `vrm:elmer` as a ready-to-use model
+5. Enable **Auto-Spawn** so the character appears automatically on future launches, then click **Save**
+
+Your character should now appear on the desktop. It will idle, react when grabbed, and follow your cursor — powered by the `@hmcs/assets` and `@hmcs/persona` MODs.
 
 ## Interact with Your Character
 
 ### Drag and Move
 
-Click and drag the character to reposition it anywhere on your desktop. While being dragged, Elmer switches to a "drag" state. Release to drop the character at the new position.
+Click and drag the character to reposition it anywhere on your desktop. While being dragged, the character switches to a "drag" state. Release to drop the character at the new position.
 
 ### Character States
 

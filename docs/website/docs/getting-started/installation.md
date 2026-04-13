@@ -73,8 +73,7 @@ The installer will:
 ## Verify Installation
 
 1. Launch **Desktop Homunculus**
-2. A character should appear on your desktop
-3. Right-click the character to open the context menu
+2. The app icon should appear in the **system tray** (notification area)
 
 You can also verify the CLI is available:
 
@@ -85,7 +84,7 @@ hmcs --version
 If everything works, you're all set!
 
 :::tip[Next Steps]
-Head over to the [Quick Start](./quick-start.md) guide to learn how to interact with your character.
+Head over to the [Quick Start](./quick-start.md) guide to create your first persona and start interacting with your character.
 :::
 
 ## For Developers
