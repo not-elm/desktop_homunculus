@@ -2,12 +2,14 @@ use crate::error::{ApiError, ApiResult};
 use crate::prelude::WebviewApi;
 use bevy::light::NotShadowCaster;
 use bevy::prelude::*;
-use bevy_cef::prelude::{PreloadScripts, WebviewExtendStandardMaterial, WebviewSize};
+use bevy_cef::prelude::{
+    PreloadScripts, WebviewExtendStandardMaterial, WebviewResizable, WebviewSize,
+};
 use bevy_flurx::action::once;
 use bevy_vrm1::prelude::Cameras;
 use homunculus_core::prelude::{
-    AssetResolver, AssetType, LinkedPersona, PersonaIndex, TransformConstraint, WebviewMeshSize,
-    WebviewOpenOptions, WebviewSource, WebviewSourceInfo,
+    AspectLockMode, AssetResolver, AssetType, LinkedPersona, PersonaIndex, TransformConstraint,
+    WebviewMeshSize, WebviewOpenOptions, WebviewResizableOptions, WebviewSource, WebviewSourceInfo,
 };
 use homunculus_effects::{Entity, Update};
 
@@ -77,6 +79,12 @@ fn create_global_webview(
         .entity(webview)
         .try_insert(OriginalWebviewSource(options.source.clone()));
     insert_preload_scripts(&mut commands, webview);
+
+    if let Some(resizable) = options.resizable {
+        commands
+            .entity(webview)
+            .try_insert(to_webview_resizable(resizable));
+    }
 
     if let Some(persona_id) = options.linked_persona {
         commands
@@ -204,4 +212,21 @@ fn insert_preload_scripts(commands: &mut Commands, webview: Entity) {
             "../webview/webviewEntity.js"
         )
         .replace("undefined", &webview.to_bits().to_string())]));
+}
+
+fn to_aspect_lock_mode(mode: AspectLockMode) -> bevy_cef::prelude::AspectLockMode {
+    match mode {
+        AspectLockMode::LockOnShift => bevy_cef::prelude::AspectLockMode::LockOnShift,
+        AspectLockMode::Always => bevy_cef::prelude::AspectLockMode::Always,
+        AspectLockMode::Never => bevy_cef::prelude::AspectLockMode::Never,
+    }
+}
+
+fn to_webview_resizable(opts: WebviewResizableOptions) -> WebviewResizable {
+    WebviewResizable {
+        edge_thickness: opts.edge_thickness,
+        min_size: opts.min_size,
+        max_size: opts.max_size,
+        aspect_lock: to_aspect_lock_mode(opts.aspect_lock),
+    }
 }
