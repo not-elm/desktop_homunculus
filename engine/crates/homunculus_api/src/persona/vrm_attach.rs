@@ -24,7 +24,6 @@ impl PersonaApi {
     ) -> ApiResult<PersonaSnapshot> {
         self.0
             .schedule(move |task| async move {
-                // Phase 1: detach old VRM + despawn old VRMA children (all deferred)
                 let (snapshot, entity) = task
                     .will(
                         Update,
@@ -33,17 +32,12 @@ impl PersonaApi {
                     .await
                     .ok()?;
 
-                // Flush deferred commands (despawn old children, trigger RequestDetachVrm)
-                task.will(Update, once::run(|| {})).await;
-
-                // Phase 2: insert new VRM handle (now that old children are gone)
                 task.will(
                     Update,
                     once::run(attach_phase).with((entity, asset_id.clone())),
                 )
                 .await;
 
-                // Wait for VRM initialization
                 task.will(Update, wait::until(initialized).with(entity))
                     .await;
 
