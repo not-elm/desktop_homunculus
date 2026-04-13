@@ -39,7 +39,8 @@
   },
   "bin": {
     "persona-open-ui": "commands/open-ui.ts",
-    "persona-open-management": "commands/open-management.ts"
+    "persona-open-management": "commands/open-management.ts",
+    "default-behavior": "commands/default-behavior.ts"
   },
   "dependencies": {
     "@hmcs/sdk": "workspace:*",

@@ -5,7 +5,6 @@ use std::process::{Command, Stdio};
 use crate::{
     config::HomunculusConfig,
     error::{ModsError, UtilError, UtilResult},
-    process::CommandNoWindow,
     runtime::RuntimeResolver,
 };
 
@@ -54,7 +53,6 @@ fn validate_package_name(spec: &str) -> UtilResult {
 
     Ok(())
 }
-
 
 /// Install the mod.
 /// The argument `pkg` is same as `pnpm add <pkg>`.
