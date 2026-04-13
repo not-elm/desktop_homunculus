@@ -2484,6 +2484,13 @@ components:
           $ref: '#/components/schemas/PlatformInfo'
         version:
           type: string
+    AspectLockMode:
+      type: string
+      description: Aspect ratio lock behavior during resize drag.
+      enum:
+      - lockOnShift
+      - always
+      - never
     AssetDeclaration:
       type: object
       description: A single declared asset entry from a MOD's package.json.
@@ -4030,6 +4037,11 @@ components:
           - type: 'null'
           - $ref: '#/components/schemas/PersonaId'
             description: Persona to link to this webview (optional).
+        resizable:
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/WebviewResizableOptions'
+            description: Enable drag-to-resize. Omit or set to null to disable.
         size:
           type:
           - array
@@ -4082,6 +4094,36 @@ components:
           items:
             type: number
             format: float
+    WebviewResizableOptions:
+      type: object
+      description: |-
+        Options for enabling drag-to-resize on a webview.
+        All fields are optional; omitted fields use bevy_cef defaults.
+      properties:
+        aspectLock:
+          $ref: '#/components/schemas/AspectLockMode'
+          description: 'Aspect ratio lock mode. Default: "lockOnShift".'
+        edgeThickness:
+          type: integer
+          format: int32
+          description: 'Width of the invisible resize border in texture pixels. Default: 16.'
+          minimum: 0
+        maxSize:
+          type:
+          - array
+          - 'null'
+          items:
+            type: integer
+            format: int32
+            minimum: 0
+          description: Maximum texture size in pixels. None = no limit.
+        minSize:
+          type: array
+          items:
+            type: integer
+            format: int32
+            minimum: 0
+          description: 'Minimum texture size in pixels. Default: [100, 100].'
     WebviewSource:
       oneOf:
       - type: object
