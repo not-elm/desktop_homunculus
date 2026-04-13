@@ -15,6 +15,23 @@
 - Aim for function bodies under 20 lines. If a function exceeds this, look for a named sub-operation to extract.
 - Inline callbacks (request handlers, Promise executors, etc.) that exceed 5 lines should be extracted as named functions.
 
+## Item Ordering
+
+ファイル内のアイテムはトップダウンに配置する。上に高位の部品、下に行くほど低位の詳細。
+
+### ファイル内の配置順序
+
+1. インポート (`import`)
+2. 定数・型定義・モジュールレベルの状態
+3. 関数定義（呼び出す側が上、呼ばれる側が下）
+4. トップレベル実行コード（エントリポイント、副作用登録）
+
+### 原則
+
+- **呼び出す側が上、呼ばれる側が下。**
+- ヘルパー関数は、それを呼び出す関数より下に配置する。
+- モジュールレベルのヘルパー関数は function 宣言を使う（hoistされるため、定義より上で呼び出し可能）。arrow function はコールバックや lexical this が必要な場面で使う。
+
 ## Custom Hooks
 
 - When a React component mixes data fetching, side effects, and rendering, extract state and logic into a `useXxx` custom hook. The component should focus on rendering and wiring callbacks.
