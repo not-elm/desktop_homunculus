@@ -14,10 +14,12 @@ MODs extend Desktop Homunculus with characters, animations, sound effects, UI pa
 | [@hmcs/assets](./assets) | Default VRM character model, VRMA animations, and sound effects | Recommended |
 | [@hmcs/elmer](./elmer) | Default character that spawns Elmer with idle, grab, and sitting animations | Recommended |
 | [@hmcs/menu](./menu) | Right-click context menu with a WebView-based HUD overlay | Recommended |
-| [@hmcs/character-settings](./character-settings) | Per-character settings panel (name, scale, persona, OCEAN traits) | Recommended |
+| [@hmcs/persona](./persona) | Persona management UI and default behavior service (identity, personality, appearance) | Recommended |
 | [@hmcs/settings](./settings) | Application settings panel (frame rate, shadow opacity) via system tray | Recommended |
 | [@hmcs/app-exit](./app-exit) | Exit menu in the system tray | Recommended |
 | [@hmcs/voicevox](./voicevox) | Text-to-speech integration using the VoiceVox engine | Optional |
+| [@hmcs/agent](./agent) | AI Agent sessions — personas act as autonomous agents via Claude or Codex | Optional |
+| [@hmcs/stt](./stt) | Speech-to-text control panel with Whisper model management | Optional |
 
 ## Managing MODs
 
