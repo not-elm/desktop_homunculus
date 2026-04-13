@@ -85,7 +85,7 @@ export default function App() {
 
   return (
     <div className="management-panel">
-      <Toolbar />
+      <Toolbar title="Persona" onClose={handleClose} />
       <div className="management-body">
         <Sidebar
           personas={mgmt.personas}

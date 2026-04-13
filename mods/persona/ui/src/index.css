@@ -726,6 +726,72 @@ body {
   animation: holo-corner-pulse 2s ease-in-out infinite;
 }
 
+/* --- Behavior section --- */
+
+.settings-section-heading {
+  font-size: var(--hud-font-size-xs);
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--hud-text);
+  margin-bottom: var(--hud-space-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--hud-space-sm);
+}
+
+.settings-section-heading::before {
+  content: "";
+  display: inline-block;
+  width: 3px;
+  height: 12px;
+  background: oklch(0.72 0.14 192 / 0.9);
+  border-radius: 1px;
+}
+
+.settings-separator {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, oklch(0.35 0.02 250 / 0.25), transparent);
+  margin: var(--hud-space-xl) 0;
+}
+
+.settings-vrma-fields {
+  display: flex;
+  flex-direction: column;
+  padding-left: var(--hud-space-xl);
+  border-left: 1px solid oklch(0.72 0.14 192 / 0.12);
+  margin-top: var(--hud-space-lg);
+  gap: var(--hud-space-md);
+}
+
+.settings-state-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.settings-state-dot--idle {
+  background: oklch(0.72 0.14 192);
+}
+.settings-state-dot--drag {
+  background: oklch(0.7 0.16 350);
+}
+.settings-state-dot--sitting {
+  background: oklch(0.65 0.18 285);
+}
+
+.settings-behavior-hint {
+  margin-top: var(--hud-space-lg);
+  padding: var(--hud-space-md) var(--hud-space-xl);
+  border-left: 1px solid oklch(0.72 0.14 192 / 0.12);
+  color: oklch(0.55 0.02 250 / 0.5);
+  font-size: var(--hud-font-size-xs);
+  letter-spacing: 0.05em;
+}
+
 /* ━━ Reduced Motion ━━ */
 
 @media (prefers-reduced-motion: reduce) {

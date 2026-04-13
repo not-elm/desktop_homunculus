@@ -1,5 +1,6 @@
 import {
   audio,
+  host,
   isWebviewSourceInfoLocal,
   Persona,
   signals,
@@ -8,6 +9,7 @@ import {
   type WebviewSourceInfo,
   webviewSource,
 } from '@hmcs/sdk';
+import { EventSource } from 'eventsource';
 
 const menuUIAssetId = 'menu:ui';
 let isProcessing = false;
@@ -15,38 +17,32 @@ const eventSources = new Map<string, ReturnType<Persona['events']>>();
 
 const NON_BLOCKING_SOURCES = new Set(['agent:session-ui']);
 
-const existsLinkedWebview = async (personaId: string) => {
-  const webviews = await Webview.list();
-  for (const webview of webviews) {
-    if (webview.linkedPersona !== personaId) continue;
-    if (isNonBlockingSource(webview.source)) continue;
-    return true;
-  }
-  return false;
-};
-
-function isNonBlockingSource(source: WebviewSourceInfo): boolean {
-  return isWebviewSourceInfoLocal(source) && NON_BLOCKING_SOURCES.has(source.id);
-}
-
-const openedMenu = async () => {
-  const webviews = await Webview.list();
-  for (const webview of webviews) {
-    if (isWebviewSourceInfoLocal(webview.source) && webview.source.id === menuUIAssetId) {
-      return new Webview(webview.entity);
+async function setupSpawnedPersonas() {
+  const snapshots = await Persona.list();
+  for (const snapshot of snapshots) {
+    if (snapshot.spawned) {
+      await setupPersonaEvents(new Persona(snapshot.id));
     }
   }
-  return null;
-};
+}
 
-signals.stream<{ entity: number }>('menu:close', async (payload) => {
-  try {
-    const webview = new Webview(payload.entity);
-    await webview.close();
-  } catch (err) {
-    console.error('Failed to close menu:', err);
-  }
-});
+function listenPersonaLifecycle() {
+  const personaStream = new EventSource(host.createUrl('personas/stream').toString());
+
+  personaStream.addEventListener('persona-spawned', async (event) => {
+    const data = JSON.parse(event.data) as { personaId: string };
+    await setupPersonaEvents(new Persona(data.personaId));
+  });
+
+  personaStream.addEventListener('persona-despawned', async (event) => {
+    const data = JSON.parse(event.data) as { personaId: string };
+    const es = eventSources.get(data.personaId);
+    if (es) {
+      es.close();
+      eventSources.delete(data.personaId);
+    }
+  });
+}
 
 async function setupPersonaEvents(p: Persona) {
   const oldEs = eventSources.get(p.id);
@@ -86,7 +82,38 @@ async function setupPersonaEvents(p: Persona) {
   });
 }
 
-const snapshots = await Persona.list();
-for (const snapshot of snapshots) {
-  await setupPersonaEvents(new Persona(snapshot.id));
+async function existsLinkedWebview(personaId: string) {
+  const webviews = await Webview.list();
+  for (const webview of webviews) {
+    if (webview.linkedPersona !== personaId) continue;
+    if (isNonBlockingSource(webview.source)) continue;
+    return true;
+  }
+  return false;
 }
+
+async function openedMenu() {
+  const webviews = await Webview.list();
+  for (const webview of webviews) {
+    if (isWebviewSourceInfoLocal(webview.source) && webview.source.id === menuUIAssetId) {
+      return new Webview(webview.entity);
+    }
+  }
+  return null;
+}
+
+function isNonBlockingSource(source: WebviewSourceInfo): boolean {
+  return isWebviewSourceInfoLocal(source) && NON_BLOCKING_SOURCES.has(source.id);
+}
+
+signals.stream<{ entity: number }>('menu:close', async (payload) => {
+  try {
+    const webview = new Webview(payload.entity);
+    await webview.close();
+  } catch (err) {
+    console.error('Failed to close menu:', err);
+  }
+});
+
+await setupSpawnedPersonas();
+listenPersonaLifecycle();

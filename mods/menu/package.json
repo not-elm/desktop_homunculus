@@ -24,6 +24,7 @@
   "dependencies": {
     "@hmcs/sdk": "workspace:*",
     "@hmcs/ui": "workspace:*",
+    "eventsource": "^4.1.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"
   },

@@ -40,39 +40,38 @@
 
 ## Item Ordering
 
-ファイル内のアイテムはトップダウンに配置する。上に高位の部品、下に行くほど低位の詳細。
+Arrange items top-down within a file. High-level components go at the top; lower-level details go toward the bottom.
 
-### ファイル内の配置順序
+### File-level ordering
 
-1. モジュール宣言 (`mod` / `pub mod`)・再エクスポート (`pub use`)
-2. インポート (`use`)
-3. 定数・型定義 (`const`, `static`, `struct`, `enum`, `type`)
-4. エントリポイント（`main`, `Plugin` struct + `impl Plugin`, `api!` マクロ呼び出し）
-5. パブリック関数・メソッド実装 (`pub fn`, `pub async fn`)
-6. クレート内部関数 (`pub(crate) fn`)
-7. プライベート関数・ヘルパー (`fn`)
-8. テスト (`#[cfg(test)]`)
+1. Module declarations (`mod` / `pub mod`) and re-exports (`pub use`)
+2. Imports (`use`)
+3. Constants and type definitions (`const`, `static`, `struct`, `enum`, `type`)
+4. Entry points (`main`, `Plugin` struct + `impl Plugin`, `api!` macro invocations)
+5. Public functions and method implementations (`pub fn`, `pub async fn`)
+6. Crate-internal functions (`pub(crate) fn`)
+7. Private functions and helpers (`fn`)
+8. Tests (`#[cfg(test)]`)
 
-### impl ブロック内の配置順序
+### Ordering within impl blocks
 
-1. `pub` メソッド
-2. `pub(crate)` メソッド
-3. プライベートメソッド
+1. `pub` methods
+2. `pub(crate)` methods
+3. Private methods
 
-### 原則
+### Principles
 
-- **呼び出す側が上、呼ばれる側が下。** `main` → それが呼ぶ関数 → さらにその下位関数。
-- **struct/enum 定義は、それを使う impl より上に置く。** 型定義はファイル上部にまとめる。
-- **Bevy Plugin はエントリポイント。** Plugin struct + `impl Plugin` を上に、`build()` から登録されるシステム関数を下に配置する。
+- **Callers above, callees below.** `main` → functions it calls → their sub-functions.
+- **Place struct/enum definitions above the impl blocks that use them.** Group type definitions near the top of the file.
+- **Bevy Plugins are entry points.** Place Plugin struct + `impl Plugin` above the system functions registered in `build()`.
 
-### 例外
+### Exceptions
 
-- `macro_rules!` によるマクロ定義は配置順序の規定対象外とする。
+- `macro_rules!` macro definitions are exempt from ordering rules.
 
 ## Function Granularity
 
-- Extract functions at a granularity where the calling code reads naturally as prose.
-- 関数本体が自然言語のように読めるよう、意図を名前で表現したヘルパー関数に処理を切り出す。呼び出す側は「何をするか」を述べ、ヘルパーは「どうするか」を担当する。
+- Extract functions at a granularity where the calling code reads naturally as prose. The caller states "what" to do; the helper handles "how".
 - Aim for function bodies under 20 lines. If a function exceeds this, look for a named sub-operation to extract.
 - Inline closures passed to combinators (`map`, `and_then`, `match` arms, etc.) that exceed 3 lines should be extracted as named functions.
 

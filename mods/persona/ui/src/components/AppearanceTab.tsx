@@ -1,9 +1,44 @@
+import type { BehaviorAnimations } from '@persona/shared/behavior-config';
+import { BehaviorSection } from '@persona/shared/components/BehaviorSection';
+
 interface AppearanceTabProps {
   scale: number;
   onScaleChange: (scale: number) => void;
+  behaviorProcess: string | null;
+  behaviorAnimations: BehaviorAnimations;
+  onBehaviorProcessChange: (process: string | null) => void;
+  onBehaviorAnimationsChange: (animations: BehaviorAnimations) => void;
 }
 
-export function AppearanceTab({ scale, onScaleChange }: AppearanceTabProps) {
+export function AppearanceTab({
+  scale,
+  onScaleChange,
+  behaviorProcess,
+  behaviorAnimations,
+  onBehaviorProcessChange,
+  onBehaviorAnimationsChange,
+}: AppearanceTabProps) {
+  return (
+    <>
+      <ScaleSection scale={scale} onScaleChange={onScaleChange} />
+      <div className="settings-separator" />
+      <BehaviorSection
+        process={behaviorProcess}
+        animations={behaviorAnimations}
+        onProcessChange={onBehaviorProcessChange}
+        onAnimationsChange={onBehaviorAnimationsChange}
+      />
+    </>
+  );
+}
+
+function ScaleSection({
+  scale,
+  onScaleChange,
+}: {
+  scale: number;
+  onScaleChange: (scale: number) => void;
+}) {
   return (
     <div className="settings-section">
       <label className="settings-label">
