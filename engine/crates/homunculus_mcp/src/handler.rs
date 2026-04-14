@@ -244,8 +244,7 @@ impl HomunculusMcpHandler {
 fn normalize_mod_name(mod_name: &str) -> String {
     mod_name
         .replace('@', "")
-        .replace('/', "_")
-        .replace('-', "_")
+        .replace(['/', '-'], "_")
 }
 
 /// Generates an MCP tool name from a mod name and method.
@@ -330,19 +329,16 @@ impl ServerHandler for HomunculusMcpHandler {
         }))
     }
 
-    fn call_tool(
+    async fn call_tool(
         &self,
         request: CallToolRequestParams,
         context: RequestContext<RoleServer>,
-    ) -> impl std::future::Future<Output = Result<CallToolResult, rmcp::ErrorData>> + Send + '_
-    {
-        async move {
-            if request.name.starts_with("rpc_") {
-                return self.dispatch_rpc_tool(&request).await;
-            }
-            let tcc = ToolCallContext::new(self, request, context);
-            self.tool_router.call(tcc).await
+    ) -> Result<CallToolResult, rmcp::ErrorData> {
+        if request.name.starts_with("rpc_") {
+            return self.dispatch_rpc_tool(&request).await;
         }
+        let tcc = ToolCallContext::new(self, request, context);
+        self.tool_router.call(tcc).await
     }
 
     fn get_tool(&self, name: &str) -> Option<Tool> {
