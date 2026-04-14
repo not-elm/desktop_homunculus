@@ -9,7 +9,7 @@ publish.workspace = true
 
 [dependencies]
 bevy = { workspace = true }
-homunculus_core = { workspace = true }
+homunculus_core = { workspace = true, features = ["mcp"] }
 homunculus_utils = { workspace = true }
 futures-lite = "2"
 uuid = { workspace = true }

@@ -1,3 +1,4 @@
+#[cfg(feature = "mcp")]
 use crate::rpc_registry::SharedRpcRegistry;
 use bevy::prelude::*;
 pub mod prelude {
@@ -22,6 +23,7 @@ pub(crate) struct CoreResourcesPlugin;
 impl Plugin for CoreResourcesPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<ModMenuMetadataList>();
+        #[cfg(feature = "mcp")]
         app.init_resource::<SharedRpcRegistry>();
     }
 }

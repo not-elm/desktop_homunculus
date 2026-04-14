@@ -49,6 +49,7 @@
 
 import * as http from 'node:http';
 import type { ZodType } from 'zod';
+import { zodToJsonSchema } from 'zod-to-json-schema';
 import { rpc as rpcClient } from './rpc-client';
 
 export type { RpcCallOptions } from './rpc-client';
@@ -68,6 +69,24 @@ export interface RpcMethodDef<I = unknown, O = unknown> {
   input?: ZodType<I>;
   /** Async function called with the validated input. */
   handler: (params: I) => Promise<O>;
+  /** Human-readable title for the MCP tool. */
+  title?: string;
+  /** JSON Schema object defining the structure of the tool's output. */
+  outputSchema?: Record<string, unknown>;
+  /** MCP tool annotations (readOnly, destructive, idempotent, openWorld hints). */
+  annotations?: {
+    title?: string;
+    readOnlyHint?: boolean;
+    destructiveHint?: boolean;
+    idempotentHint?: boolean;
+    openWorldHint?: boolean;
+  };
+  /** MCP tool execution configuration. */
+  execution?: { taskSupport?: 'forbidden' | 'optional' | 'required' };
+  /** MCP tool icons. */
+  icons?: Array<{ src: string; mimeType?: string; sizes?: string[] }>;
+  /** MCP tool metadata. */
+  _meta?: Record<string, unknown>;
 }
 
 /**
@@ -124,8 +143,6 @@ async function readBody(req: http.IncomingMessage): Promise<string> {
   return Buffer.concat(chunks).toString('utf-8');
 }
 
-// --- env reading ---
-
 function readRpcPort(): number {
   const s = process.env.HMCS_RPC_PORT;
   if (!s) throw new Error('HMCS_RPC_PORT environment variable is required');
@@ -147,7 +164,27 @@ function readEnginePort(): number {
   return port;
 }
 
-// --- HTTP server helpers ---
+function convertZodToObjectSchema(schema: ZodType): Record<string, unknown> {
+  const jsonSchema = zodToJsonSchema(schema, { $refStrategy: 'none' });
+  if (
+    typeof jsonSchema !== 'object' ||
+    jsonSchema === null ||
+    (jsonSchema as Record<string, unknown>).type !== 'object'
+  ) {
+    throw new Error(
+      'RPC method input schema must be a root object type. Use z.object({...}) as the top-level schema.',
+    );
+  }
+  return jsonSchema as Record<string, unknown>;
+}
+
+function validateMethodName(name: string): void {
+  if (!name || name.includes('/') || name.includes('\\')) {
+    throw new Error(
+      `Invalid RPC method name: "${name}". Must be non-empty and cannot contain slashes.`,
+    );
+  }
+}
 
 function listenOnPort(server: http.Server, port: number): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -171,8 +208,6 @@ function buildRpcServer(server: http.Server, port: number): RpcServer {
       }),
   };
 }
-
-// --- request handling ---
 
 async function handleRequest(
   methods: Record<string, RpcMethodEntry>,
@@ -267,19 +302,28 @@ async function dispatchMethod(
   }
 }
 
-// --- registration ---
-
 function buildMethodsMeta(
   methods: Record<string, RpcMethodEntry>,
-): Record<string, { description?: string; timeout?: number }> {
-  const meta: Record<string, { description?: string; timeout?: number }> = {};
+): Record<string, Record<string, unknown>> {
+  const meta: Record<string, Record<string, unknown>> = {};
   for (const [name, entry] of Object.entries(methods)) {
-    meta[name] = isRpcMethodDef(entry)
-      ? {
-          ...(entry.description !== undefined ? { description: entry.description } : {}),
-          ...(entry.timeout !== undefined ? { timeout: entry.timeout } : {}),
-        }
-      : {};
+    if (isRpcMethodDef(entry)) {
+      meta[name] = {
+        ...(entry.description !== undefined ? { description: entry.description } : {}),
+        ...(entry.timeout !== undefined ? { timeout: entry.timeout } : {}),
+        ...(entry.input !== undefined
+          ? { inputSchema: convertZodToObjectSchema(entry.input) }
+          : {}),
+        ...(entry.title !== undefined ? { title: entry.title } : {}),
+        ...(entry.outputSchema !== undefined ? { outputSchema: entry.outputSchema } : {}),
+        ...(entry.annotations !== undefined ? { annotations: entry.annotations } : {}),
+        ...(entry.execution !== undefined ? { execution: entry.execution } : {}),
+        ...(entry.icons !== undefined ? { icons: entry.icons } : {}),
+        ...(entry._meta !== undefined ? { _meta: entry._meta } : {}),
+      };
+    } else {
+      meta[name] = {};
+    }
   }
   return meta;
 }
@@ -401,23 +445,47 @@ export namespace rpc {
     timeout?: number;
     input: ZodType<I>;
     handler: (params: I) => Promise<O>;
+    title?: string;
+    outputSchema?: Record<string, unknown>;
+    annotations?: RpcMethodDef['annotations'];
+    execution?: RpcMethodDef['execution'];
+    icons?: RpcMethodDef['icons'];
+    _meta?: Record<string, unknown>;
   }): RpcMethodDef<I, O>;
   export function method<O>(def: {
     description?: string;
     timeout?: number;
     handler: () => Promise<O>;
+    title?: string;
+    outputSchema?: Record<string, unknown>;
+    annotations?: RpcMethodDef['annotations'];
+    execution?: RpcMethodDef['execution'];
+    icons?: RpcMethodDef['icons'];
+    _meta?: Record<string, unknown>;
   }): RpcMethodDef<unknown, O>;
   export function method(def: {
     description?: string;
     timeout?: number;
     input?: ZodType<unknown>;
     handler: (params?: unknown) => Promise<unknown>;
+    title?: string;
+    outputSchema?: Record<string, unknown>;
+    annotations?: RpcMethodDef['annotations'];
+    execution?: RpcMethodDef['execution'];
+    icons?: RpcMethodDef['icons'];
+    _meta?: Record<string, unknown>;
   }): RpcMethodDef {
     return {
       description: def.description,
       timeout: def.timeout,
       input: def.input,
       handler: def.handler,
+      title: def.title,
+      outputSchema: def.outputSchema,
+      annotations: def.annotations,
+      execution: def.execution,
+      icons: def.icons,
+      _meta: def._meta,
     };
   }
 
@@ -460,6 +528,10 @@ export namespace rpc {
     const modName = readModName();
     const enginePort = readEnginePort();
     const { methods } = options;
+
+    for (const name of Object.keys(methods)) {
+      validateMethodName(name);
+    }
 
     const server = http.createServer((req, res) => {
       handleRequest(methods, req, res);

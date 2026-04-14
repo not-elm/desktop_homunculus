@@ -4602,6 +4602,7 @@ dependencies = [
  "bevy",
  "bevy_vrm1",
  "homunculus_utils",
+ "rmcp",
  "serde",
  "serde_json",
  "utoipa",
