@@ -168,3 +168,14 @@ pub struct WebviewPatchRequest {
 pub struct WebviewNavigateRequest {
     pub source: WebviewSource,
 }
+
+/// Navigation history state of a webview.
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct NavigationState {
+    /// Whether the webview can navigate back in history.
+    pub can_go_back: bool,
+    /// Whether the webview can navigate forward in history.
+    pub can_go_forward: bool,
+}
