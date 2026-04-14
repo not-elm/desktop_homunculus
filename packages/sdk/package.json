@@ -56,7 +56,8 @@
   "dependencies": {
     "eventsource": "^4.1.0",
     "ws": "^8.18.0",
-    "zod": "^3.25.76"
+    "zod": "^3.25.76",
+    "zod-to-json-schema": "^3.25.2"
   },
   "devDependencies": {
     "@rollup/plugin-typescript": "^11.1.6",

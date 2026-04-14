@@ -166,6 +166,59 @@ describe('rpc.serve() — env var validation', () => {
   });
 });
 
+describe('rpc.method() — MCP fields', () => {
+  it('preserves MCP fields on the returned def', async () => {
+    const { rpc } = await import('./rpc');
+    const def = rpc.method({
+      description: 'Test',
+      input: z.object({ x: z.number() }),
+      handler: async ({ x }) => x,
+      title: 'My Tool',
+      annotations: { readOnlyHint: true },
+    });
+
+    expect(def.title).toBe('My Tool');
+    expect(def.annotations).toEqual({ readOnlyHint: true });
+  });
+});
+
+describe('rpc.serve() — method name validation', () => {
+  beforeEach(() => {
+    vi.resetModules();
+    process.env.HMCS_RPC_PORT = '9999';
+    process.env.HMCS_MOD_NAME = 'test-mod';
+    process.env.HMCS_PORT = '3100';
+  });
+
+  afterEach(() => {
+    delete process.env.HMCS_RPC_PORT;
+    delete process.env.HMCS_MOD_NAME;
+    delete process.env.HMCS_PORT;
+  });
+
+  it('throws for method names containing slashes', async () => {
+    const { rpc } = await import('./rpc');
+    await expect(
+      rpc.serve({
+        methods: {
+          'invalid/name': async () => ({}),
+        },
+      }),
+    ).rejects.toThrow('Invalid RPC method name');
+  });
+
+  it('throws for empty method names', async () => {
+    const { rpc } = await import('./rpc');
+    await expect(
+      rpc.serve({
+        methods: {
+          '': async () => ({}),
+        },
+      }),
+    ).rejects.toThrow('Invalid RPC method name');
+  });
+});
+
 // ---------------------------------------------------------------------------
 // rpc.call() — browser-safe RPC client (via rpc-client.ts)
 // ---------------------------------------------------------------------------
