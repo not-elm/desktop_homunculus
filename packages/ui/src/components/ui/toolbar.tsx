@@ -37,8 +37,16 @@ const toolbarButtonClass = cn(
   'active:scale-[0.92]',
 );
 
-const disabledButtonClass =
-  'opacity-30 cursor-not-allowed hover:border-primary/15 hover:bg-primary/4 hover:text-primary/35 hover:shadow-none active:scale-100';
+const navButtonClass = cn(
+  'flex size-6 cursor-pointer items-center justify-center rounded-[5px]',
+  'border border-primary/20 bg-primary/6 text-primary/60',
+  'transition-all duration-200',
+  'hover:border-holo-cyan/40 hover:bg-primary/10 hover:text-primary/80 hover:shadow-holo-xs',
+  'active:scale-[0.92]',
+);
+
+const navButtonDisabledClass =
+  'opacity-20 cursor-not-allowed hover:border-primary/20 hover:bg-primary/6 hover:text-primary/60 hover:shadow-none active:scale-100';
 
 /**
  * A draggable toolbar with a title, optional navigation, optional children, and a close button.
@@ -84,24 +92,24 @@ function Toolbar({ title, onClose, children, className, navigation }: ToolbarPro
 
 function NavigationButtons({ navigation }: { navigation: ToolbarNavigationProps }) {
   return (
-    <div className="flex items-center gap-0.5">
+    <div className="mr-2 flex items-center gap-1">
       <button
         type="button"
         onClick={navigation.canGoBack ? navigation.onBack : undefined}
         disabled={!navigation.canGoBack}
         aria-label="Go back"
-        className={cn(toolbarButtonClass, !navigation.canGoBack && disabledButtonClass)}
+        className={cn(navButtonClass, !navigation.canGoBack && navButtonDisabledClass)}
       >
-        <ChevronLeft size={12} />
+        <ChevronLeft size={14} />
       </button>
       <button
         type="button"
         onClick={navigation.canGoForward ? navigation.onForward : undefined}
         disabled={!navigation.canGoForward}
         aria-label="Go forward"
-        className={cn(toolbarButtonClass, !navigation.canGoForward && disabledButtonClass)}
+        className={cn(navButtonClass, !navigation.canGoForward && navButtonDisabledClass)}
       >
-        <ChevronRight size={12} />
+        <ChevronRight size={14} />
       </button>
     </div>
   );
