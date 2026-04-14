@@ -178,3 +178,7 @@ result_large_err = "allow"
 unexpected_cfgs = { level = "warn", check-cfg = [
     'cfg(feature, values("cargo-clippy"))',
 ] }
+
+[patch.crates-io]
+bevy_cef = { path = "/Users/notelm/workspace/bevy_cef" }
+bevy_cef_core = { path = "/Users/notelm/workspace/bevy_cef/crates/bevy_cef_core" }

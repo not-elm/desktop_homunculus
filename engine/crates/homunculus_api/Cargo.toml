@@ -28,6 +28,7 @@ homunculus_power_saver = { workspace = true }
 thiserror = { workspace = true }
 axum = { workspace = true, optional = true }
 bevy_cef = { workspace = true }
+bevy_cef_core = { workspace = true }
 bevy_tweening = "0.15"
 homunculus_utils = { workspace = true }
 tokio = { workspace = true }
