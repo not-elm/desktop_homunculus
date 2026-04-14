@@ -2713,7 +2713,6 @@ h3.hud-md-heading {
 .uv-main {
   flex: 1;
   min-width: 0;
-  max-width: 510px;
   display: flex;
   flex-direction: column;
   min-height: 0;
