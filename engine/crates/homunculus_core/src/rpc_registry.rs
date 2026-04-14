@@ -1,7 +1,6 @@
 //! Runtime registry for MOD service RPC endpoints.
 
 use bevy::prelude::*;
-#[cfg(feature = "mcp")]
 use rmcp::model::{Icon, Meta, ToolAnnotations, ToolExecution};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -37,26 +36,20 @@ pub struct RpcMethodMeta {
     pub description: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub timeout: Option<u64>,
-    #[cfg(feature = "mcp")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
-    #[cfg(feature = "mcp")]
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "openapi", schema(value_type = Object))]
     pub input_schema: Option<serde_json::Map<String, serde_json::Value>>,
-    #[cfg(feature = "mcp")]
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "openapi", schema(value_type = Object))]
     pub output_schema: Option<serde_json::Map<String, serde_json::Value>>,
-    #[cfg(feature = "mcp")]
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "openapi", schema(value_type = Object))]
     pub annotations: Option<ToolAnnotations>,
-    #[cfg(feature = "mcp")]
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "openapi", schema(value_type = Object))]
     pub execution: Option<ToolExecution>,
-    #[cfg(feature = "mcp")]
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "openapi", schema(value_type = Vec<Object>))]
     pub icons: Option<Vec<Icon>>,
@@ -185,7 +178,6 @@ mod tests {
         assert!(meta.timeout.is_none());
     }
 
-    #[cfg(feature = "mcp")]
     #[test]
     fn method_meta_serializes_camel_case() {
         let mut input_schema = serde_json::Map::new();
@@ -209,7 +201,6 @@ mod tests {
         assert!(json.get("annotations").is_none());
     }
 
-    #[cfg(feature = "mcp")]
     #[test]
     fn method_meta_deserializes_with_unknown_fields() {
         let json = serde_json::json!({

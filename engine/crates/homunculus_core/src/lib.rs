@@ -73,6 +73,7 @@ mod error;
 mod events;
 mod render_layers;
 mod resources;
+#[cfg(feature = "mcp")]
 pub mod rpc_registry;
 mod schema;
 mod system_param;
@@ -80,13 +81,14 @@ mod system_set;
 pub mod texture;
 
 pub mod prelude {
+    #[cfg(feature = "mcp")]
+    pub use crate::rpc_registry::*;
     pub use crate::{
         HomunculusCorePlugin,
         components::*,
         error::*,
         events::prelude::*,
         resources::prelude::*,
-        rpc_registry::*,
         schema::prelude::*,
         system_param::prelude::*,
         system_set::HomunculusSystemSet,
