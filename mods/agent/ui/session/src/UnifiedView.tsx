@@ -10,7 +10,7 @@ import { TextInput } from './components/TextInput';
 import type { AgentState } from './hooks/useAgentSession';
 import { useAgentSession } from './hooks/useAgentSession';
 import { useCurrentBranch } from './hooks/useCurrentBranch';
-import { useWebviewMode } from './hooks/useWebviewMode';
+import { useWebviewMode, VIEWPORT_WIDTH_EXPANDED, VIEWPORT_WIDTH_COLLAPSED } from './hooks/useWebviewMode';
 import { SettingsFormView } from './settings/components/SettingsFormView';
 import { Sidebar } from './settings/components/Sidebar';
 import type { PttKey, WorkspaceSelection } from './settings/hooks/useSettingsDraft';
@@ -24,7 +24,7 @@ export function UnifiedView() {
   const isActive = session.state !== 'idle';
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [sidebarWidth, setSidebarWidth] = useState(270);
+  const [sidebarWidth, setSidebarWidth] = useState(200);
   const [resizing, setResizing] = useState(false);
   const [bodyContent, setBodyContent] = useState<BodyContent>({ kind: 'sessionLog' });
   const [activeCategory, setActiveCategory] = useState<SettingsCategory | null>(null);
@@ -46,6 +46,7 @@ export function UnifiedView() {
   useEffect(() => {
     if (isActive && !prevActive) {
       setSidebarOpen(false);
+      setSidebarWidth(200);
       setBodyContent({ kind: 'sessionLog' });
       setActiveCategory(null);
     }
@@ -220,7 +221,7 @@ export function UnifiedView() {
     function onMouseMove(ev: MouseEvent) {
       if (!dragRef.current) return;
       const delta = ev.clientX - dragRef.current.startX;
-      const newWidth = Math.max(200, Math.min(400, dragRef.current.startWidth + delta));
+      const newWidth = Math.max(160, Math.min(280, dragRef.current.startWidth + delta));
       setSidebarWidth(newWidth);
     }
 
@@ -247,7 +248,7 @@ export function UnifiedView() {
       data-resizing={resizing || undefined}
       data-minimized={minimized || undefined}
       data-mounted={mounted || undefined}
-      style={minimized ? undefined : { width: sidebarOpen ? sidebarWidth + 400 : 400 }}
+      style={minimized ? undefined : { width: sidebarOpen ? VIEWPORT_WIDTH_EXPANDED : VIEWPORT_WIDTH_COLLAPSED }}
       onClick={minimized ? handleRestore : undefined}
       onKeyDown={
         minimized
