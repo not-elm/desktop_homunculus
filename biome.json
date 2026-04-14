@@ -11,6 +11,11 @@
     ],
     "ignoreUnknown": true
   },
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
   "formatter": {
     "enabled": true,
     "indentStyle": "space",
