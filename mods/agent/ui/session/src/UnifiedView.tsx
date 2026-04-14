@@ -24,7 +24,7 @@ export function UnifiedView() {
   const isActive = session.state !== 'idle';
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [sidebarWidth, setSidebarWidth] = useState(320);
+  const [sidebarWidth, setSidebarWidth] = useState(240);
   const [resizing, setResizing] = useState(false);
   const [bodyContent, setBodyContent] = useState<BodyContent>({ kind: 'sessionLog' });
   const [activeCategory, setActiveCategory] = useState<SettingsCategory | null>(null);
@@ -46,7 +46,7 @@ export function UnifiedView() {
   useEffect(() => {
     if (isActive && !prevActive) {
       setSidebarOpen(false);
-      setSidebarWidth(320);
+      setSidebarWidth(240);
       setBodyContent({ kind: 'sessionLog' });
       setActiveCategory(null);
     }
@@ -221,7 +221,7 @@ export function UnifiedView() {
     function onMouseMove(ev: MouseEvent) {
       if (!dragRef.current) return;
       const delta = ev.clientX - dragRef.current.startX;
-      const newWidth = Math.max(260, Math.min(450, dragRef.current.startWidth + delta));
+      const newWidth = Math.max(190, Math.min(340, dragRef.current.startWidth + delta));
       setSidebarWidth(newWidth);
     }
 
