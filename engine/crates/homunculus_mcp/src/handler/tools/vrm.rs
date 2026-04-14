@@ -161,7 +161,11 @@ impl HomunculusMcpHandler {
     #[tool(
         name = "select_character",
         description = "Switch the active character by display name (or persona ID). All subsequent tools will target this character. Use get_character_snapshot to see available characters.",
-        annotations(destructive_hint = false, idempotent_hint = true, open_world_hint = false)
+        annotations(
+            destructive_hint = false,
+            idempotent_hint = true,
+            open_world_hint = false
+        )
     )]
     async fn select_character(&self, params: Parameters<SelectCharacterParams>) -> String {
         let name = &params.0.name;
@@ -213,7 +217,11 @@ impl HomunculusMcpHandler {
     #[tool(
         name = "set_expression",
         description = "Set facial expression weights on the active character. Common expressions: happy, sad, angry, surprised, relaxed, neutral, aa, ih, ou, ee, oh, blink. Weights are 0.0-1.0. Modes: \"modify\" (default, partial update), \"set\" (replace all), \"clear\" (reset to animation control).",
-        annotations(destructive_hint = false, idempotent_hint = true, open_world_hint = false)
+        annotations(
+            destructive_hint = false,
+            idempotent_hint = true,
+            open_world_hint = false
+        )
     )]
     async fn set_expression(&self, params: Parameters<SetExpressionParams>) -> String {
         let entity = match self.resolve_character().await {
@@ -251,7 +259,11 @@ impl HomunculusMcpHandler {
     #[tool(
         name = "set_persona",
         description = "Update the active character's persona profile and/or personality text. This affects how the character is perceived in AI conversations.",
-        annotations(destructive_hint = false, idempotent_hint = true, open_world_hint = false)
+        annotations(
+            destructive_hint = false,
+            idempotent_hint = true,
+            open_world_hint = false
+        )
     )]
     async fn set_persona(&self, params: Parameters<SetPersonaParams>) -> String {
         let persona_id = match self.active_persona_id() {
@@ -279,7 +291,11 @@ impl HomunculusMcpHandler {
     #[tool(
         name = "set_look_at",
         description = "Control where the active character looks. Use \"cursor\" to follow the mouse cursor, or \"none\" to disable look-at (character looks forward).",
-        annotations(destructive_hint = false, idempotent_hint = true, open_world_hint = false)
+        annotations(
+            destructive_hint = false,
+            idempotent_hint = true,
+            open_world_hint = false
+        )
     )]
     async fn set_look_at(&self, params: Parameters<SetLookAtParams>) -> String {
         let entity = match self.resolve_character().await {

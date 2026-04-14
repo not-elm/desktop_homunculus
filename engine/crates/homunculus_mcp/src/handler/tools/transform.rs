@@ -113,7 +113,11 @@ impl HomunculusMcpHandler {
     #[tool(
         name = "move_character",
         description = "Move the active character to a screen position. Coordinates are in viewport pixels (0,0 = top-left of primary monitor).",
-        annotations(destructive_hint = false, idempotent_hint = true, open_world_hint = false)
+        annotations(
+            destructive_hint = false,
+            idempotent_hint = true,
+            open_world_hint = false
+        )
     )]
     async fn move_character(&self, params: Parameters<MoveCharacterParams>) -> String {
         let args = params.0;

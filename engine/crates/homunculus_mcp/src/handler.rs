@@ -735,7 +735,10 @@ mod tests {
             .get_tool("remove_character")
             .expect("remove_character should exist");
         let ann = tool.annotations.expect("should have annotations");
-        assert_eq!(ann.destructive_hint, None, "destructive_hint should use default (true)");
+        assert_eq!(
+            ann.destructive_hint, None,
+            "destructive_hint should use default (true)"
+        );
         assert_eq!(ann.idempotent_hint, Some(true));
         assert_eq!(ann.open_world_hint, Some(false));
     }
