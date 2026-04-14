@@ -922,7 +922,7 @@ dependencies = [
 
 [[package]]
 name = "bevy_cef"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "async-channel",
  "bevy",
@@ -937,7 +937,7 @@ dependencies = [
 
 [[package]]
 name = "bevy_cef_core"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "async-channel",
  "bevy",
