@@ -143,6 +143,18 @@ fn main() {
                 ));
             },
         )
+        .add_observer(
+            |trigger: On<AddressChanged>, mut commands: Commands| {
+                commands.trigger(HostEmitEvent::new(
+                    trigger.webview,
+                    "navigation-state-changed",
+                    &serde_json::json!({
+                        "canGoBack": trigger.can_go_back,
+                        "canGoForward": trigger.can_go_forward,
+                    }),
+                ));
+            },
+        )
         .add_systems(
             Update,
             (

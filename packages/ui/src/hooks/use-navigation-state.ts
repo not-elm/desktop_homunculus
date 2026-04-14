@@ -56,16 +56,20 @@ export function useNavigationState(
   useEffect(() => {
     if (!webview) return;
 
-    // Register push listener FIRST to avoid race condition with initial fetch
+    // Register push listeners FIRST to avoid race condition with initial fetch
     let pushReceived = false;
+    const updateNavState = (payload: string) => {
+      try {
+        const data = JSON.parse(payload);
+        setState({ canGoBack: data.canGoBack, canGoForward: data.canGoForward });
+        pushReceived = true;
+      } catch { /* ignore malformed payload */ }
+    };
     if (window.cef?.listen) {
-      window.cef.listen('loading-state-changed', (payload: string) => {
-        try {
-          const data = JSON.parse(payload);
-          setState({ canGoBack: data.canGoBack, canGoForward: data.canGoForward });
-          pushReceived = true;
-        } catch { /* ignore malformed payload */ }
-      });
+      // Cross-document navigations (page loads)
+      window.cef.listen('loading-state-changed', updateNavState);
+      // Same-document navigations (hash changes, pushState)
+      window.cef.listen('navigation-state-changed', updateNavState);
     }
 
     // Fetch initial state (skip if push already arrived)
