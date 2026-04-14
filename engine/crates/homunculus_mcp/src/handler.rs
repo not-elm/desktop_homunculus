@@ -704,4 +704,39 @@ mod tests {
         assert!(handler.get_tool("rpc_nonexistent_method").is_none());
         assert!(handler.get_tool("totally_unknown").is_none());
     }
+
+    #[test]
+    fn get_character_snapshot_has_read_only_annotation() {
+        let handler = test_handler();
+        let tool = handler
+            .get_tool("get_character_snapshot")
+            .expect("get_character_snapshot should exist");
+        let ann = tool.annotations.expect("should have annotations");
+        assert_eq!(ann.read_only_hint, Some(true));
+        assert_eq!(ann.open_world_hint, Some(false));
+    }
+
+    #[test]
+    fn execute_command_has_no_annotations() {
+        let handler = test_handler();
+        let tool = handler
+            .get_tool("execute_command")
+            .expect("execute_command should exist");
+        assert!(
+            tool.annotations.is_none(),
+            "execute_command should have no annotations (all defaults)"
+        );
+    }
+
+    #[test]
+    fn remove_character_is_destructive_and_idempotent() {
+        let handler = test_handler();
+        let tool = handler
+            .get_tool("remove_character")
+            .expect("remove_character should exist");
+        let ann = tool.annotations.expect("should have annotations");
+        assert_eq!(ann.destructive_hint, None, "destructive_hint should use default (true)");
+        assert_eq!(ann.idempotent_hint, Some(true));
+        assert_eq!(ann.open_world_hint, Some(false));
+    }
 }

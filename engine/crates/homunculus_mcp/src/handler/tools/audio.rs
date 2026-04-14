@@ -41,7 +41,8 @@ impl HomunculusMcpHandler {
     /// Play a sound effect.
     #[tool(
         name = "play_sound",
-        description = "Play a sound effect. Use a MOD asset ID (e.g., 'se:open') or a preset name."
+        description = "Play a sound effect. Use a MOD asset ID (e.g., 'se:open') or a preset name.",
+        annotations(destructive_hint = false, open_world_hint = false)
     )]
     async fn play_sound(&self, params: Parameters<PlaySoundParams>) -> String {
         let args = params.0;
@@ -66,7 +67,8 @@ impl HomunculusMcpHandler {
     /// Control background music playback.
     #[tool(
         name = "control_bgm",
-        description = "Control background music playback. Actions: play (requires asset), stop, pause, resume, status."
+        description = "Control background music playback. Actions: play (requires asset), stop, pause, resume, status.",
+        annotations(destructive_hint = false, open_world_hint = false)
     )]
     async fn control_bgm(&self, params: Parameters<ControlBgmParams>) -> String {
         let args = params.0;

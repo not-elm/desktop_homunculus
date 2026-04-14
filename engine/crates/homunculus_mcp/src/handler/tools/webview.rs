@@ -113,7 +113,8 @@ impl HomunculusMcpHandler {
     /// Open a webview panel displaying HTML content, a URL, or a local mod asset near the active character.
     #[tool(
         name = "open_webview",
-        description = "Open a webview panel. Provide exactly one of: 'html' (inline HTML), 'url' (a URL to load), or 'asset_id' (a local mod asset, e.g. 'mod-name:asset-id'). Position with 'translationX', 'translationY', 'translationZ'. Optionally provide 'characterName' to link the webview to a specific character (it will follow the character's head position). Returns the webview entity ID. Use close_webview to close it."
+        description = "Open a webview panel. Provide exactly one of: 'html' (inline HTML), 'url' (a URL to load), or 'asset_id' (a local mod asset, e.g. 'mod-name:asset-id'). Position with 'translationX', 'translationY', 'translationZ'. Optionally provide 'characterName' to link the webview to a specific character (it will follow the character's head position). Returns the webview entity ID. Use close_webview to close it.",
+        annotations(destructive_hint = false)
     )]
     async fn open_webview(&self, params: Parameters<OpenWebviewParams>) -> String {
         let args = params.0;
@@ -184,7 +185,8 @@ impl HomunculusMcpHandler {
     /// Close a webview panel.
     #[tool(
         name = "close_webview",
-        description = "Close a webview panel. If no entity ID is given, closes the most recently opened webview. Use all=true to close all webviews."
+        description = "Close a webview panel. If no entity ID is given, closes the most recently opened webview. Use all=true to close all webviews.",
+        annotations(idempotent_hint = true, open_world_hint = false)
     )]
     async fn close_webview(&self, params: Parameters<CloseWebviewParams>) -> String {
         let args = params.0;
@@ -200,7 +202,8 @@ impl HomunculusMcpHandler {
     /// Navigate an existing webview to new content.
     #[tool(
         name = "navigate_webview",
-        description = "Navigate an existing webview to new content without closing and reopening it. Provide exactly one of: 'html' (inline HTML), 'url' (a URL to load), or 'asset_id' (a local mod asset, e.g. 'mod-name:asset-id'). If no entity is specified, navigates the most recently opened webview."
+        description = "Navigate an existing webview to new content without closing and reopening it. Provide exactly one of: 'html' (inline HTML), 'url' (a URL to load), or 'asset_id' (a local mod asset, e.g. 'mod-name:asset-id'). If no entity is specified, navigates the most recently opened webview.",
+        annotations(destructive_hint = false, idempotent_hint = true)
     )]
     async fn navigate_webview(&self, params: Parameters<NavigateWebviewParams>) -> String {
         let args = params.0;

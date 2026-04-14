@@ -80,7 +80,8 @@ impl HomunculusMcpHandler {
     /// Get the current state of all desktop characters.
     #[tool(
         name = "get_character_snapshot",
-        description = "Get the current state of all desktop characters including name, persona ID, position, active expressions, playing animations, persona, and lookAt state."
+        description = "Get the current state of all desktop characters including name, persona ID, position, active expressions, playing animations, persona, and lookAt state.",
+        annotations(read_only_hint = true, open_world_hint = false)
     )]
     async fn get_character_snapshot(&self) -> String {
         match self.vrm_api.snapshot().await {
@@ -101,7 +102,8 @@ impl HomunculusMcpHandler {
     /// Spawn a new VRM character on the desktop.
     #[tool(
         name = "spawn_character",
-        description = "Spawn a new VRM character on the desktop. Creates a persona and attaches a VRM model. Use the homunculus://assets resource to discover available VRM model assets. Returns the persona ID."
+        description = "Spawn a new VRM character on the desktop. Creates a persona and attaches a VRM model. Use the homunculus://assets resource to discover available VRM model assets. Returns the persona ID.",
+        annotations(destructive_hint = false, open_world_hint = false)
     )]
     async fn spawn_character(&self, params: Parameters<SpawnCharacterParams>) -> String {
         let args = params.0;
@@ -158,7 +160,8 @@ impl HomunculusMcpHandler {
     /// Switch the active character by name.
     #[tool(
         name = "select_character",
-        description = "Switch the active character by display name (or persona ID). All subsequent tools will target this character. Use get_character_snapshot to see available characters."
+        description = "Switch the active character by display name (or persona ID). All subsequent tools will target this character. Use get_character_snapshot to see available characters.",
+        annotations(destructive_hint = false, idempotent_hint = true, open_world_hint = false)
     )]
     async fn select_character(&self, params: Parameters<SelectCharacterParams>) -> String {
         let name = &params.0.name;
@@ -175,7 +178,8 @@ impl HomunculusMcpHandler {
     /// Remove a character (persona) from the desktop.
     #[tool(
         name = "remove_character",
-        description = "Remove a character (persona + attached VRM) from the desktop. If no name is given, removes the active character."
+        description = "Remove a character (persona + attached VRM) from the desktop. If no name is given, removes the active character.",
+        annotations(idempotent_hint = true, open_world_hint = false)
     )]
     async fn remove_character(&self, params: Parameters<RemoveCharacterParams>) -> String {
         let persona_id = if let Some(name) = &params.0.name {
@@ -208,7 +212,8 @@ impl HomunculusMcpHandler {
     /// Set facial expression weights on the active character.
     #[tool(
         name = "set_expression",
-        description = "Set facial expression weights on the active character. Common expressions: happy, sad, angry, surprised, relaxed, neutral, aa, ih, ou, ee, oh, blink. Weights are 0.0-1.0. Modes: \"modify\" (default, partial update), \"set\" (replace all), \"clear\" (reset to animation control)."
+        description = "Set facial expression weights on the active character. Common expressions: happy, sad, angry, surprised, relaxed, neutral, aa, ih, ou, ee, oh, blink. Weights are 0.0-1.0. Modes: \"modify\" (default, partial update), \"set\" (replace all), \"clear\" (reset to animation control).",
+        annotations(destructive_hint = false, idempotent_hint = true, open_world_hint = false)
     )]
     async fn set_expression(&self, params: Parameters<SetExpressionParams>) -> String {
         let entity = match self.resolve_character().await {
@@ -245,7 +250,8 @@ impl HomunculusMcpHandler {
     /// Update the active character's persona profile and personality.
     #[tool(
         name = "set_persona",
-        description = "Update the active character's persona profile and/or personality text. This affects how the character is perceived in AI conversations."
+        description = "Update the active character's persona profile and/or personality text. This affects how the character is perceived in AI conversations.",
+        annotations(destructive_hint = false, idempotent_hint = true, open_world_hint = false)
     )]
     async fn set_persona(&self, params: Parameters<SetPersonaParams>) -> String {
         let persona_id = match self.active_persona_id() {
@@ -272,7 +278,8 @@ impl HomunculusMcpHandler {
     /// Control where the active character looks.
     #[tool(
         name = "set_look_at",
-        description = "Control where the active character looks. Use \"cursor\" to follow the mouse cursor, or \"none\" to disable look-at (character looks forward)."
+        description = "Control where the active character looks. Use \"cursor\" to follow the mouse cursor, or \"none\" to disable look-at (character looks forward).",
+        annotations(destructive_hint = false, idempotent_hint = true, open_world_hint = false)
     )]
     async fn set_look_at(&self, params: Parameters<SetLookAtParams>) -> String {
         let entity = match self.resolve_character().await {

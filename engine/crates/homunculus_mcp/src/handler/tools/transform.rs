@@ -112,7 +112,8 @@ impl HomunculusMcpHandler {
     /// Move the active character to a screen position.
     #[tool(
         name = "move_character",
-        description = "Move the active character to a screen position. Coordinates are in viewport pixels (0,0 = top-left of primary monitor)."
+        description = "Move the active character to a screen position. Coordinates are in viewport pixels (0,0 = top-left of primary monitor).",
+        annotations(destructive_hint = false, idempotent_hint = true, open_world_hint = false)
     )]
     async fn move_character(&self, params: Parameters<MoveCharacterParams>) -> String {
         let args = params.0;
@@ -135,7 +136,8 @@ impl HomunculusMcpHandler {
     /// Smoothly animate an entity's position to a target value over time.
     #[tool(
         name = "tween_position",
-        description = "Smoothly animate the active character's position to a screen position over time. Coordinates are in viewport pixels (0,0 = top-left of primary monitor). Use this for smooth character movement and animations."
+        description = "Smoothly animate the active character's position to a screen position over time. Coordinates are in viewport pixels (0,0 = top-left of primary monitor). Use this for smooth character movement and animations.",
+        annotations(destructive_hint = false, open_world_hint = false)
     )]
     async fn tween_position(&self, params: Parameters<TweenPositionParams>) -> String {
         let args = params.0;
@@ -166,7 +168,8 @@ impl HomunculusMcpHandler {
     /// Smoothly animate an entity's rotation to a target value over time.
     #[tool(
         name = "tween_rotation",
-        description = "Smoothly animate an entity's rotation to a target value over time. Rotation is specified as a quaternion (x, y, z, w)."
+        description = "Smoothly animate an entity's rotation to a target value over time. Rotation is specified as a quaternion (x, y, z, w).",
+        annotations(destructive_hint = false, open_world_hint = false)
     )]
     async fn tween_rotation(&self, params: Parameters<TweenRotationParams>) -> String {
         let args = params.0;
@@ -200,7 +203,8 @@ impl HomunculusMcpHandler {
     /// Smoothly animate an entity's scale to a target value over time.
     #[tool(
         name = "tween_scale",
-        description = "Smoothly animate an entity's scale to a target value over time. Use this for grow/shrink effects and size animations."
+        description = "Smoothly animate an entity's scale to a target value over time. Use this for grow/shrink effects and size animations.",
+        annotations(destructive_hint = false, open_world_hint = false)
     )]
     async fn tween_scale(&self, params: Parameters<TweenScaleParams>) -> String {
         let args = params.0;
@@ -227,7 +231,8 @@ impl HomunculusMcpHandler {
     /// Spin the active character around a world-space axis by a given angle.
     #[tool(
         name = "spin_character",
-        description = "Spin the active character around an axis by a given angle. Supports full rotations (360°+). The rotation is additive, preserving the character's current orientation. Use this instead of tween_rotation when you need full spins."
+        description = "Spin the active character around an axis by a given angle. Supports full rotations (360°+). The rotation is additive, preserving the character's current orientation. Use this instead of tween_rotation when you need full spins.",
+        annotations(destructive_hint = false, open_world_hint = false)
     )]
     async fn spin_character(&self, params: Parameters<SpinCharacterParams>) -> String {
         let args = params.0;
