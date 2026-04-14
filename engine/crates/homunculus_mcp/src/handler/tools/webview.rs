@@ -162,6 +162,7 @@ impl HomunculusMcpHandler {
                 None
             },
             linked_persona,
+            resizable: None,
         };
 
         match self.webview_api.open(options).await {

@@ -18,7 +18,8 @@ try {
       source: webviewSource.local('persona:management'),
       size: [1.4, 0.9],
       viewportSize: [1200, 700],
-      transform: { translation: [1.3, 0.8, WebviewLayer.FOREGROUND] },
+      transform: { translation: [0, 0, WebviewLayer.FOREGROUND] },
+      resizable: {},
     });
     await audio.se.play('se:open');
     output.succeed();
