@@ -10,7 +10,7 @@ import { TextInput } from './components/TextInput';
 import type { AgentState } from './hooks/useAgentSession';
 import { useAgentSession } from './hooks/useAgentSession';
 import { useCurrentBranch } from './hooks/useCurrentBranch';
-import { useWebviewMode, VIEWPORT_WIDTH_EXPANDED, VIEWPORT_WIDTH_COLLAPSED } from './hooks/useWebviewMode';
+import { useWebviewMode, VIEWPORT_WIDTH_EXPANDED } from './hooks/useWebviewMode';
 import { SettingsFormView } from './settings/components/SettingsFormView';
 import { Sidebar } from './settings/components/Sidebar';
 import type { PttKey, WorkspaceSelection } from './settings/hooks/useSettingsDraft';
@@ -248,7 +248,7 @@ export function UnifiedView() {
       data-resizing={resizing || undefined}
       data-minimized={minimized || undefined}
       data-mounted={mounted || undefined}
-      style={minimized ? undefined : { width: sidebarOpen ? VIEWPORT_WIDTH_EXPANDED : VIEWPORT_WIDTH_COLLAPSED }}
+      style={minimized ? undefined : { width: VIEWPORT_WIDTH_EXPANDED }}
       onClick={minimized ? handleRestore : undefined}
       onKeyDown={
         minimized
