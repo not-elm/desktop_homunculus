@@ -30,6 +30,7 @@ bevy_vrm1 = { workspace = true }
 base64 = { workspace = true }
 reqwest = { workspace = true }
 serde = { workspace = true }
+serde_json = { workspace = true }
 homunculus_drag = { workspace = true }
 homunculus_core = { workspace = true }
 homunculus_windows = { workspace = true }
@@ -178,3 +179,7 @@ result_large_err = "allow"
 unexpected_cfgs = { level = "warn", check-cfg = [
     'cfg(feature, values("cargo-clippy"))',
 ] }
+
+[patch.crates-io]
+bevy_cef = { path = "../../../../bevy_cef" }
+bevy_cef_core = { path = "../../../../bevy_cef/crates/bevy_cef_core" }
