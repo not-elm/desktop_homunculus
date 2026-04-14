@@ -472,6 +472,9 @@ importers:
 
   packages/ui:
     dependencies:
+      '@hmcs/sdk':
+        specifier: workspace:*
+        version: link:../sdk
       '@hookform/resolvers':
         specifier: ^5.2.2
         version: 5.2.2(react-hook-form@7.71.2(react@19.2.4))
