@@ -220,10 +220,7 @@ impl HomunculusMcpHandler {
                 }
             }
             found.ok_or_else(|| {
-                rmcp::ErrorData::invalid_params(
-                    format!("Unknown RPC tool: {}", request.name),
-                    None,
-                )
+                rmcp::ErrorData::invalid_params(format!("Unknown RPC tool: {}", request.name), None)
             })?
         };
 
@@ -232,8 +229,7 @@ impl HomunculusMcpHandler {
             .as_ref()
             .map(|args| serde_json::Value::Object(args.clone()));
 
-        let text =
-            tools::send_rpc_call(port, &mod_name, &method, timeout_ms, body.as_ref()).await;
+        let text = tools::send_rpc_call(port, &mod_name, &method, timeout_ms, body.as_ref()).await;
         Ok(CallToolResult::success(vec![Content::text(text)]))
     }
 }
@@ -242,9 +238,7 @@ impl HomunculusMcpHandler {
 ///
 /// Strips `@`, replaces `/` and `-` with `_`.
 fn normalize_mod_name(mod_name: &str) -> String {
-    mod_name
-        .replace('@', "")
-        .replace(['/', '-'], "_")
+    mod_name.replace('@', "").replace(['/', '-'], "_")
 }
 
 /// Generates an MCP tool name from a mod name and method.
