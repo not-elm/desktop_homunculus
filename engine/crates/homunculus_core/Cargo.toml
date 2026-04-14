@@ -16,10 +16,12 @@ bevy_vrm1 = { workspace = true }
 anyhow = { workspace = true }
 async-broadcast = { workspace = true }
 utoipa = { workspace = true, optional = true }
+rmcp = { workspace = true, optional = true }
 
 [features]
 default = []
 openapi = ["dep:utoipa"]
+mcp = ["dep:rmcp"]
 
 [lints]
 workspace = true
