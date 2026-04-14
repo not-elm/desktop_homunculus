@@ -1,6 +1,8 @@
 //! Runtime registry for MOD service RPC endpoints.
 
 use bevy::prelude::*;
+#[cfg(feature = "mcp")]
+use rmcp::model::{Icon, Meta, ToolAnnotations, ToolExecution};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
@@ -24,6 +26,9 @@ pub struct RpcRegistration {
 }
 
 /// Metadata for a single RPC method.
+///
+/// When the `mcp` feature is enabled, additional fields are available
+/// for full MCP tool compatibility (annotations, schemas, icons, etc.).
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[serde(rename_all = "camelCase")]
@@ -32,6 +37,33 @@ pub struct RpcMethodMeta {
     pub description: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub timeout: Option<u64>,
+    #[cfg(feature = "mcp")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub title: Option<String>,
+    #[cfg(feature = "mcp")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "openapi", schema(value_type = Object))]
+    pub input_schema: Option<serde_json::Map<String, serde_json::Value>>,
+    #[cfg(feature = "mcp")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "openapi", schema(value_type = Object))]
+    pub output_schema: Option<serde_json::Map<String, serde_json::Value>>,
+    #[cfg(feature = "mcp")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "openapi", schema(value_type = Object))]
+    pub annotations: Option<ToolAnnotations>,
+    #[cfg(feature = "mcp")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "openapi", schema(value_type = Object))]
+    pub execution: Option<ToolExecution>,
+    #[cfg(feature = "mcp")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "openapi", schema(value_type = Vec<Object>))]
+    pub icons: Option<Vec<Icon>>,
+    #[cfg(feature = "mcp")]
+    #[serde(rename = "_meta", skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "openapi", schema(value_type = Object))]
+    pub meta: Option<Meta>,
 }
 
 /// Shared reference to the RPC registry, usable across async boundaries.
@@ -95,6 +127,7 @@ mod tests {
             RpcMethodMeta {
                 description: Some("Display visual".to_string()),
                 timeout: Some(15000),
+                ..Default::default()
             },
         );
         reg.register("visual".to_string(), 54321, methods);
@@ -143,5 +176,49 @@ mod tests {
         reg.register("a".to_string(), 1000, HashMap::new());
         reg.register("b".to_string(), 2000, HashMap::new());
         assert_eq!(reg.all().len(), 2);
+    }
+
+    #[test]
+    fn method_meta_default_has_none_fields() {
+        let meta = RpcMethodMeta::default();
+        assert!(meta.description.is_none());
+        assert!(meta.timeout.is_none());
+    }
+
+    #[cfg(feature = "mcp")]
+    #[test]
+    fn method_meta_serializes_camel_case() {
+        let mut input_schema = serde_json::Map::new();
+        input_schema.insert(
+            "type".to_string(),
+            serde_json::Value::String("object".to_string()),
+        );
+        let meta = RpcMethodMeta {
+            description: Some("test".to_string()),
+            timeout: Some(5000),
+            title: Some("Test Tool".to_string()),
+            input_schema: Some(input_schema),
+            ..Default::default()
+        };
+        let json = serde_json::to_value(&meta).unwrap();
+        assert_eq!(json["description"], "test");
+        assert_eq!(json["timeout"], 5000);
+        assert_eq!(json["title"], "Test Tool");
+        assert_eq!(json["inputSchema"]["type"], "object");
+        assert!(json.get("outputSchema").is_none());
+        assert!(json.get("annotations").is_none());
+    }
+
+    #[cfg(feature = "mcp")]
+    #[test]
+    fn method_meta_deserializes_with_unknown_fields() {
+        let json = serde_json::json!({
+            "description": "hello",
+            "timeout": 3000
+        });
+        let meta: RpcMethodMeta = serde_json::from_value(json).unwrap();
+        assert_eq!(meta.description.as_deref(), Some("hello"));
+        assert_eq!(meta.timeout, Some(3000));
+        assert!(meta.input_schema.is_none());
     }
 }
