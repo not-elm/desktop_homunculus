@@ -130,6 +130,19 @@ fn main() {
             },
             CefFetchPlugin,
         ))
+        .add_observer(
+            |trigger: On<LoadingStateChanged>, mut commands: Commands| {
+                commands.trigger(HostEmitEvent::new(
+                    trigger.webview,
+                    "loading-state-changed",
+                    &serde_json::json!({
+                        "isLoading": trigger.is_loading,
+                        "canGoBack": trigger.can_go_back,
+                        "canGoForward": trigger.can_go_forward,
+                    }),
+                ));
+            },
+        )
         .add_systems(
             Update,
             (
