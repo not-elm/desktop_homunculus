@@ -1900,7 +1900,6 @@ h3.hud-md-heading {
 /* ━━ Settings Chrome (.stg-*) ━━ */
 
 .stg-chrome {
-  width: 800px;
   height: var(--hud-settings-height);
   display: flex;
   flex-direction: column;
