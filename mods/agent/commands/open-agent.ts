@@ -11,8 +11,8 @@ try {
 
   await Webview.open({
     source: webviewSource.local('agent:session-ui'),
-    size: [1.24, 1.0],
-    viewportSize: [620, 500],
+    size: [1.25, 1.0],
+    viewportSize: [1000, 800],
     transform: { translation: [1.7, 0.8, WebviewLayer.UI] },
     linkedPersona: personaId,
   });

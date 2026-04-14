@@ -3,11 +3,11 @@ import { useEffect, useRef } from 'react';
 
 export type WebviewMode = 'expanded' | 'collapsed';
 
-const PX_PER_UNIT = 500;
-const VIEWPORT_HEIGHT = 500;
+const PX_PER_UNIT = 800;
+const VIEWPORT_HEIGHT = 800;
 
-export const VIEWPORT_WIDTH_EXPANDED = 620;
-export const VIEWPORT_WIDTH_COLLAPSED = 420;
+export const VIEWPORT_WIDTH_EXPANDED = 1000;
+export const VIEWPORT_WIDTH_COLLAPSED = 680;
 
 function patchWebviewSize(viewportWidth: number): void {
   const size: [number, number] = [viewportWidth / PX_PER_UNIT, VIEWPORT_HEIGHT / PX_PER_UNIT];
