@@ -34,7 +34,7 @@
     "@hmcs/ui": "workspace:*",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "zod": "^3.25.76"
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@tailwindcss/vite": "catalog:",

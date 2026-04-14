@@ -54,9 +54,9 @@
     "dist"
   ],
   "dependencies": {
-    "eventsource": "^4.1.0",
-    "ws": "^8.18.0",
-    "zod": "^3.25.76",
+    "eventsource": "catalog:",
+    "ws": "catalog:",
+    "zod": "catalog:",
     "zod-to-json-schema": "^3.25.2"
   },
   "devDependencies": {

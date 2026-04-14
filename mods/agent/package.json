@@ -48,7 +48,7 @@
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
     "uiohook-napi": "^1.5.4",
-    "zod": "^3.25.76"
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@tailwindcss/vite": "catalog:",
