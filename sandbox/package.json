@@ -10,8 +10,7 @@
     "@hmcs/settings": "workspace:*",
     "@hmcs/stt": "workspace:*",
     "@hmcs/voicevox": "workspace:*",
-    "@hmcs/app-exit": "workspace:*",
-    "@hmcs/nav-test": "workspace:*"
+    "@hmcs/app-exit": "workspace:*"
   },
   "devDependencies": {
     "tsx": "4.21.0"
