@@ -315,12 +315,12 @@ mod tests {
     }
 
     #[test]
-    fn resource_definitions_lists_five_resources() {
+    fn resource_definitions_lists_four_resources() {
         let resources = resources::resource_definitions();
         assert_eq!(
             resources.len(),
-            5,
-            "expected 5 resources, got {}",
+            4,
+            "expected 4 resources, got {}",
             resources.len()
         );
     }
@@ -340,7 +340,6 @@ mod tests {
             uris.contains(&"homunculus://assets"),
             "missing assets resource"
         );
-        assert!(uris.contains(&"homunculus://rpc"), "missing rpc resource");
     }
 
     #[test]

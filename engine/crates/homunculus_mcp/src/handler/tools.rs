@@ -5,13 +5,15 @@
 
 mod animation;
 mod audio;
-mod rpc;
+pub(super) mod rpc;
 mod system;
 mod transform;
 mod vrm;
 mod webview;
 
 use rmcp::handler::server::router::tool::ToolRouter;
+
+pub(super) use rpc::send_rpc_call;
 
 use super::HomunculusMcpHandler;
 
@@ -23,5 +25,4 @@ pub(super) fn tool_router() -> ToolRouter<HomunculusMcpHandler> {
         + HomunculusMcpHandler::audio_tool_router()
         + HomunculusMcpHandler::transform_tool_router()
         + HomunculusMcpHandler::system_tool_router()
-        + HomunculusMcpHandler::rpc_tool_router()
 }
