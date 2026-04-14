@@ -474,9 +474,7 @@ export class Webview {
    * ```
    */
   async navigationState(): Promise<NavigationState> {
-    const response = await host.get(
-      host.createUrl(`webviews/${this.entity}/navigation-state`),
-    );
+    const response = await host.get(host.createUrl(`webviews/${this.entity}/navigation-state`));
     return (await response.json()) as NavigationState;
   }
 

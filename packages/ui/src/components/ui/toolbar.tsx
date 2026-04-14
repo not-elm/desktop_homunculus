@@ -37,7 +37,8 @@ const toolbarButtonClass = cn(
   'active:scale-[0.92]',
 );
 
-const disabledButtonClass = 'opacity-30 cursor-not-allowed hover:border-primary/15 hover:bg-primary/4 hover:text-primary/35 hover:shadow-none active:scale-100';
+const disabledButtonClass =
+  'opacity-30 cursor-not-allowed hover:border-primary/15 hover:bg-primary/4 hover:text-primary/35 hover:shadow-none active:scale-100';
 
 /**
  * A draggable toolbar with a title, optional navigation, optional children, and a close button.
@@ -108,12 +109,7 @@ function NavigationButtons({ navigation }: { navigation: ToolbarNavigationProps 
 
 function CloseButton({ onClick }: { onClick: () => void }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label="Close"
-      className={toolbarButtonClass}
-    >
+    <button type="button" onClick={onClick} aria-label="Close" className={toolbarButtonClass}>
       <svg
         aria-hidden="true"
         width="10"
