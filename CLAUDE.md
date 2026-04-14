@@ -18,7 +18,7 @@ desktop-homunculus/
 │   ├── ui/              # @hmcs/ui — Shared React component library (Radix + Tailwind)
 │   ├── cli/             # @hmcs/cli — Node CLI wrapper (distributes platform-specific Rust binary)
 │   └── cli-platform/    # Platform-specific binary packages for hmcs CLI
-├── mods/                # Mods (NPM packages): persona/, settings/, menu/, assets/, voicevox/, agent/, app-exit/, stt/
+├── mods/                # Mods (NPM packages): persona/, settings/, menu/, assets/, voicevox/, agent/, app-exit/, stt/, character-settings/, elmer/, rpc-test/
 ├── docs/website/        # Docusaurus documentation site
 └── sandbox/             # Dev sandbox — aggregates all mods for workspace linking validation
 ```
@@ -39,8 +39,8 @@ make setup            # pnpm install + engine tooling setup + CEF framework down
 make debug            # pnpm build (excl. docs) + cargo run (debug with inspector)
 make debug-cuda       # Same as debug but with CUDA STT support
 make test             # pnpm test (TS) + cargo test --workspace (Rust)
-make fix-lint         # cargo clippy --fix + cargo fmt (Rust only, no TS lint)
-make gen-open-api     # Regenerate OpenAPI spec + pnpm build (rebuilds SDK types)
+make fix-lint         # cargo clippy --fix + cargo fmt (Rust) + pnpm lint:fix (TS)
+make gen-open-api     # Regenerate OpenAPI spec + Docusaurus API docs + pnpm build
 make release-macos    # pnpm build + native arch release → DMG
 make release-windows  # pnpm build + MSI installer via WiX 4.x (Windows only)
 ```
@@ -141,13 +141,14 @@ UI apps live in `mods/` as mod packages — **settings** (`mods/settings/ui/`), 
 
 ### MCP Server (`engine/crates/homunculus_mcp/`)
 
-Embedded Rust MCP server using Streamable HTTP transport, mounted at `/mcp` on the engine's Axum router (`localhost:3100/mcp`). Exposes 19 tools (character control, audio, webview, mod commands), 5 resources (`homunculus://info`, `homunculus://characters`, `homunculus://mods`, `homunculus://assets`, `homunculus://rpc`), and 3 prompts. Uses the `rmcp` crate with `LocalSessionManager` for session isolation.
+Embedded Rust MCP server using Streamable HTTP transport, mounted at `/mcp` on the engine's Axum router (`localhost:3100/mcp`). Exposes static tools (character control, audio, webview) plus dynamic tools auto-registered from mod RPC methods, 5 resources (`homunculus://info`, `homunculus://characters`, `homunculus://mods`, `homunculus://assets`, `homunculus://rpc`), and 3 prompts. Uses the `rmcp` crate with `LocalSessionManager` for session isolation.
 
 ### Rust CLI (`engine/crates/homunculus_cli/`)
 
 The `hmcs` binary is a Rust CLI built with `clap`. Current subcommands:
 - `hmcs mod install|uninstall` — Install/uninstall mods to `~/.homunculus/mods/`
 - `hmcs prefs list|get|set|delete` — Manage preferences in `~/.homunculus/preferences.db`
+- `hmcs config` — Manage application configuration (`~/.homunculus/config.toml`)
 
 ## Important Workflows
 
