@@ -1,4 +1,5 @@
 import { audio, preferences, Webview } from '@hmcs/sdk';
+import { rpc } from '@hmcs/sdk/rpc';
 import { useCallback, useEffect, useState } from 'react';
 
 const VOICEVOX_HOST = 'http://localhost:50021';
@@ -45,6 +46,8 @@ export function useVoicevoxSettings() {
   const [assetId, setAssetId] = useState<string | null>(null);
   const [characterName, setCharacterName] = useState('');
   const [invalidSpeaker, setInvalidSpeaker] = useState(false);
+  const [personaId, setPersonaId] = useState<string | null>(null);
+  const [speaking, setSpeaking] = useState(false);
 
   const prefsKey = assetId ? `voicevox::${assetId}` : null;
 
@@ -55,6 +58,7 @@ export function useVoicevoxSettings() {
         const linked = await resolveLinkedPersona();
         if (cancelled) return;
 
+        setPersonaId(linked?.personaId ?? null);
         const resolvedAssetId = linked?.assetId ?? null;
         setAssetId(resolvedAssetId);
 
@@ -135,6 +139,26 @@ export function useVoicevoxSettings() {
     }
   }, []);
 
+  const handleSpeak = useCallback(
+    async (text: string) => {
+      if (speaking || !personaId || !prefsKey) return;
+      setSpeaking(true);
+      try {
+        await preferences.save(prefsKey, settings);
+        await rpc.call({
+          modName: 'voicevox',
+          method: 'speak',
+          body: { personaId, text },
+        });
+      } catch (err) {
+        console.error('Speech test failed:', err);
+      } finally {
+        setSpeaking(false);
+      }
+    },
+    [speaking, personaId, prefsKey, settings],
+  );
+
   return {
     loading,
     connected,
@@ -146,15 +170,19 @@ export function useVoicevoxSettings() {
     assetId,
     characterName,
     invalidSpeaker,
+    personaId,
+    speaking,
     handleSave,
     handleReset,
     handleClose,
     handleRetry,
+    handleSpeak,
   };
 }
 
-/** Resolves the linked persona's VRM asset ID. */
+/** Resolves the linked persona's ID, name, and VRM asset ID. */
 async function resolveLinkedPersona(): Promise<{
+  personaId: string;
   name: string;
   assetId: string | null;
 } | null> {
@@ -163,7 +191,7 @@ async function resolveLinkedPersona(): Promise<{
   const linked = await webview.linkedPersona();
   if (!linked) return null;
   const snapshot = await linked.snapshot();
-  return { name: snapshot.name ?? '', assetId: snapshot.vrmAssetId ?? null };
+  return { personaId: linked.id, name: snapshot.name ?? '', assetId: snapshot.vrmAssetId ?? null };
 }
 
 async function fetchSpeakers(): Promise<VoicevoxSpeaker[] | null> {
