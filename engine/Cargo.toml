@@ -56,8 +56,8 @@ async-channel = "2.5.0"
 tokio = { workspace = true }
 
 [workspace.dependencies]
-bevy_cef = { version = "0.8" }
-bevy_cef_core = { version = "0.8" }
+bevy_cef = { version = "0.8.1" }
+bevy_cef_core = { version = "0.8.1" }
 bevy_flurx = { version = "0.14.1", features = [
     "side-effect",
     "state",
@@ -179,7 +179,3 @@ result_large_err = "allow"
 unexpected_cfgs = { level = "warn", check-cfg = [
     'cfg(feature, values("cargo-clippy"))',
 ] }
-
-[patch.crates-io]
-bevy_cef = { path = "../../../../bevy_cef" }
-bevy_cef_core = { path = "../../../../bevy_cef/crates/bevy_cef_core" }
