@@ -52,7 +52,7 @@ import type { ZodType } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { rpc as rpcClient } from './rpc-client';
 
-export type { RpcCallOptions } from './rpc-client';
+export type { RpcCallOptions, RpcRegistrationEntry } from './rpc-client';
 
 /**
  * A single RPC method definition created by {@link rpc.method}.
@@ -420,6 +420,7 @@ export namespace rpc {
    * ```
    */
   export const call = rpcClient.call;
+  export const registrations = rpcClient.registrations;
 
   /**
    * Create a typed RPC method definition with Zod input validation.

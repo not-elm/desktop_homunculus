@@ -333,3 +333,110 @@ describe('rpc.call()', () => {
     expect(result).toEqual({ ok: true });
   });
 });
+
+describe('rpc.registrations()', () => {
+  let getMock: Mock;
+
+  beforeEach(async () => {
+    vi.resetModules();
+    const { host } = await import('./host');
+    getMock = vi.fn();
+    vi.spyOn(host, 'get').mockImplementation(getMock);
+    vi.spyOn(host, 'createUrl').mockImplementation(
+      (path: string) => new URL(`http://localhost:3100/${path}`),
+    );
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('returns all RPC registrations when no filter given', async () => {
+    getMock.mockResolvedValue({
+      json: () =>
+        Promise.resolve({
+          '@hmcs/voicevox': {
+            port: 12345,
+            methods: {
+              speak: {
+                description: 'VoiceVox TTS',
+                _meta: { category: 'tts' },
+              },
+            },
+          },
+          '@hmcs/other': {
+            port: 12346,
+            methods: {
+              doStuff: { description: 'Other method' },
+            },
+          },
+        }),
+    });
+
+    const { rpc } = await import('./rpc-client');
+    const result = await rpc.registrations();
+
+    expect(result).toHaveLength(2);
+    expect(result).toContainEqual({
+      modName: '@hmcs/voicevox',
+      method: 'speak',
+      description: 'VoiceVox TTS',
+      meta: { category: 'tts' },
+    });
+    expect(result).toContainEqual({
+      modName: '@hmcs/other',
+      method: 'doStuff',
+      description: 'Other method',
+      meta: undefined,
+    });
+  });
+
+  it('filters by category when filter.category is provided', async () => {
+    getMock.mockResolvedValue({
+      json: () =>
+        Promise.resolve({
+          '@hmcs/voicevox': {
+            port: 12345,
+            methods: {
+              speak: {
+                description: 'VoiceVox TTS',
+                _meta: { category: 'tts' },
+              },
+            },
+          },
+          '@hmcs/other': {
+            port: 12346,
+            methods: {
+              doStuff: { description: 'Other method' },
+            },
+          },
+        }),
+    });
+
+    const { rpc } = await import('./rpc-client');
+    const result = await rpc.registrations({ category: 'tts' });
+
+    expect(result).toHaveLength(1);
+    expect(result[0].modName).toBe('@hmcs/voicevox');
+    expect(result[0].method).toBe('speak');
+  });
+
+  it('returns empty array when no mods match the category filter', async () => {
+    getMock.mockResolvedValue({
+      json: () =>
+        Promise.resolve({
+          '@hmcs/other': {
+            port: 12346,
+            methods: {
+              doStuff: { description: 'Other method' },
+            },
+          },
+        }),
+    });
+
+    const { rpc } = await import('./rpc-client');
+    const result = await rpc.registrations({ category: 'tts' });
+
+    expect(result).toHaveLength(0);
+  });
+});
