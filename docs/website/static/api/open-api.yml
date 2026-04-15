@@ -2437,6 +2437,28 @@ paths:
       responses:
         '200':
           description: Navigated forward
+  /webviews/{entity}/navigation-state:
+    get:
+      tags:
+      - webviews
+      summary: Get navigation history state.
+      operationId: navigation_state
+      parameters:
+      - name: entity
+        in: path
+        description: Entity ID
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Navigation state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NavigationState'
+        '404':
+          description: Webview not found
   /webviews/{entity}/reload:
     post:
       tags:
@@ -3098,6 +3120,19 @@ components:
           type:
           - string
           - 'null'
+    NavigationState:
+      type: object
+      description: Navigation history state of a webview.
+      required:
+      - canGoBack
+      - canGoForward
+      properties:
+        canGoBack:
+          type: boolean
+          description: Whether the webview can navigate back in history.
+        canGoForward:
+          type: boolean
+          description: Whether the webview can navigate forward in history.
     OptionalTransform:
       type: object
       properties:

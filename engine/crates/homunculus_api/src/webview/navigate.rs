@@ -3,8 +3,9 @@ use crate::prelude::WebviewApi;
 use crate::webview::open::{OriginalWebviewSource, source_to_webview_source};
 use bevy::prelude::*;
 use bevy_cef::prelude::{RequestGoBack, RequestGoForward};
+use bevy_cef_core::prelude::Browsers;
 use bevy_flurx::action::once;
-use homunculus_core::prelude::{AssetResolver, WebviewSource};
+use homunculus_core::prelude::{AssetResolver, NavigationState, WebviewSource};
 use homunculus_effects::{Entity, Update};
 
 impl WebviewApi {
@@ -22,6 +23,16 @@ impl WebviewApi {
         self.0
             .schedule(move |task| async move {
                 task.will(Update, once::run(go_forward).with(webview)).await
+            })
+            .await?
+    }
+
+    /// Returns the navigation history state of a webview.
+    pub async fn navigation_state(&self, webview: Entity) -> ApiResult<NavigationState> {
+        self.0
+            .schedule(move |task| async move {
+                task.will(Update, once::run(get_navigation_state).with(webview))
+                    .await
             })
             .await?
     }
@@ -77,4 +88,18 @@ fn navigate(
         .entity(webview)
         .try_insert((cef_source, OriginalWebviewSource(source)));
     Ok(())
+}
+
+fn get_navigation_state(
+    In(webview): In<Entity>,
+    browsers: NonSend<Browsers>,
+    webviews: Query<Entity, With<bevy_cef::prelude::WebviewSource>>,
+) -> ApiResult<NavigationState> {
+    if !webviews.contains(webview) {
+        return Err(ApiError::WebviewNotFound(webview));
+    }
+    Ok(NavigationState {
+        can_go_back: browsers.can_go_back(&webview),
+        can_go_forward: browsers.can_go_forward(&webview),
+    })
 }

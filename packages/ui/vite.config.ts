@@ -42,7 +42,7 @@ export default defineConfig({
       formats: ['es', 'umd'], // default の設定と同じ
     },
     rollupOptions: {
-      external: ['react', 'react-dom'],
+      external: ['react', 'react-dom', '@hmcs/sdk'],
       output: {
         globals: {
           react: 'React',

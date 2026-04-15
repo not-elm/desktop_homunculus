@@ -190,6 +190,24 @@ pub async fn navigate_forward(
     api.go_forward(entity).await.into_http_result()
 }
 
+/// Get navigation history state.
+#[utoipa::path(
+    get,
+    path = "/{entity}/navigation-state",
+    tag = "webviews",
+    params(("entity" = String, Path, description = "Entity ID")),
+    responses(
+        (status = 200, description = "Navigation state", body = NavigationState),
+        (status = 404, description = "Webview not found"),
+    ),
+)]
+pub async fn navigation_state(
+    State(api): State<WebviewApi>,
+    EntityId(entity): EntityId,
+) -> HttpResult<NavigationState> {
+    api.navigation_state(entity).await.into_http_result()
+}
+
 /// Navigate to a new URL.
 #[utoipa::path(
     post,

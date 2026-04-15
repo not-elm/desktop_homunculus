@@ -308,6 +308,14 @@ export interface WebviewNavigateRequest {
   source: WebviewSource;
 }
 
+/** Navigation history state of a webview. */
+export interface NavigationState {
+  /** Whether the webview can navigate back in history. */
+  canGoBack: boolean;
+  /** Whether the webview can navigate forward in history. */
+  canGoForward: boolean;
+}
+
 /**
  * Webview management for creating and controlling embedded web interfaces.
  *
@@ -451,6 +459,23 @@ export class Webview {
    */
   async navigateForward(): Promise<void> {
     await host.post(host.createUrl(`webviews/${this.entity}/navigate/forward`));
+  }
+
+  /**
+   * Gets the navigation history state of this webview.
+   *
+   * @returns A promise that resolves to the navigation state
+   *
+   * @example
+   * ```typescript
+   * const wv = Webview.current()!;
+   * const state = await wv.navigationState();
+   * console.log(`Can go back: ${state.canGoBack}`);
+   * ```
+   */
+  async navigationState(): Promise<NavigationState> {
+    const response = await host.get(host.createUrl(`webviews/${this.entity}/navigation-state`));
+    return (await response.json()) as NavigationState;
   }
 
   /**

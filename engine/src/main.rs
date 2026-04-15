@@ -7,6 +7,11 @@
 mod cef_fetch;
 
 use crate::cef_fetch::CefFetchPlugin;
+
+/// Marker component indicating a webview's V8 context is ready for HostEmitEvent.
+/// Inserted on `LoadingStateChanged(is_loading=false)`, removed on `is_loading=true`.
+#[derive(Component)]
+struct WebviewReady;
 use bevy::DefaultPlugins;
 use bevy::app::{App, PluginGroup};
 use bevy::asset::UnapprovedPathMode;
@@ -130,6 +135,44 @@ fn main() {
             },
             CefFetchPlugin,
         ))
+        .add_observer(|trigger: On<LoadingStateChanged>, mut commands: Commands| {
+            if trigger.is_loading {
+                // V8 context is not ready during load start — remove ready marker
+                // and skip HostEmitEvent to avoid render process crash.
+                commands.entity(trigger.webview).remove::<WebviewReady>();
+                return;
+            }
+            // Page load complete — V8 is stable, mark as ready.
+            commands.entity(trigger.webview).try_insert(WebviewReady);
+            commands.trigger(HostEmitEvent::new(
+                trigger.webview,
+                "loading-state-changed",
+                &serde_json::json!({
+                    "isLoading": trigger.is_loading,
+                    "canGoBack": trigger.can_go_back,
+                    "canGoForward": trigger.can_go_forward,
+                }),
+            ));
+        })
+        .add_observer(
+            |trigger: On<AddressChanged>,
+             mut commands: Commands,
+             ready: Query<(), With<WebviewReady>>| {
+                // Only emit when V8 context is ready — during initial load or
+                // cross-document navigation, WebviewReady is absent.
+                if ready.get(trigger.webview).is_err() {
+                    return;
+                }
+                commands.trigger(HostEmitEvent::new(
+                    trigger.webview,
+                    "navigation-state-changed",
+                    &serde_json::json!({
+                        "canGoBack": trigger.can_go_back,
+                        "canGoForward": trigger.can_go_forward,
+                    }),
+                ));
+            },
+        )
         .add_systems(
             Update,
             (
