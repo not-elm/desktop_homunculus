@@ -1,6 +1,8 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@hmcs/ui';
+import { Info } from 'lucide-react';
 import { KeyCaptureField } from '../../components/KeyCaptureField';
 import type { AgentSettings, PttKey } from '../hooks/useSettingsDraft';
+import { useTtsEngines } from '../hooks/useTtsEngines';
 import type { SettingsCategory } from '../types';
 import { PermissionSeField } from './PermissionSeField';
 import { PhraseListField } from './PhraseListField';
@@ -134,26 +136,63 @@ function ServicesForm({
   settings: AgentSettings;
   onSettingsChange: (s: AgentSettings) => void;
 }) {
-  function handleChange(value: string) {
+  const { engines, loading: enginesLoading } = useTtsEngines();
+
+  function handleRuntimeChange(value: string) {
     onSettingsChange({ ...settings, runtime: value as AgentSettings['runtime'] });
   }
 
+  function handleTtsChange(value: string) {
+    onSettingsChange({ ...settings, ttsModName: value === '__none__' ? null : value });
+  }
+
   return (
-    <div className="settings-label">
-      Backend
-      <span className="settings-label-desc">Runtime engine for agent sessions</span>
-      <Select value={settings.runtime} onValueChange={handleChange}>
-        <SelectTrigger className="stg-backend-trigger">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {BACKEND_OPTIONS.map((o) => (
-            <SelectItem key={o.value} value={o.value}>
-              {o.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+    <>
+      <div className="settings-label">
+        Runtime
+        <span className="settings-label-desc">Runtime engine for agent sessions</span>
+        <Select value={settings.runtime} onValueChange={handleRuntimeChange}>
+          <SelectTrigger className="stg-backend-trigger">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {BACKEND_OPTIONS.map((o) => (
+              <SelectItem key={o.value} value={o.value}>
+                {o.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="stg-section-divider" />
+      <div className="settings-label">
+        TTS Engine
+        <span className="settings-label-desc">
+          Text-to-speech engine for character voice. When &quot;None&quot; is selected, the
+          character responds with text only.
+        </span>
+        <Select
+          value={settings.ttsModName ?? '__none__'}
+          onValueChange={handleTtsChange}
+          disabled={enginesLoading}
+        >
+          <SelectTrigger className="stg-backend-trigger">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__none__">None</SelectItem>
+            {engines.map((e) => (
+              <SelectItem key={e.modName} value={e.modName}>
+                {e.modName}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <span className="settings-label-desc" style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4, fontSize: '0.75rem' }}>
+          <Info size={12} />
+          This setting is per-persona
+        </span>
+      </div>
+    </>
   );
 }
