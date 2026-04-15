@@ -188,7 +188,16 @@ function ServicesForm({
             ))}
           </SelectContent>
         </Select>
-        <span className="settings-label-desc" style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4, fontSize: '0.75rem' }}>
+        <span
+          className="settings-label-desc"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4,
+            marginTop: 4,
+            fontSize: '0.75rem',
+          }}
+        >
           <Info size={12} />
           This setting is per-persona
         </span>

@@ -127,15 +127,18 @@ export namespace rpc {
    * // [{ modName: "@hmcs/voicevox", method: "speak", description: "...", meta: { category: "tts" } }]
    * ```
    */
-  export async function registrations(
-    filter?: { category?: string },
-  ): Promise<RpcRegistrationEntry[]> {
+  export async function registrations(filter?: {
+    category?: string;
+  }): Promise<RpcRegistrationEntry[]> {
     const url = host.createUrl('rpc/registrations');
     const response = await host.get(url);
     const raw = (await response.json()) as {
       registrations: Record<
         string,
-        { port: number; methods: Record<string, { description?: string; _meta?: Record<string, unknown> }> }
+        {
+          port: number;
+          methods: Record<string, { description?: string; _meta?: Record<string, unknown> }>;
+        }
       >;
     };
     const data = raw.registrations;

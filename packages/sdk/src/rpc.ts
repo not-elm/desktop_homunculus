@@ -323,9 +323,7 @@ function buildMethodsMeta(
         ...(entry.annotations !== undefined ? { annotations: entry.annotations } : {}),
         ...(entry.execution !== undefined ? { execution: entry.execution } : {}),
         ...(entry.icons !== undefined ? { icons: entry.icons } : {}),
-        ...((entry.meta ?? entry._meta) !== undefined
-          ? { _meta: entry.meta ?? entry._meta }
-          : {}),
+        ...((entry.meta ?? entry._meta) !== undefined ? { _meta: entry.meta ?? entry._meta } : {}),
       };
     } else {
       meta[name] = {};
