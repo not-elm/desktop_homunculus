@@ -1,5 +1,5 @@
+import type { NavigationState, Webview } from '@hmcs/sdk';
 import { useCallback, useEffect, useState } from 'react';
-import { type Webview, type NavigationState } from '@hmcs/sdk';
 
 declare global {
   interface Window {
@@ -48,9 +48,7 @@ export interface UseNavigationStateResult {
  * />
  * ```
  */
-export function useNavigationState(
-  webview: Webview | undefined,
-): UseNavigationStateResult {
+export function useNavigationState(webview: Webview | undefined): UseNavigationStateResult {
   const [state, setState] = useState<NavigationState>({ canGoBack: false, canGoForward: false });
 
   useEffect(() => {
@@ -63,7 +61,9 @@ export function useNavigationState(
         const data = JSON.parse(payload);
         setState({ canGoBack: data.canGoBack, canGoForward: data.canGoForward });
         pushReceived = true;
-      } catch { /* ignore malformed payload */ }
+      } catch {
+        /* ignore malformed payload */
+      }
     };
     if (window.cef?.listen) {
       // Cross-document navigations (page loads)
@@ -73,13 +73,22 @@ export function useNavigationState(
     }
 
     // Fetch initial state (skip if push already arrived)
-    webview.navigationState().then((s) => {
-      if (!pushReceived) setState(s);
-    }).catch(() => { /* ignore — initial state stays { false, false } */ });
+    webview
+      .navigationState()
+      .then((s) => {
+        if (!pushReceived) setState(s);
+      })
+      .catch(() => {
+        /* ignore — initial state stays { false, false } */
+      });
   }, [webview]);
 
-  const navigateBack = useCallback(() => { webview?.navigateBack(); }, [webview]);
-  const navigateForward = useCallback(() => { webview?.navigateForward(); }, [webview]);
+  const navigateBack = useCallback(() => {
+    webview?.navigateBack();
+  }, [webview]);
+  const navigateForward = useCallback(() => {
+    webview?.navigateForward();
+  }, [webview]);
 
   return { ...state, navigateBack, navigateForward };
 }

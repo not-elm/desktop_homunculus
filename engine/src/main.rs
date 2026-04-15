@@ -135,27 +135,25 @@ fn main() {
             },
             CefFetchPlugin,
         ))
-        .add_observer(
-            |trigger: On<LoadingStateChanged>, mut commands: Commands| {
-                if trigger.is_loading {
-                    // V8 context is not ready during load start — remove ready marker
-                    // and skip HostEmitEvent to avoid render process crash.
-                    commands.entity(trigger.webview).remove::<WebviewReady>();
-                    return;
-                }
-                // Page load complete — V8 is stable, mark as ready.
-                commands.entity(trigger.webview).try_insert(WebviewReady);
-                commands.trigger(HostEmitEvent::new(
-                    trigger.webview,
-                    "loading-state-changed",
-                    &serde_json::json!({
-                        "isLoading": trigger.is_loading,
-                        "canGoBack": trigger.can_go_back,
-                        "canGoForward": trigger.can_go_forward,
-                    }),
-                ));
-            },
-        )
+        .add_observer(|trigger: On<LoadingStateChanged>, mut commands: Commands| {
+            if trigger.is_loading {
+                // V8 context is not ready during load start — remove ready marker
+                // and skip HostEmitEvent to avoid render process crash.
+                commands.entity(trigger.webview).remove::<WebviewReady>();
+                return;
+            }
+            // Page load complete — V8 is stable, mark as ready.
+            commands.entity(trigger.webview).try_insert(WebviewReady);
+            commands.trigger(HostEmitEvent::new(
+                trigger.webview,
+                "loading-state-changed",
+                &serde_json::json!({
+                    "isLoading": trigger.is_loading,
+                    "canGoBack": trigger.can_go_back,
+                    "canGoForward": trigger.can_go_forward,
+                }),
+            ));
+        })
         .add_observer(
             |trigger: On<AddressChanged>,
              mut commands: Commands,

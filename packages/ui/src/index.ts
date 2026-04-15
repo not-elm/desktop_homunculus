@@ -40,6 +40,6 @@ export * from './components/ui/textarea';
 export * from './components/ui/toolbar';
 export * from './components/ui/tooltip';
 export { useClickOutside } from './hooks/use-click-outside';
-export { useNavigationState, type UseNavigationStateResult } from './hooks/use-navigation-state';
+export { type UseNavigationStateResult, useNavigationState } from './hooks/use-navigation-state';
 import './index.css';
 import './animation.css';
