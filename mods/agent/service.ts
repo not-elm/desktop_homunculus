@@ -78,7 +78,8 @@ async function loadPersonaSettings(personaId: string): Promise<AgentSettings> {
   return { ...DEFAULT_SETTINGS, ...(saved as Partial<AgentSettings>) };
 }
 
-function speakText(personaId: string, text: string): void {
+function speakText(personaId: string, text: string, ttsModName: string | null): void {
+  if (ttsModName === null) return;
   const { sentences, log } = sanitizeForTts(text);
   if (sentences.length === 0) return;
   if (log.length > 0) {
@@ -86,7 +87,7 @@ function speakText(personaId: string, text: string): void {
   }
   rpc
     .call({
-      modName: '@hmcs/voicevox',
+      modName: ttsModName,
       method: 'speak',
       body: { personaId, text: sentences },
     })
@@ -559,7 +560,7 @@ async function handleAgentEvent(
 ): Promise<AgentResponse | undefined> {
   switch (event.type) {
     case 'assistant_message':
-      return handleAssistantMessage(personaId, event.text);
+      return handleAssistantMessage(personaId, event.text, settings.ttsModName);
     case 'tool_use':
       return handleToolUse(personaId, event.summary);
     case 'permission_request':
@@ -573,10 +574,10 @@ async function handleAgentEvent(
   }
 }
 
-function handleAssistantMessage(personaId: string, text: string): undefined {
+function handleAssistantMessage(personaId: string, text: string, ttsModName: string | null): undefined {
   emitStatus(personaId, 'thinking');
   emitLog(personaId, 'assistant', text);
-  speakText(personaId, text);
+  speakText(personaId, text, ttsModName);
   return undefined;
 }
 
