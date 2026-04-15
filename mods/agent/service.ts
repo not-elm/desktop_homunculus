@@ -78,18 +78,25 @@ async function loadPersonaSettings(personaId: string): Promise<AgentSettings> {
   return { ...DEFAULT_SETTINGS, ...(saved as Partial<AgentSettings>) };
 }
 
-function speakText(personaId: string, text: string, ttsModName: string | null): void {
-  if (ttsModName === null) return;
+async function resolveTtsModName(personaId: string): Promise<string | null> {
+  const saved = await preferences.load<{ ttsModName?: string | null }>(`agent::${personaId}`);
+  return saved?.ttsModName ?? null;
+}
+
+function speakText(personaId: string, text: string): void {
   const { sentences, log } = sanitizeForTts(text);
   if (sentences.length === 0) return;
   if (log.length > 0) {
     emitLog(personaId, 'tts-sanitize', log.join('; '));
   }
-  rpc
-    .call({
-      modName: ttsModName,
-      method: 'speak',
-      body: { personaId, text: sentences },
+  resolveTtsModName(personaId)
+    .then((ttsModName) => {
+      if (ttsModName === null) return;
+      return rpc.call({
+        modName: ttsModName,
+        method: 'speak',
+        body: { personaId, text: sentences },
+      });
     })
     .catch(() => emitLog(personaId, 'warning', 'TTS unavailable'));
 }
@@ -560,7 +567,7 @@ async function handleAgentEvent(
 ): Promise<AgentResponse | undefined> {
   switch (event.type) {
     case 'assistant_message':
-      return handleAssistantMessage(personaId, event.text, settings.ttsModName);
+      return handleAssistantMessage(personaId, event.text);
     case 'tool_use':
       return handleToolUse(personaId, event.summary);
     case 'permission_request':
@@ -574,10 +581,10 @@ async function handleAgentEvent(
   }
 }
 
-function handleAssistantMessage(personaId: string, text: string, ttsModName: string | null): undefined {
+function handleAssistantMessage(personaId: string, text: string): undefined {
   emitStatus(personaId, 'thinking');
   emitLog(personaId, 'assistant', text);
-  speakText(personaId, text, ttsModName);
+  speakText(personaId, text);
   return undefined;
 }
 
