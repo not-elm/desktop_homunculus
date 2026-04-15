@@ -132,10 +132,13 @@ export namespace rpc {
   ): Promise<RpcRegistrationEntry[]> {
     const url = host.createUrl('rpc/registrations');
     const response = await host.get(url);
-    const data = (await response.json()) as Record<
-      string,
-      { port: number; methods: Record<string, { description?: string; _meta?: Record<string, unknown> }> }
-    >;
+    const raw = (await response.json()) as {
+      registrations: Record<
+        string,
+        { port: number; methods: Record<string, { description?: string; _meta?: Record<string, unknown> }> }
+      >;
+    };
+    const data = raw.registrations;
 
     const entries: RpcRegistrationEntry[] = [];
     for (const [modName, registration] of Object.entries(data)) {

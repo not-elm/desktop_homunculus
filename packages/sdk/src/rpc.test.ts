@@ -355,19 +355,21 @@ describe('rpc.registrations()', () => {
     getMock.mockResolvedValue({
       json: () =>
         Promise.resolve({
-          '@hmcs/voicevox': {
-            port: 12345,
-            methods: {
-              speak: {
-                description: 'VoiceVox TTS',
-                _meta: { category: 'tts' },
+          registrations: {
+            '@hmcs/voicevox': {
+              port: 12345,
+              methods: {
+                speak: {
+                  description: 'VoiceVox TTS',
+                  _meta: { category: 'tts' },
+                },
               },
             },
-          },
-          '@hmcs/other': {
-            port: 12346,
-            methods: {
-              doStuff: { description: 'Other method' },
+            '@hmcs/other': {
+              port: 12346,
+              methods: {
+                doStuff: { description: 'Other method' },
+              },
             },
           },
         }),
@@ -395,19 +397,21 @@ describe('rpc.registrations()', () => {
     getMock.mockResolvedValue({
       json: () =>
         Promise.resolve({
-          '@hmcs/voicevox': {
-            port: 12345,
-            methods: {
-              speak: {
-                description: 'VoiceVox TTS',
-                _meta: { category: 'tts' },
+          registrations: {
+            '@hmcs/voicevox': {
+              port: 12345,
+              methods: {
+                speak: {
+                  description: 'VoiceVox TTS',
+                  _meta: { category: 'tts' },
+                },
               },
             },
-          },
-          '@hmcs/other': {
-            port: 12346,
-            methods: {
-              doStuff: { description: 'Other method' },
+            '@hmcs/other': {
+              port: 12346,
+              methods: {
+                doStuff: { description: 'Other method' },
+              },
             },
           },
         }),
@@ -425,10 +429,12 @@ describe('rpc.registrations()', () => {
     getMock.mockResolvedValue({
       json: () =>
         Promise.resolve({
-          '@hmcs/other': {
-            port: 12346,
-            methods: {
-              doStuff: { description: 'Other method' },
+          registrations: {
+            '@hmcs/other': {
+              port: 12346,
+              methods: {
+                doStuff: { description: 'Other method' },
+              },
             },
           },
         }),
