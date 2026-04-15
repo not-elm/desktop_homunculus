@@ -85,7 +85,11 @@ export interface RpcMethodDef<I = unknown, O = unknown> {
   execution?: { taskSupport?: 'forbidden' | 'optional' | 'required' };
   /** MCP tool icons. */
   icons?: Array<{ src: string; mimeType?: string; sizes?: string[] }>;
-  /** MCP tool metadata. */
+  /** Metadata for RPC method discovery and MCP integration. */
+  meta?: Record<string, unknown>;
+  /**
+   * @deprecated Use `meta` instead. Accepted as an alias for backward compatibility.
+   */
   _meta?: Record<string, unknown>;
 }
 
@@ -319,7 +323,9 @@ function buildMethodsMeta(
         ...(entry.annotations !== undefined ? { annotations: entry.annotations } : {}),
         ...(entry.execution !== undefined ? { execution: entry.execution } : {}),
         ...(entry.icons !== undefined ? { icons: entry.icons } : {}),
-        ...(entry._meta !== undefined ? { _meta: entry._meta } : {}),
+        ...((entry.meta ?? entry._meta) !== undefined
+          ? { _meta: entry.meta ?? entry._meta }
+          : {}),
       };
     } else {
       meta[name] = {};
@@ -450,6 +456,7 @@ export namespace rpc {
     annotations?: RpcMethodDef['annotations'];
     execution?: RpcMethodDef['execution'];
     icons?: RpcMethodDef['icons'];
+    meta?: Record<string, unknown>;
     _meta?: Record<string, unknown>;
   }): RpcMethodDef<I, O>;
   export function method<O>(def: {
@@ -461,6 +468,7 @@ export namespace rpc {
     annotations?: RpcMethodDef['annotations'];
     execution?: RpcMethodDef['execution'];
     icons?: RpcMethodDef['icons'];
+    meta?: Record<string, unknown>;
     _meta?: Record<string, unknown>;
   }): RpcMethodDef<unknown, O>;
   export function method(def: {
@@ -473,8 +481,10 @@ export namespace rpc {
     annotations?: RpcMethodDef['annotations'];
     execution?: RpcMethodDef['execution'];
     icons?: RpcMethodDef['icons'];
+    meta?: Record<string, unknown>;
     _meta?: Record<string, unknown>;
   }): RpcMethodDef {
+    const resolvedMeta = def.meta ?? def._meta;
     return {
       description: def.description,
       timeout: def.timeout,
@@ -485,7 +495,8 @@ export namespace rpc {
       annotations: def.annotations,
       execution: def.execution,
       icons: def.icons,
-      _meta: def._meta,
+      meta: resolvedMeta,
+      _meta: resolvedMeta,
     };
   }
 

@@ -182,6 +182,45 @@ describe('rpc.method() — MCP fields', () => {
   });
 });
 
+describe('rpc.method() — meta field', () => {
+  it('preserves meta on the returned def', async () => {
+    const { rpc } = await import('./rpc');
+    const def = rpc.method({
+      description: 'TTS speak',
+      input: z.object({ text: z.string() }),
+      handler: async ({ text }) => ({ text }),
+      meta: { category: 'tts' },
+    });
+
+    expect(def.meta).toEqual({ category: 'tts' });
+  });
+
+  it('accepts deprecated _meta and maps it to meta', async () => {
+    const { rpc } = await import('./rpc');
+    const def = rpc.method({
+      description: 'Legacy',
+      input: z.object({ x: z.number() }),
+      handler: async ({ x }) => x,
+      _meta: { legacy: true },
+    });
+
+    expect(def.meta).toEqual({ legacy: true });
+  });
+
+  it('meta takes precedence over _meta when both provided', async () => {
+    const { rpc } = await import('./rpc');
+    const def = rpc.method({
+      description: 'Both',
+      input: z.object({ x: z.number() }),
+      handler: async ({ x }) => x,
+      meta: { category: 'tts' },
+      _meta: { legacy: true },
+    });
+
+    expect(def.meta).toEqual({ category: 'tts' });
+  });
+});
+
 describe('rpc.serve() — method name validation', () => {
   beforeEach(() => {
     vi.resetModules();
