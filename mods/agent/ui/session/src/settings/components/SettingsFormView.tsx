@@ -23,8 +23,8 @@ export function SettingsFormView({ category, settings, onSettingsChange }: Setti
       {category === 'permissions' && (
         <PermissionsForm settings={settings} onSettingsChange={onSettingsChange} />
       )}
-      {category === 'backend' && (
-        <BackendForm settings={settings} onSettingsChange={onSettingsChange} />
+      {category === 'services' && (
+        <ServicesForm settings={settings} onSettingsChange={onSettingsChange} />
       )}
     </div>
   );
@@ -127,7 +127,7 @@ function PermissionsForm({
 
 const BACKEND_OPTIONS = [{ value: 'codex', label: 'Codex' }];
 
-function BackendForm({
+function ServicesForm({
   settings,
   onSettingsChange,
 }: {
