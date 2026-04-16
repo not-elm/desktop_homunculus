@@ -9,7 +9,7 @@ interface SettingsNavProps {
 const NAV_ITEMS: { category: SettingsCategory; label: string; icon: React.ElementType }[] = [
   { category: 'phrases', label: 'Phrases', icon: MessageSquareText },
   { category: 'permissions', label: 'Permissions', icon: ShieldCheck },
-  { category: 'backend', label: 'Backend', icon: Settings },
+  { category: 'services', label: 'Services', icon: Settings },
 ];
 
 export function SettingsNav({ activeCategory, onSelect }: SettingsNavProps) {

@@ -1,4 +1,4 @@
-export type SettingsCategory = 'phrases' | 'permissions' | 'backend';
+export type SettingsCategory = 'phrases' | 'permissions' | 'services';
 
 export type BodyContent =
   | { kind: 'sessionLog' }

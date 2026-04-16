@@ -78,17 +78,26 @@ async function loadPersonaSettings(personaId: string): Promise<AgentSettings> {
   return { ...DEFAULT_SETTINGS, ...(saved as Partial<AgentSettings>) };
 }
 
+async function resolveTtsModName(personaId: string): Promise<string | null> {
+  const persona = await SdkPersona.load(personaId);
+  const metadata = await persona.metadata();
+  return (metadata?.ttsModName as string | null) ?? null;
+}
+
 function speakText(personaId: string, text: string): void {
   const { sentences, log } = sanitizeForTts(text);
   if (sentences.length === 0) return;
   if (log.length > 0) {
     emitLog(personaId, 'tts-sanitize', log.join('; '));
   }
-  rpc
-    .call({
-      modName: '@hmcs/voicevox',
-      method: 'speak',
-      body: { personaId, text: sentences },
+  resolveTtsModName(personaId)
+    .then((ttsModName) => {
+      if (ttsModName === null) return;
+      return rpc.call({
+        modName: ttsModName,
+        method: 'speak',
+        body: { personaId, text: sentences },
+      });
     })
     .catch(() => emitLog(personaId, 'warning', 'TTS unavailable'));
 }
