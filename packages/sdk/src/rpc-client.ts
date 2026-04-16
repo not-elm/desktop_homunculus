@@ -112,10 +112,10 @@ export namespace rpc {
    * List registered RPC methods across all MOD services.
    *
    * Fetches the full RPC registry from the engine and flattens it into
-   * per-method entries. Optionally filters by `_meta.category`.
+   * per-method entries. Optionally filters by `meta.category`.
    *
    * @param filter - Optional filter. When `category` is set, only methods
-   *   whose `_meta.category` matches are returned.
+   *   whose `meta.category` matches are returned.
    * @returns Array of registration entries
    *
    * @example
@@ -137,7 +137,7 @@ export namespace rpc {
         string,
         {
           port: number;
-          methods: Record<string, { description?: string; _meta?: Record<string, unknown> }>;
+          methods: Record<string, { description?: string; meta?: Record<string, unknown> }>;
         }
       >;
     };
@@ -146,7 +146,7 @@ export namespace rpc {
     const entries: RpcRegistrationEntry[] = [];
     for (const [modName, registration] of Object.entries(data)) {
       for (const [method, methodMeta] of Object.entries(registration.methods)) {
-        const meta = methodMeta._meta;
+        const meta = methodMeta.meta;
         if (filter?.category !== undefined) {
           if (meta?.category !== filter.category) continue;
         }

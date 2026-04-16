@@ -23,7 +23,6 @@ export interface AgentSettings {
   allowList: string[];
   disallowedTools: string[];
   claudeModel: string;
-  ttsModName: string | null;
 }
 
 const DEFAULT_SETTINGS: AgentSettings = {
@@ -35,7 +34,6 @@ const DEFAULT_SETTINGS: AgentSettings = {
   allowList: [],
   disallowedTools: [],
   claudeModel: '',
-  ttsModName: null,
 };
 
 export function useSettingsDraft() {

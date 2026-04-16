@@ -19,8 +19,6 @@ export interface AgentSettings {
   /** Shell command patterns auto-approved by the Codex runtime (regex strings). */
   commandAutoApprovePatterns: string[];
   claudeModel: string;
-  /** TTS engine MOD name. Null means no TTS (text chat only). */
-  ttsModName: string | null;
 }
 
 /** Session lifecycle states. */
@@ -98,7 +96,6 @@ export const DEFAULT_SETTINGS: AgentSettings = {
     '^rg\\s',
   ],
   claudeModel: '',
-  ttsModName: null,
 };
 
 export type { AgentEvent, AgentResponse, AgentRuntime } from './agent-runtime.ts';

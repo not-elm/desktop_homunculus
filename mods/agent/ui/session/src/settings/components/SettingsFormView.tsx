@@ -3,6 +3,7 @@ import { Info } from 'lucide-react';
 import { KeyCaptureField } from '../../components/KeyCaptureField';
 import type { AgentSettings, PttKey } from '../hooks/useSettingsDraft';
 import { useTtsEngines } from '../hooks/useTtsEngines';
+import { useTtsModName } from '../hooks/useTtsModName';
 import type { SettingsCategory } from '../types';
 import { PermissionSeField } from './PermissionSeField';
 import { PhraseListField } from './PhraseListField';
@@ -137,13 +138,14 @@ function ServicesForm({
   onSettingsChange: (s: AgentSettings) => void;
 }) {
   const { engines, loading: enginesLoading } = useTtsEngines();
+  const { value: ttsModName, onChange: onTtsChange, loading: ttsLoading } = useTtsModName();
 
   function handleRuntimeChange(value: string) {
     onSettingsChange({ ...settings, runtime: value as AgentSettings['runtime'] });
   }
 
   function handleTtsChange(value: string) {
-    onSettingsChange({ ...settings, ttsModName: value === '__none__' ? null : value });
+    onTtsChange(value === '__none__' ? null : value);
   }
 
   return (
@@ -172,9 +174,9 @@ function ServicesForm({
           character responds with text only.
         </span>
         <Select
-          value={settings.ttsModName ?? '__none__'}
+          value={ttsModName ?? '__none__'}
           onValueChange={handleTtsChange}
-          disabled={enginesLoading}
+          disabled={enginesLoading || ttsLoading}
         >
           <SelectTrigger className="stg-backend-trigger">
             <SelectValue />

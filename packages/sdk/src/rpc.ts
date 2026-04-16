@@ -87,10 +87,6 @@ export interface RpcMethodDef<I = unknown, O = unknown> {
   icons?: Array<{ src: string; mimeType?: string; sizes?: string[] }>;
   /** Metadata for RPC method discovery and MCP integration. */
   meta?: Record<string, unknown>;
-  /**
-   * @deprecated Use `meta` instead. Accepted as an alias for backward compatibility.
-   */
-  _meta?: Record<string, unknown>;
 }
 
 /**
@@ -323,7 +319,7 @@ function buildMethodsMeta(
         ...(entry.annotations !== undefined ? { annotations: entry.annotations } : {}),
         ...(entry.execution !== undefined ? { execution: entry.execution } : {}),
         ...(entry.icons !== undefined ? { icons: entry.icons } : {}),
-        ...((entry.meta ?? entry._meta) !== undefined ? { _meta: entry.meta ?? entry._meta } : {}),
+        ...(entry.meta !== undefined ? { meta: entry.meta } : {}),
       };
     } else {
       meta[name] = {};
@@ -456,7 +452,6 @@ export namespace rpc {
     execution?: RpcMethodDef['execution'];
     icons?: RpcMethodDef['icons'];
     meta?: Record<string, unknown>;
-    _meta?: Record<string, unknown>;
   }): RpcMethodDef<I, O>;
   export function method<O>(def: {
     description?: string;
@@ -468,7 +463,6 @@ export namespace rpc {
     execution?: RpcMethodDef['execution'];
     icons?: RpcMethodDef['icons'];
     meta?: Record<string, unknown>;
-    _meta?: Record<string, unknown>;
   }): RpcMethodDef<unknown, O>;
   export function method(def: {
     description?: string;
@@ -481,9 +475,7 @@ export namespace rpc {
     execution?: RpcMethodDef['execution'];
     icons?: RpcMethodDef['icons'];
     meta?: Record<string, unknown>;
-    _meta?: Record<string, unknown>;
   }): RpcMethodDef {
-    const resolvedMeta = def.meta ?? def._meta;
     return {
       description: def.description,
       timeout: def.timeout,
@@ -494,8 +486,7 @@ export namespace rpc {
       annotations: def.annotations,
       execution: def.execution,
       icons: def.icons,
-      meta: resolvedMeta,
-      _meta: resolvedMeta,
+      meta: def.meta,
     };
   }
 

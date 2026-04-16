@@ -79,8 +79,9 @@ async function loadPersonaSettings(personaId: string): Promise<AgentSettings> {
 }
 
 async function resolveTtsModName(personaId: string): Promise<string | null> {
-  const saved = await preferences.load<{ ttsModName?: string | null }>(`agent::${personaId}`);
-  return saved?.ttsModName ?? null;
+  const persona = await SdkPersona.load(personaId);
+  const metadata = await persona.metadata();
+  return (metadata?.ttsModName as string | null) ?? null;
 }
 
 function speakText(personaId: string, text: string): void {

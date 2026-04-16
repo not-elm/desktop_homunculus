@@ -54,7 +54,7 @@ pub struct RpcMethodMeta {
     #[cfg_attr(feature = "openapi", schema(value_type = Vec<Object>))]
     pub icons: Option<Vec<Icon>>,
     #[cfg(feature = "mcp")]
-    #[serde(rename = "_meta", skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "openapi", schema(value_type = Object))]
     pub meta: Option<Meta>,
 }
