@@ -25,7 +25,9 @@ export function useTtsModName(): UseTtsModNameReturn {
         const id = p ? p.id : null;
         setPersonaId(id);
 
-        const metadata = id ? await SdkPersona.load(id).then((persona) => persona.metadata()) : undefined;
+        const metadata = id
+          ? await SdkPersona.load(id).then((persona) => persona.metadata())
+          : undefined;
         if (cancelled) return;
 
         if (metadata && metadata.ttsModName !== undefined) {

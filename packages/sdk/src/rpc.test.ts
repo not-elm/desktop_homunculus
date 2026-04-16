@@ -194,7 +194,6 @@ describe('rpc.method() — meta field', () => {
 
     expect(def.meta).toEqual({ category: 'tts' });
   });
-
 });
 
 describe('rpc.serve() — method name validation', () => {
