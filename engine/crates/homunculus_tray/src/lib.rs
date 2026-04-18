@@ -413,11 +413,7 @@ mod tests {
 
         assert_eq!(
             texts,
-            vec![
-                "@hmcs/settings",
-                "@hmcs/voicevox",
-                "@hmcs/app-exit"
-            ]
+            vec!["@hmcs/settings", "@hmcs/voicevox", "@hmcs/app-exit"]
         );
 
         let separator_count = menu
