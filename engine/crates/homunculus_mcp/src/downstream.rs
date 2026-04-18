@@ -7,7 +7,7 @@ use rmcp::{
 };
 use std::{collections::HashMap, sync::Arc};
 use thiserror::Error;
-use tokio::sync::{mpsc, RwLock};
+use tokio::sync::{RwLock, mpsc};
 
 pub mod handler;
 pub use handler::DownstreamClientHandler;
@@ -197,7 +197,11 @@ impl McpExtensionRegistry {
             }
             CacheInvalidation::Resources(_) => {
                 if client.capabilities.resources.is_some() {
-                    let new_res = client.service.list_all_resources().await.unwrap_or_default();
+                    let new_res = client
+                        .service
+                        .list_all_resources()
+                        .await
+                        .unwrap_or_default();
                     let new_tpl = client
                         .service
                         .list_all_resource_templates()
@@ -288,7 +292,10 @@ impl McpExtensionRegistry {
         };
         let (resources, resource_templates) = if capabilities.resources.is_some() {
             let r = service.list_all_resources().await.unwrap_or_default();
-            let t = service.list_all_resource_templates().await.unwrap_or_default();
+            let t = service
+                .list_all_resource_templates()
+                .await
+                .unwrap_or_default();
             (r, t)
         } else {
             (Vec::new(), Vec::new())
@@ -423,8 +430,8 @@ impl McpExtensionRegistry {
             .clients
             .get(slug)
             .ok_or_else(|| DownstreamError::UnknownSlug(slug.to_string()))?;
-        let params = rmcp::model::CallToolRequestParams::new(original_name.to_string())
-            .with_arguments(args);
+        let params =
+            rmcp::model::CallToolRequestParams::new(original_name.to_string()).with_arguments(args);
         Ok(client.service.call_tool(params).await?)
     }
 

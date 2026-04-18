@@ -20,8 +20,7 @@ use rmcp::{
     },
     service::{RequestContext, RoleServer},
     transport::streamable_http_server::{
-        StreamableHttpServerConfig, StreamableHttpService,
-        session::local::LocalSessionManager,
+        StreamableHttpServerConfig, StreamableHttpService, session::local::LocalSessionManager,
     },
 };
 
@@ -235,7 +234,9 @@ async fn deregister_removes_tools_from_aggregated_list() {
     // Before deregister — tool is visible.
     let tools_before = registry.0.read().await.list_all_tools_prefixed().await;
     assert!(
-        tools_before.iter().any(|t| t.name.as_ref() == "mockmod__echo"),
+        tools_before
+            .iter()
+            .any(|t| t.name.as_ref() == "mockmod__echo"),
         "expected mockmod__echo before deregister, got: {:?}",
         tools_before
             .iter()
@@ -249,7 +250,9 @@ async fn deregister_removes_tools_from_aggregated_list() {
     // After deregister — tool is gone.
     let tools_after = registry.0.read().await.list_all_tools_prefixed().await;
     assert!(
-        tools_after.iter().all(|t| t.name.as_ref() != "mockmod__echo"),
+        tools_after
+            .iter()
+            .all(|t| t.name.as_ref() != "mockmod__echo"),
         "expected mockmod__echo absent after deregister, got: {:?}",
         tools_after
             .iter()
@@ -259,7 +262,10 @@ async fn deregister_removes_tools_from_aggregated_list() {
 
     // list_registrations is empty.
     let regs = registry.0.read().await.list_registrations().await;
-    assert!(regs.is_empty(), "no registrations should remain after remove");
+    assert!(
+        regs.is_empty(),
+        "no registrations should remain after remove"
+    );
 }
 
 #[tokio::test]
@@ -306,5 +312,9 @@ async fn multiple_downstreams_aggregate_correctly() {
         "expected modtwo__echo in tool list, got: {:?}",
         names
     );
-    assert_eq!(tools.len(), 2, "expected exactly 2 tools from 2 downstreams");
+    assert_eq!(
+        tools.len(),
+        2,
+        "expected exactly 2 tools from 2 downstreams"
+    );
 }
