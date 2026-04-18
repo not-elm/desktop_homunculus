@@ -23,9 +23,9 @@ use rmcp::handler::server::router::tool::ToolRouter;
 use rmcp::handler::server::tool::ToolCallContext;
 use rmcp::model::{
     CallToolRequestParams, CallToolResult, Content, GetPromptRequestParams, GetPromptResult,
-    Implementation, ListPromptsResult, ListResourcesResult, ListToolsResult,
-    PaginatedRequestParams, ReadResourceRequestParams, ReadResourceResult, ServerCapabilities,
-    ServerInfo, Tool,
+    Implementation, InitializeRequestParams, InitializeResult, ListPromptsResult,
+    ListResourcesResult, ListToolsResult, PaginatedRequestParams, ReadResourceRequestParams,
+    ReadResourceResult, ServerCapabilities, ServerInfo, Tool,
 };
 use rmcp::service::RequestContext;
 use rmcp::{RoleServer, ServerHandler};
@@ -68,7 +68,13 @@ pub struct HomunculusMcpHandler {
     pub(crate) runtime: RuntimeResolver,
     /// Tracks open webview IDs so they can be cleaned up when the MCP session ends.
     pub(crate) open_webviews: Arc<Mutex<Vec<u64>>>,
+    #[allow(dead_code)] // TODO(task17): remove after RPC auto-MCP removal
     pub(crate) rpc_registry: Arc<RwLock<RpcRegistry>>,
+    /// Registry of downstream mod MCP servers whose tools/prompts/resources are proxied here.
+    #[allow(dead_code)] // TODO(task13): used in hybrid list_tools/call_tool
+    pub(crate) registry: crate::downstream::SharedMcpExtensionRegistry,
+    /// Hub for broadcasting list_changed notifications to all connected upstream MCP clients.
+    pub(crate) upstream_hub: Arc<crate::upstream_hub::UpstreamSessionHub>,
     tool_router: ToolRouter<Self>,
 }
 
@@ -79,6 +85,8 @@ impl HomunculusMcpHandler {
         config: HomunculusConfig,
         runtime: RuntimeResolver,
         rpc_registry: Arc<RwLock<RpcRegistry>>,
+        registry: crate::downstream::SharedMcpExtensionRegistry,
+        upstream_hub: Arc<crate::upstream_hub::UpstreamSessionHub>,
     ) -> Self {
         Self {
             webview_api: WebviewApi::from(reactor.clone()),
@@ -95,6 +103,8 @@ impl HomunculusMcpHandler {
             runtime,
             open_webviews: Arc::new(Mutex::new(Vec::new())),
             rpc_registry,
+            registry,
+            upstream_hub,
             tool_router: tools::tool_router(),
         }
     }
@@ -298,8 +308,11 @@ impl ServerHandler for HomunculusMcpHandler {
     fn get_info(&self) -> ServerInfo {
         let capabilities = ServerCapabilities::builder()
             .enable_tools()
+            .enable_tool_list_changed()
             .enable_resources()
+            .enable_resources_list_changed()
             .enable_prompts()
+            .enable_prompts_list_changed()
             .build();
 
         ServerInfo::new(capabilities)
@@ -308,6 +321,21 @@ impl ServerHandler for HomunculusMcpHandler {
                 "Desktop Homunculus MCP server. Controls a desktop mascot application — \
                  manage VRM characters, open webviews, query mods and assets.",
             )
+    }
+
+    async fn initialize(
+        &self,
+        request: InitializeRequestParams,
+        context: RequestContext<RoleServer>,
+    ) -> Result<InitializeResult, rmcp::ErrorData> {
+        // Register the connecting upstream client so list_changed notifications can be sent.
+        self.upstream_hub.register(context.peer.clone()).await;
+
+        // Retain default behavior: store peer info if not already set.
+        if context.peer.peer_info().is_none() {
+            context.peer.set_peer_info(request);
+        }
+        Ok(self.get_info())
     }
 
     fn list_tools(
@@ -415,7 +443,10 @@ mod tests {
         };
         let rpc_registry = Arc::new(RwLock::new(RpcRegistry::default()));
         let runtime = RuntimeResolver::detect();
-        HomunculusMcpHandler::new(reactor, config, runtime, rpc_registry)
+        let upstream_hub = crate::upstream_hub::UpstreamSessionHub::new();
+        let (registry, _deregister_sender) =
+            crate::downstream::McpExtensionRegistry::new(upstream_hub.clone());
+        HomunculusMcpHandler::new(reactor, config, runtime, rpc_registry, registry, upstream_hub)
     }
 
     #[test]

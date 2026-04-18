@@ -281,19 +281,24 @@ fn create_router(
     upstream_hub: std::sync::Arc<UpstreamSessionHub>,
 ) -> Router {
     let (router, _openapi) = build_openapi_router().split_for_parts();
-    // TODO(task12): update create_mcp_service signature to accept mcp_registry and upstream_hub.
-    let _upstream_hub = upstream_hub;
     router
         .with_state(HttpState::new(
             reactor.clone(),
             config.clone(),
             runtime.clone(),
             rpc_registry.clone(),
-            mcp_registry,
+            mcp_registry.clone(),
         ))
         .route_service(
             "/mcp",
-            homunculus_mcp::create_mcp_service(reactor, config, runtime, rpc_registry),
+            homunculus_mcp::create_mcp_service(
+                reactor,
+                config,
+                runtime,
+                rpc_registry,
+                mcp_registry,
+                upstream_hub,
+            ),
         )
         .layer(
             CorsLayer::new()

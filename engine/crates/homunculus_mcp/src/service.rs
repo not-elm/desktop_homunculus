@@ -13,7 +13,9 @@ use rmcp::transport::streamable_http_server::{
     StreamableHttpServerConfig, StreamableHttpService, session::local::LocalSessionManager,
 };
 
+use crate::downstream::SharedMcpExtensionRegistry;
 use crate::handler::HomunculusMcpHandler;
+use crate::upstream_hub::UpstreamSessionHub;
 
 /// Creates a [`StreamableHttpService`] backed by the given [`ApiReactor`].
 ///
@@ -26,7 +28,9 @@ pub fn create_mcp_service(
     reactor: ApiReactor,
     config: HomunculusConfig,
     runtime: RuntimeResolver,
-    rpc_registry: Arc<RwLock<RpcRegistry>>,
+    rpc_registry: Arc<RwLock<RpcRegistry>>, // TODO(task17): remove after RPC auto-MCP removal
+    registry: SharedMcpExtensionRegistry,
+    upstream_hub: Arc<UpstreamSessionHub>,
 ) -> StreamableHttpService<HomunculusMcpHandler, LocalSessionManager> {
     let server_config = StreamableHttpServerConfig::default();
     let session_manager = Arc::new(LocalSessionManager {
@@ -40,6 +44,8 @@ pub fn create_mcp_service(
                 config.clone(),
                 runtime.clone(),
                 rpc_registry.clone(),
+                registry.clone(),
+                upstream_hub.clone(),
             ))
         },
         session_manager,
