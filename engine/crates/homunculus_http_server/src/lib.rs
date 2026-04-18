@@ -196,10 +196,12 @@ fn setup(
     let runtime = runtime.clone();
     let addr = config.host();
     let rpc_registry = rpc_registry.0.clone();
-    // TODO(task11): extract mcp_registry and upstream_hub from Bevy resources once registered.
     let upstream_hub = UpstreamSessionHub::new();
-    let (mcp_registry, _deregister_sender) =
+    let (mcp_registry, deregister_sender) =
         homunculus_mcp::downstream::McpExtensionRegistry::new(upstream_hub.clone());
+    commands.insert_resource(mcp_registry.clone());
+    commands.insert_resource(homunculus_mcp::SharedUpstreamHub(upstream_hub.clone()));
+    commands.insert_resource(deregister_sender);
     commands.spawn(Reactor::schedule(|task| async move {
         task.will(
             Update,

@@ -6,6 +6,14 @@ use rmcp::service::{Peer, RoleServer, ServiceError};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
+/// Bevy resource wrapper for a shared [`UpstreamSessionHub`].
+///
+/// Inserted into the Bevy world during HTTP server setup so that any system or
+/// handler needing to reach the upstream session hub can access it via
+/// `Res<SharedUpstreamHub>`.
+#[derive(Clone, bevy::prelude::Resource)]
+pub struct SharedUpstreamHub(pub Arc<UpstreamSessionHub>);
+
 #[derive(Clone, Default)]
 pub struct UpstreamSessionHub {
     peers: Arc<RwLock<Vec<Peer<RoleServer>>>>,
