@@ -166,36 +166,6 @@ describe('rpc.serve() — env var validation', () => {
   });
 });
 
-describe('rpc.method() — MCP fields', () => {
-  it('preserves MCP fields on the returned def', async () => {
-    const { rpc } = await import('./rpc');
-    const def = rpc.method({
-      description: 'Test',
-      input: z.object({ x: z.number() }),
-      handler: async ({ x }) => x,
-      title: 'My Tool',
-      annotations: { readOnlyHint: true },
-    });
-
-    expect(def.title).toBe('My Tool');
-    expect(def.annotations).toEqual({ readOnlyHint: true });
-  });
-});
-
-describe('rpc.method() — meta field', () => {
-  it('preserves meta on the returned def', async () => {
-    const { rpc } = await import('./rpc');
-    const def = rpc.method({
-      description: 'TTS speak',
-      input: z.object({ text: z.string() }),
-      handler: async ({ text }) => ({ text }),
-      meta: { category: 'tts' },
-    });
-
-    expect(def.meta).toEqual({ category: 'tts' });
-  });
-});
-
 describe('rpc.serve() — method name validation', () => {
   beforeEach(() => {
     vi.resetModules();
@@ -326,7 +296,7 @@ describe('rpc.registrations()', () => {
     vi.restoreAllMocks();
   });
 
-  it('returns all RPC registrations when no filter given', async () => {
+  it('returns all RPC registrations flattened', async () => {
     getMock.mockResolvedValue({
       json: () =>
         Promise.resolve({
@@ -336,7 +306,6 @@ describe('rpc.registrations()', () => {
               methods: {
                 speak: {
                   description: 'VoiceVox TTS',
-                  meta: { category: 'tts' },
                 },
               },
             },
@@ -358,65 +327,24 @@ describe('rpc.registrations()', () => {
       modName: '@hmcs/voicevox',
       method: 'speak',
       description: 'VoiceVox TTS',
-      meta: { category: 'tts' },
     });
     expect(result).toContainEqual({
       modName: '@hmcs/other',
       method: 'doStuff',
       description: 'Other method',
-      meta: undefined,
     });
   });
 
-  it('filters by category when filter.category is provided', async () => {
+  it('returns empty array when no mods are registered', async () => {
     getMock.mockResolvedValue({
       json: () =>
         Promise.resolve({
-          registrations: {
-            '@hmcs/voicevox': {
-              port: 12345,
-              methods: {
-                speak: {
-                  description: 'VoiceVox TTS',
-                  meta: { category: 'tts' },
-                },
-              },
-            },
-            '@hmcs/other': {
-              port: 12346,
-              methods: {
-                doStuff: { description: 'Other method' },
-              },
-            },
-          },
+          registrations: {},
         }),
     });
 
     const { rpc } = await import('./rpc-client');
-    const result = await rpc.registrations({ category: 'tts' });
-
-    expect(result).toHaveLength(1);
-    expect(result[0].modName).toBe('@hmcs/voicevox');
-    expect(result[0].method).toBe('speak');
-  });
-
-  it('returns empty array when no mods match the category filter', async () => {
-    getMock.mockResolvedValue({
-      json: () =>
-        Promise.resolve({
-          registrations: {
-            '@hmcs/other': {
-              port: 12346,
-              methods: {
-                doStuff: { description: 'Other method' },
-              },
-            },
-          },
-        }),
-    });
-
-    const { rpc } = await import('./rpc-client');
-    const result = await rpc.registrations({ category: 'tts' });
+    const result = await rpc.registrations();
 
     expect(result).toHaveLength(0);
   });
