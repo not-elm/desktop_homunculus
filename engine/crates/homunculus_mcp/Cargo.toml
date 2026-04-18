@@ -9,6 +9,7 @@ publish.workspace = true
 
 [dependencies]
 bevy = { workspace = true }
+futures = { version = "0.3" }
 bevy_vrm1 = { workspace = true }
 homunculus_api = { workspace = true }
 homunculus_core = { workspace = true, features = ["mcp"] }
