@@ -3,6 +3,12 @@
 //! Spawns a mock downstream MCP server on an ephemeral port, registers it via
 //! [`McpExtensionRegistry::add`], and verifies the full
 //! register → list_tools → call_tool → deregister flow end-to-end.
+//!
+//! Note: Full upstream notifications/tools/list_changed propagation is covered by manual
+//! verification (plan Task 26) rather than automated tests. Creating a standalone Peer<RoleServer>
+//! observer requires running a complete rmcp server lifecycle, which is disproportionate for
+//! Phase-1 coverage. The tests here verify the registry bookkeeping (which is what would trigger
+//! UpstreamSessionHub broadcasts in production).
 
 use std::sync::Arc;
 
@@ -168,4 +174,137 @@ async fn register_list_tools_call_tool_then_deregister() {
             .map(|t| t.name.as_ref())
             .collect::<Vec<_>>()
     );
+}
+
+#[tokio::test]
+async fn re_registration_replaces_existing_downstream() {
+    let (mock_port, _mock_task) = spawn_mock_server().await;
+
+    let hub = UpstreamSessionHub::new();
+    let (registry, _deregister_tx) = McpExtensionRegistry::new(hub.clone());
+
+    let make_args = |slug: &str| RegisterArgs {
+        mod_slug: slug.to_string(),
+        mod_name: "@test/mockmod".into(),
+        mcp_url: format!("http://127.0.0.1:{}/mcp", mock_port),
+    };
+
+    registry
+        .0
+        .write()
+        .await
+        .add(make_args("mockmod"))
+        .await
+        .expect("first add");
+    registry
+        .0
+        .write()
+        .await
+        .add(make_args("mockmod"))
+        .await
+        .expect("re-add should succeed (upsert)");
+
+    // Only one entry with slug "mockmod" should exist.
+    let regs = registry.0.read().await.list_registrations().await;
+    let mockmod_count = regs.iter().filter(|r| r.mod_slug == "mockmod").count();
+    assert_eq!(
+        mockmod_count, 1,
+        "upsert should keep exactly one entry per slug"
+    );
+}
+
+#[tokio::test]
+async fn deregister_removes_tools_from_aggregated_list() {
+    let (mock_port, _mock_task) = spawn_mock_server().await;
+
+    let hub = UpstreamSessionHub::new();
+    let (registry, _deregister_tx) = McpExtensionRegistry::new(hub.clone());
+
+    registry
+        .0
+        .write()
+        .await
+        .add(RegisterArgs {
+            mod_slug: "mockmod".into(),
+            mod_name: "@test/mockmod".into(),
+            mcp_url: format!("http://127.0.0.1:{}/mcp", mock_port),
+        })
+        .await
+        .expect("add");
+
+    // Before deregister — tool is visible.
+    let tools_before = registry.0.read().await.list_all_tools_prefixed().await;
+    assert!(
+        tools_before.iter().any(|t| t.name.as_ref() == "mockmod__echo"),
+        "expected mockmod__echo before deregister, got: {:?}",
+        tools_before
+            .iter()
+            .map(|t| t.name.as_ref())
+            .collect::<Vec<_>>()
+    );
+
+    // Deregister.
+    registry.0.write().await.remove("mockmod").await;
+
+    // After deregister — tool is gone.
+    let tools_after = registry.0.read().await.list_all_tools_prefixed().await;
+    assert!(
+        tools_after.iter().all(|t| t.name.as_ref() != "mockmod__echo"),
+        "expected mockmod__echo absent after deregister, got: {:?}",
+        tools_after
+            .iter()
+            .map(|t| t.name.as_ref())
+            .collect::<Vec<_>>()
+    );
+
+    // list_registrations is empty.
+    let regs = registry.0.read().await.list_registrations().await;
+    assert!(regs.is_empty(), "no registrations should remain after remove");
+}
+
+#[tokio::test]
+async fn multiple_downstreams_aggregate_correctly() {
+    let (port_a, _task_a) = spawn_mock_server().await;
+    let (port_b, _task_b) = spawn_mock_server().await;
+
+    let hub = UpstreamSessionHub::new();
+    let (registry, _deregister_tx) = McpExtensionRegistry::new(hub.clone());
+
+    registry
+        .0
+        .write()
+        .await
+        .add(RegisterArgs {
+            mod_slug: "modone".into(),
+            mod_name: "@test/modone".into(),
+            mcp_url: format!("http://127.0.0.1:{}/mcp", port_a),
+        })
+        .await
+        .expect("add modone");
+
+    registry
+        .0
+        .write()
+        .await
+        .add(RegisterArgs {
+            mod_slug: "modtwo".into(),
+            mod_name: "@test/modtwo".into(),
+            mcp_url: format!("http://127.0.0.1:{}/mcp", port_b),
+        })
+        .await
+        .expect("add modtwo");
+
+    let tools = registry.0.read().await.list_all_tools_prefixed().await;
+    let names: Vec<&str> = tools.iter().map(|t| t.name.as_ref()).collect();
+    assert!(
+        names.contains(&"modone__echo"),
+        "expected modone__echo in tool list, got: {:?}",
+        names
+    );
+    assert!(
+        names.contains(&"modtwo__echo"),
+        "expected modtwo__echo in tool list, got: {:?}",
+        names
+    );
+    assert_eq!(tools.len(), 2, "expected exactly 2 tools from 2 downstreams");
 }
