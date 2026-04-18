@@ -1,10 +1,7 @@
 //! MCP extension registry — tracks downstream mod MCP servers and proxies them to the engine's single `/mcp` endpoint.
 
 use rmcp::{
-    model::{
-        CallToolResult, GetPromptResult, Prompt, ReadResourceResult, Resource, ResourceTemplate,
-        ServerCapabilities, Tool,
-    },
+    model::{Prompt, Resource, ResourceTemplate, ServerCapabilities, Tool},
     service::{ClientInitializeError, RoleClient, RunningService, ServiceError},
 };
 use std::{collections::HashMap, sync::Arc};
@@ -292,6 +289,114 @@ impl McpExtensionRegistry {
             });
         }
         out
+    }
+
+    /// Returns all tools from all downstreams, prefixed with `{slug}__`.
+    pub async fn list_all_tools_prefixed(&self) -> Vec<rmcp::model::Tool> {
+        use futures::future::join_all;
+        let gets = self.clients.values().map(|c| async move {
+            let cache = c.cached.read().await;
+            cache
+                .tools
+                .iter()
+                .map(|t| {
+                    let mut cloned = t.clone();
+                    cloned.name = format!("{}__{}", c.mod_slug, cloned.name).into();
+                    cloned
+                })
+                .collect::<Vec<_>>()
+        });
+        join_all(gets).await.into_iter().flatten().collect()
+    }
+
+    /// Returns all prompts from all downstreams, prefixed with `{slug}__`.
+    pub async fn list_all_prompts_prefixed(&self) -> Vec<rmcp::model::Prompt> {
+        use futures::future::join_all;
+        let gets = self.clients.values().map(|c| async move {
+            let cache = c.cached.read().await;
+            cache
+                .prompts
+                .iter()
+                .map(|p| {
+                    let mut cloned = p.clone();
+                    cloned.name = format!("{}__{}", c.mod_slug, cloned.name);
+                    cloned
+                })
+                .collect::<Vec<_>>()
+        });
+        join_all(gets).await.into_iter().flatten().collect()
+    }
+
+    /// Returns all resources from all downstreams (no prefix; URI scheme = slug).
+    pub async fn list_all_resources(&self) -> Vec<rmcp::model::Resource> {
+        use futures::future::join_all;
+        let gets = self
+            .clients
+            .values()
+            .map(|c| async move { c.cached.read().await.resources.clone() });
+        join_all(gets).await.into_iter().flatten().collect()
+    }
+
+    /// Returns all resource templates from all downstreams.
+    pub async fn list_all_resource_templates(&self) -> Vec<rmcp::model::ResourceTemplate> {
+        use futures::future::join_all;
+        let gets = self
+            .clients
+            .values()
+            .map(|c| async move { c.cached.read().await.resource_templates.clone() });
+        join_all(gets).await.into_iter().flatten().collect()
+    }
+
+    /// Dispatches a tool call to the downstream identified by `slug`.
+    pub async fn call_tool_by_parts(
+        &self,
+        slug: &str,
+        original_name: &str,
+        args: serde_json::Map<String, serde_json::Value>,
+    ) -> Result<rmcp::model::CallToolResult, DownstreamError> {
+        let client = self
+            .clients
+            .get(slug)
+            .ok_or_else(|| DownstreamError::UnknownSlug(slug.to_string()))?;
+        let params = rmcp::model::CallToolRequestParams::new(original_name.to_string())
+            .with_arguments(args);
+        Ok(client.service.call_tool(params).await?)
+    }
+
+    /// Dispatches a prompt retrieval to the downstream identified by `slug`.
+    pub async fn get_prompt_by_parts(
+        &self,
+        slug: &str,
+        original_name: &str,
+        args: Option<serde_json::Map<String, serde_json::Value>>,
+    ) -> Result<rmcp::model::GetPromptResult, DownstreamError> {
+        let client = self
+            .clients
+            .get(slug)
+            .ok_or_else(|| DownstreamError::UnknownSlug(slug.to_string()))?;
+        let mut params = rmcp::model::GetPromptRequestParams::new(original_name.to_string());
+        if let Some(a) = args {
+            params = params.with_arguments(a);
+        }
+        Ok(client.service.get_prompt(params).await?)
+    }
+
+    /// Dispatches a resource read to the downstream whose slug matches the URI scheme.
+    ///
+    /// Convention: the URI scheme equals the mod slug (e.g. `voicevox://...`).
+    pub async fn read_resource(
+        &self,
+        uri: &str,
+    ) -> Result<rmcp::model::ReadResourceResult, DownstreamError> {
+        let scheme = uri.split("://").next().unwrap_or("");
+        let client = self
+            .clients
+            .get(scheme)
+            .ok_or_else(|| DownstreamError::UnknownSlug(scheme.to_string()))?;
+        Ok(client
+            .service
+            .read_resource(rmcp::model::ReadResourceRequestParams::new(uri.to_string()))
+            .await?)
     }
 }
 
