@@ -11,6 +11,7 @@ publish.workspace = true
 bevy = { workspace = true }
 futures = { version = "0.3" }
 bevy_vrm1 = { workspace = true }
+crossbeam-channel = { workspace = true }
 homunculus_api = { workspace = true }
 homunculus_core = { workspace = true, features = ["mcp"] }
 homunculus_utils = { workspace = true }

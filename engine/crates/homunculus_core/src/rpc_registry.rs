@@ -1,10 +1,22 @@
 //! Runtime registry for MOD service RPC endpoints.
 
 use bevy::prelude::*;
+use crossbeam_channel::Sender;
 use rmcp::model::{Icon, Meta, ToolAnnotations, ToolExecution};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
+
+/// Bevy resource that allows synchronous ECS systems to enqueue MCP deregistrations
+/// without blocking on async code.
+///
+/// The sender feeds a background task (spawned by `homunculus_mcp`) that calls
+/// `McpExtensionRegistry::remove` for each slug received.
+///
+/// Used by [`homunculus_mod`]'s `watch_mod_service_processes` system to deregister
+/// a mod's MCP server when its service process exits.
+#[derive(Clone, Resource)]
+pub struct McpDeregisterSender(pub Sender<String>);
 
 /// Tracks registered MOD service RPC endpoints at runtime.
 ///

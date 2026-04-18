@@ -198,7 +198,7 @@ fn setup(
     let rpc_registry = rpc_registry.0.clone();
     // TODO(task11): extract mcp_registry and upstream_hub from Bevy resources once registered.
     let upstream_hub = UpstreamSessionHub::new();
-    let mcp_registry =
+    let (mcp_registry, _deregister_sender) =
         homunculus_mcp::downstream::McpExtensionRegistry::new(upstream_hub.clone());
     commands.spawn(Reactor::schedule(|task| async move {
         task.will(
@@ -587,7 +587,7 @@ mod tests {
         app.insert_resource(runtime.clone());
         let rpc_registry = Arc::new(RwLock::new(RpcRegistry::default()));
         let upstream_hub = homunculus_mcp::upstream_hub::UpstreamSessionHub::new();
-        let mcp_registry =
+        let (mcp_registry, _deregister_sender) =
             homunculus_mcp::downstream::McpExtensionRegistry::new(upstream_hub.clone());
         let router = create_router(
             app.world().resource::<ApiReactor>().clone(),

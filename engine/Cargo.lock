@@ -4603,6 +4603,7 @@ dependencies = [
  "async-broadcast",
  "bevy",
  "bevy_vrm1",
+ "crossbeam-channel",
  "homunculus_utils",
  "rmcp",
  "serde",
@@ -4688,6 +4689,7 @@ version = "0.1.0-alpha.6-dev"
 dependencies = [
  "bevy",
  "bevy_vrm1",
+ "crossbeam-channel",
  "futures",
  "homunculus_api",
  "homunculus_core",

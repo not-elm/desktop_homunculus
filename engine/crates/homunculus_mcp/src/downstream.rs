@@ -1,5 +1,6 @@
 //! MCP extension registry — tracks downstream mod MCP servers and proxies them to the engine's single `/mcp` endpoint.
 
+use homunculus_core::rpc_registry::McpDeregisterSender;
 use rmcp::{
     model::{Prompt, Resource, ResourceTemplate, ServerCapabilities, Tool},
     service::{ClientInitializeError, RoleClient, RunningService, ServiceError},
@@ -12,7 +13,10 @@ pub mod handler;
 pub use handler::DownstreamClientHandler;
 
 /// Axum state wrapper for the registry.
-#[derive(Clone)]
+///
+/// Implements `bevy::prelude::Resource` so it can be inserted into the Bevy world
+/// and accessed from systems via `Res<SharedMcpExtensionRegistry>`.
+#[derive(Clone, bevy::prelude::Resource)]
 pub struct SharedMcpExtensionRegistry(pub Arc<RwLock<McpExtensionRegistry>>);
 
 pub struct McpExtensionRegistry {
@@ -84,9 +88,11 @@ pub struct RegisterArgs {
 }
 
 impl McpExtensionRegistry {
+    /// Create a new registry, returning both the shared registry and a sender for
+    /// async deregistrations from synchronous Bevy systems.
     pub fn new(
         upstream_hub: Arc<crate::upstream_hub::UpstreamSessionHub>,
-    ) -> SharedMcpExtensionRegistry {
+    ) -> (SharedMcpExtensionRegistry, McpDeregisterSender) {
         let (tx, mut rx) = mpsc::unbounded_channel::<CacheInvalidation>();
 
         // Create the registry with a placeholder task.
@@ -115,7 +121,28 @@ impl McpExtensionRegistry {
             placeholder.abort();
         }
 
-        shared
+        // Spawn a background task that drains deregister slugs and calls remove().
+        // crossbeam-channel sender is used so the ECS thread (non-tokio) can send
+        // without requiring a tokio runtime context.
+        let (deregister_tx, deregister_rx) = crossbeam_channel::unbounded::<String>();
+        let shared_for_deregister = shared.clone();
+        tokio::spawn(async move {
+            loop {
+                // Bridge sync crossbeam receiver into async tokio task via spawn_blocking.
+                let slug = match tokio::task::spawn_blocking({
+                    let rx = deregister_rx.clone();
+                    move || rx.recv()
+                })
+                .await
+                {
+                    Ok(Ok(slug)) => slug,
+                    _ => break, // channel closed or task cancelled
+                };
+                shared_for_deregister.0.write().await.remove(&slug).await;
+            }
+        });
+
+        (shared, McpDeregisterSender(deregister_tx))
     }
 
     async fn refresh_cache_for(client: &DownstreamClient, inv: &CacheInvalidation) {
