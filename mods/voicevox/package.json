@@ -32,6 +32,7 @@
   "dependencies": {
     "@hmcs/sdk": "workspace:*",
     "@hmcs/ui": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.24.0",
     "react": "catalog:",
     "react-dom": "catalog:",
     "zod": "catalog:"
