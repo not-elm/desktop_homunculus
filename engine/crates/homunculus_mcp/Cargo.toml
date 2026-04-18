@@ -23,5 +23,9 @@ thiserror = { workspace = true }
 utoipa = { workspace = true }
 tokio = { workspace = true, features = ["process", "io-util", "time"] }
 
+[dev-dependencies]
+axum = { workspace = true }
+tokio = { workspace = true, features = ["net", "rt-multi-thread", "macros", "time"] }
+
 [lints]
 workspace = true

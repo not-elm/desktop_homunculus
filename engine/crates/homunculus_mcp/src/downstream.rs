@@ -115,8 +115,12 @@ impl McpExtensionRegistry {
         });
 
         // Replace placeholder with real task. Safe: registry just created, no other holders.
+        // Use try_write() to avoid blocking, which would panic inside a tokio runtime.
         {
-            let mut guard = shared.0.blocking_write();
+            let mut guard = shared
+                .0
+                .try_write()
+                .expect("McpExtensionRegistry::new: lock should be uncontested at construction");
             let placeholder = std::mem::replace(&mut guard.invalidator_task, task);
             placeholder.abort();
         }

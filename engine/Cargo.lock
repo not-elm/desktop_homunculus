@@ -4687,6 +4687,7 @@ dependencies = [
 name = "homunculus_mcp"
 version = "0.1.0-alpha.6-dev"
 dependencies = [
+ "axum",
  "bevy",
  "bevy_vrm1",
  "crossbeam-channel",
