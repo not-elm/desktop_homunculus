@@ -24,8 +24,8 @@ use rmcp::handler::server::tool::ToolCallContext;
 use rmcp::model::{
     CallToolRequestParams, CallToolResult, Content, GetPromptRequestParams, GetPromptResult,
     Implementation, InitializeRequestParams, InitializeResult, ListPromptsResult,
-    ListResourcesResult, ListToolsResult, PaginatedRequestParams, ReadResourceRequestParams,
-    ReadResourceResult, ServerCapabilities, ServerInfo, Tool,
+    ListResourceTemplatesResult, ListResourcesResult, ListToolsResult, PaginatedRequestParams,
+    ReadResourceRequestParams, ReadResourceResult, ServerCapabilities, ServerInfo, Tool,
 };
 use rmcp::service::RequestContext;
 use rmcp::{RoleServer, ServerHandler};
@@ -430,26 +430,49 @@ impl ServerHandler for HomunculusMcpHandler {
         None
     }
 
-    fn list_resources(
+    async fn list_resources(
         &self,
         _request: Option<PaginatedRequestParams>,
         _context: RequestContext<RoleServer>,
-    ) -> impl std::future::Future<Output = Result<ListResourcesResult, rmcp::ErrorData>> + Send + '_
-    {
-        std::future::ready(Ok(ListResourcesResult {
+    ) -> Result<ListResourcesResult, rmcp::ErrorData> {
+        let mut resources = resources::resource_definitions();
+        let registry = self.registry.0.read().await;
+        resources.extend(registry.list_all_resources().await);
+        warn_total_limit(resources.len(), "resources");
+        Ok(ListResourcesResult {
             meta: None,
             next_cursor: None,
-            resources: resources::resource_definitions(),
-        }))
+            resources,
+        })
     }
 
-    fn read_resource(
+    async fn list_resource_templates(
+        &self,
+        _request: Option<PaginatedRequestParams>,
+        _context: RequestContext<RoleServer>,
+    ) -> Result<ListResourceTemplatesResult, rmcp::ErrorData> {
+        let registry = self.registry.0.read().await;
+        let resource_templates = registry.list_all_resource_templates().await;
+        Ok(ListResourceTemplatesResult {
+            meta: None,
+            next_cursor: None,
+            resource_templates,
+        })
+    }
+
+    async fn read_resource(
         &self,
         request: ReadResourceRequestParams,
         _context: RequestContext<RoleServer>,
-    ) -> impl std::future::Future<Output = Result<ReadResourceResult, rmcp::ErrorData>> + Send + '_
-    {
-        resources::read_resource(self, request)
+    ) -> Result<ReadResourceResult, rmcp::ErrorData> {
+        if request.uri.starts_with("homunculus://") {
+            return resources::read_resource(self, request).await;
+        }
+        let registry = self.registry.0.read().await;
+        registry
+            .read_resource(&request.uri)
+            .await
+            .map_err(downstream_error_to_mcp)
     }
 
     async fn list_prompts(
