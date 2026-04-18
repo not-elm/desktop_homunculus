@@ -23,7 +23,7 @@ pub struct McpExtensionRegistry {
     clients: HashMap<String, DownstreamClient>,
     upstream_hub: Arc<crate::upstream_hub::UpstreamSessionHub>,
     invalidator_tx: mpsc::UnboundedSender<CacheInvalidation>,
-    invalidator_task: tokio::task::JoinHandle<()>,
+    invalidator_task: Option<tokio::task::JoinHandle<()>>,
 }
 
 pub struct DownstreamClient {
@@ -90,62 +90,83 @@ pub struct RegisterArgs {
 impl McpExtensionRegistry {
     /// Create a new registry, returning both the shared registry and a sender for
     /// async deregistrations from synchronous Bevy systems.
+    ///
+    /// Safe to call outside a tokio runtime (e.g. in unit tests): background tasks that
+    /// require a running runtime are skipped when none is available. Cache invalidation and
+    /// deregistration are no-ops in that case, which is acceptable since tests don't register
+    /// real downstream clients.
     pub fn new(
         upstream_hub: Arc<crate::upstream_hub::UpstreamSessionHub>,
     ) -> (SharedMcpExtensionRegistry, McpDeregisterSender) {
         let (tx, mut rx) = mpsc::unbounded_channel::<CacheInvalidation>();
 
-        // Create the registry with a placeholder task.
+        // Spawn cache-invalidation receiver only when a tokio runtime is available.
+        // In non-runtime contexts (unit tests, blocking code paths) the receiver is dropped
+        // and cache invalidation becomes a no-op.
+        let invalidator_task = if tokio::runtime::Handle::try_current().is_ok() {
+            let shared_inner = Arc::new(RwLock::new(Self {
+                clients: HashMap::new(),
+                upstream_hub: upstream_hub.clone(),
+                invalidator_tx: tx.clone(),
+                invalidator_task: None, // filled in below after the Arc is created
+            }));
+            let shared = SharedMcpExtensionRegistry(shared_inner);
+
+            let shared_for_task = shared.clone();
+            let task = tokio::spawn(async move {
+                while let Some(inv) = rx.recv().await {
+                    let reg = shared_for_task.0.read().await;
+                    if let Some(client) = reg.clients.get(inv.mod_slug()) {
+                        Self::refresh_cache_for(client, &inv).await;
+                    }
+                }
+            });
+
+            // Store the task handle. The lock is uncontested at construction.
+            shared
+                .0
+                .try_write()
+                .expect("McpExtensionRegistry::new: lock should be uncontested at construction")
+                .invalidator_task = Some(task);
+
+            // Spawn a background task that drains deregister slugs and calls remove().
+            // crossbeam-channel sender is used so the ECS thread (non-tokio) can send
+            // without requiring a tokio runtime context.
+            let (deregister_tx, deregister_rx) = crossbeam_channel::unbounded::<String>();
+            let shared_for_deregister = shared.clone();
+            tokio::spawn(async move {
+                loop {
+                    // Bridge sync crossbeam receiver into async tokio task via spawn_blocking.
+                    let slug = match tokio::task::spawn_blocking({
+                        let rx = deregister_rx.clone();
+                        move || rx.recv()
+                    })
+                    .await
+                    {
+                        Ok(Ok(slug)) => slug,
+                        _ => break, // channel closed or task cancelled
+                    };
+                    shared_for_deregister.0.write().await.remove(&slug).await;
+                }
+            });
+
+            return (shared, McpDeregisterSender(deregister_tx));
+        } else {
+            // No runtime available (e.g. unit tests). Drop rx; the tx will silently discard
+            // any invalidation signals sent through it.
+            drop(rx);
+            None
+        };
+
+        // No-runtime path: build a minimal registry without background tasks.
         let shared = SharedMcpExtensionRegistry(Arc::new(RwLock::new(Self {
             clients: HashMap::new(),
             upstream_hub,
             invalidator_tx: tx,
-            invalidator_task: tokio::spawn(async {}), // placeholder, replaced below
+            invalidator_task,
         })));
 
-        // Spawn real receiver task that holds a handle back to the registry.
-        let shared_for_task = shared.clone();
-        let task = tokio::spawn(async move {
-            while let Some(inv) = rx.recv().await {
-                let reg = shared_for_task.0.read().await;
-                if let Some(client) = reg.clients.get(inv.mod_slug()) {
-                    Self::refresh_cache_for(client, &inv).await;
-                }
-            }
-        });
-
-        // Replace placeholder with real task. Safe: registry just created, no other holders.
-        // Use try_write() to avoid blocking, which would panic inside a tokio runtime.
-        {
-            let mut guard = shared
-                .0
-                .try_write()
-                .expect("McpExtensionRegistry::new: lock should be uncontested at construction");
-            let placeholder = std::mem::replace(&mut guard.invalidator_task, task);
-            placeholder.abort();
-        }
-
-        // Spawn a background task that drains deregister slugs and calls remove().
-        // crossbeam-channel sender is used so the ECS thread (non-tokio) can send
-        // without requiring a tokio runtime context.
-        let (deregister_tx, deregister_rx) = crossbeam_channel::unbounded::<String>();
-        let shared_for_deregister = shared.clone();
-        tokio::spawn(async move {
-            loop {
-                // Bridge sync crossbeam receiver into async tokio task via spawn_blocking.
-                let slug = match tokio::task::spawn_blocking({
-                    let rx = deregister_rx.clone();
-                    move || rx.recv()
-                })
-                .await
-                {
-                    Ok(Ok(slug)) => slug,
-                    _ => break, // channel closed or task cancelled
-                };
-                shared_for_deregister.0.write().await.remove(&slug).await;
-            }
-        });
-
+        let (deregister_tx, _deregister_rx) = crossbeam_channel::unbounded::<String>();
         (shared, McpDeregisterSender(deregister_tx))
     }
 
@@ -182,7 +203,9 @@ impl McpExtensionRegistry {
 
 impl Drop for McpExtensionRegistry {
     fn drop(&mut self) {
-        self.invalidator_task.abort();
+        if let Some(task) = self.invalidator_task.take() {
+            task.abort();
+        }
     }
 }
 
