@@ -47,6 +47,42 @@ pub(crate) fn to_json_string(value: &impl serde::Serialize) -> Result<String, rm
     serde_json::to_string_pretty(value).map_err(api_err)
 }
 
+/// Logs a warning if the aggregated list exceeds the soft limit (SA2 from spec).
+fn warn_total_limit(n: usize, kind: &'static str) {
+    const LIMIT: usize = 1000;
+    if n > LIMIT {
+        bevy::log::warn!(
+            count = n,
+            limit = LIMIT,
+            kind,
+            "aggregated MCP list exceeds soft limit",
+        );
+    }
+}
+
+/// Convert [`crate::downstream::DownstreamError`] into [`rmcp::ErrorData`].
+///
+/// Maps the 6 [`rmcp::service::ServiceError`] variants to appropriate MCP error codes.
+fn downstream_error_to_mcp(e: crate::downstream::DownstreamError) -> rmcp::ErrorData {
+    use crate::downstream::DownstreamError;
+    use rmcp::service::ServiceError;
+    match e {
+        DownstreamError::UnknownSlug(s) => {
+            rmcp::ErrorData::invalid_params(format!("unknown mod slug: {s}"), None)
+        }
+        DownstreamError::ServiceError(inner) => match inner {
+            ServiceError::TransportSend(_) | ServiceError::TransportClosed => {
+                rmcp::ErrorData::internal_error("downstream unavailable", None)
+            }
+            ServiceError::Timeout { .. } => {
+                rmcp::ErrorData::internal_error("downstream timeout", None)
+            }
+            ServiceError::McpError(mcp_err) => mcp_err,
+            other => rmcp::ErrorData::internal_error(other.to_string(), None),
+        },
+    }
+}
+
 /// MCP handler that bridges AI agent requests to the Homunculus engine.
 ///
 /// Holds domain API handles for dispatching tool calls and resource reads
@@ -71,7 +107,6 @@ pub struct HomunculusMcpHandler {
     #[allow(dead_code)] // TODO(task17): remove after RPC auto-MCP removal
     pub(crate) rpc_registry: Arc<RwLock<RpcRegistry>>,
     /// Registry of downstream mod MCP servers whose tools/prompts/resources are proxied here.
-    #[allow(dead_code)] // TODO(task13): used in hybrid list_tools/call_tool
     pub(crate) registry: crate::downstream::SharedMcpExtensionRegistry,
     /// Hub for broadcasting list_changed notifications to all connected upstream MCP clients.
     pub(crate) upstream_hub: Arc<crate::upstream_hub::UpstreamSessionHub>,
@@ -338,17 +373,20 @@ impl ServerHandler for HomunculusMcpHandler {
         Ok(self.get_info())
     }
 
-    fn list_tools(
+    async fn list_tools(
         &self,
         _request: Option<PaginatedRequestParams>,
         _context: RequestContext<RoleServer>,
-    ) -> impl std::future::Future<Output = Result<ListToolsResult, rmcp::ErrorData>> + Send + '_
-    {
-        std::future::ready(Ok(ListToolsResult {
+    ) -> Result<ListToolsResult, rmcp::ErrorData> {
+        let mut tools = self.tool_router.list_all();
+        let registry = self.registry.0.read().await;
+        tools.extend(registry.list_all_tools_prefixed().await);
+        warn_total_limit(tools.len(), "tools");
+        Ok(ListToolsResult {
             meta: None,
             next_cursor: None,
-            tools: self.build_tool_list(),
-        }))
+            tools,
+        })
     }
 
     async fn call_tool(
@@ -356,6 +394,18 @@ impl ServerHandler for HomunculusMcpHandler {
         request: CallToolRequestParams,
         context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, rmcp::ErrorData> {
+        // Downstream dispatch only when prefix matches a registered slug.
+        if let Some((slug, original)) = request.name.split_once("__") {
+            let registry = self.registry.0.read().await;
+            if registry.has_slug(slug) {
+                let args = request.arguments.clone().unwrap_or_default();
+                return registry
+                    .call_tool_by_parts(slug, original, args)
+                    .await
+                    .map_err(downstream_error_to_mcp);
+            }
+        }
+        // Fall through to built-in static tool_router.
         if request.name.starts_with("rpc_") {
             return self.dispatch_rpc_tool(&request).await;
         }
