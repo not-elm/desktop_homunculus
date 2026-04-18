@@ -452,27 +452,38 @@ impl ServerHandler for HomunculusMcpHandler {
         resources::read_resource(self, request)
     }
 
-    fn list_prompts(
+    async fn list_prompts(
         &self,
         _request: Option<PaginatedRequestParams>,
         _context: RequestContext<RoleServer>,
-    ) -> impl std::future::Future<Output = Result<ListPromptsResult, rmcp::ErrorData>> + Send + '_
-    {
-        std::future::ready(Ok(ListPromptsResult {
+    ) -> Result<ListPromptsResult, rmcp::ErrorData> {
+        let mut prompts = prompts::prompt_definitions();
+        let registry = self.registry.0.read().await;
+        prompts.extend(registry.list_all_prompts_prefixed().await);
+        warn_total_limit(prompts.len(), "prompts");
+        Ok(ListPromptsResult {
             meta: None,
             next_cursor: None,
-            prompts: prompts::prompt_definitions(),
-        }))
+            prompts,
+        })
     }
 
-    fn get_prompt(
+    async fn get_prompt(
         &self,
         request: GetPromptRequestParams,
         _context: RequestContext<RoleServer>,
-    ) -> impl std::future::Future<Output = Result<GetPromptResult, rmcp::ErrorData>> + Send + '_
-    {
+    ) -> Result<GetPromptResult, rmcp::ErrorData> {
+        if let Some((slug, original)) = request.name.split_once("__") {
+            let registry = self.registry.0.read().await;
+            if registry.has_slug(slug) {
+                return registry
+                    .get_prompt_by_parts(slug, original, request.arguments.clone())
+                    .await
+                    .map_err(downstream_error_to_mcp);
+            }
+        }
         let args = request.arguments.unwrap_or_default();
-        std::future::ready(prompts::get_prompt(&request.name, &args))
+        prompts::get_prompt(&request.name, &args)
     }
 }
 
