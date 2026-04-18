@@ -86,6 +86,8 @@ use bevy_flurx::action::side_effect;
 use bevy_flurx::prelude::Reactor;
 use homunculus_api::prelude::ApiReactor;
 use homunculus_core::rpc_registry::{RpcRegistry, SharedRpcRegistry};
+use homunculus_mcp::downstream::SharedMcpExtensionRegistry;
+use homunculus_mcp::upstream_hub::UpstreamSessionHub;
 use homunculus_utils::config::HomunculusConfig;
 use homunculus_utils::runtime::RuntimeResolver;
 use route::entities;
@@ -120,6 +122,7 @@ use utoipa_axum::{router::OpenApiRouter, routes};
         (name = "processes", description = "Managed long-running processes"),
         (name = "assets", description = "Asset management"),
         (name = "rpc", description = "MOD service RPC registration and proxy"),
+        (name = "mcp", description = "MCP extension registry for mod MCP servers"),
         (name = "stt", description = "Speech-to-text"),
         (name = "dialog", description = "Native OS dialogs"),
     ),
@@ -193,12 +196,24 @@ fn setup(
     let runtime = runtime.clone();
     let addr = config.host();
     let rpc_registry = rpc_registry.0.clone();
+    // TODO(task11): extract mcp_registry and upstream_hub from Bevy resources once registered.
+    let upstream_hub = UpstreamSessionHub::new();
+    let mcp_registry =
+        homunculus_mcp::downstream::McpExtensionRegistry::new(upstream_hub.clone());
     commands.spawn(Reactor::schedule(|task| async move {
         task.will(
             Update,
             side_effect::tokio::spawn(async move {
-                if let Err(e) =
-                    start_http_server(reactor, config, runtime, rpc_registry, addr).await
+                if let Err(e) = start_http_server(
+                    reactor,
+                    config,
+                    runtime,
+                    rpc_registry,
+                    mcp_registry,
+                    upstream_hub,
+                    addr,
+                )
+                .await
                 {
                     error!("Failed to start http server: {e}");
                 }
@@ -213,13 +228,15 @@ async fn start_http_server(
     config: HomunculusConfig,
     runtime: RuntimeResolver,
     rpc_registry: Arc<RwLock<RpcRegistry>>,
+    mcp_registry: SharedMcpExtensionRegistry,
+    upstream_hub: std::sync::Arc<UpstreamSessionHub>,
     addr: String,
 ) -> std::io::Result<()> {
     let listener = tokio::net::TcpListener::bind(&addr).await?;
     info!("HTTP server listening on {addr}");
     axum::serve(
         listener,
-        create_router(reactor, config, runtime, rpc_registry),
+        create_router(reactor, config, runtime, rpc_registry, mcp_registry, upstream_hub),
     )
     .await?;
     Ok(())
@@ -250,6 +267,7 @@ fn build_openapi_router() -> OpenApiRouter<HttpState> {
         .routes(routes!(assets::import))
         .routes(routes!(assets::get_asset_file))
         .nest("/rpc", rpc_openapi_router())
+        .nest("/mcp", mcp_openapi_router())
 }
 
 fn create_router(
@@ -257,16 +275,21 @@ fn create_router(
     config: HomunculusConfig,
     runtime: RuntimeResolver,
     rpc_registry: Arc<RwLock<RpcRegistry>>,
+    mcp_registry: SharedMcpExtensionRegistry,
+    upstream_hub: std::sync::Arc<UpstreamSessionHub>,
 ) -> Router {
     let (router, _openapi) = build_openapi_router().split_for_parts();
+    // TODO(task12): update create_mcp_service signature to accept mcp_registry and upstream_hub.
+    let _upstream_hub = upstream_hub;
     router
         .with_state(HttpState::new(
             reactor.clone(),
             config.clone(),
             runtime.clone(),
             rpc_registry.clone(),
+            mcp_registry,
         ))
-        .nest_service(
+        .route_service(
             "/mcp",
             homunculus_mcp::create_mcp_service(reactor, config, runtime, rpc_registry),
         )
@@ -285,6 +308,13 @@ fn rpc_openapi_router() -> OpenApiRouter<HttpState> {
         .routes(routes!(route::rpc::deregister))
         .routes(routes!(route::rpc::list_registrations))
         .routes(routes!(route::rpc::call))
+}
+
+fn mcp_openapi_router() -> OpenApiRouter<HttpState> {
+    OpenApiRouter::new()
+        .routes(routes!(route::mcp::register))
+        .routes(routes!(route::mcp::deregister))
+        .routes(routes!(route::mcp::list_registrations))
 }
 
 fn app_router() -> OpenApiRouter<HttpState> {
@@ -556,11 +586,16 @@ mod tests {
         app.insert_resource(config.clone());
         app.insert_resource(runtime.clone());
         let rpc_registry = Arc::new(RwLock::new(RpcRegistry::default()));
+        let upstream_hub = homunculus_mcp::upstream_hub::UpstreamSessionHub::new();
+        let mcp_registry =
+            homunculus_mcp::downstream::McpExtensionRegistry::new(upstream_hub.clone());
         let router = create_router(
             app.world().resource::<ApiReactor>().clone(),
             config,
             runtime,
             rpc_registry,
+            mcp_registry,
+            upstream_hub,
         );
         (app, router)
     }
