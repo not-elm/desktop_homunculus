@@ -17,7 +17,6 @@ MODs extend Desktop Homunculus with characters, animations, sound effects, UI pa
 | [@hmcs/settings](./settings) | Application settings panel (frame rate, shadow opacity) via system tray | Recommended |
 | [@hmcs/app-exit](./app-exit) | Exit menu in the system tray | Recommended |
 | [@hmcs/voicevox](./voicevox) | Text-to-speech integration using the VoiceVox engine | Optional |
-| [@hmcs/agent](./agent) | AI Agent sessions — personas act as autonomous agents via Claude or Codex | Optional |
 | [@hmcs/stt](./stt) | Speech-to-text control panel with Whisper model management | Optional |
 
 ## Managing MODs
