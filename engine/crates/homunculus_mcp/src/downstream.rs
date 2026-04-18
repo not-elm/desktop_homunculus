@@ -63,13 +63,19 @@ impl CacheInvalidation {
 #[derive(Error, Debug)]
 pub enum RegisterError {
     #[error("mcpUrl unreachable or initialize failed: {0}")]
-    Initialize(#[from] ClientInitializeError),
+    Initialize(Box<ClientInitializeError>),
     #[error("peer info missing after initialize")]
     MissingPeerInfo,
     #[error("reserved URI scheme '{0}' not allowed for mod resources")]
     ReservedScheme(String),
     #[error("invalid mod slug: must match ^[a-z][a-z0-9_]*$")]
     InvalidSlug,
+}
+
+impl From<ClientInitializeError> for RegisterError {
+    fn from(e: ClientInitializeError) -> Self {
+        RegisterError::Initialize(Box::new(e))
+    }
 }
 
 #[derive(Error, Debug)]
@@ -95,6 +101,11 @@ impl McpExtensionRegistry {
     /// require a running runtime are skipped when none is available. Cache invalidation and
     /// deregistration are no-ops in that case, which is acceptable since tests don't register
     /// real downstream clients.
+    ///
+    /// Returns a tuple so the `McpDeregisterSender` can be independently owned by the mod
+    /// service watcher (a Bevy system on the ECS thread). Renaming would require changes at
+    /// all call sites.
+    #[allow(clippy::new_ret_no_self)]
     pub fn new(
         upstream_hub: Arc<crate::upstream_hub::UpstreamSessionHub>,
     ) -> (SharedMcpExtensionRegistry, McpDeregisterSender) {

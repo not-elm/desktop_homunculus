@@ -44,49 +44,32 @@ impl rmcp::ClientHandler for DownstreamClientHandler {
         .with_protocol_version(ProtocolVersion::V_2025_03_26)
     }
 
-    fn on_tool_list_changed(
-        &self,
-        _context: NotificationContext<RoleClient>,
-    ) -> impl std::future::Future<Output = ()> + Send + '_ {
-        async move {
-            let _ = self
-                .cache_invalidator
-                .send(CacheInvalidation::Tools(self.mod_slug.clone()));
-            self.upstream_hub.notify_tools_changed().await;
-        }
+    async fn on_tool_list_changed(&self, _context: NotificationContext<RoleClient>) {
+        let _ = self
+            .cache_invalidator
+            .send(CacheInvalidation::Tools(self.mod_slug.clone()));
+        self.upstream_hub.notify_tools_changed().await;
     }
 
-    fn on_prompt_list_changed(
-        &self,
-        _context: NotificationContext<RoleClient>,
-    ) -> impl std::future::Future<Output = ()> + Send + '_ {
-        async move {
-            let _ = self
-                .cache_invalidator
-                .send(CacheInvalidation::Prompts(self.mod_slug.clone()));
-            self.upstream_hub.notify_prompts_changed().await;
-        }
+    async fn on_prompt_list_changed(&self, _context: NotificationContext<RoleClient>) {
+        let _ = self
+            .cache_invalidator
+            .send(CacheInvalidation::Prompts(self.mod_slug.clone()));
+        self.upstream_hub.notify_prompts_changed().await;
     }
 
-    fn on_resource_list_changed(
-        &self,
-        _context: NotificationContext<RoleClient>,
-    ) -> impl std::future::Future<Output = ()> + Send + '_ {
-        async move {
-            let _ = self
-                .cache_invalidator
-                .send(CacheInvalidation::Resources(self.mod_slug.clone()));
-            self.upstream_hub.notify_resources_changed().await;
-        }
+    async fn on_resource_list_changed(&self, _context: NotificationContext<RoleClient>) {
+        let _ = self
+            .cache_invalidator
+            .send(CacheInvalidation::Resources(self.mod_slug.clone()));
+        self.upstream_hub.notify_resources_changed().await;
     }
 
-    fn on_logging_message(
+    async fn on_logging_message(
         &self,
         params: LoggingMessageNotificationParam,
         _context: NotificationContext<RoleClient>,
-    ) -> impl std::future::Future<Output = ()> + Send + '_ {
-        async move {
-            bevy::log::info!("downstream mcp log [{}]: {:?}", self.mod_slug, params);
-        }
+    ) {
+        bevy::log::info!("downstream mcp log [{}]: {:?}", self.mod_slug, params);
     }
 }
