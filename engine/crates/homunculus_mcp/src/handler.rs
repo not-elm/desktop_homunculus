@@ -16,20 +16,19 @@ use homunculus_api::prelude::{
     WebviewApi,
 };
 use homunculus_core::prelude::{Persona, PersonaId};
-use homunculus_core::rpc_registry::RpcRegistry;
 use homunculus_utils::config::HomunculusConfig;
 use homunculus_utils::runtime::RuntimeResolver;
 use rmcp::handler::server::router::tool::ToolRouter;
 use rmcp::handler::server::tool::ToolCallContext;
 use rmcp::model::{
-    CallToolRequestParams, CallToolResult, Content, GetPromptRequestParams, GetPromptResult,
+    CallToolRequestParams, CallToolResult, GetPromptRequestParams, GetPromptResult,
     Implementation, InitializeRequestParams, InitializeResult, ListPromptsResult,
     ListResourceTemplatesResult, ListResourcesResult, ListToolsResult, PaginatedRequestParams,
     ReadResourceRequestParams, ReadResourceResult, ServerCapabilities, ServerInfo, Tool,
 };
 use rmcp::service::RequestContext;
 use rmcp::{RoleServer, ServerHandler};
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::{Arc, Mutex};
 
 const SERVER_NAME: &str = "homunculus";
 
@@ -104,8 +103,6 @@ pub struct HomunculusMcpHandler {
     pub(crate) runtime: RuntimeResolver,
     /// Tracks open webview IDs so they can be cleaned up when the MCP session ends.
     pub(crate) open_webviews: Arc<Mutex<Vec<u64>>>,
-    #[allow(dead_code)] // TODO(task17): remove after RPC auto-MCP removal
-    pub(crate) rpc_registry: Arc<RwLock<RpcRegistry>>,
     /// Registry of downstream mod MCP servers whose tools/prompts/resources are proxied here.
     pub(crate) registry: crate::downstream::SharedMcpExtensionRegistry,
     /// Hub for broadcasting list_changed notifications to all connected upstream MCP clients.
@@ -119,7 +116,6 @@ impl HomunculusMcpHandler {
         reactor: ApiReactor,
         config: HomunculusConfig,
         runtime: RuntimeResolver,
-        rpc_registry: Arc<RwLock<RpcRegistry>>,
         registry: crate::downstream::SharedMcpExtensionRegistry,
         upstream_hub: Arc<crate::upstream_hub::UpstreamSessionHub>,
     ) -> Self {
@@ -137,7 +133,6 @@ impl HomunculusMcpHandler {
             config,
             runtime,
             open_webviews: Arc::new(Mutex::new(Vec::new())),
-            rpc_registry,
             registry,
             upstream_hub,
             tool_router: tools::tool_router(),
@@ -210,133 +205,6 @@ impl HomunculusMcpHandler {
         }) = persona_id;
     }
 
-    /// Builds the combined tool list from static router + dynamic RPC registry.
-    fn build_tool_list(&self) -> Vec<Tool> {
-        let mut tools: Vec<Tool> = self.tool_router.list_all();
-        let reg = self.rpc_registry.read().unwrap_or_else(|e| e.into_inner());
-        let mut seen_names: std::collections::HashMap<String, bool> =
-            std::collections::HashMap::new();
-
-        for (mod_name, registration) in reg.all() {
-            for (method, meta) in &registration.methods {
-                let tool_name = generate_tool_name(mod_name, method);
-                match seen_names.entry(tool_name.clone()) {
-                    std::collections::hash_map::Entry::Vacant(e) => {
-                        e.insert(false);
-                        tools.push(build_rpc_tool(mod_name, method, meta));
-                    }
-                    std::collections::hash_map::Entry::Occupied(mut e) => {
-                        if !*e.get() {
-                            tools.retain(|t| t.name != tool_name);
-                            e.insert(true);
-                        }
-                        bevy::log::warn!(
-                            "RPC tool name collision: '{tool_name}' from '{mod_name}.{method}' — skipping"
-                        );
-                    }
-                }
-            }
-        }
-        tools
-    }
-
-    /// Dispatches a `call_tool` request to the matching RPC endpoint.
-    async fn dispatch_rpc_tool(
-        &self,
-        request: &CallToolRequestParams,
-    ) -> Result<CallToolResult, rmcp::ErrorData> {
-        let (port, mod_name, method, timeout_ms) = {
-            let reg = self.rpc_registry.read().unwrap_or_else(|e| e.into_inner());
-            let mut found = None;
-            for (mn, registration) in reg.all() {
-                for (m, meta) in &registration.methods {
-                    if generate_tool_name(mn, m) == request.name {
-                        found = Some((
-                            registration.port,
-                            mn.clone(),
-                            m.clone(),
-                            meta.timeout.unwrap_or(tools::rpc::DEFAULT_RPC_TIMEOUT_MS),
-                        ));
-                        break;
-                    }
-                }
-                if found.is_some() {
-                    break;
-                }
-            }
-            found.ok_or_else(|| {
-                rmcp::ErrorData::invalid_params(format!("Unknown RPC tool: {}", request.name), None)
-            })?
-        };
-
-        let body = request
-            .arguments
-            .as_ref()
-            .map(|args| serde_json::Value::Object(args.clone()));
-
-        let text = tools::send_rpc_call(port, &mod_name, &method, timeout_ms, body.as_ref()).await;
-        Ok(CallToolResult::success(vec![Content::text(text)]))
-    }
-}
-
-/// Normalizes a mod name for use in MCP tool names.
-///
-/// Strips `@`, replaces `/` and `-` with `_`.
-fn normalize_mod_name(mod_name: &str) -> String {
-    mod_name.replace('@', "").replace(['/', '-'], "_")
-}
-
-/// Generates an MCP tool name from a mod name and method.
-fn generate_tool_name(mod_name: &str, method: &str) -> String {
-    format!("rpc_{}_{}", normalize_mod_name(mod_name), method)
-}
-
-/// Builds an MCP `Tool` definition from RPC method metadata.
-fn build_rpc_tool(
-    mod_name: &str,
-    method: &str,
-    meta: &homunculus_core::rpc_registry::RpcMethodMeta,
-) -> Tool {
-    let name = generate_tool_name(mod_name, method);
-    let description = meta
-        .description
-        .clone()
-        .unwrap_or_else(|| format!("RPC: {mod_name}.{method}"));
-    let input_schema = meta
-        .input_schema
-        .clone()
-        .unwrap_or_else(default_empty_object_schema);
-
-    let mut tool = Tool::new(name, description, std::sync::Arc::new(input_schema));
-
-    if let Some(title) = &meta.title {
-        tool = tool.with_title(title.clone());
-    }
-    if let Some(output) = &meta.output_schema {
-        tool = tool.with_raw_output_schema(std::sync::Arc::new(output.clone()));
-    }
-    if let Some(annotations) = &meta.annotations {
-        tool = tool.with_annotations(annotations.clone());
-    }
-    if let Some(execution) = &meta.execution {
-        tool = tool.with_execution(execution.clone());
-    }
-    if let Some(icons) = &meta.icons {
-        tool = tool.with_icons(icons.clone());
-    }
-    if let Some(m) = &meta.meta {
-        tool = tool.with_meta(m.clone());
-    }
-    tool
-}
-
-fn default_empty_object_schema() -> serde_json::Map<String, serde_json::Value> {
-    let mut map = serde_json::Map::new();
-    map.insert(
-        "type".to_string(),
-        serde_json::Value::String("object".to_string()),
-    );
-    map
 }
 
 impl ServerHandler for HomunculusMcpHandler {
@@ -406,28 +274,12 @@ impl ServerHandler for HomunculusMcpHandler {
             }
         }
         // Fall through to built-in static tool_router.
-        if request.name.starts_with("rpc_") {
-            return self.dispatch_rpc_tool(&request).await;
-        }
         let tcc = ToolCallContext::new(self, request, context);
         self.tool_router.call(tcc).await
     }
 
     fn get_tool(&self, name: &str) -> Option<Tool> {
-        if let Some(tool) = self.tool_router.get(name) {
-            return Some(tool.clone());
-        }
-        if name.starts_with("rpc_") {
-            let reg = self.rpc_registry.read().unwrap_or_else(|e| e.into_inner());
-            for (mod_name, registration) in reg.all() {
-                for (method, meta) in &registration.methods {
-                    if generate_tool_name(mod_name, method) == name {
-                        return Some(build_rpc_tool(mod_name, method, meta));
-                    }
-                }
-            }
-        }
-        None
+        self.tool_router.get(name).cloned()
     }
 
     async fn list_resources(
@@ -517,20 +369,17 @@ mod tests {
 
     /// Creates a handler backed by a dummy reactor (no Bevy app).
     fn test_handler() -> HomunculusMcpHandler {
-        use homunculus_core::rpc_registry::RpcRegistry;
-        use std::sync::{Arc, RwLock};
         let reactor = ApiReactor::__test_dummy();
         let config = HomunculusConfig {
             mods_dir: std::path::PathBuf::from("/tmp/mods"),
             port: 3100,
             ..Default::default()
         };
-        let rpc_registry = Arc::new(RwLock::new(RpcRegistry::default()));
         let runtime = RuntimeResolver::detect();
         let upstream_hub = crate::upstream_hub::UpstreamSessionHub::new();
         let (registry, _deregister_sender) =
             crate::downstream::McpExtensionRegistry::new(upstream_hub.clone());
-        HomunculusMcpHandler::new(reactor, config, runtime, rpc_registry, registry, upstream_hub)
+        HomunculusMcpHandler::new(reactor, config, runtime, registry, upstream_hub)
     }
 
     #[test]
@@ -710,104 +559,10 @@ mod tests {
     }
 
     #[test]
-    fn normalize_mod_name_strips_at_and_replaces_separators() {
-        assert_eq!(normalize_mod_name("@hmcs/persona"), "hmcs_persona");
-        assert_eq!(normalize_mod_name("my-mod"), "my_mod");
-        assert_eq!(normalize_mod_name("simple"), "simple");
-        assert_eq!(normalize_mod_name("@scope/my-pkg"), "scope_my_pkg");
-    }
-
-    #[test]
-    fn generate_tool_name_produces_expected_format() {
-        assert_eq!(
-            generate_tool_name("@hmcs/persona", "speak"),
-            "rpc_hmcs_persona_speak"
-        );
-        assert_eq!(generate_tool_name("voicevox", "tts"), "rpc_voicevox_tts");
-    }
-
-    #[test]
-    fn build_tool_list_includes_static_and_dynamic_tools() {
-        let handler = test_handler();
-        {
-            let mut reg = handler.rpc_registry.write().unwrap();
-            let mut methods = std::collections::HashMap::new();
-            methods.insert(
-                "speak".to_string(),
-                homunculus_core::rpc_registry::RpcMethodMeta {
-                    description: Some("Speak text".to_string()),
-                    ..Default::default()
-                },
-            );
-            reg.register("@hmcs/voicevox".to_string(), 9999, methods);
-        }
-        let tools = handler.build_tool_list();
-        let names: Vec<&str> = tools.iter().map(|t| t.name.as_ref()).collect();
-        assert!(
-            names.iter().any(|n| !n.starts_with("rpc_")),
-            "should have static tools"
-        );
-        assert!(
-            names.contains(&"rpc_hmcs_voicevox_speak"),
-            "should have dynamic rpc tool"
-        );
-    }
-
-    #[test]
-    fn build_tool_list_excludes_colliding_names() {
-        let handler = test_handler();
-        {
-            let mut reg = handler.rpc_registry.write().unwrap();
-            let mut m1 = std::collections::HashMap::new();
-            m1.insert(
-                "ping".to_string(),
-                homunculus_core::rpc_registry::RpcMethodMeta::default(),
-            );
-            reg.register("my-mod".to_string(), 1000, m1);
-
-            let mut m2 = std::collections::HashMap::new();
-            m2.insert(
-                "ping".to_string(),
-                homunculus_core::rpc_registry::RpcMethodMeta::default(),
-            );
-            reg.register("my_mod".to_string(), 2000, m2);
-        }
-        let tools = handler.build_tool_list();
-        let names: Vec<&str> = tools.iter().map(|t| t.name.as_ref()).collect();
-        assert!(
-            !names.contains(&"rpc_my_mod_ping"),
-            "colliding tool should be excluded"
-        );
-    }
-
-    #[test]
-    fn get_tool_finds_dynamic_rpc_tool() {
-        let handler = test_handler();
-        {
-            let mut reg = handler.rpc_registry.write().unwrap();
-            let mut methods = std::collections::HashMap::new();
-            methods.insert(
-                "hello".to_string(),
-                homunculus_core::rpc_registry::RpcMethodMeta {
-                    description: Some("Say hello".to_string()),
-                    ..Default::default()
-                },
-            );
-            reg.register("test-mod".to_string(), 8888, methods);
-        }
-        let tool = handler.get_tool("rpc_test_mod_hello");
-        assert!(tool.is_some(), "should find dynamic RPC tool");
-        let tool = tool.unwrap();
-        assert_eq!(tool.name, "rpc_test_mod_hello");
-        assert_eq!(tool.description.as_deref(), Some("Say hello"));
-    }
-
-    #[test]
     fn get_tool_finds_static_tools() {
         let handler = test_handler();
-        // Static tools like "show_vrm" should be found
-        let tools = handler.build_tool_list();
-        if let Some(first_static) = tools.iter().find(|t| !t.name.starts_with("rpc_")) {
+        let tools = handler.tool_router.list_all();
+        if let Some(first_static) = tools.first() {
             let found = handler.get_tool(&first_static.name);
             assert!(found.is_some(), "should find static tool by name");
         }
@@ -816,7 +571,6 @@ mod tests {
     #[test]
     fn get_tool_returns_none_for_unknown() {
         let handler = test_handler();
-        assert!(handler.get_tool("rpc_nonexistent_method").is_none());
         assert!(handler.get_tool("totally_unknown").is_none());
     }
 

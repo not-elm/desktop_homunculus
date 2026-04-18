@@ -291,14 +291,7 @@ fn create_router(
         ))
         .route_service(
             "/mcp",
-            homunculus_mcp::create_mcp_service(
-                reactor,
-                config,
-                runtime,
-                rpc_registry,
-                mcp_registry,
-                upstream_hub,
-            ),
+            homunculus_mcp::create_mcp_service(reactor, config, runtime, mcp_registry, upstream_hub),
         )
         .layer(
             CorsLayer::new()

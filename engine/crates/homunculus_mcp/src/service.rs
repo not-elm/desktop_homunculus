@@ -3,10 +3,9 @@
 //! Provides [`create_mcp_service`], which builds a [`StreamableHttpService`]
 //! suitable for mounting on the engine's Axum router via `nest_service`.
 
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 
 use homunculus_api::prelude::ApiReactor;
-use homunculus_core::rpc_registry::RpcRegistry;
 use homunculus_utils::config::HomunculusConfig;
 use homunculus_utils::runtime::RuntimeResolver;
 use rmcp::transport::streamable_http_server::{
@@ -28,7 +27,6 @@ pub fn create_mcp_service(
     reactor: ApiReactor,
     config: HomunculusConfig,
     runtime: RuntimeResolver,
-    rpc_registry: Arc<RwLock<RpcRegistry>>, // TODO(task17): remove after RPC auto-MCP removal
     registry: SharedMcpExtensionRegistry,
     upstream_hub: Arc<UpstreamSessionHub>,
 ) -> StreamableHttpService<HomunculusMcpHandler, LocalSessionManager> {
@@ -43,7 +41,6 @@ pub fn create_mcp_service(
                 reactor.clone(),
                 config.clone(),
                 runtime.clone(),
-                rpc_registry.clone(),
                 registry.clone(),
                 upstream_hub.clone(),
             ))
