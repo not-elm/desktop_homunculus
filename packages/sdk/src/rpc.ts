@@ -49,6 +49,8 @@
 
 import * as http from 'node:http';
 import type { ZodType } from 'zod';
+import { readModName, readEnginePort, readRpcPort } from './internal/env';
+import { readRawBody } from './internal/http';
 import { rpc as rpcClient } from './rpc-client';
 
 export type { RpcCallOptions, RpcRegistrationEntry } from './rpc-client';
@@ -116,35 +118,6 @@ function jsonResponse(res: http.ServerResponse, status: number, body: unknown): 
   res.end(payload);
 }
 
-async function readBody(req: http.IncomingMessage): Promise<string> {
-  const chunks: Buffer[] = [];
-  for await (const chunk of req) {
-    chunks.push(chunk as Buffer);
-  }
-  return Buffer.concat(chunks).toString('utf-8');
-}
-
-function readRpcPort(): number {
-  const s = process.env.HMCS_RPC_PORT;
-  if (!s) throw new Error('HMCS_RPC_PORT environment variable is required');
-  const port = parseInt(s, 10);
-  if (Number.isNaN(port)) throw new Error(`HMCS_RPC_PORT is not a valid port number: ${s}`);
-  return port;
-}
-
-function readModName(): string {
-  const name = process.env.HMCS_MOD_NAME;
-  if (!name) throw new Error('HMCS_MOD_NAME environment variable is required');
-  return name;
-}
-
-function readEnginePort(): number {
-  const s = process.env.HMCS_PORT ?? '3100';
-  const port = parseInt(s, 10);
-  if (Number.isNaN(port)) throw new Error(`HMCS_PORT is not a valid port number: ${s}`);
-  return port;
-}
-
 function validateMethodName(name: string): void {
   if (!name || name.includes('/') || name.includes('\\')) {
     throw new Error(
@@ -199,7 +172,7 @@ async function handleRequest(
 
   let rawBody: string;
   try {
-    rawBody = await readBody(req);
+    rawBody = await readRawBody(req);
   } catch (err) {
     jsonResponse(res, 400, {
       error: 'READ_ERROR',
