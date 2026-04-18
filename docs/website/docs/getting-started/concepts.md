@@ -33,7 +33,7 @@ Official MODs use the `@hmcs/` prefix:
 | `@hmcs/settings` | Application settings panel |
 | `@hmcs/app-exit` | Exit option in the system tray |
 
-Additional MODs — such as text-to-speech (`@hmcs/voicevox`), AI Agent (`@hmcs/agent`), and speech recognition (`@hmcs/stt`) — can be installed at any time using the `hmcs` CLI.
+Additional MODs — such as text-to-speech (`@hmcs/voicevox`) and speech recognition (`@hmcs/stt`) — can be installed at any time using the `hmcs` CLI. For AI-powered interaction, see [AI Integration](../ai-integration) (requires running [OpenClaw](https://docs.openclaw.ai) externally).
 
 ## Asset
 
