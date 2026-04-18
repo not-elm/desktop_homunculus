@@ -4688,6 +4688,7 @@ version = "0.1.0-alpha.6-dev"
 dependencies = [
  "bevy",
  "bevy_vrm1",
+ "futures",
  "homunculus_api",
  "homunculus_core",
  "homunculus_utils",
@@ -4695,7 +4696,9 @@ dependencies = [
  "rmcp",
  "serde",
  "serde_json",
+ "thiserror 2.0.18",
  "tokio",
+ "utoipa",
 ]
 
 [[package]]
