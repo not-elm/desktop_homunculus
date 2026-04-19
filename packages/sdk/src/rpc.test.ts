@@ -2,10 +2,6 @@ import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from 'vite
 import { z } from 'zod';
 import { HomunculusApiError } from './host';
 
-// ---------------------------------------------------------------------------
-// rpc.method() — validation logic (no server needed)
-// ---------------------------------------------------------------------------
-
 describe('rpc.method()', () => {
   it('returns a method def with handler that resolves for valid input', async () => {
     const { rpc } = await import('./rpc');
@@ -109,10 +105,6 @@ describe('rpc.method()', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// rpc.serve() — env var checks
-// ---------------------------------------------------------------------------
-
 describe('rpc.serve() — env var validation', () => {
   const originalEnv = { ...process.env };
 
@@ -202,10 +194,6 @@ describe('rpc.serve() — method name validation', () => {
     ).rejects.toThrow('Invalid RPC method name');
   });
 });
-
-// ---------------------------------------------------------------------------
-// rpc.call() — browser-safe RPC client (via rpc-client.ts)
-// ---------------------------------------------------------------------------
 
 describe('rpc.call()', () => {
   let postMock: Mock;

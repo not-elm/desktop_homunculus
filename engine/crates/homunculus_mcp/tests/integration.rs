@@ -27,10 +27,6 @@ use rmcp::{
 use homunculus_mcp::downstream::{McpExtensionRegistry, RegisterArgs};
 use homunculus_mcp::upstream_hub::UpstreamSessionHub;
 
-// ---------------------------------------------------------------------------
-// Mock downstream server
-// ---------------------------------------------------------------------------
-
 #[derive(Clone)]
 struct MockDownstream;
 
@@ -75,10 +71,6 @@ impl ServerHandler for MockDownstream {
     }
 }
 
-// ---------------------------------------------------------------------------
-// Helper: spawn the mock server on an ephemeral port
-// ---------------------------------------------------------------------------
-
 async fn spawn_mock_server() -> (u16, tokio::task::JoinHandle<()>) {
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
         .await
@@ -106,10 +98,6 @@ async fn spawn_mock_server() -> (u16, tokio::task::JoinHandle<()>) {
 
     (port, handle)
 }
-
-// ---------------------------------------------------------------------------
-// Integration test
-// ---------------------------------------------------------------------------
 
 #[tokio::test]
 async fn register_list_tools_call_tool_then_deregister() {
