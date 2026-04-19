@@ -88,15 +88,16 @@ You can extend Desktop Homunculus with optional MODs. Install any of them at any
 | MOD | Description |
 |---|---|
 | `@hmcs/voicevox` | Text-to-speech integration using the [VoiceVox](https://voicevox.hiroshiba.jp/) engine |
-| `@hmcs/agent` | AI Agent — personas act as autonomous agents via Claude or Codex ([details](../mods/agent)) |
 | `@hmcs/stt` | Speech-to-text with Whisper-based voice recognition ([details](../mods/stt)) |
+
+For AI-powered interaction, install [OpenClaw](https://docs.openclaw.ai) externally and set up the `@hmcs/openclaw-plugin` bridge. See [AI Integration](../ai-integration) for details.
 
 :::info[VoiceVox Setup]
 The `@hmcs/voicevox` MOD requires the VoiceVox engine to be installed and running separately. Visit the [VoiceVox website](https://voicevox.hiroshiba.jp/) for installation instructions.
 :::
 
 ```shell
-hmcs mod install @hmcs/voicevox @hmcs/agent @hmcs/stt
+hmcs mod install @hmcs/voicevox @hmcs/stt
 ```
 
 ## What's Next?

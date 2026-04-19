@@ -3,7 +3,6 @@
   "private": true,
   "license": "MIT",
   "dependencies": {
-    "@hmcs/agent": "workspace:*",
     "@hmcs/assets": "workspace:*",
     "@hmcs/persona": "workspace:*",
     "@hmcs/menu": "workspace:*",

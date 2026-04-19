@@ -10,7 +10,7 @@
  * import { signals } from "@hmcs/sdk";
  *
  * // Subscribe to a channel
- * const sub = signals.stream<{ state: string }>("agent:status", (data) => {
+ * const sub = signals.stream<{ state: string }>("openclaw:status", (data) => {
  *   console.log("State:", data.state);
  * });
  *
@@ -18,7 +18,7 @@
  * sub.close();
  *
  * // Send a signal (uses HTTP POST, not WebSocket)
- * await signals.send("agent:status", { state: "idle" });
+ * await signals.send("openclaw:status", { state: "idle" });
  * ```
  *
  * @packageDocumentation
@@ -187,7 +187,7 @@ export namespace signals {
    *
    * @example
    * ```typescript
-   * const sub = signals.stream<{ state: string }>("agent:status", (data) => {
+   * const sub = signals.stream<{ state: string }>("openclaw:status", (data) => {
    *   console.log("State:", data.state);
    * });
    *
@@ -246,7 +246,7 @@ export namespace signals {
    *
    * @example
    * ```typescript
-   * await signals.send("agent:status", { state: "thinking" });
+   * await signals.send("openclaw:status", { state: "thinking" });
    * ```
    */
   export async function send<V>(signal: string, payload: V): Promise<void> {

@@ -81,7 +81,7 @@ For the full tool reference, see [MCP Reference](/reference/mcp-tools).
 
 ## Built-in AI Agent
 
-Beyond connecting external AI clients via MCP, you can give personas a built-in AI agent experience with the [`@hmcs/agent`](/mods/agent) MOD. The Agent MOD is an independent MOD that *uses* the persona system — each persona can have its own AI configuration.
+Beyond connecting external AI clients via MCP, you can give personas a built-in AI agent experience via [OpenClaw](https://docs.openclaw.ai) and the `@hmcs/openclaw-plugin` bridge. See the "AI Integration (OpenClaw)" page for details.
 
 | Approach | Best For |
 |----------|----------|
@@ -106,6 +106,6 @@ If you'd like to help build template MODs or improve MCP tools, see the [Contrib
 ## Next Steps {#next-steps}
 
 - **[Set up your AI client](./setup/claude-desktop)** — Get connected in minutes via MCP
-- **[AI Agent MOD](/mods/agent)** — Give your personas a built-in AI agent
+- **[OpenClaw integration](/ai-integration)** — Give your personas a built-in AI agent via OpenClaw
 - **[Explore MCP capabilities](/reference/mcp-tools)** — Full reference for all tools, resources, and prompts
 - **[Build a MOD](/mod-development/quick-start)** — Create template MODs for richer AI workflows
