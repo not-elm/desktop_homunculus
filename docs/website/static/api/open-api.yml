@@ -3564,6 +3564,8 @@ components:
           type:
           - string
           - 'null'
+        inputSchema:
+          type: object
         timeout:
           type:
           - integer
