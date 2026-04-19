@@ -689,37 +689,6 @@ body {
   z-index: 7;
 }
 
-.voicevox-speech-test-textarea {
-  background: oklch(0.12 0.01 250 / 0.8);
-  border: 1px solid oklch(0.72 0.14 192 / 0.2);
-  border-radius: 6px;
-  padding: var(--hud-space-md) var(--hud-space-lg);
-  color: oklch(0.92 0.01 250);
-  font-size: var(--hud-font-size-base);
-  font-family: inherit;
-  outline: none;
-  resize: none;
-  transition:
-    border-color var(--hud-duration-content) ease,
-    box-shadow var(--hud-duration-content) ease;
-}
-
-.voicevox-speech-test-textarea:focus {
-  border-color: oklch(0.72 0.14 192 / 0.5);
-  box-shadow:
-    0 0 8px oklch(0.72 0.14 192 / 0.15),
-    inset 0 0 4px oklch(0.72 0.14 192 / 0.05);
-}
-
-.voicevox-speech-test-textarea::placeholder {
-  color: oklch(0.55 0.02 250 / 0.5);
-}
-
-.voicevox-speech-test-textarea:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 .voicevox-speech-test-actions {
   display: flex;
   justify-content: flex-end;

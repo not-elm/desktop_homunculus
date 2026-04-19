@@ -146,7 +146,7 @@ export function useVoicevoxSettings() {
       try {
         await preferences.save(prefsKey, settings);
         await rpc.call({
-          modName: 'voicevox',
+          modName: '@hmcs/voicevox',
           method: 'speak',
           body: { personaId, text },
         });
@@ -191,7 +191,11 @@ async function resolveLinkedPersona(): Promise<{
   const linked = await webview.linkedPersona();
   if (!linked) return null;
   const snapshot = await linked.snapshot();
-  return { personaId: linked.id, name: snapshot.name ?? '', assetId: snapshot.vrmAssetId ?? null };
+  return {
+    personaId: linked.id,
+    name: snapshot.name ?? '',
+    assetId: snapshot.vrmAssetId ?? null,
+  };
 }
 
 async function fetchSpeakers(): Promise<VoicevoxSpeaker[] | null> {

@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import {
   Select,
   SelectContent,
@@ -7,7 +6,9 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
+  Textarea,
 } from '@hmcs/ui';
+import { useState } from 'react';
 import type { VoicevoxSettings } from './hooks/useVoicevoxSettings';
 import { useVoicevoxSettings } from './hooks/useVoicevoxSettings';
 
@@ -280,8 +281,8 @@ function SpeechTest({
   return (
     <div className="voicevox-speech-test">
       <div className="voicevox-section-title">Speech Test</div>
-      <textarea
-        className="voicevox-speech-test-textarea"
+      <Textarea
+        className="resize-none"
         rows={3}
         placeholder="Enter text to test..."
         value={text}
