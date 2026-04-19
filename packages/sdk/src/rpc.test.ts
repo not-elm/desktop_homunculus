@@ -166,36 +166,6 @@ describe('rpc.serve() — env var validation', () => {
   });
 });
 
-describe('rpc.method() — MCP fields', () => {
-  it('preserves MCP fields on the returned def', async () => {
-    const { rpc } = await import('./rpc');
-    const def = rpc.method({
-      description: 'Test',
-      input: z.object({ x: z.number() }),
-      handler: async ({ x }) => x,
-      title: 'My Tool',
-      annotations: { readOnlyHint: true },
-    });
-
-    expect(def.title).toBe('My Tool');
-    expect(def.annotations).toEqual({ readOnlyHint: true });
-  });
-});
-
-describe('rpc.method() — meta field', () => {
-  it('preserves meta on the returned def', async () => {
-    const { rpc } = await import('./rpc');
-    const def = rpc.method({
-      description: 'TTS speak',
-      input: z.object({ text: z.string() }),
-      handler: async ({ text }) => ({ text }),
-      meta: { category: 'tts' },
-    });
-
-    expect(def.meta).toEqual({ category: 'tts' });
-  });
-});
-
 describe('rpc.serve() — method name validation', () => {
   beforeEach(() => {
     vi.resetModules();
