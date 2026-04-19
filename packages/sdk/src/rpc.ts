@@ -52,7 +52,7 @@ import type { ZodType } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { rpc as rpcClient } from './rpc-client';
 
-export type { RpcCallOptions } from './rpc-client';
+export type { RpcCallOptions, RpcRegistrationEntry } from './rpc-client';
 
 /**
  * A single RPC method definition created by {@link rpc.method}.
@@ -85,8 +85,8 @@ export interface RpcMethodDef<I = unknown, O = unknown> {
   execution?: { taskSupport?: 'forbidden' | 'optional' | 'required' };
   /** MCP tool icons. */
   icons?: Array<{ src: string; mimeType?: string; sizes?: string[] }>;
-  /** MCP tool metadata. */
-  _meta?: Record<string, unknown>;
+  /** Metadata for RPC method discovery and MCP integration. */
+  meta?: Record<string, unknown>;
 }
 
 /**
@@ -319,7 +319,7 @@ function buildMethodsMeta(
         ...(entry.annotations !== undefined ? { annotations: entry.annotations } : {}),
         ...(entry.execution !== undefined ? { execution: entry.execution } : {}),
         ...(entry.icons !== undefined ? { icons: entry.icons } : {}),
-        ...(entry._meta !== undefined ? { _meta: entry._meta } : {}),
+        ...(entry.meta !== undefined ? { meta: entry.meta } : {}),
       };
     } else {
       meta[name] = {};
@@ -414,6 +414,7 @@ export namespace rpc {
    * ```
    */
   export const call = rpcClient.call;
+  export const registrations = rpcClient.registrations;
 
   /**
    * Create a typed RPC method definition with Zod input validation.
@@ -450,7 +451,7 @@ export namespace rpc {
     annotations?: RpcMethodDef['annotations'];
     execution?: RpcMethodDef['execution'];
     icons?: RpcMethodDef['icons'];
-    _meta?: Record<string, unknown>;
+    meta?: Record<string, unknown>;
   }): RpcMethodDef<I, O>;
   export function method<O>(def: {
     description?: string;
@@ -461,7 +462,7 @@ export namespace rpc {
     annotations?: RpcMethodDef['annotations'];
     execution?: RpcMethodDef['execution'];
     icons?: RpcMethodDef['icons'];
-    _meta?: Record<string, unknown>;
+    meta?: Record<string, unknown>;
   }): RpcMethodDef<unknown, O>;
   export function method(def: {
     description?: string;
@@ -473,7 +474,7 @@ export namespace rpc {
     annotations?: RpcMethodDef['annotations'];
     execution?: RpcMethodDef['execution'];
     icons?: RpcMethodDef['icons'];
-    _meta?: Record<string, unknown>;
+    meta?: Record<string, unknown>;
   }): RpcMethodDef {
     return {
       description: def.description,
@@ -485,7 +486,7 @@ export namespace rpc {
       annotations: def.annotations,
       execution: def.execution,
       icons: def.icons,
-      _meta: def._meta,
+      meta: def.meta,
     };
   }
 
