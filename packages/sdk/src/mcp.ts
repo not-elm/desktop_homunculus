@@ -30,16 +30,16 @@
  * @packageDocumentation
  */
 
+import { randomUUID } from 'node:crypto';
 import http from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { randomUUID } from 'node:crypto';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
 
-import { readModName, readEnginePort } from './internal/env';
+import { readEnginePort, readModName } from './internal/env';
 import { readJsonBody } from './internal/http';
-import { registerWithEngineWithRetry, deregisterFromEngine } from './internal/mcp-register';
+import { deregisterFromEngine, registerWithEngineWithRetry } from './internal/mcp-register';
 
 /**
  * Options for {@link mcp.serve}.
@@ -199,7 +199,9 @@ export namespace mcp {
       void handleRequest(req, res, sessions, options.createServer);
     });
 
-    await new Promise<void>((resolve) => httpServer.listen(options.port ?? 0, '127.0.0.1', resolve));
+    await new Promise<void>((resolve) =>
+      httpServer.listen(options.port ?? 0, '127.0.0.1', resolve),
+    );
     const port = (httpServer.address() as AddressInfo).port;
 
     const mcpUrl = `http://127.0.0.1:${port}/mcp`;
@@ -290,7 +292,7 @@ async function handlePost(
   const body = await readJsonBody(req);
 
   if (sessionId && sessions.has(sessionId)) {
-    await sessions.get(sessionId)!.transport.handleRequest(req, res, body);
+    await sessions.get(sessionId)?.transport.handleRequest(req, res, body);
     return;
   }
 
@@ -344,5 +346,5 @@ async function handleGetOrDelete(
     res.end(JSON.stringify({ error: 'invalid session' }));
     return;
   }
-  await sessions.get(sessionId)!.transport.handleRequest(req, res);
+  await sessions.get(sessionId)?.transport.handleRequest(req, res);
 }

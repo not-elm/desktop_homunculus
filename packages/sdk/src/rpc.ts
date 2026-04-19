@@ -49,7 +49,7 @@
 
 import * as http from 'node:http';
 import type { ZodType } from 'zod';
-import { readModName, readEnginePort, readRpcPort } from './internal/env';
+import { readEnginePort, readModName, readRpcPort } from './internal/env';
 import { readRawBody } from './internal/http';
 import { rpc as rpcClient } from './rpc-client';
 
