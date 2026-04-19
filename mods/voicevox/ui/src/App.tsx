@@ -6,7 +6,9 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
+  Textarea,
 } from '@hmcs/ui';
+import { useState } from 'react';
 import type { VoicevoxSettings } from './hooks/useVoicevoxSettings';
 import { useVoicevoxSettings } from './hooks/useVoicevoxSettings';
 
@@ -87,10 +89,13 @@ export function App() {
     saved,
     characterName,
     invalidSpeaker,
+    personaId,
+    speaking,
     handleSave,
     handleReset,
     handleClose,
     handleRetry,
+    handleSpeak,
   } = useVoicevoxSettings();
 
   if (loading) {
@@ -119,6 +124,9 @@ export function App() {
             settings={settings}
             onSettingsChange={setSettings}
             invalidSpeaker={invalidSpeaker}
+            speaking={speaking}
+            disabled={!connected || speakers.length === 0 || invalidSpeaker || !personaId}
+            onSpeak={handleSpeak}
           />
         )}
       </div>
@@ -180,11 +188,17 @@ function SettingsForm({
   settings,
   onSettingsChange,
   invalidSpeaker,
+  speaking,
+  disabled,
+  onSpeak,
 }: {
   speakers: { name: string; styles: { name: string; id: number }[] }[];
   settings: VoicevoxSettings;
   onSettingsChange: (s: VoicevoxSettings) => void;
   invalidSpeaker: boolean;
+  speaking: boolean;
+  disabled: boolean;
+  onSpeak: (text: string) => void;
 }) {
   return (
     <>
@@ -246,7 +260,46 @@ function SettingsForm({
           <div className="voicevox-param-desc">{param.desc}</div>
         </label>
       ))}
+
+      <div className="voicevox-divider" />
+      <SpeechTest speaking={speaking} disabled={disabled} onSpeak={onSpeak} />
     </>
+  );
+}
+
+function SpeechTest({
+  speaking,
+  disabled,
+  onSpeak,
+}: {
+  speaking: boolean;
+  disabled: boolean;
+  onSpeak: (text: string) => void;
+}) {
+  const [text, setText] = useState('');
+
+  return (
+    <div className="voicevox-speech-test">
+      <div className="voicevox-section-title">Speech Test</div>
+      <Textarea
+        className="resize-none"
+        rows={3}
+        placeholder="Enter text to test..."
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        disabled={disabled || speaking}
+      />
+      <div className="voicevox-speech-test-actions">
+        <button
+          type="button"
+          className="voicevox-speech-test-btn"
+          disabled={disabled || speaking || text.trim().length === 0}
+          onClick={() => onSpeak(text.trim())}
+        >
+          {speaking ? 'Speaking...' : '▶ Speak'}
+        </button>
+      </div>
+    </div>
   );
 }
 

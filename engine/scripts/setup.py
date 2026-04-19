@@ -19,9 +19,9 @@ def setup() -> None:
     cargo_packages = ["export-cef-dir@145.6.1+145.0.28", "cargo-about"]
     if plat == Platform.MACOS:
         cargo_packages.extend([
-            "bevy_cef_debug_render_process@0.4.1",
-            "bevy_cef_render_process@0.4.1",
-            "bevy_cef_bundle_app@0.4.1",
+            "bevy_cef_debug_render_process@0.8.1",
+            "bevy_cef_render_process@0.8.1",
+            "bevy_cef_bundle_app@0.8.1",
         ])
     elif plat == Platform.WINDOWS:
         cargo_packages.append("bevy_cef_render_process@0.4.1")
