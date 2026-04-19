@@ -6,7 +6,32 @@
 
 ## Comments
 
-- Do NOT use region-divider comments (e.g. `// --- Section Name ---`). Extract named functions instead, so the code self-documents through function names.
+### Region-divider comments are strictly forbidden
+
+Never write comments whose sole purpose is to visually separate sections of a file, module, or function. This is a hard rule with no exceptions.
+
+Forbidden forms include (but are not limited to):
+
+```ts
+// ---------------------
+// --- Section Name ---
+// ===== Handlers =====
+// #################### Helpers ####################
+// ----------------------------------------
+// region: public api
+// endregion
+// #region Hooks
+// #endregion
+/* ============ Types ============ */
+```
+
+Any line or block comment consisting primarily of repeated punctuation (`-`, `=`, `*`, `#`, `/`, `~`), or explicit `region` / `endregion` / `#region` / `#endregion` / `MARK:` markers, is banned — with or without a label between the punctuation runs.
+
+If a file feels like it needs section dividers, that is a signal to restructure, not to annotate. Use the file's natural structure instead:
+
+- Split the file into separate modules.
+- Extract cohesive logic into named functions so the function name does the labeling.
+- Rely on JSDoc (`/** */`) on exported APIs and blank lines between declarations for visual grouping.
 
 ## Function Granularity
 

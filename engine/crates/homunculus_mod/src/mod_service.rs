@@ -1,6 +1,6 @@
 use crate::node_process::{NodeAvailable, NodeProcessHandle};
 use bevy::prelude::*;
-use homunculus_core::prelude::SharedRpcRegistry;
+use homunculus_core::prelude::{McpDeregisterSender, SharedRpcRegistry};
 use homunculus_utils::process::CommandNoWindow;
 use homunculus_utils::runtime::RuntimeResolver;
 use std::io::{BufRead, BufReader};
@@ -19,13 +19,26 @@ pub(crate) struct ModService {
     pub mods_dir: PathBuf,
 }
 
+/// Marker component attached to entities that own a mod service process which
+/// was registered with the MCP extension registry.
+///
+/// The [`watch_mod_service_processes`] system polls these entities and sends a
+/// deregister signal via [`McpDeregisterSender`] when the process exits.
+#[derive(Component)]
+pub struct ModServiceProcess {
+    pub mod_slug: String,
+}
+
 pub(crate) struct ModServicePlugin;
 
 impl Plugin for ModServicePlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             Update,
-            run_mod_services.run_if(resource_exists::<NodeAvailable>),
+            (
+                run_mod_services.run_if(resource_exists::<NodeAvailable>),
+                watch_mod_service_processes,
+            ),
         );
     }
 }
@@ -56,7 +69,11 @@ fn run_mod_services(
         match launch_mod_service_process(service, rpc_port, &runtime) {
             Ok(child) => {
                 append_pid_file(child.id());
-                commands.spawn(build_process_handle(child, &service.mod_name));
+                let mod_slug = derive_slug(&service.mod_name);
+                commands.spawn((
+                    build_process_handle(child, &service.mod_name),
+                    ModServiceProcess { mod_slug },
+                ));
             }
             Err(e) => {
                 error!(
@@ -68,6 +85,48 @@ fn run_mod_services(
         }
         commands.entity(entity).despawn();
     }
+}
+
+/// Polls all running mod service processes for exit and enqueues MCP deregistrations.
+///
+/// When a process exits, its slug is sent to the [`McpDeregisterSender`] background
+/// task for async removal, and the entity is despawned.
+pub(crate) fn watch_mod_service_processes(
+    mut commands: Commands,
+    mut query: Query<(Entity, &ModServiceProcess, &mut NodeProcessHandle)>,
+    deregister: Option<Res<McpDeregisterSender>>,
+) {
+    for (entity, tag, mut handle) in query.iter_mut() {
+        if let Some(status) = handle.try_wait_exited() {
+            info!(
+                mod_slug = %tag.mod_slug,
+                ?status,
+                "mod service process exited"
+            );
+            enqueue_deregister(&deregister, &tag.mod_slug);
+            commands.entity(entity).despawn();
+        }
+    }
+}
+
+/// Sends `slug` to the async deregister background task if the resource is present.
+fn enqueue_deregister(deregister: &Option<Res<McpDeregisterSender>>, slug: &str) {
+    let Some(sender) = deregister else { return };
+    if sender.0.send(slug.to_owned()).is_err() {
+        warn!(mod_slug = %slug, "MCP deregister channel closed; skipping deregistration");
+    }
+}
+
+/// Derives a canonical slug from a mod package name.
+///
+/// Takes the last path component (after the last `/`), lowercases it,
+/// and replaces `-` with `_` to match the `^[a-z][a-z0-9_]*$` slug pattern.
+///
+/// # Example
+/// `@hmcs/voicevox` → `voicevox`, `my-mod` → `my_mod`
+fn derive_slug(mod_name: &str) -> String {
+    let last = mod_name.rsplit('/').next().unwrap_or(mod_name);
+    last.replace('-', "_").to_lowercase()
 }
 
 /// Append a child PID to `~/.homunculus/mod_pids` so stale processes can be

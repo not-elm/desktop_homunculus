@@ -12,6 +12,7 @@ pub(crate) mod displays;
 pub(crate) mod effects;
 pub(crate) mod entities;
 pub(crate) mod info;
+pub(crate) mod mcp;
 pub(crate) mod mods;
 pub(crate) mod persona;
 pub(crate) mod preferences;

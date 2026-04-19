@@ -5,15 +5,12 @@
 
 mod animation;
 mod audio;
-pub(super) mod rpc;
 mod system;
 mod transform;
 mod vrm;
 mod webview;
 
 use rmcp::handler::server::router::tool::ToolRouter;
-
-pub(super) use rpc::send_rpc_call;
 
 use super::HomunculusMcpHandler;
 

@@ -11,6 +11,7 @@ use homunculus_api::processes::ProcessesApi;
 use homunculus_api::stt::SttApi;
 use homunculus_api::vrm::VrmApi;
 use homunculus_core::rpc_registry::RpcRegistry;
+use homunculus_mcp::downstream::SharedMcpExtensionRegistry;
 use homunculus_utils::config::HomunculusConfig;
 use homunculus_utils::runtime::RuntimeResolver;
 use std::sync::{Arc, RwLock};
@@ -42,6 +43,7 @@ pub struct HttpState {
     pub config: HomunculusConfig,
     pub runtime: RuntimeResolver,
     pub rpc_registry: Arc<RwLock<RpcRegistry>>,
+    pub mcp_registry: SharedMcpExtensionRegistry,
 }
 
 impl HttpState {
@@ -50,6 +52,7 @@ impl HttpState {
         config: HomunculusConfig,
         runtime: RuntimeResolver,
         rpc_registry: Arc<RwLock<RpcRegistry>>,
+        mcp_registry: SharedMcpExtensionRegistry,
     ) -> Self {
         Self {
             app: AppApi::from(reactor.clone()),
@@ -74,6 +77,7 @@ impl HttpState {
             config,
             runtime,
             rpc_registry,
+            mcp_registry,
             reactor,
         }
     }

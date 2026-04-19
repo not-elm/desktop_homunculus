@@ -49,7 +49,8 @@
 
 import * as http from 'node:http';
 import type { ZodType } from 'zod';
-import { zodToJsonSchema } from 'zod-to-json-schema';
+import { readEnginePort, readModName, readRpcPort } from './internal/env';
+import { readRawBody } from './internal/http';
 import { rpc as rpcClient } from './rpc-client';
 
 export type { RpcCallOptions, RpcRegistrationEntry } from './rpc-client';
@@ -69,24 +70,6 @@ export interface RpcMethodDef<I = unknown, O = unknown> {
   input?: ZodType<I>;
   /** Async function called with the validated input. */
   handler: (params: I) => Promise<O>;
-  /** Human-readable title for the MCP tool. */
-  title?: string;
-  /** JSON Schema object defining the structure of the tool's output. */
-  outputSchema?: Record<string, unknown>;
-  /** MCP tool annotations (readOnly, destructive, idempotent, openWorld hints). */
-  annotations?: {
-    title?: string;
-    readOnlyHint?: boolean;
-    destructiveHint?: boolean;
-    idempotentHint?: boolean;
-    openWorldHint?: boolean;
-  };
-  /** MCP tool execution configuration. */
-  execution?: { taskSupport?: 'forbidden' | 'optional' | 'required' };
-  /** MCP tool icons. */
-  icons?: Array<{ src: string; mimeType?: string; sizes?: string[] }>;
-  /** Metadata for RPC method discovery and MCP integration. */
-  meta?: Record<string, unknown>;
 }
 
 /**
@@ -133,49 +116,6 @@ function jsonResponse(res: http.ServerResponse, status: number, body: unknown): 
     'Content-Length': Buffer.byteLength(payload),
   });
   res.end(payload);
-}
-
-async function readBody(req: http.IncomingMessage): Promise<string> {
-  const chunks: Buffer[] = [];
-  for await (const chunk of req) {
-    chunks.push(chunk as Buffer);
-  }
-  return Buffer.concat(chunks).toString('utf-8');
-}
-
-function readRpcPort(): number {
-  const s = process.env.HMCS_RPC_PORT;
-  if (!s) throw new Error('HMCS_RPC_PORT environment variable is required');
-  const port = parseInt(s, 10);
-  if (Number.isNaN(port)) throw new Error(`HMCS_RPC_PORT is not a valid port number: ${s}`);
-  return port;
-}
-
-function readModName(): string {
-  const name = process.env.HMCS_MOD_NAME;
-  if (!name) throw new Error('HMCS_MOD_NAME environment variable is required');
-  return name;
-}
-
-function readEnginePort(): number {
-  const s = process.env.HMCS_PORT ?? '3100';
-  const port = parseInt(s, 10);
-  if (Number.isNaN(port)) throw new Error(`HMCS_PORT is not a valid port number: ${s}`);
-  return port;
-}
-
-function convertZodToObjectSchema(schema: ZodType): Record<string, unknown> {
-  const jsonSchema = zodToJsonSchema(schema, { $refStrategy: 'none' });
-  if (
-    typeof jsonSchema !== 'object' ||
-    jsonSchema === null ||
-    (jsonSchema as Record<string, unknown>).type !== 'object'
-  ) {
-    throw new Error(
-      'RPC method input schema must be a root object type. Use z.object({...}) as the top-level schema.',
-    );
-  }
-  return jsonSchema as Record<string, unknown>;
 }
 
 function validateMethodName(name: string): void {
@@ -232,7 +172,7 @@ async function handleRequest(
 
   let rawBody: string;
   try {
-    rawBody = await readBody(req);
+    rawBody = await readRawBody(req);
   } catch (err) {
     jsonResponse(res, 400, {
       error: 'READ_ERROR',
@@ -311,15 +251,6 @@ function buildMethodsMeta(
       meta[name] = {
         ...(entry.description !== undefined ? { description: entry.description } : {}),
         ...(entry.timeout !== undefined ? { timeout: entry.timeout } : {}),
-        ...(entry.input !== undefined
-          ? { inputSchema: convertZodToObjectSchema(entry.input) }
-          : {}),
-        ...(entry.title !== undefined ? { title: entry.title } : {}),
-        ...(entry.outputSchema !== undefined ? { outputSchema: entry.outputSchema } : {}),
-        ...(entry.annotations !== undefined ? { annotations: entry.annotations } : {}),
-        ...(entry.execution !== undefined ? { execution: entry.execution } : {}),
-        ...(entry.icons !== undefined ? { icons: entry.icons } : {}),
-        ...(entry.meta !== undefined ? { meta: entry.meta } : {}),
       };
     } else {
       meta[name] = {};
@@ -446,47 +377,23 @@ export namespace rpc {
     timeout?: number;
     input: ZodType<I>;
     handler: (params: I) => Promise<O>;
-    title?: string;
-    outputSchema?: Record<string, unknown>;
-    annotations?: RpcMethodDef['annotations'];
-    execution?: RpcMethodDef['execution'];
-    icons?: RpcMethodDef['icons'];
-    meta?: Record<string, unknown>;
   }): RpcMethodDef<I, O>;
   export function method<O>(def: {
     description?: string;
     timeout?: number;
     handler: () => Promise<O>;
-    title?: string;
-    outputSchema?: Record<string, unknown>;
-    annotations?: RpcMethodDef['annotations'];
-    execution?: RpcMethodDef['execution'];
-    icons?: RpcMethodDef['icons'];
-    meta?: Record<string, unknown>;
   }): RpcMethodDef<unknown, O>;
   export function method(def: {
     description?: string;
     timeout?: number;
     input?: ZodType<unknown>;
     handler: (params?: unknown) => Promise<unknown>;
-    title?: string;
-    outputSchema?: Record<string, unknown>;
-    annotations?: RpcMethodDef['annotations'];
-    execution?: RpcMethodDef['execution'];
-    icons?: RpcMethodDef['icons'];
-    meta?: Record<string, unknown>;
   }): RpcMethodDef {
     return {
       description: def.description,
       timeout: def.timeout,
       input: def.input,
       handler: def.handler,
-      title: def.title,
-      outputSchema: def.outputSchema,
-      annotations: def.annotations,
-      execution: def.execution,
-      icons: def.icons,
-      meta: def.meta,
     };
   }
 

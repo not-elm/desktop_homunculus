@@ -3,7 +3,6 @@
 ## Formatting & Linting
 
 - Use `cargo fmt` (default rustfmt settings, no rustfmt.toml).
-- Do NOT use region-divider comments (e.g. `// ----------- Section Name -----------`). Use the file's natural structure (modules, impl blocks, doc comments) for organization instead.
 - Use `cargo clippy -- -D warnings`. The `type_complexity` lint is allowed workspace-wide.
 - Run `make fix` to apply both: `cargo clippy --workspace --fix --allow-dirty && cargo fmt --all`.
 - Use the non-mod-rs file pattern (RFC 2126, Rust 1.30+) for module declarations. Place the module root in `foo.rs` alongside a `foo/` directory for submodules, instead of using `foo/mod.rs`.
@@ -75,7 +74,34 @@ Arrange items top-down within a file. High-level components go at the top; lower
 - Aim for function bodies under 20 lines. If a function exceeds this, look for a named sub-operation to extract.
 - Inline closures passed to combinators (`map`, `and_then`, `match` arms, etc.) that exceed 3 lines should be extracted as named functions.
 
-## Documentation
+## Comments
+
+### Region-divider comments are strictly forbidden
+
+Never write comments whose sole purpose is to visually separate sections of a file or function. This is a hard rule with no exceptions.
+
+Forbidden forms include (but are not limited to):
+
+```rust
+// ---------------------
+// ----- Section Name -----
+// ===== Handlers =====
+// #################### Helpers ####################
+// ----------------------------------------
+// region: public api
+// endregion
+```
+
+Any line comment consisting primarily of repeated punctuation (`-`, `=`, `*`, `#`, `/`, `~`), or explicit `region` / `endregion` / `MARK:` / `pragma mark` markers, is banned — with or without a label between the punctuation runs.
+
+If a file feels like it needs section dividers, that is a signal to restructure, not to annotate. Use the file's natural structure instead:
+
+- Split the file into modules (`mod foo;` + `foo.rs` / `foo/`).
+- Move grouped items into separate `impl` blocks, separate files, or separate submodules.
+- Rely on doc comments (`///`, `//!`) and item boundaries (blank lines between items) for visual grouping.
+- Extract cohesive logic into named functions so the function name does the labeling.
+
+### Doc comments
 
 - Public types and functions MUST have `///` doc comments.
 - Include `# Usage` or `# Example` blocks in doc comments for complex APIs.

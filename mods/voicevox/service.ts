@@ -1,5 +1,6 @@
 import { Persona, type PersonaVrm, preferences } from '@hmcs/sdk';
-import { rpc } from '@hmcs/sdk/rpc';
+import { mcp } from '@hmcs/sdk/mcp';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { voicevoxToTimeline } from './lib/timeline.ts';
 import { fetchWithTimeout } from './lib/utils.ts';
@@ -176,33 +177,48 @@ async function synthesize(query: VoicevoxAudioQuery, speakerId: number): Promise
   return response.arrayBuffer();
 }
 
-await rpc.serve({
-  methods: {
-    speak: rpc.method({
+function buildVoicevoxMcpServer(): McpServer {
+  const server = new McpServer({
+    name: '@hmcs/voicevox',
+    version: '1.0.0',
+  });
+
+  server.registerTool(
+    'speak',
+    {
+      title: 'Speak via VoiceVox',
       description: 'Make a character speak text with lip-synced audio via VoiceVox TTS',
-      timeout: 300_000,
-      meta: { category: 'tts' },
-      input: z.object({
+      inputSchema: {
         personaId: z.string().min(1),
         text: z.union([z.string().min(1), z.array(z.string().min(1)).min(1)]),
-      }),
-      handler: async ({ personaId, text }) => {
-        return withCharacterLock(personaId, async () => {
-          const p = await Persona.load(personaId);
-          const vrm = p.vrm();
-          const assetId = await resolveAssetId(personaId);
-          const settings = await loadSettings(assetId);
-
-          await ensureSpeakerInitialized(settings.speakerId);
-
-          const sentences = Array.isArray(text) ? text : [text];
-          for (const sentence of sentences) {
-            await speakSentence(vrm, sentence, settings);
-          }
-
-          return { success: true as const, sentences: sentences.length };
-        });
       },
-    }),
-  },
+    },
+    async ({ personaId, text }) => {
+      await withCharacterLock(personaId, async () => {
+        const p = await Persona.load(personaId);
+        const vrm = p.vrm();
+        const assetId = await resolveAssetId(personaId);
+        const settings = await loadSettings(assetId);
+
+        await ensureSpeakerInitialized(settings.speakerId);
+
+        const sentences = Array.isArray(text) ? text : [text];
+        for (const sentence of sentences) {
+          await speakSentence(vrm, sentence, settings);
+        }
+      });
+
+      const sentences = Array.isArray(text) ? text : [text];
+      return {
+        content: [{ type: 'text' as const, text: `Spoken ${sentences.length} sentence(s)` }],
+      };
+    },
+  );
+
+  return server;
+}
+
+await mcp.serve({
+  createServer: buildVoicevoxMcpServer,
+  slug: 'voicevox',
 });

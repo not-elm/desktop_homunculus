@@ -39,6 +39,7 @@ export default defineConfig([
       path.join(srcDir, 'src', 'index.ts'),
       path.join(srcDir, 'src', 'commands.ts'),
       path.join(srcDir, 'src', 'rpc.ts'),
+      path.join(srcDir, 'src', 'mcp.ts'),
     ],
     output: [
       {
@@ -68,6 +69,12 @@ export default defineConfig([
         },
       },
     ],
+    external: (id) =>
+      id.startsWith('@modelcontextprotocol/sdk') ||
+      id.startsWith('node:') ||
+      id === 'zod' ||
+      id === 'eventsource' ||
+      id === 'ws',
     plugins: [
       typescript({
         declaration: true,
@@ -92,6 +99,11 @@ export default defineConfig([
   {
     input: 'dist/types/rpc.d.ts',
     output: { file: 'dist/rpc.d.ts', format: 'es' },
+    plugins: [dts()],
+  },
+  {
+    input: 'dist/types/mcp.d.ts',
+    output: { file: 'dist/mcp.d.ts', format: 'es' },
     plugins: [dts()],
   },
   {

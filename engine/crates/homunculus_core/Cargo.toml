@@ -15,13 +15,14 @@ serde_json = { workspace = true }
 bevy_vrm1 = { workspace = true }
 anyhow = { workspace = true }
 async-broadcast = { workspace = true }
+crossbeam-channel = { workspace = true, optional = true }
 utoipa = { workspace = true, optional = true }
 rmcp = { workspace = true, optional = true }
 
 [features]
 default = []
 openapi = ["dep:utoipa"]
-mcp = ["dep:rmcp"]
+mcp = ["dep:rmcp", "dep:crossbeam-channel"]
 
 [lints]
 workspace = true

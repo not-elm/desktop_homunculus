@@ -47,8 +47,6 @@ export interface RpcRegistrationEntry {
   method: string;
   /** Human-readable description of the method. */
   description?: string;
-  /** Metadata attached to the method (e.g., `{ category: "tts" }`). */
-  meta?: Record<string, unknown>;
 }
 
 /**
@@ -112,24 +110,19 @@ export namespace rpc {
    * List registered RPC methods across all MOD services.
    *
    * Fetches the full RPC registry from the engine and flattens it into
-   * per-method entries. Optionally filters by `meta.category`.
+   * per-method entries.
    *
-   * @param filter - Optional filter. When `category` is set, only methods
-   *   whose `meta.category` matches are returned.
    * @returns Array of registration entries
    *
    * @example
    * ```typescript
    * import { rpc } from "@hmcs/sdk/rpc";
    *
-   * // List all TTS engines
-   * const ttsEngines = await rpc.registrations({ category: "tts" });
-   * // [{ modName: "@hmcs/voicevox", method: "speak", description: "...", meta: { category: "tts" } }]
+   * const methods = await rpc.registrations();
+   * // [{ modName: "@hmcs/voicevox", method: "speak", description: "..." }]
    * ```
    */
-  export async function registrations(filter?: {
-    category?: string;
-  }): Promise<RpcRegistrationEntry[]> {
+  export async function registrations(): Promise<RpcRegistrationEntry[]> {
     const url = host.createUrl('rpc/registrations');
     const response = await host.get(url);
     const raw = (await response.json()) as {
@@ -137,7 +130,7 @@ export namespace rpc {
         string,
         {
           port: number;
-          methods: Record<string, { description?: string; meta?: Record<string, unknown> }>;
+          methods: Record<string, { description?: string }>;
         }
       >;
     };
@@ -146,15 +139,10 @@ export namespace rpc {
     const entries: RpcRegistrationEntry[] = [];
     for (const [modName, registration] of Object.entries(data)) {
       for (const [method, methodMeta] of Object.entries(registration.methods)) {
-        const meta = methodMeta.meta;
-        if (filter?.category !== undefined) {
-          if (meta?.category !== filter.category) continue;
-        }
         entries.push({
           modName,
           method,
           description: methodMeta.description,
-          meta,
         });
       }
     }
