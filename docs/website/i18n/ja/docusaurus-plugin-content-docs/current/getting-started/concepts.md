@@ -33,7 +33,7 @@ Persona はシステムトレイからアクセスできる **Persona Management
 | `@hmcs/settings` | アプリケーション設定パネル |
 | `@hmcs/app-exit` | システムトレイの終了オプション |
 
-テキスト読み上げ（`@hmcs/voicevox`）、AI Agent（`@hmcs/agent`）、音声認識（`@hmcs/stt`）などの追加 MOD は、`hmcs` CLI でいつでもインストールできます。
+テキスト読み上げ（`@hmcs/voicevox`）や音声認識（`@hmcs/stt`）などの追加 MOD は、`hmcs` CLI でいつでもインストールできます。AI 連携については、[AI 連携](../ai-integration)を参照してください（外部で [OpenClaw](https://docs.openclaw.ai) を起動する必要があります）。
 
 ## Asset
 

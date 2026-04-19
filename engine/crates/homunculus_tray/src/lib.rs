@@ -377,7 +377,6 @@ mod tests {
             ("@hmcs/voicevox", Some("middle")),
             ("@hmcs/app-exit", Some("bottom")),
             ("@hmcs/settings", Some("top")),
-            ("@hmcs/agent", None),
         ];
         for (name, position) in mods {
             mod_registry.register(ModInfo {
@@ -414,12 +413,7 @@ mod tests {
 
         assert_eq!(
             texts,
-            vec![
-                "@hmcs/settings",
-                "@hmcs/agent",
-                "@hmcs/voicevox",
-                "@hmcs/app-exit"
-            ]
+            vec!["@hmcs/settings", "@hmcs/voicevox", "@hmcs/app-exit"]
         );
 
         let separator_count = menu

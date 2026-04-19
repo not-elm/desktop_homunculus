@@ -60,14 +60,7 @@ Start with the `base` model for a good balance of speed and accuracy. Upgrade to
 
 ## Agent Integration
 
-When used with the [`@hmcs/agent`](./agent) MOD:
-
-1. Press the configured **PTT key** (set in Agent settings)
-2. Speak your input
-3. Release the key — audio is transcribed via Whisper
-4. The transcription is fed directly into the agent's input
-
-This enables a voice → text → AI reasoning → action flow.
+Transcribed speech can be fed into an external [OpenClaw](https://docs.openclaw.ai) agent via the `@hmcs/openclaw-plugin` bridge. See [AI Integration](/ai-integration) for setup details.
 
 ## SDK Reference
 

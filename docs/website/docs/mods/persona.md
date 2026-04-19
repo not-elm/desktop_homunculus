@@ -81,4 +81,4 @@ For programmatic persona management, see the [SDK guide](/mod-development/sdk) a
 
 - This MOD adds a "Persona" entry to both the [context menu](./menu) and the system tray menu.
 - The settings panel UI uses the shared `@hmcs/ui` component library.
-- Personality text is used by the `@hmcs/agent` MOD to build AI agent system prompts.
+- Personality text is used by the `@hmcs/openclaw-plugin` bridge to generate SOUL.md / IDENTITY.md for external OpenClaw agents. See [AI Integration](/ai-integration) for details.
