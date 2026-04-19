@@ -268,7 +268,7 @@ fn create_router(
         ))
         .nest_service(
             "/mcp",
-            homunculus_mcp::create_mcp_service(reactor, config, runtime, rpc_registry),
+            homunculus_mcp::create_mcp_service(reactor, config, runtime),
         )
         .layer(
             CorsLayer::new()
