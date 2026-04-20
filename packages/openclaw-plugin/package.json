@@ -1,0 +1,31 @@
+{
+  "name": "@hmcs/openclaw-plugin",
+  "version": "0.1.0-alpha.0",
+  "type": "module",
+  "main": "./dist/entry.js",
+  "license": "MIT",
+  "author": "notelm",
+  "description": "OpenClaw plugin bridging agent output to Desktop Homunculus characters.",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "test": "vitest run",
+    "check-types": "tsc -p tsconfig.json --noEmit"
+  },
+  "openclaw": {
+    "extensions": [
+      "./dist/entry.js"
+    ]
+  },
+  "dependencies": {
+    "@hmcs/sdk": "workspace:*",
+    "eventsource": "catalog:"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.3"
+  },
+  "peerDependencies": {
+    "openclaw": "*"
+  }
+}

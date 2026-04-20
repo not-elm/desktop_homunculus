@@ -1,0 +1,12 @@
+{
+  "id": "hmcs-openclaw",
+  "name": "Desktop Homunculus Bridge",
+  "description": "Renders OpenClaw agent replies on HMCS characters.",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "hmcsBaseUrl": { "type": "string", "default": "http://127.0.0.1:3100" },
+      "soulMaxChars": { "type": "integer", "default": 10000 }
+    }
+  }
+}
