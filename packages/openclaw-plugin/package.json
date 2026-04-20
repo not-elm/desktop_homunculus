@@ -6,9 +6,13 @@
   "license": "MIT",
   "author": "notelm",
   "description": "OpenClaw plugin bridging agent output to Desktop Homunculus characters.",
+  "files": [
+    "dist",
+    "openclaw.plugin.json"
+  ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "dev": "tsc -p tsconfig.json --watch",
+    "build": "rimraf dist && esbuild src/entry.ts --bundle --platform=node --format=esm --outfile=dist/entry.js --external:openclaw --external:openclaw/*",
+    "dev": "esbuild src/entry.ts --bundle --platform=node --format=esm --outfile=dist/entry.js --external:openclaw --external:openclaw/* --watch",
     "test": "vitest run",
     "check-types": "tsc -p tsconfig.json --noEmit"
   },
@@ -17,11 +21,11 @@
       "./dist/entry.js"
     ]
   },
-  "dependencies": {
-    "@hmcs/sdk": "workspace:*",
-    "eventsource": "catalog:"
-  },
   "devDependencies": {
+    "@hmcs/sdk": "workspace:*",
+    "esbuild": "^0.24.0",
+    "eventsource": "catalog:",
+    "rimraf": "^6.1.3",
     "typescript": "^5.9.3",
     "vitest": "^3.2.3"
   },

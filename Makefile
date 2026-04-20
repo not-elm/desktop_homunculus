@@ -9,7 +9,8 @@ endif
 
 .PHONY: setup debug test fix-lint gen-open-api \
         release-macos release-macos-arm release-macos-x86 release-macos-universal \
-        bump-version check-version install-cli stage-runtime
+        bump-version check-version install-cli stage-runtime \
+        build-openclaw-plugin install-openclaw-plugin
 
 setup:
 	pnpm install
@@ -68,3 +69,10 @@ bump-version:
 
 check-version:
 	$(PYTHON) scripts/bump_version.py --check
+
+install-openclaw-plugin: 
+	pnpm --filter @hmcs/openclaw-plugin build
+	cd packages/openclaw-plugin && pnpm pack --out hmcs-openclaw-plugin.tgz
+	openclaw plugins install --force --dangerously-force-unsafe-install packages/openclaw-plugin/hmcs-openclaw-plugin.tgz
+	rm -rf packages/openclaw-plugin/hmcs-openclaw-plugin.tgz
+
