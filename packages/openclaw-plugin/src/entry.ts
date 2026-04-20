@@ -1,9 +1,16 @@
 import { host } from '@hmcs/sdk';
+import { rpc } from '@hmcs/sdk/rpc';
 import type { OpenClawPluginApi } from 'openclaw/plugin-sdk/plugin-entry';
 import { definePluginEntry } from 'openclaw/plugin-sdk/plugin-entry';
 import type { PluginDeps } from './deps.js';
-import { createBootstrapHandler } from './hooks/index.js';
+import {
+  createBootstrapHandler,
+  createReplyDispatchHandler,
+  createSessionEndHandler,
+} from './hooks/index.js';
 import { createPluginCache } from './persona-cache.js';
+import { sanitizeForTts } from './sanitize/tts.js';
+import { createSpeakDebouncer } from './speak-debouncer.js';
 import { createSyncRunner } from './sync/index.js';
 
 export default definePluginEntry({
@@ -29,6 +36,14 @@ export default definePluginEntry({
 
     deps.logger.info('hmcs-openclaw plugin registered');
 
+    const debouncer = createSpeakDebouncer({
+      speak: (payload) => speakViaVoicevox(payload.agentId, payload.text),
+      logger: deps.logger,
+    });
+
+    api.on('reply_dispatch', createReplyDispatchHandler({ debouncer, logger: deps.logger }));
+    api.on('session_end', createSessionEndHandler({ debouncer }));
+
     api.registerHook('agent:bootstrap', createBootstrapHandler(deps), {
       name: 'hmcs-openclaw.bootstrap',
     });
@@ -45,3 +60,13 @@ export default definePluginEntry({
     });
   },
 });
+
+export async function speakViaVoicevox(personaId: string, text: string): Promise<void> {
+  const { sentences } = sanitizeForTts(text);
+  if (sentences.length === 0) return;
+  await rpc.call({
+    modName: '@hmcs/voicevox',
+    method: 'speak',
+    body: { personaId, text: sentences },
+  });
+}

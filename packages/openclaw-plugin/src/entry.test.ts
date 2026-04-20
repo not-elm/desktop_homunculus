@@ -1,14 +1,19 @@
+import { rpc } from '@hmcs/sdk/rpc';
 import type { OpenClawPluginApi } from 'openclaw/plugin-sdk/plugin-entry';
-import { describe, expect, test, vi } from 'vitest';
-import pluginEntry from './entry.js';
+import { afterEach, describe, expect, test, vi } from 'vitest';
+import pluginEntry, { speakViaVoicevox } from './entry.js';
 
 interface EntryShape {
   register?: (api: OpenClawPluginApi) => void;
   default?: { register?: (api: OpenClawPluginApi) => void };
 }
 
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
 describe('entry', () => {
-  test('registers bootstrap hook + persona-sync service', () => {
+  test('registers message hooks + bootstrap hook + persona-sync service', () => {
     const registerTool = vi.fn();
     const registerHook = vi.fn();
     const on = vi.fn();
@@ -39,8 +44,8 @@ describe('entry', () => {
     register!(api);
 
     expect(registerTool).not.toHaveBeenCalled();
-    // No api.on subscriptions in this stage — message hooks arrive in a follow-up PR.
-    expect(on).not.toHaveBeenCalled();
+    const hookNames = on.mock.calls.map((call) => call[0]);
+    expect(hookNames).toEqual(['reply_dispatch', 'session_end']);
 
     expect(registerHook).toHaveBeenCalledWith('agent:bootstrap', expect.any(Function), {
       name: 'hmcs-openclaw.bootstrap',
@@ -52,5 +57,27 @@ describe('entry', () => {
         stop: expect.any(Function),
       }),
     );
+  });
+});
+
+describe('speakViaVoicevox', () => {
+  test('forwards sanitized sentences to @hmcs/voicevox via rpc.call', async () => {
+    const spy = vi.spyOn(rpc, 'call').mockResolvedValue(undefined);
+    await speakViaVoicevox('alice', 'Hello, world!');
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    const options = spy.mock.calls[0]![0];
+    expect(options.modName).toBe('@hmcs/voicevox');
+    expect(options.method).toBe('speak');
+    const body = options.body as { personaId: string; text: string[] };
+    expect(body.personaId).toBe('alice');
+    expect(Array.isArray(body.text)).toBe(true);
+    expect(body.text.length).toBeGreaterThan(0);
+  });
+
+  test('skips rpc.call when sanitizer yields zero sentences', async () => {
+    const spy = vi.spyOn(rpc, 'call').mockResolvedValue(undefined);
+    await speakViaVoicevox('alice', '');
+    expect(spy).not.toHaveBeenCalled();
   });
 });
