@@ -24,10 +24,7 @@ export interface OpenClawCli {
  * See docs/superpowers/specs/2026-04-18-openclaw-agent-integration-design.md
  * §6.2 for the rationale (OpenClaw security scanner blocks dangerous-exec).
  */
-export function createOpenClawCli(
-  logger: PluginLogger,
-  source: OpenClawAgentSource,
-): OpenClawCli {
+export function createOpenClawCli(logger: PluginLogger, source: OpenClawAgentSource): OpenClawCli {
   let inFlight: Promise<OpenClawAgentListEntry[]> | null = null;
   let warnedOnEmpty = false;
 

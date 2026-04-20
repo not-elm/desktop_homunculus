@@ -1,6 +1,6 @@
+import { errorMessage } from '../util/error.js';
 import type { SeedDeps } from './seed.js';
 import { seedFromDh } from './seed.js';
-import { errorMessage } from '../util/error.js';
 
 const MAX_BACKOFF_MS = 5 * 60 * 1000;
 

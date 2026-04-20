@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { OpenClawConfig } from 'openclaw/plugin-sdk/plugin-entry';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { createOpenClawCli, type OpenClawAgentSource } from './openclaw-cli.js';
 
 function makeLogger() {
@@ -12,9 +12,7 @@ function asConfig(value: unknown): OpenClawConfig {
   return value as OpenClawConfig;
 }
 
-function makeSource(
-  agents: Array<{ id: string; workspace?: string }>,
-): OpenClawAgentSource {
+function makeSource(agents: Array<{ id: string; workspace?: string }>): OpenClawAgentSource {
   return {
     config: asConfig({ agents: { list: agents } }),
     resolveAgentWorkspaceDir: vi.fn((_cfg, id) => `/ws/${id}`),
@@ -28,10 +26,7 @@ describe('openclaw-cli', () => {
 
   test('agentsList returns entries resolved via SDK resolvers', async () => {
     const logger = makeLogger();
-    const source = makeSource([
-      { id: 'alice' },
-      { id: 'bob', workspace: '/custom/bob' },
-    ]);
+    const source = makeSource([{ id: 'alice' }, { id: 'bob', workspace: '/custom/bob' }]);
     const cli = createOpenClawCli(logger, source);
     const result = await cli.agentsList();
 

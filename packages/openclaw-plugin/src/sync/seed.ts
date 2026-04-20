@@ -1,9 +1,9 @@
 import type { PluginDeps } from '../deps.js';
-import type { OpenClawCli } from './openclaw-cli.js';
-import type { DhPersonaSnapshot, OpenClawAgentListEntry } from '../types.js';
 import { getPersonas } from '../dh-client.js';
-import { writePersonaFiles as defaultWritePersonaFiles } from './writer.js';
+import type { DhPersonaSnapshot, OpenClawAgentListEntry } from '../types.js';
 import { errorMessage } from '../util/error.js';
+import type { OpenClawCli } from './openclaw-cli.js';
+import { writePersonaFiles as defaultWritePersonaFiles } from './writer.js';
 
 export interface SeedDeps extends PluginDeps {
   cli: OpenClawCli;
@@ -61,10 +61,7 @@ async function fetchAgents(deps: SeedDeps): Promise<OpenClawAgentListEntry[]> {
   }
 }
 
-function reconcilePersonaCache(
-  cache: SeedDeps['cache'],
-  personas: DhPersonaSnapshot[],
-): void {
+function reconcilePersonaCache(cache: SeedDeps['cache'], personas: DhPersonaSnapshot[]): void {
   const seen = new Set<string>();
   for (const p of personas) {
     cache.upsertPersona(p);
@@ -75,10 +72,7 @@ function reconcilePersonaCache(
   }
 }
 
-function reconcileAgentCache(
-  cache: SeedDeps['cache'],
-  agents: OpenClawAgentListEntry[],
-): void {
+function reconcileAgentCache(cache: SeedDeps['cache'], agents: OpenClawAgentListEntry[]): void {
   const seen = new Set<string>();
   for (const a of agents) {
     cache.upsertAgent(a);

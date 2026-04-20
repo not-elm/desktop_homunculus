@@ -1,7 +1,7 @@
 import { describe, expect, test, vi } from 'vitest';
-import { createBootstrapHandler } from './bootstrap.js';
-import { createPluginCache } from '../persona-cache.js';
 import type { PluginDeps } from '../deps.js';
+import { createPluginCache } from '../persona-cache.js';
+import { createBootstrapHandler } from './bootstrap.js';
 
 function makeDeps(): PluginDeps {
   const logger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() };

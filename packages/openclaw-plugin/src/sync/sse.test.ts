@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
-import { createSseController } from './sse.js';
 import { createPluginCache } from '../persona-cache.js';
+import { createSseController } from './sse.js';
 
 class FakeEventSource {
   listeners = new Map<string, Array<(e: any) => void>>();
@@ -35,7 +35,10 @@ describe('createSseController', () => {
     const fake = new FakeEventSource();
     const deps = makeDeps(() => fake);
     deps.cache.upsertPersona({
-      id: 'alice', name: 'Alice', metadata: {}, spawned: false,
+      id: 'alice',
+      name: 'Alice',
+      metadata: {},
+      spawned: false,
       personality: 'cheerful',
     } as any);
     createSseController(deps as any).start();
@@ -49,7 +52,10 @@ describe('createSseController', () => {
     const fake = new FakeEventSource();
     const deps = makeDeps(() => fake);
     deps.cache.upsertPersona({
-      id: 'alice', name: 'Alice', metadata: {}, spawned: false,
+      id: 'alice',
+      name: 'Alice',
+      metadata: {},
+      spawned: false,
       personality: 'cheerful',
     } as any);
     deps.cache.upsertAgent({ id: 'alice', workspace: '/tmp/alice' });

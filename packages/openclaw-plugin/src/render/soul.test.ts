@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
-import { renderSoul } from './soul.js';
 import type { PersonaCacheEntry } from '../persona-cache.js';
+import { renderSoul } from './soul.js';
 
 function makePersona(overrides: Partial<PersonaCacheEntry> = {}): PersonaCacheEntry {
   return {

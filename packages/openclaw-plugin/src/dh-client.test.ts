@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { getPersonas } from './dh-client.js';
 import type { PluginDeps } from './deps.js';
+import { getPersonas } from './dh-client.js';
 
 function makeDeps(): PluginDeps {
   const logger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() };
@@ -18,9 +18,7 @@ describe('getPersonas', () => {
   });
 
   test('GETs {dhBaseUrl}/personas and returns JSON body', async () => {
-    const mockPersonas = [
-      { id: 'alice', name: 'Alice', metadata: {}, spawned: true },
-    ];
+    const mockPersonas = [{ id: 'alice', name: 'Alice', metadata: {}, spawned: true }];
     const fetchMock = vi
       .spyOn(globalThis, 'fetch')
       .mockResolvedValueOnce(new Response(JSON.stringify(mockPersonas), { status: 200 }));
@@ -28,7 +26,10 @@ describe('getPersonas', () => {
     const deps = makeDeps();
     const result = await getPersonas(deps);
 
-    expect(fetchMock).toHaveBeenCalledWith('http://127.0.0.1:3100/personas', expect.objectContaining({ method: 'GET' }));
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://127.0.0.1:3100/personas',
+      expect.objectContaining({ method: 'GET' }),
+    );
     expect(result).toEqual(mockPersonas);
   });
 

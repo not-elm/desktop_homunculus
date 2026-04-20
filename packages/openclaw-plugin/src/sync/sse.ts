@@ -1,11 +1,11 @@
 import type { PluginDeps, PluginLogger } from '../deps.js';
 import type { PluginCache } from '../persona-cache.js';
 import type { DhPersonaSnapshot } from '../types.js';
-import {
-  writePersonaFiles as defaultWritePersonaFiles,
-  deletePersonaFiles as defaultDeletePersonaFiles,
-} from './writer.js';
 import { errorMessage } from '../util/error.js';
+import {
+  deletePersonaFiles as defaultDeletePersonaFiles,
+  writePersonaFiles as defaultWritePersonaFiles,
+} from './writer.js';
 
 export interface SseDeps extends PluginDeps {
   eventSourceFactory?: (url: string) => MinimalEventSource;
@@ -30,7 +30,9 @@ export interface SseController {
  * Minimal EventSource constructor type. Matches both the `eventsource`
  * package's class shape and mock factories used in tests.
  */
-type EventSourceCtor = new (url: string) => {
+type EventSourceCtor = new (
+  url: string,
+) => {
   addEventListener(name: string, cb: (e: { data: string }) => void): void;
   close(): void;
 };

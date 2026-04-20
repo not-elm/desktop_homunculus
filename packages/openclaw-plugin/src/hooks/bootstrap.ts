@@ -1,6 +1,6 @@
 import type { PluginDeps } from '../deps.js';
-import { renderSoul } from '../render/soul.js';
 import { renderIdentity } from '../render/identity.js';
+import { renderSoul } from '../render/soul.js';
 
 interface BootstrapCtx {
   agentId?: string;

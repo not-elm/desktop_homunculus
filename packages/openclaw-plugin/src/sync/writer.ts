@@ -1,10 +1,10 @@
 import { createHash } from 'node:crypto';
 import { promises as fs } from 'node:fs';
 import { join } from 'node:path';
-import type { PluginCache } from '../persona-cache.js';
 import type { PluginLogger } from '../deps.js';
-import { renderSoul } from '../render/soul.js';
+import type { PluginCache } from '../persona-cache.js';
 import { renderIdentity } from '../render/identity.js';
+import { renderSoul } from '../render/soul.js';
 import { errorMessage } from '../util/error.js';
 
 const MAX_WRITE_RETRIES = 3;
@@ -30,7 +30,9 @@ export async function writePersonaFiles(
   const identity = renderIdentity(entry, opts.soulMaxChars);
 
   if (!soul.trim() && !identity.trim()) {
-    logger.warn(`writePersonaFiles: both SOUL and IDENTITY rendered empty, skipping persona=${opts.personaId}`);
+    logger.warn(
+      `writePersonaFiles: both SOUL and IDENTITY rendered empty, skipping persona=${opts.personaId}`,
+    );
     return;
   }
 
@@ -82,7 +84,9 @@ async function atomicWrite(
       }
     }
   }
-  logger.warn(`writer: atomic write failed after retries path=${targetPath} err=${errorMessage(lastErr)}`);
+  logger.warn(
+    `writer: atomic write failed after retries path=${targetPath} err=${errorMessage(lastErr)}`,
+  );
 }
 
 async function safeUnlink(logger: PluginLogger, path: string): Promise<void> {

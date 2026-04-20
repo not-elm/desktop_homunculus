@@ -1,8 +1,8 @@
 import type { OpenClawPluginApi } from 'openclaw/plugin-sdk/plugin-entry';
 import type { PluginDeps } from '../deps.js';
 import { createOpenClawCli, type OpenClawAgentSource } from './openclaw-cli.js';
-import { seedFromDh as seedRaw, type SeedDeps } from './seed.js';
 import { startReconciler as startReconcilerRaw } from './reconciler.js';
+import { type SeedDeps, seedFromDh as seedRaw } from './seed.js';
 import { createSseController } from './sse.js';
 
 /**

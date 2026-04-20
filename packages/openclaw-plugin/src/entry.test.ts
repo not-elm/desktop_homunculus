@@ -1,5 +1,5 @@
-import { describe, expect, test, vi } from 'vitest';
 import type { OpenClawPluginApi } from 'openclaw/plugin-sdk/plugin-entry';
+import { describe, expect, test, vi } from 'vitest';
 import pluginEntry from './entry.js';
 
 interface EntryShape {

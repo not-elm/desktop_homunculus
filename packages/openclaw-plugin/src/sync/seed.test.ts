@@ -1,7 +1,7 @@
 import { describe, expect, test, vi } from 'vitest';
-import { seedFromDh } from './seed.js';
-import { createPluginCache } from '../persona-cache.js';
 import * as dhClient from '../dh-client.js';
+import { createPluginCache } from '../persona-cache.js';
+import { seedFromDh } from './seed.js';
 
 function makeDeps(overrides: any = {}) {
   const logger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() };
@@ -53,9 +53,7 @@ describe('seedFromDh', () => {
     ] as any);
     const deps = makeDeps();
     await seedFromDh(deps as any);
-    expect(deps.logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Persona `bob`'),
-    );
+    expect(deps.logger.warn).toHaveBeenCalledWith(expect.stringContaining('Persona `bob`'));
     expect(deps.cache.personas.get('bob')!.hasWarnedNoAgent).toBe(true);
   });
 

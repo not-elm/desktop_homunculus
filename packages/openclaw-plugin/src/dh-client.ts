@@ -13,11 +13,7 @@ export async function getPersonas(deps: PluginDeps): Promise<DhPersonaSnapshot[]
   return await dhFetch<DhPersonaSnapshot[]>(deps, '/personas', { method: 'GET' });
 }
 
-async function dhFetch<T>(
-  deps: PluginDeps,
-  path: string,
-  opts: DhFetchOptions,
-): Promise<T> {
+async function dhFetch<T>(deps: PluginDeps, path: string, opts: DhFetchOptions): Promise<T> {
   const url = `${deps.config.dhBaseUrl}${path}`;
   const init: RequestInit = { method: opts.method };
   if (opts.body !== undefined) {

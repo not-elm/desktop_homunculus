@@ -13,7 +13,9 @@
     "check-types": "tsc -p tsconfig.json --noEmit"
   },
   "openclaw": {
-    "extensions": ["./dist/entry.js"]
+    "extensions": [
+      "./dist/entry.js"
+    ]
   },
   "dependencies": {
     "eventsource": "catalog:"
