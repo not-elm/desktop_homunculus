@@ -8,7 +8,7 @@ function makeDeps(overrides: any = {}) {
   return {
     api: { runtime: { logger } } as any,
     cache: createPluginCache(),
-    config: { hmcsBaseUrl: 'http://127.0.0.1:3100', reconcileIntervalSec: 30, soulMaxChars: 10000 },
+    config: { hmcsBaseUrl: 'http://127.0.0.1:3100', soulMaxChars: 10000 },
     logger,
     cli: {
       agentsList: vi.fn(async () => []),

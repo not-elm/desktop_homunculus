@@ -6,7 +6,6 @@
     "type": "object",
     "properties": {
       "hmcsBaseUrl": { "type": "string", "default": "http://127.0.0.1:3100" },
-      "reconcileIntervalSec": { "type": "integer", "default": 30 },
       "soulMaxChars": { "type": "integer", "default": 10000 }
     }
   }

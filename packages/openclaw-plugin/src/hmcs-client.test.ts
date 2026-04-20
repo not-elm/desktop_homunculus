@@ -7,7 +7,7 @@ function makeDeps(): PluginDeps {
   return {
     api: { runtime: { logger } },
     cache: { personas: new Map(), agents: new Map() } as any,
-    config: { hmcsBaseUrl: 'http://127.0.0.1:3100', reconcileIntervalSec: 30, soulMaxChars: 10000 },
+    config: { hmcsBaseUrl: 'http://127.0.0.1:3100', soulMaxChars: 10000 },
     logger,
   };
 }

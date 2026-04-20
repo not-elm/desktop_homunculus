@@ -5,7 +5,6 @@ export type { PluginLogger };
 
 export interface PluginConfig {
   hmcsBaseUrl: string;
-  reconcileIntervalSec: number;
   soulMaxChars: number;
 }
 
