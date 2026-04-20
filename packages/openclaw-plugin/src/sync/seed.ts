@@ -1,6 +1,6 @@
 import type { PluginDeps } from '../deps.js';
-import { getPersonas } from '../dh-client.js';
-import type { DhPersonaSnapshot, OpenClawAgentListEntry } from '../types.js';
+import { getPersonas } from '../hmcs-client.js';
+import type { HmcsPersonaSnapshot, OpenClawAgentListEntry } from '../types.js';
 import { errorMessage } from '../util/error.js';
 import type { OpenClawCli } from './openclaw-cli.js';
 import { writePersonaFiles as defaultWritePersonaFiles } from './writer.js';
@@ -11,7 +11,7 @@ export interface SeedDeps extends PluginDeps {
   writePersonaFiles?: typeof defaultWritePersonaFiles;
 }
 
-export async function seedFromDh(deps: SeedDeps): Promise<void> {
+export async function seedFromHmcs(deps: SeedDeps): Promise<void> {
   const { cache, logger, config } = deps;
   const write = deps.writePersonaFiles ?? defaultWritePersonaFiles;
 
@@ -41,7 +41,7 @@ export async function seedFromDh(deps: SeedDeps): Promise<void> {
   }
 }
 
-async function fetchPersonas(deps: SeedDeps): Promise<DhPersonaSnapshot[] | null> {
+async function fetchPersonas(deps: SeedDeps): Promise<HmcsPersonaSnapshot[] | null> {
   try {
     return await getPersonas(deps);
   } catch (err) {
@@ -61,7 +61,7 @@ async function fetchAgents(deps: SeedDeps): Promise<OpenClawAgentListEntry[]> {
   }
 }
 
-function reconcilePersonaCache(cache: SeedDeps['cache'], personas: DhPersonaSnapshot[]): void {
+function reconcilePersonaCache(cache: SeedDeps['cache'], personas: HmcsPersonaSnapshot[]): void {
   const seen = new Set<string>();
   for (const p of personas) {
     cache.upsertPersona(p);

@@ -1,11 +1,11 @@
 import { errorMessage } from '../util/error.js';
 import type { SeedDeps } from './seed.js';
-import { seedFromDh } from './seed.js';
+import { seedFromHmcs } from './seed.js';
 
 const MAX_BACKOFF_MS = 5 * 60 * 1000;
 
 /**
- * Periodically re-runs `seedFromDh`. The base period is the configured
+ * Periodically re-runs `seedFromHmcs`. The base period is the configured
  * `reconcileIntervalSec`; consecutive failures double the wait up to 5 min,
  * and a successful run resets back to the base period. Self-reschedules with
  * `setTimeout` so a slow tick cannot overlap with the next one.
@@ -23,7 +23,7 @@ export function startReconciler(deps: SeedDeps): () => void {
   async function tick(): Promise<void> {
     if (stopped) return;
     try {
-      await seedFromDh(deps);
+      await seedFromHmcs(deps);
       failureCount = 0;
       schedule(baseMs);
     } catch (err) {

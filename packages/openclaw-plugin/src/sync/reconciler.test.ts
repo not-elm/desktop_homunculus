@@ -10,15 +10,19 @@ function makeDeps(intervalMs: number) {
   return {
     api: { runtime: { logger } } as any,
     cache: { personas: new Map(), agents: new Map() } as any,
-    config: { dhBaseUrl: 'http://x', reconcileIntervalSec: intervalMs / 1000, soulMaxChars: 10000 },
+    config: {
+      hmcsBaseUrl: 'http://x',
+      reconcileIntervalSec: intervalMs / 1000,
+      soulMaxChars: 10000,
+    },
     logger,
     cli: { agentsList: vi.fn(async () => []) },
   };
 }
 
 describe('startReconciler', () => {
-  test('invokes seedFromDh at each interval; stop() cancels', async () => {
-    const spy = vi.spyOn(seed, 'seedFromDh').mockResolvedValue(undefined);
+  test('invokes seedFromHmcs at each interval; stop() cancels', async () => {
+    const spy = vi.spyOn(seed, 'seedFromHmcs').mockResolvedValue(undefined);
     const deps = makeDeps(1000);
     const stop = startReconciler(deps as any);
 
@@ -33,7 +37,7 @@ describe('startReconciler', () => {
   });
 
   test('logs warn but does not throw when seed rejects', async () => {
-    vi.spyOn(seed, 'seedFromDh').mockRejectedValue(new Error('boom'));
+    vi.spyOn(seed, 'seedFromHmcs').mockRejectedValue(new Error('boom'));
     const deps = makeDeps(1000);
     const stop = startReconciler(deps as any);
     await vi.advanceTimersByTimeAsync(1000);

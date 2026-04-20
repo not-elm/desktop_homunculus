@@ -1,6 +1,6 @@
 import type { PluginDeps, PluginLogger } from '../deps.js';
 import type { PluginCache } from '../persona-cache.js';
-import type { DhPersonaSnapshot } from '../types.js';
+import type { HmcsPersonaSnapshot } from '../types.js';
 import { errorMessage } from '../util/error.js';
 import {
   deletePersonaFiles as defaultDeletePersonaFiles,
@@ -46,7 +46,7 @@ export function createSseController(deps: SseDeps): SseController {
 
   return {
     start() {
-      const url = `${deps.config.dhBaseUrl}/personas/stream`;
+      const url = `${deps.config.hmcsBaseUrl}/personas/stream`;
       es = deps.eventSourceFactory
         ? deps.eventSourceFactory(url)
         : defaultEventSourceFactory(url, deps.logger);
@@ -99,7 +99,7 @@ export function createSseController(deps: SseDeps): SseController {
   };
 }
 
-function buildPersonaSnapshot(payload: SsePayload): DhPersonaSnapshot | null {
+function buildPersonaSnapshot(payload: SsePayload): HmcsPersonaSnapshot | null {
   const id = readString(payload, 'personaId');
   if (!id) return null;
 

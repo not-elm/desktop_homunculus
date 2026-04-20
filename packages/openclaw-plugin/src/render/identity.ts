@@ -15,7 +15,7 @@ export function renderIdentity(persona: PersonaCacheEntry, maxChars: number): st
     '# Gender',
     gender,
     '',
-    `# DH persona id: ${persona.personaId}`,
+    `# HMCS persona id: ${persona.personaId}`,
   ];
   const out = lines.join('\n') + '\n';
   if (out.length <= maxChars) return out;

@@ -8,7 +8,7 @@ function makeDeps(): PluginDeps {
   return {
     api: { logger } as unknown as PluginDeps['api'],
     cache: createPluginCache(),
-    config: { dhBaseUrl: 'http://x', reconcileIntervalSec: 30, soulMaxChars: 10000 },
+    config: { hmcsBaseUrl: 'http://x', reconcileIntervalSec: 30, soulMaxChars: 10000 },
     logger,
   };
 }

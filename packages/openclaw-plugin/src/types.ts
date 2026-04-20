@@ -1,8 +1,8 @@
 /**
- * DH `GET /personas` のレスポンス要素。spec §6.2 Phase A で使う。
- * engine/crates/homunculus_api/src/persona.rs の PersonaSnapshot に対応。
+ * HMCS `GET /personas` response element.
+ * Corresponds to `engine/crates/homunculus_api/src/persona.rs` `PersonaSnapshot`.
  */
-export interface DhPersonaSnapshot {
+export interface HmcsPersonaSnapshot {
   id: string;
   name: string;
   age?: number | null;
@@ -16,7 +16,7 @@ export interface DhPersonaSnapshot {
 }
 
 /**
- * `openclaw agents list --json` の出力要素。
+ * `openclaw agents list --json` output element.
  */
 export interface OpenClawAgentListEntry {
   id: string;

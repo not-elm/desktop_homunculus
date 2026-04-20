@@ -1,7 +1,7 @@
 import type { PluginDeps } from './deps.js';
-import type { DhPersonaSnapshot } from './types.js';
+import type { HmcsPersonaSnapshot } from './types.js';
 
-interface DhFetchOptions {
+interface HmcsFetchOptions {
   method: 'GET' | 'POST';
   body?: unknown;
 }
@@ -9,12 +9,12 @@ interface DhFetchOptions {
 /**
  * GET /personas - returns the full persona list including DB-only entries.
  */
-export async function getPersonas(deps: PluginDeps): Promise<DhPersonaSnapshot[]> {
-  return await dhFetch<DhPersonaSnapshot[]>(deps, '/personas', { method: 'GET' });
+export async function getPersonas(deps: PluginDeps): Promise<HmcsPersonaSnapshot[]> {
+  return await hmcsFetch<HmcsPersonaSnapshot[]>(deps, '/personas', { method: 'GET' });
 }
 
-async function dhFetch<T>(deps: PluginDeps, path: string, opts: DhFetchOptions): Promise<T> {
-  const url = `${deps.config.dhBaseUrl}${path}`;
+async function hmcsFetch<T>(deps: PluginDeps, path: string, opts: HmcsFetchOptions): Promise<T> {
+  const url = `${deps.config.hmcsBaseUrl}${path}`;
   const init: RequestInit = { method: opts.method };
   if (opts.body !== undefined) {
     init.headers = { 'content-type': 'application/json' };

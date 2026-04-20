@@ -35,7 +35,7 @@ describe('renderIdentity', () => {
     expect(out).toContain('20');
     expect(out).toContain('# Gender');
     expect(out).toContain('female');
-    expect(out).toContain('# DH persona id: alice');
+    expect(out).toContain('# HMCS persona id: alice');
   });
 
   test('uses "unknown" placeholders when fields are null', () => {

@@ -1,8 +1,7 @@
-import type { DhPersonaSnapshot, OpenClawAgentListEntry } from './types.js';
+import type { HmcsPersonaSnapshot, OpenClawAgentListEntry } from './types.js';
 
 /**
- * Entry for a DH persona tracked by the plugin.
- * See spec §6.2.1 for the full contract.
+ * Entry for an HMCS persona tracked by the plugin.
  */
 export interface PersonaCacheEntry {
   personaId: string;
@@ -26,7 +25,7 @@ export interface AgentCacheEntry {
 export interface PluginCache {
   personas: Map<string, PersonaCacheEntry>;
   agents: Map<string, AgentCacheEntry>;
-  upsertPersona(snap: DhPersonaSnapshot): void;
+  upsertPersona(snap: HmcsPersonaSnapshot): void;
   deletePersona(personaId: string): void;
   setSpawned(personaId: string, spawned: boolean): void;
   upsertAgent(entry: OpenClawAgentListEntry): void;

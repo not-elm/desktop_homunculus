@@ -8,13 +8,13 @@ import { createSyncRunner } from './sync/index.js';
 export default definePluginEntry({
   id: 'hmcs-openclaw',
   name: 'Desktop Homunculus Bridge',
-  description: 'Renders OpenClaw agent replies on DH characters.',
+  description: 'Renders OpenClaw agent replies on HMCS characters.',
   register(api: OpenClawPluginApi) {
     const deps: PluginDeps = {
       api,
       cache: createPluginCache(),
       config: {
-        dhBaseUrl: 'http://127.0.0.1:3100',
+        hmcsBaseUrl: 'http://127.0.0.1:3100',
         reconcileIntervalSec: 30,
         soulMaxChars: 10000,
       },
