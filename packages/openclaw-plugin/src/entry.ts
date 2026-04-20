@@ -1,3 +1,4 @@
+import { host } from '@hmcs/sdk';
 import type { OpenClawPluginApi } from 'openclaw/plugin-sdk/plugin-entry';
 import { definePluginEntry } from 'openclaw/plugin-sdk/plugin-entry';
 import type { PluginDeps } from './deps.js';
@@ -19,6 +20,12 @@ export default definePluginEntry({
       },
       logger: api.logger,
     };
+
+    // The @hmcs/sdk client stores its base URL as module-level state
+    // (`host._baseUrl`). The plugin is currently the only SDK consumer inside
+    // the OpenClaw runtime, so configuring once at register is safe; revisit
+    // if SDK grows an instance-based client or if another consumer ships.
+    host.configure({ baseUrl: deps.config.hmcsBaseUrl });
 
     deps.logger.info('hmcs-openclaw plugin registered');
 

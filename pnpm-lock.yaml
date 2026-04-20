@@ -377,6 +377,9 @@ importers:
 
   packages/openclaw-plugin:
     dependencies:
+      '@hmcs/sdk':
+        specifier: workspace:*
+        version: link:../sdk
       eventsource:
         specifier: 'catalog:'
         version: 4.1.0

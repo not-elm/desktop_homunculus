@@ -1,6 +1,6 @@
+import { Persona, type PersonaSnapshot } from '@hmcs/sdk';
 import type { PluginDeps } from '../deps.js';
-import { getPersonas } from '../hmcs-client.js';
-import type { HmcsPersonaSnapshot, OpenClawAgentListEntry } from '../types.js';
+import type { OpenClawAgentListEntry } from '../types.js';
 import { errorMessage } from '../util/error.js';
 import type { OpenClawCli } from './openclaw-cli.js';
 import { writePersonaFiles as defaultWritePersonaFiles } from './writer.js';
@@ -41,9 +41,9 @@ export async function seedFromHmcs(deps: SeedDeps): Promise<void> {
   }
 }
 
-async function fetchPersonas(deps: SeedDeps): Promise<HmcsPersonaSnapshot[] | null> {
+async function fetchPersonas(deps: SeedDeps): Promise<PersonaSnapshot[] | null> {
   try {
-    return await getPersonas(deps);
+    return await Persona.list();
   } catch (err) {
     deps.logger.warn(
       `seed: GET /personas failed, will retry on reconciler tick err=${errorMessage(err)}`,
@@ -61,7 +61,7 @@ async function fetchAgents(deps: SeedDeps): Promise<OpenClawAgentListEntry[]> {
   }
 }
 
-function reconcilePersonaCache(cache: SeedDeps['cache'], personas: HmcsPersonaSnapshot[]): void {
+function reconcilePersonaCache(cache: SeedDeps['cache'], personas: PersonaSnapshot[]): void {
   const seen = new Set<string>();
   for (const p of personas) {
     cache.upsertPersona(p);

@@ -18,6 +18,7 @@
     ]
   },
   "dependencies": {
+    "@hmcs/sdk": "workspace:*",
     "eventsource": "catalog:"
   },
   "devDependencies": {

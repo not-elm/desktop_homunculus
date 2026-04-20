@@ -9,9 +9,9 @@ function makePersona(overrides: Partial<PersonaCacheEntry> = {}): PersonaCacheEn
     personality: null,
     profile: null,
     age: null,
-    gender: null,
+    gender: 'unknown',
     firstPersonPronoun: null,
-    ttsModName: null,
+    ttsModName: '@hmcs/voicevox',
     spawned: true,
     hasWarnedNoAgent: false,
     lastRenderedHash: null,
@@ -38,13 +38,23 @@ describe('renderIdentity', () => {
     expect(out).toContain('# HMCS persona id: alice');
   });
 
-  test('uses "unknown" placeholders when fields are null', () => {
-    const out = renderIdentity(makePersona({ age: null, gender: null }), 10000);
+  test('uses "unknown" placeholders when age is null and gender is unknown', () => {
+    const out = renderIdentity(makePersona({ age: null, gender: 'unknown' }), 10000);
     expect(out).toContain('unknown');
   });
 
+  test('falls back to personaId when name is null', () => {
+    const out = renderIdentity(makePersona({ name: null, personaId: 'elmer' }), 10000);
+    expect(out).toContain('elmer');
+  });
+
+  test('falls back to personaId when name is whitespace only', () => {
+    const out = renderIdentity(makePersona({ name: '   ', personaId: 'elmer' }), 10000);
+    expect(out).toContain('elmer');
+  });
+
   test('idempotent', () => {
-    const p = makePersona({ age: 30, gender: 'nb' });
+    const p = makePersona({ age: 30, gender: 'other' });
     expect(renderIdentity(p, 10000)).toBe(renderIdentity(p, 10000));
   });
 });

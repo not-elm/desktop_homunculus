@@ -1,6 +1,6 @@
+import { type Gender, host, type PersonaSnapshot } from '@hmcs/sdk';
 import type { PluginDeps, PluginLogger } from '../deps.js';
 import type { PluginCache } from '../persona-cache.js';
-import type { HmcsPersonaSnapshot } from '../types.js';
 import { errorMessage } from '../util/error.js';
 import {
   deletePersonaFiles as defaultDeletePersonaFiles,
@@ -46,7 +46,7 @@ export function createSseController(deps: SseDeps): SseController {
 
   return {
     start() {
-      const url = `${deps.config.hmcsBaseUrl}/personas/stream`;
+      const url = host.createUrl('personas/stream').toString();
       es = deps.eventSourceFactory
         ? deps.eventSourceFactory(url)
         : defaultEventSourceFactory(url, deps.logger);
@@ -99,7 +99,7 @@ export function createSseController(deps: SseDeps): SseController {
   };
 }
 
-function buildPersonaSnapshot(payload: SsePayload): HmcsPersonaSnapshot | null {
+function buildPersonaSnapshot(payload: SsePayload): PersonaSnapshot | null {
   const id = readString(payload, 'personaId');
   if (!id) return null;
 
@@ -117,11 +117,12 @@ function buildPersonaSnapshot(payload: SsePayload): HmcsPersonaSnapshot | null {
     metadata,
     spawned: typeof payload['spawned'] === 'boolean' ? payload['spawned'] : true,
     personality: readString(src, 'personality'),
-    profile: readString(src, 'profile'),
+    profile: readString(src, 'profile') ?? '',
     age: readNumber(src, 'age'),
-    gender: readString(src, 'gender'),
+    gender: toGender(src['gender']),
     firstPersonPronoun: readString(src, 'firstPersonPronoun'),
     vrmAssetId: readString(src, 'vrmAssetId'),
+    state: readString(src, 'state') ?? '',
   };
 }
 
@@ -133,6 +134,15 @@ function readString(obj: SsePayload, key: string): string | null {
 function readNumber(obj: SsePayload, key: string): number | null {
   const v = obj[key];
   return typeof v === 'number' ? v : null;
+}
+
+/**
+ * Coerces a raw SSE value into SDK's `Gender` union. Unknown / missing values
+ * fall back to `'unknown'` so downstream consumers see a valid enum member.
+ */
+function toGender(v: unknown): Gender {
+  if (v === 'male' || v === 'female' || v === 'other') return v;
+  return 'unknown';
 }
 
 function maybeWrite(

@@ -1,15 +1,16 @@
-import type { HmcsPersonaSnapshot, OpenClawAgentListEntry } from './types.js';
+import type { Gender, PersonaSnapshot } from '@hmcs/sdk';
+import type { OpenClawAgentListEntry } from './types.js';
 
 /**
  * Entry for an HMCS persona tracked by the plugin.
  */
 export interface PersonaCacheEntry {
   personaId: string;
-  name: string;
+  name: string | null;
   personality: string | null;
   profile: string | null;
   age: number | null;
-  gender: string | null;
+  gender: Gender;
   firstPersonPronoun: string | null;
   ttsModName: string;
   spawned: boolean;
@@ -25,7 +26,7 @@ export interface AgentCacheEntry {
 export interface PluginCache {
   personas: Map<string, PersonaCacheEntry>;
   agents: Map<string, AgentCacheEntry>;
-  upsertPersona(snap: HmcsPersonaSnapshot): void;
+  upsertPersona(snap: PersonaSnapshot): void;
   deletePersona(personaId: string): void;
   setSpawned(personaId: string, spawned: boolean): void;
   upsertAgent(entry: OpenClawAgentListEntry): void;
@@ -45,11 +46,11 @@ export function createPluginCache(): PluginCache {
       const ttsModName = typeof rawTtsModName === 'string' ? rawTtsModName : '@hmcs/voicevox';
       personas.set(snap.id, {
         personaId: snap.id,
-        name: snap.name,
+        name: snap.name ?? null,
         personality: snap.personality ?? null,
         profile: snap.profile ?? null,
         age: snap.age ?? null,
-        gender: snap.gender ?? null,
+        gender: snap.gender ?? 'unknown',
         firstPersonPronoun: snap.firstPersonPronoun ?? null,
         ttsModName,
         spawned: snap.spawned,

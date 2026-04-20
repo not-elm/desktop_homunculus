@@ -90,6 +90,20 @@ describe('createSseController', () => {
     expect(deps.writePersonaFiles).toHaveBeenCalled();
   });
 
+  test('persona-change coerces unknown gender strings to "unknown"', () => {
+    const fake = new FakeEventSource();
+    const deps = makeDeps(() => fake);
+    deps.cache.upsertAgent({ id: 'alice', workspace: '/tmp/alice' });
+    deps.cache.upsertPersona({ id: 'alice', name: 'A', metadata: {}, spawned: true } as any);
+    createSseController(deps as any).start();
+
+    fake.emit('persona-change', {
+      personaId: 'alice',
+      persona: { id: 'alice', gender: 'bogus-value', metadata: {} },
+    });
+    expect(deps.cache.personas.get('alice')!.gender).toBe('unknown');
+  });
+
   test('persona-despawned flips spawned flag but does not delete', () => {
     const fake = new FakeEventSource();
     const deps = makeDeps(() => fake);
