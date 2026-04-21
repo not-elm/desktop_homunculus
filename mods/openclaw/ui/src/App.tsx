@@ -115,12 +115,8 @@ function PersonaPanel({
   }
 
   return (
-    <div className="openclaw-persona-row">
-      <div className="openclaw-persona-meta">
-        <span className="openclaw-persona-name">{snapshot.name ?? snapshot.id}</span>
-        <span className="openclaw-persona-id">{snapshot.id}</span>
-        {err && <span className="openclaw-error-text">{err}</span>}
-      </div>
+    <label className="settings-label">
+      TTS Engine
       <Select value={value} onValueChange={onChange} disabled={saving}>
         <SelectTrigger className="openclaw-select">
           <SelectValue />
@@ -136,7 +132,8 @@ function PersonaPanel({
           </SelectGroup>
         </SelectContent>
       </Select>
-    </div>
+      {err && <span className="openclaw-error-text">{err}</span>}
+    </label>
   );
 }
 
