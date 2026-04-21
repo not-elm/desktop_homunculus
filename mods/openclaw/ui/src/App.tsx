@@ -115,10 +115,10 @@ function PersonaPanel({
   }
 
   return (
-    <label className="settings-label">
+    <label className="settings-label" htmlFor="openclaw-tts-engine-select">
       TTS Engine
       <Select value={value} onValueChange={onChange} disabled={saving}>
-        <SelectTrigger className="openclaw-select">
+        <SelectTrigger id="openclaw-tts-engine-select" className="w-full">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
