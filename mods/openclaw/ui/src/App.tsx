@@ -126,7 +126,8 @@ function PersonaRow({
 }
 
 function readTtsModName(persona: PersonaSnapshot): string {
-  const value = (persona.metadata as { ttsModName?: unknown }).ttsModName;
+  const metadata = (persona.metadata ?? {}) as { ttsModName?: unknown };
+  const value = metadata.ttsModName;
   if (typeof value === 'string' && value.length > 0) return value;
   return NONE_VALUE;
 }

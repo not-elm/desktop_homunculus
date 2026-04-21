@@ -31,4 +31,14 @@ describe('setTtsModName', () => {
     setTtsModName(input, '@hmcs/voicevox');
     expect(input).toEqual({ favoriteColor: 'blue' });
   });
+
+  test('treats null existing metadata as empty', () => {
+    const out = setTtsModName(null, '@hmcs/voicevox');
+    expect(out).toEqual({ ttsModName: '@hmcs/voicevox' });
+  });
+
+  test('treats undefined existing metadata as empty', () => {
+    const out = setTtsModName(undefined, '@hmcs/voicevox');
+    expect(out).toEqual({ ttsModName: '@hmcs/voicevox' });
+  });
 });
