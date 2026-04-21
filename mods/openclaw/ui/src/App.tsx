@@ -73,12 +73,6 @@ export function App() {
       <Toolbar title="Openclaw" onClose={handleClose} />
       <div className="settings-content">
         <section className="settings-section">
-          {ttsEngines.data.length === 0 && (
-            <div className="openclaw-hint">
-              No TTS engine installed. Install a MOD whose RPC method declares{' '}
-              <code>meta.category = "tts"</code>.
-            </div>
-          )}
           <PersonaPanel
             persona={linked.persona}
             snapshot={linked.snapshot}

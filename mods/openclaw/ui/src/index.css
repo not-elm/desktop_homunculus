@@ -333,24 +333,6 @@ body {
   min-width: 220px;
 }
 
-.openclaw-hint {
-  padding: var(--hud-space-md) var(--hud-space-lg);
-  font-size: var(--hud-font-size-sm);
-  color: oklch(0.8 0.14 80 / 0.85);
-  background: oklch(0.8 0.14 80 / 0.08);
-  border: 1px solid oklch(0.8 0.14 80 / 0.2);
-  border-radius: 6px;
-  position: relative;
-  z-index: 7;
-}
-
-.openclaw-hint code {
-  font-family: monospace;
-  padding: 1px 4px;
-  border-radius: 3px;
-  background: oklch(0.8 0.14 80 / 0.15);
-}
-
 .openclaw-retry {
   align-self: flex-start;
   padding: var(--hud-space-md) 20px;
