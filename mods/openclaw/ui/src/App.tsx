@@ -130,7 +130,7 @@ function PersonaPanel({
             <SelectItem value={NONE_VALUE}>None (no TTS)</SelectItem>
             {engines.map((engine) => (
               <SelectItem key={engine.modName} value={engine.modName}>
-                {engine.description}
+                {engine.modName}
               </SelectItem>
             ))}
           </SelectGroup>

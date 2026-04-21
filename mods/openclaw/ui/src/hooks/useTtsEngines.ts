@@ -3,7 +3,6 @@ import { useCallback, useEffect, useState } from 'react';
 
 export interface TtsEngine {
   modName: string;
-  description: string;
 }
 
 interface State {
@@ -23,10 +22,7 @@ export function useTtsEngines(): State & { refetch: () => void } {
     setState((s) => ({ ...s, loading: true, error: null }));
     try {
       const entries = await rpc.registrations({ category: 'tts' });
-      const engines = entries.map((entry) => ({
-        modName: entry.modName,
-        description: entry.description ?? entry.modName,
-      }));
+      const engines = entries.map((entry) => ({ modName: entry.modName }));
       setState({ data: engines, loading: false, error: null });
     } catch (err) {
       setState({
