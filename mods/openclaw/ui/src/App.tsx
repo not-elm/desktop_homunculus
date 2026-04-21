@@ -1,4 +1,4 @@
-import type { Persona, PersonaSnapshot } from '@hmcs/sdk';
+import { audio, type Persona, type PersonaSnapshot, Webview } from '@hmcs/sdk';
 import {
   Select,
   SelectContent,
@@ -6,10 +6,10 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Toolbar,
 } from '@hmcs/ui';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Decorations } from './components/Decorations';
-import { Header } from './components/Header';
 import { useLinkedPersona } from './hooks/useLinkedPersona';
 import { type TtsEngine, useTtsEngines } from './hooks/useTtsEngines';
 import { setTtsModName } from './lib/metadata';
@@ -22,11 +22,18 @@ export function App() {
   const loading = linked.loading || ttsEngines.loading;
   const error = linked.error ?? ttsEngines.error;
 
+  const handleClose = useCallback(() => {
+    audio.se.play('se:close').catch(() => {
+      // best-effort; ignore if SE service is unavailable
+    });
+    Webview.current()?.close();
+  }, []);
+
   if (loading) {
     return (
       <div className="settings-panel holo-noise">
         <Decorations />
-        <Header personaName={null} />
+        <Toolbar title="Openclaw" onClose={handleClose} />
         <div className="settings-content">
           <div className="settings-loading">
             <div className="settings-loading-text">Loading…</div>
@@ -40,7 +47,7 @@ export function App() {
     return (
       <div className="settings-panel holo-noise">
         <Decorations />
-        <Header personaName={null} />
+        <Toolbar title="Openclaw" onClose={handleClose} />
         <div className="settings-content">
           <div className="openclaw-error-block">
             <span className="openclaw-error-text">{error ?? 'No linked persona'}</span>
@@ -63,7 +70,7 @@ export function App() {
   return (
     <div className="settings-panel holo-noise">
       <Decorations />
-      <Header personaName={linked.snapshot.name ?? linked.snapshot.id} />
+      <Toolbar title="Openclaw" onClose={handleClose} />
       <div className="settings-content">
         <section className="settings-section">
           {ttsEngines.data.length === 0 && (
