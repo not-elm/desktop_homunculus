@@ -3,13 +3,14 @@
   "private": true,
   "license": "MIT",
   "dependencies": {
+    "@hmcs/app-exit": "workspace:*",
     "@hmcs/assets": "workspace:*",
-    "@hmcs/persona": "workspace:*",
     "@hmcs/menu": "workspace:*",
+    "@hmcs/openclaw": "workspace:*",
+    "@hmcs/persona": "workspace:*",
     "@hmcs/settings": "workspace:*",
     "@hmcs/stt": "workspace:*",
-    "@hmcs/voicevox": "workspace:*",
-    "@hmcs/app-exit": "workspace:*"
+    "@hmcs/voicevox": "workspace:*"
   },
   "devDependencies": {
     "tsx": "4.21.0"

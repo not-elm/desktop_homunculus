@@ -714,6 +714,9 @@ importers:
       '@hmcs/menu':
         specifier: workspace:*
         version: link:../mods/menu
+      '@hmcs/openclaw':
+        specifier: workspace:*
+        version: link:../mods/openclaw
       '@hmcs/persona':
         specifier: workspace:*
         version: link:../mods/persona
