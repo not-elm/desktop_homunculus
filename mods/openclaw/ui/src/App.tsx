@@ -1,4 +1,4 @@
-import { Persona, type PersonaSnapshot } from '@hmcs/sdk';
+import type { Persona, PersonaSnapshot } from '@hmcs/sdk';
 import {
   Select,
   SelectContent,
@@ -8,31 +8,31 @@ import {
   SelectValue,
 } from '@hmcs/ui';
 import { useMemo, useState } from 'react';
-import { usePersonas } from './hooks/usePersonas';
+import { useLinkedPersona } from './hooks/useLinkedPersona';
 import { type TtsEngine, useTtsEngines } from './hooks/useTtsEngines';
 import { setTtsModName } from './lib/metadata';
 
 const NONE_VALUE = '__none__';
 
 export function App() {
-  const personas = usePersonas();
+  const linked = useLinkedPersona();
   const ttsEngines = useTtsEngines();
-  const loading = personas.loading || ttsEngines.loading;
-  const error = personas.error ?? ttsEngines.error;
+  const loading = linked.loading || ttsEngines.loading;
+  const error = linked.error ?? ttsEngines.error;
 
   if (loading) {
     return <div className="p-6 text-white/80 text-sm">Loading…</div>;
   }
 
-  if (error) {
+  if (error || !linked.persona || !linked.snapshot) {
     return (
       <div className="p-6 text-white/90 flex flex-col gap-3">
-        <div className="text-sm text-red-300">{error}</div>
+        <div className="text-sm text-red-300">{error ?? 'No linked persona'}</div>
         <button
           type="button"
           className="self-start px-3 py-1.5 text-sm bg-white/10 border border-white/20 rounded hover:bg-white/15"
           onClick={() => {
-            personas.refetch();
+            linked.refetch();
             ttsEngines.refetch();
           }}
         >
@@ -47,7 +47,7 @@ export function App() {
       <header>
         <h1 className="text-lg font-semibold tracking-wide">OpenClaw Settings</h1>
         <p className="text-xs text-white/60">
-          Pick a TTS engine per persona. "None" disables speech output — text replies still flow.
+          Pick a TTS engine for this persona. "None" disables speech output — text replies still flow.
         </p>
       </header>
 
@@ -57,27 +57,25 @@ export function App() {
         </div>
       )}
 
-      <section className="flex flex-col gap-3">
-        {personas.data.length === 0 ? (
-          <div className="text-sm text-white/70">No personas available.</div>
-        ) : (
-          personas.data.map((p) => (
-            <PersonaRow key={p.id} persona={p} engines={ttsEngines.data} />
-          ))
-        )}
-      </section>
+      <PersonaPanel
+        persona={linked.persona}
+        snapshot={linked.snapshot}
+        engines={ttsEngines.data}
+      />
     </div>
   );
 }
 
-function PersonaRow({
+function PersonaPanel({
   persona,
+  snapshot,
   engines,
 }: {
-  persona: PersonaSnapshot;
+  persona: Persona;
+  snapshot: PersonaSnapshot;
   engines: TtsEngine[];
 }) {
-  const initial = useMemo(() => readTtsModName(persona), [persona]);
+  const initial = useMemo(() => readTtsModName(snapshot), [snapshot]);
   const [value, setValue] = useState<string>(initial);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -87,10 +85,9 @@ function PersonaRow({
     setSaving(true);
     setErr(null);
     try {
-      const p = await Persona.load(persona.id);
-      const existing = await p.metadata();
+      const existing = await persona.metadata();
       const merged = setTtsModName(existing, next === NONE_VALUE ? null : next);
-      await p.setMetadata(merged);
+      await persona.setMetadata(merged);
     } catch (e) {
       setErr((e as Error).message ?? 'Save failed');
       setValue(initial);
@@ -102,8 +99,8 @@ function PersonaRow({
   return (
     <div className="flex items-center justify-between gap-4 bg-white/5 border border-white/15 rounded p-3">
       <div className="flex flex-col min-w-0">
-        <span className="text-sm font-medium truncate">{persona.name ?? persona.id}</span>
-        <span className="text-xs text-white/50 truncate">{persona.id}</span>
+        <span className="text-sm font-medium truncate">{snapshot.name ?? snapshot.id}</span>
+        <span className="text-xs text-white/50 truncate">{snapshot.id}</span>
         {err && <span className="text-xs text-red-300 mt-1">{err}</span>}
       </div>
       <Select value={value} onValueChange={onChange} disabled={saving}>
@@ -125,8 +122,8 @@ function PersonaRow({
   );
 }
 
-function readTtsModName(persona: PersonaSnapshot): string {
-  const metadata = (persona.metadata ?? {}) as { ttsModName?: unknown };
+function readTtsModName(snapshot: PersonaSnapshot): string {
+  const metadata = (snapshot.metadata ?? {}) as { ttsModName?: unknown };
   const value = metadata.ttsModName;
   if (typeof value === 'string' && value.length > 0) return value;
   return NONE_VALUE;
