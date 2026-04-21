@@ -1,0 +1,11 @@
+@import "tailwindcss";
+@import "@hmcs/ui/dist/index.css";
+
+body {
+  background: transparent;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+}
