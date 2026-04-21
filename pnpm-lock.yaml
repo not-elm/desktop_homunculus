@@ -46,8 +46,8 @@ catalogs:
 overrides:
   serialize-javascript@<7.0.5: 7.0.5
   minimatch@>=10.0.0 <10.2.3: 10.2.4
-  lodash@<=4.17.23: 4.18.0
-  lodash-es@<=4.17.23: 4.18.0
+  lodash@<=4.18.0: 4.18.1
+  lodash-es@<=4.18.0: 4.18.1
   js-yaml@4.1.0: 4.1.1
   express-rate-limit@>=8.2.0 <8.2.2: 8.2.2
   svgo@>=3.0.0 <3.3.3: 3.3.3
@@ -8748,9 +8748,8 @@ packages:
     resolution: {integrity: sha512-gvVijfZvn7R+2qyPX8mAuKcFGDf6Nc61GdvGafQsHL0sBIxfKzA+usWn4GFC/bk+QdwPUD4kWFJLhElipq+0VA==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
-  lodash-es@4.18.0:
-    resolution: {integrity: sha512-koAgswPPA+UTaPN64Etp+PGP+WT6oqOS2NMi5yDkMaiGw9qY4VxQbQF0mtKMyr4BlTznWyzePV5UpECTJQmSUA==}
-    deprecated: Bad release. Please use lodash-es@4.17.23 instead.
+  lodash-es@4.18.1:
+    resolution: {integrity: sha512-J8xewKD/Gk22OZbhpOVSwcs60zhd95ESDwezOFuA3/099925PdHJ7OFHNTGtajL3AlZkykD32HykiMo+BIBI8A==}
 
   lodash.camelcase@4.3.0:
     resolution: {integrity: sha512-TwuEnCnxbc3rAvhf/LbG7tJUDzhqXyFnv3dtzLOPgCG/hODL7WFnsbwktkD7yUV0RrreP/l1PALq/YSg6VvjlA==}
@@ -8794,9 +8793,8 @@ packages:
   lodash.uniq@4.5.0:
     resolution: {integrity: sha512-xfBaXQd9ryd9dlSDvnvI0lvxfLJlYAZzXomUYzLKtUeOQvOP5piqAWuGtrhWeqaXK9hhoM/iyJc5AV+XfsX3HQ==}
 
-  lodash@4.18.0:
-    resolution: {integrity: sha512-l1mfj2atMqndAHI3ls7XqPxEjV2J9ZkcNyHpoZA3r2T1LLwDB69jgkMWh71YKwhBbK0G2f4WSn05ahmQXVxupA==}
-    deprecated: Bad release. Please use lodash@4.17.21 instead.
+  lodash@4.18.1:
+    resolution: {integrity: sha512-dMInicTPVE8d1e5otfwmmjlxkZoUpiVLwyeTdUsi/Caj/gfzzblBcCE5sRHV/AsjuCmxWrte2TNGSYuCeCq+0Q==}
 
   loglevel@1.9.2:
     resolution: {integrity: sha512-HgMmCqIJSAKqo68l0rS2AanEWfkxaZ5wNiEFb5ggm08lDs9Xl2KxBlX3PTcaD2chBM1gXAYf491/M2Rv8Jwayg==}
@@ -13771,12 +13769,12 @@ snapshots:
     dependencies:
       '@chevrotain/gast': 11.1.2
       '@chevrotain/types': 11.1.2
-      lodash-es: 4.18.0
+      lodash-es: 4.18.1
 
   '@chevrotain/gast@11.1.2':
     dependencies:
       '@chevrotain/types': 11.1.2
-      lodash-es: 4.18.0
+      lodash-es: 4.18.1
 
   '@chevrotain/regexp-to-ast@11.1.2': {}
 
@@ -14286,7 +14284,7 @@ snapshots:
       html-tags: 3.3.1
       html-webpack-plugin: 5.6.6(webpack@5.105.4)
       leven: 3.1.0
-      lodash: 4.18.0
+      lodash: 4.18.1
       open: 8.4.2
       p-map: 4.0.0
       prompts: 2.4.2
@@ -14403,7 +14401,7 @@ snapshots:
       '@docusaurus/utils-validation': 3.9.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       eta: 2.2.0
       fs-extra: 11.3.4
-      lodash: 4.18.0
+      lodash: 4.18.1
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
       tslib: 2.8.1
@@ -14439,7 +14437,7 @@ snapshots:
       cheerio: 1.0.0-rc.12
       feed: 4.2.2
       fs-extra: 11.3.4
-      lodash: 4.18.0
+      lodash: 4.18.1
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
       schema-dts: 1.1.5
@@ -14481,7 +14479,7 @@ snapshots:
       combine-promises: 1.2.0
       fs-extra: 11.3.4
       js-yaml: 4.1.1
-      lodash: 4.18.0
+      lodash: 4.18.1
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
       schema-dts: 1.1.5
@@ -14794,7 +14792,7 @@ snapshots:
       '@mdx-js/react': 3.1.1(@types/react@19.2.14)(react@19.2.4)
       clsx: 2.1.1
       infima: 0.2.0-alpha.45
-      lodash: 4.18.0
+      lodash: 4.18.1
       nprogress: 0.2.0
       postcss: 8.5.8
       prism-react-renderer: 2.4.1(react@19.2.4)
@@ -14892,7 +14890,7 @@ snapshots:
       clsx: 2.1.1
       eta: 2.2.0
       fs-extra: 11.3.4
-      lodash: 4.18.0
+      lodash: 4.18.1
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
       tslib: 2.8.1
@@ -15001,7 +14999,7 @@ snapshots:
       fs-extra: 11.3.4
       joi: 17.13.3
       js-yaml: 4.1.1
-      lodash: 4.18.0
+      lodash: 4.18.1
       tslib: 2.8.1
     transitivePeerDependencies:
       - '@swc/core'
@@ -15020,7 +15018,7 @@ snapshots:
       fs-extra: 11.3.4
       joi: 17.13.3
       js-yaml: 4.1.1
-      lodash: 4.18.0
+      lodash: 4.18.1
       tslib: 2.8.1
     transitivePeerDependencies:
       - '@swc/core'
@@ -15045,7 +15043,7 @@ snapshots:
       gray-matter: 4.0.3
       jiti: 1.21.7
       js-yaml: 4.1.1
-      lodash: 4.18.0
+      lodash: 4.18.1
       micromatch: 4.0.8
       p-queue: 6.6.2
       prompts: 2.4.2
@@ -15077,7 +15075,7 @@ snapshots:
       gray-matter: 4.0.3
       jiti: 1.21.7
       js-yaml: 4.1.1
-      lodash: 4.18.0
+      lodash: 4.18.1
       micromatch: 4.0.8
       p-queue: 6.6.2
       prompts: 2.4.2
@@ -16189,7 +16187,7 @@ snapshots:
       '@rushstack/terminal': 0.22.3(@types/node@24.11.0)
       '@rushstack/ts-command-line': 5.3.3(@types/node@24.11.0)
       diff: 8.0.3
-      lodash: 4.18.0
+      lodash: 4.18.1
       minimatch: 10.2.4
       resolve: 1.22.11
       semver: 7.5.4
@@ -19829,7 +19827,7 @@ snapshots:
   chevrotain-allstar@0.3.1(chevrotain@11.1.2):
     dependencies:
       chevrotain: 11.1.2
-      lodash-es: 4.18.0
+      lodash-es: 4.18.1
 
   chevrotain@11.1.2:
     dependencies:
@@ -19838,7 +19836,7 @@ snapshots:
       '@chevrotain/regexp-to-ast': 11.1.2
       '@chevrotain/types': 11.1.2
       '@chevrotain/utils': 11.1.2
-      lodash-es: 4.18.0
+      lodash-es: 4.18.1
 
   chokidar@3.6.0:
     dependencies:
@@ -20448,7 +20446,7 @@ snapshots:
   dagre-d3-es@7.0.14:
     dependencies:
       d3: 7.9.0
-      lodash-es: 4.18.0
+      lodash-es: 4.18.1
 
   data-uri-to-buffer@4.0.1: {}
 
@@ -20597,7 +20595,7 @@ snapshots:
       fs-extra: 11.3.4
       json-pointer: 0.6.2
       json5: 2.2.3
-      lodash: 4.18.0
+      lodash: 4.18.1
       mustache: 4.2.0
       openapi-to-postmanv2: 5.8.0
       postman-collection: 5.3.0
@@ -20633,7 +20631,7 @@ snapshots:
       docusaurus-plugin-openapi-docs: 4.7.1(@docusaurus/plugin-content-docs@3.9.2(@mdx-js/react@3.1.1(@types/react@19.2.14)(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.6.3))(@docusaurus/utils-validation@3.10.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(@docusaurus/utils@3.10.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)
       docusaurus-plugin-sass: 0.2.6(@docusaurus/core@3.9.2(@mdx-js/react@3.1.1(@types/react@19.2.14)(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.6.3))(sass@1.97.3)(webpack@5.105.4)
       file-saver: 2.0.5
-      lodash: 4.18.0
+      lodash: 4.18.1
       pako: 2.1.0
       postman-code-generators: 2.1.0
       postman-collection: 5.3.0
@@ -21525,7 +21523,7 @@ snapshots:
 
   graphlib@2.1.8:
     dependencies:
-      lodash: 4.18.0
+      lodash: 4.18.1
 
   gray-matter@4.0.3:
     dependencies:
@@ -21751,7 +21749,7 @@ snapshots:
     dependencies:
       '@types/html-minifier-terser': 6.1.0
       html-minifier-terser: 6.1.0
-      lodash: 4.18.0
+      lodash: 4.18.1
       pretty-error: 4.0.0
       tapable: 2.3.0
     optionalDependencies:
@@ -22174,13 +22172,13 @@ snapshots:
 
   json-schema-compare@0.2.2:
     dependencies:
-      lodash: 4.18.0
+      lodash: 4.18.1
 
   json-schema-merge-allof@0.8.1:
     dependencies:
       compute-lcm: 1.1.2
       json-schema-compare: 0.2.2
-      lodash: 4.18.0
+      lodash: 4.18.1
 
   json-schema-to-ts@3.1.1:
     dependencies:
@@ -22373,7 +22371,7 @@ snapshots:
     dependencies:
       p-locate: 6.0.0
 
-  lodash-es@4.18.0: {}
+  lodash-es@4.18.1: {}
 
   lodash.camelcase@4.3.0: {}
 
@@ -22403,7 +22401,7 @@ snapshots:
 
   lodash.uniq@4.5.0: {}
 
-  lodash@4.18.0: {}
+  lodash@4.18.1: {}
 
   loglevel@1.9.2: {}
 
@@ -22757,7 +22755,7 @@ snapshots:
       dompurify: 3.3.3
       katex: 0.16.38
       khroma: 2.1.0
-      lodash-es: 4.18.0
+      lodash-es: 4.18.1
       marked: 16.4.2
       roughjs: 4.6.6
       stylis: 4.3.6
@@ -23443,7 +23441,7 @@ snapshots:
       js-yaml: 4.1.1
       json-pointer: 0.6.2
       json-schema-merge-allof: 0.8.1
-      lodash: 4.18.0
+      lodash: 4.18.1
       neotraverse: 0.6.15
       oas-resolver-browser: 2.5.6
       object-hash: 3.0.0
@@ -24306,7 +24304,7 @@ snapshots:
     dependencies:
       async: 3.2.2
       detect-package-manager: 3.0.2
-      lodash: 4.18.0
+      lodash: 4.18.1
       path: 0.12.7
       postman-collection: 5.3.0
       shelljs: 0.8.5
@@ -24318,7 +24316,7 @@ snapshots:
       http-reasons: 0.1.0
       iconv-lite: 0.6.3
       liquid-json: 0.3.1
-      lodash: 4.18.0
+      lodash: 4.18.1
       mime: 3.0.0
       mime-format: 2.0.2
       postman-url-encoder: 3.0.8
@@ -24331,7 +24329,7 @@ snapshots:
 
   pretty-error@4.0.0:
     dependencies:
-      lodash: 4.18.0
+      lodash: 4.18.1
       renderkid: 3.0.0
 
   pretty-format@27.5.1:
@@ -24820,7 +24818,7 @@ snapshots:
     dependencies:
       clsx: 2.1.1
       eventemitter3: 4.0.7
-      lodash: 4.18.0
+      lodash: 4.18.1
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
       react-is: 18.3.1
@@ -25004,7 +25002,7 @@ snapshots:
       css-select: 4.3.0
       dom-converter: 0.2.0
       htmlparser2: 6.1.0
-      lodash: 4.18.0
+      lodash: 4.18.1
       strip-ansi: 6.0.1
 
   repeat-string@1.6.1: {}
