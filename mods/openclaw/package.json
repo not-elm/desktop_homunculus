@@ -8,7 +8,7 @@
   "scripts": {
     "build": "pnpm exec vite build ui",
     "dev": "pnpm exec vite dev ui",
-    "test": "vitest run",
+    "test": "vitest run --config ui/vitest.config.ts",
     "check-types": "tsc -p ui/tsconfig.json --noEmit"
   },
   "bin": {
