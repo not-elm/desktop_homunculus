@@ -8,6 +8,8 @@ import {
   SelectValue,
 } from '@hmcs/ui';
 import { useMemo, useState } from 'react';
+import { Decorations } from './components/Decorations';
+import { Header } from './components/Header';
 import { useLinkedPersona } from './hooks/useLinkedPersona';
 import { type TtsEngine, useTtsEngines } from './hooks/useTtsEngines';
 import { setTtsModName } from './lib/metadata';
@@ -21,47 +23,62 @@ export function App() {
   const error = linked.error ?? ttsEngines.error;
 
   if (loading) {
-    return <div className="p-6 text-white/80 text-sm">Loading…</div>;
+    return (
+      <div className="settings-panel holo-noise">
+        <Decorations />
+        <Header personaName={null} />
+        <div className="settings-content">
+          <div className="settings-loading">
+            <div className="settings-loading-text">Loading…</div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (error || !linked.persona || !linked.snapshot) {
     return (
-      <div className="p-6 text-white/90 flex flex-col gap-3">
-        <div className="text-sm text-red-300">{error ?? 'No linked persona'}</div>
-        <button
-          type="button"
-          className="self-start px-3 py-1.5 text-sm bg-white/10 border border-white/20 rounded hover:bg-white/15"
-          onClick={() => {
-            linked.refetch();
-            ttsEngines.refetch();
-          }}
-        >
-          Retry
-        </button>
+      <div className="settings-panel holo-noise">
+        <Decorations />
+        <Header personaName={null} />
+        <div className="settings-content">
+          <div className="openclaw-error-block">
+            <span className="openclaw-error-text">{error ?? 'No linked persona'}</span>
+            <button
+              type="button"
+              className="openclaw-retry"
+              onClick={() => {
+                linked.refetch();
+                ttsEngines.refetch();
+              }}
+            >
+              Retry
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 flex flex-col gap-4 text-white/90">
-      <header>
-        <h1 className="text-lg font-semibold tracking-wide">OpenClaw Settings</h1>
-        <p className="text-xs text-white/60">
-          Pick a TTS engine for this persona. "None" disables speech output — text replies still flow.
-        </p>
-      </header>
-
-      {ttsEngines.data.length === 0 && (
-        <div className="text-xs text-amber-200/90 bg-amber-400/10 border border-amber-300/30 rounded p-2">
-          No TTS engine installed. Install a MOD whose RPC method declares <code>meta.category = "tts"</code>.
-        </div>
-      )}
-
-      <PersonaPanel
-        persona={linked.persona}
-        snapshot={linked.snapshot}
-        engines={ttsEngines.data}
-      />
+    <div className="settings-panel holo-noise">
+      <Decorations />
+      <Header personaName={linked.snapshot.name ?? linked.snapshot.id} />
+      <div className="settings-content">
+        <section className="settings-section">
+          {ttsEngines.data.length === 0 && (
+            <div className="openclaw-hint">
+              No TTS engine installed. Install a MOD whose RPC method declares{' '}
+              <code>meta.category = "tts"</code>.
+            </div>
+          )}
+          <PersonaPanel
+            persona={linked.persona}
+            snapshot={linked.snapshot}
+            engines={ttsEngines.data}
+          />
+        </section>
+      </div>
     </div>
   );
 }
@@ -97,14 +114,14 @@ function PersonaPanel({
   }
 
   return (
-    <div className="flex items-center justify-between gap-4 bg-white/5 border border-white/15 rounded p-3">
-      <div className="flex flex-col min-w-0">
-        <span className="text-sm font-medium truncate">{snapshot.name ?? snapshot.id}</span>
-        <span className="text-xs text-white/50 truncate">{snapshot.id}</span>
-        {err && <span className="text-xs text-red-300 mt-1">{err}</span>}
+    <div className="openclaw-persona-row">
+      <div className="openclaw-persona-meta">
+        <span className="openclaw-persona-name">{snapshot.name ?? snapshot.id}</span>
+        <span className="openclaw-persona-id">{snapshot.id}</span>
+        {err && <span className="openclaw-error-text">{err}</span>}
       </div>
       <Select value={value} onValueChange={onChange} disabled={saving}>
-        <SelectTrigger className="w-56">
+        <SelectTrigger className="openclaw-select">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
