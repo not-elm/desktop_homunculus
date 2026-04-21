@@ -1,11 +1,13 @@
 import { describe, expect, test, vi } from 'vitest';
 import { createPluginCache } from '../persona-cache.js';
+import { makePersonaSnapshot } from '../testing.js';
+import type { MinimalEventSource, SseDeps } from './sse.js';
 import { createSseController } from './sse.js';
 
-class FakeEventSource {
-  listeners = new Map<string, Array<(e: any) => void>>();
+class FakeEventSource implements MinimalEventSource {
+  listeners = new Map<string, Array<(e: { data: string }) => void>>();
   closed = false;
-  addEventListener(name: string, cb: (e: any) => void): void {
+  addEventListener(name: string, cb: (e: { data: string }) => void): void {
     if (!this.listeners.has(name)) this.listeners.set(name, []);
     this.listeners.get(name)?.push(cb);
   }
@@ -17,10 +19,10 @@ class FakeEventSource {
   }
 }
 
-function makeDeps(fakeFactory: () => FakeEventSource) {
+function makeDeps(fakeFactory: () => FakeEventSource): SseDeps {
   const logger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() };
   return {
-    api: { runtime: { logger } } as any,
+    api: { runtime: { logger } } as unknown as SseDeps['api'],
     cache: createPluginCache(),
     config: { hmcsBaseUrl: 'http://127.0.0.1:3100', soulMaxChars: 10000 },
     logger,
@@ -34,14 +36,10 @@ describe('createSseController', () => {
   test('persona-spawned sets spawned flag on existing cache entry', () => {
     const fake = new FakeEventSource();
     const deps = makeDeps(() => fake);
-    deps.cache.upsertPersona({
-      id: 'alice',
-      name: 'Alice',
-      metadata: {},
-      spawned: false,
-      personality: 'cheerful',
-    } as any);
-    createSseController(deps as any).start();
+    deps.cache.upsertPersona(
+      makePersonaSnapshot({ id: 'alice', name: 'Alice', spawned: false, personality: 'cheerful' }),
+    );
+    createSseController(deps).start();
 
     fake.emit('persona-spawned', { personaId: 'alice' });
     expect(deps.cache.personas.get('alice')?.spawned).toBe(true);
@@ -51,15 +49,11 @@ describe('createSseController', () => {
   test('persona-spawned writes SOUL/IDENTITY if agent is in cache', () => {
     const fake = new FakeEventSource();
     const deps = makeDeps(() => fake);
-    deps.cache.upsertPersona({
-      id: 'alice',
-      name: 'Alice',
-      metadata: {},
-      spawned: false,
-      personality: 'cheerful',
-    } as any);
+    deps.cache.upsertPersona(
+      makePersonaSnapshot({ id: 'alice', name: 'Alice', spawned: false, personality: 'cheerful' }),
+    );
     deps.cache.upsertAgent({ id: 'alice', workspace: '/tmp/alice' });
-    createSseController(deps as any).start();
+    createSseController(deps).start();
     fake.emit('persona-spawned', { personaId: 'alice' });
     expect(deps.writePersonaFiles).toHaveBeenCalled();
   });
@@ -67,7 +61,7 @@ describe('createSseController', () => {
   test('persona-spawned without prior cache entry does not crash', () => {
     const fake = new FakeEventSource();
     const deps = makeDeps(() => fake);
-    createSseController(deps as any).start();
+    createSseController(deps).start();
     fake.emit('persona-spawned', { personaId: 'unknown' });
     expect(deps.cache.personas.has('unknown')).toBe(false);
     expect(deps.writePersonaFiles).not.toHaveBeenCalled();
@@ -77,8 +71,8 @@ describe('createSseController', () => {
     const fake = new FakeEventSource();
     const deps = makeDeps(() => fake);
     deps.cache.upsertAgent({ id: 'alice', workspace: '/tmp/alice' });
-    deps.cache.upsertPersona({ id: 'alice', name: 'A', metadata: {}, spawned: true } as any);
-    const ctl = createSseController(deps as any);
+    deps.cache.upsertPersona(makePersonaSnapshot({ id: 'alice', name: 'A', spawned: true }));
+    const ctl = createSseController(deps);
     ctl.start();
 
     fake.emit('persona-change', {
@@ -94,8 +88,8 @@ describe('createSseController', () => {
     const fake = new FakeEventSource();
     const deps = makeDeps(() => fake);
     deps.cache.upsertAgent({ id: 'alice', workspace: '/tmp/alice' });
-    deps.cache.upsertPersona({ id: 'alice', name: 'A', metadata: {}, spawned: true } as any);
-    createSseController(deps as any).start();
+    deps.cache.upsertPersona(makePersonaSnapshot({ id: 'alice', name: 'A', spawned: true }));
+    createSseController(deps).start();
 
     fake.emit('persona-change', {
       personaId: 'alice',
@@ -107,8 +101,8 @@ describe('createSseController', () => {
   test('persona-despawned flips spawned flag but does not delete', () => {
     const fake = new FakeEventSource();
     const deps = makeDeps(() => fake);
-    deps.cache.upsertPersona({ id: 'alice', name: 'A', metadata: {}, spawned: true } as any);
-    createSseController(deps as any).start();
+    deps.cache.upsertPersona(makePersonaSnapshot({ id: 'alice', name: 'A', spawned: true }));
+    createSseController(deps).start();
 
     fake.emit('persona-despawned', { personaId: 'alice' });
     expect(deps.cache.personas.get('alice')?.spawned).toBe(false);
@@ -118,8 +112,8 @@ describe('createSseController', () => {
     const fake = new FakeEventSource();
     const deps = makeDeps(() => fake);
     deps.cache.upsertAgent({ id: 'alice', workspace: '/tmp/alice' });
-    deps.cache.upsertPersona({ id: 'alice', name: 'A', metadata: {}, spawned: true } as any);
-    createSseController(deps as any).start();
+    deps.cache.upsertPersona(makePersonaSnapshot({ id: 'alice', name: 'A', spawned: true }));
+    createSseController(deps).start();
 
     fake.emit('persona-deleted', { personaId: 'alice' });
     expect(deps.deletePersonaFiles).toHaveBeenCalledWith(deps.logger, '/tmp/alice');
@@ -129,7 +123,7 @@ describe('createSseController', () => {
   test('stop() closes the EventSource', () => {
     const fake = new FakeEventSource();
     const deps = makeDeps(() => fake);
-    const ctl = createSseController(deps as any);
+    const ctl = createSseController(deps);
     ctl.start();
     ctl.stop();
     expect(fake.closed).toBe(true);
@@ -139,8 +133,8 @@ describe('createSseController', () => {
     const fake = new FakeEventSource();
     const deps = makeDeps(() => fake);
     deps.cache.upsertAgent({ id: 'alice', workspace: '/tmp/alice' });
-    deps.cache.upsertPersona({ id: 'alice', name: 'A', metadata: {}, spawned: true } as any);
-    createSseController(deps as any).start();
+    deps.cache.upsertPersona(makePersonaSnapshot({ id: 'alice', name: 'A', spawned: true }));
+    createSseController(deps).start();
     fake.emit('state-change', { personaId: 'alice', state: 'idle' });
     fake.emit('vrm-attached', { personaId: 'alice' });
     fake.emit('vrm-detached', { personaId: 'alice' });

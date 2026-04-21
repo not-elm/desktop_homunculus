@@ -50,7 +50,8 @@ describe('renderSoul', () => {
   test('caps profile to 5 lines', () => {
     const profile = Array.from({ length: 10 }, (_, i) => `line${i + 1}`).join('\n');
     const out = renderSoul(makePersona({ profile }), 10000);
-    const body = out.split('# Profile note\n')[1]!;
+    const parts = out.split('# Profile note\n');
+    const body = parts[1] ?? '';
     const lineCount = body.split('\n').filter((l) => l.startsWith('line')).length;
     expect(lineCount).toBeLessThanOrEqual(5);
   });

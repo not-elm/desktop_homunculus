@@ -1,6 +1,7 @@
 import { describe, expect, test, vi } from 'vitest';
 import type { PluginDeps } from '../deps.js';
 import { createPluginCache } from '../persona-cache.js';
+import { makePersonaSnapshot } from '../testing.js';
 import { createBootstrapHandler } from './bootstrap.js';
 
 function makeDeps(): PluginDeps {
@@ -16,46 +17,48 @@ function makeDeps(): PluginDeps {
 describe('createBootstrapHandler', () => {
   test('pushes SOUL.md and IDENTITY.md into ctx.bootstrapFiles when persona is cached', async () => {
     const deps = makeDeps();
-    deps.cache.upsertPersona({
-      id: 'alice',
-      name: 'Alice',
-      metadata: {},
-      spawned: true,
-      personality: 'Kind',
-    } as any);
-    const handler = createBootstrapHandler(deps as any);
-    const ctx = { agentId: 'alice', bootstrapFiles: [] };
-    await handler(ctx as any);
+    deps.cache.upsertPersona(
+      makePersonaSnapshot({ id: 'alice', name: 'Alice', spawned: true, personality: 'Kind' }),
+    );
+    const handler = createBootstrapHandler(deps);
+    const ctx = {
+      agentId: 'alice',
+      bootstrapFiles: [] as Array<{ path: string; content: string }>,
+    };
+    await handler(ctx);
     expect(ctx.bootstrapFiles).toHaveLength(2);
-    expect(ctx.bootstrapFiles.find((f: any) => f.path === 'SOUL.md')).toBeDefined();
-    expect(ctx.bootstrapFiles.find((f: any) => f.path === 'IDENTITY.md')).toBeDefined();
+    expect(ctx.bootstrapFiles.find((f) => f.path === 'SOUL.md')).toBeDefined();
+    expect(ctx.bootstrapFiles.find((f) => f.path === 'IDENTITY.md')).toBeDefined();
   });
 
   test('no-op when cache has no matching persona', async () => {
     const deps = makeDeps();
-    const handler = createBootstrapHandler(deps as any);
-    const ctx = { agentId: 'ghost', bootstrapFiles: [] };
-    await handler(ctx as any);
+    const handler = createBootstrapHandler(deps);
+    const ctx = {
+      agentId: 'ghost',
+      bootstrapFiles: [] as Array<{ path: string; content: string }>,
+    };
+    await handler(ctx);
     expect(ctx.bootstrapFiles).toHaveLength(0);
   });
 
   test('no-op when ctx.agentId is undefined', async () => {
     const deps = makeDeps();
-    const handler = createBootstrapHandler(deps as any);
-    const ctx = { bootstrapFiles: [] };
-    await handler(ctx as any);
+    const handler = createBootstrapHandler(deps);
+    const ctx = { bootstrapFiles: [] as Array<{ path: string; content: string }> };
+    await handler(ctx);
     expect(ctx.bootstrapFiles).toHaveLength(0);
   });
 
   test('preserves existing bootstrapFiles entries', async () => {
     const deps = makeDeps();
-    deps.cache.upsertPersona({ id: 'alice', name: 'A', metadata: {}, spawned: true } as any);
-    const handler = createBootstrapHandler(deps as any);
+    deps.cache.upsertPersona(makePersonaSnapshot({ id: 'alice', name: 'A', spawned: true }));
+    const handler = createBootstrapHandler(deps);
     const ctx = {
       agentId: 'alice',
       bootstrapFiles: [{ path: 'USER.md', content: 'preserve me' }],
     };
-    await handler(ctx as any);
+    await handler(ctx);
     expect(ctx.bootstrapFiles).toHaveLength(3);
     expect(ctx.bootstrapFiles[0]?.path).toBe('USER.md');
   });

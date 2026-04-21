@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { createPluginCache } from '../persona-cache.js';
+import { getRequired, makePersonaSnapshot } from '../testing.js';
 import { deletePersonaFiles, writePersonaFiles } from './writer.js';
 
 let baseDir: string;
@@ -17,14 +18,15 @@ afterEach(() => {
 
 function setupPersona() {
   const cache = createPluginCache();
-  cache.upsertPersona({
-    id: 'alice',
-    name: 'Alice',
-    metadata: {},
-    spawned: true,
-    personality: 'Kind',
-    profile: 'Lives on a desktop',
-  } as any);
+  cache.upsertPersona(
+    makePersonaSnapshot({
+      id: 'alice',
+      name: 'Alice',
+      spawned: true,
+      personality: 'Kind',
+      profile: 'Lives on a desktop',
+    }),
+  );
   return cache;
 }
 
@@ -33,10 +35,10 @@ const logger = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() };
 describe('writePersonaFiles', () => {
   test('creates SOUL.md and IDENTITY.md atomically', async () => {
     const cache = setupPersona();
-    const entry = cache.personas.get('alice')!;
+    const entry = getRequired(cache.personas, 'alice');
     mkdirSync(baseDir, { recursive: true });
 
-    await writePersonaFiles({ personas: cache.personas, agents: cache.agents } as any, logger, {
+    await writePersonaFiles(cache, logger, {
       workspacePath: baseDir,
       personaId: 'alice',
       soulMaxChars: 10000,
@@ -51,7 +53,7 @@ describe('writePersonaFiles', () => {
 
   test('skips write when content unchanged (lastRenderedHash match)', async () => {
     const cache = setupPersona();
-    await writePersonaFiles({ personas: cache.personas, agents: cache.agents } as any, logger, {
+    await writePersonaFiles(cache, logger, {
       workspacePath: baseDir,
       personaId: 'alice',
       soulMaxChars: 10000,
@@ -63,7 +65,7 @@ describe('writePersonaFiles', () => {
     // Wait to ensure mtime would differ if a write actually happened.
     await new Promise((r) => setTimeout(r, 20));
 
-    await writePersonaFiles({ personas: cache.personas, agents: cache.agents } as any, logger, {
+    await writePersonaFiles(cache, logger, {
       workspacePath: baseDir,
       personaId: 'alice',
       soulMaxChars: 10000,
@@ -74,15 +76,16 @@ describe('writePersonaFiles', () => {
 
   test('rewrites when persona content changes (hash differs)', async () => {
     const cache = setupPersona();
-    await writePersonaFiles({ personas: cache.personas, agents: cache.agents } as any, logger, {
+    await writePersonaFiles(cache, logger, {
       workspacePath: baseDir,
       personaId: 'alice',
       soulMaxChars: 10000,
     });
     // Mutate persona
-    cache.personas.get('alice')!.personality = 'Changed';
+    const entry = getRequired(cache.personas, 'alice');
+    entry.personality = 'Changed';
 
-    await writePersonaFiles({ personas: cache.personas, agents: cache.agents } as any, logger, {
+    await writePersonaFiles(cache, logger, {
       workspacePath: baseDir,
       personaId: 'alice',
       soulMaxChars: 10000,
@@ -94,7 +97,7 @@ describe('writePersonaFiles', () => {
   test('overwrites even when a pre-existing user-edited SOUL.md exists', async () => {
     writeFileSync(join(baseDir, 'SOUL.md'), 'USER EDITED', 'utf8');
     const cache = setupPersona();
-    await writePersonaFiles({ personas: cache.personas, agents: cache.agents } as any, logger, {
+    await writePersonaFiles(cache, logger, {
       workspacePath: baseDir,
       personaId: 'alice',
       soulMaxChars: 10000,

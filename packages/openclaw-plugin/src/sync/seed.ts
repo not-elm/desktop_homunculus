@@ -24,7 +24,7 @@ export async function seedFromHmcs(deps: SeedDeps): Promise<void> {
 
   for (const p of personas) {
     if (!p.spawned) continue;
-    const personaEntry = cache.personas.get(p.id)!;
+    const personaEntry = cache.personas.get(p.id);
     const agentEntry = cache.agents.get(p.id);
     if (agentEntry) {
       await write(cache, logger, {
@@ -32,7 +32,7 @@ export async function seedFromHmcs(deps: SeedDeps): Promise<void> {
         personaId: p.id,
         soulMaxChars: config.soulMaxChars,
       });
-    } else if (!personaEntry.hasWarnedNoAgent) {
+    } else if (personaEntry && !personaEntry.hasWarnedNoAgent) {
       logger.warn(
         `Persona \`${p.id}\` has no matching OpenClaw agent. Create one with \`openclaw agents add ${p.id}\`.`,
       );
