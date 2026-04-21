@@ -106,6 +106,6 @@ If you'd like to help build template MODs or improve MCP tools, see the [Contrib
 ## Next Steps {#next-steps}
 
 - **[Set up your AI client](./setup/claude-desktop)** — Get connected in minutes via MCP
-- **[OpenClaw integration](/ai-integration)** — Give your personas a built-in AI agent via OpenClaw
+- **[OpenClaw integration](/ai-integration/openclaw/)** — Give your personas a built-in AI agent via OpenClaw
 - **[Explore MCP capabilities](/reference/mcp-tools)** — Full reference for all tools, resources, and prompts
 - **[Build a MOD](/mod-development/quick-start)** — Create template MODs for richer AI workflows
