@@ -208,7 +208,10 @@ mod tests {
         });
         let meta: RpcMethodMeta = serde_json::from_value(json).unwrap();
         let tag = meta.meta.expect("meta should be present");
-        assert_eq!(tag.get("category"), Some(&serde_json::Value::String("tts".to_string())));
+        assert_eq!(
+            tag.get("category"),
+            Some(&serde_json::Value::String("tts".to_string()))
+        );
     }
 
     #[test]

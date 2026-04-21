@@ -7,7 +7,7 @@ class FakeEventSource {
   closed = false;
   addEventListener(name: string, cb: (e: any) => void): void {
     if (!this.listeners.has(name)) this.listeners.set(name, []);
-    this.listeners.get(name)!.push(cb);
+    this.listeners.get(name)?.push(cb);
   }
   emit(name: string, data: unknown): void {
     for (const cb of this.listeners.get(name) ?? []) cb({ data: JSON.stringify(data) });
@@ -44,8 +44,8 @@ describe('createSseController', () => {
     createSseController(deps as any).start();
 
     fake.emit('persona-spawned', { personaId: 'alice' });
-    expect(deps.cache.personas.get('alice')!.spawned).toBe(true);
-    expect(deps.cache.personas.get('alice')!.personality).toBe('cheerful');
+    expect(deps.cache.personas.get('alice')?.spawned).toBe(true);
+    expect(deps.cache.personas.get('alice')?.personality).toBe('cheerful');
   });
 
   test('persona-spawned writes SOUL/IDENTITY if agent is in cache', () => {
@@ -85,8 +85,8 @@ describe('createSseController', () => {
       personaId: 'alice',
       persona: { id: 'alice', name: 'Alice Updated', personality: 'kind', metadata: {} },
     });
-    expect(deps.cache.personas.get('alice')!.name).toBe('Alice Updated');
-    expect(deps.cache.personas.get('alice')!.personality).toBe('kind');
+    expect(deps.cache.personas.get('alice')?.name).toBe('Alice Updated');
+    expect(deps.cache.personas.get('alice')?.personality).toBe('kind');
     expect(deps.writePersonaFiles).toHaveBeenCalled();
   });
 
@@ -101,7 +101,7 @@ describe('createSseController', () => {
       personaId: 'alice',
       persona: { id: 'alice', gender: 'bogus-value', metadata: {} },
     });
-    expect(deps.cache.personas.get('alice')!.gender).toBe('unknown');
+    expect(deps.cache.personas.get('alice')?.gender).toBe('unknown');
   });
 
   test('persona-despawned flips spawned flag but does not delete', () => {
@@ -111,7 +111,7 @@ describe('createSseController', () => {
     createSseController(deps as any).start();
 
     fake.emit('persona-despawned', { personaId: 'alice' });
-    expect(deps.cache.personas.get('alice')!.spawned).toBe(false);
+    expect(deps.cache.personas.get('alice')?.spawned).toBe(false);
   });
 
   test('persona-deleted removes files and cache entry', () => {

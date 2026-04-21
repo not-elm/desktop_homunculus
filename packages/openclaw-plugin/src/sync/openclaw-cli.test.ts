@@ -73,7 +73,7 @@ describe('openclaw-cli', () => {
     const cli = createOpenClawCli(logger, source);
     const result = await cli.agentsList();
     expect(result).toHaveLength(1);
-    expect(result[0]!.id).toBe('alice');
+    expect(result[0]?.id).toBe('alice');
   });
 
   test('agentsList dedupes duplicate ids', async () => {

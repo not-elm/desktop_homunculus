@@ -1,7 +1,7 @@
 import { rpc } from '@hmcs/sdk/rpc';
 import type { OpenClawPluginApi } from 'openclaw/plugin-sdk/plugin-entry';
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import pluginEntry, { speakViaTts } from './entry.js';
+import pluginEntry from './entry.js';
 
 interface EntryShape {
   register?: (api: OpenClawPluginApi) => void;
@@ -41,7 +41,7 @@ describe('entry', () => {
     const entry = pluginEntry as EntryShape;
     const register = entry.register ?? entry.default?.register;
     expect(typeof register).toBe('function');
-    register!(api);
+    register?.(api);
 
     expect(registerTool).not.toHaveBeenCalled();
     const hookNames = on.mock.calls.map((call) => call[0]);
@@ -81,7 +81,7 @@ describe('speakViaTts', () => {
     await speakViaTts('alice', 'Hello, world!');
 
     expect(callSpy).toHaveBeenCalledTimes(1);
-    const options = callSpy.mock.calls[0]![0];
+    const options = callSpy.mock.calls[0]?.[0];
     expect(options.modName).toBe('@hmcs/voicevox');
     expect(options.method).toBe('speak');
     const body = options.body as { personaId: string; text: string[] };
@@ -98,7 +98,7 @@ describe('speakViaTts', () => {
     const { speakViaTts } = await import('./entry.js');
     await speakViaTts('alice', 'Hello');
 
-    expect(callSpy.mock.calls[0]![0].modName).toBe('@hmcs/some-other-tts');
+    expect(callSpy.mock.calls[0]?.[0].modName).toBe('@hmcs/some-other-tts');
   });
 
   test('skips rpc.call when sanitizer yields zero sentences', async () => {

@@ -72,7 +72,7 @@ describe('seedFromHmcs', () => {
     const deps = makeDeps();
     await seedFromHmcs(deps as any);
     expect(deps.logger.warn).toHaveBeenCalledWith(expect.stringContaining('Persona `bob`'));
-    expect(deps.cache.personas.get('bob')!.hasWarnedNoAgent).toBe(true);
+    expect(deps.cache.personas.get('bob')?.hasWarnedNoAgent).toBe(true);
   });
 
   test('does not warn again for the same persona across seed calls', async () => {
