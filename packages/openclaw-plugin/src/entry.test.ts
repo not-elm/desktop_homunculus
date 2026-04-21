@@ -1,7 +1,7 @@
 import { rpc } from '@hmcs/sdk/rpc';
 import type { OpenClawPluginApi } from 'openclaw/plugin-sdk/plugin-entry';
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import pluginEntry, { speakViaVoicevox } from './entry.js';
+import pluginEntry, { speakViaTts } from './entry.js';
 
 interface EntryShape {
   register?: (api: OpenClawPluginApi) => void;
@@ -60,13 +60,28 @@ describe('entry', () => {
   });
 });
 
-describe('speakViaVoicevox', () => {
-  test('forwards sanitized sentences to @hmcs/voicevox via rpc.call', async () => {
-    const spy = vi.spyOn(rpc, 'call').mockResolvedValue(undefined);
-    await speakViaVoicevox('alice', 'Hello, world!');
+describe('speakViaTts', () => {
+  test('skips rpc.call when resolveTtsModName returns null', async () => {
+    const resolverModule = await import('./tts-resolver.js');
+    vi.spyOn(resolverModule, 'resolveTtsModName').mockResolvedValue(null);
+    const callSpy = vi.spyOn(rpc, 'call').mockResolvedValue(undefined);
 
-    expect(spy).toHaveBeenCalledTimes(1);
-    const options = spy.mock.calls[0]![0];
+    const { speakViaTts } = await import('./entry.js');
+    await speakViaTts('alice', 'Hello, world!');
+
+    expect(callSpy).not.toHaveBeenCalled();
+  });
+
+  test('forwards sanitized sentences to the resolved MOD', async () => {
+    const resolverModule = await import('./tts-resolver.js');
+    vi.spyOn(resolverModule, 'resolveTtsModName').mockResolvedValue('@hmcs/voicevox');
+    const callSpy = vi.spyOn(rpc, 'call').mockResolvedValue(undefined);
+
+    const { speakViaTts } = await import('./entry.js');
+    await speakViaTts('alice', 'Hello, world!');
+
+    expect(callSpy).toHaveBeenCalledTimes(1);
+    const options = callSpy.mock.calls[0]![0];
     expect(options.modName).toBe('@hmcs/voicevox');
     expect(options.method).toBe('speak');
     const body = options.body as { personaId: string; text: string[] };
@@ -75,9 +90,25 @@ describe('speakViaVoicevox', () => {
     expect(body.text.length).toBeGreaterThan(0);
   });
 
+  test('routes to a different MOD when the resolver changes', async () => {
+    const resolverModule = await import('./tts-resolver.js');
+    vi.spyOn(resolverModule, 'resolveTtsModName').mockResolvedValue('@hmcs/some-other-tts');
+    const callSpy = vi.spyOn(rpc, 'call').mockResolvedValue(undefined);
+
+    const { speakViaTts } = await import('./entry.js');
+    await speakViaTts('alice', 'Hello');
+
+    expect(callSpy.mock.calls[0]![0].modName).toBe('@hmcs/some-other-tts');
+  });
+
   test('skips rpc.call when sanitizer yields zero sentences', async () => {
-    const spy = vi.spyOn(rpc, 'call').mockResolvedValue(undefined);
-    await speakViaVoicevox('alice', '');
-    expect(spy).not.toHaveBeenCalled();
+    const resolverModule = await import('./tts-resolver.js');
+    vi.spyOn(resolverModule, 'resolveTtsModName').mockResolvedValue('@hmcs/voicevox');
+    const callSpy = vi.spyOn(rpc, 'call').mockResolvedValue(undefined);
+
+    const { speakViaTts } = await import('./entry.js');
+    await speakViaTts('alice', '');
+
+    expect(callSpy).not.toHaveBeenCalled();
   });
 });
