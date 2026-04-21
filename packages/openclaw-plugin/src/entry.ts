@@ -12,6 +12,7 @@ import { createPluginCache } from './persona-cache.js';
 import { sanitizeForTts } from './sanitize/tts.js';
 import { createSpeakDebouncer } from './speak-debouncer.js';
 import { createSyncRunner } from './sync/index.js';
+import { resolveTtsModName } from './tts-resolver.js';
 
 export default definePluginEntry({
   id: 'hmcs-openclaw',
@@ -37,7 +38,7 @@ export default definePluginEntry({
     deps.logger.info('hmcs-openclaw plugin registered');
 
     const debouncer = createSpeakDebouncer({
-      speak: (payload) => speakViaVoicevox(payload.agentId, payload.text),
+      speak: (payload) => speakViaTts(payload.agentId, payload.text),
       logger: deps.logger,
     });
 
@@ -61,11 +62,18 @@ export default definePluginEntry({
   },
 });
 
-export async function speakViaVoicevox(personaId: string, text: string): Promise<void> {
+/**
+ * Speak `text` on behalf of `personaId` via the TTS MOD currently selected
+ * in the persona's metadata. Skips the call entirely when the selection is
+ * null / absent / unreadable (text output still flows through OpenClaw).
+ */
+export async function speakViaTts(personaId: string, text: string): Promise<void> {
+  const ttsModName = await resolveTtsModName(personaId);
+  if (ttsModName === null) return;
   const { sentences } = sanitizeForTts(text);
   if (sentences.length === 0) return;
   await rpc.call({
-    modName: '@hmcs/voicevox',
+    modName: ttsModName,
     method: 'speak',
     body: { personaId, text: sentences },
   });

@@ -69,6 +69,12 @@ export interface RpcMethodDef<I = unknown, O = unknown> {
   input?: ZodType<I>;
   /** Async function called with the validated input. */
   handler: (params: I) => Promise<O>;
+  /**
+   * Optional metadata attached to the method. Surfaced to clients via
+   * `rpc.registrations()` and usable as a discovery filter (e.g.
+   * `rpc.registrations({ category: "tts" })`).
+   */
+  meta?: Record<string, unknown>;
 }
 
 /**
@@ -296,6 +302,7 @@ function buildMethodsMeta(
         ...(entry.input !== undefined
           ? { inputSchema: convertZodToObjectSchema(entry.input) }
           : {}),
+        ...(entry.meta !== undefined ? { meta: entry.meta } : {}),
       };
     } else {
       meta[name] = {};
@@ -422,23 +429,27 @@ export namespace rpc {
     timeout?: number;
     input: ZodType<I>;
     handler: (params: I) => Promise<O>;
+    meta?: Record<string, unknown>;
   }): RpcMethodDef<I, O>;
   export function method<O>(def: {
     description?: string;
     timeout?: number;
     handler: () => Promise<O>;
+    meta?: Record<string, unknown>;
   }): RpcMethodDef<unknown, O>;
   export function method(def: {
     description?: string;
     timeout?: number;
     input?: ZodType<unknown>;
     handler: (params?: unknown) => Promise<unknown>;
+    meta?: Record<string, unknown>;
   }): RpcMethodDef {
     return {
       description: def.description,
       timeout: def.timeout,
       input: def.input,
       handler: def.handler,
+      meta: def.meta,
     };
   }
 

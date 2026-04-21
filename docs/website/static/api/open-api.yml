@@ -3566,6 +3566,12 @@ components:
           - 'null'
         inputSchema:
           type: object
+        meta:
+          type: object
+          description: |-
+            Arbitrary metadata the MOD attaches to the method (e.g. `{ category: "tts" }`).
+            Surfaced verbatim via `GET /rpc/registrations` so clients can filter by
+            fields like `meta.category`.
         timeout:
           type:
           - integer

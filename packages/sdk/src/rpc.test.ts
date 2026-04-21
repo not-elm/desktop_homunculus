@@ -107,6 +107,42 @@ describe('rpc.method()', () => {
       expect(handlerFn).toHaveBeenCalledWith({ value: 'hello' });
     }
   });
+
+  it('preserves meta on the returned def', async () => {
+    const { rpc } = await import('./rpc');
+    const def = rpc.method({
+      input: z.object({ x: z.string() }),
+      handler: async ({ x }) => x,
+      meta: { category: 'tts' },
+    });
+
+    expect(def.meta).toEqual({ category: 'tts' });
+  });
+
+  it('returns undefined meta when not provided', async () => {
+    const { rpc } = await import('./rpc');
+    const def = rpc.method({
+      input: z.object({ x: z.string() }),
+      handler: async ({ x }) => x,
+    });
+
+    expect(def.meta).toBeUndefined();
+  });
+
+  it('exposes meta through a def suitable for registration payloads', async () => {
+    const { rpc } = await import('./rpc');
+    const def = rpc.method({
+      description: 'Tagged method',
+      input: z.object({ x: z.string() }),
+      handler: async ({ x }) => x,
+      meta: { category: 'tts', flavor: 'alpha' },
+    });
+    // This is the shape buildMethodsMeta produces per entry. Asserting on
+    // the def fields keeps the test independent of the non-exported
+    // buildMethodsMeta helper.
+    expect(def.description).toBe('Tagged method');
+    expect(def.meta).toEqual({ category: 'tts', flavor: 'alpha' });
+  });
 });
 
 // ---------------------------------------------------------------------------

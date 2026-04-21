@@ -104,22 +104,22 @@ function buildPersonaSnapshot(payload: SsePayload): PersonaSnapshot | null {
   if (!id) return null;
 
   // persona-change events nest persona data under "persona" key
-  const persona = payload['persona'];
+  const persona = payload.persona;
   const src: SsePayload =
     persona && typeof persona === 'object' ? (persona as SsePayload) : payload;
 
-  const rawMeta = src['metadata'];
+  const rawMeta = src.metadata;
   const metadata =
     rawMeta && typeof rawMeta === 'object' ? (rawMeta as Record<string, unknown>) : {};
   return {
     id,
     name: readString(src, 'name') ?? id,
     metadata,
-    spawned: typeof payload['spawned'] === 'boolean' ? payload['spawned'] : true,
+    spawned: typeof payload.spawned === 'boolean' ? payload.spawned : true,
     personality: readString(src, 'personality'),
     profile: readString(src, 'profile') ?? '',
     age: readNumber(src, 'age'),
-    gender: toGender(src['gender']),
+    gender: toGender(src.gender),
     firstPersonPronoun: readString(src, 'firstPersonPronoun'),
     vrmAssetId: readString(src, 'vrmAssetId'),
     state: readString(src, 'state') ?? '',

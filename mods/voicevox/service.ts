@@ -181,6 +181,7 @@ await rpc.serve({
     speak: rpc.method({
       description: 'Make a character speak text with lip-synced audio via VoiceVox TTS',
       timeout: 300_000,
+      meta: { category: 'tts' },
       input: z.object({
         personaId: z.string().min(1),
         text: z.union([z.string().min(1), z.array(z.string().min(1)).min(1)]),

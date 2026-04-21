@@ -1,0 +1,52 @@
+{
+  "name": "@hmcs/openclaw",
+  "version": "0.1.0-alpha.0",
+  "description": "OpenClaw integration settings UI for Desktop Homunculus",
+  "license": "MIT",
+  "type": "module",
+  "author": "notelm",
+  "scripts": {
+    "build": "pnpm exec vite build ui",
+    "dev": "pnpm exec vite dev ui",
+    "test": "vitest run --config ui/vitest.config.ts",
+    "check-types": "tsc -p ui/tsconfig.json --noEmit"
+  },
+  "bin": {
+    "openclaw-open-settings": "commands/open-settings.ts"
+  },
+  "homunculus": {
+    "menus": [
+      {
+        "id": "openclaw-open-settings",
+        "text": "OpenClaw",
+        "command": "openclaw-open-settings"
+      }
+    ],
+    "assets": {
+      "openclaw:ui": {
+        "path": "ui/dist/index.html",
+        "type": "html",
+        "description": "OpenClaw integration settings UI"
+      }
+    }
+  },
+  "dependencies": {
+    "@hmcs/sdk": "workspace:*",
+    "@hmcs/ui": "workspace:*",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "catalog:",
+    "@types/node": "^25.3.3",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react-swc": "catalog:",
+    "tailwindcss": "catalog:",
+    "typescript": "^5.9.3",
+    "vite": "catalog:",
+    "vite-plugin-singlefile": "catalog:",
+    "vitest": "^3.2.3"
+  }
+}

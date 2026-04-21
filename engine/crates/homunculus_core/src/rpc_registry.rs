@@ -35,6 +35,12 @@ pub struct RpcMethodMeta {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "openapi", schema(value_type = Object))]
     pub input_schema: Option<serde_json::Map<String, serde_json::Value>>,
+    /// Arbitrary metadata the MOD attaches to the method (e.g. `{ category: "tts" }`).
+    /// Surfaced verbatim via `GET /rpc/registrations` so clients can filter by
+    /// fields like `meta.category`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "openapi", schema(value_type = Object))]
+    pub meta: Option<serde_json::Map<String, serde_json::Value>>,
 }
 
 /// Shared reference to the RPC registry, usable across async boundaries.
@@ -163,15 +169,22 @@ mod tests {
             "type".to_string(),
             serde_json::Value::String("object".to_string()),
         );
+        let mut tag = serde_json::Map::new();
+        tag.insert(
+            "category".to_string(),
+            serde_json::Value::String("tts".to_string()),
+        );
         let meta = RpcMethodMeta {
             description: Some("test".to_string()),
             timeout: Some(5000),
             input_schema: Some(input_schema),
+            meta: Some(tag),
         };
         let json = serde_json::to_value(&meta).unwrap();
         assert_eq!(json["description"], "test");
         assert_eq!(json["timeout"], 5000);
         assert_eq!(json["inputSchema"]["type"], "object");
+        assert_eq!(json["meta"]["category"], "tts");
     }
 
     #[test]
@@ -184,5 +197,27 @@ mod tests {
         assert_eq!(meta.description.as_deref(), Some("hello"));
         assert_eq!(meta.timeout, Some(3000));
         assert!(meta.input_schema.is_none());
+        assert!(meta.meta.is_none());
+    }
+
+    #[test]
+    fn method_meta_deserializes_meta_object() {
+        let json = serde_json::json!({
+            "description": "speak",
+            "meta": { "category": "tts" }
+        });
+        let meta: RpcMethodMeta = serde_json::from_value(json).unwrap();
+        let tag = meta.meta.expect("meta should be present");
+        assert_eq!(
+            tag.get("category"),
+            Some(&serde_json::Value::String("tts".to_string()))
+        );
+    }
+
+    #[test]
+    fn method_meta_omits_meta_when_none_on_serialize() {
+        let meta = RpcMethodMeta::default();
+        let json = serde_json::to_value(&meta).unwrap();
+        assert!(json.get("meta").is_none());
     }
 }

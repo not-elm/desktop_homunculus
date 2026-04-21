@@ -12,7 +12,6 @@ export interface PersonaCacheEntry {
   age: number | null;
   gender: Gender;
   firstPersonPronoun: string | null;
-  ttsModName: string;
   spawned: boolean;
   hasWarnedNoAgent: boolean;
   lastRenderedHash: string | null;
@@ -42,8 +41,6 @@ export function createPluginCache(): PluginCache {
     agents,
     upsertPersona(snap) {
       const existing = personas.get(snap.id);
-      const rawTtsModName = snap.metadata?.ttsModName;
-      const ttsModName = typeof rawTtsModName === 'string' ? rawTtsModName : '@hmcs/voicevox';
       personas.set(snap.id, {
         personaId: snap.id,
         name: snap.name ?? null,
@@ -52,7 +49,6 @@ export function createPluginCache(): PluginCache {
         age: snap.age ?? null,
         gender: snap.gender ?? 'unknown',
         firstPersonPronoun: snap.firstPersonPronoun ?? null,
-        ttsModName,
         spawned: snap.spawned,
         hasWarnedNoAgent: existing?.hasWarnedNoAgent ?? false,
         lastRenderedHash: existing?.lastRenderedHash ?? null,
