@@ -51,7 +51,7 @@ curl http://127.0.0.1:3100/personas | jq '.[].id'
 | キー | デフォルト | 変更するとき |
 |---|---|---|
 | `hmcsBaseUrl` | `http://127.0.0.1:3100` | `~/.homunculus/config.toml` の `port` を変更している場合 |
-| `soulMaxChars` | `10000` | 各エージェントのワークスペースに書き出す soul プロンプトの最大文字数 |
+| `soulMaxChars` | `10000` | 各エージェントのワークスペースに書き出す soul プロンプトの最大文字数を制限したい場合 |
 
 値を設定する場所は [OpenClaw のプラグイン設定ドキュメント](https://docs.openclaw.ai) を参照してください。
 
