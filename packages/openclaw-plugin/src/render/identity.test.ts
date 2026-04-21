@@ -11,7 +11,6 @@ function makePersona(overrides: Partial<PersonaCacheEntry> = {}): PersonaCacheEn
     age: null,
     gender: 'unknown',
     firstPersonPronoun: null,
-    ttsModName: '@hmcs/voicevox',
     spawned: true,
     hasWarnedNoAgent: false,
     lastRenderedHash: null,

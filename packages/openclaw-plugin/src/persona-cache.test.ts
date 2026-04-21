@@ -7,13 +7,12 @@ describe('PluginCache', () => {
     cache.upsertPersona({
       id: 'alice',
       name: 'Alice',
-      metadata: { ttsModName: '@hmcs/voicevox' },
+      metadata: {},
       spawned: true,
     } as any);
     const entry = cache.personas.get('alice');
     expect(entry).toBeDefined();
     expect(entry!.personaId).toBe('alice');
-    expect(entry!.ttsModName).toBe('@hmcs/voicevox');
     expect(entry!.spawned).toBe(true);
     expect(entry!.hasWarnedNoAgent).toBe(false);
     expect(entry!.lastRenderedHash).toBeNull();
