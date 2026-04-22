@@ -17,7 +17,7 @@
     "menus": [
       {
         "id": "open-voicevox-settings",
-        "text": "VOICEVOX Settings",
+        "text": "VOICEVOX",
         "command": "voicevox-open-settings"
       }
     ],
