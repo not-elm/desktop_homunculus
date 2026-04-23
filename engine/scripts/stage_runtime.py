@@ -87,7 +87,7 @@ def download_file(url: str, dest: Path) -> None:
     dest.parent.mkdir(parents=True, exist_ok=True)
     dest.write_bytes(data)
     size_mb = len(data) / (1024 * 1024)
-    log(f"  Downloaded {size_mb:.1f} MB → {dest}")
+    log(f"  Downloaded {size_mb:.1f} MB -> {dest}")
 
 
 def cached_download(url: str, filename: str) -> Path:
@@ -134,7 +134,7 @@ def stage_node(version: str, node_os: str, node_arch: str) -> None:
                 dest.write_bytes(src.read())
             dest.chmod(0o755)
 
-    log(f"Staged Node.js v{version} → {node_dir}")
+    log(f"Staged Node.js v{version} -> {node_dir}")
 
 
 def stage_pnpm(version: str) -> None:
@@ -175,7 +175,7 @@ def stage_pnpm(version: str) -> None:
                         with tf.extractfile(member) as src:
                             dest.write_bytes(src.read())
 
-    log(f"Staged pnpm v{version} → {pnpm_dir}")
+    log(f"Staged pnpm v{version} -> {pnpm_dir}")
 
 
 def stage_tsx(version: str) -> None:
@@ -209,7 +209,7 @@ def stage_tsx(version: str) -> None:
     if not esm_entry.exists():
         error(f"tsx ESM entry point not found: {esm_entry}")
 
-    log(f"Staged tsx v{version} → {tsx_dir}")
+    log(f"Staged tsx v{version} -> {tsx_dir}")
 
 
 def main() -> None:

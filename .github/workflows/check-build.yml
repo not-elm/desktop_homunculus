@@ -38,7 +38,7 @@ jobs:
           shared-key: arm64-engine-dist
           cef-cache-key: cef-arm64-144.4.0
 
-      - name: Build engine binary
+      - name: Build engine and CLI binaries
         run: |
           if ! sccache --start-server 2>/dev/null && ! sccache --show-stats 2>/dev/null; then
             echo "::warning::sccache unavailable, falling back to plain cargo build"
@@ -46,12 +46,17 @@ jobs:
           fi
           SDKROOT=$(xcrun -sdk macosx --show-sdk-path) \
             cargo build --profile dist --target=aarch64-apple-darwin --locked
+          SDKROOT=$(xcrun -sdk macosx --show-sdk-path) \
+            cargo build -p homunculus_cli --profile dist --target=aarch64-apple-darwin --locked
         env:
           CARGO_PROFILE_DIST_CODEGEN_UNITS: 2
 
       - name: Bundle .app and create DMG
         run: |
-          make bundle-macos-app BIN_SOURCE=target/aarch64-apple-darwin/dist/desktop_homunculus
+          make bundle-macos-app \
+            BIN_SOURCE=target/aarch64-apple-darwin/dist/desktop_homunculus \
+            CLI_SOURCE=target/aarch64-apple-darwin/dist/hmcs \
+            TARGET_ARCH=arm64
           make package-macos-dmg
         env:
           SKIP_GEN_CREDITS: "1"
