@@ -1,6 +1,6 @@
 {
   "name": "@hmcs/assets",
-  "version": "0.1.0-alpha.5",
+  "version": "0.1.0-alpha.6-dev",
   "description": "Official built-in assets for Desktop Homunculus — includes the default VRM character, VRMA animations, and UI sound effects",
   "license": "MIT AND CC-BY-4.0",
   "author": "notelm",

@@ -1,7 +1,9 @@
 use crate::{
+    config::HomunculusConfig,
     error::{ModsError, UtilError, UtilResult},
-    mods::create_pnpm_command,
+    mods::{create_pnpm_command, create_pnpm_command_with_runtime},
     prelude::{ModInfo, ModPackageJson},
+    runtime::RuntimeResolver,
 };
 use std::{
     path::{Path, PathBuf},
@@ -11,6 +13,12 @@ use std::{
 /// Retrieves list of installation mods.
 pub fn list_installation_mods() -> UtilResult<Vec<ModInfo>> {
     let mods = list_candidate_paths()?;
+    Ok(list_mods(&mods))
+}
+
+/// Retrieves list of installation mods using the given [`RuntimeResolver`].
+pub fn list_installation_mods_with_runtime(runtime: &RuntimeResolver) -> UtilResult<Vec<ModInfo>> {
+    let mods = list_candidate_paths_with_runtime(runtime)?;
     Ok(list_mods(&mods))
 }
 
@@ -46,6 +54,18 @@ fn list_mods<P: AsRef<Path>>(mod_paths: &[P]) -> Vec<ModInfo> {
 /// It is not guaranteed that they are actually MODs, so you need to filter them appropriately.
 fn list_candidate_paths() -> UtilResult<Vec<PathBuf>> {
     let output = create_pnpm_command()?
+        .args(["ls", "--parseable", "-P", "--depth", "0"])
+        .output()
+        .map_err(|e| UtilError::Mods(ModsError::List(e.to_string())))?;
+    error_if_failed_pnpm_ls(&output)?;
+    Ok(parse_pnpm_ls_output(&String::from_utf8_lossy(
+        &output.stdout,
+    )))
+}
+
+fn list_candidate_paths_with_runtime(runtime: &RuntimeResolver) -> UtilResult<Vec<PathBuf>> {
+    let config = HomunculusConfig::load()?;
+    let output = create_pnpm_command_with_runtime(runtime, &config.mods_dir)?
         .args(["ls", "--parseable", "-P", "--depth", "0"])
         .output()
         .map_err(|e| UtilError::Mods(ModsError::List(e.to_string())))?;

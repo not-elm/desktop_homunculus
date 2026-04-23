@@ -7,6 +7,8 @@ on:
       - "mods/**"
       - "pnpm-lock.yaml"
       - "pnpm-workspace.yaml"
+      - "biome.json"
+      - "package.json"
       - ".github/workflows/ci-ts.yml"
 
 permissions:
@@ -31,4 +33,4 @@ jobs:
       - run: pnpm build --filter '!docs'
       - run: pnpm check-types
       - run: pnpm test
-      - run: pnpm lint
+      - run: pnpm lint:ci

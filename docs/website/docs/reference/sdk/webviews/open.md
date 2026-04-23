@@ -24,8 +24,8 @@ static async open(options: WebviewOpenOptions): Promise<Webview>
 | `source` | [`WebviewSource`](./types#webviewsource) | -- | What to display (required) |
 | `size` | `Vec2` | -- | Dimensions in 3D world space (e.g., `[0.7, 0.7]`) |
 | `viewportSize` | `Vec2` | -- | HTML pixel dimensions (e.g., `[800, 600]`) |
-| `offset` | `Vec2` | -- | Position relative to linked VRM or world origin |
-| `linkedVrm` | `number` | -- | Entity ID of the VRM to attach to |
+| `offset` | `Vec2` | -- | Position relative to linked persona or world origin |
+| `linkedPersona` | `string` | -- | Persona ID to attach to |
 
 ## Returns
 
@@ -44,15 +44,17 @@ const webview = await Webview.open({
 });
 ```
 
-Link a webview to a VRM character so it follows the character's position:
+Link a webview to a persona so it follows the character's position:
 
 ```typescript
-const vrm = await Vrm.findByName("MyAvatar");
+import { persona } from "@hmcs/sdk";
+
+const p = await persona.load("alice");
 const webview = await Webview.open({
   source: webviewSource.local("my-mod:ui"),
   size: [1, 0.9],
   viewportSize: [900, 700],
   offset: [1.1, 0],
-  linkedVrm: vrm.entity,
+  linkedPersona: p.id,
 });
 ```

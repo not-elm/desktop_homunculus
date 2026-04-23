@@ -9,10 +9,11 @@ publish.workspace = true
 
 [dependencies]
 bevy = { workspace = true }
-homunculus_screen = { workspace = true }
-homunculus_sitting = { workspace = true }
+bevy_cef = { workspace = true }
 bevy_vrm1 = { workspace = true }
 homunculus_core = { workspace = true }
+homunculus_screen = { workspace = true }
+homunculus_sitting = { workspace = true }
 
 [lints]
 workspace = true

@@ -1,10 +1,10 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn } from "storybook/test";
-import { Slider } from "./slider";
-import { Label } from "./label";
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { fn } from 'storybook/test';
+import { Label } from './label';
+import { Slider } from './slider';
 
 const meta = {
-  title: "UI/Forms/Slider",
+  title: 'UI/Forms/Slider',
   component: Slider,
   args: {
     onValueChange: fn(),
@@ -16,16 +16,16 @@ const meta = {
   },
   argTypes: {
     min: {
-      control: "number",
+      control: 'number',
     },
     max: {
-      control: "number",
+      control: 'number',
     },
     step: {
-      control: "number",
+      control: 'number',
     },
     disabled: {
-      control: "boolean",
+      control: 'boolean',
     },
   },
 } satisfies Meta<typeof Slider>;

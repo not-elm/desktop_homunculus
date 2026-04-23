@@ -1,6 +1,6 @@
 {
   "name": "@hmcs/voicevox",
-  "version": "0.1.0-alpha.5",
+  "version": "0.1.0-alpha.6-dev",
   "author": "notelm",
   "license": "MIT",
   "description": "VoiceVox TTS integration for Desktop Homunculus",
@@ -10,15 +10,15 @@
     "dev": "pnpm exec vite dev ui"
   },
   "bin": {
-    "open-settings": "commands/open-settings.ts"
+    "voicevox-open-settings": "commands/open-settings.ts"
   },
   "homunculus": {
     "service": "service.ts",
     "menus": [
       {
         "id": "open-voicevox-settings",
-        "text": "VOICEVOX Settings",
-        "command": "open-settings"
+        "text": "VOICEVOX",
+        "command": "voicevox-open-settings"
       }
     ],
     "assets": {
@@ -32,19 +32,19 @@
   "dependencies": {
     "@hmcs/sdk": "workspace:*",
     "@hmcs/ui": "workspace:*",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4",
-    "zod": "^3.25.76"
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.2.1",
+    "@tailwindcss/vite": "catalog:",
     "@types/node": "^25.3.3",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react-swc": "^4.2.3",
-    "tailwindcss": "^4.2.1",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react-swc": "catalog:",
+    "tailwindcss": "catalog:",
     "typescript": "^5.9.3",
-    "vite": "^6.4.1",
-    "vite-plugin-singlefile": "^2.3.0"
+    "vite": "catalog:",
+    "vite-plugin-singlefile": "catalog:"
   }
 }

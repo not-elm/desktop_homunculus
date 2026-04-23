@@ -2,12 +2,14 @@ use crate::error::{ApiError, ApiResult};
 use crate::prelude::WebviewApi;
 use bevy::light::NotShadowCaster;
 use bevy::prelude::*;
-use bevy_cef::prelude::{PreloadScripts, WebviewExtendStandardMaterial, WebviewSize};
+use bevy_cef::prelude::{
+    PreloadScripts, WebviewExtendStandardMaterial, WebviewResizable, WebviewSize,
+};
 use bevy_flurx::action::once;
-use bevy_vrm1::prelude::{Cameras, HeadBoneEntity};
+use bevy_vrm1::prelude::Cameras;
 use homunculus_core::prelude::{
-    AssetResolver, AssetType, LinkedVrm, WebviewMeshSize, WebviewOffset, WebviewOpenOptions,
-    WebviewSource, WebviewSourceInfo,
+    AspectLockMode, AssetResolver, AssetType, LinkedPersona, PersonaIndex, TransformConstraint,
+    WebviewMeshSize, WebviewOpenOptions, WebviewResizableOptions, WebviewSource, WebviewSourceInfo,
 };
 use homunculus_effects::{Entity, Update};
 
@@ -31,7 +33,7 @@ pub(crate) struct WebviewOpenPlugin;
 
 impl Plugin for WebviewOpenPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (visible, track_for_linked_vrm));
+        app.add_systems(Update, visible);
     }
 }
 
@@ -60,6 +62,7 @@ fn create_global_webview(
     mut materials: ResMut<Assets<WebviewExtendStandardMaterial>>,
     cameras: Cameras,
     asset_resolver: AssetResolver,
+    index: Res<PersonaIndex>,
 ) -> ApiResult<Entity> {
     let webview_source = source_to_webview_source(&options.source, &asset_resolver)?;
 
@@ -77,8 +80,19 @@ fn create_global_webview(
         .try_insert(OriginalWebviewSource(options.source.clone()));
     insert_preload_scripts(&mut commands, webview);
 
-    if let Some(vrm) = options.linked_vrm {
-        commands.entity(webview).try_insert(LinkedVrm(vrm));
+    if let Some(resizable) = options.resizable {
+        commands
+            .entity(webview)
+            .try_insert(to_webview_resizable(resizable));
+    }
+
+    if let Some(persona_id) = options.linked_persona {
+        commands
+            .entity(webview)
+            .try_insert(LinkedPersona(persona_id.clone()));
+        if let Some(persona_entity) = index.get(&persona_id) {
+            commands.entity(webview).insert(ChildOf(persona_entity));
+        }
     }
     Ok(webview)
 }
@@ -138,6 +152,12 @@ fn spawn_webview_entity(
     options: &WebviewOpenOptions,
 ) -> Entity {
     let size = options.size.unwrap_or(Vec2::splat(0.7));
+    let translation = options
+        .transform
+        .as_ref()
+        .and_then(|t| t.translation)
+        .unwrap_or(Vec3::new(0.0, 0.0, 10.0));
+    let constraint = build_transform_constraint(options);
     let mut entity_commands = commands.spawn((
         Name::new("Webview"),
         webview_source,
@@ -157,8 +177,8 @@ fn spawn_webview_entity(
             is_hoverable: true,
         },
         Visibility::Hidden,
-        Transform::default(),
-        options.offset.unwrap_or_default(),
+        Transform::from_translation(translation),
+        constraint,
         WebviewMeshSize(size),
     ));
 
@@ -169,27 +189,20 @@ fn spawn_webview_entity(
     entity_commands.id()
 }
 
-fn track_for_linked_vrm(
-    par_commands: ParallelCommands,
-    head_bones: Query<&HeadBoneEntity>,
-    global_transforms: Query<&GlobalTransform>,
-    webviews: Query<(Entity, &LinkedVrm, &WebviewOffset, &Transform)>,
-) {
-    webviews
-        .par_iter()
-        .for_each(|(entity, linked_vrm, offset, tf)| {
-            let Ok(head_bone) = head_bones.get(linked_vrm.0) else {
-                return;
-            };
-            let Ok(p) = global_transforms.get(head_bone.0) else {
-                return;
-            };
-            let mut new_tf = *tf;
-            new_tf.translation = p.translation() + offset.0.extend(10.0);
-            par_commands.command_scope(|mut commands| {
-                commands.entity(entity).try_insert(new_tf);
-            });
-        });
+fn build_transform_constraint(options: &WebviewOpenOptions) -> TransformConstraint {
+    let mut constraint = TransformConstraint::default();
+    if let Some(c) = &options.constraints {
+        if let Some(v) = c.rotation_follow {
+            constraint.rotation_follow = v;
+        }
+        if let Some(v) = c.max_tilt_degrees {
+            constraint.max_tilt_degrees = v;
+        }
+        if let Some(v) = c.lock_scale {
+            constraint.lock_scale = v;
+        }
+    }
+    constraint
 }
 
 fn insert_preload_scripts(commands: &mut Commands, webview: Entity) {
@@ -199,4 +212,21 @@ fn insert_preload_scripts(commands: &mut Commands, webview: Entity) {
             "../webview/webviewEntity.js"
         )
         .replace("undefined", &webview.to_bits().to_string())]));
+}
+
+fn to_aspect_lock_mode(mode: AspectLockMode) -> bevy_cef::prelude::AspectLockMode {
+    match mode {
+        AspectLockMode::LockOnShift => bevy_cef::prelude::AspectLockMode::LockOnShift,
+        AspectLockMode::Always => bevy_cef::prelude::AspectLockMode::Always,
+        AspectLockMode::Never => bevy_cef::prelude::AspectLockMode::Never,
+    }
+}
+
+fn to_webview_resizable(opts: WebviewResizableOptions) -> WebviewResizable {
+    WebviewResizable {
+        edge_thickness: opts.edge_thickness,
+        min_size: opts.min_size,
+        max_size: opts.max_size,
+        aspect_lock: to_aspect_lock_mode(opts.aspect_lock),
+    }
 }

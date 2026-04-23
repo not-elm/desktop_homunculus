@@ -38,21 +38,25 @@
  * @packageDocumentation
  */
 
-export * from "./coordinates";
-export * from "./displays";
-export * from "./audio";
-export * from "./effects";
-export * from "./host";
-export * from "./preferences";
-export * from "./math";
-export * from "./settings";
-export * from "./shadowPanel";
-export * from "./vrm";
-export * from "./speech";
-export * from "./webviews";
-export * from "./signals";
-export * from "./entities";
-export * from "./app";
-export * from "./mods";
-export * from "./assets";
-export * from "./utils";
+export * from './app';
+export * from './assets';
+export * from './audio';
+export * from './coordinates';
+export * from './dialog';
+export * from './displays';
+export * from './effects';
+export * from './entities';
+export * as fileDialog from './file-dialog.js';
+export * from './host';
+export * from './math';
+export * from './mods';
+export * from './persona';
+export * from './preferences';
+export * from './processes';
+export * from './settings';
+export * from './shadowPanel';
+export * from './signals';
+export * from './speech';
+export * from './stt';
+export * from './utils';
+export * from './webviews';

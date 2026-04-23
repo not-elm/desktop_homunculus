@@ -1,9 +1,9 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn } from "storybook/test";
-import { AspectRatio } from "./aspect-ratio";
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { fn } from 'storybook/test';
+import { AspectRatio } from './aspect-ratio';
 
 const meta = {
-  title: "UI/Layout/AspectRatio",
+  title: 'UI/Layout/AspectRatio',
   component: AspectRatio,
   args: {
     onClick: fn(),

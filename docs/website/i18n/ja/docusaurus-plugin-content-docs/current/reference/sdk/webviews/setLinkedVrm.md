@@ -1,31 +1,31 @@
 ---
-title: "setLinkedVrm"
+title: "setLinkedPersona"
 sidebar_position: 17
 ---
 
-# setLinkedVrm
+# setLinkedPersona
 
-WebView を VRM キャラクターにリンクして、キャラクターの位置に追従させます。
+WebView をペルソナにリンクして、ペルソナのキャラクター位置に追従させます。
 
 ```typescript
-async setLinkedVrm(vrm: Vrm): Promise<void>
+async setLinkedPersona(personaId: string): Promise<void>
 ```
 
 ## パラメータ
 
 | パラメータ | 型 | 説明 |
 |-----------|------|-------------|
-| `vrm` | `Vrm` | この WebView にリンクする VRM インスタンス |
+| `personaId` | `string` | この WebView にリンクするペルソナ ID |
 
 ## 例
 
 ```typescript
-import { Vrm } from "@hmcs/sdk";
+import { persona } from "@hmcs/sdk";
 
-const vrm = await Vrm.findByName("MyAvatar");
+const p = await persona.load("alice");
 
 // リンク
-await webview.setLinkedVrm(vrm);
+await webview.setLinkedPersona(p.id);
 ```
 
-リンクを解除するには [`unlinkVrm()`](./unlinkVrm) を使用してください。
+リンクを解除するには [`unlinkPersona()`](./unlinkVrm) を使用してください。

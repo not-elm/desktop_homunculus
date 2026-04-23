@@ -1,0 +1,1 @@
+{"responses":{"200":{"description":"Folder selection result","content":{"application/json":{"schema":{"type":"object","description":"Response from the folder picker dialog.","properties":{"path":{"type":["string","null"],"description":"The selected directory path, or `null` if the user cancelled."}},"title":"PickFolderResponse"}}}}}}

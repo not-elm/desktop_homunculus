@@ -4,5 +4,5 @@
    本番環境では CEF WebView の透明ウィンドウ上で必要だが、
    Storybook ではデコレータの scene layer が背景を提供する。 */
 body {
-  backdrop-filter: none !important;
+  backdrop-filter: none;
 }

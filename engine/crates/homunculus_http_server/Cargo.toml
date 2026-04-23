@@ -10,16 +10,18 @@ publish.workspace = true
 [dependencies]
 bevy = { workspace = true }
 axum = { workspace = true, features = ["tokio", "macros"] }
-tokio = { version = "1", features = ["rt-multi-thread", "process", "io-util"] }
+tokio = { version = "1", features = ["rt-multi-thread", "process", "io-util", "fs"] }
 tokio-stream = "0.1"
 bevy_vrm1 = { workspace = true }
-homunculus_core = { workspace = true, features = ["openapi"] }
+homunculus_core = { workspace = true, features = ["openapi", "mcp"] }
 homunculus_api = { workspace = true, features = ["axum", "openapi"] }
 homunculus_utils = { workspace = true, features = ["bevy"] }
 homunculus_audio = { workspace = true }
 homunculus_effects = { workspace = true }
 homunculus_mcp = { workspace = true }
+homunculus_microphone = { workspace = true, features = ["openapi"] }
 homunculus_prefs = { workspace = true }
+async-broadcast = { workspace = true }
 homunculus_screen = { workspace = true, features = ["openapi"] }
 reqwest = { workspace = true }
 serde = { workspace = true }
@@ -31,6 +33,9 @@ tower-http = { version = "0.6", features = ["cors", "trace"] }
 async-channel = { workspace = true }
 utoipa = { workspace = true }
 utoipa-axum = { workspace = true }
+rfd = { workspace = true }
+uuid = { workspace = true }
+mime_guess = { workspace = true }
 
 [dev-dependencies]
 serde_json = "1.0.140"

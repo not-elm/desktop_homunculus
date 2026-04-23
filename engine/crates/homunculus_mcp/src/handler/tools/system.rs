@@ -104,8 +104,10 @@ impl HomunculusMcpHandler {
     }
 
     fn create_command(&self, args: &ExecuteCommandParams) -> Command {
-        let mut cmd = Command::new(homunculus_utils::mods::pnpm_program());
-        cmd.arg("exec")
+        let (program, pnpm_args) = self.runtime.pnpm_program_and_args();
+        let mut cmd = Command::new(program);
+        cmd.args(&pnpm_args)
+            .arg("exec")
             .arg(&args.command)
             .current_dir(&self.config.mods_dir)
             .stdout(Stdio::piped())
@@ -122,7 +124,14 @@ impl HomunculusMcpHandler {
         }
 
         #[cfg(windows)]
-        cmd.creation_flags(CREATE_NO_WINDOW);
+        {
+            cmd.creation_flags(CREATE_NO_WINDOW);
+            if !self.runtime.is_bundled()
+                && let Some(path) = homunculus_utils::process::path_with_node_prepended()
+            {
+                cmd.env("PATH", path);
+            }
+        }
         cmd
     }
 }

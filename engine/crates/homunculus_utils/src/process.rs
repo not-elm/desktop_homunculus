@@ -3,6 +3,91 @@ use std::process::Command;
 #[cfg(windows)]
 use std::os::windows::process::CommandExt;
 
+/// Resolve the directory containing the `node` executable.
+///
+/// Uses `node -e "process.stdout.write(process.execPath)"` to obtain the
+/// absolute path to the Node.js binary, then caches the parent directory in a
+/// `OnceLock` so at most one subprocess is spawned per process lifetime.
+///
+/// This is needed on Windows because `cargo run` with `whisper-rs-sys` can
+/// inflate `PATH` beyond `cmd.exe`'s 8,191-character limit. Since `pnpm.cmd`
+/// is a batch script that runs via `cmd.exe`, it cannot find `node` when its
+/// entry sits past the limit. By resolving node's directory up front (via
+/// `CreateProcessW`, which supports 32,767 chars) we can prepend it to `PATH`.
+#[cfg(windows)]
+pub fn resolve_node_dir() -> Option<&'static std::path::Path> {
+    use std::sync::OnceLock;
+
+    static NODE_DIR: OnceLock<Option<std::path::PathBuf>> = OnceLock::new();
+
+    NODE_DIR
+        .get_or_init(|| {
+            let output = Command::new("node")
+                .arg("-e")
+                .arg("process.stdout.write(process.execPath)")
+                .creation_flags(CREATE_NO_WINDOW)
+                .stdout(std::process::Stdio::piped())
+                .stderr(std::process::Stdio::null())
+                .output()
+                .ok()?;
+
+            if !output.status.success() {
+                return None;
+            }
+
+            let exec_path = String::from_utf8(output.stdout).ok()?;
+            let path = std::path::PathBuf::from(exec_path);
+            let dir = path.parent()?.to_path_buf();
+            log::info!("Node.js available at: {}", dir.display());
+            Some(dir)
+        })
+        .as_deref()
+}
+
+/// Build a sanitized `PATH` with the Node.js directory prepended and cargo
+/// build artifact directories removed.
+///
+/// `cargo run` inherits build-script `PATH` additions (e.g. `whisper-rs-sys`
+/// adds ~111 CMake output directories). This can push `PATH` past `cmd.exe`'s
+/// 8,191-character environment variable limit, causing batch scripts like
+/// `pnpm.cmd` to fail. This function:
+///
+/// 1. Filters out entries containing `\target\` followed by `\build\` (cargo
+///    build-script artifacts that are never needed at runtime).
+/// 2. Prepends the resolved Node.js directory so `cmd.exe` finds `node` first.
+///
+/// Returns `None` if the node directory cannot be resolved or `PATH` is unset.
+#[cfg(windows)]
+pub fn path_with_node_prepended() -> Option<std::ffi::OsString> {
+    use std::ffi::OsString;
+
+    let node_dir = resolve_node_dir()?;
+    let current_path = std::env::var("PATH").ok()?;
+
+    let filtered: Vec<&str> = current_path
+        .split(';')
+        .filter(|entry| !is_cargo_build_artifact(entry))
+        .collect();
+
+    let mut new_path = OsString::from(node_dir);
+    for entry in &filtered {
+        new_path.push(";");
+        new_path.push(entry);
+    }
+    Some(new_path)
+}
+
+/// Returns `true` if a PATH entry looks like a cargo build-script artifact.
+///
+/// Matches paths containing both `\target\` and `\build\` (e.g.
+/// `...\target\debug\build\whisper-rs-sys-abc123\out\...`).
+#[cfg(windows)]
+fn is_cargo_build_artifact(entry: &str) -> bool {
+    let lower = entry.to_ascii_lowercase();
+    // Match: ...\target\<profile>\build\... — covers debug, release, dist, etc.
+    lower.contains("\\target\\") && lower.contains("\\build\\")
+}
+
 #[cfg(windows)]
 const CREATE_NO_WINDOW: u32 = 0x08000000;
 

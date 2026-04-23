@@ -12,19 +12,22 @@ use bevy::prelude::Entity;
 use homunculus_api::assets::AssetsApi;
 use homunculus_api::mods::ModsApi;
 use homunculus_api::prelude::{
-    ApiReactor, AudioBgmApi, AudioSeApi, EntitiesApi, VrmAnimationApi, VrmApi, WebviewApi,
+    ApiReactor, AudioBgmApi, AudioSeApi, EntitiesApi, PersonaApi, VrmAnimationApi, VrmApi,
+    WebviewApi,
 };
-use homunculus_core::rpc_registry::RpcRegistry;
+use homunculus_core::prelude::{Persona, PersonaId};
 use homunculus_utils::config::HomunculusConfig;
+use homunculus_utils::runtime::RuntimeResolver;
 use rmcp::handler::server::router::tool::ToolRouter;
+use rmcp::handler::server::tool::ToolCallContext;
 use rmcp::model::{
-    GetPromptRequestParams, GetPromptResult, Implementation, ListPromptsResult,
-    ListResourcesResult, PaginatedRequestParams, ReadResourceRequestParams, ReadResourceResult,
-    ServerCapabilities, ServerInfo,
+    CallToolRequestParams, CallToolResult, GetPromptRequestParams, GetPromptResult, Implementation,
+    ListPromptsResult, ListResourcesResult, ListToolsResult, PaginatedRequestParams,
+    ReadResourceRequestParams, ReadResourceResult, ServerCapabilities, ServerInfo, Tool,
 };
 use rmcp::service::RequestContext;
-use rmcp::{RoleServer, ServerHandler, tool_handler};
-use std::sync::{Arc, Mutex, RwLock};
+use rmcp::{RoleServer, ServerHandler};
+use std::sync::{Arc, Mutex};
 
 const SERVER_NAME: &str = "homunculus";
 
@@ -56,22 +59,19 @@ pub struct HomunculusMcpHandler {
     pub(crate) audio_bgm_api: AudioBgmApi,
     pub(crate) entities_api: EntitiesApi,
     pub(crate) vrma_api: VrmAnimationApi,
-    /// Stores `Entity` as `u64` bits because `Entity` is not `Send`/`Sync`.
-    pub(crate) active_character: Arc<Mutex<Option<u64>>>,
+    pub(crate) persona_api: PersonaApi,
+    /// Stores the active persona's [`PersonaId`] for character resolution.
+    pub(crate) active_character: Arc<Mutex<Option<PersonaId>>>,
     pub(crate) config: HomunculusConfig,
+    pub(crate) runtime: RuntimeResolver,
     /// Tracks open webview IDs so they can be cleaned up when the MCP session ends.
     pub(crate) open_webviews: Arc<Mutex<Vec<u64>>>,
-    pub(crate) rpc_registry: Arc<RwLock<RpcRegistry>>,
     tool_router: ToolRouter<Self>,
 }
 
 impl HomunculusMcpHandler {
     /// Creates a new handler, constructing all domain APIs from the given reactor.
-    pub fn new(
-        reactor: ApiReactor,
-        config: HomunculusConfig,
-        rpc_registry: Arc<RwLock<RpcRegistry>>,
-    ) -> Self {
+    pub fn new(reactor: ApiReactor, config: HomunculusConfig, runtime: RuntimeResolver) -> Self {
         Self {
             webview_api: WebviewApi::from(reactor.clone()),
             vrm_api: VrmApi::from(reactor.clone()),
@@ -80,52 +80,83 @@ impl HomunculusMcpHandler {
             audio_bgm_api: AudioBgmApi::from(reactor.clone()),
             entities_api: EntitiesApi::from(reactor.clone()),
             vrma_api: VrmAnimationApi::from(reactor.clone()),
+            persona_api: PersonaApi::from(reactor.clone()),
             assets_api: AssetsApi::from(reactor),
             active_character: Arc::new(Mutex::new(None)),
             config,
+            runtime,
             open_webviews: Arc::new(Mutex::new(Vec::new())),
-            rpc_registry,
             tool_router: tools::tool_router(),
         }
     }
 
-    /// Resolves the active character entity, falling back to the first character in snapshot.
+    /// Resolves the active character entity, falling back to the first persona.
     pub(crate) async fn resolve_character(&self) -> Result<Entity, String> {
-        let current = self
-            .active_character
+        let current = self.active_persona_id();
+
+        if let Some(persona_id) = current {
+            return self
+                .persona_api
+                .resolve(persona_id)
+                .await
+                .map_err(|e| e.to_string());
+        }
+
+        let personas = self.persona_api.list().await.map_err(|e| e.to_string())?;
+        let first = personas
+            .first()
+            .ok_or_else(|| "No characters loaded. Use spawn_character first.".to_string())?;
+        self.set_active_character(Some(first.persona.id.clone()));
+
+        self.persona_api
+            .resolve(first.persona.id.clone())
+            .await
+            .map_err(|e| e.to_string())
+    }
+
+    /// Resolves a persona by display name.
+    ///
+    /// Searches all personas for a matching `name` field first,
+    /// then falls back to matching against the persona ID string.
+    pub(crate) async fn resolve_persona_by_name(&self, name: &str) -> Result<Persona, String> {
+        let snapshots = self.persona_api.list().await.map_err(|e| e.to_string())?;
+
+        if let Some(s) = snapshots
+            .iter()
+            .find(|s| s.persona.name.as_deref() == Some(name))
+        {
+            return Ok(s.persona.clone());
+        }
+
+        if let Some(s) = snapshots.iter().find(|s| s.persona.id.0 == name) {
+            return Ok(s.persona.clone());
+        }
+
+        Err(format!(
+            "No persona found with name or id '{name}'. Use get_character_snapshot to see available characters."
+        ))
+    }
+
+    /// Returns the currently active [`PersonaId`], if any.
+    pub(crate) fn active_persona_id(&self) -> Option<PersonaId> {
+        self.active_character
             .lock()
             .unwrap_or_else(|e| {
                 bevy::log::warn!("Mutex poisoned: {e}");
                 e.into_inner()
             })
-            .to_owned();
-
-        if let Some(bits) = current {
-            return Ok(Entity::from_bits(bits));
-        }
-
-        let snapshots = self.vrm_api.snapshot().await.map_err(|e| e.to_string())?;
-        let first = snapshots
-            .first()
-            .ok_or_else(|| "No characters loaded. Use spawn_character first.".to_string())?;
-        let bits = first.entity.to_bits();
-        *self.active_character.lock().unwrap_or_else(|e| {
-            bevy::log::warn!("Mutex poisoned: {e}");
-            e.into_inner()
-        }) = Some(bits);
-        Ok(first.entity)
+            .clone()
     }
 
-    /// Sets or clears the active character.
-    pub(crate) fn set_active_character(&self, entity: Option<u64>) {
+    /// Sets or clears the active character by [`PersonaId`].
+    pub(crate) fn set_active_character(&self, persona_id: Option<PersonaId>) {
         *self.active_character.lock().unwrap_or_else(|e| {
             bevy::log::warn!("Mutex poisoned: {e}");
             e.into_inner()
-        }) = entity;
+        }) = persona_id;
     }
 }
 
-#[tool_handler(router = self.tool_router)]
 impl ServerHandler for HomunculusMcpHandler {
     fn get_info(&self) -> ServerInfo {
         let capabilities = ServerCapabilities::builder()
@@ -140,6 +171,32 @@ impl ServerHandler for HomunculusMcpHandler {
                 "Desktop Homunculus MCP server. Controls a desktop mascot application — \
                  manage VRM characters, open webviews, query mods and assets.",
             )
+    }
+
+    fn list_tools(
+        &self,
+        _request: Option<PaginatedRequestParams>,
+        _context: RequestContext<RoleServer>,
+    ) -> impl std::future::Future<Output = Result<ListToolsResult, rmcp::ErrorData>> + Send + '_
+    {
+        std::future::ready(Ok(ListToolsResult {
+            meta: None,
+            next_cursor: None,
+            tools: self.tool_router.list_all(),
+        }))
+    }
+
+    async fn call_tool(
+        &self,
+        request: CallToolRequestParams,
+        context: RequestContext<RoleServer>,
+    ) -> Result<CallToolResult, rmcp::ErrorData> {
+        let tcc = ToolCallContext::new(self, request, context);
+        self.tool_router.call(tcc).await
+    }
+
+    fn get_tool(&self, name: &str) -> Option<Tool> {
+        self.tool_router.get(name).cloned()
     }
 
     fn list_resources(
@@ -195,15 +252,14 @@ mod tests {
 
     /// Creates a handler backed by a dummy reactor (no Bevy app).
     fn test_handler() -> HomunculusMcpHandler {
-        use homunculus_core::rpc_registry::RpcRegistry;
-        use std::sync::{Arc, RwLock};
         let reactor = ApiReactor::__test_dummy();
         let config = HomunculusConfig {
             mods_dir: std::path::PathBuf::from("/tmp/mods"),
             port: 3100,
+            ..Default::default()
         };
-        let rpc_registry = Arc::new(RwLock::new(RpcRegistry::default()));
-        HomunculusMcpHandler::new(reactor, config, rpc_registry)
+        let runtime = RuntimeResolver::detect();
+        HomunculusMcpHandler::new(reactor, config, runtime)
     }
 
     #[test]
@@ -274,12 +330,12 @@ mod tests {
     }
 
     #[test]
-    fn resource_definitions_lists_five_resources() {
+    fn resource_definitions_lists_four_resources() {
         let resources = resources::resource_definitions();
         assert_eq!(
             resources.len(),
-            5,
-            "expected 5 resources, got {}",
+            4,
+            "expected 4 resources, got {}",
             resources.len()
         );
     }
@@ -299,7 +355,6 @@ mod tests {
             uris.contains(&"homunculus://assets"),
             "missing assets resource"
         );
-        assert!(uris.contains(&"homunculus://rpc"), "missing rpc resource");
     }
 
     #[test]
@@ -381,5 +436,60 @@ mod tests {
             names.contains(&"mod-command-helper"),
             "missing mod-command-helper prompt"
         );
+    }
+
+    #[test]
+    fn get_tool_finds_static_tools() {
+        let handler = test_handler();
+        let tools = handler.tool_router.list_all();
+        if let Some(first_tool) = tools.first() {
+            let found = handler.get_tool(&first_tool.name);
+            assert!(found.is_some(), "should find static tool by name");
+        }
+    }
+
+    #[test]
+    fn get_tool_returns_none_for_unknown() {
+        let handler = test_handler();
+        assert!(handler.get_tool("rpc_nonexistent_method").is_none());
+        assert!(handler.get_tool("totally_unknown").is_none());
+    }
+
+    #[test]
+    fn get_character_snapshot_has_read_only_annotation() {
+        let handler = test_handler();
+        let tool = handler
+            .get_tool("get_character_snapshot")
+            .expect("get_character_snapshot should exist");
+        let ann = tool.annotations.expect("should have annotations");
+        assert_eq!(ann.read_only_hint, Some(true));
+        assert_eq!(ann.open_world_hint, Some(false));
+    }
+
+    #[test]
+    fn execute_command_has_no_annotations() {
+        let handler = test_handler();
+        let tool = handler
+            .get_tool("execute_command")
+            .expect("execute_command should exist");
+        assert!(
+            tool.annotations.is_none(),
+            "execute_command should have no annotations (all defaults)"
+        );
+    }
+
+    #[test]
+    fn remove_character_is_destructive_and_idempotent() {
+        let handler = test_handler();
+        let tool = handler
+            .get_tool("remove_character")
+            .expect("remove_character should exist");
+        let ann = tool.annotations.expect("should have annotations");
+        assert_eq!(
+            ann.destructive_hint, None,
+            "destructive_hint should use default (true)"
+        );
+        assert_eq!(ann.idempotent_hint, Some(true));
+        assert_eq!(ann.open_world_hint, Some(false));
     }
 }

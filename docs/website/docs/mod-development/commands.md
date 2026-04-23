@@ -140,7 +140,7 @@ import { input, output } from "@hmcs/sdk/commands";
 
 try {
   const data = await input.parse(
-    z.object({ linkedVrm: z.number() })
+    z.object({ linkedPersona: z.string() })
   );
   // ... use data ...
 } catch (e) {
@@ -149,7 +149,7 @@ try {
 ```
 
 :::tip
-For menu commands that only need the linked VRM, use [`input.parseMenu()`](./menus.md#handling-menu-commands) instead — it handles the schema and returns a `Vrm` instance directly.
+For menu commands that only need the linked persona, use [`input.parseMenu()`](./menus.md#handling-menu-commands) instead — it handles the schema and returns a `Persona` instance directly.
 :::
 
 **Pattern 2: Fall back to defaults** — Use when input is optional.

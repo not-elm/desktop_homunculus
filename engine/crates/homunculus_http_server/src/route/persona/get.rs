@@ -1,0 +1,36 @@
+use axum::extract::State;
+use homunculus_api::persona::{PersonaApi, PersonaSnapshot};
+use homunculus_api::prelude::axum::{HttpResult, IntoHttpResult};
+
+use super::PersonaPath;
+
+/// List all personas.
+#[utoipa::path(
+    get,
+    path = "/",
+    tag = "personas",
+    responses(
+        (status = 200, description = "List of personas", body = Vec<PersonaSnapshot>),
+    ),
+)]
+pub async fn list_personas(State(api): State<PersonaApi>) -> HttpResult<Vec<PersonaSnapshot>> {
+    api.list().await.into_http_result()
+}
+
+/// Get a single persona by ID.
+#[utoipa::path(
+    get,
+    path = "/",
+    tag = "personas",
+    params(("id" = String, Path, description = "Persona ID")),
+    responses(
+        (status = 200, description = "Persona details", body = PersonaSnapshot),
+        (status = 404, description = "Persona not found"),
+    ),
+)]
+pub async fn get_persona(
+    State(api): State<PersonaApi>,
+    path: PersonaPath,
+) -> HttpResult<PersonaSnapshot> {
+    api.get(path.persona_id).await.into_http_result()
+}

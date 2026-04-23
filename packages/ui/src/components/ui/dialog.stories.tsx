@@ -1,20 +1,20 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn } from "storybook/test";
-import { Settings, Copy } from "lucide-react";
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { Copy, Settings } from 'lucide-react';
+import { fn } from 'storybook/test';
+import { Button } from './button';
 import {
   Dialog,
-  DialogTrigger,
+  DialogClose,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogDescription,
   DialogFooter,
-  DialogClose,
-} from "./dialog";
-import { Button } from "./button";
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from './dialog';
 
 const meta = {
-  title: "UI/Overlays/Dialog",
+  title: 'UI/Overlays/Dialog',
   component: Dialog,
   args: {
     onOpenChange: fn(),
@@ -35,8 +35,8 @@ export const Default: Story = {
         <DialogHeader>
           <DialogTitle>Dialog Title</DialogTitle>
           <DialogDescription>
-            This is a description of the dialog content. It provides context
-            about the action or information being presented.
+            This is a description of the dialog content. It provides context about the action or
+            information being presented.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
@@ -78,10 +78,7 @@ export const WithForm: Story = {
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <label
-              htmlFor="username"
-              className="text-right text-sm font-medium"
-            >
+            <label htmlFor="username" className="text-right text-sm font-medium">
               Username
             </label>
             <input
@@ -114,17 +111,15 @@ export const ScrollableContent: Story = {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Terms of Service</DialogTitle>
-          <DialogDescription>
-            Please review the terms below before continuing.
-          </DialogDescription>
+          <DialogDescription>Please review the terms below before continuing.</DialogDescription>
         </DialogHeader>
         <div className="max-h-[300px] overflow-y-auto rounded-md border border-border p-4 text-sm text-muted-foreground">
           {Array.from({ length: 10 }, (_, i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: static list of identical paragraphs has no stable ID
             <p key={i} className="mb-4">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
-              eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim
-              ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-              aliquip ex ea commodo consequat.
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
+              incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
+              exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
             </p>
           ))}
         </div>
@@ -150,8 +145,8 @@ export const NoCloseButton: Story = {
         <DialogHeader>
           <DialogTitle>No Close Button</DialogTitle>
           <DialogDescription>
-            This dialog does not have the X close button. The user must use the
-            footer actions to dismiss it.
+            This dialog does not have the X close button. The user must use the footer actions to
+            dismiss it.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

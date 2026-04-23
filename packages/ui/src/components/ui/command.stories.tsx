@@ -1,31 +1,31 @@
-import * as React from "react";
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import {
   Calculator,
   Calendar,
   CreditCard,
-  Settings,
-  User,
-  Smile,
   FileText,
   Moon,
+  Settings,
+  Smile,
   Sun,
-} from "lucide-react";
+  User,
+} from 'lucide-react';
+import * as React from 'react';
+import { Button } from './button';
 import {
   Command,
   CommandDialog,
-  CommandInput,
-  CommandList,
   CommandEmpty,
   CommandGroup,
+  CommandInput,
   CommandItem,
+  CommandList,
   CommandSeparator,
   CommandShortcut,
-} from "./command";
-import { Button } from "./button";
+} from './command';
 
 const meta = {
-  title: "UI/Overlays/Command",
+  title: 'UI/Overlays/Command',
   component: Command,
 } satisfies Meta<typeof Command>;
 

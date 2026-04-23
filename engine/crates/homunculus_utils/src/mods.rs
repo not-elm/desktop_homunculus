@@ -1,10 +1,11 @@
 pub mod list;
+use std::path::Path;
 use std::process::{Command, Stdio};
 
 use crate::{
     config::HomunculusConfig,
     error::{ModsError, UtilError, UtilResult},
-    process::CommandNoWindow,
+    runtime::RuntimeResolver,
 };
 
 /// Validate an npm package specifier for safe use with `pnpm add`/`pnpm remove`.
@@ -53,41 +54,20 @@ fn validate_package_name(spec: &str) -> UtilResult {
     Ok(())
 }
 
-/// Pinned tsx version for deterministic mod service execution.
-const TSX_PACKAGE: &str = "tsx@4.21.0";
-
-/// Ensure tsx is installed in the mods directory.
-///
-/// Runs `pnpm -C <mods_dir> add --save-dev --save-exact tsx@4.21.0` on every
-/// app startup. If the pinned version is already installed, pnpm resolves
-/// quickly without network access.
-/// The installed tsx is used by mod services via `node --import tsx`.
-pub fn ensure_tsx() -> UtilResult {
-    let status = create_pnpm_command()?
-        .no_window()
-        .arg("add")
-        .arg("--save-dev")
-        .arg("--save-exact")
-        .arg(TSX_PACKAGE)
-        .status()
-        .map_err(|e| UtilError::Mods(ModsError::Install(e)))?;
-
-    if !status.success() {
-        return Err(UtilError::ForkProcess(format!(
-            "pnpm add {TSX_PACKAGE} failed with status: {status}"
-        )));
-    }
-    Ok(())
-}
-
 /// Install the mod.
 /// The argument `pkg` is same as `pnpm add <pkg>`.
 pub fn install<S: AsRef<str>>(pkg: &[S]) -> UtilResult {
+    install_with_runtime(&RuntimeResolver::detect(), pkg)
+}
+
+/// Install mods using the given [`RuntimeResolver`].
+pub fn install_with_runtime<S: AsRef<str>>(runtime: &RuntimeResolver, pkg: &[S]) -> UtilResult {
     for p in pkg {
         validate_package_name(p.as_ref())?;
     }
 
-    let status = create_pnpm_command()?
+    let config = HomunculusConfig::load()?;
+    let status = create_pnpm_command_with_runtime(runtime, &config.mods_dir)?
         .arg("add")
         .args(pkg.iter().map(|s| s.as_ref()))
         .status()
@@ -103,11 +83,20 @@ pub fn install<S: AsRef<str>>(pkg: &[S]) -> UtilResult {
 
 /// Uninstall the mod.
 pub fn uninstall<S: AsRef<str>>(mod_names: &[S]) -> UtilResult {
+    uninstall_with_runtime(&RuntimeResolver::detect(), mod_names)
+}
+
+/// Uninstall mods using the given [`RuntimeResolver`].
+pub fn uninstall_with_runtime<S: AsRef<str>>(
+    runtime: &RuntimeResolver,
+    mod_names: &[S],
+) -> UtilResult {
     for name in mod_names {
         validate_package_name(name.as_ref())?;
     }
 
-    let status = create_pnpm_command()?
+    let config = HomunculusConfig::load()?;
+    let status = create_pnpm_command_with_runtime(runtime, &config.mods_dir)?
         .arg("remove")
         .args(mod_names.iter().map(|s| s.as_ref()))
         .status()
@@ -122,7 +111,17 @@ pub fn uninstall<S: AsRef<str>>(mod_names: &[S]) -> UtilResult {
 }
 
 pub fn update<S: AsRef<str>>(mod_patterns: &[S], install_latest: bool) -> UtilResult {
-    let mut cmd = create_pnpm_command()?;
+    update_with_runtime(&RuntimeResolver::detect(), mod_patterns, install_latest)
+}
+
+/// Update mods using the given [`RuntimeResolver`].
+pub fn update_with_runtime<S: AsRef<str>>(
+    runtime: &RuntimeResolver,
+    mod_patterns: &[S],
+    install_latest: bool,
+) -> UtilResult {
+    let config = HomunculusConfig::load()?;
+    let mut cmd = create_pnpm_command_with_runtime(runtime, &config.mods_dir)?;
     cmd.arg("update");
     if !mod_patterns.is_empty() {
         cmd.args(mod_patterns.iter().map(|s| s.as_ref()));
@@ -148,8 +147,17 @@ pub fn pnpm_program() -> &'static str {
 
 fn create_pnpm_command() -> UtilResult<Command> {
     let config = HomunculusConfig::load()?;
-    let mut command = Command::new(pnpm_program());
-    command.args(["-C", &format!("{}", &config.mods_dir.display())]);
+    create_pnpm_command_with_runtime(&RuntimeResolver::detect(), &config.mods_dir)
+}
+
+/// Create a pnpm [`Command`] targeting the given mods directory,
+/// using the provided [`RuntimeResolver`] for path resolution.
+pub(crate) fn create_pnpm_command_with_runtime(
+    runtime: &RuntimeResolver,
+    mods_dir: &Path,
+) -> UtilResult<Command> {
+    let mut command = runtime.pnpm_command();
+    command.args(["-C", &format!("{}", mods_dir.display())]);
     Ok(command)
 }
 

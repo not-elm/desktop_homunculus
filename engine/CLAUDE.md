@@ -74,7 +74,7 @@ This is the central pattern for bridging async HTTP handlers with Bevy's single-
 Events use async broadcast channels (`async-broadcast`, capacity 256 with overflow):
 - `VrmEventSender<E>` / `VrmEventReceiver<E>` — typed broadcast resources
 - `VrmEvent<E>` — wraps entity + payload
-- Event types include: `OnClickEvent`, `OnDragStartEvent`, `OnDragEvent`, `OnDragEndEvent`, `OnPointerPressedEvent`, `VrmStateChangeEvent`, `ExpressionChangeEvent`, `VrmaPlayEvent`, `VrmaFinishEvent`, `PersonaChangeEvent`
+- Event types include: `OnClickEvent`, `OnDragStartEvent`, `OnDragEvent`, `OnDragEndEvent`, `OnPointerPressedEvent`, `PersonaStateChangeEvent`, `VrmAttachedEvent`, `VrmDetachedEvent`, `PersonaDeletedEvent`, `ExpressionChangeEvent`, `VrmaPlayEvent`, `VrmaFinishEvent`, `PersonaChangeEvent`
 
 ### Core System Parameters
 
@@ -92,14 +92,14 @@ Custom `SystemParam` types available in `homunculus_core::system_param::prelude`
 
 ### Crates
 
-- `homunculus_core` — Components (`Loading`, `AppWindow`, `VrmState`, `LinkedVrm`, `Persona`), events, resources, system parameters
-- `homunculus_api` — `ApiReactor`, `api!` macro, domain APIs: `VrmApi`, `VrmAnimationApi`, `AudioSeApi`, `AudioBgmApi`, `PrefsApi`, `CameraApi`, `WebviewApi`, `EffectsApi`, `SpeechApi`, `SignalsApi`, `EntitiesApi`, `AssetsApi`, `ModsApi`, `ShadowPanelApi`, `AppApi`
+- `homunculus_core` — Components (`Loading`, `AppWindow`, `PersonaState`, `LinkedPersona`, `Persona`, `PersonaId`), events, resources, system parameters
+- `homunculus_api` — `ApiReactor`, `api!` macro, domain APIs: `VrmApi`, `PersonaApi`, `VrmAnimationApi`, `AudioSeApi`, `AudioBgmApi`, `PrefsApi`, `CameraApi`, `WebviewApi`, `EffectsApi`, `SpeechApi`, `SignalsApi`, `EntitiesApi`, `AssetsApi`, `ModsApi`, `ShadowPanelApi`, `AppApi`
 - `homunculus_http_server` — Axum routes organized by domain in `src/route/`. `HttpState` holds all API resources. Test utilities: `test_app()`, `call()`, `assert_response()`. Includes command execution endpoint (`POST /commands/execute`) with NDJSON streaming output.
 - `homunculus_mod` — MOD system: NPM package discovery, Node.js child processes
 - `homunculus_speech` — Mora-based lip-sync for VRM models. Provides speech queue, vowel animation, and expression keyframe control. TTS audio is provided externally (e.g. via the Timeline API or MODs).
-- `homunculus_prefs` — SQLite-backed preferences (`~/.homunculus/preferences.db`). Auto-persists VRM transforms. Key format: `"{asset_id}:transform"`, `"persona::{asset_id}"`
+- `homunculus_prefs` — SQLite-backed preferences and persona persistence (`~/.homunculus/preferences.db`). Manages `personas` and `persona_metadata` tables with CRUD methods. Transform persistence uses `persona_metadata` key `"transform"`.
 - `homunculus_utils` — Bevy-independent utilities shared across engine, CLI, and MCP: config loading (`~/.homunculus/config.toml`), path helpers (`homunculus_dir()`, `mod_dir()`), shared schema types, camera order constants
-- Other plugins: `drag`, `effects`, `windows`, `hit_test`, `screen`, `sitting`, `shadow_panel`, `power_saver`, `audio`
+- Other plugins: `drag`, `effects`, `windows`, `hit_test`, `screen`, `sitting`, `shadow_panel`, `power_saver`, `audio`, `microphone`, `tray`
 
 ### Command Execution
 
@@ -148,9 +148,12 @@ Each monitor gets its own Bevy window with an isolated render layer. The primary
 
 ## Build Profiles
 
-- **`dev`**: `opt-level = 1` for faster iteration.
-- **`release`**: Full LTO enabled.
-- **`dist`** (for distribution): `opt-level = 2`, `lto = "thin"`, `strip = true`. Used by `make release-macos` and `make release-windows`.
+| Profile | `opt-level` | LTO | Strip | Usage |
+|---------|-------------|-----|-------|-------|
+| `dev` | 1 (deps: 3) | no | no | Local development (`make debug`) |
+| `ci` | 1 (all) | no | no | CI lint + test (`--profile ci`) |
+| `release` | `"s"` | full | yes | Not typically used directly |
+| `dist` | 2 | thin | yes | Distribution builds (`make release-*`) |
 
 ## Build Scripts (`scripts/`)
 

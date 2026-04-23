@@ -1,6 +1,6 @@
 ---
 title: "Resources & Prompts"
-sidebar_position: 3
+sidebar_position: 4
 ---
 
 # Resources & Prompts

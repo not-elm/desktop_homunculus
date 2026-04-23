@@ -1,4 +1,4 @@
-import type { TimelineKeyframe } from "@hmcs/sdk";
+import type { TimelineKeyframe } from '@hmcs/sdk';
 
 interface VoiceVoxMora {
   vowel: string;
@@ -19,11 +19,30 @@ interface VoiceVoxAudioQuery {
 }
 
 const VOWEL_MAP: Record<string, string> = {
-  a: "aa", b: "aa", h: "aa", l: "aa", m: "aa", p: "aa",
-  i: "ih", d: "ih", f: "ih", n: "ih", r: "ih", t: "ih", v: "ih",
-  u: "ou",
-  e: "ee", j: "ee", s: "ee", x: "ee", y: "ee", z: "ee",
-  o: "oh", g: "oh", q: "oh", w: "oh",
+  a: 'aa',
+  b: 'aa',
+  h: 'aa',
+  l: 'aa',
+  m: 'aa',
+  p: 'aa',
+  i: 'ih',
+  d: 'ih',
+  f: 'ih',
+  n: 'ih',
+  r: 'ih',
+  t: 'ih',
+  v: 'ih',
+  u: 'ou',
+  e: 'ee',
+  j: 'ee',
+  s: 'ee',
+  x: 'ee',
+  y: 'ee',
+  z: 'ee',
+  o: 'oh',
+  g: 'oh',
+  q: 'oh',
+  w: 'oh',
 };
 
 /**

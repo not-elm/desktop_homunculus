@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
-import { audio, preferences, Vrm, Webview } from "@hmcs/sdk";
+import { audio, preferences, Webview } from '@hmcs/sdk';
+import { rpc } from '@hmcs/sdk/rpc';
+import { useCallback, useEffect, useState } from 'react';
 
-const VOICEVOX_HOST = "http://localhost:50021";
+const VOICEVOX_HOST = 'http://localhost:50021';
 
 const DEFAULTS: VoicevoxSettings = {
   speakerId: 0,
@@ -9,6 +10,9 @@ const DEFAULTS: VoicevoxSettings = {
   pitchScale: 0.0,
   intonationScale: 1.0,
   volumeScale: 1.0,
+  pauseLength: 1.0,
+  prePhonemeLength: 0.1,
+  postPhonemeLength: 0.1,
 };
 
 export interface VoicevoxSettings {
@@ -17,6 +21,9 @@ export interface VoicevoxSettings {
   pitchScale: number;
   intonationScale: number;
   volumeScale: number;
+  pauseLength: number;
+  prePhonemeLength: number;
+  postPhonemeLength: number;
 }
 
 export interface VoicevoxStyle {
@@ -37,8 +44,10 @@ export function useVoicevoxSettings() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [assetId, setAssetId] = useState<string | null>(null);
-  const [characterName, setCharacterName] = useState("");
+  const [characterName, setCharacterName] = useState('');
   const [invalidSpeaker, setInvalidSpeaker] = useState(false);
+  const [personaId, setPersonaId] = useState<string | null>(null);
+  const [speaking, setSpeaking] = useState(false);
 
   const prefsKey = assetId ? `voicevox::${assetId}` : null;
 
@@ -46,22 +55,22 @@ export function useVoicevoxSettings() {
     let cancelled = false;
     (async () => {
       try {
-        const linked = await resolveLinkedVrm();
+        const linked = await resolveLinkedPersona();
         if (cancelled) return;
 
+        setPersonaId(linked?.personaId ?? null);
         const resolvedAssetId = linked?.assetId ?? null;
         setAssetId(resolvedAssetId);
 
-        const [speakersResult, savedSettings, name] = await Promise.all([
+        const [speakersResult, savedSettings] = await Promise.all([
           fetchSpeakers(),
           resolvedAssetId
             ? preferences.load<VoicevoxSettings>(`voicevox::${resolvedAssetId}`)
             : undefined,
-          linked?.vrm.name() ?? Promise.resolve(""),
         ]);
         if (cancelled) return;
 
-        setCharacterName(name);
+        setCharacterName(linked?.name ?? '');
 
         if (speakersResult) {
           setConnected(true);
@@ -80,7 +89,7 @@ export function useVoicevoxSettings() {
           }
         }
       } catch (err) {
-        console.error("Failed to initialize:", err);
+        console.error('Failed to initialize:', err);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -98,7 +107,7 @@ export function useVoicevoxSettings() {
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch (err) {
-      console.error("Save failed:", err);
+      console.error('Save failed:', err);
     } finally {
       setSaving(false);
     }
@@ -110,7 +119,7 @@ export function useVoicevoxSettings() {
   }, []);
 
   const handleClose = useCallback(() => {
-    audio.se.play("se:close");
+    audio.se.play('se:close');
     Webview.current()?.close();
   }, []);
 
@@ -130,6 +139,26 @@ export function useVoicevoxSettings() {
     }
   }, []);
 
+  const handleSpeak = useCallback(
+    async (text: string) => {
+      if (speaking || !personaId || !prefsKey) return;
+      setSpeaking(true);
+      try {
+        await preferences.save(prefsKey, settings);
+        await rpc.call({
+          modName: '@hmcs/voicevox',
+          method: 'speak',
+          body: { personaId, text },
+        });
+      } catch (err) {
+        console.error('Speech test failed:', err);
+      } finally {
+        setSpeaking(false);
+      }
+    },
+    [speaking, personaId, prefsKey, settings],
+  );
+
   return {
     loading,
     connected,
@@ -141,30 +170,37 @@ export function useVoicevoxSettings() {
     assetId,
     characterName,
     invalidSpeaker,
+    personaId,
+    speaking,
     handleSave,
     handleReset,
     handleClose,
     handleRetry,
+    handleSpeak,
   };
 }
 
-/** Resolves the linked VRM's asset ID via VrmSnapshot. */
-async function resolveLinkedVrm(): Promise<{
-  vrm: Vrm;
+/** Resolves the linked persona's ID, name, and VRM asset ID. */
+async function resolveLinkedPersona(): Promise<{
+  personaId: string;
+  name: string;
   assetId: string | null;
 } | null> {
   const webview = Webview.current();
   if (!webview) return null;
-  const linked = await webview.linkedVrm();
+  const linked = await webview.linkedPersona();
   if (!linked) return null;
-  const snapshots = await Vrm.findAllDetailed();
-  const snapshot = snapshots.find((s) => s.entity === linked.entity);
-  return { vrm: linked, assetId: snapshot?.assetId ?? null };
+  const snapshot = await linked.snapshot();
+  return {
+    personaId: linked.id,
+    name: snapshot.name ?? '',
+    assetId: snapshot.vrmAssetId ?? null,
+  };
 }
 
 async function fetchSpeakers(): Promise<VoicevoxSpeaker[] | null> {
   try {
-    const cefFetch = (globalThis as any).cef?.fetch;
+    const cefFetch = (globalThis as unknown as { cef?: { fetch: typeof fetch } }).cef?.fetch;
     const fetchFn = cefFetch ?? fetch;
     const response = await fetchFn(`${VOICEVOX_HOST}/speakers`, {
       signal: AbortSignal.timeout(10000),

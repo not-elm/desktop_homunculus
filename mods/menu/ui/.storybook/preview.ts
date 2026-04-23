@@ -1,17 +1,17 @@
-import type { Preview } from "@storybook/react-vite";
 import {
-  withSceneLayer,
+  defaultInitialGlobals,
   sceneGlobalType,
   themeGlobalType,
-  defaultInitialGlobals,
-} from "@hmcs/ui/storybook";
+  withSceneLayer,
+} from '@hmcs/ui/storybook';
+import type { Preview } from '@storybook/react-vite';
 
-import "../src/index.css";
-import "./storybook.css";
+import '../src/index.css';
+import './storybook.css';
 
 const preview: Preview = {
   parameters: {
-    layout: "fullscreen",
+    layout: 'fullscreen',
     controls: {
       matchers: {
         color: /(background|color)$/i,
@@ -24,7 +24,7 @@ const preview: Preview = {
     theme: themeGlobalType,
   },
   initialGlobals: defaultInitialGlobals,
-  decorators: [withSceneLayer as any],
+  decorators: [withSceneLayer as unknown as NonNullable<Preview['decorators']>[number]],
 };
 
 export default preview;

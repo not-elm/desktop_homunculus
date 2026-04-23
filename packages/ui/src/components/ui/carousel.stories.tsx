@@ -1,15 +1,15 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn } from "storybook/test";
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { fn } from 'storybook/test';
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
-} from "./carousel";
+} from './carousel';
 
 const meta = {
-  title: "UI/Display/Carousel",
+  title: 'UI/Display/Carousel',
   component: Carousel,
   args: {
     onClick: fn(),
@@ -19,12 +19,12 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const SLIDE_COLORS = [
-  "bg-blue-500",
-  "bg-green-500",
-  "bg-purple-500",
-  "bg-orange-500",
-  "bg-pink-500",
+const SLIDES = [
+  { color: 'bg-blue-500', label: 'Slide 1' },
+  { color: 'bg-green-500', label: 'Slide 2' },
+  { color: 'bg-purple-500', label: 'Slide 3' },
+  { color: 'bg-orange-500', label: 'Slide 4' },
+  { color: 'bg-pink-500', label: 'Slide 5' },
 ];
 
 /** Default horizontal carousel with colored slide content */
@@ -33,14 +33,10 @@ export const Default: Story = {
     <div className="mx-auto w-full max-w-xs px-12">
       <Carousel>
         <CarouselContent>
-          {SLIDE_COLORS.map((color, index) => (
-            <CarouselItem key={index}>
-              <div
-                className={`${color} flex h-40 items-center justify-center rounded-lg`}
-              >
-                <span className="text-2xl font-bold text-white">
-                  Slide {index + 1}
-                </span>
+          {SLIDES.map((slide) => (
+            <CarouselItem key={slide.label}>
+              <div className={`${slide.color} flex h-40 items-center justify-center rounded-lg`}>
+                <span className="text-2xl font-bold text-white">{slide.label}</span>
               </div>
             </CarouselItem>
           ))}
@@ -58,14 +54,10 @@ export const Vertical: Story = {
     <div className="mx-auto w-full max-w-xs py-12">
       <Carousel orientation="vertical">
         <CarouselContent className="-mt-4 h-[200px]">
-          {SLIDE_COLORS.map((color, index) => (
-            <CarouselItem key={index} className="pt-4 basis-full">
-              <div
-                className={`${color} flex h-40 items-center justify-center rounded-lg`}
-              >
-                <span className="text-2xl font-bold text-white">
-                  Slide {index + 1}
-                </span>
+          {SLIDES.map((slide) => (
+            <CarouselItem key={slide.label} className="pt-4 basis-full">
+              <div className={`${slide.color} flex h-40 items-center justify-center rounded-lg`}>
+                <span className="text-2xl font-bold text-white">{slide.label}</span>
               </div>
             </CarouselItem>
           ))}
@@ -81,16 +73,12 @@ export const Vertical: Story = {
 export const MultiplePerView: Story = {
   render: () => (
     <div className="mx-auto w-full max-w-lg px-12">
-      <Carousel opts={{ align: "start" }}>
+      <Carousel opts={{ align: 'start' }}>
         <CarouselContent>
-          {SLIDE_COLORS.map((color, index) => (
-            <CarouselItem key={index} className="basis-1/3">
-              <div
-                className={`${color} flex h-28 items-center justify-center rounded-lg`}
-              >
-                <span className="text-lg font-bold text-white">
-                  {index + 1}
-                </span>
+          {SLIDES.map((slide) => (
+            <CarouselItem key={slide.label} className="basis-1/3">
+              <div className={`${slide.color} flex h-28 items-center justify-center rounded-lg`}>
+                <span className="text-lg font-bold text-white">{slide.label}</span>
               </div>
             </CarouselItem>
           ))}
@@ -108,14 +96,10 @@ export const WithLoop: Story = {
     <div className="mx-auto w-full max-w-xs px-12">
       <Carousel opts={{ loop: true }}>
         <CarouselContent>
-          {SLIDE_COLORS.map((color, index) => (
-            <CarouselItem key={index}>
-              <div
-                className={`${color} flex h-40 items-center justify-center rounded-lg`}
-              >
-                <span className="text-2xl font-bold text-white">
-                  Slide {index + 1}
-                </span>
+          {SLIDES.map((slide) => (
+            <CarouselItem key={slide.label}>
+              <div className={`${slide.color} flex h-40 items-center justify-center rounded-lg`}>
+                <span className="text-2xl font-bold text-white">{slide.label}</span>
               </div>
             </CarouselItem>
           ))}

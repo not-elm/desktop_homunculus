@@ -1,16 +1,16 @@
-import { describe, it, expect, beforeEach, afterEach, vi, type Mock } from "vitest";
-import { z } from "zod";
-import { HomunculusApiError } from "./host";
+import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
+import { z } from 'zod';
+import { HomunculusApiError } from './host';
 
 // ---------------------------------------------------------------------------
 // rpc.method() — validation logic (no server needed)
 // ---------------------------------------------------------------------------
 
-describe("rpc.method()", () => {
-  it("returns a method def with handler that resolves for valid input", async () => {
-    const { rpc } = await import("./rpc");
+describe('rpc.method()', () => {
+  it('returns a method def with handler that resolves for valid input', async () => {
+    const { rpc } = await import('./rpc');
     const def = rpc.method({
-      description: "Double a number",
+      description: 'Double a number',
       timeout: 5000,
       input: z.object({ n: z.number() }),
       handler: async ({ n }) => ({ result: n * 2 }),
@@ -20,21 +20,21 @@ describe("rpc.method()", () => {
     expect(result).toEqual({ result: 14 });
   });
 
-  it("preserves description and timeout on the returned def", async () => {
-    const { rpc } = await import("./rpc");
+  it('preserves description and timeout on the returned def', async () => {
+    const { rpc } = await import('./rpc');
     const def = rpc.method({
-      description: "My method",
+      description: 'My method',
       timeout: 1234,
       input: z.object({ x: z.string() }),
       handler: async ({ x }) => x,
     });
 
-    expect(def.description).toBe("My method");
+    expect(def.description).toBe('My method');
     expect(def.timeout).toBe(1234);
   });
 
-  it("returns undefined description and timeout when not provided", async () => {
-    const { rpc } = await import("./rpc");
+  it('returns undefined description and timeout when not provided', async () => {
+    const { rpc } = await import('./rpc');
     const def = rpc.method({
       input: z.object({ x: z.number() }),
       handler: async ({ x }) => x,
@@ -44,27 +44,29 @@ describe("rpc.method()", () => {
     expect(def.timeout).toBeUndefined();
   });
 
-  it("validates input with safeParse — returns success for valid data", async () => {
-    const { rpc } = await import("./rpc");
+  it('validates input with safeParse — returns success for valid data', async () => {
+    const { rpc } = await import('./rpc');
     const def = rpc.method({
       input: z.object({ name: z.string(), count: z.number() }),
       handler: async (params) => params,
     });
 
-    const result = def.input!.safeParse({ name: "alice", count: 3 });
+    // biome-ignore lint/style/noNonNullAssertion: input is defined in this test
+    const result = def.input!.safeParse({ name: 'alice', count: 3 });
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data).toEqual({ name: "alice", count: 3 });
+      expect(result.data).toEqual({ name: 'alice', count: 3 });
     }
   });
 
-  it("validates input with safeParse — returns failure for invalid data", async () => {
-    const { rpc } = await import("./rpc");
+  it('validates input with safeParse — returns failure for invalid data', async () => {
+    const { rpc } = await import('./rpc');
     const def = rpc.method({
       input: z.object({ name: z.string() }),
       handler: async (params) => params,
     });
 
+    // biome-ignore lint/style/noNonNullAssertion: input is defined in this test
     const result = def.input!.safeParse({ name: 123 });
     expect(result.success).toBe(false);
     if (!result.success) {
@@ -72,21 +74,21 @@ describe("rpc.method()", () => {
     }
   });
 
-  it("supports method without input schema", async () => {
-    const { rpc } = await import("./rpc");
+  it('supports method without input schema', async () => {
+    const { rpc } = await import('./rpc');
     const def = rpc.method({
-      description: "Ping",
+      description: 'Ping',
       handler: async () => ({ pong: true }),
     });
 
     expect(def.input).toBeUndefined();
-    expect(def.description).toBe("Ping");
+    expect(def.description).toBe('Ping');
     const result = await def.handler(undefined as never);
     expect(result).toEqual({ pong: true });
   });
 
-  it("handler is called and result returned for valid input", async () => {
-    const { rpc } = await import("./rpc");
+  it('handler is called and result returned for valid input', async () => {
+    const { rpc } = await import('./rpc');
     const handlerFn = vi.fn(async ({ value }: { value: string }) => ({
       upper: value.toUpperCase(),
     }));
@@ -96,13 +98,50 @@ describe("rpc.method()", () => {
       handler: handlerFn,
     });
 
-    const parseResult = def.input!.safeParse({ value: "hello" });
+    // biome-ignore lint/style/noNonNullAssertion: input is defined in this test
+    const parseResult = def.input!.safeParse({ value: 'hello' });
     expect(parseResult.success).toBe(true);
     if (parseResult.success) {
       const output = await def.handler(parseResult.data);
-      expect(output).toEqual({ upper: "HELLO" });
-      expect(handlerFn).toHaveBeenCalledWith({ value: "hello" });
+      expect(output).toEqual({ upper: 'HELLO' });
+      expect(handlerFn).toHaveBeenCalledWith({ value: 'hello' });
     }
+  });
+
+  it('preserves meta on the returned def', async () => {
+    const { rpc } = await import('./rpc');
+    const def = rpc.method({
+      input: z.object({ x: z.string() }),
+      handler: async ({ x }) => x,
+      meta: { category: 'tts' },
+    });
+
+    expect(def.meta).toEqual({ category: 'tts' });
+  });
+
+  it('returns undefined meta when not provided', async () => {
+    const { rpc } = await import('./rpc');
+    const def = rpc.method({
+      input: z.object({ x: z.string() }),
+      handler: async ({ x }) => x,
+    });
+
+    expect(def.meta).toBeUndefined();
+  });
+
+  it('exposes meta through a def suitable for registration payloads', async () => {
+    const { rpc } = await import('./rpc');
+    const def = rpc.method({
+      description: 'Tagged method',
+      input: z.object({ x: z.string() }),
+      handler: async ({ x }) => x,
+      meta: { category: 'tts', flavor: 'alpha' },
+    });
+    // This is the shape buildMethodsMeta produces per entry. Asserting on
+    // the def fields keeps the test independent of the non-exported
+    // buildMethodsMeta helper.
+    expect(def.description).toBe('Tagged method');
+    expect(def.meta).toEqual({ category: 'tts', flavor: 'alpha' });
   });
 });
 
@@ -110,7 +149,7 @@ describe("rpc.method()", () => {
 // rpc.serve() — env var checks
 // ---------------------------------------------------------------------------
 
-describe("rpc.serve() — env var validation", () => {
+describe('rpc.serve() — env var validation', () => {
   const originalEnv = { ...process.env };
 
   beforeEach(() => {
@@ -126,40 +165,77 @@ describe("rpc.serve() — env var validation", () => {
 
   afterEach(() => {
     // Clean up env vars set during tests
-    delete process.env["HMCS_RPC_PORT"];
-    delete process.env["HMCS_MOD_NAME"];
-    delete process.env["HMCS_PORT"];
+    delete process.env.HMCS_RPC_PORT;
+    delete process.env.HMCS_MOD_NAME;
+    delete process.env.HMCS_PORT;
   });
 
-  it("throws when HMCS_RPC_PORT is missing", async () => {
-    delete process.env["HMCS_RPC_PORT"];
-    process.env["HMCS_MOD_NAME"] = "test-mod";
+  it('throws when HMCS_RPC_PORT is missing', async () => {
+    delete process.env.HMCS_RPC_PORT;
+    process.env.HMCS_MOD_NAME = 'test-mod';
 
-    const { rpc } = await import("./rpc");
+    const { rpc } = await import('./rpc');
     await expect(rpc.serve({ methods: {} })).rejects.toThrow(
-      "HMCS_RPC_PORT environment variable is required",
+      'HMCS_RPC_PORT environment variable is required',
     );
   });
 
-  it("throws when HMCS_MOD_NAME is missing", async () => {
-    process.env["HMCS_RPC_PORT"] = "9999";
-    delete process.env["HMCS_MOD_NAME"];
+  it('throws when HMCS_MOD_NAME is missing', async () => {
+    process.env.HMCS_RPC_PORT = '9999';
+    delete process.env.HMCS_MOD_NAME;
 
-    const { rpc } = await import("./rpc");
+    const { rpc } = await import('./rpc');
     await expect(rpc.serve({ methods: {} })).rejects.toThrow(
-      "HMCS_MOD_NAME environment variable is required",
+      'HMCS_MOD_NAME environment variable is required',
     );
   });
 
-  it("throws when both HMCS_RPC_PORT and HMCS_MOD_NAME are missing", async () => {
-    delete process.env["HMCS_RPC_PORT"];
-    delete process.env["HMCS_MOD_NAME"];
+  it('throws when both HMCS_RPC_PORT and HMCS_MOD_NAME are missing', async () => {
+    delete process.env.HMCS_RPC_PORT;
+    delete process.env.HMCS_MOD_NAME;
 
-    const { rpc } = await import("./rpc");
+    const { rpc } = await import('./rpc');
     // HMCS_RPC_PORT is checked first
     await expect(rpc.serve({ methods: {} })).rejects.toThrow(
-      "HMCS_RPC_PORT environment variable is required",
+      'HMCS_RPC_PORT environment variable is required',
     );
+  });
+});
+
+describe('rpc.serve() — method name validation', () => {
+  beforeEach(() => {
+    vi.resetModules();
+    process.env.HMCS_RPC_PORT = '9999';
+    process.env.HMCS_MOD_NAME = 'test-mod';
+    process.env.HMCS_PORT = '3100';
+  });
+
+  afterEach(() => {
+    delete process.env.HMCS_RPC_PORT;
+    delete process.env.HMCS_MOD_NAME;
+    delete process.env.HMCS_PORT;
+  });
+
+  it('throws for method names containing slashes', async () => {
+    const { rpc } = await import('./rpc');
+    await expect(
+      rpc.serve({
+        methods: {
+          'invalid/name': async () => ({}),
+        },
+      }),
+    ).rejects.toThrow('Invalid RPC method name');
+  });
+
+  it('throws for empty method names', async () => {
+    const { rpc } = await import('./rpc');
+    await expect(
+      rpc.serve({
+        methods: {
+          '': async () => ({}),
+        },
+      }),
+    ).rejects.toThrow('Invalid RPC method name');
   });
 });
 
@@ -167,15 +243,15 @@ describe("rpc.serve() — env var validation", () => {
 // rpc.call() — browser-safe RPC client (via rpc-client.ts)
 // ---------------------------------------------------------------------------
 
-describe("rpc.call()", () => {
+describe('rpc.call()', () => {
   let postMock: Mock;
 
   beforeEach(async () => {
     vi.resetModules();
-    const { host } = await import("./host");
+    const { host } = await import('./host');
     postMock = vi.fn();
-    vi.spyOn(host, "post").mockImplementation(postMock);
-    vi.spyOn(host, "createUrl").mockImplementation(
+    vi.spyOn(host, 'post').mockImplementation(postMock);
+    vi.spyOn(host, 'createUrl').mockImplementation(
       (path: string) => new URL(`http://localhost:3100/${path}`),
     );
   });
@@ -184,58 +260,170 @@ describe("rpc.call()", () => {
     vi.restoreAllMocks();
   });
 
-  it("sends POST to rpc/call with modName, method, and body", async () => {
+  it('sends POST to rpc/call with modName, method, and body', async () => {
     postMock.mockResolvedValue({
-      json: () => Promise.resolve({ greeting: "Hello!" }),
+      json: () => Promise.resolve({ greeting: 'Hello!' }),
     });
 
-    const { rpc } = await import("./rpc-client");
+    const { rpc } = await import('./rpc-client');
     const result = await rpc.call<{ greeting: string }>({
-      modName: "voicevox",
-      method: "speak",
-      body: { text: "Hello!" },
+      modName: 'voicevox',
+      method: 'speak',
+      body: { text: 'Hello!' },
     });
 
-    expect(result).toEqual({ greeting: "Hello!" });
-    expect(postMock).toHaveBeenCalledWith(
-      new URL("http://localhost:3100/rpc/call"),
-      { modName: "voicevox", method: "speak", body: { text: "Hello!" } },
-    );
+    expect(result).toEqual({ greeting: 'Hello!' });
+    expect(postMock).toHaveBeenCalledWith(new URL('http://localhost:3100/rpc/call'), {
+      modName: 'voicevox',
+      method: 'speak',
+      body: { text: 'Hello!' },
+    });
   });
 
-  it("omits body field when body is undefined", async () => {
+  it('omits body field when body is undefined', async () => {
     postMock.mockResolvedValue({
       json: () => Promise.resolve({ running: true }),
     });
 
-    const { rpc } = await import("./rpc-client");
-    await rpc.call({ modName: "voicevox", method: "status" });
+    const { rpc } = await import('./rpc-client');
+    await rpc.call({ modName: 'voicevox', method: 'status' });
 
-    expect(postMock).toHaveBeenCalledWith(
-      new URL("http://localhost:3100/rpc/call"),
-      { modName: "voicevox", method: "status" },
+    expect(postMock).toHaveBeenCalledWith(new URL('http://localhost:3100/rpc/call'), {
+      modName: 'voicevox',
+      method: 'status',
+    });
+  });
+
+  it('propagates HomunculusApiError from host.post', async () => {
+    postMock.mockRejectedValue(new HomunculusApiError(503, '/rpc/call', 'MOD not registered'));
+
+    const { rpc } = await import('./rpc-client');
+    await expect(rpc.call({ modName: 'unknown', method: 'foo' })).rejects.toThrow(
+      HomunculusApiError,
     );
   });
 
-  it("propagates HomunculusApiError from host.post", async () => {
-    postMock.mockRejectedValue(
-      new HomunculusApiError(503, "/rpc/call", "MOD not registered"),
-    );
-
-    const { rpc } = await import("./rpc-client");
-    await expect(
-      rpc.call({ modName: "unknown", method: "foo" }),
-    ).rejects.toThrow(HomunculusApiError);
-  });
-
-  it("is re-exported from rpc.ts (Node.js entry)", async () => {
+  it('is re-exported from rpc.ts (Node.js entry)', async () => {
     postMock.mockResolvedValue({
       json: () => Promise.resolve({ ok: true }),
     });
 
-    const { rpc } = await import("./rpc");
-    const result = await rpc.call({ modName: "test", method: "ping" });
+    const { rpc } = await import('./rpc');
+    const result = await rpc.call({ modName: 'test', method: 'ping' });
 
     expect(result).toEqual({ ok: true });
+  });
+});
+
+describe('rpc.registrations()', () => {
+  let getMock: Mock;
+
+  beforeEach(async () => {
+    vi.resetModules();
+    const { host } = await import('./host');
+    getMock = vi.fn();
+    vi.spyOn(host, 'get').mockImplementation(getMock);
+    vi.spyOn(host, 'createUrl').mockImplementation(
+      (path: string) => new URL(`http://localhost:3100/${path}`),
+    );
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('returns all RPC registrations when no filter given', async () => {
+    getMock.mockResolvedValue({
+      json: () =>
+        Promise.resolve({
+          registrations: {
+            '@hmcs/voicevox': {
+              port: 12345,
+              methods: {
+                speak: {
+                  description: 'VoiceVox TTS',
+                  meta: { category: 'tts' },
+                },
+              },
+            },
+            '@hmcs/other': {
+              port: 12346,
+              methods: {
+                doStuff: { description: 'Other method' },
+              },
+            },
+          },
+        }),
+    });
+
+    const { rpc } = await import('./rpc-client');
+    const result = await rpc.registrations();
+
+    expect(result).toHaveLength(2);
+    expect(result).toContainEqual({
+      modName: '@hmcs/voicevox',
+      method: 'speak',
+      description: 'VoiceVox TTS',
+      meta: { category: 'tts' },
+    });
+    expect(result).toContainEqual({
+      modName: '@hmcs/other',
+      method: 'doStuff',
+      description: 'Other method',
+      meta: undefined,
+    });
+  });
+
+  it('filters by category when filter.category is provided', async () => {
+    getMock.mockResolvedValue({
+      json: () =>
+        Promise.resolve({
+          registrations: {
+            '@hmcs/voicevox': {
+              port: 12345,
+              methods: {
+                speak: {
+                  description: 'VoiceVox TTS',
+                  meta: { category: 'tts' },
+                },
+              },
+            },
+            '@hmcs/other': {
+              port: 12346,
+              methods: {
+                doStuff: { description: 'Other method' },
+              },
+            },
+          },
+        }),
+    });
+
+    const { rpc } = await import('./rpc-client');
+    const result = await rpc.registrations({ category: 'tts' });
+
+    expect(result).toHaveLength(1);
+    expect(result[0].modName).toBe('@hmcs/voicevox');
+    expect(result[0].method).toBe('speak');
+  });
+
+  it('returns empty array when no mods match the category filter', async () => {
+    getMock.mockResolvedValue({
+      json: () =>
+        Promise.resolve({
+          registrations: {
+            '@hmcs/other': {
+              port: 12346,
+              methods: {
+                doStuff: { description: 'Other method' },
+              },
+            },
+          },
+        }),
+    });
+
+    const { rpc } = await import('./rpc-client');
+    const result = await rpc.registrations({ category: 'tts' });
+
+    expect(result).toHaveLength(0);
   });
 });

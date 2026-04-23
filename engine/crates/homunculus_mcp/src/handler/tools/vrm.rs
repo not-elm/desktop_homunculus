@@ -3,9 +3,7 @@
 use super::super::HomunculusMcpHandler;
 use bevy::math::Vec2;
 use homunculus_api::entities::MoveTarget;
-use homunculus_api::vrm::VrmSpawnArgs;
-use homunculus_core::prelude::Persona;
-use homunculus_utils::schema::asset::AssetId;
+use homunculus_api::persona::CreatePersona;
 use rmcp::handler::server::wrapper::Parameters;
 use rmcp::schemars;
 use rmcp::schemars::JsonSchema;
@@ -17,12 +15,16 @@ use std::collections::HashMap;
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct SpawnCharacterParams {
-    /// Asset ID of the VRM model to spawn (e.g. "vrm:my-model").
+    /// Persona ID for the new character (URL-safe: [a-zA-Z0-9_-], max 64 chars).
+    pub id: String,
+    /// Asset ID of the VRM model to attach (e.g. "vrm:my-model").
     pub asset: String,
     /// Optional display name for the character.
     pub name: Option<String>,
     /// Optional persona profile text describing the character.
-    pub persona_profile: Option<String>,
+    pub profile: Option<String>,
+    /// Optional free-text personality description for agent prompts.
+    pub personality: Option<String>,
     /// Optional viewport x position to place the character.
     pub x: Option<f32>,
     /// Optional viewport y position to place the character.
@@ -33,7 +35,7 @@ pub struct SpawnCharacterParams {
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct SelectCharacterParams {
-    /// Name of the character to select.
+    /// Display name (or persona ID) of the character to select.
     pub name: String,
 }
 
@@ -41,14 +43,15 @@ pub struct SelectCharacterParams {
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct RemoveCharacterParams {
-    /// Name of the character to remove. If omitted, removes the active character.
+    /// Display name (or persona ID) of the character to remove.
+    /// If omitted, removes the active character.
     pub name: Option<String>,
 }
 
 /// Parameters for the `set_expression` tool.
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
 pub struct SetExpressionParams {
-    /// Map of expression names to weight values (0.0–1.0).
+    /// Map of expression names to weight values (0.0-1.0).
     pub expressions: Option<HashMap<String, f32>>,
     /// Mode: "modify" (default, partial update), "set" (replace all), or "clear" (reset).
     pub mode: Option<String>,
@@ -58,8 +61,9 @@ pub struct SetExpressionParams {
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
 pub struct SetPersonaParams {
     /// The persona profile text.
-    pub profile: String,
-    /// Optional personality description.
+    pub profile: Option<String>,
+    /// Free-text personality description for agent prompts.
+    #[serde(default)]
     pub personality: Option<String>,
 }
 
@@ -76,25 +80,15 @@ impl HomunculusMcpHandler {
     /// Get the current state of all desktop characters.
     #[tool(
         name = "get_character_snapshot",
-        description = "Get the current state of all desktop characters including name, entity ID, position, active expressions, playing animations, persona, and lookAt state."
+        description = "Get the current state of all desktop characters including name, persona ID, position, active expressions, playing animations, persona, and lookAt state.",
+        annotations(read_only_hint = true, open_world_hint = false)
     )]
     async fn get_character_snapshot(&self) -> String {
         match self.vrm_api.snapshot().await {
             Ok(snapshots) => {
                 // Auto-select the first character if none is active.
-                if !snapshots.is_empty() {
-                    let should_set = self
-                        .active_character
-                        .lock()
-                        .unwrap_or_else(|e| {
-                            bevy::log::warn!("Mutex poisoned: {e}");
-                            e.into_inner()
-                        })
-                        .is_none();
-                    if should_set {
-                        let bits = snapshots[0].entity.to_bits();
-                        self.set_active_character(Some(bits));
-                    }
+                if !snapshots.is_empty() && self.active_persona_id().is_none() {
+                    self.set_active_character(Some(snapshots[0].persona.id.clone()));
                 }
                 match serde_json::to_string_pretty(&snapshots) {
                     Ok(json) => json,
@@ -108,103 +102,112 @@ impl HomunculusMcpHandler {
     /// Spawn a new VRM character on the desktop.
     #[tool(
         name = "spawn_character",
-        description = "Spawn a new VRM character on the desktop. Use the homunculus://assets resource to discover available VRM model assets. Returns the entity ID and name."
+        description = "Spawn a new VRM character on the desktop. Creates a persona and attaches a VRM model. Use the homunculus://assets resource to discover available VRM model assets. Returns the persona ID.",
+        annotations(destructive_hint = false, open_world_hint = false)
     )]
     async fn spawn_character(&self, params: Parameters<SpawnCharacterParams>) -> String {
         let args = params.0;
 
-        let persona = match (&args.name, &args.persona_profile) {
-            (Some(name), Some(profile)) => Some(Persona {
-                profile: format!("Name: {name}\n{profile}"),
-                ..Default::default()
-            }),
-            (Some(name), None) => Some(Persona {
-                profile: format!("Name: {name}"),
-                ..Default::default()
-            }),
-            (None, Some(profile)) => Some(Persona {
-                profile: profile.clone(),
-                ..Default::default()
-            }),
-            (None, None) => None,
+        let create_args = CreatePersona {
+            id: args.id.clone(),
+            name: args.name.clone(),
+            profile: args.profile,
+            personality: args.personality,
+            ..Default::default()
         };
 
-        let spawn_args = VrmSpawnArgs {
-            asset: AssetId::new(&args.asset),
-            transform: None,
-            persona,
+        let snap = match self.persona_api.create(create_args).await {
+            Ok(p) => p,
+            Err(e) => return format!("Error creating persona: {e}"),
         };
+        let persona_id = snap.persona.id.clone();
 
-        match self.vrm_api.spawn(spawn_args).await {
-            Ok(entity) => {
-                let entity_id = entity.to_bits();
+        let result = self
+            .persona_api
+            .attach_vrm(persona_id.clone(), args.asset.clone())
+            .await;
+
+        match result {
+            Ok(updated) => {
+                let display = updated
+                    .persona
+                    .name
+                    .as_deref()
+                    .unwrap_or(updated.persona.id.as_ref());
 
                 // Optionally move to viewport position.
-                if let (Some(x), Some(y)) = (args.x, args.y) {
+                if let (Some(x), Some(y)) = (args.x, args.y)
+                    && let Ok(entity) = self.persona_api.resolve(persona_id.clone()).await
+                {
                     let target = MoveTarget::Viewport {
                         position: Vec2::new(x, y),
                     };
                     if let Err(e) = self.entities_api.move_to(entity, target).await {
                         return format!(
-                            "Spawned character (entity {entity_id}) but failed to move: {e}"
+                            "Spawned character '{display}' (persona {}) but failed to move: {e}",
+                            persona_id
                         );
                     }
                 }
 
-                self.set_active_character(Some(entity_id));
-                format!("Spawned character (entity {entity_id})")
+                self.set_active_character(Some(persona_id.clone()));
+                format!("Spawned character '{display}' (persona {})", persona_id)
             }
-            Err(e) => format!("Error spawning character: {e}"),
+            Err(e) => format!("Error attaching VRM to persona '{}': {e}", persona_id),
         }
     }
 
     /// Switch the active character by name.
     #[tool(
         name = "select_character",
-        description = "Switch the active character by name. All subsequent tools will target this character. Use get_character_snapshot to see available characters."
+        description = "Switch the active character by display name (or persona ID). All subsequent tools will target this character. Use get_character_snapshot to see available characters.",
+        annotations(
+            destructive_hint = false,
+            idempotent_hint = true,
+            open_world_hint = false
+        )
     )]
     async fn select_character(&self, params: Parameters<SelectCharacterParams>) -> String {
-        let name = params.0.name;
-        match self.vrm_api.find_by_name(name.clone()).await {
-            Ok(entity) => {
-                let entity_id = entity.to_bits();
-                self.set_active_character(Some(entity_id));
-                format!("Selected character '{name}' (entity {entity_id})")
+        let name = &params.0.name;
+        match self.resolve_persona_by_name(name).await {
+            Ok(persona) => {
+                let display = persona.name.as_deref().unwrap_or(persona.id.as_ref());
+                self.set_active_character(Some(persona.id.clone()));
+                format!("Selected character '{display}' (persona {})", persona.id)
             }
-            Err(e) => format!("Error finding character '{name}': {e}"),
+            Err(e) => format!("Error: {e}"),
         }
     }
 
-    /// Remove a VRM character from the desktop.
+    /// Remove a character (persona) from the desktop.
     #[tool(
         name = "remove_character",
-        description = "Remove a VRM character from the desktop. If no name is given, removes the active character."
+        description = "Remove a character (persona + attached VRM) from the desktop. If no name is given, removes the active character.",
+        annotations(idempotent_hint = true, open_world_hint = false)
     )]
     async fn remove_character(&self, params: Parameters<RemoveCharacterParams>) -> String {
-        let entity = if let Some(name) = &params.0.name {
-            match self.vrm_api.find_by_name(name.clone()).await {
-                Ok(e) => e,
-                Err(e) => return format!("Error finding character '{name}': {e}"),
+        let persona_id = if let Some(name) = &params.0.name {
+            match self.resolve_persona_by_name(name).await {
+                Ok(p) => p.id,
+                Err(e) => return format!("Error: {e}"),
             }
         } else {
-            match self.resolve_character().await {
-                Ok(e) => e,
-                Err(e) => return format!("Error: {e}"),
+            match self.active_persona_id() {
+                Some(id) => id,
+                None => {
+                    return "No active character. Specify a name or use select_character first."
+                        .to_string();
+                }
             }
         };
 
-        let entity_id = entity.to_bits();
-        match self.vrm_api.despawn(entity).await {
+        match self.persona_api.delete(persona_id.clone()).await {
             Ok(()) => {
                 // Clear active character if it was the removed one.
-                let is_active = *self.active_character.lock().unwrap_or_else(|e| {
-                    bevy::log::warn!("Mutex poisoned: {e}");
-                    e.into_inner()
-                }) == Some(entity_id);
-                if is_active {
+                if self.active_persona_id().as_ref() == Some(&persona_id) {
                     self.set_active_character(None);
                 }
-                format!("Removed character (entity {entity_id})")
+                format!("Removed character (persona {})", persona_id)
             }
             Err(e) => format!("Error removing character: {e}"),
         }
@@ -213,7 +216,12 @@ impl HomunculusMcpHandler {
     /// Set facial expression weights on the active character.
     #[tool(
         name = "set_expression",
-        description = "Set facial expression weights on the active character. Common expressions: happy, sad, angry, surprised, relaxed, neutral, aa, ih, ou, ee, oh, blink. Weights are 0.0-1.0. Modes: \"modify\" (default, partial update), \"set\" (replace all), \"clear\" (reset to animation control)."
+        description = "Set facial expression weights on the active character. Common expressions: happy, sad, angry, surprised, relaxed, neutral, aa, ih, ou, ee, oh, blink. Weights are 0.0-1.0. Modes: \"modify\" (default, partial update), \"set\" (replace all), \"clear\" (reset to animation control).",
+        annotations(
+            destructive_hint = false,
+            idempotent_hint = true,
+            open_world_hint = false
+        )
     )]
     async fn set_expression(&self, params: Parameters<SetExpressionParams>) -> String {
         let entity = match self.resolve_character().await {
@@ -247,27 +255,34 @@ impl HomunculusMcpHandler {
         }
     }
 
-    /// Set the active character's personality profile.
+    /// Update the active character's persona profile and personality.
     #[tool(
         name = "set_persona",
-        description = "Set the active character's personality profile. This affects how the character is perceived in AI conversations."
+        description = "Update the active character's persona profile and/or personality text. This affects how the character is perceived in AI conversations.",
+        annotations(
+            destructive_hint = false,
+            idempotent_hint = true,
+            open_world_hint = false
+        )
     )]
     async fn set_persona(&self, params: Parameters<SetPersonaParams>) -> String {
-        let entity = match self.resolve_character().await {
-            Ok(e) => e,
-            Err(e) => return format!("Error: {e}"),
+        let persona_id = match self.active_persona_id() {
+            Some(id) => id,
+            None => {
+                return "No active character. Use select_character or spawn_character first."
+                    .to_string();
+            }
         };
 
         let args = params.0;
-        let persona = Persona {
+        let patch = homunculus_api::persona::PatchPersona {
             profile: args.profile,
             personality: args.personality,
             ..Default::default()
         };
 
-        let entity_id = entity.to_bits();
-        match self.vrm_api.set_persona(entity, persona).await {
-            Ok(()) => format!("Updated persona for character (entity {entity_id})"),
+        match self.persona_api.patch(persona_id.clone(), patch).await {
+            Ok(_) => format!("Updated persona for character (persona {})", persona_id),
             Err(e) => format!("Error setting persona: {e}"),
         }
     }
@@ -275,7 +290,12 @@ impl HomunculusMcpHandler {
     /// Control where the active character looks.
     #[tool(
         name = "set_look_at",
-        description = "Control where the active character looks. Use \"cursor\" to follow the mouse cursor, or \"none\" to disable look-at (character looks forward)."
+        description = "Control where the active character looks. Use \"cursor\" to follow the mouse cursor, or \"none\" to disable look-at (character looks forward).",
+        annotations(
+            destructive_hint = false,
+            idempotent_hint = true,
+            open_world_hint = false
+        )
     )]
     async fn set_look_at(&self, params: Parameters<SetLookAtParams>) -> String {
         let entity = match self.resolve_character().await {

@@ -42,62 +42,67 @@ pub async fn is_closed(
     api.is_closed(entity).await.into_http_result()
 }
 
+/// Request body for setting the linked persona on a webview.
 #[derive(Deserialize, ToSchema)]
-pub struct SetLinkedVrmRequest {
-    #[schema(value_type = String)]
-    pub vrm: Entity,
+#[serde(rename_all = "camelCase")]
+pub struct SetLinkedPersonaRequest {
+    /// The persona ID to link to this webview.
+    pub persona_id: PersonaId,
 }
 
-/// Get the linked VRM for a webview.
+/// Get the linked persona for a webview.
 #[utoipa::path(
     get,
-    path = "/{entity}/linked-vrm",
+    path = "/{entity}/linked-persona",
     tag = "webviews",
     params(("entity" = String, Path, description = "Entity ID")),
     responses(
-        (status = 200, description = "Linked VRM entity ID", body = Option<String>),
+        (status = 200, description = "Linked persona ID", body = Option<PersonaId>),
     ),
 )]
-pub async fn get_linked_vrm(
+pub async fn get_linked_persona(
     State(api): State<WebviewApi>,
     EntityId(entity): EntityId,
-) -> HttpResult<Option<Entity>> {
-    api.linked_vrm(entity).await.into_http_result()
+) -> HttpResult<Option<PersonaId>> {
+    api.linked_persona(entity).await.into_http_result()
 }
 
-/// Set the linked VRM for a webview.
+/// Set the linked persona for a webview.
 #[utoipa::path(
     put,
-    path = "/{entity}/linked-vrm",
+    path = "/{entity}/linked-persona",
     tag = "webviews",
     params(("entity" = String, Path, description = "Entity ID")),
-    request_body = SetLinkedVrmRequest,
+    request_body = SetLinkedPersonaRequest,
     responses(
-        (status = 200, description = "VRM linked to webview"),
+        (status = 200, description = "Persona linked to webview"),
     ),
 )]
-pub async fn set_linked_vrm(
+pub async fn set_linked_persona(
     State(api): State<WebviewApi>,
     EntityId(entity): EntityId,
-    Json(body): Json<SetLinkedVrmRequest>,
+    Json(body): Json<SetLinkedPersonaRequest>,
 ) -> HttpResult {
-    api.set_linked_vrm(entity, body.vrm)
+    api.set_linked_persona(entity, body.persona_id)
         .await
         .into_http_result()
 }
 
-/// Remove the linked VRM from a webview.
+/// Remove the linked persona from a webview.
 #[utoipa::path(
     delete,
-    path = "/{entity}/linked-vrm",
+    path = "/{entity}/linked-persona",
     tag = "webviews",
     params(("entity" = String, Path, description = "Entity ID")),
     responses(
-        (status = 200, description = "VRM unlinked from webview"),
+        (status = 200, description = "Persona unlinked from webview"),
     ),
 )]
-pub async fn unlink_vrm(State(api): State<WebviewApi>, EntityId(entity): EntityId) -> HttpResult {
-    api.unlink_vrm(entity).await.into_http_result()
+pub async fn unlink_persona(
+    State(api): State<WebviewApi>,
+    EntityId(entity): EntityId,
+) -> HttpResult {
+    api.unlink_persona(entity).await.into_http_result()
 }
 
 /// List all open webviews.
@@ -109,7 +114,7 @@ pub async fn unlink_vrm(State(api): State<WebviewApi>, EntityId(entity): EntityI
         (status = 200, description = "List of open webviews", body = Vec<WebviewInfo>),
     ),
 )]
-pub async fn list(State(api): State<WebviewApi>) -> HttpResult<Vec<WebviewInfo>> {
+pub async fn list_webviews(State(api): State<WebviewApi>) -> HttpResult<Vec<WebviewInfo>> {
     api.list().await.into_http_result()
 }
 
@@ -124,7 +129,7 @@ pub async fn list(State(api): State<WebviewApi>) -> HttpResult<Vec<WebviewInfo>>
         (status = 404, description = "Webview not found"),
     ),
 )]
-pub async fn get(
+pub async fn get_webview(
     State(api): State<WebviewApi>,
     EntityId(entity): EntityId,
 ) -> HttpResult<WebviewInfo> {
@@ -143,7 +148,7 @@ pub async fn get(
         (status = 404, description = "Webview not found"),
     ),
 )]
-pub async fn patch(
+pub async fn update_webview(
     State(api): State<WebviewApi>,
     EntityId(entity): EntityId,
     Json(body): Json<WebviewPatchRequest>,
@@ -183,6 +188,24 @@ pub async fn navigate_forward(
     EntityId(entity): EntityId,
 ) -> HttpResult {
     api.go_forward(entity).await.into_http_result()
+}
+
+/// Get navigation history state.
+#[utoipa::path(
+    get,
+    path = "/{entity}/navigation-state",
+    tag = "webviews",
+    params(("entity" = String, Path, description = "Entity ID")),
+    responses(
+        (status = 200, description = "Navigation state", body = NavigationState),
+        (status = 404, description = "Webview not found"),
+    ),
+)]
+pub async fn navigation_state(
+    State(api): State<WebviewApi>,
+    EntityId(entity): EntityId,
+) -> HttpResult<NavigationState> {
+    api.navigation_state(entity).await.into_http_result()
 }
 
 /// Navigate to a new URL.
@@ -229,6 +252,9 @@ pub async fn reload(State(api): State<WebviewApi>, EntityId(entity): EntityId) -
         (status = 404, description = "Webview not found"),
     ),
 )]
-pub async fn delete(State(api): State<WebviewApi>, EntityId(entity): EntityId) -> HttpResult {
+pub async fn delete_webview(
+    State(api): State<WebviewApi>,
+    EntityId(entity): EntityId,
+) -> HttpResult {
     api.close(entity).await.into_http_result()
 }

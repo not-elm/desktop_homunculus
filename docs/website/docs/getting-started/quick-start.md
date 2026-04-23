@@ -1,6 +1,6 @@
 ---
 title: "Quick Start"
-sidebar_position: 3
+sidebar_position: 4
 ---
 
 # Quick Start
@@ -9,17 +9,27 @@ sidebar_position: 3
 Make sure you have completed the [Installation](/getting-started/installation) guide. Desktop Homunculus and the official MODs should be installed and the app should be running.
 :::
 
-## Meet Elmer
+## Create Your First Persona
 
-When you launch Desktop Homunculus with the official MODs installed, **Elmer** appears on your desktop. Elmer is the default character -- a VRM 3D model rendered in a transparent window that floats above your other applications.
+:::tip[New to Desktop Homunculus?]
+Learn what personas, MODs, and assets are in the [Core Concepts](./concepts) page.
+:::
 
-Elmer comes with built-in animations and behaviors powered by the `@hmcs/elmer` and `@hmcs/assets` MODs. The character will idle, react when grabbed, and follow your cursor.
+When you first launch Desktop Homunculus, no character appears on screen — you need to create a **persona** first.
+
+1. Click the **Desktop Homunculus** icon in the **system tray** (notification area)
+2. Select **"Persona"** to open the Persona Management dashboard
+3. Enter an **ID** (e.g. `elmer`) and a **Name**, then click **Create**
+4. Select a VRM model — the official `@hmcs/assets` MOD provides `vrm:elmer` as a ready-to-use model
+5. Enable **Auto-Spawn** so the character appears automatically on future launches, then click **Save**
+
+Your character should now appear on the desktop. It will idle, react when grabbed, and follow your cursor — powered by the `@hmcs/assets` and `@hmcs/persona` MODs.
 
 ## Interact with Your Character
 
 ### Drag and Move
 
-Click and drag the character to reposition it anywhere on your desktop. While being dragged, Elmer switches to a "drag" state. Release to drop the character at the new position.
+Click and drag the character to reposition it anywhere on your desktop. While being dragged, the character switches to a "drag" state. Release to drop the character at the new position.
 
 ### Character States
 
@@ -39,6 +49,16 @@ Right-click the character to open the context menu overlay. From here you can ac
 
 Open the Settings panel through the right-click context menu. The settings UI lets you configure the application and MOD-specific options.
 
+### Persona Settings
+
+Right-click the character and select **"Persona"** to open the per-persona settings panel. Here you can configure the character's identity (name, age, gender, personality) and appearance (bone scale adjustments).
+
+To manage all your personas (create new ones, delete old ones), open the **system tray** → **"Persona"** to access the Persona Management dashboard.
+
+### Speech to Text
+
+If you have the `@hmcs/stt` MOD installed, open the **system tray** → **"Speech to Text"** to access the STT control panel. Download a Whisper model, configure your preferred language, and use voice input with the AI Agent.
+
 ### Exiting the App
 
 1. Find the **Desktop Homunculus** icon in the **system tray** (notification area)
@@ -55,9 +75,8 @@ Desktop Homunculus ships with a set of official MODs under the `@hmcs` scope:
 
 | MOD | Description |
 |---|---|
-| `@hmcs/elmer` | Controls the default character (Elmer) — spawns the character, manages animations and cursor tracking |
 | `@hmcs/assets` | Default VRMA animations (`idle-maid`, `grabbed`, `idle-sitting`) and sound effects |
-| `@hmcs/character-settings` | Per-character settings panel accessible from the context menu |
+| `@hmcs/persona` | Persona management UI and default behavior service — configure identity, personality, and appearance |
 | `@hmcs/settings` | Application settings panel accessible from the system tray |
 | `@hmcs/app-exit` | Exit menu in the system tray (required on Windows) |
 | `@hmcs/menu` | Right-click context menu overlay |
@@ -69,13 +88,16 @@ You can extend Desktop Homunculus with optional MODs. Install any of them at any
 | MOD | Description |
 |---|---|
 | `@hmcs/voicevox` | Text-to-speech integration using the [VoiceVox](https://voicevox.hiroshiba.jp/) engine |
+| `@hmcs/stt` | Speech-to-text with Whisper-based voice recognition ([details](../mods/stt)) |
+
+For AI-powered interaction, install [OpenClaw](https://docs.openclaw.ai) externally and set up the `@hmcs/openclaw-plugin` bridge. See [AI Integration](../ai-integration) for details.
 
 :::info[VoiceVox Setup]
 The `@hmcs/voicevox` MOD requires the VoiceVox engine to be installed and running separately. Visit the [VoiceVox website](https://voicevox.hiroshiba.jp/) for installation instructions.
 :::
 
 ```shell
-hmcs mod install @hmcs/voicevox
+hmcs mod install @hmcs/voicevox @hmcs/stt
 ```
 
 ## What's Next?

@@ -1,3 +1,6 @@
+.hmcs/
+wt/
+
 # ide
 .vscode/
 .idea/
@@ -51,3 +54,6 @@ docs/superpowers/
 *.njsproj
 *.sln
 *.sw?
+docs/investigations/
+
+.claude/skills/ui-ux-pro-max

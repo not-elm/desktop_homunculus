@@ -7,17 +7,20 @@ pub(crate) mod app;
 pub(crate) mod assets;
 pub(crate) mod audio;
 pub(crate) mod coordinates;
+pub(crate) mod dialog;
 pub(crate) mod displays;
 pub(crate) mod effects;
 pub(crate) mod entities;
 pub(crate) mod info;
 pub(crate) mod mods;
+pub(crate) mod persona;
 pub(crate) mod preferences;
+pub(crate) mod processes;
 pub(crate) mod rpc;
 pub(crate) mod settings;
 pub(crate) mod shadow_panel;
 pub(crate) mod signals;
-pub(crate) mod vrm;
+pub(crate) mod stt;
 pub(crate) mod webviews;
 
 #[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]

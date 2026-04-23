@@ -88,6 +88,7 @@ impl VrmAnimationApi {
 }
 
 fn play(In(event): In<PlayVrma>, mut commands: Commands) {
+    info!("[vrma] play trigger: vrma={}", event.vrma);
     commands.trigger(event);
 }
 

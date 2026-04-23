@@ -1,14 +1,18 @@
 use axum::extract::FromRef;
 use homunculus_api::assets::AssetsApi;
 use homunculus_api::mods::ModsApi;
+use homunculus_api::persona::PersonaApi;
 use homunculus_api::preferences::PrefsApi;
 use homunculus_api::prelude::{
     ApiReactor, AppApi, AudioBgmApi, AudioSeApi, CameraApi, EffectsApi, EntitiesApi, SettingsApi,
     ShadowPanelApi, SignalsApi, SpeechApi, VrmAnimationApi, WebviewApi,
 };
+use homunculus_api::processes::ProcessesApi;
+use homunculus_api::stt::SttApi;
 use homunculus_api::vrm::VrmApi;
 use homunculus_core::rpc_registry::RpcRegistry;
 use homunculus_utils::config::HomunculusConfig;
+use homunculus_utils::runtime::RuntimeResolver;
 use std::sync::{Arc, RwLock};
 
 #[derive(Clone, FromRef)]
@@ -17,6 +21,7 @@ pub struct HttpState {
     pub app: AppApi,
     pub audio_se: AudioSeApi,
     pub audio_bgm: AudioBgmApi,
+    pub persona: PersonaApi,
     pub vrm: VrmApi,
     pub vrma: VrmAnimationApi,
     pub prefs: PrefsApi,
@@ -30,7 +35,12 @@ pub struct HttpState {
     pub entities: EntitiesApi,
     pub assets: AssetsApi,
     pub mods: ModsApi,
+    pub processes: ProcessesApi,
+    /// STT API — stateless speech recognition and model downloads.
+    /// Bypasses ApiReactor; audio pipelines are managed internally.
+    pub stt: SttApi,
     pub config: HomunculusConfig,
+    pub runtime: RuntimeResolver,
     pub rpc_registry: Arc<RwLock<RpcRegistry>>,
 }
 
@@ -38,12 +48,14 @@ impl HttpState {
     pub fn new(
         reactor: ApiReactor,
         config: HomunculusConfig,
+        runtime: RuntimeResolver,
         rpc_registry: Arc<RwLock<RpcRegistry>>,
     ) -> Self {
         Self {
             app: AppApi::from(reactor.clone()),
             audio_se: AudioSeApi::from(reactor.clone()),
             audio_bgm: AudioBgmApi::from(reactor.clone()),
+            persona: PersonaApi::from(reactor.clone()),
             vrm: VrmApi::from(reactor.clone()),
             vrma: VrmAnimationApi::from(reactor.clone()),
             prefs: PrefsApi::from(reactor.clone()),
@@ -57,7 +69,10 @@ impl HttpState {
             entities: EntitiesApi::from(reactor.clone()),
             assets: AssetsApi::from(reactor.clone()),
             mods: ModsApi::from(reactor.clone()),
+            processes: ProcessesApi::from(reactor.clone()),
+            stt: SttApi::new(reactor.clone()),
             config,
+            runtime,
             rpc_registry,
             reactor,
         }

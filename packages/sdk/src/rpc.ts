@@ -47,11 +47,12 @@
  * @packageDocumentation
  */
 
-import * as http from "node:http";
-import { type ZodType } from "zod";
-import { rpc as rpcClient } from "./rpc-client";
+import * as http from 'node:http';
+import type { ZodType } from 'zod';
+import { zodToJsonSchema } from 'zod-to-json-schema';
+import { rpc as rpcClient } from './rpc-client';
 
-export type { RpcCallOptions } from "./rpc-client";
+export type { RpcCallOptions, RpcRegistrationEntry } from './rpc-client';
 
 /**
  * A single RPC method definition created by {@link rpc.method}.
@@ -68,6 +69,12 @@ export interface RpcMethodDef<I = unknown, O = unknown> {
   input?: ZodType<I>;
   /** Async function called with the validated input. */
   handler: (params: I) => Promise<O>;
+  /**
+   * Optional metadata attached to the method. Surfaced to clients via
+   * `rpc.registrations()` and usable as a discovery filter (e.g.
+   * `rpc.registrations({ category: "tts" })`).
+   */
+  meta?: Record<string, unknown>;
 }
 
 /**
@@ -104,18 +111,14 @@ export interface RpcServer {
 }
 
 function isRpcMethodDef(entry: RpcMethodEntry): entry is RpcMethodDef {
-  return typeof entry === "object" && entry !== null && "handler" in entry;
+  return typeof entry === 'object' && entry !== null && 'handler' in entry;
 }
 
-function jsonResponse(
-  res: http.ServerResponse,
-  status: number,
-  body: unknown,
-): void {
+function jsonResponse(res: http.ServerResponse, status: number, body: unknown): void {
   const payload = JSON.stringify(body);
   res.writeHead(status, {
-    "Content-Type": "application/json",
-    "Content-Length": Buffer.byteLength(payload),
+    'Content-Type': 'application/json',
+    'Content-Length': Buffer.byteLength(payload),
   });
   res.end(payload);
 }
@@ -125,41 +128,57 @@ async function readBody(req: http.IncomingMessage): Promise<string> {
   for await (const chunk of req) {
     chunks.push(chunk as Buffer);
   }
-  return Buffer.concat(chunks).toString("utf-8");
+  return Buffer.concat(chunks).toString('utf-8');
 }
 
-// --- env reading ---
-
 function readRpcPort(): number {
-  const s = process.env["HMCS_RPC_PORT"];
-  if (!s) throw new Error("HMCS_RPC_PORT environment variable is required");
+  const s = process.env.HMCS_RPC_PORT;
+  if (!s) throw new Error('HMCS_RPC_PORT environment variable is required');
   const port = parseInt(s, 10);
-  if (isNaN(port))
-    throw new Error(`HMCS_RPC_PORT is not a valid port number: ${s}`);
+  if (Number.isNaN(port)) throw new Error(`HMCS_RPC_PORT is not a valid port number: ${s}`);
   return port;
 }
 
 function readModName(): string {
-  const name = process.env["HMCS_MOD_NAME"];
-  if (!name) throw new Error("HMCS_MOD_NAME environment variable is required");
+  const name = process.env.HMCS_MOD_NAME;
+  if (!name) throw new Error('HMCS_MOD_NAME environment variable is required');
   return name;
 }
 
 function readEnginePort(): number {
-  const s = process.env["HMCS_PORT"] ?? "3100";
+  const s = process.env.HMCS_PORT ?? '3100';
   const port = parseInt(s, 10);
-  if (isNaN(port))
-    throw new Error(`HMCS_PORT is not a valid port number: ${s}`);
+  if (Number.isNaN(port)) throw new Error(`HMCS_PORT is not a valid port number: ${s}`);
   return port;
 }
 
-// --- HTTP server helpers ---
+function convertZodToObjectSchema(schema: ZodType): Record<string, unknown> {
+  const jsonSchema = zodToJsonSchema(schema, { $refStrategy: 'none' });
+  if (
+    typeof jsonSchema !== 'object' ||
+    jsonSchema === null ||
+    (jsonSchema as Record<string, unknown>).type !== 'object'
+  ) {
+    throw new Error(
+      'RPC method input schema must be a root object type. Use z.object({...}) as the top-level schema.',
+    );
+  }
+  return jsonSchema as Record<string, unknown>;
+}
+
+function validateMethodName(name: string): void {
+  if (!name || name.includes('/') || name.includes('\\')) {
+    throw new Error(
+      `Invalid RPC method name: "${name}". Must be non-empty and cannot contain slashes.`,
+    );
+  }
+}
 
 function listenOnPort(server: http.Server, port: number): Promise<void> {
   return new Promise((resolve, reject) => {
-    server.once("error", reject);
-    server.listen(port, "127.0.0.1", () => {
-      server.off("error", reject);
+    server.once('error', reject);
+    server.listen(port, '127.0.0.1', () => {
+      server.off('error', reject);
       resolve();
     });
   });
@@ -178,24 +197,22 @@ function buildRpcServer(server: http.Server, port: number): RpcServer {
   };
 }
 
-// --- request handling ---
-
 async function handleRequest(
   methods: Record<string, RpcMethodEntry>,
   req: http.IncomingMessage,
   res: http.ServerResponse,
 ): Promise<void> {
-  if (req.method !== "POST") {
+  if (req.method !== 'POST') {
     jsonResponse(res, 405, {
-      error: "METHOD_NOT_ALLOWED",
-      message: "Only POST is supported",
+      error: 'METHOD_NOT_ALLOWED',
+      message: 'Only POST is supported',
     });
     return;
   }
-  const methodName = (req.url ?? "/").replace(/^\//, "");
+  const methodName = (req.url ?? '/').replace(/^\//, '');
   if (!methodName || !(methodName in methods)) {
     jsonResponse(res, 404, {
-      error: "METHOD_NOT_FOUND",
+      error: 'METHOD_NOT_FOUND',
       message: `Unknown method: ${methodName}`,
     });
     return;
@@ -206,7 +223,7 @@ async function handleRequest(
     rawBody = await readBody(req);
   } catch (err) {
     jsonResponse(res, 400, {
-      error: "READ_ERROR",
+      error: 'READ_ERROR',
       message: (err as Error).message,
     });
     return;
@@ -217,9 +234,9 @@ async function handleRequest(
     parsedBody = rawBody.trim().length > 0 ? JSON.parse(rawBody) : {};
   } catch {
     jsonResponse(res, 400, {
-      error: "VALIDATION_ERROR",
-      message: "Invalid input",
-      details: [{ message: "Request body is not valid JSON" }],
+      error: 'VALIDATION_ERROR',
+      message: 'Invalid input',
+      details: [{ message: 'Request body is not valid JSON' }],
     });
     return;
   }
@@ -237,8 +254,8 @@ async function dispatchMethod(
       const result = entry.input.safeParse(body);
       if (!result.success) {
         jsonResponse(res, 400, {
-          error: "VALIDATION_ERROR",
-          message: "Invalid input",
+          error: 'VALIDATION_ERROR',
+          message: 'Invalid input',
           details: result.error.errors,
         });
         return;
@@ -247,8 +264,8 @@ async function dispatchMethod(
         jsonResponse(res, 200, await entry.handler(result.data));
       } catch (err) {
         jsonResponse(res, 500, {
-          error: "HANDLER_ERROR",
-          message: (err as Error).message ?? "Unknown error",
+          error: 'HANDLER_ERROR',
+          message: (err as Error).message ?? 'Unknown error',
         });
       }
     } else {
@@ -256,8 +273,8 @@ async function dispatchMethod(
         jsonResponse(res, 200, await entry.handler(body));
       } catch (err) {
         jsonResponse(res, 500, {
-          error: "HANDLER_ERROR",
-          message: (err as Error).message ?? "Unknown error",
+          error: 'HANDLER_ERROR',
+          message: (err as Error).message ?? 'Unknown error',
         });
       }
     }
@@ -266,28 +283,30 @@ async function dispatchMethod(
       jsonResponse(res, 200, await entry(body));
     } catch (err) {
       jsonResponse(res, 500, {
-        error: "HANDLER_ERROR",
-        message: (err as Error).message ?? "Unknown error",
+        error: 'HANDLER_ERROR',
+        message: (err as Error).message ?? 'Unknown error',
       });
     }
   }
 }
 
-// --- registration ---
-
 function buildMethodsMeta(
   methods: Record<string, RpcMethodEntry>,
-): Record<string, { description?: string; timeout?: number }> {
-  const meta: Record<string, { description?: string; timeout?: number }> = {};
+): Record<string, Record<string, unknown>> {
+  const meta: Record<string, Record<string, unknown>> = {};
   for (const [name, entry] of Object.entries(methods)) {
-    meta[name] = isRpcMethodDef(entry)
-      ? {
-          ...(entry.description !== undefined
-            ? { description: entry.description }
-            : {}),
-          ...(entry.timeout !== undefined ? { timeout: entry.timeout } : {}),
-        }
-      : {};
+    if (isRpcMethodDef(entry)) {
+      meta[name] = {
+        ...(entry.description !== undefined ? { description: entry.description } : {}),
+        ...(entry.timeout !== undefined ? { timeout: entry.timeout } : {}),
+        ...(entry.input !== undefined
+          ? { inputSchema: convertZodToObjectSchema(entry.input) }
+          : {}),
+        ...(entry.meta !== undefined ? { meta: entry.meta } : {}),
+      };
+    } else {
+      meta[name] = {};
+    }
   }
   return meta;
 }
@@ -307,14 +326,14 @@ async function registerWithRetry(
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body,
       });
       if (res.ok) {
         return;
       }
-      const text = await res.text().catch(() => "(unreadable)");
+      const text = await res.text().catch(() => '(unreadable)');
       throw new Error(`Engine returned ${res.status}: ${text}`);
     } catch (err) {
       if (attempt === maxAttempts) {
@@ -378,6 +397,7 @@ export namespace rpc {
    * ```
    */
   export const call = rpcClient.call;
+  export const registrations = rpcClient.registrations;
 
   /**
    * Create a typed RPC method definition with Zod input validation.
@@ -409,23 +429,27 @@ export namespace rpc {
     timeout?: number;
     input: ZodType<I>;
     handler: (params: I) => Promise<O>;
+    meta?: Record<string, unknown>;
   }): RpcMethodDef<I, O>;
   export function method<O>(def: {
     description?: string;
     timeout?: number;
     handler: () => Promise<O>;
+    meta?: Record<string, unknown>;
   }): RpcMethodDef<unknown, O>;
   export function method(def: {
     description?: string;
     timeout?: number;
     input?: ZodType<unknown>;
     handler: (params?: unknown) => Promise<unknown>;
+    meta?: Record<string, unknown>;
   }): RpcMethodDef {
     return {
       description: def.description,
       timeout: def.timeout,
       input: def.input,
       handler: def.handler,
+      meta: def.meta,
     };
   }
 
@@ -469,6 +493,10 @@ export namespace rpc {
     const enginePort = readEnginePort();
     const { methods } = options;
 
+    for (const name of Object.keys(methods)) {
+      validateMethodName(name);
+    }
+
     const server = http.createServer((req, res) => {
       handleRequest(methods, req, res);
     });
@@ -477,7 +505,7 @@ export namespace rpc {
     await registerWithRetry(enginePort, modName, methods);
 
     const rpcServer = buildRpcServer(server, rpcPort);
-    process.once("SIGTERM", () => {
+    process.once('SIGTERM', () => {
       rpcServer.close().catch(() => {
         // ignore close errors during shutdown
       });

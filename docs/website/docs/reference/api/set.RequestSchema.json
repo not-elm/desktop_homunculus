@@ -1,1 +1,0 @@
-{"title":"Body","body":{"content":{"application/json":{"schema":{"type":"object","required":["weights"],"properties":{"weights":{"type":"object","additionalProperties":{"type":"number","format":"float"},"propertyNames":{"type":"string"}}},"title":"WeightsBody"}}},"required":true}}

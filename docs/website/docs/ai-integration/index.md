@@ -27,6 +27,7 @@ Your desktop character can respond to your AI conversations — reacting to even
 | **Show information** | Floating Webview panels anchored near the character — HTML content, dashboards, presentations |
 | **Run MOD commands** | Trigger any installed MOD's functionality |
 | **Have a personality** | Personas give each character distinct viewpoints for debates and reviews |
+| **Listen** | Speech-to-text recognition via Whisper — converts voice input to text for AI processing |
 
 ## How It Works
 
@@ -78,6 +79,17 @@ For the full tool reference, see [MCP Reference](/reference/mcp-tools).
 - **Multi-character debates** — Spawn multiple characters with distinct personas. Each character contributes a different viewpoint to discussions. Works well with AI agent teams.
 - **Code review companion** — Characters react to code changes and show review feedback in Webview panels. Different personas can focus on different aspects — security, performance, readability.
 
+## Built-in AI Agent
+
+Beyond connecting external AI clients via MCP, you can give personas a built-in AI agent experience via [OpenClaw](https://docs.openclaw.ai) and the `@hmcs/openclaw-plugin` bridge. See the "AI Integration (OpenClaw)" page for details.
+
+| Approach | Best For |
+|----------|----------|
+| **MCP** (external AI client) | Flexible integration with any AI tool — Claude Desktop, Claude Code, Codex, or custom clients |
+| **Agent MOD** (built-in) | Turnkey AI agent experience — voice input, workspace awareness, session persistence |
+
+Combined with [`@hmcs/stt`](/mods/stt) for voice input and [`@hmcs/voicevox`](/mods/voicevox) for speech output, the Agent MOD enables a complete voice → text → AI reasoning → action → speech flow.
+
 ## Known Limitations
 
 AI Integration is functional today, but some workflows have performance constraints:
@@ -93,6 +105,7 @@ If you'd like to help build template MODs or improve MCP tools, see the [Contrib
 
 ## Next Steps {#next-steps}
 
-- **[Set up your AI client](./setup/claude-desktop)** — Get connected in minutes
-- **[Explore MCP capabilities](/reference/mcp-tools)** — Full reference for all 20 tools, 4 resources, and 3 prompts
+- **[Set up your AI client](./setup/claude-desktop)** — Get connected in minutes via MCP
+- **[OpenClaw integration](/ai-integration/openclaw/)** — Give your personas a built-in AI agent via OpenClaw
+- **[Explore MCP capabilities](/reference/mcp-tools)** — Full reference for all tools, resources, and prompts
 - **[Build a MOD](/mod-development/quick-start)** — Create template MODs for richer AI workflows

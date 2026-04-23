@@ -1,22 +1,16 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
-import { SettingsCard } from "./settings-card";
-import { Input } from "./input";
-import { Label } from "./label";
-import { Checkbox } from "./checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "./select";
-import { Separator } from "./separator";
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { Checkbox } from './checkbox';
+import { Input } from './input';
+import { Label } from './label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './select';
+import { Separator } from './separator';
+import { SettingsCard } from './settings-card';
 
 const meta = {
-  title: "UI/Layout/SettingsCard",
+  title: 'UI/Layout/SettingsCard',
   component: SettingsCard,
   args: {
-    title: "Settings",
+    title: 'Settings',
   },
 } satisfies Meta<typeof SettingsCard>;
 
@@ -26,8 +20,8 @@ type Story = StoryObj<typeof meta>;
 /** Default settings card with title and simple content */
 export const Default: Story = {
   args: {
-    title: "General",
-    description: "Basic application settings.",
+    title: 'General',
+    description: 'Basic application settings.',
     children: (
       <div className="flex flex-col gap-2">
         <Label htmlFor="app-name">Application Name</Label>
@@ -40,8 +34,8 @@ export const Default: Story = {
 /** Settings card with a description and multiple form fields */
 export const WithDescription: Story = {
   args: {
-    title: "Display",
-    description: "Configure how the mascot appears on your desktop.",
+    title: 'Display',
+    description: 'Configure how the mascot appears on your desktop.',
     children: (
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
@@ -60,8 +54,8 @@ export const WithDescription: Story = {
 /** Settings card showing checkbox toggles for preferences */
 export const WithToggles: Story = {
   args: {
-    title: "Notifications",
-    description: "Choose which notifications to receive.",
+    title: 'Notifications',
+    description: 'Choose which notifications to receive.',
     children: (
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
@@ -84,8 +78,8 @@ export const WithToggles: Story = {
 /** Settings card with a select dropdown and separated sections */
 export const WithSelect: Story = {
   args: {
-    title: "Audio",
-    description: "Configure speech and sound settings.",
+    title: 'Audio',
+    description: 'Configure speech and sound settings.',
     children: (
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">

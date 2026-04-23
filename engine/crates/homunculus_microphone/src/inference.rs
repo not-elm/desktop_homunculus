@@ -1,0 +1,421 @@
+use std::borrow::Cow;
+use std::time::Instant;
+
+use whisper_rs::{FullParams, SamplingStrategy, WhisperContext, WhisperState};
+
+use crate::error::InferenceError;
+
+/// Configurable thresholds for the inference pipeline.
+#[derive(Clone, Copy, Debug)]
+pub struct InferenceConfig {
+    /// Unconditional discard threshold for `no_speech_prob` (tier 1).
+    pub no_speech_discard_threshold: f32,
+    /// Minimum RMS energy for a chunk to be sent to Whisper.
+    pub inference_energy_threshold: f32,
+}
+
+impl InferenceConfig {
+    /// Create from application config with defaults.
+    pub fn from_stt_config(stt: &homunculus_utils::config::SttConfig) -> Self {
+        Self {
+            no_speech_discard_threshold: stt.no_speech_threshold.unwrap_or(0.8),
+            inference_energy_threshold: stt.inference_energy_threshold.unwrap_or(0.02),
+        }
+    }
+}
+
+/// Result of a single speech recognition.
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct SttResult {
+    /// The recognized text.
+    pub text: String,
+    /// Timestamp offset from request start (seconds, f64).
+    pub timestamp: f64,
+    /// Detected or specified language code.
+    pub language: String,
+}
+
+/// Perform one-shot Whisper inference on a speech chunk.
+///
+/// Creates a `WhisperState`, runs inference with confidence gating,
+/// and returns the recognized text. Intended for `tokio::task::spawn_blocking`.
+pub fn whisper_infer(
+    ctx: &WhisperContext,
+    samples: &[f32],
+    language: &str,
+    started_at: Instant,
+    config: InferenceConfig,
+) -> Result<SttResult, InferenceError> {
+    check_energy_gate(samples, config.inference_energy_threshold)?;
+    let mut state = create_whisper_state(ctx)?;
+    let (text, detected_lang) =
+        run_inference_with_recovery(&mut state, samples, language, ctx, config)?;
+    Ok(SttResult {
+        text,
+        timestamp: started_at.elapsed().as_secs_f64(),
+        language: detected_lang,
+    })
+}
+
+/// Reject chunks whose RMS energy is below the threshold.
+fn check_energy_gate(samples: &[f32], threshold: f32) -> Result<(), InferenceError> {
+    let rms = crate::vad::rms_energy(samples);
+    if rms < threshold {
+        tracing::debug!(
+            "Inference: skipping chunk — RMS energy {rms:.4} below threshold {threshold}"
+        );
+        return Err(InferenceError::BelowEnergyThreshold);
+    }
+    Ok(())
+}
+
+/// Create a fresh WhisperState from the context.
+fn create_whisper_state(ctx: &WhisperContext) -> Result<WhisperState, InferenceError> {
+    ctx.create_state()
+        .map_err(|e| InferenceError::CreateState(e.to_string()))
+}
+
+/// Run inference inside `catch_unwind` to recover from whisper.cpp panics.
+fn run_inference_with_recovery(
+    state: &mut WhisperState,
+    samples: &[f32],
+    language: &str,
+    ctx: &WhisperContext,
+    config: InferenceConfig,
+) -> Result<(String, String), InferenceError> {
+    let max_audio_ctx = ctx.model_n_audio_ctx();
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        run_inference(
+            state,
+            samples,
+            language,
+            max_audio_ctx,
+            config.no_speech_discard_threshold,
+        )
+    }));
+    match result {
+        Ok(Ok(Some(pair))) => Ok(pair),
+        Ok(Ok(None)) => Err(InferenceError::EmptyResult),
+        Ok(Err(e)) => Err(e),
+        Err(_) => Err(InferenceError::WhisperPanic),
+    }
+}
+
+/// Minimum samples (1 second at 16kHz) to expand timestamp search space.
+/// whisper.cpp does not guarantee 30s padding; short chunks with
+/// `single_segment=true` constrain the timestamp search range.
+const MIN_INFERENCE_SAMPLES: usize = 16000;
+
+/// Discard results with avg_logprobs below this threshold **and** high
+/// no-speech probability.  Upstream Whisper uses `-1.0` as a *fallback*
+/// trigger (retry at higher temperature), not a hard discard gate.
+/// Japanese greedy decoding produces systematically lower logprobs than
+/// English, so `-1.5` is used here as a more conservative discard floor.
+const AVG_LOGPROBS_THRESHOLD: f32 = -1.5;
+
+/// Combined-gate threshold for `no_speech_prob` in tier-2 discard logic.
+/// Slightly below the upstream Whisper default (0.6) to catch borderline
+/// hallucinations that slip through with moderate no-speech confidence.
+const NO_SPEECH_PROB_THRESHOLD: f32 = 0.55;
+
+fn run_inference(
+    state: &mut WhisperState,
+    samples: &[f32],
+    language: &str,
+    max_audio_ctx: i32,
+    no_speech_discard_threshold: f32,
+) -> Result<Option<(String, String)>, InferenceError> {
+    let samples = pad_short_chunk(samples);
+    let params = create_whisper_params(language, samples.len(), max_audio_ctx);
+
+    state
+        .full(params, &samples)
+        .map_err(|e| InferenceError::Full(e.to_string()))?;
+
+    if should_discard_low_confidence(state, no_speech_discard_threshold) {
+        return Ok(None);
+    }
+
+    let text = collect_segment_text(state);
+    if text.is_empty() {
+        return Ok(None);
+    }
+
+    let detected_lang = detect_language(state, language);
+
+    Ok(Some((text, detected_lang)))
+}
+
+/// Pad chunks shorter than 1s with silence to ensure sufficient timestamp
+/// search space for whisper.cpp's decoder.
+fn pad_short_chunk(samples: &[f32]) -> Cow<'_, [f32]> {
+    if samples.len() >= MIN_INFERENCE_SAMPLES {
+        Cow::Borrowed(samples)
+    } else {
+        let mut padded = samples.to_vec();
+        padded.resize(MIN_INFERENCE_SAMPLES, 0.0);
+        Cow::Owned(padded)
+    }
+}
+
+/// Discard decision based on extracted segment metrics.
+///
+/// Returns `true` if the segment should be discarded as low-confidence
+/// or likely silence/hallucination.
+fn should_discard_segment(
+    avg_logprobs: f32,
+    no_speech_prob: f32,
+    no_speech_threshold: f32,
+    logprobs_threshold: f32,
+) -> bool {
+    // Tier 1: Unconditional discard when encoder is highly confident
+    // there is no speech. Catches confident hallucinations where
+    // avg_logprobs look normal.
+    if no_speech_prob > no_speech_threshold {
+        return true;
+    }
+    // Tier 2: Combined gate for borderline cases.
+    avg_logprobs < logprobs_threshold && no_speech_prob > NO_SPEECH_PROB_THRESHOLD
+}
+
+/// Check avg_logprobs across all segments. Discard if confidence is too low
+/// to prevent hallucinated output from being emitted.
+fn should_discard_low_confidence(state: &WhisperState, no_speech_discard_threshold: f32) -> bool {
+    let n_segments = state.full_n_segments();
+    if n_segments == 0 {
+        return false;
+    }
+
+    for i in 0..n_segments {
+        let Some(segment) = state.get_segment(i) else {
+            continue;
+        };
+
+        let no_speech_prob = segment.no_speech_probability();
+        let n_tokens = segment.n_tokens();
+        if n_tokens == 0 {
+            continue;
+        }
+
+        let mut sum_logprobs = 0.0f32;
+        let mut content_token_count = 0u32;
+
+        for j in 0..n_tokens {
+            if let Some(token) = segment.get_token(j) {
+                let data = token.token_data();
+                // Skip special tokens (SOT, timestamps, language, etc.)
+                if data.id >= 50257 {
+                    continue;
+                }
+                sum_logprobs += data.plog;
+                content_token_count += 1;
+            }
+        }
+
+        if content_token_count == 0 {
+            continue;
+        }
+
+        let avg_logprobs = sum_logprobs / content_token_count as f32;
+
+        tracing::debug!(
+            "Inference: segment {i} confidence: avg_logprobs={avg_logprobs:.3}, \
+             no_speech_prob={no_speech_prob:.3}, content_tokens={content_token_count}"
+        );
+
+        if should_discard_segment(
+            avg_logprobs,
+            no_speech_prob,
+            no_speech_discard_threshold,
+            AVG_LOGPROBS_THRESHOLD,
+        ) {
+            if no_speech_prob > no_speech_discard_threshold {
+                tracing::debug!(
+                    "Inference: discarding segment {i} — no_speech_prob={no_speech_prob:.3} \
+                     exceeds unconditional threshold {no_speech_discard_threshold}"
+                );
+            } else {
+                tracing::debug!(
+                    "Inference: discarding segment {i} — avg_logprobs={avg_logprobs:.3} < \
+                     {AVG_LOGPROBS_THRESHOLD} AND no_speech_prob={no_speech_prob:.3} > \
+                     {NO_SPEECH_PROB_THRESHOLD}"
+                );
+            }
+            return true;
+        }
+    }
+
+    false
+}
+
+fn optimal_n_threads() -> i32 {
+    let physical = num_cpus::get_physical();
+    let n = (physical / 2).clamp(1, 8);
+    n as i32
+}
+
+fn create_whisper_params<'a>(
+    language: &'a str,
+    sample_count: usize,
+    max_audio_ctx: i32,
+) -> FullParams<'a, 'a> {
+    let mut params = FullParams::new(SamplingStrategy::Greedy { best_of: 1 });
+    params.set_suppress_nst(true);
+    params.set_single_segment(true);
+    params.set_n_threads(optimal_n_threads());
+    params.set_no_context(true);
+    params.set_temperature_inc(0.2);
+    params.set_audio_ctx(compute_audio_ctx(sample_count, max_audio_ctx));
+    params.set_print_progress(false);
+    params.set_print_realtime(false);
+    params.set_print_timestamps(false);
+    params.set_print_special(false);
+
+    if language == "auto" {
+        params.set_language(None);
+    } else {
+        params.set_language(Some(language));
+    }
+
+    params
+}
+
+/// Compute the optimal `audio_ctx` value for the given sample count.
+///
+/// Restricts the encoder's attention window to the actual audio length plus
+/// a safety margin, avoiding unnecessary computation on zero-padded silence.
+///
+/// Uses the model's `model_n_audio_ctx` as the upper bound (queried at runtime)
+/// and 768 as the lower bound (upstream-recommended minimum for streaming).
+fn compute_audio_ctx(sample_count: usize, max_audio_ctx: i32) -> i32 {
+    let encoder_tokens = sample_count.div_ceil(320) as i32;
+    let with_margin = encoder_tokens + 128;
+    let aligned = (with_margin + 63) & !63; // ceil to multiple of 64
+    aligned.clamp(768, max_audio_ctx)
+}
+
+fn collect_segment_text(state: &WhisperState) -> String {
+    let n_segments = state.full_n_segments();
+    let mut text = String::new();
+    for i in 0..n_segments {
+        if let Some(segment) = state.get_segment(i)
+            && let Ok(segment_text) = segment.to_str()
+        {
+            text.push_str(segment_text);
+        }
+    }
+    text.trim().to_string()
+}
+
+fn detect_language(state: &WhisperState, fallback: &str) -> String {
+    let lang_id = state.full_lang_id_from_state();
+    whisper_rs::get_lang_str(lang_id)
+        .map(String::from)
+        .unwrap_or_else(|| fallback.to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn optimal_n_threads_respects_bounds() {
+        let n = optimal_n_threads();
+        assert!(n >= 1, "n_threads must be at least 1, got {n}");
+        assert!(n <= 8, "n_threads must be at most 8, got {n}");
+    }
+
+    #[test]
+    fn compute_audio_ctx_clamps_to_minimum() {
+        // 1s = 16000 samples → 50 tokens + 128 = 178, ceil_64 = 192
+        // clamp(192, 768, 1500) = 768
+        assert_eq!(compute_audio_ctx(16000, 1500), 768);
+    }
+
+    #[test]
+    fn compute_audio_ctx_zero_samples() {
+        // 0 tokens + 128 = 128, ceil_64 = 128 → clamp to 768
+        assert_eq!(compute_audio_ctx(0, 1500), 768);
+    }
+
+    #[test]
+    fn compute_audio_ctx_large_chunk() {
+        // 30s = 480000 samples → 1500 tokens + 128 = 1628, ceil_64 = 1664
+        // clamp(1664, 768, 1500) = 1500
+        assert_eq!(compute_audio_ctx(480000, 1500), 1500);
+    }
+
+    #[test]
+    fn compute_audio_ctx_above_minimum() {
+        // ~15s = 240000 samples → 750 tokens + 128 = 878, ceil_64 = 896
+        // clamp(896, 768, 1500) = 896
+        assert_eq!(compute_audio_ctx(240000, 1500), 896);
+    }
+
+    #[test]
+    fn compute_audio_ctx_alignment() {
+        // 256000 samples → 800 tokens + 128 = 928, ceil_64 = 960
+        assert_eq!(compute_audio_ctx(256000, 1500), 960);
+    }
+
+    #[test]
+    fn discard_segment_both_conditions_met() {
+        // avg_logprobs < -1.5 AND no_speech_prob > 0.55 (tier 2) → discard
+        assert!(should_discard_segment(-2.0, 0.6, 0.8, -1.5));
+    }
+
+    #[test]
+    fn discard_segment_only_logprobs_bad() {
+        assert!(!should_discard_segment(-2.0, 0.3, 0.8, -1.5));
+    }
+
+    #[test]
+    fn discard_segment_only_no_speech_high() {
+        // threshold=0.8 so tier 1 doesn't fire; tests pure AND gate behavior
+        assert!(!should_discard_segment(-0.5, 0.7, 0.8, -1.5));
+    }
+
+    #[test]
+    fn discard_segment_neither_condition() {
+        assert!(!should_discard_segment(-0.5, 0.2, 0.8, -1.5));
+    }
+
+    #[test]
+    fn discard_segment_boundary_values() {
+        // Exactly at thresholds (not crossing) → keep
+        assert!(!should_discard_segment(-1.5, 0.55, 0.8, -1.5));
+    }
+
+    #[test]
+    fn discard_segment_tier1_high_no_speech_alone() {
+        // no_speech_prob > 0.8 → discard regardless of avg_logprobs
+        assert!(should_discard_segment(-0.5, 0.85, 0.8, -1.5));
+    }
+
+    #[test]
+    fn discard_segment_tier1_boundary() {
+        // Exactly 0.8 → not discarded (must exceed)
+        assert!(!should_discard_segment(-0.5, 0.8, 0.8, -1.5));
+    }
+
+    #[test]
+    fn discard_segment_tier2_and_gate() {
+        // avg_logprobs < -1.5 AND no_speech_prob > 0.55 but <= 0.8 → discard
+        assert!(should_discard_segment(-2.0, 0.6, 0.8, -1.5));
+    }
+
+    #[test]
+    fn discard_segment_hallucination_case() {
+        // The actual hallucination: confident logprobs + elevated no_speech_prob
+        // Before fix: NOT discarded. After fix: DISCARDED (tier 1).
+        assert!(should_discard_segment(-0.5, 0.85, 0.8, -1.5));
+    }
+
+    #[test]
+    fn discard_segment_quiet_speech_preserved() {
+        // Quiet legitimate speech: normal logprobs, low no_speech_prob
+        assert!(!should_discard_segment(-0.8, 0.2, 0.8, -1.5));
+    }
+}

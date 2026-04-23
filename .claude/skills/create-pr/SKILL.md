@@ -12,7 +12,13 @@ Create or update a GitHub PR using the project's PR template. Validates that the
 ## Flow
 
 ```
-Step 1: Preflight  ──→  failure → abort (show reason)
+Step 1: Preflight (checks 1-2)  ──→  failure → abort (show reason)
+         │
+    pass ↓
+Step 1.5: Base branch selection  ──→  no release branch → use main
+         │
+    selected ↓
+Step 1 continued: Preflight (checks 4-8)  ──→  failure → abort
          │
     pass ↓
 Step 2: Problem input
@@ -24,7 +30,10 @@ Step 3: Diff retrieval + plausibility check  ──→  mismatch → revise or a
 Step 4: Full PR draft generation + approval
          │
   approved ↓
-Step 4.5: Label selection (AskUserQuestion multiSelect)
+Step 4.5: Documentation status (if unchecked)
+         │
+         ↓
+Step 4.6: Label selection (AskUserQuestion multiSelect)
          │
          ↓
 Step 5: push + gh pr create/edit → report URL
@@ -38,12 +47,24 @@ Run these checks in order. Abort with a clear message on first failure:
 
 1. **Git repository**: Confirm the working directory is a git repo (`git rev-parse --git-dir`).
 2. **Not detached HEAD**: `git symbolic-ref HEAD` must succeed.
-3. **Resolve base branch**: Run `git symbolic-ref refs/remotes/origin/HEAD` and strip the remote prefix (e.g., `refs/remotes/origin/main` → `main`). If this fails, fall back to checking `git rev-parse --verify origin/main` or `origin/master`. If neither exists, ask the user to specify the base branch.
-4. **Not on base branch**: `git branch --show-current` must differ from the resolved base branch.
-5. **Commits exist**: `git rev-list --count origin/<base>...HEAD` must be > 0.
-6. **Clean working tree**: `git status --porcelain` must produce no output. Abort if uncommitted changes exist.
-7. **`gh` authenticated**: `gh auth status` must succeed. On failure, tell the user to run `gh auth login`.
-8. **Existing PR check**: Run `gh pr view --json url 2>/dev/null`.
+
+#### 1.5. Base Branch Selection
+
+After checks 1-2 pass, select the base branch:
+
+1. **Detect release branches**: Run `git branch -r --list 'origin/v[0-9]*' --sort=-version:refname` and take the first result (the single most recent release branch).
+2. **Present selection**:
+   - If a release branch is found: present a 2-option `AskUserQuestion` with `main` and the detected release branch (e.g., `v0.1.0-alpha.6`).
+   - If no release branch is found: skip the selection and use `main` automatically.
+3. **Use the selected base** for all subsequent checks and commands.
+
+Then continue with the remaining preflight checks using the selected base branch:
+
+3. **Not on base branch**: `git branch --show-current` must differ from the selected base branch.
+4. **Commits exist**: `git rev-list --count origin/<base>...HEAD` must be > 0.
+5. **Clean working tree**: `git status --porcelain` must produce no output. Abort if uncommitted changes exist.
+6. **`gh` authenticated**: `gh auth status` must succeed. On failure, tell the user to run `gh auth login`.
+7. **Existing PR check**: Run `gh pr view --json url 2>/dev/null`.
    - If a PR exists: switch to **update mode** and inform the user: "Existing PR found: <url>. Will update it."
    - If no PR exists: use **create mode**.
 
@@ -89,6 +110,12 @@ Read `.github/pull_request_template.md` to obtain the current template structure
 
 {What changed, why this approach, which parts of the codebase are affected (engine, packages, mods, docs).}
 
+## Documentation
+
+- [x] or [ ] Included in this PR
+- [ ] Will be added in a follow-up PR
+- [ ] Not needed
+
 ---
 
 - [x] or [ ] If HTTP endpoints changed: I ran `make gen-open-api` and `pnpm build`
@@ -98,11 +125,21 @@ Read `.github/pull_request_template.md` to obtain the current template structure
 **Checklist auto-detection**:
 - **HTTP endpoint changes**: If diff touches `engine/crates/homunculus_http_server/src/**`, mark `[x]`. Otherwise `[ ]`.
 - **Breaking changes**: If removed/renamed public APIs, changed HTTP response shapes, or removed config keys detected, mark `[x]` and add a `### Breaking Changes` subsection in Solution. Otherwise `[ ]`.
+- **Documentation status**: If diff includes files under `docs/website/` or the PR title has a `docs:` prefix, mark `[x] Included in this PR`. Otherwise, leave all documentation checkboxes unchecked.
 - **UI changes**: If diff touches `mods/*/ui/**` or `packages/ui/**`, remind the user to consider adding screenshots.
 
 Present the complete PR draft (title + body) and ask the user to approve or request edits. If edits are requested, apply them and re-present. Repeat until approved.
 
-### 4.5. Label Selection
+### 4.5. Documentation Status
+
+After the user approves the PR draft, if all documentation checkboxes are unchecked:
+
+1. **Present via `AskUserQuestion`**: Show 3 options: "Included in this PR", "Will be added in a follow-up PR", "Not needed".
+2. **Apply selection**: Update the documentation section in the PR body with the user's choice.
+
+If any documentation checkbox was already checked (via auto-detection or user edit), skip this step.
+
+### 4.6. Label Selection
 
 After the user approves the PR draft, present available labels for selection:
 
@@ -121,7 +158,7 @@ After the user approves the PR draft, present available labels for selection:
 1. Push the branch: `git push -u origin <current-branch>`. If push fails, report the error and abort. Do NOT use `--force` unless the user explicitly requests it.
 2. Create or update the PR:
    - **Create mode**: `gh pr create --base <base-branch> --title "<title>" --body "<body>"` — append `-l <label>` for each selected label (e.g., `gh pr create ... -l bug -l enhancement`).
-   - **Update mode**: `gh pr edit --title "<title>" --body "<body>"` — append `--add-label <label>` for each selected label (e.g., `gh pr edit ... --add-label bug --add-label enhancement`).
+   - **Update mode**: `gh pr edit --base <base-branch> --title "<title>" --body "<body>"` — append `--add-label <label>` for each selected label (e.g., `gh pr edit ... --add-label bug --add-label enhancement`).
    - If no labels were selected, omit the label flags entirely.
 3. Report the PR URL to the user.
 

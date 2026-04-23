@@ -1,1 +1,0 @@
-{"responses":{"200":{"description":"VRM loaded, returns entity ID","content":{"text/plain":{"schema":{"type":"string"}}}}}}

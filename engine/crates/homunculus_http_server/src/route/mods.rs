@@ -9,6 +9,7 @@ use homunculus_api::prelude::ApiError;
 use homunculus_api::prelude::axum::{HttpResult, IntoHttpResult};
 use homunculus_core::prelude::{ModInfo, ModMenuMetadata};
 use homunculus_utils::config::HomunculusConfig;
+use homunculus_utils::runtime::RuntimeResolver;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use tokio::io::AsyncBufReadExt;
@@ -25,7 +26,7 @@ use utoipa::ToSchema;
         (status = 200, description = "List of loaded mods", body = Vec<ModInfo>),
     ),
 )]
-pub async fn list(State(api): State<ModsApi>) -> HttpResult<Vec<ModInfo>> {
+pub async fn list_mods(State(api): State<ModsApi>) -> HttpResult<Vec<ModInfo>> {
     api.list().await.into_http_result()
 }
 
@@ -141,6 +142,7 @@ fn serialize_event(event: &CommandEvent) -> Vec<u8> {
 )]
 pub async fn execute_command(
     State(config): State<HomunculusConfig>,
+    State(runtime): State<RuntimeResolver>,
     Json(request): Json<ExecuteCommandRequest>,
 ) -> Response {
     if let Err(e) = validate_request(&request) {
@@ -156,8 +158,10 @@ pub async fn execute_command(
     let (tx, rx) = tokio::sync::mpsc::channel::<Vec<u8>>(64);
 
     tokio::spawn(async move {
-        let mut cmd = tokio::process::Command::new(homunculus_utils::mods::pnpm_program());
-        cmd.arg("exec")
+        let (program, pnpm_args) = runtime.pnpm_program_and_args();
+        let mut cmd = tokio::process::Command::new(program);
+        cmd.args(&pnpm_args)
+            .arg("exec")
             .arg(&command)
             .args(&args)
             .current_dir(&mods_dir)
@@ -169,7 +173,14 @@ pub async fn execute_command(
                 std::process::Stdio::null()
             });
         #[cfg(windows)]
-        cmd.creation_flags(0x08000000);
+        {
+            cmd.creation_flags(0x08000000);
+            if !runtime.is_bundled()
+                && let Some(path) = homunculus_utils::process::path_with_node_prepended()
+            {
+                cmd.env("PATH", path);
+            }
+        }
         let mut child = match cmd.spawn() {
             Ok(c) => c,
             Err(_) => {

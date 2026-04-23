@@ -32,7 +32,8 @@ impl HomunculusMcpHandler {
     /// Play a VRMA animation on the active character.
     #[tool(
         name = "play_animation",
-        description = "Play a VRMA animation on the active character. Use the homunculus://assets resource to discover available VRMA animations."
+        description = "Play a VRMA animation on the active character. Use the homunculus://assets resource to discover available VRMA animations.",
+        annotations(destructive_hint = false, open_world_hint = false)
     )]
     async fn play_animation(&self, params: Parameters<PlayAnimationParams>) -> String {
         let args = params.0;

@@ -14,6 +14,8 @@ INSTALLER_PROJECT = Path("build/windows/installer/Installer.wixproj")
 BUNDLE_DIR = Path("target/bundle")
 RUST_LICENSES_OUTPUT = Path("credits/licenses/RUST_THIRD_PARTY.md")
 CEF_STAGING_DIR = Path("build/windows/installer/cef_runtime")
+RUNTIME_STAGING_DIR = Path("build/windows/installer/runtime")
+BIN_STAGING_DIR = Path("build/windows/installer/bin")
 DIST_DIR = Path("target/dist")
 CEF_EXTENSIONS = {".dll", ".pak", ".dat", ".bin"}
 CEF_EXCLUDE_EXTENSIONS = {".exe", ".lib", ".pdb", ".d", ".exp"}
@@ -117,6 +119,43 @@ def generate_icon_for_installer() -> None:
     log(f"Generated {ICON_ICO} from {ICON_PNG}")
 
 
+def stage_runtime_files() -> None:
+    """Run stage_runtime.py and copy output to the installer staging directory."""
+    run([sys.executable, "scripts/stage_runtime.py"])
+
+    runtime_source = BUNDLE_DIR / "runtime"
+    if not runtime_source.exists():
+        error(f"Runtime staging directory not found: {runtime_source}")
+
+    if RUNTIME_STAGING_DIR.exists():
+        shutil.rmtree(RUNTIME_STAGING_DIR)
+    shutil.copytree(runtime_source, RUNTIME_STAGING_DIR)
+    log(f"Staged runtime to {RUNTIME_STAGING_DIR}")
+
+
+def stage_cli_binary() -> None:
+    """Build hmcs.exe and stage it for the installer."""
+    run(["cargo", "build", "-p", "homunculus_cli", "--profile", "dist", "--locked"])
+
+    if BIN_STAGING_DIR.exists():
+        shutil.rmtree(BIN_STAGING_DIR)
+    BIN_STAGING_DIR.mkdir(parents=True)
+
+    hmcs_source = DIST_DIR / "hmcs.exe"
+    if not hmcs_source.exists():
+        error(f"hmcs.exe not found at {hmcs_source}")
+    shutil.copy2(hmcs_source, BIN_STAGING_DIR / "hmcs.exe")
+    log(f"Staged hmcs.exe to {BIN_STAGING_DIR}")
+
+
+def cleanup_runtime_staging() -> None:
+    """Remove the runtime and bin staging directories after the build."""
+    for d in [RUNTIME_STAGING_DIR, BIN_STAGING_DIR]:
+        if d.exists():
+            shutil.rmtree(d)
+            log(f"Cleaned up {d}")
+
+
 def release_windows() -> None:
     # 1. Validate prerequisites
     if not command_exists("dotnet"):
@@ -127,7 +166,7 @@ def release_windows() -> None:
     if not skip_credits and not command_exists("cargo-about"):
         error("cargo-about not found. Run 'make setup' first.")
 
-    # 2. Build
+    # 2. Build engine + CLI
     run(["cargo", "build", "--profile", "dist", "--locked"])
 
     # 3. Generate ICO from source PNG for WiX installer
@@ -152,11 +191,17 @@ def release_windows() -> None:
     stage_cef_files()
     verify_cef_staging()
 
-    # 6. Get versions
+    # 6. Stage Node.js/pnpm/tsx runtime
+    stage_runtime_files()
+
+    # 7. Stage hmcs CLI binary
+    stage_cli_binary()
+
+    # 8. Get versions
     full_version, msi_version = get_versions()
     log(f"Full version: {full_version}, MSI version: {msi_version}")
 
-    # 7. Build MSI (pass 3-part numeric version via MSBuild property)
+    # 9. Build MSI (pass 3-part numeric version via MSBuild property)
     run([
         "dotnet",
         "build",
@@ -166,15 +211,16 @@ def release_windows() -> None:
         f"-p:Version={msi_version}",
     ])
 
-    # 8. Copy MSI to target/bundle/ with unified naming
+    # 10. Copy MSI to target/bundle/ with unified naming
     BUNDLE_DIR.mkdir(parents=True, exist_ok=True)
     msi_source = INSTALLER_PROJECT.parent / "bin" / "Release" / "en-US" / "installer.msi"
     msi_dest = BUNDLE_DIR / f"desktop-homunculus-{full_version}-x64.msi"
     shutil.copy2(msi_source, msi_dest)
     log(f"Done: {msi_dest}")
 
-    # 9. Clean up CEF staging directory
+    # 11. Clean up staging directories
     cleanup_cef_staging()
+    cleanup_runtime_staging()
 
 
 if __name__ == "__main__":

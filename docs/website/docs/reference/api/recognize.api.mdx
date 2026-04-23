@@ -1,0 +1,70 @@
+---
+id: recognize
+title: "Recognize a single sentence from the microphone."
+description: "Starts a cpal capture -> VAD -> Whisper pipeline, returns the first"
+hide_title: true
+hide_table_of_contents: true
+api: eJzVVsFu20YQ/ZXBnBKAohTbDQoeirpN0RhwEMNW0oOjw2o5IjdZ7m52h3IUgUA/ol/YLwmGpGzaKtoeeqkuJGZ3hm/evJnRHllVCYtbTMy4yrCkpKMJbLzDAm9YRU6gQAdlQavAbSSY/QDvz1/J47fapEARgglkjaMMInEbXQKuCTYmJv7gImlfOfOVSkjkmJymTM4dlJQ4+t1w+xAjh0vvqlnw1iZoHRv7waVApGswCUpi0kwl+AhsGvItw7OXi/Q8xwx9oKgE+kWJBd5/FzOM9LmlxD/5cofFHrUXHCyvKgRrdO81/5gk6z0mXVOj5I13gbBAv/5ImvEpPddDVPC9IcHGR1CQWDFZSglGBHIIWlkrGEMUlGwoSXyrXNWqiibfShyNq7DLsPEl2RtJ4Oj0KZJDIXoXSOYrwVZFoxwn+Si5tpEis3E7zHCtkpCSGmUtZthQadoGM7QqVjTbns64jWs/MYgy2LClXhP85h5Y1z0cXB/4fjvQgZ2cCvMmUokFx5Z6QwrepSH/k8VCHk9pvRcM0xeh/T+rV2otg99IlYyrLMGorEmlcpyCvsURgogtsWpCT8tYtdW/r+dTLK8mQk6BtNkYKuHgD9qXlIsI+s//Y7RlTRAf0zZ436N+COHaZk0RM9z42CjGAkvfri0dBz04g99sEjFsom9gbCWReWR4lkh7V6YMNi/PnuePBHHDPDAuSugyPFt8f1zs5djEf/7+Bzh/qMehzSWHs5OTY7cLt1XWTAjzU/GL23eL02O3XrngPIPaKmPV2g6eRkcfau8IKEYf+zQa4trLIAk+iQKC4hoLnCfm+XS2JIpbijJE99hGiwXWzKGYz63XytY+cXH6YrE4ovdSjqGkLVkfGpF3t8pQNH39MK1++aKaYOmxth5UMBkRQ3N3GRq38X25xzK89k3rdGvbBOdXF38hxPSJfYDJtdfL5ZXc7Qea9F701hpXwfvrN6BrFZVmiimDO1pvDd2lDFRbGp+BciU0PlI+Nq3SvXidanrleSYrg4YaZYQosk2IvoqqEdA/VmLOtW8kDWs0uUQT98tfry5np/li5p3tMxXahyRe5It8ISapVaPcxOt+mkyaflxDg6Bl+TwIIH9K0GRb/N/24djwMg3mwSrjhKFeovtRzcPezya7cpWhSFaO9ntZFO+i7Toxf24p7rC4XWXY7xYZGcXtqsuwJlVS7BvgE+2wwJ8HxmZLASDXbStAjmZ3lx08zrWmwH97dzVpyau3N0tZZOM+lzaQja/uJBd1hwX2fweGPVTsB9ujFhpiyu8bBEwkNg==
+sidebar_class_name: "post api-method"
+info_path: reference/api/homunculus-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Recognize a single sentence from the microphone."}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/stt/recognize"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Starts a cpal capture -&gt; VAD -&gt; Whisper pipeline, returns the first
+recognized sentence, then destroys the pipeline. Long-polls until
+speech is detected or timeout (60s).
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  parameters={undefined}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./recognize.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./recognize.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

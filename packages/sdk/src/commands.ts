@@ -31,9 +31,9 @@
  * @packageDocumentation
  */
 
-import { writeFileSync } from "node:fs";
-import { z, type ZodType } from "zod";
-import { Vrm } from "./vrm";
+import { writeFileSync } from 'node:fs';
+import { type ZodType, z } from 'zod';
+import { Persona } from './persona';
 
 /**
  * Safely serialize a value to JSON. Returns a fallback error JSON string
@@ -67,11 +67,11 @@ function safeStringify(data: unknown): string {
  * ```
  */
 export class StdinParseError extends Error {
-  override readonly name = "StdinParseError";
+  override readonly name = 'StdinParseError';
 
   constructor(
     /** Structured error code identifying the failure stage. */
-    public readonly code: "EMPTY_STDIN" | "INVALID_JSON" | "VALIDATION_ERROR",
+    public readonly code: 'EMPTY_STDIN' | 'INVALID_JSON' | 'VALIDATION_ERROR',
     message: string,
     /** For `VALIDATION_ERROR`, contains the `ZodError` instance. */
     public readonly details?: unknown,
@@ -114,7 +114,7 @@ export namespace input {
     for await (const chunk of process.stdin) {
       chunks.push(chunk);
     }
-    return Buffer.concat(chunks).toString("utf-8");
+    return Buffer.concat(chunks).toString('utf-8');
   }
 
   /**
@@ -150,23 +150,20 @@ export namespace input {
     const raw = await read();
 
     if (raw.trim().length === 0) {
-      throw new StdinParseError("EMPTY_STDIN", "No input received on stdin");
+      throw new StdinParseError('EMPTY_STDIN', 'No input received on stdin');
     }
 
     let json: unknown;
     try {
       json = JSON.parse(raw);
     } catch {
-      throw new StdinParseError(
-        "INVALID_JSON",
-        `Invalid JSON: ${raw.slice(0, 200)}`,
-      );
+      throw new StdinParseError('INVALID_JSON', `Invalid JSON: ${raw.slice(0, 200)}`);
     }
 
     const result = schema.safeParse(json);
     if (!result.success) {
       throw new StdinParseError(
-        "VALIDATION_ERROR",
+        'VALIDATION_ERROR',
         `Validation failed: ${result.error.message}`,
         result.error,
       );
@@ -176,28 +173,28 @@ export namespace input {
   }
 
   /**
-   * Parse menu command stdin and return the linked VRM instance.
+   * Parse menu command stdin and return the linked Persona instance.
    *
-   * Menu commands receive `{ "linkedVrm": <entityId> }` on stdin from the
+   * Menu commands receive `{ "linkedPersona": "<personaId>" }` on stdin from the
    * menu UI. This helper validates the input and returns a ready-to-use
-   * {@link Vrm} instance.
+   * {@link Persona} instance.
    *
-   * @returns A {@link Vrm} instance for the linked entity
+   * @returns A {@link Persona} instance for the linked persona
    * @throws {StdinParseError} With `code: "EMPTY_STDIN"` if stdin is empty
    * @throws {StdinParseError} With `code: "INVALID_JSON"` if stdin is not valid JSON
-   * @throws {StdinParseError} With `code: "VALIDATION_ERROR"` if `linkedVrm` is missing or not a number
+   * @throws {StdinParseError} With `code: "VALIDATION_ERROR"` if `linkedPersona` is missing or not a string
    *
    * @example
    * ```typescript
    * import { input } from "@hmcs/sdk/commands";
    *
-   * const vrm = await input.parseMenu();
-   * await vrm.setExpressions({ happy: 1.0 });
+   * const persona = await input.parseMenu();
+   * await persona.vrm().setExpressions({ happy: 1.0 });
    * ```
    */
-  export async function parseMenu(): Promise<Vrm> {
-    const parsed = await parse(z.object({ linkedVrm: z.number() }));
-    return new Vrm(parsed.linkedVrm);
+  export async function parseMenu(): Promise<Persona> {
+    const parsed = await parse(z.object({ linkedPersona: z.string() }));
+    return new Persona(parsed.linkedPersona);
   }
 }
 
@@ -230,7 +227,7 @@ export namespace output {
    * ```
    */
   export function write(data: unknown): void {
-    writeFileSync(1, safeStringify(data) + "\n");
+    writeFileSync(1, `${safeStringify(data)}\n`);
   }
 
   /**
@@ -251,7 +248,7 @@ export namespace output {
    * ```
    */
   export function writeError(code: string, message: string): void {
-    writeFileSync(2, JSON.stringify({ code, message }) + "\n");
+    writeFileSync(2, `${JSON.stringify({ code, message })}\n`);
   }
 
   /**

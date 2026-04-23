@@ -1,0 +1,1 @@
+{"parameters":[{"name":"name","in":"query","description":"Entity name to search for","required":true,"schema":{"type":"string"}},{"name":"root","in":"query","description":"Root entity to search from recursively","required":false,"schema":{"type":"string"}}]}

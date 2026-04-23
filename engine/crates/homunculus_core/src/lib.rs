@@ -14,7 +14,7 @@
 //! ## Key Features
 //!
 //! - **Core Components**: Essential Bevy components like `Loading`, `ShadowPanel`,
-//!   `GlobalViewport`, `PrimaryCamera`, and `VrmState`
+//!   `GlobalViewport`, `PrimaryCamera`, and `PersonaState`
 //! - **Event System**: Comprehensive event handling for VRM models, pointer
 //!   interactions, and state changes
 //! - **System Parameters**: Custom Bevy system parameters for common operations
@@ -41,7 +41,7 @@
 //! ## Core Components
 //!
 //! ### VRM Management
-//! - `VrmState`: Tracks the current state of VRM models (idle, sitting, etc.)
+//! - `PersonaState`: Tracks the current state of persona characters (idle, sitting, etc.)
 //! - `Loading`: Indicates when VRM models are being loaded
 //! - Various bone and animation-related components
 //!
@@ -73,16 +73,26 @@ mod error;
 mod events;
 mod render_layers;
 mod resources;
+#[cfg(feature = "mcp")]
 pub mod rpc_registry;
 mod schema;
 mod system_param;
 mod system_set;
+pub mod texture;
 
 pub mod prelude {
+    #[cfg(feature = "mcp")]
+    pub use crate::rpc_registry::*;
     pub use crate::{
-        HomunculusCorePlugin, components::*, error::*, events::prelude::*, resources::prelude::*,
-        rpc_registry::*, schema::prelude::*, system_param::prelude::*,
+        HomunculusCorePlugin,
+        components::*,
+        error::*,
+        events::prelude::*,
+        resources::prelude::*,
+        schema::prelude::*,
+        system_param::prelude::*,
         system_set::HomunculusSystemSet,
+        texture::{TRANSPARENT_ALPHA_THRESHOLD, sample_texture_alpha},
     };
     pub use homunculus_utils::prelude::*;
 }

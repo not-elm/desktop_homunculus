@@ -1,1 +1,1 @@
-{"parameters":[{"name":"entity","in":"path","description":"Entity ID","required":true,"schema":{"type":"string"}}]}
+{"parameters":[{"name":"id","in":"path","description":"Persona ID","required":true,"schema":{"type":"string"}}]}

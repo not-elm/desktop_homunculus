@@ -5,7 +5,6 @@
 
 mod animation;
 mod audio;
-mod rpc;
 mod system;
 mod transform;
 mod vrm;
@@ -23,5 +22,4 @@ pub(super) fn tool_router() -> ToolRouter<HomunculusMcpHandler> {
         + HomunculusMcpHandler::audio_tool_router()
         + HomunculusMcpHandler::transform_tool_router()
         + HomunculusMcpHandler::system_tool_router()
-        + HomunculusMcpHandler::rpc_tool_router()
 }

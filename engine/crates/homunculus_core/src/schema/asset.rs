@@ -30,6 +30,14 @@ impl AssetRegistry {
         self.entries.insert(entry.id.clone(), entry);
     }
 
+    /// Registers an imported asset dynamically (not from a mod package.json).
+    ///
+    /// Unlike [`register`](Self::register), this overwrites any existing entry
+    /// with the same ID, supporting upsert semantics for user-imported assets.
+    pub fn register_imported(&mut self, entry: AssetEntry) {
+        self.entries.insert(entry.id.clone(), entry);
+    }
+
     /// Look up an asset entry by ID.
     pub fn get(&self, id: &str) -> Option<&AssetEntry> {
         self.entries.get(id)

@@ -1,2 +1,3 @@
 *.rs linguist-detectable
 *.html linguist-vendored
+mods/agent/lib/generated/** linguist-generated=true

@@ -1,20 +1,14 @@
-import * as React from "react"
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card"
+import type * as React from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 function SettingsCard({
   title,
   description,
   children,
 }: {
-  title: string
-  description?: string
-  children: React.ReactNode
+  title: string;
+  description?: string;
+  children: React.ReactNode;
 }) {
   return (
     <Card data-slot="settings-card">
@@ -24,7 +18,7 @@ function SettingsCard({
       </CardHeader>
       <CardContent className="flex flex-col gap-4">{children}</CardContent>
     </Card>
-  )
+  );
 }
 
-export { SettingsCard }
+export { SettingsCard };

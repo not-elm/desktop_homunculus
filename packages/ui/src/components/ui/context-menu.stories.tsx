@@ -1,33 +1,25 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn } from "storybook/test";
-import {
-  Copy,
-  Scissors,
-  Clipboard,
-  Trash2,
-  RotateCcw,
-  Eye,
-  Share2,
-} from "lucide-react";
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { Clipboard, Copy, Eye, RotateCcw, Scissors, Share2, Trash2 } from 'lucide-react';
+import { fn } from 'storybook/test';
 import {
   ContextMenu,
-  ContextMenuTrigger,
+  ContextMenuCheckboxItem,
   ContextMenuContent,
+  ContextMenuGroup,
   ContextMenuItem,
   ContextMenuLabel,
-  ContextMenuSeparator,
-  ContextMenuShortcut,
-  ContextMenuGroup,
-  ContextMenuSub,
-  ContextMenuSubTrigger,
-  ContextMenuSubContent,
-  ContextMenuCheckboxItem,
   ContextMenuRadioGroup,
   ContextMenuRadioItem,
-} from "./context-menu";
+  ContextMenuSeparator,
+  ContextMenuShortcut,
+  ContextMenuSub,
+  ContextMenuSubContent,
+  ContextMenuSubTrigger,
+  ContextMenuTrigger,
+} from './context-menu';
 
 const meta = {
-  title: "UI/Overlays/ContextMenu",
+  title: 'UI/Overlays/ContextMenu',
   component: ContextMenu,
   args: {
     onOpenChange: fn(),

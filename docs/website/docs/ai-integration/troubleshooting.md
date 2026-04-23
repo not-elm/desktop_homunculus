@@ -68,6 +68,40 @@ If you'd like to help build template MODs or improve MCP tools, see the [Contrib
 
 **Solution:** Verify the app is running on the expected port (default: 3100). Check the logs at `~/.homunculus/Logs/log.txt` for details.
 
+### Agent MOD Won't Start
+
+**Symptom:** Agent session fails to start or immediately disconnects.
+
+**Cause:** Missing or invalid API key, or runtime not configured.
+
+**Solution:**
+1. Right-click the character → "Agent" to open settings
+2. Verify the correct runtime is selected (Claude SDK or Codex AppServer)
+3. For Claude runtime: ensure a valid Anthropic API key is entered
+4. Check the logs at `~/.homunculus/Logs/log.txt` for detailed errors
+
+### STT Not Recognizing Speech
+
+**Symptom:** Push-to-Talk records but returns empty or incorrect text.
+
+**Cause:** No Whisper model downloaded, microphone not accessible, or model too small.
+
+**Solution:**
+1. Open **system tray** → **"Speech to Text"** and verify a model is downloaded
+2. Check that your OS has granted microphone permission to Desktop Homunculus
+3. Try a larger model size (e.g., switch from `tiny` to `base` or `small`) for better accuracy
+
+### PTT Key Not Responding
+
+**Symptom:** Pressing the Push-to-Talk key does nothing.
+
+**Cause:** Key mapping conflict or agent session not active.
+
+**Solution:**
+1. Verify the PTT key is configured in Agent settings (right-click → "Agent" → settings)
+2. Check for OS-level keyboard shortcut conflicts (macOS System Settings → Keyboard → Shortcuts)
+3. Ensure an agent session is active — PTT only works during an active session
+
 ## Getting Help
 
 If you encounter an issue not listed here, please [open an issue on GitHub](https://github.com/not-elm/desktop-homunculus/issues).

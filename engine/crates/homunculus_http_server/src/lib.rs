@@ -27,15 +27,22 @@
 //! ### Application Control
 //! - `POST /app/exit` - Exit the application
 //!
-//! ### VRM Management
-//! - `GET /vrm` - List VRM models (optional `?name=` filter)
-//! - `POST /vrm` - Spawn new VRM model
-//! - `GET /vrm/stream` - SSE stream of VRM load events
-//! - `DELETE /vrm/{entity}` - Remove VRM model
+//! ### Persona Management
+//! - `POST /personas` - Create a new persona
+//! - `GET /personas` - List all personas
+//! - `GET /personas/{id}` - Get persona details
+//! - `PATCH /personas/{id}` - Partial update persona
+//! - `DELETE /personas/{id}` - Delete persona
+//! - `GET /personas/{id}/events` - SSE event stream
+//! - `GET /personas/stream` - Combined SSE stream for all personas
+//! - `GET /personas/{id}/thumbnail` - Get thumbnail asset ID
+//! - `PUT /personas/{id}/thumbnail` - Set (or clear with `null`) thumbnail asset ID
 //!
-//! ### Animation Control
-//! - `POST /vrm/{entity}/vrma/play` - Play VRMA animation
-//! - `POST /vrm/{entity}/vrma/stop` - Stop VRMA animation
+//! ### VRM Operations (via persona)
+//! - `POST /personas/{id}/vrm` - Attach VRM model
+//! - `DELETE /personas/{id}/vrm` - Detach VRM model
+//! - `POST /personas/{id}/vrm/vrma/play` - Play VRMA animation
+//! - `POST /personas/{id}/vrm/vrma/stop` - Stop VRMA animation
 //!
 //! ### Effects
 //! - `POST /effects/stamps` - Display visual stamp effect
@@ -69,7 +76,8 @@ pub mod prelude {
 }
 
 use crate::route::{
-    assets, audio, coordinates, displays, info, preferences, settings, shadow_panel, vrm, webviews,
+    assets, audio, coordinates, displays, info, persona, preferences, settings, shadow_panel, stt,
+    webviews,
 };
 use crate::state::HttpState;
 use axum::Router;
@@ -79,6 +87,7 @@ use bevy_flurx::prelude::Reactor;
 use homunculus_api::prelude::ApiReactor;
 use homunculus_core::rpc_registry::{RpcRegistry, SharedRpcRegistry};
 use homunculus_utils::config::HomunculusConfig;
+use homunculus_utils::runtime::RuntimeResolver;
 use route::entities;
 use std::sync::{Arc, RwLock};
 use tower_http::cors::{Any, CorsLayer};
@@ -96,7 +105,7 @@ use utoipa_axum::{router::OpenApiRouter, routes};
     tags(
         (name = "app", description = "Application lifecycle"),
         (name = "audio", description = "Sound effects and background music"),
-        (name = "vrm", description = "VRM model management"),
+        (name = "personas", description = "Persona management"),
         (name = "entities", description = "Entity transform and tween control"),
         (name = "webviews", description = "WebView management"),
         (name = "coordinates", description = "Coordinate system conversion"),
@@ -108,8 +117,11 @@ use utoipa_axum::{router::OpenApiRouter, routes};
         (name = "displays", description = "Display information"),
         (name = "mods", description = "Mod management"),
         (name = "commands", description = "Command execution"),
+        (name = "processes", description = "Managed long-running processes"),
         (name = "assets", description = "Asset management"),
         (name = "rpc", description = "MOD service RPC registration and proxy"),
+        (name = "stt", description = "Speech-to-text"),
+        (name = "dialog", description = "Native OS dialogs"),
     ),
     servers(
         (url = "http://localhost:3100", description = "Local development"),
@@ -173,17 +185,21 @@ fn setup(
     mut commands: Commands,
     reactor: Res<ApiReactor>,
     config: Res<HomunculusConfig>,
+    runtime: Res<RuntimeResolver>,
     rpc_registry: Res<SharedRpcRegistry>,
 ) {
     let reactor = reactor.clone();
     let config = config.clone();
+    let runtime = runtime.clone();
     let addr = config.host();
     let rpc_registry = rpc_registry.0.clone();
     commands.spawn(Reactor::schedule(|task| async move {
         task.will(
             Update,
             side_effect::tokio::spawn(async move {
-                if let Err(e) = start_http_server(reactor, config, rpc_registry, addr).await {
+                if let Err(e) =
+                    start_http_server(reactor, config, runtime, rpc_registry, addr).await
+                {
                     error!("Failed to start http server: {e}");
                 }
             }),
@@ -195,12 +211,17 @@ fn setup(
 async fn start_http_server(
     reactor: ApiReactor,
     config: HomunculusConfig,
+    runtime: RuntimeResolver,
     rpc_registry: Arc<RwLock<RpcRegistry>>,
     addr: String,
 ) -> std::io::Result<()> {
     let listener = tokio::net::TcpListener::bind(&addr).await?;
     info!("HTTP server listening on {addr}");
-    axum::serve(listener, create_router(reactor, config, rpc_registry)).await?;
+    axum::serve(
+        listener,
+        create_router(reactor, config, runtime, rpc_registry),
+    )
+    .await?;
     Ok(())
 }
 
@@ -212,7 +233,7 @@ fn build_openapi_router() -> OpenApiRouter<HttpState> {
         .nest("/settings", settings_router())
         .nest("/shadow-panel", shadow_panel_router())
         .nest("/entities", entities_router())
-        .nest("/vrm", vrm_router())
+        .nest("/personas", persona_router())
         .nest("/coordinates", coordinates_router())
         .nest("/preferences", preferences_router())
         .nest("/webviews", webviews_router())
@@ -222,13 +243,19 @@ fn build_openapi_router() -> OpenApiRouter<HttpState> {
         .nest("/effects", effects_router())
         .nest("/mods", mods_router())
         .nest("/commands", commands_router())
-        .routes(routes!(assets::list))
+        .nest("/processes", processes_router())
+        .nest("/stt", stt_router())
+        .nest("/dialog", dialog_router())
+        .routes(routes!(assets::list_assets))
+        .routes(routes!(assets::import))
+        .routes(routes!(assets::get_asset_file))
         .nest("/rpc", rpc_openapi_router())
 }
 
 fn create_router(
     reactor: ApiReactor,
     config: HomunculusConfig,
+    runtime: RuntimeResolver,
     rpc_registry: Arc<RwLock<RpcRegistry>>,
 ) -> Router {
     let (router, _openapi) = build_openapi_router().split_for_parts();
@@ -236,11 +263,12 @@ fn create_router(
         .with_state(HttpState::new(
             reactor.clone(),
             config.clone(),
+            runtime.clone(),
             rpc_registry.clone(),
         ))
         .nest_service(
             "/mcp",
-            homunculus_mcp::create_mcp_service(reactor, config, rpc_registry),
+            homunculus_mcp::create_mcp_service(reactor, config, runtime),
         )
         .layer(
             CorsLayer::new()
@@ -262,7 +290,7 @@ fn rpc_openapi_router() -> OpenApiRouter<HttpState> {
 fn app_router() -> OpenApiRouter<HttpState> {
     OpenApiRouter::new()
         .routes(routes!(route::health))
-        .routes(routes!(info::get))
+        .routes(routes!(info::get_app_info))
         .routes(routes!(route::app::exit))
 }
 
@@ -285,66 +313,137 @@ fn effects_router() -> OpenApiRouter<HttpState> {
 
 fn mods_router() -> OpenApiRouter<HttpState> {
     OpenApiRouter::new()
-        .routes(routes!(route::mods::list))
+        .routes(routes!(route::mods::list_mods))
         .routes(routes!(route::mods::list_menus))
         .routes(routes!(route::mods::get_one))
+}
+
+fn stt_router() -> OpenApiRouter<HttpState> {
+    OpenApiRouter::new()
+        .routes(routes!(stt::recognize))
+        .routes(routes!(stt::download_model))
+        .routes(routes!(stt::cancel_download))
+        .routes(routes!(stt::download_model_stream))
+        .routes(routes!(stt::list_models))
+        .routes(routes!(stt::list_languages))
+        .routes(routes!(stt::ptt_start))
+        .routes(routes!(stt::ptt_stop))
+}
+
+fn dialog_router() -> OpenApiRouter<HttpState> {
+    OpenApiRouter::new()
+        .routes(routes!(route::dialog::pick_folder))
+        .routes(routes!(route::dialog::pick_file))
+        .routes(routes!(route::dialog::pick_files))
 }
 
 fn commands_router() -> OpenApiRouter<HttpState> {
     OpenApiRouter::new().routes(routes!(route::mods::execute_command))
 }
 
+fn processes_router() -> OpenApiRouter<HttpState> {
+    OpenApiRouter::new()
+        .routes(routes!(route::processes::list_processes))
+        .routes(routes!(route::processes::start))
+        .routes(routes!(route::processes::stop))
+}
+
 fn entities_router() -> OpenApiRouter<HttpState> {
     OpenApiRouter::new()
-        .routes(routes!(entities::get))
+        .routes(routes!(entities::find_entity))
         .nest("/{entity}", entities_id_router())
 }
 
 fn entities_id_router() -> OpenApiRouter<HttpState> {
     OpenApiRouter::new()
-        .routes(routes!(entities::transform::get, entities::transform::put))
-        .routes(routes!(entities::name::get))
+        .routes(routes!(
+            entities::transform::get_transform,
+            entities::transform::set_transform
+        ))
+        .routes(routes!(entities::name::get_entity_name))
         .routes(routes!(entities::move_to::move_to))
         .routes(routes!(entities::tween::tween_position))
         .routes(routes!(entities::tween::tween_rotation))
         .routes(routes!(entities::tween::tween_scale))
 }
 
-fn vrm_router() -> OpenApiRouter<HttpState> {
+fn persona_router() -> OpenApiRouter<HttpState> {
     OpenApiRouter::new()
-        .routes(routes!(vrm::get::get, vrm::spawn::spawn))
-        .routes(routes!(vrm::snapshot::snapshot))
-        .routes(routes!(vrm::stream::stream))
-        .routes(routes!(vrm::wait_load::wait_load))
-        .nest("/{entity}", vrm_entity_router())
+        .routes(routes!(
+            persona::get::list_personas,
+            persona::create::create
+        ))
+        .routes(routes!(persona::snapshot::snapshot))
+        .routes(routes!(persona::stream::stream))
+        .nest("/{id}", persona_id_router())
 }
 
-fn vrm_entity_router() -> OpenApiRouter<HttpState> {
+fn persona_id_router() -> OpenApiRouter<HttpState> {
     OpenApiRouter::new()
-        .routes(routes!(vrm::state::get, vrm::state::put))
-        .routes(routes!(vrm::persona::get, vrm::persona::put))
-        .routes(routes!(route::vrm::events::events))
-        .routes(routes!(vrm::vrma::get))
-        .routes(routes!(vrm::vrma::play))
-        .routes(routes!(vrm::vrma::stop))
-        .routes(routes!(vrm::vrma::state))
-        .routes(routes!(vrm::vrma::speed))
         .routes(routes!(
-            vrm::expressions::list,
-            vrm::expressions::set,
-            vrm::expressions::modify,
-            vrm::expressions::clear
+            persona::get::get_persona,
+            persona::update::update_persona,
+            persona::delete::delete_persona
         ))
-        .routes(routes!(vrm::expressions::modify_mouth))
-        .routes(routes!(vrm::position::get))
-        .routes(routes!(vrm::spring_bones::list))
-        .routes(routes!(vrm::spring_bones::get, vrm::spring_bones::put))
-        .routes(routes!(vrm::speech::timeline))
-        .routes(routes!(vrm::look::unlook))
-        .routes(routes!(vrm::look::target))
-        .routes(routes!(vrm::look::cursor))
-        .routes(routes!(vrm::bone::get))
-        .routes(routes!(vrm::despawn::despawn))
+        .routes(routes!(
+            persona::fields::get_name,
+            persona::fields::put_name
+        ))
+        .routes(routes!(persona::fields::get_age, persona::fields::put_age))
+        .routes(routes!(
+            persona::fields::get_gender,
+            persona::fields::put_gender
+        ))
+        .routes(routes!(
+            persona::fields::get_first_person_pronoun,
+            persona::fields::put_first_person_pronoun
+        ))
+        .routes(routes!(
+            persona::fields::get_profile,
+            persona::fields::put_profile
+        ))
+        .routes(routes!(
+            persona::fields::get_personality,
+            persona::fields::put_personality
+        ))
+        .routes(routes!(
+            persona::state::get_persona_state,
+            persona::state::set_persona_state
+        ))
+        .routes(routes!(
+            persona::fields::get_metadata,
+            persona::fields::put_metadata
+        ))
+        .routes(routes!(
+            persona::fields::get_thumbnail,
+            persona::fields::put_thumbnail
+        ))
+        .routes(routes!(
+            persona::fields::get_persona_transform,
+            persona::fields::set_persona_transform
+        ))
+        .routes(routes!(persona::spawn::spawn))
+        .routes(routes!(persona::spawn::despawn))
+        .routes(routes!(persona::events::events))
+        .routes(routes!(persona::vrm::attach, persona::vrm::detach))
+        .routes(routes!(
+            persona::vrm::expressions::list_expressions,
+            persona::vrm::expressions::modify_expressions,
+            persona::vrm::expressions::clear_expressions
+        ))
+        .routes(routes!(persona::vrm::vrma::play_vrma))
+        .routes(routes!(persona::vrm::vrma::stop_vrma))
+        .routes(routes!(persona::vrm::vrma::get_vrma))
+        .routes(routes!(persona::vrm::position::get_position))
+        .routes(routes!(persona::vrm::bone::get_bone))
+        .routes(routes!(persona::vrm::look::look_cursor))
+        .routes(routes!(persona::vrm::look::look_target))
+        .routes(routes!(persona::vrm::look::unlook))
+        .routes(routes!(
+            persona::vrm::spring_bones::list_spring_bones,
+            persona::vrm::spring_bones::patch_spring_bones
+        ))
+        .routes(routes!(persona::vrm::speech::speech_timeline))
         .layer(axum::extract::DefaultBodyLimit::max(20 * 1024 * 1024))
 }
 
@@ -355,32 +454,40 @@ fn coordinates_router() -> OpenApiRouter<HttpState> {
 }
 
 fn settings_router() -> OpenApiRouter<HttpState> {
-    OpenApiRouter::new().routes(routes!(settings::get, settings::put))
+    OpenApiRouter::new().routes(routes!(settings::get_fps, settings::set_fps))
 }
 
 fn shadow_panel_router() -> OpenApiRouter<HttpState> {
-    OpenApiRouter::new().routes(routes!(shadow_panel::alpha::get, shadow_panel::alpha::put))
+    OpenApiRouter::new().routes(routes!(
+        shadow_panel::alpha::get_shadow_alpha,
+        shadow_panel::alpha::set_shadow_alpha
+    ))
 }
 
 fn webviews_router() -> OpenApiRouter<HttpState> {
     OpenApiRouter::new()
-        .routes(routes!(webviews::list, webviews::open))
-        .routes(routes!(webviews::get, webviews::patch, webviews::delete))
+        .routes(routes!(webviews::list_webviews, webviews::open))
+        .routes(routes!(
+            webviews::get_webview,
+            webviews::update_webview,
+            webviews::delete_webview
+        ))
         .routes(routes!(webviews::is_closed))
         .routes(routes!(webviews::navigate))
         .routes(routes!(webviews::navigate_back))
         .routes(routes!(webviews::navigate_forward))
+        .routes(routes!(webviews::navigation_state))
         .routes(routes!(webviews::reload))
         .routes(routes!(
-            webviews::get_linked_vrm,
-            webviews::set_linked_vrm,
-            webviews::unlink_vrm
+            webviews::get_linked_persona,
+            webviews::set_linked_persona,
+            webviews::unlink_persona
         ))
 }
 
 fn preferences_router() -> OpenApiRouter<HttpState> {
     OpenApiRouter::new()
-        .routes(routes!(preferences::list))
+        .routes(routes!(preferences::list_preferences))
         .routes(routes!(preferences::load, preferences::save))
 }
 
@@ -390,8 +497,9 @@ fn display_router() -> OpenApiRouter<HttpState> {
 
 fn signals_router() -> OpenApiRouter<HttpState> {
     OpenApiRouter::new()
-        .routes(routes!(route::signals::list))
-        .routes(routes!(route::signals::stream, route::signals::send))
+        .routes(routes!(route::signals::list_signals))
+        .routes(routes!(route::signals::send))
+        .route("/ws", axum::routing::get(route::signals::ws_handler))
 }
 
 #[cfg(test)]
@@ -405,11 +513,14 @@ mod tests {
     use bevy::tasks::{block_on, poll_once};
     use homunculus_api::HomunculusApiPlugin;
     use homunculus_api::prelude::{ApiReactor, ShadowPanelApiPlugin, WebviewApiPlugin};
-    use homunculus_core::prelude::{ModInfo, ModMenuMetadata, ModMenuMetadataList, ModRegistry};
+    use homunculus_core::prelude::{
+        AssetRegistry, ModInfo, ModMenuMetadata, ModMenuMetadataList, ModRegistry,
+    };
     use homunculus_core::rpc_registry::RpcRegistry;
     use homunculus_prefs::PrefsDatabase;
     use homunculus_utils::config::HomunculusConfig;
     use homunculus_utils::prelude::{AssetDeclaration, AssetType};
+    use homunculus_utils::runtime::RuntimeResolver;
     use http_body_util::BodyExt;
     use serde::de::DeserializeOwned;
     use std::collections::HashMap;
@@ -436,13 +547,19 @@ mod tests {
         ));
 
         app.insert_non_send_resource(PrefsDatabase::open_in_memory());
+        app.init_resource::<AssetRegistry>();
         app.init_resource::<ModRegistry>();
         app.init_resource::<ModMenuMetadataList>();
+        app.init_resource::<homunculus_core::prelude::PersonaIndex>();
         let config = HomunculusConfig::default();
+        let runtime = RuntimeResolver::detect();
+        app.insert_resource(config.clone());
+        app.insert_resource(runtime.clone());
         let rpc_registry = Arc::new(RwLock::new(RpcRegistry::default()));
         let router = create_router(
             app.world().resource::<ApiReactor>().clone(),
             config,
+            runtime,
             rpc_registry,
         );
         (app, router)
@@ -778,6 +895,130 @@ mod tests {
             request,
             vec![],
         ));
+    }
+
+    #[test]
+    fn test_get_asset_file_returns_file_content() {
+        let (mut app, router) = test_app();
+
+        // Create a temp file with known content
+        let tmp = std::env::temp_dir().join("test_asset_file.png");
+        std::fs::write(&tmp, b"fake-png-content").unwrap();
+
+        // Register an asset pointing to the temp file
+        app.world_mut().resource_mut::<AssetRegistry>().register(
+            homunculus_core::prelude::AssetEntry {
+                id: homunculus_utils::prelude::AssetId::new("test-mod:my-image"),
+                path: PathBuf::from("my-image.png"),
+                absolute_path: tmp.clone(),
+                asset_type: AssetType::Image,
+                description: None,
+                mod_name: "test-mod".to_string(),
+            },
+        );
+
+        let request = Request::get("/assets/file?id=test-mod:my-image")
+            .body(Body::empty())
+            .unwrap();
+        let response = block_on(call(&mut app, router, request));
+        let content_type = response
+            .headers()
+            .get("content-type")
+            .unwrap()
+            .to_str()
+            .unwrap();
+        assert_eq!(content_type, "image/png");
+
+        let nosniff = response
+            .headers()
+            .get("x-content-type-options")
+            .unwrap()
+            .to_str()
+            .unwrap();
+        assert_eq!(nosniff, "nosniff");
+
+        let body = block_on(response.into_body().collect()).unwrap().to_bytes();
+        assert_eq!(&body[..], b"fake-png-content");
+
+        std::fs::remove_file(&tmp).ok();
+    }
+
+    #[test]
+    fn test_get_asset_file_not_found() {
+        let (mut app, router) = test_app();
+        let request = Request::get("/assets/file?id=nonexistent:asset")
+            .body(Body::empty())
+            .unwrap();
+        let response = block_on(call_any_status(&mut app, router, request));
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    }
+
+    #[test]
+    fn test_get_asset_file_missing_id() {
+        let (mut app, router) = test_app();
+        let request = Request::get("/assets/file").body(Body::empty()).unwrap();
+        let response = block_on(call_any_status(&mut app, router, request));
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[test]
+    fn test_get_asset_file_imported_asset() {
+        let (mut app, router) = test_app();
+
+        let tmp = std::env::temp_dir().join("test_imported_asset.jpg");
+        std::fs::write(&tmp, b"fake-jpg-data").unwrap();
+
+        // Use register_imported (same path as POST /assets/import)
+        app.world_mut()
+            .resource_mut::<AssetRegistry>()
+            .register_imported(homunculus_core::prelude::AssetEntry {
+                id: homunculus_utils::prelude::AssetId::new("vrm:local:my-persona"),
+                path: PathBuf::from("vrm_local_my-persona.jpg"),
+                absolute_path: tmp.clone(),
+                asset_type: AssetType::Image,
+                description: None,
+                mod_name: "local".to_string(),
+            });
+
+        let request = Request::get("/assets/file?id=vrm:local:my-persona")
+            .body(Body::empty())
+            .unwrap();
+        let response = block_on(call(&mut app, router, request));
+        let content_type = response
+            .headers()
+            .get("content-type")
+            .unwrap()
+            .to_str()
+            .unwrap();
+        assert_eq!(content_type, "image/jpeg");
+
+        let body = block_on(response.into_body().collect()).unwrap().to_bytes();
+        assert_eq!(&body[..], b"fake-jpg-data");
+
+        std::fs::remove_file(&tmp).ok();
+    }
+
+    #[test]
+    fn test_get_asset_file_missing_file_on_disk() {
+        let (mut app, router) = test_app();
+
+        // Register asset with a path that does not exist on disk
+        app.world_mut().resource_mut::<AssetRegistry>().register(
+            homunculus_core::prelude::AssetEntry {
+                id: homunculus_utils::prelude::AssetId::new("test-mod:ghost"),
+                path: PathBuf::from("ghost.png"),
+                absolute_path: PathBuf::from("/tmp/does_not_exist_12345.png"),
+                asset_type: AssetType::Image,
+                description: None,
+                mod_name: "test-mod".to_string(),
+            },
+        );
+
+        let request = Request::get("/assets/file?id=test-mod:ghost")
+            .body(Body::empty())
+            .unwrap();
+        let response = block_on(call_any_status(&mut app, router, request));
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
     }
 
     #[test]

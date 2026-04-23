@@ -1,36 +1,29 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn } from "storybook/test";
-import { Heart, Mail, Plus, Trash2 } from "lucide-react";
-import { Button } from "./button";
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { Heart, Mail, Plus, Trash2 } from 'lucide-react';
+import { fn } from 'storybook/test';
+import { Button } from './button';
 
 const meta = {
-  title: "UI/Button",
+  title: 'UI/Button',
   component: Button,
   args: {
     onClick: fn(),
-    children: "Button",
+    children: 'Button',
   },
   argTypes: {
     variant: {
-      control: "select",
-      options: [
-        "default",
-        "destructive",
-        "outline",
-        "secondary",
-        "ghost",
-        "link",
-      ],
+      control: 'select',
+      options: ['default', 'destructive', 'outline', 'secondary', 'ghost', 'link'],
     },
     size: {
-      control: "select",
-      options: ["default", "sm", "lg", "icon"],
+      control: 'select',
+      options: ['default', 'sm', 'lg', 'icon'],
     },
     disabled: {
-      control: "boolean",
+      control: 'boolean',
     },
     children: {
-      control: "text",
+      control: 'text',
     },
   },
 } satisfies Meta<typeof Button>;
@@ -90,6 +83,6 @@ export const WithIcons: Story = {
 export const Disabled: Story = {
   args: {
     disabled: true,
-    children: "Disabled",
+    children: 'Disabled',
   },
 };

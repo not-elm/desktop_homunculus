@@ -97,22 +97,8 @@ interface Persona {
   profile: string;
   /** Personality description in natural language. */
   personality?: string | null;
-  /** Big Five personality parameters. */
-  ocean: Ocean;
   /** Extension metadata for MODs. */
   metadata: Record<string, unknown>;
-}
-```
-
-### `Ocean`
-
-```typescript
-interface Ocean {
-  openness?: number;
-  conscientiousness?: number;
-  extraversion?: number;
-  agreeableness?: number;
-  neuroticism?: number;
 }
 ```
 

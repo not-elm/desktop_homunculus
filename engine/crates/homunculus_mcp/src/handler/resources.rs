@@ -16,7 +16,7 @@ pub(super) fn resource_definitions() -> Vec<Resource> {
             .with_mime_type("application/json")
             .no_annotation(),
         RawResource::new("homunculus://characters", "homunculus-characters")
-            .with_description("Detailed snapshot of all loaded VRM characters")
+            .with_description("List of all personas (characters) with their profile, personality, VRM asset, and metadata")
             .with_mime_type("application/json")
             .no_annotation(),
         RawResource::new("homunculus://mods", "homunculus-mods")
@@ -25,10 +25,6 @@ pub(super) fn resource_definitions() -> Vec<Resource> {
             .no_annotation(),
         RawResource::new("homunculus://assets", "homunculus-assets")
             .with_description("List of available assets across all mods")
-            .with_mime_type("application/json")
-            .no_annotation(),
-        RawResource::new("homunculus://rpc", "homunculus-rpc")
-            .with_description("Registered RPC methods by MOD service. Use with call_rpc tool.")
             .with_mime_type("application/json")
             .no_annotation(),
     ]
@@ -56,8 +52,8 @@ pub(super) async fn read_resource(
             to_json_string(&info)?
         }
         "homunculus://characters" => {
-            let snapshots = handler.vrm_api.snapshot().await.map_err(api_err)?;
-            to_json_string(&snapshots)?
+            let personas = handler.persona_api.list().await.map_err(api_err)?;
+            to_json_string(&personas)?
         }
         "homunculus://mods" => {
             let mods = handler.mods_api.list().await.map_err(api_err)?;
@@ -70,13 +66,6 @@ pub(super) async fn read_resource(
                 .await
                 .map_err(api_err)?;
             to_json_string(&assets)?
-        }
-        "homunculus://rpc" => {
-            let reg = handler
-                .rpc_registry
-                .read()
-                .unwrap_or_else(|e| e.into_inner());
-            to_json_string(reg.all())?
         }
         _ => {
             return Err(rmcp::ErrorData::resource_not_found(

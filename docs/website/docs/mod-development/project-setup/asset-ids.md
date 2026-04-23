@@ -5,7 +5,7 @@ sidebar_position: 3
 
 # Asset IDs
 
-Asset IDs are unique identifiers that reference files across the entire MOD system. Whenever you spawn a VRM model, play an animation, or open a WebView, you use an asset ID to tell the engine which file to load. The only hard requirement is that every asset ID is **globally unique** — duplicate IDs are logged as warnings and skipped.
+Asset IDs are unique identifiers that reference files across the entire MOD system. Whenever you attach a VRM model to a persona, play an animation, or open a WebView, you use an asset ID to tell the engine which file to load. The only hard requirement is that every asset ID is **globally unique** — duplicate IDs are logged as warnings and skipped.
 
 ## Recommended Convention
 
@@ -19,12 +19,12 @@ The engine treats asset IDs as opaque strings — it does not validate or parse 
 
 | Part | Source | Example |
 |---|---|---|
-| `mod-name` | Derived from the `name` field in `package.json` | `@hmcs/elmer` becomes `elmer` |
+| `mod-name` | Derived from the `name` field in `package.json` | `@hmcs/assets` becomes `assets` |
 | `asset-name` | The key in the `homunculus.assets` object | `vrm`, `open`, `ui` |
 
 The **mod name** is extracted from the package name by stripping the scope prefix. For example:
 
-- `@hmcs/elmer` -- mod name is `elmer`
+- `@hmcs/assets` -- mod name is `assets`
 - `@hmcs/settings` -- mod name is `settings`
 - `my-character` -- mod name is `my-character` (no scope to strip)
 
@@ -36,15 +36,15 @@ Given this `package.json`:
 
 ```json
 {
-  "name": "@hmcs/elmer",
+  "name": "my-character",
   "homunculus": {
     "assets": {
-      "elmer:vrm": {
-        "path": "assets/Elmer.vrm",
+      "my-character:vrm": {
+        "path": "assets/MyModel.vrm",
         "type": "vrm",
-        "description": "VRM model named Elmer"
+        "description": "Custom VRM character model"
       },
-      "elmer:open": {
+      "my-character:open": {
         "path": "assets/open.mp3",
         "type": "sound",
         "description": "Sound effect for opening action"
@@ -54,7 +54,7 @@ Given this `package.json`:
 }
 ```
 
-The asset IDs are `elmer:vrm` and `elmer:open`. You use these strings anywhere the SDK or API expects an asset reference.
+The asset IDs are `my-character:vrm` and `my-character:open`. You use these strings anywhere the SDK or API expects an asset reference.
 
 ## Built-in Assets
 
@@ -75,12 +75,13 @@ The built-in assets use the mod name `vrma` and `se` (from the `@hmcs/assets` pa
 
 The `@hmcs/sdk` accepts asset IDs as strings wherever an asset is needed.
 
-### Spawning a VRM character
+### Attaching a VRM character to a persona
 
 ```typescript
-import { Vrm } from "@hmcs/sdk";
+import { persona } from "@hmcs/sdk";
 
-const character = await Vrm.spawn("elmer:vrm");
+const p = await persona.create({ id: "elmer" });
+const vrm = await p.attachVrm("elmer:vrm");
 ```
 
 ### Playing a VRMA animation
@@ -88,7 +89,7 @@ const character = await Vrm.spawn("elmer:vrm");
 ```typescript
 import { repeat } from "@hmcs/sdk";
 
-await character.playVrma({
+await vrm.playVrma({
   asset: "vrma:idle-maid",
   repeat: repeat.forever(),
   transitionSecs: 0.5,
@@ -111,23 +112,23 @@ The `webviewSource.local("settings:ui")` source tells the engine to load the HTM
 
 ## Using Asset IDs in the HTTP API
 
-Asset IDs appear in HTTP API request bodies as well. For example, to spawn a VRM model directly via the API:
+Asset IDs appear in HTTP API request bodies as well. For example, to attach a VRM model to a persona via the API:
 
 ```bash
-curl -X POST http://localhost:3100/vrm/spawn \
+curl -X POST http://localhost:3100/personas/elmer/vrm \
   -H "Content-Type: application/json" \
-  -d '{"asset": "elmer:vrm"}'
+  -d '{"assetId": "elmer:vrm"}'
 ```
 
 The same asset ID string is used consistently across the SDK and the HTTP API.
 
 ## Referencing Assets from Other MODs
 
-A MOD can reference assets from any other installed MOD. For example, a MOD that spawns a character commonly uses animations from `@hmcs/assets`:
+A MOD can reference assets from any other installed MOD. For example, a MOD that creates a character commonly uses animations from `@hmcs/assets`:
 
 ```typescript
 // This MOD uses an animation from @hmcs/assets
-await character.playVrma({
+await vrm.playVrma({
   asset: "vrma:idle-maid", // Defined in @hmcs/assets, not in this MOD
 });
 ```

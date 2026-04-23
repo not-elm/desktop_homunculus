@@ -1,0 +1,1 @@
+{"parameters":[{"name":"modelSize","in":"query","description":"Model size to cancel. Omit to cancel all.","required":false,"schema":{"type":"string","description":"Whisper model size variants.","enum":["tiny","base","small","medium","large-v3-turbo","large-v3"],"title":"SttModelSize"}}]}

@@ -1,0 +1,69 @@
+---
+id: download-model-stream
+title: "Download an STT model with NDJSON progress streaming."
+description: "Streams progress events as NDJSON lines. If the model already exists,"
+hide_title: true
+hide_table_of_contents: true
+api: eJzNVcGS2zYM/RUOzrKs7OYSnZJ0O81mNsnO2m0PW09CS7DEhCIVArLX8ejfM6Ak21039/piDwgCD+89wgdgXRHkj0DMsEqgRCqCadl4BzksOKBuSLXBVwGJFG7RMSlN6uPN+8Wnj8oah5Sq243iGlXjS7RK24C63Ct8MsSU/OMCchccKa3IuMqi+lL4prXI+GWomKqHMeVl9kqZjdKq9DtnvS6VoWNB445IUkjAtxi0IL0tIYfpwucI4jNF6JBAwO8dEr/15R7yAxTeMTqWn7ptrSlihflXkoEPQEWNjZZfvG8RcvDrr1gwPGfmYaiq1r7cq40P4+gTiHRsbAKWwm48XZgfKBy3QZCzQZI+p6NTU+JgXHXR9O/aUItTLzI/UG11MNpx5ANd10gzNm4PCaw1ISRAjbYWEmiwNJ0QYnWocLa9nnEX1v4sINjYsMWoPH84Auv700GM3oxjjixALxmneTl0GAPUekfDmFdZJl//Hmg00aCV8puT6pPOkPxKsaeZK0fVYvuX2avLBhPQ/7IQyKWrq8tLt26rrSnPaI4MNMi1F6e1nsQQreYacpgT8zym0nyCPz+6jzBsMcgLO0AXLORQM7f5fG59oW3tifPrF1l2IfWdHKsSt2h928j4/SoBmffh5Offn7Q8o2cuGvTvEzBu46OpRune+aZzRWc7Um/uby9a3iB9Y9+qs7R3y+W95EaHiw7BW2tcpf56+KCKWgddMAZK1A7XW4M7SpTuSuMTpZ3wFzAdBdRFFNDpRpA4z2iFHmy0EVLQNlEW3Qjo15WE08I3MoY1BTrCs+t3f9zfza7TbOadjZMKxcMQL9IszSQkIjXand06ecGpxXI5yrszXE/L7LjmBvmMq9LnLJ0tkP/5dhxXCeMTz1urjRNWogUPo3WHpZ8M3pGXNlUV3w4GXiUgHpXcw0EWyp/B9r2Ev3cY9pA/rhKIO2gtFntc9QnUqEsM0fHfcA85/DYwNlsKIkm3nSC7WL99Mt14UxTY8i9yjw9fXsTxUd5/Wixl6Y1rXmaCHILeySbWO8gh/mNIhbiPYuwAVruq05XkDjXl8xP0a3Xl
+sidebar_class_name: "post api-method"
+info_path: reference/api/homunculus-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+import Translate from "@docusaurus/Translate";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Download an STT model with NDJSON progress streaming."}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/stt/models/download/stream"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Streams progress events as NDJSON lines. If the model already exists,
+returns a single `complete` event. Returns 409 if a download is already in progress.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+>
+  <Translate id="theme.openapi.request.title">Request</Translate>
+</Heading>
+
+<ParamsDetails
+  parameters={undefined}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  {...require("./download-model-stream.RequestSchema.json")}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  {...require("./download-model-stream.StatusCodes.json")}
+>
+  
+</StatusCodes>
+
+
+      

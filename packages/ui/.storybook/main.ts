@@ -1,14 +1,14 @@
-import type { StorybookConfig } from "@storybook/react-vite";
-import tailwindcss from "@tailwindcss/vite";
-import { resolve, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import type { StorybookConfig } from '@storybook/react-vite';
+import tailwindcss from '@tailwindcss/vite';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const config: StorybookConfig = {
-  stories: ["../src/**/*.stories.@(ts|tsx)"],
+  stories: ['../src/**/*.stories.@(ts|tsx)'],
   addons: [],
-  framework: "@storybook/react-vite",
+  framework: '@storybook/react-vite',
   typescript: {
     reactDocgen: false,
   },
@@ -19,7 +19,7 @@ const config: StorybookConfig = {
     config.resolve ??= {};
     config.resolve.alias = {
       ...config.resolve.alias,
-      "@": resolve(__dirname, "../src"),
+      '@': resolve(__dirname, '../src'),
     };
 
     config.plugins ??= [];
@@ -28,9 +28,9 @@ const config: StorybookConfig = {
     config.optimizeDeps ??= {};
     config.optimizeDeps.include = [
       ...(config.optimizeDeps.include ?? []),
-      "react",
-      "react-dom",
-      "react/jsx-runtime",
+      'react',
+      'react-dom',
+      'react/jsx-runtime',
     ];
 
     return config;
