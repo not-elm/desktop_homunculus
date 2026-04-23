@@ -24,7 +24,7 @@ def setup() -> None:
             "bevy_cef_bundle_app@0.8.1",
         ])
     elif plat == Platform.WINDOWS:
-        cargo_packages.append("bevy_cef_render_process@0.4.1")
+        cargo_packages.append("bevy_cef_render_process@0.8.1")
 
     run(["cargo", "install"] + cargo_packages)
 
