@@ -4,7 +4,6 @@ BIN_NAME       := desktop_homunculus
 BUNDLE_DIR     := target/bundle
 APP_BUNDLE     := $(BUNDLE_DIR)/$(APP_NAME).app
 CONTENTS       := $(APP_BUNDLE)/Contents
-DMG_FILE       := $(BUNDLE_DIR)/$(BIN_NAME).dmg
 PLIST_TEMPLATE := build/macos/Info.plist
 ICNS_FILE      := build/macos/AppIcon.icns
 RUST_LICENSES_OUTPUT := credits/licenses/RUST_THIRD_PARTY.md
@@ -71,7 +70,7 @@ install-cli: ## Install hmcs CLI via cargo install
 # --- Release targets ---
 
 .PHONY: release-windows release-macos release-macos-arm release-macos-x86 release-macos-universal \
-        bundle-macos-app package-macos-pkg package-macos-dmg bundle-macos-cef bundle-macos-runtime
+        bundle-macos-app package-macos-pkg bundle-macos-cef bundle-macos-runtime
 
 release-windows: ## Build Windows MSI installer
 	$(PYTHON) scripts/release_windows.py
@@ -148,17 +147,6 @@ package-macos-pkg: ## Create pkg installer from .app bundle (internal)
 	@echo "Creating pkg..."
 	bash scripts/build_pkg.sh "$(VERSION)" "$(SIGNING_IDENTITY)"
 	@echo "Done."
-
-package-macos-dmg: ## Create DMG from .app bundle (internal, legacy)
-	@echo "Creating DMG..."
-	rm -f $(DMG_FILE)
-	mkdir -p $(BUNDLE_DIR)/dmg-staging
-	cp -r $(APP_BUNDLE) $(BUNDLE_DIR)/dmg-staging/
-	ln -s /Applications $(BUNDLE_DIR)/dmg-staging/Applications
-	hdiutil create -fs HFS+ -volname "$(APP_NAME)" \
-		-srcfolder $(BUNDLE_DIR)/dmg-staging $(DMG_FILE)
-	rm -rf $(BUNDLE_DIR)/dmg-staging
-	@echo "Done: $(DMG_FILE)"
 
 bundle-macos-cef: ## Bundle CEF framework and helper apps into .app
 	@echo "==> Bundling CEF framework..."
