@@ -15,9 +15,9 @@ def setup_ci() -> None:
     plat = current_platform()
     if plat == Platform.MACOS:
         packages.extend([
-            "bevy_cef_debug_render_process@0.4.1",
-            "bevy_cef_render_process@0.4.1",
-            "bevy_cef_bundle_app@0.4.1",
+            "bevy_cef_debug_render_process@0.8.1",
+            "bevy_cef_render_process@0.8.1",
+            "bevy_cef_bundle_app@0.8.1",
         ])
     elif plat == Platform.WINDOWS:
         packages.append("bevy_cef_render_process@0.4.1")

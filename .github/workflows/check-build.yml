@@ -36,7 +36,7 @@ jobs:
       - uses: ./.github/actions/setup-engine-build
         with:
           shared-key: arm64-engine-dist
-          cef-cache-key: cef-arm64-144.4.0
+          cef-cache-key: cef-arm64-145.6.1
 
       - name: Cache runtime downloads
         uses: actions/cache@v4
@@ -88,7 +88,7 @@ jobs:
       - uses: ./.github/actions/setup-engine-build
         with:
           shared-key: x64-engine-dist
-          cef-cache-key: cef-windows-x64-144.4.0
+          cef-cache-key: cef-windows-x64-145.6.1
 
       - name: Clean stale CEF files from target cache
         run: |
