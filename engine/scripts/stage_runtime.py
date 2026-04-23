@@ -34,6 +34,10 @@ VERSIONS_FILE = ENGINE_DIR / "runtime-versions.toml"
 STAGING_DIR = ENGINE_DIR / "target" / "bundle" / "runtime"
 CACHE_DIR = ENGINE_DIR / "target" / "bundle" / "runtime-cache"
 
+# On Windows, npm is a .cmd shim; subprocess.run requires the full filename
+# because CreateProcess only resolves .exe by default.
+NPM = "npm.cmd" if platform.system() == "Windows" else "npm"
+
 
 def load_versions() -> dict[str, str]:
     """Parse runtime-versions.toml (minimal TOML parser for [runtime] section)."""
@@ -147,7 +151,7 @@ def stage_pnpm(version: str) -> None:
         tmp_path = Path(tmp)
         log(f"Packing pnpm@{version}")
         result = subprocess.run(
-            ["npm", "pack", f"pnpm@{version}", "--pack-destination", str(tmp_path)],
+            [NPM, "pack", f"pnpm@{version}", "--pack-destination", str(tmp_path)],
             capture_output=True,
             text=True,
         )
@@ -192,7 +196,7 @@ def stage_tsx(version: str) -> None:
 
     log(f"Installing tsx@{version}")
     result = subprocess.run(
-        ["npm", "install", "--no-audit", "--no-fund", f"tsx@{version}"],
+        [NPM, "install", "--no-audit", "--no-fund", f"tsx@{version}"],
         cwd=tsx_dir,
         capture_output=True,
         text=True,
