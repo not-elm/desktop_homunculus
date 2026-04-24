@@ -1,6 +1,6 @@
 {
   "name": "@hmcs/stt",
-  "version": "0.1.0-alpha.6-dev",
+  "version": "0.1.0-alpha.6",
   "description": "Speech-to-Text control panel — provides a tray menu to manage STT models and sessions",
   "license": "MIT",
   "type": "module",

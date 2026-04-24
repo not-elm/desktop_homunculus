@@ -21,6 +21,8 @@ jobs:
       sdk_tag: ${{ steps.check.outputs.sdk_tag }}
       ui_version: ${{ steps.check.outputs.ui_version }}
       ui_tag: ${{ steps.check.outputs.ui_tag }}
+      openclaw_plugin_version: ${{ steps.check.outputs.openclaw_plugin_version }}
+      openclaw_plugin_tag: ${{ steps.check.outputs.openclaw_plugin_tag }}
     steps:
       - uses: actions/checkout@v4
 
@@ -45,6 +47,7 @@ jobs:
           # Read package versions from package.json (using sed to avoid Node.js dependency)
           SDK_VERSION=$(sed -n 's/.*"version": *"\(.*\)".*/\1/p' packages/sdk/package.json | head -1)
           UI_VERSION=$(sed -n 's/.*"version": *"\(.*\)".*/\1/p' packages/ui/package.json | head -1)
+          OPENCLAW_PLUGIN_VERSION=$(sed -n 's/.*"version": *"\(.*\)".*/\1/p' packages/openclaw-plugin/package.json | head -1)
 
           # Prerelease detection
           if echo "$VERSION" | grep -qE -- '-(alpha|beta|rc)'; then
@@ -56,6 +59,7 @@ jobs:
           # Per-package dist-tag computation
           SDK_TAG="$(.github/scripts/compute-tag.sh "$SDK_VERSION")"
           UI_TAG="$(.github/scripts/compute-tag.sh "$UI_VERSION")"
+          OPENCLAW_PLUGIN_TAG="$(.github/scripts/compute-tag.sh "$OPENCLAW_PLUGIN_VERSION")"
 
           {
             echo "version=$VERSION"
@@ -64,6 +68,8 @@ jobs:
             echo "sdk_tag=$SDK_TAG"
             echo "ui_version=$UI_VERSION"
             echo "ui_tag=$UI_TAG"
+            echo "openclaw_plugin_version=$OPENCLAW_PLUGIN_VERSION"
+            echo "openclaw_plugin_tag=$OPENCLAW_PLUGIN_TAG"
           } >> "$GITHUB_OUTPUT"
 
   build-engine:
@@ -201,6 +207,14 @@ jobs:
           package-name: "@hmcs/ui"
           version: ${{ needs.validate.outputs.ui_version }}
           tag: ${{ needs.validate.outputs.ui_tag }}
+          npm-token: ${{ secrets.NPM_TOKEN }}
+
+      # --- Publish @hmcs/openclaw-plugin (bundles @hmcs/sdk; build after SDK is built) ---
+      - uses: ./.github/actions/publish-npm-package
+        with:
+          package-name: "@hmcs/openclaw-plugin"
+          version: ${{ needs.validate.outputs.openclaw_plugin_version }}
+          tag: ${{ needs.validate.outputs.openclaw_plugin_tag }}
           npm-token: ${{ secrets.NPM_TOKEN }}
 
       # --- Publish official MOD packages ---

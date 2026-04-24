@@ -1,11 +1,19 @@
 {
   "name": "@hmcs/openclaw-plugin",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0-alpha.6",
   "type": "module",
   "main": "./dist/entry.js",
   "license": "MIT",
   "author": "notelm",
   "description": "OpenClaw plugin bridging agent output to Desktop Homunculus characters.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/not-elm/desktop-homunculus.git",
+    "directory": "packages/openclaw-plugin"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "files": [
     "dist",
     "openclaw.plugin.json"
