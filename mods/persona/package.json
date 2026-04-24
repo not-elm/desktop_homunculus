@@ -1,6 +1,6 @@
 {
   "name": "@hmcs/persona",
-  "version": "0.1.0-alpha.6-dev",
+  "version": "0.1.0-alpha.6",
   "description": "Persona management mod — spawns personas at startup, manages animations, and provides settings and management UIs",
   "license": "MIT",
   "type": "module",
