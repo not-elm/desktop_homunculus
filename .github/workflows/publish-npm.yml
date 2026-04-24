@@ -33,15 +33,19 @@ jobs:
         run: |
           SDK_VERSION="$(node -e 'const p=require("./packages/sdk/package.json"); process.stdout.write(p.version)')"
           UI_VERSION="$(node -e 'const p=require("./packages/ui/package.json"); process.stdout.write(p.version)')"
+          OPENCLAW_PLUGIN_VERSION="$(node -e 'const p=require("./packages/openclaw-plugin/package.json"); process.stdout.write(p.version)')"
 
           SDK_TAG="$(.github/scripts/compute-tag.sh "$SDK_VERSION")"
           UI_TAG="$(.github/scripts/compute-tag.sh "$UI_VERSION")"
+          OPENCLAW_PLUGIN_TAG="$(.github/scripts/compute-tag.sh "$OPENCLAW_PLUGIN_VERSION")"
 
           {
             echo "sdk_version=$SDK_VERSION"
             echo "sdk_tag=$SDK_TAG"
             echo "ui_version=$UI_VERSION"
             echo "ui_tag=$UI_TAG"
+            echo "openclaw_plugin_version=$OPENCLAW_PLUGIN_VERSION"
+            echo "openclaw_plugin_tag=$OPENCLAW_PLUGIN_TAG"
           } >> "$GITHUB_OUTPUT"
 
       # --- Publish @hmcs/sdk ---
@@ -58,6 +62,14 @@ jobs:
           package-name: "@hmcs/ui"
           version: ${{ steps.versions.outputs.ui_version }}
           tag: ${{ steps.versions.outputs.ui_tag }}
+          npm-token: ${{ secrets.NPM_TOKEN }}
+
+      # --- Publish @hmcs/openclaw-plugin (bundles @hmcs/sdk; build after SDK is built) ---
+      - uses: ./.github/actions/publish-npm-package
+        with:
+          package-name: "@hmcs/openclaw-plugin"
+          version: ${{ steps.versions.outputs.openclaw_plugin_version }}
+          tag: ${{ steps.versions.outputs.openclaw_plugin_tag }}
           npm-token: ${{ secrets.NPM_TOKEN }}
 
       # --- Publish official MOD packages ---
