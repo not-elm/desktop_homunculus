@@ -87,8 +87,10 @@ impl RuntimeResolver {
 
     /// Build a [`Command`] for `node --import tsx <args...>`.
     ///
-    /// In bundled mode, tsx is referenced by absolute path so that
-    /// `--import` resolves without `node_modules/` lookup.
+    /// In bundled mode, tsx is referenced by an absolute `file://` URL so that
+    /// Node's ESM loader accepts it on Windows (a bare `C:\...` path triggers
+    /// `ERR_UNSUPPORTED_ESM_URL_SCHEME` because the drive letter is parsed as
+    /// a URL scheme).
     /// In fallback mode, uses the bare specifier `tsx` (resolved from
     /// `node_modules/` in the mods directory).
     pub fn node_command_with_tsx(&self) -> Command {
@@ -96,7 +98,7 @@ impl RuntimeResolver {
         cmd.arg("--import");
         match &self.bundled_runtime_dir {
             Some(dir) => {
-                cmd.arg(tsx_import_path(dir));
+                cmd.arg(tsx_import_arg(dir));
             }
             None => {
                 cmd.arg("tsx");
@@ -236,6 +238,17 @@ fn tsx_import_path(runtime_dir: &Path) -> PathBuf {
         .join("dist")
         .join("esm")
         .join("index.mjs")
+}
+
+/// Argument passed to `node --import`. Node 22 on Windows rejects bare
+/// absolute paths containing a drive letter (`c:`) as unsupported URL
+/// schemes, so bundled-mode arguments are converted to `file://` URLs.
+fn tsx_import_arg(runtime_dir: &Path) -> std::ffi::OsString {
+    let path = tsx_import_path(runtime_dir);
+    match url::Url::from_file_path(&path) {
+        Ok(url) => std::ffi::OsString::from(url.to_string()),
+        Err(_) => path.into_os_string(),
+    }
 }
 
 /// Returns the correct program name for pnpm on the current platform.
