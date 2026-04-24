@@ -14,8 +14,12 @@ VERSION = $(shell cargo metadata --format-version 1 --no-deps 2>/dev/null \
 	| jq -r '.packages[] | select(.name=="$(BIN_NAME)") | .version')
 
 # --- Platform detection ---
-UNAME_S    := $(shell uname -s)
-IS_WINDOWS := $(findstring MINGW,$(UNAME_S))$(findstring MSYS,$(UNAME_S))
+ifeq ($(OS),Windows_NT)
+  IS_WINDOWS := 1
+else
+  UNAME_S    := $(shell uname -s)
+  IS_WINDOWS := $(findstring MINGW,$(UNAME_S))$(findstring MSYS,$(UNAME_S))
+endif
 
 # Python command: python3 on macOS/Linux, python on Windows
 ifeq ($(IS_WINDOWS),)
@@ -40,12 +44,14 @@ setup-ci: ## CI release build setup (uses cargo-binstall, skips cargo-about and 
 setup-cef:
 	$(PYTHON) scripts/setup_cef.py
 
+debug: export HMCS_MODS_DIR := $(CURDIR)/../sandbox
 debug:
-	HMCS_MODS_DIR=$(CURDIR)/../sandbox cargo run --features develop
+	cargo run --features develop
 
+debug-cuda: export HMCS_MODS_DIR := $(CURDIR)/../sandbox
 debug-cuda:
 	$(PYTHON) scripts/patch_whisper_cuda.py
-	HMCS_MODS_DIR=$(CURDIR)/../sandbox cargo run --features develop,stt-cuda
+	cargo run --features develop,stt-cuda
 
 gen-open-api:
 	cargo run -p homunculus_http_server --bin gen_openapi -- --output $(OPENAPI_OUTPUT)

@@ -29,6 +29,9 @@ storybook-static
 *.tsbuildinfo
 *.local
 
+# Build artifacts
+packages/openclaw-plugin/*.tgz
+
 .superpowers/
 docs/plans/
 docs/memo.md
