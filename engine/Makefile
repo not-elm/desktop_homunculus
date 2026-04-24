@@ -4,7 +4,6 @@ BIN_NAME       := desktop_homunculus
 BUNDLE_DIR     := target/bundle
 APP_BUNDLE     := $(BUNDLE_DIR)/$(APP_NAME).app
 CONTENTS       := $(APP_BUNDLE)/Contents
-DMG_FILE       := $(BUNDLE_DIR)/$(BIN_NAME).dmg
 PLIST_TEMPLATE := build/macos/Info.plist
 ICNS_FILE      := build/macos/AppIcon.icns
 RUST_LICENSES_OUTPUT := credits/licenses/RUST_THIRD_PARTY.md
@@ -15,8 +14,12 @@ VERSION = $(shell cargo metadata --format-version 1 --no-deps 2>/dev/null \
 	| jq -r '.packages[] | select(.name=="$(BIN_NAME)") | .version')
 
 # --- Platform detection ---
-UNAME_S    := $(shell uname -s)
-IS_WINDOWS := $(findstring MINGW,$(UNAME_S))$(findstring MSYS,$(UNAME_S))
+ifeq ($(OS),Windows_NT)
+  IS_WINDOWS := 1
+else
+  UNAME_S    := $(shell uname -s)
+  IS_WINDOWS := $(findstring MINGW,$(UNAME_S))$(findstring MSYS,$(UNAME_S))
+endif
 
 # Python command: python3 on macOS/Linux, python on Windows
 ifeq ($(IS_WINDOWS),)
@@ -41,12 +44,14 @@ setup-ci: ## CI release build setup (uses cargo-binstall, skips cargo-about and 
 setup-cef:
 	$(PYTHON) scripts/setup_cef.py
 
+debug: export HMCS_MODS_DIR := $(CURDIR)/../sandbox
 debug:
-	HMCS_MODS_DIR=$(CURDIR)/../sandbox cargo run --features develop
+	cargo run --features develop
 
+debug-cuda: export HMCS_MODS_DIR := $(CURDIR)/../sandbox
 debug-cuda:
 	$(PYTHON) scripts/patch_whisper_cuda.py
-	HMCS_MODS_DIR=$(CURDIR)/../sandbox cargo run --features develop,stt-cuda
+	cargo run --features develop,stt-cuda
 
 gen-open-api:
 	cargo run -p homunculus_http_server --bin gen_openapi -- --output $(OPENAPI_OUTPUT)
@@ -71,7 +76,7 @@ install-cli: ## Install hmcs CLI via cargo install
 # --- Release targets ---
 
 .PHONY: release-windows release-macos release-macos-arm release-macos-x86 release-macos-universal \
-        bundle-macos-app package-macos-pkg package-macos-dmg bundle-macos-cef bundle-macos-runtime
+        bundle-macos-app package-macos-pkg bundle-macos-cef bundle-macos-runtime
 
 release-windows: ## Build Windows MSI installer
 	$(PYTHON) scripts/release_windows.py
@@ -148,17 +153,6 @@ package-macos-pkg: ## Create pkg installer from .app bundle (internal)
 	@echo "Creating pkg..."
 	bash scripts/build_pkg.sh "$(VERSION)" "$(SIGNING_IDENTITY)"
 	@echo "Done."
-
-package-macos-dmg: ## Create DMG from .app bundle (internal, legacy)
-	@echo "Creating DMG..."
-	rm -f $(DMG_FILE)
-	mkdir -p $(BUNDLE_DIR)/dmg-staging
-	cp -r $(APP_BUNDLE) $(BUNDLE_DIR)/dmg-staging/
-	ln -s /Applications $(BUNDLE_DIR)/dmg-staging/Applications
-	hdiutil create -fs HFS+ -volname "$(APP_NAME)" \
-		-srcfolder $(BUNDLE_DIR)/dmg-staging $(DMG_FILE)
-	rm -rf $(BUNDLE_DIR)/dmg-staging
-	@echo "Done: $(DMG_FILE)"
 
 bundle-macos-cef: ## Bundle CEF framework and helper apps into .app
 	@echo "==> Bundling CEF framework..."

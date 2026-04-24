@@ -89,7 +89,7 @@ jobs:
       - uses: ./.github/actions/setup-engine-build
         with:
           shared-key: ${{ matrix.arch }}-engine-dist
-          cef-cache-key: cef-${{ matrix.arch }}-144.4.0
+          cef-cache-key: cef-${{ matrix.arch }}-145.6.1
 
       - name: Cache runtime downloads
         uses: actions/cache@v4
@@ -141,7 +141,7 @@ jobs:
       - uses: ./.github/actions/setup-engine-build
         with:
           shared-key: x64-engine-dist
-          cef-cache-key: cef-windows-x64-144.4.0
+          cef-cache-key: cef-windows-x64-145.6.1
 
       - name: Cache runtime downloads
         uses: actions/cache@v4

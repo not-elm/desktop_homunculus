@@ -34,7 +34,7 @@ Minimal steps to reproduce the issue.
 <!--
   Examples:
   - OS: macOS 15.3 / Windows 11 24H2
-  - Build method: local build / MSI installer / DMG / GitHub Actions artifact
+  - Build method: local build / PKG installer / MSI installer / GitHub Actions artifact
   - GPU: NVIDIA RTX 3080 Ti, driver 560.xx
 -->
 

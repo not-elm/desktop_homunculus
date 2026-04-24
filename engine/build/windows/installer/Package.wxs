@@ -70,7 +70,7 @@
                       Return="ignore" />
 
         <InstallExecuteSequence>
-            <Custom Action="InstallModsAction" After="InstallFiles">NOT Installed OR REINSTALL</Custom>
+            <Custom Action="InstallModsAction" After="InstallFiles" Condition="NOT Installed OR REINSTALL" />
         </InstallExecuteSequence>
     </Package>
 </Wix>

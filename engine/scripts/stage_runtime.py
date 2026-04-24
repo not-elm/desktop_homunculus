@@ -34,6 +34,10 @@ VERSIONS_FILE = ENGINE_DIR / "runtime-versions.toml"
 STAGING_DIR = ENGINE_DIR / "target" / "bundle" / "runtime"
 CACHE_DIR = ENGINE_DIR / "target" / "bundle" / "runtime-cache"
 
+# On Windows, npm is a .cmd shim; subprocess.run requires the full filename
+# because CreateProcess only resolves .exe by default.
+NPM = "npm.cmd" if platform.system() == "Windows" else "npm"
+
 
 def load_versions() -> dict[str, str]:
     """Parse runtime-versions.toml (minimal TOML parser for [runtime] section)."""
@@ -87,7 +91,7 @@ def download_file(url: str, dest: Path) -> None:
     dest.parent.mkdir(parents=True, exist_ok=True)
     dest.write_bytes(data)
     size_mb = len(data) / (1024 * 1024)
-    log(f"  Downloaded {size_mb:.1f} MB → {dest}")
+    log(f"  Downloaded {size_mb:.1f} MB -> {dest}")
 
 
 def cached_download(url: str, filename: str) -> Path:
@@ -134,7 +138,7 @@ def stage_node(version: str, node_os: str, node_arch: str) -> None:
                 dest.write_bytes(src.read())
             dest.chmod(0o755)
 
-    log(f"Staged Node.js v{version} → {node_dir}")
+    log(f"Staged Node.js v{version} -> {node_dir}")
 
 
 def stage_pnpm(version: str) -> None:
@@ -147,7 +151,7 @@ def stage_pnpm(version: str) -> None:
         tmp_path = Path(tmp)
         log(f"Packing pnpm@{version}")
         result = subprocess.run(
-            ["npm", "pack", f"pnpm@{version}", "--pack-destination", str(tmp_path)],
+            [NPM, "pack", f"pnpm@{version}", "--pack-destination", str(tmp_path)],
             capture_output=True,
             text=True,
         )
@@ -175,7 +179,7 @@ def stage_pnpm(version: str) -> None:
                         with tf.extractfile(member) as src:
                             dest.write_bytes(src.read())
 
-    log(f"Staged pnpm v{version} → {pnpm_dir}")
+    log(f"Staged pnpm v{version} -> {pnpm_dir}")
 
 
 def stage_tsx(version: str) -> None:
@@ -192,7 +196,7 @@ def stage_tsx(version: str) -> None:
 
     log(f"Installing tsx@{version}")
     result = subprocess.run(
-        ["npm", "install", "--no-audit", "--no-fund", f"tsx@{version}"],
+        [NPM, "install", "--no-audit", "--no-fund", f"tsx@{version}"],
         cwd=tsx_dir,
         capture_output=True,
         text=True,
@@ -209,7 +213,7 @@ def stage_tsx(version: str) -> None:
     if not esm_entry.exists():
         error(f"tsx ESM entry point not found: {esm_entry}")
 
-    log(f"Staged tsx v{version} → {tsx_dir}")
+    log(f"Staged tsx v{version} -> {tsx_dir}")
 
 
 def main() -> None:

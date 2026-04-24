@@ -86,7 +86,11 @@ export class HomunculusStreamError extends Error {
 }
 
 export namespace host {
-  let _baseUrl = 'http://localhost:3100';
+  // Use 127.0.0.1 explicitly: on Windows 11, `localhost` resolves to `::1`
+  // first, and Node 22's undici 6 has no IPv4 fallback, causing every
+  // bundled-runtime mod service fetch to ECONNREFUSED against the engine's
+  // IPv4-only bind.
+  let _baseUrl = 'http://127.0.0.1:3100';
 
   /**
    * Configures the SDK's base URL for the Desktop Homunculus HTTP server.

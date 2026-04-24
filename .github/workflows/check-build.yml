@@ -36,9 +36,15 @@ jobs:
       - uses: ./.github/actions/setup-engine-build
         with:
           shared-key: arm64-engine-dist
-          cef-cache-key: cef-arm64-144.4.0
+          cef-cache-key: cef-arm64-145.6.1
 
-      - name: Build engine binary
+      - name: Cache runtime downloads
+        uses: actions/cache@v4
+        with:
+          path: engine/target/bundle/runtime-cache
+          key: runtime-${{ hashFiles('engine/runtime-versions.toml') }}-arm64
+
+      - name: Build engine and CLI binaries
         run: |
           if ! sccache --start-server 2>/dev/null && ! sccache --show-stats 2>/dev/null; then
             echo "::warning::sccache unavailable, falling back to plain cargo build"
@@ -46,27 +52,26 @@ jobs:
           fi
           SDKROOT=$(xcrun -sdk macosx --show-sdk-path) \
             cargo build --profile dist --target=aarch64-apple-darwin --locked
+          SDKROOT=$(xcrun -sdk macosx --show-sdk-path) \
+            cargo build -p homunculus_cli --profile dist --target=aarch64-apple-darwin --locked
         env:
           CARGO_PROFILE_DIST_CODEGEN_UNITS: 2
 
-      - name: Bundle .app and create DMG
+      - name: Bundle .app and create pkg
         run: |
-          make bundle-macos-app BIN_SOURCE=target/aarch64-apple-darwin/dist/desktop_homunculus
-          make package-macos-dmg
+          make bundle-macos-app \
+            BIN_SOURCE=target/aarch64-apple-darwin/dist/desktop_homunculus \
+            CLI_SOURCE=target/aarch64-apple-darwin/dist/hmcs \
+            TARGET_ARCH=arm64
+          make package-macos-pkg
         env:
           SKIP_GEN_CREDITS: "1"
 
-      - name: Rename DMG with arch suffix
-        run: |
-          VERSION="${{ needs.resolve-version.outputs.version }}"
-          mv target/bundle/desktop_homunculus.dmg \
-             target/bundle/desktop-homunculus-${VERSION}-arm64.dmg
-
-      - name: Upload DMG artifact
+      - name: Upload pkg artifact
         uses: actions/upload-artifact@v4
         with:
           name: engine-macos-arm64
-          path: engine/target/bundle/desktop-homunculus-${{ needs.resolve-version.outputs.version }}-arm64.dmg
+          path: engine/target/bundle/desktop_homunculus-${{ needs.resolve-version.outputs.version }}-*.pkg
 
   build-engine-windows:
     needs: resolve-version
@@ -83,7 +88,7 @@ jobs:
       - uses: ./.github/actions/setup-engine-build
         with:
           shared-key: x64-engine-dist
-          cef-cache-key: cef-windows-x64-144.4.0
+          cef-cache-key: cef-windows-x64-145.6.1
 
       - name: Clean stale CEF files from target cache
         run: |

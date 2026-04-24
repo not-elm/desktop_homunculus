@@ -3698,10 +3698,10 @@ Used by:
 
 Used by:
 - assert_type_match 0.1.1 (https://github.com/MrGVSV/assert_type_match)
-- bevy_cef 0.6.0 (https://github.com/not-elm/bevy_cef)
+- bevy_cef 0.8.1 (https://github.com/not-elm/bevy_cef)
 - bevy_flurx 0.14.1 (https://github.com/not-elm/bevy_flurx)
 - bevy_tray_icon 0.3.1 (https://github.com/not-elm/bevy_tray_icon)
-- bevy_vrm1 0.7.0 (https://github.com/not-elm/bevy_vrm1)
+- bevy_vrm1 0.7.1 (https://github.com/not-elm/bevy_vrm1)
 - codespan-reporting 0.12.0 (https://github.com/brendanzab/codespan)
 - cpal 0.15.3 (https://github.com/rustaudio/cpal)
 - self_cell 1.2.2 (https://github.com/Voultapher/self_cell)
@@ -14221,7 +14221,7 @@ Used by:
 - bevy_asset_macros 0.18.1 (https://github.com/bevyengine/bevy)
 - bevy_audio 0.18.1 (https://github.com/bevyengine/bevy)
 - bevy_camera 0.18.1 (https://github.com/bevyengine/bevy)
-- bevy_cef_core 0.6.0 (https://github.com/not-elm/bevy_cef)
+- bevy_cef_core 0.8.1 (https://github.com/not-elm/bevy_cef)
 - bevy_color 0.18.1 (https://github.com/bevyengine/bevy)
 - bevy_core_pipeline 0.18.1 (https://github.com/bevyengine/bevy)
 - bevy_derive 0.18.1 (https://github.com/bevyengine/bevy)

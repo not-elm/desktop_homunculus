@@ -41,7 +41,7 @@ make debug-cuda       # Same as debug but with CUDA STT support
 make test             # pnpm test (TS) + cargo test --workspace (Rust)
 make fix-lint         # cargo clippy --fix + cargo fmt (Rust) + pnpm lint:fix (TS)
 make gen-open-api     # Regenerate OpenAPI spec + Docusaurus API docs + pnpm build
-make release-macos    # pnpm build + native arch release → DMG
+make release-macos    # pnpm build + native arch release → PKG
 make release-windows  # pnpm build + MSI installer via WiX 4.x (Windows only)
 make install-cli      # cargo install the hmcs CLI binary
 make stage-runtime    # Download and stage Node.js, pnpm, tsx for bundling
@@ -65,7 +65,7 @@ cargo test -p homunculus_http_server test_health # Single test by name
 
 Release builds use `--profile dist` (not `--release`), which enables `lto = "thin"` and `strip = true`:
 ```bash
-make release-macos           # Native arch → .app bundle → DMG
+make release-macos           # Native arch → .app bundle → PKG
 make release-macos-arm       # Apple Silicon
 make release-macos-x86       # Intel
 make release-macos-universal # Universal binary (ARM + x86)

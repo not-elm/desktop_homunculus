@@ -1,5 +1,9 @@
-UNAME_S    := $(shell uname -s)
-IS_WINDOWS := $(findstring MINGW,$(UNAME_S))$(findstring MSYS,$(UNAME_S))
+ifeq ($(OS),Windows_NT)
+  IS_WINDOWS := 1
+else
+  UNAME_S    := $(shell uname -s)
+  IS_WINDOWS := $(findstring MINGW,$(UNAME_S))$(findstring MSYS,$(UNAME_S))
+endif
 
 ifeq ($(IS_WINDOWS),)
   PYTHON ?= python3
@@ -74,5 +78,5 @@ install-openclaw-plugin:
 	pnpm --filter @hmcs/openclaw-plugin build
 	cd packages/openclaw-plugin && pnpm pack --out hmcs-openclaw-plugin.tgz
 	openclaw plugins install --force --dangerously-force-unsafe-install packages/openclaw-plugin/hmcs-openclaw-plugin.tgz
-	rm -rf packages/openclaw-plugin/hmcs-openclaw-plugin.tgz
+	pnpm --filter @hmcs/openclaw-plugin exec rimraf hmcs-openclaw-plugin.tgz
 
