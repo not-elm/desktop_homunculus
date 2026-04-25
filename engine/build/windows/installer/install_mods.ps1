@@ -58,14 +58,16 @@ function fetch(url) {
 }
 
 async function main() {
-    const searchRes = await fetch('https://registry.npmjs.org/-/v1/search?text=scope:hmcs&size=250');
-    if (searchRes.status !== 200) {
-        process.stderr.write('npm search failed: HTTP ' + searchRes.status + '\n');
+    // List all packages under the @hmcs scope via the org-listing endpoint
+    // (used by `npm access list packages <scope>`); /-/v1/search does not
+    // reliably index scoped packages.
+    const listRes = await fetch('https://registry.npmjs.org/-/org/hmcs/package');
+    if (listRes.status !== 200) {
+        process.stderr.write('npm org listing failed: HTTP ' + listRes.status + '\n');
         process.exit(1);
     }
 
-    const results = JSON.parse(searchRes.body);
-    const packages = results.objects.map(o => o.package.name);
+    const packages = Object.keys(JSON.parse(listRes.body));
     const mods = [];
 
     for (const name of packages) {
@@ -89,7 +91,7 @@ main().catch((e) => {
 '@
 
 try {
-    $OfficialMods = & $NodeExe -e $DiscoverScript 2>$null
+    $OfficialMods = & $NodeExe -e $DiscoverScript
 } catch {
     Write-Warning "MOD discovery failed: $_"
     $OfficialMods = ""
