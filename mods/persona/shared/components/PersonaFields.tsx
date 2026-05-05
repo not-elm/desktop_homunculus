@@ -29,7 +29,7 @@ export function PersonaFields({ values, onChange, disabled }: PersonaFieldsProps
   }
 
   return (
-    <div className="settings-section">
+    <div className="flex flex-col gap-4">
       <NameField value={values.name} onChange={(v) => update('name', v)} disabled={disabled} />
       <AgeField value={values.age} onChange={(v) => update('age', v)} disabled={disabled} />
       <GenderField

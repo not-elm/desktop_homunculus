@@ -33,11 +33,14 @@ export function BehaviorSection({
   const displayValue = isDefaultProcess(process) ? DEFAULT_PROCESS : process;
 
   return (
-    <div className="settings-section">
-      <div className="settings-section-heading">Behavior</div>
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.15em] text-primary">
+        <span className="inline-block h-3 w-0.5 rounded-sm bg-primary" />
+        Behavior
+      </div>
 
-      <div className="detail-field">
-        <div className="detail-field-label">Process</div>
+      <div className="flex flex-col gap-1.5">
+        <div className="text-xs uppercase tracking-[0.1em] text-primary/70">Process</div>
         <AssetSelect
           value={displayValue}
           onValueChange={(v) => onProcessChange(v === DEFAULT_PROCESS ? null : v)}
@@ -52,7 +55,7 @@ export function BehaviorSection({
           onChange={onAnimationsChange}
         />
       ) : (
-        <div className="settings-behavior-hint">
+        <div className="mt-2 border-l border-primary/12 px-3 py-2 text-[0.7rem] tracking-[0.05em] text-muted-foreground/50">
           Animations are controlled by the selected process.
         </div>
       )}
@@ -70,17 +73,17 @@ function AnimationFields({
   onChange: (animations: BehaviorAnimations) => void;
 }) {
   const fields: Array<{ key: keyof BehaviorAnimations; label: string; dotClass: string }> = [
-    { key: 'idle', label: 'Idle Animation', dotClass: 'settings-state-dot--idle' },
-    { key: 'drag', label: 'Drag Animation', dotClass: 'settings-state-dot--drag' },
-    { key: 'sitting', label: 'Sitting Animation', dotClass: 'settings-state-dot--sitting' },
+    { key: 'idle', label: 'Idle Animation', dotClass: 'bg-primary' },
+    { key: 'drag', label: 'Drag Animation', dotClass: 'bg-holo-rose' },
+    { key: 'sitting', label: 'Sitting Animation', dotClass: 'bg-holo-violet' },
   ];
 
   return (
-    <div className="settings-vrma-fields">
+    <div className="mt-2 flex flex-col gap-2 border-l border-primary/12 pl-4">
       {fields.map(({ key, label, dotClass }) => (
-        <div key={key} className="detail-field">
-          <div className="detail-field-label">
-            <span className={`settings-state-dot ${dotClass}`} />
+        <div key={key} className="flex flex-col gap-1.5">
+          <div className="flex items-center gap-2 text-xs uppercase tracking-[0.1em] text-primary/70">
+            <span className={`inline-block h-1.5 w-1.5 rounded-full align-middle ${dotClass}`} />
             {label}
           </div>
           <AssetSelect

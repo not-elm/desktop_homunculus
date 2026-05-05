@@ -30,7 +30,7 @@ export interface ToolbarProps {
 }
 
 const toolbarButtonClass = cn(
-  'flex size-[22px] cursor-pointer items-center justify-center rounded-[4px]',
+  'flex size-6 cursor-pointer items-center justify-center rounded-[4px]',
   'border border-primary/15 bg-primary/4 text-primary/35',
   'transition-all duration-200',
   'hover:border-primary/40 hover:bg-primary/8 hover:text-primary hover:shadow-[0_0_8px_oklch(0.72_0.14_192/0.15)]',
@@ -120,8 +120,8 @@ function CloseButton({ onClick }: { onClick: () => void }) {
     <button type="button" onClick={onClick} aria-label="Close" className={toolbarButtonClass}>
       <svg
         aria-hidden="true"
-        width="10"
-        height="10"
+        width="12"
+        height="12"
         viewBox="0 0 10 10"
         fill="none"
         stroke="currentColor"

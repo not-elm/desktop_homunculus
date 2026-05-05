@@ -77,15 +77,24 @@ When you need a one-off value not in the theme, use bracket syntax — do not dr
 
 If the same arbitrary value appears in 3+ places, promote it to the theme (a CSS variable in the Tailwind config / `@theme` block) instead of repeating the brackets.
 
-## Project Design Language
+## Project Design Language — Use Tokens, Not Literals
 
-Mod WebView UIs follow the **glassmorphism** look documented in the root `CLAUDE.md`:
-- Semi-transparent backgrounds: `bg-primary/30`, `bg-white/10`
-- Backdrop blur: `backdrop-blur-sm`
-- Subtle borders: `border border-white/20`
-- White text on the transparent Bevy window: `text-white`
+Mod WebView UIs use the **Holographic HUD** palette defined in `packages/ui/src/index.css`. The full canonical token map lives in the root `CLAUDE.md`. Always use the named utilities — never hand-write the same `oklch(...)` literal that a token already represents.
 
-Compose these with utilities. Do not create a `.glass` class.
+```tsx
+// ✅ Token utilities
+<div className="bg-panel/92 border-primary/30 text-primary" />
+<button className="bg-success/15 border-success/40 text-success" />
+<span className="text-muted-foreground" />
+
+// ❌ Raw oklch repeating tokens that already exist
+<div className="bg-[oklch(0.15_0.01_250/0.92)] border-[oklch(0.72_0.14_192/0.3)] text-[oklch(0.72_0.14_192)]" />
+<span className="text-[oklch(0.55_0.02_250/0.6)]" />  // → `text-muted-foreground`
+```
+
+**Backdrop blur** is applied once at the body level by `@hmcs/ui` (`backdrop-filter: blur(12px)`). Do NOT add `backdrop-blur-*` per element. Mod panels stack on a transparent Bevy window without re-blurring.
+
+Compose with utilities. Do not create `.glass` / `.btn-*` / `.panel` classes.
 
 ## Conditional Classes: Use `cn()`
 

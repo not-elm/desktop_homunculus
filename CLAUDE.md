@@ -148,7 +148,24 @@ Source mods live in `mods/` (in the repo, for development). At runtime, mods are
 
 UI apps live in `mods/` as mod packages — **settings** (`mods/settings/ui/`), **menu** (`mods/menu/ui/`), and **persona** (`mods/persona/ui/`). They are React 19 + Vite + Tailwind CSS v4 apps that import `@hmcs/ui` (from `packages/ui/`) as the shared component library. Build output goes to each mod's `ui/dist/` (bundled into a single `index.html` via `vite-plugin-singlefile` for CEF loading) and is declared as an asset in the mod's `package.json`.
 
-**Design language**: Glassmorphism — semi-transparent backgrounds (`bg-primary/30`), `backdrop-blur-sm`, subtle borders (`border-white/20`), white text. This is the canonical style for all WebView UI overlays on the transparent Bevy window. The `@hmcs/ui` library is built on **shadcn/ui (new-york style)** with Radix UI primitives and **lucide-react** icons. Use the `cn()` utility from `@hmcs/ui` (clsx + tailwind-merge) for conditional class names.
+**Design language**: "Holographic HUD" theme. Mod panels render as translucent dark surfaces over a transparent Bevy window. Use the design tokens defined in `packages/ui/src/index.css` — never hand-write `oklch(...)` literals when a token covers the same color. Canonical token map:
+
+| Purpose | Use | Token resolves to (dark) |
+|---|---|---|
+| Panel surface | `bg-panel/92` | `oklch(0.15 0.01 250 / 0.92)` |
+| Form input surface (deep) | `bg-input` (shadcn Input/Textarea/Select default) | `oklch(0.12 0.01 250 / 0.8)` |
+| Toggle off / inset surface | `bg-hud-surface-toggle-off` | `oklch(0.25 0.01 250)` |
+| Primary accent (cyan) | `bg-primary/N`, `text-primary`, `border-primary/N` | `oklch(0.72 0.14 192)` |
+| Secondary accent (violet) | `bg-holo-violet/N`, `text-holo-violet` | `oklch(0.65 0.18 285)` |
+| Magenta accent | `bg-holo-rose/N`, `text-holo-rose` | `oklch(0.7 0.16 350)` |
+| Warning yellow | `bg-holo-amber/N`, `text-holo-amber` | `oklch(0.78 0.14 80)` |
+| Saved/confirmed | `bg-success/N`, `text-success`, `border-success/N` | `oklch(0.65 0.18 145)` |
+| Body / contrast text | `text-foreground` | `oklch(0.92 0.01 250)` |
+| Muted helper text | `text-muted-foreground` | `oklch(0.55 0.02 250)` |
+| Subdued sub-label | `text-hud-text-subdued` | `oklch(0.45 0.02 250)` |
+| Toolbar/footer band | `bg-primary/4 border-primary/12` | derived from primary |
+
+Body-level `backdrop-filter: blur(12px)` is applied globally in `@hmcs/ui` — do NOT add `backdrop-blur-*` per-element. Body is `bg-transparent text-foreground`. The `@hmcs/ui` library is built on **shadcn/ui (new-york style)** with Radix UI primitives and **lucide-react** icons. Use the `cn()` utility from `@hmcs/ui` (clsx + tailwind-merge) for conditional class names.
 
 ### MCP Server (`engine/crates/homunculus_mcp/`)
 

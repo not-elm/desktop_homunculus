@@ -1,15 +1,20 @@
 import { audio, Persona, Webview } from '@hmcs/sdk';
+import { Button, cn, Tabs, TabsContent, TabsList, TabsTrigger, Toolbar } from '@hmcs/ui';
 import { PersonaDetailBody } from '@persona/shared/components/PersonaDetailBody';
 import { usePersonaDetail } from '@persona/shared/hooks/usePersonaDetail';
 import { useThumbnailImport } from '@persona/shared/hooks/useThumbnailImport';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AppearanceTab } from './components/AppearanceTab';
+import { Decorations } from './components/Decorations';
 import { useScale } from './hooks/useScale';
 
 type Tab = 'persona' | 'appearance';
 
 const NOOP = () => {};
 const DETAIL_CALLBACKS = { onDirtyChange: NOOP, onSaved: NOOP };
+
+const panelClasses =
+  'holo-noise relative box-border flex h-screen max-h-screen max-w-screen flex-col overflow-hidden rounded-xl bg-panel/92 animate-settings-in motion-reduce:animate-none motion-reduce:opacity-100';
 
 export function App() {
   const [personaId, setPersonaId] = useState<string | null>(null);
@@ -30,8 +35,8 @@ export function App() {
 
   if (!personaId) {
     return (
-      <div className="settings-panel settings-loading">
-        <div className="settings-loading-text">Loading...</div>
+      <div className={cn(panelClasses, 'items-center justify-center')}>
+        <div className="text-xs uppercase tracking-[0.12em] text-primary/50">Loading...</div>
       </div>
     );
   }
@@ -79,8 +84,8 @@ function SettingsContent({ personaId }: { personaId: string }) {
 
   if (!detail.snapshot || !detail.formValues || scaleState.loading) {
     return (
-      <div className="settings-panel settings-loading">
-        <div className="settings-loading-text">Loading...</div>
+      <div className={cn(panelClasses, 'items-center justify-center')}>
+        <div className="text-xs uppercase tracking-[0.12em] text-primary/50">Loading...</div>
       </div>
     );
   }
@@ -88,45 +93,44 @@ function SettingsContent({ personaId }: { personaId: string }) {
   const autoSpawn = detail.snapshot.metadata?.['auto-spawn'] === true;
   const name = detail.snapshot.name ?? '';
 
-  const tabs: { id: Tab; label: string }[] = [
-    { id: 'persona', label: 'Persona' },
-    { id: 'appearance', label: 'Appearance' },
-  ];
-
   return (
-    <div className="settings-panel holo-refract-border holo-noise">
-      {/* Decorative layers */}
-      <div className="settings-highlight" />
-      <div className="settings-bottom-line" />
-      <div className="settings-scanline" />
-      <span className="settings-corner settings-corner--tl" />
-      <span className="settings-corner settings-corner--tr" />
-      <span className="settings-corner settings-corner--bl" />
-      <span className="settings-corner settings-corner--br" />
+    <div className={panelClasses}>
+      <Decorations />
 
-      {/* Header */}
-      <div className="settings-header">
-        <h1 className="settings-title">Settings</h1>
-        <span className="settings-entity-name">{name}</span>
-      </div>
+      <Toolbar
+        title="Settings"
+        onClose={handleClose}
+        className="border-b-0 bg-transparent px-5 pt-4 pb-0"
+      >
+        {name && (
+          <span className="font-mono text-[10px] tracking-[0.04em] text-primary/50">{name}</span>
+        )}
+      </Toolbar>
 
-      {/* Tabs */}
-      <div className="settings-tabs">
-        {tabs.map((t) => (
-          <button
-            type="button"
-            key={t.id}
-            className={`settings-tab ${tab === t.id ? 'settings-tab--active' : ''}`}
-            onClick={() => setTab(t.id)}
+      <Tabs
+        value={tab}
+        onValueChange={(v) => setTab(v as Tab)}
+        className="relative z-[7] flex min-h-0 flex-1 flex-col gap-0"
+      >
+        <TabsList className="mx-5 mt-2 h-auto justify-start gap-1 rounded-none border-0 border-b border-primary/12 bg-transparent p-0">
+          <TabsTrigger
+            value="persona"
+            className="rounded-none border-0 px-4 py-2 text-xs font-medium uppercase tracking-[0.08em] data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:[box-shadow:inset_0_-2px_0_var(--primary)]"
           >
-            {t.label}
-          </button>
-        ))}
-      </div>
+            Persona
+          </TabsTrigger>
+          <TabsTrigger
+            value="appearance"
+            className="rounded-none border-0 px-4 py-2 text-xs font-medium uppercase tracking-[0.08em] data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:[box-shadow:inset_0_-2px_0_var(--primary)]"
+          >
+            Appearance
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Content */}
-      <div className="settings-content">
-        {tab === 'persona' && (
+        <TabsContent
+          value="persona"
+          className="no-scrollbar flex-1 overflow-y-auto px-[18px] py-[14px]"
+        >
           <PersonaDetailBody
             personaId={personaId}
             thumbnailUrl={persona.thumbnailUrl(detail.thumbnail)}
@@ -138,8 +142,12 @@ function SettingsContent({ personaId }: { personaId: string }) {
             formValues={detail.formValues}
             onFormChange={detail.setFormValues}
           />
-        )}
-        {tab === 'appearance' && (
+        </TabsContent>
+
+        <TabsContent
+          value="appearance"
+          className="no-scrollbar flex-1 overflow-y-auto px-[18px] py-[14px]"
+        >
           <AppearanceTab
             scale={scaleState.scale}
             onScaleChange={scaleState.setScale}
@@ -148,23 +156,28 @@ function SettingsContent({ personaId }: { personaId: string }) {
             onBehaviorProcessChange={detail.setBehaviorProcess}
             onBehaviorAnimationsChange={detail.setBehaviorAnimations}
           />
-        )}
-      </div>
+        </TabsContent>
+      </Tabs>
 
-      {/* Footer */}
-      <div className="settings-footer">
-        <button type="button" className="settings-close" onClick={handleClose}>
-          Close
-        </button>
-        <button
-          type="button"
-          className={`settings-save ${saved ? 'settings-save--success' : ''}`}
-          onClick={handleSave}
-          disabled={saving}
-        >
-          {saving ? 'Saving...' : saved ? 'Saved!' : 'Save'}
-        </button>
-      </div>
+      <Footer onSave={handleSave} saving={saving} saved={saved} />
+    </div>
+  );
+}
+
+function Footer({
+  onSave,
+  saving,
+  saved,
+}: {
+  onSave: () => void;
+  saving: boolean;
+  saved: boolean;
+}) {
+  return (
+    <div className="relative z-[7] flex shrink-0 justify-end gap-2 border-t border-primary/12 bg-primary/4 px-3.5 py-2">
+      <Button variant={saved ? 'hud-success' : 'hud'} size="hud" onClick={onSave} disabled={saving}>
+        {saving ? 'Saving...' : saved ? 'Saved!' : 'Save'}
+      </Button>
     </div>
   );
 }

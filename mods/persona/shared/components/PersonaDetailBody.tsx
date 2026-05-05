@@ -1,3 +1,4 @@
+import { Input, Switch } from '@hmcs/ui';
 import { PersonaFields, type PersonaFormValues } from '@persona/shared/components/PersonaFields';
 import { ThumbnailCard } from '@persona/shared/components/ThumbnailCard';
 import VrmSelect from '@persona/shared/components/VrmSelect';
@@ -31,7 +32,7 @@ export function PersonaDetailBody({
   onFormChange,
 }: PersonaDetailBodyProps) {
   return (
-    <div className="detail-body">
+    <div className="flex flex-row gap-5">
       <LeftColumn
         personaId={personaId}
         thumbnailUrl={thumbnailUrl}
@@ -64,26 +65,24 @@ function LeftColumn({
   onAutoSpawnToggle: () => void;
 }) {
   return (
-    <div className="detail-left">
+    <div className="flex w-[160px] shrink-0 flex-col gap-3">
       <ThumbnailCard thumbnailUrl={thumbnailUrl} onThumbnailChange={onThumbnailChange} />
 
       <VrmSelect personaId={personaId} value={vrmAssetId} onChange={onVrmChange} />
 
-      <div className="detail-auto-row">
-        <div>
-          <div className="detail-auto-label">Auto Spawn</div>
-          <div className="detail-auto-sublabel">Launch at startup</div>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-col">
+          <div className="text-xs text-muted-foreground">Auto Spawn</div>
+          <div className="text-[0.7rem] tracking-[0.04em] text-hud-text-subdued">
+            Launch at startup
+          </div>
         </div>
-        <button
-          type="button"
-          className={`toggle-mini ${autoSpawn ? 'on' : 'off'}`}
-          onClick={onAutoSpawnToggle}
+        <Switch
+          checked={autoSpawn}
+          onCheckedChange={() => onAutoSpawnToggle()}
           aria-label="Toggle auto spawn"
-          role="switch"
-          aria-checked={autoSpawn}
-        >
-          <span className="knob" />
-        </button>
+          className="h-4 w-8 [&>span]:size-3 [&>span]:data-[state=checked]:translate-x-4"
+        />
       </div>
     </div>
   );
@@ -99,15 +98,10 @@ function RightColumn({
   onFormChange: (values: PersonaFormValues) => void;
 }) {
   return (
-    <div className="detail-right">
-      <div className="detail-field">
-        <div className="detail-field-label">ID</div>
-        <input
-          type="text"
-          className="settings-input w-full cursor-not-allowed opacity-50"
-          value={personaId}
-          readOnly
-        />
+    <div className="flex min-w-0 flex-1 flex-col gap-3">
+      <div className="flex flex-col gap-1.5">
+        <div className="text-xs uppercase tracking-[0.1em] text-primary/70">ID</div>
+        <Input value={personaId} readOnly className="cursor-not-allowed opacity-50" />
       </div>
       <PersonaFields values={formValues} onChange={onFormChange} />
     </div>

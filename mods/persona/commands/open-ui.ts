@@ -10,8 +10,8 @@ try {
   const { linkedPersona: personaId } = await input.parse(z.object({ linkedPersona: z.string() }));
   await Webview.open({
     source: webviewSource.local('persona:ui'),
-    size: [1, 0.92],
-    viewportSize: [1000, 760],
+    size: [1.1, 0.95],
+    viewportSize: [780, 620],
     transform: { translation: [1.4, 0.8, WebviewLayer.UI] },
     linkedPersona: personaId,
   });

@@ -96,3 +96,14 @@ export const FileInput: Story = {
     placeholder: undefined,
   },
 };
+
+/** Size variants: sm (h-9), md/default (h-10), lg (h-11) */
+export const Sizes: Story = {
+  render: () => (
+    <div className="flex flex-col gap-3 w-72">
+      <Input size="sm" placeholder="Small (h-9)" />
+      <Input size="md" placeholder="Medium (h-10, default)" />
+      <Input size="lg" placeholder="Large (h-11)" />
+    </div>
+  ),
+};

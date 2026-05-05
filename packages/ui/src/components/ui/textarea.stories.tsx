@@ -85,3 +85,14 @@ export const Autosize: Story = {
     </div>
   ),
 };
+
+/** Size variants: sm / md (default) / lg */
+export const Sizes: Story = {
+  render: () => (
+    <div className="flex flex-col gap-3 w-80">
+      <Textarea size="sm" placeholder="Small (min-h-12)" />
+      <Textarea size="md" placeholder="Medium (min-h-16, default)" />
+      <Textarea size="lg" placeholder="Large (min-h-20)" />
+    </div>
+  ),
+};

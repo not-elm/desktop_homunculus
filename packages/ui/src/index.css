@@ -62,6 +62,18 @@
   --color-holo-indigo: var(--holo-indigo);
   --color-holo-amber: var(--holo-amber);
 
+  /* Panel surface — canonical mod-overlay background.
+     Use as `bg-panel/92` to apply the documented translucency. */
+  --color-panel: var(--panel);
+
+  /* Success — saved/confirmed state (deeper green than --hud-status-success). */
+  --color-success: var(--success);
+
+  /* Persona-derived auxiliary surfaces (extend --hud-* family) */
+  --color-hud-surface-toggle-off: var(--hud-surface-toggle-off);
+  --color-hud-text-subdued: var(--hud-text-subdued);
+  --color-hud-surface-elevated: var(--hud-surface-elevated);
+
   /* Holographic shadow system — luminous glow effects */
   --shadow-holo-xs: inset 0 0 6px oklch(0.72 0.14 192 / 0.08), 0 0 4px oklch(0.72 0.14 192 / 0.04);
   --shadow-holo-sm: 0 0 10px oklch(0.72 0.14 192 / 0.12), 0 0 20px oklch(0.72 0.14 192 / 0.06);
@@ -120,6 +132,13 @@
   --holo-indigo: oklch(0.58 0.2 270);
   --holo-amber: oklch(0.78 0.14 80);
 
+  --panel: oklch(0.97 0.005 250);
+  --success: oklch(0.55 0.18 145);
+
+  --hud-surface-toggle-off: oklch(0.85 0.01 250);
+  --hud-text-subdued: oklch(0.5 0.02 250);
+  --hud-surface-elevated: oklch(0.85 0.02 250 / 0.6);
+
   /* Light mode shadow overrides — ~50% opacity of dark mode */
   --shadow-holo-xs: inset 0 0 6px oklch(0.65 0.15 192 / 0.04), 0 0 4px oklch(0.65 0.15 192 / 0.02);
   --shadow-holo-sm: 0 0 10px oklch(0.65 0.15 192 / 0.06), 0 0 20px oklch(0.65 0.15 192 / 0.03);
@@ -161,22 +180,22 @@
 
 .dark {
   --background: oklch(0.08 0.025 250 / 0.9);
-  --foreground: oklch(0.92 0.01 230);
-  --card: oklch(0.13 0 0 / 0.65);
-  --card-foreground: oklch(0.92 0.01 230);
+  --foreground: oklch(0.92 0.01 250);
+  --card: oklch(0.13 0.01 250 / 0.7);
+  --card-foreground: oklch(0.92 0.01 250);
   --popover: oklch(0.1 0.025 250 / 0.85);
-  --popover-foreground: oklch(0.92 0.01 230);
+  --popover-foreground: oklch(0.92 0.01 250);
   --primary: oklch(0.72 0.14 192);
   --primary-foreground: oklch(0.05 0.02 250);
   --secondary: oklch(0.6 0.15 280);
   --secondary-foreground: oklch(0.95 0.01 250);
   --muted: oklch(0.2 0.02 250);
   --muted-foreground: oklch(0.55 0.02 250);
-  --accent: oklch(0.25 0.03 250);
-  --accent-foreground: oklch(0.92 0.01 230);
+  --accent: oklch(0.25 0.01 250);
+  --accent-foreground: oklch(0.92 0.01 250);
   --destructive: oklch(0.6 0.22 25);
   --border: oklch(1 0 0 / 0.1);
-  --input: oklch(1 0 0 / 0.06);
+  --input: oklch(0.12 0.01 250 / 0.8);
   --ring: oklch(0.72 0.14 192 / 0.5);
 
   --holo-cyan: oklch(0.75 0.16 192);
@@ -185,6 +204,13 @@
   --holo-teal: oklch(0.68 0.12 175);
   --holo-indigo: oklch(0.58 0.2 270);
   --holo-amber: oklch(0.78 0.14 80);
+
+  --panel: oklch(0.15 0.01 250);
+  --success: oklch(0.65 0.18 145);
+
+  --hud-surface-toggle-off: oklch(0.25 0.01 250);
+  --hud-text-subdued: oklch(0.45 0.02 250);
+  --hud-surface-elevated: oklch(0.18 0.02 250 / 0.5);
 
   /* Dark mode shadow values (full intensity) */
   --shadow-holo-xs: inset 0 0 6px oklch(0.72 0.14 192 / 0.08), 0 0 4px oklch(0.72 0.14 192 / 0.04);
@@ -547,20 +573,12 @@
     content: "";
     position: absolute;
     inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
     background-size: 128px 128px;
-    opacity: 0.04;
     pointer-events: none;
     border-radius: inherit;
-    z-index: 1;
-  }
-
-  :root .holo-noise::before {
-    opacity: 0.02;
-  }
-
-  .dark .holo-noise::before {
-    opacity: 0.04;
+    z-index: 5;
+    mix-blend-mode: overlay;
   }
 }
 

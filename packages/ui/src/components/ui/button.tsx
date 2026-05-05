@@ -19,12 +19,23 @@ const buttonVariants = cva(
           'bg-secondary/20 backdrop-blur-md border border-secondary/30 text-foreground hover:bg-secondary/30 hover:border-secondary/50',
         ghost: 'text-foreground hover:bg-accent hover:text-accent-foreground active:shadow-none',
         link: 'text-primary underline-offset-4 hover:underline active:shadow-none',
+        hud: 'border border-primary/30 bg-primary/15 text-primary hover:border-primary/50 hover:bg-primary/25 hover:shadow-holo-sm',
+        'hud-success':
+          'border border-success/40 bg-success/15 text-success hover:border-success/50 hover:bg-success/20 hover:shadow-holo-sm',
+        'hud-destructive':
+          'border border-destructive/30 bg-destructive/15 text-destructive hover:border-destructive/50 hover:bg-destructive/25',
+        'hud-ghost':
+          'border border-muted-foreground/25 bg-transparent text-muted-foreground hover:border-muted-foreground/45 hover:text-foreground',
+        'hud-rose':
+          'border border-holo-rose/30 bg-holo-rose/15 text-holo-rose hover:border-holo-rose/50 hover:bg-holo-rose/25',
       },
       size: {
         default: 'h-10 px-5 py-2 has-[>svg]:px-3',
         sm: 'h-9 rounded-md gap-1.5 px-4 has-[>svg]:px-2.5',
         lg: 'h-11 rounded-md px-7 has-[>svg]:px-4',
         icon: 'size-10',
+        hud: 'h-auto rounded-md px-5 py-2 text-xs font-medium uppercase tracking-[0.08em]',
+        'hud-sm': 'h-auto rounded-md px-4 py-1.5 text-xs font-medium uppercase tracking-[0.08em]',
       },
     },
     defaultVariants: {

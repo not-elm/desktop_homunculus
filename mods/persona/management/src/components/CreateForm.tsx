@@ -1,3 +1,4 @@
+import { Button, Input, Label } from '@hmcs/ui';
 import { useMemo, useState } from 'react';
 
 interface CreateFormProps {
@@ -34,50 +35,49 @@ export default function CreateForm({ onCreate, onCancel }: CreateFormProps) {
   }
 
   return (
-    <div className="create-form-wrapper">
-      <form className="create-form" onSubmit={handleSubmit}>
-        <h2 className="create-form-title">Create Persona</h2>
+    <div className="no-scrollbar flex flex-1 items-start justify-center overflow-y-auto p-5">
+      <form className="flex w-full max-w-md flex-col gap-4" onSubmit={handleSubmit}>
+        <h2 className="text-xs font-semibold uppercase tracking-[0.15em] text-primary">
+          Create Persona
+        </h2>
 
-        <label className="settings-label">
+        <Label className="flex flex-col gap-1.5 text-xs uppercase tracking-[0.1em] text-primary/70">
           ID
-          <input
-            type="text"
-            className="settings-input"
+          <Input
             value={id}
             onChange={(e) => setId(e.target.value)}
             placeholder="e.g. alice, my-persona"
+            aria-invalid={idError || undefined}
           />
           {idError && (
-            <span className="create-form-error-hint">
+            <span className="text-[0.7rem] tracking-[0.04em] text-holo-amber/80">
               Only letters, numbers, hyphens, and underscores (1-64 chars)
             </span>
           )}
-        </label>
+        </Label>
 
-        <label className="settings-label">
+        <Label className="flex flex-col gap-1.5 text-xs uppercase tracking-[0.1em] text-primary/70">
           Name
-          <input
-            type="text"
-            className="settings-input"
+          <Input
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Display name"
           />
-        </label>
+        </Label>
 
-        {error && <div className="create-form-error">{error}</div>}
+        {error && (
+          <div className="rounded-md border border-destructive/40 bg-destructive/15 px-3 py-2 text-xs text-destructive">
+            {error}
+          </div>
+        )}
 
-        <div className="create-form-actions">
-          <button
-            type="button"
-            className="management-btn management-btn--secondary"
-            onClick={onCancel}
-          >
+        <div className="flex justify-end gap-2 pt-2">
+          <Button variant="hud-ghost" size="hud" onClick={onCancel}>
             Cancel
-          </button>
-          <button type="submit" className="management-btn" disabled={!formValid || submitting}>
+          </Button>
+          <Button variant="hud" size="hud" type="submit" disabled={!formValid || submitting}>
             {submitting ? 'Creating...' : 'Create'}
-          </button>
+          </Button>
         </div>
       </form>
     </div>

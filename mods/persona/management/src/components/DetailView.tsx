@@ -1,11 +1,16 @@
 import { Persona } from '@hmcs/sdk';
 import {
+  Button,
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
 } from '@hmcs/ui';
 import { BehaviorSection } from '@persona/shared/components/BehaviorSection';
 import { PersonaDetailBody } from '@persona/shared/components/PersonaDetailBody';
@@ -14,11 +19,6 @@ import { useThumbnailImport } from '@persona/shared/hooks/useThumbnailImport';
 import { useMemo, useState } from 'react';
 
 type Tab = 'persona' | 'appearance';
-
-const TABS: { id: Tab; label: string }[] = [
-  { id: 'persona', label: 'Persona' },
-  { id: 'appearance', label: 'Appearance' },
-];
 
 interface DetailViewProps {
   personaId: string;
@@ -60,8 +60,8 @@ export default function DetailView({
 
   if (!snapshot || !formValues) {
     return (
-      <div className="main-loading">
-        <div className="main-loading-text">Loading...</div>
+      <div className="flex flex-1 items-center justify-center">
+        <div className="text-xs uppercase tracking-[0.12em] text-primary/50">Loading...</div>
       </div>
     );
   }
@@ -84,7 +84,7 @@ export default function DetailView({
   }
 
   return (
-    <div className="detail-view">
+    <div className="flex flex-1 min-w-0 flex-col">
       <DetailHeader
         name={snapshot.name ?? ''}
         personaId={personaId}
@@ -95,21 +95,17 @@ export default function DetailView({
         saved={saved}
       />
 
-      <div className="settings-tabs">
-        {TABS.map((t) => (
-          <button
-            type="button"
-            key={t.id}
-            className={`settings-tab ${tab === t.id ? 'settings-tab--active' : ''}`}
-            onClick={() => setTab(t.id)}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+      <Tabs
+        value={tab}
+        onValueChange={(v) => setTab(v as Tab)}
+        className="flex flex-1 min-h-0 flex-col"
+      >
+        <TabsList className="mx-5 mt-3 self-start">
+          <TabsTrigger value="persona">Persona</TabsTrigger>
+          <TabsTrigger value="appearance">Appearance</TabsTrigger>
+        </TabsList>
 
-      <div className="detail-tab-content">
-        {tab === 'persona' && (
+        <TabsContent value="persona" className="no-scrollbar flex-1 overflow-y-auto p-5">
           <PersonaDetailBody
             personaId={personaId}
             thumbnailUrl={persona.thumbnailUrl(thumbnail)}
@@ -121,16 +117,17 @@ export default function DetailView({
             formValues={formValues}
             onFormChange={setFormValues}
           />
-        )}
-        {tab === 'appearance' && (
+        </TabsContent>
+
+        <TabsContent value="appearance" className="no-scrollbar flex-1 overflow-y-auto p-5">
           <BehaviorSection
             process={behaviorProcess}
             animations={behaviorAnimations}
             onProcessChange={setBehaviorProcess}
             onAnimationsChange={setBehaviorAnimations}
           />
-        )}
-      </div>
+        </TabsContent>
+      </Tabs>
 
       <DeleteSection onDelete={() => setDeleteOpen(true)} />
 
@@ -161,28 +158,30 @@ function DetailHeader({
   saved: boolean;
 }) {
   return (
-    <div className="detail-header">
-      <div className="detail-header-left">
-        <span className="detail-header-name">{name}</span>
-        <span className="detail-header-id">{personaId}</span>
+    <div className="flex shrink-0 items-center justify-between gap-3 border-b border-primary/12 px-5 py-3">
+      <div className="flex min-w-0 flex-col">
+        <span className="truncate text-sm font-semibold text-foreground">{name}</span>
+        <span className="truncate font-mono text-[10px] tracking-[0.04em] text-hud-text-subdued">
+          {personaId}
+        </span>
       </div>
-      <div className="detail-header-actions">
-        <button
-          type="button"
-          className={`detail-spawn-btn ${isSpawned ? 'deactivate' : 'activate'}`}
+      <div className="flex shrink-0 items-center gap-2">
+        <Button
+          variant={isSpawned ? 'hud-rose' : 'hud'}
+          size="hud-sm"
           onClick={onSpawnToggle}
           disabled={saving}
         >
           {isSpawned ? 'Despawn' : 'Spawn'}
-        </button>
-        <button
-          type="button"
-          className="management-btn management-btn--success"
+        </Button>
+        <Button
+          variant={saved ? 'hud-success' : 'hud'}
+          size="hud-sm"
           onClick={onSave}
           disabled={saving}
         >
           {saving ? 'Saving...' : saved ? 'Saved!' : 'Save'}
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -190,10 +189,10 @@ function DetailHeader({
 
 function DeleteSection({ onDelete }: { onDelete: () => void }) {
   return (
-    <div className="delete-section">
-      <button type="button" className="management-btn management-btn--danger" onClick={onDelete}>
+    <div className="flex shrink-0 justify-end border-t border-primary/12 px-5 py-3">
+      <Button variant="hud-destructive" size="hud" onClick={onDelete}>
         Delete Persona
-      </button>
+      </Button>
     </div>
   );
 }
@@ -215,20 +214,12 @@ function DeleteConfirmDialog({
           <DialogDescription>This action cannot be undone. Are you sure?</DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <button
-            type="button"
-            className="management-btn management-btn--secondary"
-            onClick={() => onOpenChange(false)}
-          >
+          <Button variant="hud-ghost" size="hud" onClick={() => onOpenChange(false)}>
             Cancel
-          </button>
-          <button
-            type="button"
-            className="management-btn management-btn--danger"
-            onClick={onConfirm}
-          >
+          </Button>
+          <Button variant="hud-destructive" size="hud" onClick={onConfirm}>
             Delete
-          </button>
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

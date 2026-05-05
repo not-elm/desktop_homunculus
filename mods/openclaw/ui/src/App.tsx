@@ -1,5 +1,6 @@
 import { audio, type Persona, type PersonaSnapshot, Webview } from '@hmcs/sdk';
 import {
+  Button,
   cn,
   Select,
   SelectContent,
@@ -46,19 +47,20 @@ export function App() {
     return (
       <Shell onClose={handleClose}>
         <div className="flex flex-col gap-[var(--hud-space-md)] p-[var(--hud-space-lg)] text-left">
-          <span className="text-[var(--hud-font-size-sm)] text-[oklch(0.7_0.16_350/0.85)]">
+          <span className="text-[var(--hud-font-size-sm)] text-holo-rose/85">
             {error ?? 'No linked persona'}
           </span>
-          <button
-            type="button"
-            className="relative z-[7] cursor-pointer self-start rounded-md border border-[oklch(0.72_0.14_192/0.3)] bg-[oklch(0.72_0.14_192/0.2)] px-5 py-[var(--hud-space-md)] font-[inherit] text-[var(--hud-font-size-sm)] font-medium text-[oklch(0.72_0.14_192)] transition-all duration-200 ease-[ease] hover:bg-[oklch(0.72_0.14_192/0.3)]"
+          <Button
+            variant="hud"
+            size="hud"
+            className="relative z-[7] self-start"
             onClick={() => {
               linked.refetch();
               ttsEngines.refetch();
             }}
           >
             Retry
-          </button>
+          </Button>
         </div>
       </Shell>
     );

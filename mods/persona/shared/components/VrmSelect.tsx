@@ -22,8 +22,8 @@ export default function VrmSelect({ personaId, value, onChange, disabled }: VrmS
   }
 
   return (
-    <div className="detail-field">
-      <div className="detail-field-label">VRM Model</div>
+    <div className="flex flex-col gap-1.5">
+      <div className="text-xs uppercase tracking-[0.1em] text-primary/70">VRM Model</div>
       <AssetSelect
         value={value}
         onValueChange={onChange}

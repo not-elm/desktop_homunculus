@@ -1,5 +1,6 @@
 import { audio, Webview } from '@hmcs/sdk';
 import {
+  Button,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -13,6 +14,9 @@ import CreateForm from './components/CreateForm';
 import DetailView from './components/DetailView';
 import Sidebar from './components/Sidebar';
 import { usePersonaManagement } from './hooks/usePersonaManagement';
+
+const panelClasses =
+  'relative box-border flex h-screen max-h-screen max-w-screen flex-col overflow-hidden rounded-xl bg-panel/92 animate-settings-in motion-reduce:animate-none motion-reduce:opacity-100';
 
 export default function App() {
   const mgmt = usePersonaManagement();
@@ -74,26 +78,26 @@ export default function App() {
 
   if (mgmt.loading) {
     return (
-      <div className="management-panel">
+      <div className={panelClasses}>
         <Toolbar title="Persona" onClose={handleClose} />
-        <div className="main-loading">
-          <div className="main-loading-text">Loading...</div>
+        <div className="flex flex-1 items-center justify-center">
+          <div className="text-xs uppercase tracking-[0.12em] text-primary/50">Loading...</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="management-panel">
+    <div className={panelClasses}>
       <Toolbar title="Persona" onClose={handleClose} />
-      <div className="management-body">
+      <div className="flex min-h-0 flex-1 flex-row">
         <Sidebar
           personas={mgmt.personas}
           selectedId={mgmt.createMode ? null : mgmt.selectedId}
           onSelect={handleSelectPersona}
           onCreateClick={handleCreateClick}
         />
-        <div className="main-area">
+        <div className="flex flex-1 min-w-0 flex-col">
           {mgmt.createMode ? (
             <CreateForm onCreate={mgmt.createPersona} onCancel={mgmt.exitCreateMode} />
           ) : mgmt.selectedId ? (
@@ -105,11 +109,11 @@ export default function App() {
               onDelete={handleDelete}
             />
           ) : (
-            <div className="main-empty">
-              <div className="main-empty-text">No personas yet</div>
-              <button type="button" className="management-btn" onClick={mgmt.enterCreateMode}>
+            <div className="flex flex-1 flex-col items-center justify-center gap-3">
+              <div className="text-sm text-muted-foreground">No personas yet</div>
+              <Button variant="hud" size="hud" onClick={mgmt.enterCreateMode}>
                 + Create
-              </button>
+              </Button>
             </div>
           )}
         </div>
@@ -141,20 +145,12 @@ function DiscardDialog({
           <DialogDescription>You have unsaved changes. Discard?</DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <button
-            type="button"
-            className="management-btn management-btn--secondary"
-            onClick={onCancel}
-          >
+          <Button variant="hud-ghost" size="hud" onClick={onCancel}>
             Cancel
-          </button>
-          <button
-            type="button"
-            className="management-btn management-btn--danger"
-            onClick={onConfirm}
-          >
+          </Button>
+          <Button variant="hud-destructive" size="hud" onClick={onConfirm}>
             Discard
-          </button>
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

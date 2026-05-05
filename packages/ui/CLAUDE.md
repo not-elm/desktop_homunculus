@@ -24,18 +24,31 @@ After changes here, rebuild consumers: `pnpm turbo run build` from the repo root
 Built on **shadcn/ui (new-york style)** with Radix UI primitives. Add new components: `npx shadcn@latest add <component>` — `components.json` routes them to `src/components/ui/`. Icons: **lucide-react**.
 
 Two layers of components:
-- `src/components/ui/` — shadcn/ui base components (Button, Card, Dialog, etc.), customized with glassmorphism styling
+- `src/components/ui/` — shadcn/ui base components (Button, Card, Dialog, etc.), customized to the Holographic HUD palette
 - `src/components/sliders/`, etc. — higher-level composed components (e.g., `NumericSlider`, `SettingsCard`)
 
 Not all `ui/` components are exported. Check `src/index.ts` — when adding or using a component, ensure its export is present.
 
-### Glassmorphism Design Language
+### Design Tokens — the Holographic HUD palette
 
-All components are customized with a consistent glassmorphism aesthetic for rendering over the transparent Bevy game window. When modifying or creating components, maintain this pattern:
-- Semi-transparent backgrounds with opacity (`bg-primary/30`, `bg-card` where `--card` is `oklch(... / 0.7)`)
-- `backdrop-blur-sm` or `backdrop-filter: blur(...)` for frosted glass effect
-- Subtle borders with opacity (`border-white/20`, `border-primary/50`)
-- White text (`text-white`) as the default foreground in dark contexts
+`src/index.css` is the single source of truth for the design system. It exposes:
+
+- shadcn semantic tokens (`--primary`, `--card`, `--muted-foreground`, ...) wired into `@theme inline` so utilities like `bg-primary/N`, `text-foreground`, `border-border` resolve to the canonical color
+- Holographic accents (`--holo-cyan`, `--holo-violet`, `--holo-rose`, `--holo-teal`, `--holo-indigo`, `--holo-amber`)
+- Project-specific tokens: `--panel` (mod overlay surface, used as `bg-panel/92`), `--success` (saved/confirmed green)
+- HUD scale tokens (`--hud-text-*`, `--hud-surface-*`, `--hud-border-*`, `--hud-space-*`, `--hud-font-size-*`, `--hud-shadow-glow-*`, `--hud-focus-*`) for finer-grained control
+- Persona-aligned auxiliary tokens: `--hud-surface-toggle-off` (`bg-hud-surface-toggle-off`, `oklch(0.25 0.01 250)` dark) for toggle-off / inset surfaces, `--hud-text-subdued` (`text-hud-text-subdued`, `oklch(0.45 0.02 250)` dark) for sub-labels (one step weaker than `text-muted-foreground`)
+- Shadow system (`--shadow-holo-{xs,sm,lg,intense,multi}`) — use `shadow-holo-*` utilities
+
+**`--input` is a deep blue-black surface** (`oklch(0.12 0.01 250 / 0.8)` dark) used by all shadcn form components (`Input`, `Textarea`, `SelectTrigger`, `Checkbox`, `Switch (off)`, `Slider track`, `Progress`, `Tabs`, `Alert`, `Button outline`). This is the persona-aligned form recess color. Prefer `bg-input` over hand-rolled dark backgrounds for form-like surfaces.
+
+`*-foreground` tokens (`--foreground`, `--card-foreground`, `--popover-foreground`, `--accent-foreground`) are all `oklch(0.92 0.01 250)` in dark mode (hue 250, blue-leaning white) for consistent body-text tone. `--secondary-foreground` is `oklch(0.95 0.01 250)`.
+
+Backdrop blur is applied once on `body` (`backdrop-filter: blur(12px)`) — do not re-apply per element.
+
+**Light mode**: Tokens are defined for both `:root` and `.dark`, and Storybook can render either. Mod WebView UIs in production always run with `<html class="dark">`, so light-mode values exist for parity but are not tested in real apps. Verify changes in Storybook (`pnpm storybook`) for both modes.
+
+When adding or styling components: reach for these tokens first. Only fall back to bracket-syntax `oklch(...)` literals for genuinely one-off colors that have no token equivalent. If you find yourself writing the same arbitrary `oklch(...)` value 3+ times, that is a missing token — promote it to `:root` / `.dark` and `@theme inline` instead of duplicating it.
 
 ### Styling
 

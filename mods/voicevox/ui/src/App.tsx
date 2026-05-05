@@ -1,4 +1,6 @@
 import {
+  Button,
+  cn,
   Select,
   SelectContent,
   SelectGroup,
@@ -6,11 +8,27 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
+  Slider,
   Textarea,
+  Toolbar,
 } from '@hmcs/ui';
 import { useState } from 'react';
+import { Decorations } from './components/Decorations';
 import type { VoicevoxSettings } from './hooks/useVoicevoxSettings';
 import { useVoicevoxSettings } from './hooks/useVoicevoxSettings';
+
+const panelClasses =
+  'holo-noise relative box-border flex h-screen max-h-screen max-w-screen flex-col overflow-hidden rounded-xl bg-panel/92 animate-settings-in motion-reduce:animate-none motion-reduce:opacity-100';
+
+const labelClasses = 'flex flex-col gap-1.5 text-xs uppercase tracking-[0.1em] text-primary/70';
+
+const descriptionClasses =
+  'text-[0.7rem] tracking-[0.04em] normal-case leading-[1.4] text-hud-text-subdued';
+
+const sectionHeadingClasses = 'text-[0.7rem] uppercase tracking-[0.12em] text-hud-text-subdued';
+
+const sliderBoxClasses =
+  'flex flex-row items-center gap-3 rounded-md border border-primary/20 bg-input px-3 py-2.5';
 
 const PARAMS: {
   key: keyof VoicevoxSettings;
@@ -100,23 +118,33 @@ export function App() {
 
   if (loading) {
     return (
-      <div className="settings-panel settings-loading">
-        <div className="settings-loading-text">Loading...</div>
+      <div className={cn(panelClasses, 'items-center justify-center')}>
+        <div className="text-xs uppercase tracking-[0.12em] text-primary/50 animate-[holo-corner-pulse_2s_ease-in-out_infinite] motion-reduce:animate-none motion-reduce:opacity-50">
+          Loading...
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="settings-panel holo-refract-border holo-noise">
+    <div className={panelClasses}>
       <Decorations />
-      <Header name={characterName} connected={connected} />
 
-      <div className="settings-content">
+      <Toolbar title="VOICEVOX" onClose={handleClose}>
+        {characterName && (
+          <span className="font-mono text-[10px] tracking-[0.04em] text-primary/50">
+            {characterName}
+          </span>
+        )}
+        <ConnectionBadge connected={connected} />
+      </Toolbar>
+
+      <div className="no-scrollbar relative z-[7] flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto p-5">
         {!connected ? (
           <DisconnectedView onRetry={handleRetry} />
         ) : speakers.length === 0 ? (
-          <div className="voicevox-error">
-            <div className="voicevox-error-text">No speakers found</div>
+          <div className="flex flex-col items-center justify-center gap-4 py-10 text-center">
+            <div className="text-sm text-holo-rose/80">No speakers found</div>
           </div>
         ) : (
           <SettingsForm
@@ -132,7 +160,6 @@ export function App() {
       </div>
 
       <Footer
-        onClose={handleClose}
         onReset={handleReset}
         onSave={handleSave}
         saving={saving}
@@ -143,42 +170,36 @@ export function App() {
   );
 }
 
-function Decorations() {
+function ConnectionBadge({ connected }: { connected: boolean }) {
   return (
-    <>
-      <div className="settings-highlight" />
-      <div className="settings-bottom-line" />
-      <div className="settings-scanline" />
-      <span className="settings-corner settings-corner--tl" />
-      <span className="settings-corner settings-corner--tr" />
-      <span className="settings-corner settings-corner--bl" />
-      <span className="settings-corner settings-corner--br" />
-    </>
-  );
-}
-
-function Header({ name, connected }: { name: string; connected: boolean }) {
-  return (
-    <div className="settings-header">
-      <h1 className="settings-title">VOICEVOX</h1>
-      <span className="settings-entity-name">{name}</span>
+    <span
+      className={cn(
+        'inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-[0.06em]',
+        connected
+          ? 'border-success/25 bg-success/10 text-success/85'
+          : 'border-holo-rose/25 bg-holo-rose/10 text-holo-rose/85',
+      )}
+    >
       <span
-        className={`voicevox-status ${connected ? 'voicevox-status--connected' : 'voicevox-status--disconnected'}`}
-      >
-        <span className="voicevox-status-dot" />
-        {connected ? 'Connected' : 'Disconnected'}
-      </span>
-    </div>
+        className={cn(
+          'h-1.5 w-1.5 rounded-full',
+          connected
+            ? 'bg-success [box-shadow:0_0_6px_var(--success)]'
+            : 'bg-holo-rose [box-shadow:0_0_6px_var(--holo-rose)]',
+        )}
+      />
+      {connected ? 'Connected' : 'Disconnected'}
+    </span>
   );
 }
 
 function DisconnectedView({ onRetry }: { onRetry: () => void }) {
   return (
-    <div className="voicevox-error">
-      <div className="voicevox-error-text">Cannot connect to VOICEVOX</div>
-      <button type="button" className="voicevox-error-retry" onClick={onRetry}>
+    <div className="flex flex-col items-center justify-center gap-4 py-10 text-center">
+      <div className="text-sm text-holo-rose/80">Cannot connect to VOICEVOX</div>
+      <Button variant="hud" size="hud" className="relative z-[7]" onClick={onRetry}>
         Retry
-      </button>
+      </Button>
     </div>
   );
 }
@@ -203,12 +224,12 @@ function SettingsForm({
   return (
     <>
       {invalidSpeaker && (
-        <div className="voicevox-warning">
+        <div className="relative z-[7] rounded-md border border-holo-amber/20 bg-holo-amber/10 px-3 py-2 text-xs text-holo-amber/80">
           Previous speaker is unavailable. Please select a new one.
         </div>
       )}
 
-      <label className="settings-label" htmlFor="voicevox-speaker-select">
+      <label className={labelClasses} htmlFor="voicevox-speaker-select">
         Speaker
         <Select
           value={settings.speakerId === -1 ? undefined : String(settings.speakerId)}
@@ -232,38 +253,53 @@ function SettingsForm({
         </Select>
       </label>
 
-      <div className="voicevox-divider" />
-      <div className="voicevox-section-title">Voice Parameters</div>
+      <section className="flex flex-col gap-3">
+        <h2 className={sectionHeadingClasses}>Voice Parameters</h2>
+        {PARAMS.map((param) => (
+          <ParameterField
+            key={param.key}
+            param={param}
+            value={settings[param.key] as number}
+            onChange={(value) => onSettingsChange({ ...settings, [param.key]: value })}
+          />
+        ))}
+      </section>
 
-      {PARAMS.map((param) => (
-        <label key={param.key} className="settings-label">
-          {param.label}
-          <div className="settings-slider-row">
-            <input
-              type="range"
-              className="settings-slider"
-              min={param.min}
-              max={param.max}
-              step={param.step}
-              value={settings[param.key] as number}
-              onChange={(e) =>
-                onSettingsChange({
-                  ...settings,
-                  [param.key]: parseFloat(e.target.value),
-                })
-              }
-            />
-            <span className="settings-slider-value">
-              {(settings[param.key] as number).toFixed(2)}
-            </span>
-          </div>
-          <div className="voicevox-param-desc">{param.desc}</div>
-        </label>
-      ))}
-
-      <div className="voicevox-divider" />
-      <SpeechTest speaking={speaking} disabled={disabled} onSpeak={onSpeak} />
+      <section className="flex flex-col gap-3">
+        <h2 className={sectionHeadingClasses}>Speech Test</h2>
+        <SpeechTest speaking={speaking} disabled={disabled} onSpeak={onSpeak} />
+      </section>
     </>
+  );
+}
+
+function ParameterField({
+  param,
+  value,
+  onChange,
+}: {
+  param: { key: string; label: string; desc: string; min: number; max: number; step: number };
+  value: number;
+  onChange: (value: number) => void;
+}) {
+  return (
+    <label className={labelClasses}>
+      {param.label}
+      <div className={sliderBoxClasses}>
+        <Slider
+          className="flex-1"
+          min={param.min}
+          max={param.max}
+          step={param.step}
+          value={[value]}
+          onValueChange={(arr) => onChange(arr[0])}
+        />
+        <span className="min-w-[3.5em] text-right font-mono text-xs text-foreground">
+          {value.toFixed(2)}
+        </span>
+      </div>
+      <span className={descriptionClasses}>{param.desc}</span>
+    </label>
   );
 }
 
@@ -279,8 +315,7 @@ function SpeechTest({
   const [text, setText] = useState('');
 
   return (
-    <div className="voicevox-speech-test">
-      <div className="voicevox-section-title">Speech Test</div>
+    <div className="relative z-[7] flex flex-col gap-2">
       <Textarea
         className="resize-none"
         rows={3}
@@ -289,29 +324,27 @@ function SpeechTest({
         onChange={(e) => setText(e.target.value)}
         disabled={disabled || speaking}
       />
-      <div className="voicevox-speech-test-actions">
-        <button
-          type="button"
-          className="voicevox-speech-test-btn"
+      <div className="flex justify-end">
+        <Button
+          variant="hud"
+          size="hud"
           disabled={disabled || speaking || text.trim().length === 0}
           onClick={() => onSpeak(text.trim())}
         >
           {speaking ? 'Speaking...' : '▶ Speak'}
-        </button>
+        </Button>
       </div>
     </div>
   );
 }
 
 function Footer({
-  onClose,
   onReset,
   onSave,
   saving,
   saved,
   disabled,
 }: {
-  onClose: () => void;
   onReset: () => void;
   onSave: () => void;
   saving: boolean;
@@ -319,21 +352,18 @@ function Footer({
   disabled: boolean;
 }) {
   return (
-    <div className="settings-footer">
-      <button type="button" className="settings-close" onClick={onClose}>
-        Close
-      </button>
-      <button type="button" className="settings-close" onClick={onReset}>
+    <div className="relative z-[7] flex shrink-0 justify-end gap-2 border-t border-primary/12 bg-primary/4 px-3.5 py-2">
+      <Button variant="hud-ghost" size="hud" onClick={onReset}>
         Reset
-      </button>
-      <button
-        type="button"
-        className={`settings-save ${saved ? 'settings-save--success' : ''}`}
+      </Button>
+      <Button
+        variant={saved ? 'hud-success' : 'hud'}
+        size="hud"
         onClick={onSave}
         disabled={saving || disabled}
       >
         {saving ? 'Saving...' : saved ? 'Saved!' : 'Save'}
-      </button>
+      </Button>
     </div>
   );
 }

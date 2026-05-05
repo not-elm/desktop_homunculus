@@ -1,3 +1,5 @@
+import { Label, Textarea } from '@hmcs/ui';
+
 interface ProfileFieldProps {
   value: string;
   onChange: (value: string) => void;
@@ -6,16 +8,15 @@ interface ProfileFieldProps {
 
 export function ProfileField({ value, onChange, disabled }: ProfileFieldProps) {
   return (
-    <label className="settings-label">
+    <Label className="flex flex-col items-start gap-1.5 text-xs uppercase tracking-[0.1em] text-primary/70">
       Profile
-      <textarea
-        className="settings-textarea"
+      <Textarea
         rows={5}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="Character background and profile description..."
         disabled={disabled}
       />
-    </label>
+    </Label>
   );
 }

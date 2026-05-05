@@ -1,5 +1,5 @@
 /**
- * Decorative HUD layers for the STT settings panel: a top-edge highlight
+ * Decorative HUD layers for the VOICEVOX settings panel: a top-edge highlight
  * with shimmering sweep, a bottom-edge fade line, an animated scanline, and
  * four animated corner accents. All elements are aria-hidden and pointer-events
  * disabled so they don't interfere with focus order or click-through.

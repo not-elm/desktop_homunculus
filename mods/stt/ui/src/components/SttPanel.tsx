@@ -13,27 +13,27 @@ export function SttPanel() {
   }, []);
 
   return (
-    <div className="holo-refract-border holo-noise relative box-border flex h-screen max-h-screen max-w-screen flex-col overflow-hidden rounded-xl bg-[oklch(0.15_0.01_250/0.92)] animate-settings-in motion-reduce:animate-none motion-reduce:opacity-100">
+    <div className="holo-noise relative box-border flex h-screen max-h-screen max-w-screen flex-col overflow-hidden rounded-xl bg-panel/92 animate-settings-in motion-reduce:animate-none motion-reduce:opacity-100">
       <Decorations />
 
       <Toolbar title="Speech to Text" onClose={handleClose} />
 
-      <div className="relative z-[7] flex min-h-0 flex-1 flex-col gap-[var(--hud-space-xl)] overflow-y-auto p-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div className="flex flex-col gap-[var(--hud-space-xl)]">
+      <div className="no-scrollbar relative z-[7] flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-5">
+        <div className="flex flex-col gap-4">
           {errorMessage && (
-            <div className="py-[var(--hud-space-sm)] text-[0.7rem] tracking-[0.04em] text-[oklch(0.7_0.18_25/0.8)]">
+            <div className="py-1.5 text-[0.7rem] tracking-[0.04em] text-destructive">
               {errorMessage}
             </div>
           )}
 
-          <div className="mt-[var(--hud-space-xs)] flex items-center gap-[var(--hud-space-md)]">
-            <span className="whitespace-nowrap text-[0.7rem] uppercase tracking-[0.12em] text-[oklch(0.55_0.02_250/0.5)]">
+          <div className="mt-1 flex items-center gap-2">
+            <span className="whitespace-nowrap text-[0.7rem] uppercase tracking-[0.12em] text-hud-text-subdued">
               Models
             </span>
-            <span className="h-px flex-1 bg-[linear-gradient(90deg,oklch(0.72_0.14_192/0.15),transparent)]" />
+            <span className="h-px flex-1 bg-gradient-to-r from-primary/15 to-transparent" />
           </div>
 
-          <div className="grid grid-cols-2 gap-[var(--hud-space-md)]">
+          <div className="grid grid-cols-2 gap-2">
             {models.map((model) => (
               <ModelCard
                 key={model.size}
@@ -64,24 +64,22 @@ function ModelCard({
   return (
     <div
       className={cn(
-        'flex flex-col gap-[var(--hud-space-sm)] rounded-lg border p-[var(--hud-space-lg)] text-left font-[inherit] bg-[oklch(0.18_0.01_250/0.6)]',
-        isReady ? 'border-[oklch(0.72_0.14_192/0.3)]' : 'border-[oklch(0.4_0.02_250/0.25)]',
+        'flex flex-col gap-1.5 rounded-lg border bg-input p-3 text-left',
+        isReady ? 'border-primary/30' : 'border-muted-foreground/25',
       )}
       title={`${model.label} model, ${model.fileSize}${
         isReady ? ', ready' : isDownloading ? ', downloading' : ', not downloaded'
       }`}
     >
-      <span className="text-[0.8rem] font-semibold uppercase tracking-[0.08em] text-[oklch(0.85_0.04_250)]">
+      <span className="text-[0.8rem] font-semibold uppercase tracking-[0.08em] text-foreground">
         {model.label}
       </span>
-      <span className="font-mono text-[0.7rem] text-[oklch(0.55_0.02_250/0.6)]">
-        {model.fileSize}
-      </span>
+      <span className="font-mono text-[0.7rem] text-muted-foreground">{model.fileSize}</span>
 
       {model.status === 'not_downloaded' && (
         <button
           type="button"
-          className="inline-block cursor-pointer rounded border border-[oklch(0.72_0.14_192/0.25)] bg-[oklch(0.72_0.14_192/0.1)] px-[var(--hud-space-md)] py-[var(--hud-space-xs)] font-[inherit] text-[0.7rem] uppercase tracking-[0.06em] text-[oklch(0.72_0.14_192)] transition-[background,border-color] duration-[var(--hud-duration-content)] ease-[ease] hover:border-[oklch(0.72_0.14_192/0.4)] hover:bg-[oklch(0.72_0.14_192/0.2)]"
+          className="inline-block cursor-pointer rounded border border-primary/25 bg-primary/10 px-2 py-1 text-[0.7rem] uppercase tracking-[0.06em] text-primary transition-[background,border-color] duration-200 ease-out hover:border-primary/40 hover:bg-primary/20"
           onClick={onDownload}
         >
           Download
@@ -90,19 +88,19 @@ function ModelCard({
 
       {isDownloading && (
         <>
-          <div className="h-1 overflow-hidden rounded-sm bg-[oklch(0.25_0.01_250/0.4)]">
+          <div className="h-1 overflow-hidden rounded-sm bg-hud-surface-toggle-off/40">
             <div
-              className="h-full rounded-sm bg-[linear-gradient(90deg,oklch(0.72_0.14_192),oklch(0.65_0.18_285))] transition-[width] duration-[var(--hud-duration-content)] ease-[ease]"
+              className="h-full rounded-sm bg-primary transition-[width] duration-200 ease-out"
               style={{ width: `${model.downloadProgress ?? 0}%` }}
             />
           </div>
           <div className="flex items-center justify-between">
-            <span className="font-mono text-[0.7rem] text-[oklch(0.55_0.02_250/0.6)]">
+            <span className="font-mono text-[0.7rem] text-muted-foreground">
               {Math.round(model.downloadProgress ?? 0)}%
             </span>
             <button
               type="button"
-              className="cursor-pointer border-none bg-transparent px-[var(--hud-space-xs)] py-0.5 text-[var(--hud-font-size-sm)] text-[oklch(0.55_0.02_250/0.5)] hover:text-[oklch(0.7_0.18_25)]"
+              className="cursor-pointer border-none bg-transparent px-1 py-0.5 text-xs text-muted-foreground hover:text-destructive"
               onClick={onCancel}
             >
               ✕
@@ -111,9 +109,7 @@ function ModelCard({
         </>
       )}
 
-      {isReady && (
-        <span className="text-[0.7rem] tracking-[0.04em] text-[oklch(0.65_0.18_145)]">✓ Ready</span>
-      )}
+      {isReady && <span className="text-[0.7rem] tracking-[0.04em] text-success">✓ Ready</span>}
     </div>
   );
 }

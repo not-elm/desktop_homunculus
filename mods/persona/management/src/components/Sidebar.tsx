@@ -1,5 +1,6 @@
 import type { PersonaSnapshot } from '@hmcs/sdk';
 import { Persona } from '@hmcs/sdk';
+import { cn } from '@hmcs/ui';
 
 interface SidebarProps {
   personas: PersonaSnapshot[];
@@ -10,8 +11,8 @@ interface SidebarProps {
 
 export default function Sidebar({ personas, selectedId, onSelect, onCreateClick }: SidebarProps) {
   return (
-    <div className="sidebar">
-      <div className="sidebar-list">
+    <aside className="flex w-56 shrink-0 flex-col border-r border-primary/12 bg-input/40">
+      <div className="no-scrollbar flex flex-1 flex-col overflow-y-auto">
         {personas.map((p) => (
           <SidebarItem
             key={p.id}
@@ -21,10 +22,14 @@ export default function Sidebar({ personas, selectedId, onSelect, onCreateClick 
           />
         ))}
       </div>
-      <button type="button" className="sidebar-create" onClick={onCreateClick}>
+      <button
+        type="button"
+        onClick={onCreateClick}
+        className="cursor-pointer border-t border-primary/12 bg-primary/8 px-3 py-2.5 text-xs uppercase tracking-[0.08em] text-primary transition-colors duration-200 hover:bg-primary/15"
+      >
         + Create
       </button>
-    </div>
+    </aside>
   );
 }
 
@@ -42,24 +47,34 @@ function SidebarItem({
   return (
     <button
       type="button"
-      className={`sidebar-item ${selected ? 'sidebar-item--selected' : ''}`}
       onClick={onSelect}
+      className={cn(
+        'flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left transition-colors duration-150',
+        'text-muted-foreground hover:bg-primary/10 hover:text-foreground',
+        selected && 'border-l-2 border-primary/60 bg-primary/15 text-foreground',
+      )}
     >
-      <div className="sidebar-item-avatar">
+      <div className="relative flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-md bg-input">
         <img
           src={new Persona(persona.id).thumbnailUrl() || undefined}
           alt=""
+          className="size-full object-cover"
           onError={(e) => {
             e.currentTarget.style.display = 'none';
             e.currentTarget.nextElementSibling?.classList.remove('hidden');
           }}
         />
-        <span className="sidebar-item-initial hidden">{initial}</span>
+        <span className="hidden text-sm font-semibold text-muted-foreground">{initial}</span>
       </div>
-      <div className="sidebar-item-info">
-        <span className="sidebar-item-name">{persona.name}</span>
-        <span className="sidebar-item-status">
-          <span className={`status-dot ${persona.spawned ? 'active' : 'inactive'}`} />
+      <div className="flex min-w-0 flex-1 flex-col">
+        <span className="truncate text-sm">{persona.name}</span>
+        <span className="flex items-center gap-1 text-[0.7rem] tracking-[0.04em] text-hud-text-subdued">
+          <span
+            className={cn(
+              'inline-block size-1.5 rounded-full',
+              persona.spawned ? 'bg-success' : 'bg-muted-foreground/40',
+            )}
+          />
           {persona.spawned ? 'Spawned' : 'Offline'}
         </span>
       </div>

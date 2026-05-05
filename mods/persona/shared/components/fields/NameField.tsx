@@ -1,3 +1,5 @@
+import { Input, Label } from '@hmcs/ui';
+
 interface NameFieldProps {
   value: string;
   onChange: (value: string) => void;
@@ -6,16 +8,14 @@ interface NameFieldProps {
 
 export function NameField({ value, onChange, disabled }: NameFieldProps) {
   return (
-    <label className="settings-label">
+    <Label className="flex flex-col items-start gap-1.5 text-xs uppercase tracking-[0.1em] text-primary/70">
       Name
-      <input
-        type="text"
-        className="settings-input"
+      <Input
         value={value}
         placeholder="Name"
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
       />
-    </label>
+    </Label>
   );
 }

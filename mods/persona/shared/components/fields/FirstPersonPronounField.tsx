@@ -1,3 +1,5 @@
+import { Input, Label } from '@hmcs/ui';
+
 interface FirstPersonPronounFieldProps {
   value: string;
   onChange: (value: string) => void;
@@ -10,16 +12,14 @@ export function FirstPersonPronounField({
   disabled,
 }: FirstPersonPronounFieldProps) {
   return (
-    <label className="settings-label">
+    <Label className="flex flex-col items-start gap-1.5 text-xs uppercase tracking-[0.1em] text-primary/70">
       First Person Pronoun
-      <input
-        type="text"
-        className="settings-input"
+      <Input
         value={value}
         placeholder="e.g. watashi, boku, ore"
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
       />
-    </label>
+    </Label>
   );
 }

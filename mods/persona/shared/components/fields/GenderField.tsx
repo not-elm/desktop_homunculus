@@ -1,5 +1,5 @@
 import type { Gender } from '@hmcs/sdk';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@hmcs/ui';
+import { Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@hmcs/ui';
 
 const GENDER_OPTIONS: { value: Gender; label: string }[] = [
   { value: 'unknown', label: 'Unknown' },
@@ -16,10 +16,10 @@ interface GenderFieldProps {
 
 export function GenderField({ value, onChange, disabled }: GenderFieldProps) {
   return (
-    <div className="settings-label">
+    <Label className="flex flex-col items-start gap-1.5 text-xs uppercase tracking-[0.1em] text-primary/70">
       Gender
       <Select value={value} onValueChange={(v) => onChange(v as Gender)} disabled={disabled}>
-        <SelectTrigger className="settings-input">
+        <SelectTrigger className="w-full">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -30,6 +30,6 @@ export function GenderField({ value, onChange, disabled }: GenderFieldProps) {
           ))}
         </SelectContent>
       </Select>
-    </div>
+    </Label>
   );
 }
