@@ -1,4 +1,4 @@
-import { cn, Input, Label } from '@hmcs/ui';
+import { Button, Input, Label } from '@hmcs/ui';
 import { useMemo, useState } from 'react';
 
 interface CreateFormProps {
@@ -72,22 +72,12 @@ export default function CreateForm({ onCreate, onCancel }: CreateFormProps) {
         )}
 
         <div className="flex justify-end gap-2 pt-2">
-          <button
-            type="button"
-            className="cursor-pointer rounded-md border border-muted-foreground/25 bg-transparent px-5 py-2 text-xs uppercase tracking-[0.08em] text-muted-foreground transition-colors duration-200 hover:border-muted-foreground/45 hover:text-foreground"
-            onClick={onCancel}
-          >
+          <Button variant="hud-ghost" size="hud" onClick={onCancel}>
             Cancel
-          </button>
-          <button
-            type="submit"
-            className={cn(
-              'cursor-pointer rounded-md border border-primary/30 bg-primary/15 px-5 py-2 text-xs uppercase tracking-[0.08em] text-primary transition-[background,border-color,box-shadow] duration-200 hover:border-primary/50 hover:bg-primary/25 hover:shadow-holo-sm disabled:cursor-not-allowed disabled:opacity-50',
-            )}
-            disabled={!formValid || submitting}
-          >
+          </Button>
+          <Button variant="hud" size="hud" type="submit" disabled={!formValid || submitting}>
             {submitting ? 'Creating...' : 'Create'}
-          </button>
+          </Button>
         </div>
       </form>
     </div>

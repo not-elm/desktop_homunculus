@@ -1,5 +1,5 @@
 import { audio, Persona, Webview } from '@hmcs/sdk';
-import { cn, Tabs, TabsContent, TabsList, TabsTrigger, Toolbar } from '@hmcs/ui';
+import { Button, cn, Tabs, TabsContent, TabsList, TabsTrigger, Toolbar } from '@hmcs/ui';
 import { PersonaDetailBody } from '@persona/shared/components/PersonaDetailBody';
 import { usePersonaDetail } from '@persona/shared/hooks/usePersonaDetail';
 import { useThumbnailImport } from '@persona/shared/hooks/useThumbnailImport';
@@ -175,19 +175,9 @@ function Footer({
 }) {
   return (
     <div className="relative z-[7] flex shrink-0 justify-end gap-2 border-t border-primary/12 bg-primary/4 px-3.5 py-2">
-      <button
-        type="button"
-        className={cn(
-          'cursor-pointer rounded-md border px-5 py-2 text-xs uppercase tracking-[0.08em] transition-[background,border-color,box-shadow,color] duration-200 ease-out active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50',
-          saved
-            ? 'border-success/40 bg-success/15 text-success hover:border-success/50 hover:bg-success/20 hover:shadow-holo-sm'
-            : 'border-primary/30 bg-primary/15 text-primary hover:border-primary/50 hover:bg-primary/25 hover:shadow-holo-sm',
-        )}
-        onClick={onSave}
-        disabled={saving}
-      >
+      <Button variant={saved ? 'hud-success' : 'hud'} size="hud" onClick={onSave} disabled={saving}>
         {saving ? 'Saving...' : saved ? 'Saved!' : 'Save'}
-      </button>
+      </Button>
     </div>
   );
 }

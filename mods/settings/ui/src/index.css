@@ -196,63 +196,6 @@ body {
   }
 }
 
-/* ━━ Slider thumb/track (vendor pseudo-elements Tailwind cannot express) ━━ */
-
-@utility settings-slider {
-  flex: 1;
-  -webkit-appearance: none;
-  appearance: none;
-  height: 14px;
-  background: transparent;
-  border-radius: 2px;
-  outline: none;
-  cursor: pointer;
-  padding: 0;
-
-  &::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 14px;
-    height: 14px;
-    margin-top: -5px;
-    border-radius: 50%;
-    background: oklch(0.72 0.14 192);
-    border: 2px solid oklch(0.72 0.14 192 / 0.5);
-    box-shadow: 0 0 8px oklch(0.72 0.14 192 / 0.4);
-    cursor: pointer;
-    transition:
-      box-shadow var(--hud-duration-content) ease,
-      transform var(--hud-duration-micro) ease;
-  }
-
-  &::-webkit-slider-thumb:hover {
-    box-shadow: 0 0 14px oklch(0.72 0.14 192 / 0.6);
-    transform: scale(1.1);
-  }
-
-  &::-moz-range-thumb {
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    background: oklch(0.72 0.14 192);
-    border: 2px solid oklch(0.72 0.14 192 / 0.5);
-    box-shadow: 0 0 8px oklch(0.72 0.14 192 / 0.4);
-    cursor: pointer;
-  }
-
-  &::-webkit-slider-runnable-track {
-    height: 4px;
-    border-radius: 2px;
-    background: linear-gradient(90deg, oklch(0.72 0.14 192 / 0.3), oklch(0.65 0.18 285 / 0.2));
-  }
-
-  &::-moz-range-track {
-    height: 4px;
-    border-radius: 2px;
-    background: linear-gradient(90deg, oklch(0.72 0.14 192 / 0.3), oklch(0.65 0.18 285 / 0.2));
-  }
-}
-
 /* ━━ Reduced Motion ━━ */
 
 @media (prefers-reduced-motion: reduce) {

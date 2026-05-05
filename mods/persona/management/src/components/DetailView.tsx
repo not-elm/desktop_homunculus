@@ -1,6 +1,6 @@
 import { Persona } from '@hmcs/sdk';
 import {
-  cn,
+  Button,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -166,32 +166,22 @@ function DetailHeader({
         </span>
       </div>
       <div className="flex shrink-0 items-center gap-2">
-        <button
-          type="button"
+        <Button
+          variant={isSpawned ? 'hud-rose' : 'hud'}
+          size="hud-sm"
           onClick={onSpawnToggle}
           disabled={saving}
-          className={cn(
-            'cursor-pointer rounded-md border px-4 py-1.5 text-xs uppercase tracking-[0.08em] transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-50',
-            isSpawned
-              ? 'border-holo-rose/30 bg-holo-rose/15 text-holo-rose hover:border-holo-rose/50 hover:bg-holo-rose/25'
-              : 'border-primary/30 bg-primary/15 text-primary hover:border-primary/50 hover:bg-primary/25',
-          )}
         >
           {isSpawned ? 'Despawn' : 'Spawn'}
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
+          variant={saved ? 'hud-success' : 'hud'}
+          size="hud-sm"
           onClick={onSave}
           disabled={saving}
-          className={cn(
-            'cursor-pointer rounded-md border px-5 py-1.5 text-xs uppercase tracking-[0.08em] transition-[background,border-color,box-shadow,color] duration-200 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50',
-            saved
-              ? 'border-success/40 bg-success/15 text-success hover:border-success/50 hover:bg-success/20 hover:shadow-holo-sm'
-              : 'border-primary/30 bg-primary/15 text-primary hover:border-primary/50 hover:bg-primary/25 hover:shadow-holo-sm',
-          )}
         >
           {saving ? 'Saving...' : saved ? 'Saved!' : 'Save'}
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -200,13 +190,9 @@ function DetailHeader({
 function DeleteSection({ onDelete }: { onDelete: () => void }) {
   return (
     <div className="flex shrink-0 justify-end border-t border-primary/12 px-5 py-3">
-      <button
-        type="button"
-        onClick={onDelete}
-        className="cursor-pointer rounded-md border border-destructive/30 bg-destructive/15 px-5 py-2 text-xs uppercase tracking-[0.08em] text-destructive transition-colors duration-200 hover:border-destructive/50 hover:bg-destructive/25"
-      >
+      <Button variant="hud-destructive" size="hud" onClick={onDelete}>
         Delete Persona
-      </button>
+      </Button>
     </div>
   );
 }
@@ -228,20 +214,12 @@ function DeleteConfirmDialog({
           <DialogDescription>This action cannot be undone. Are you sure?</DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <button
-            type="button"
-            className="cursor-pointer rounded-md border border-muted-foreground/25 bg-transparent px-5 py-2 text-xs uppercase tracking-[0.08em] text-muted-foreground transition-colors duration-200 hover:border-muted-foreground/45 hover:text-foreground"
-            onClick={() => onOpenChange(false)}
-          >
+          <Button variant="hud-ghost" size="hud" onClick={() => onOpenChange(false)}>
             Cancel
-          </button>
-          <button
-            type="button"
-            className="cursor-pointer rounded-md border border-destructive/40 bg-destructive/15 px-5 py-2 text-xs uppercase tracking-[0.08em] text-destructive transition-colors duration-200 hover:border-destructive/55 hover:bg-destructive/25"
-            onClick={onConfirm}
-          >
+          </Button>
+          <Button variant="hud-destructive" size="hud" onClick={onConfirm}>
             Delete
-          </button>
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

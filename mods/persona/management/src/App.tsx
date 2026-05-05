@@ -1,5 +1,6 @@
 import { audio, Webview } from '@hmcs/sdk';
 import {
+  Button,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -110,13 +111,9 @@ export default function App() {
           ) : (
             <div className="flex flex-1 flex-col items-center justify-center gap-3">
               <div className="text-sm text-muted-foreground">No personas yet</div>
-              <button
-                type="button"
-                onClick={mgmt.enterCreateMode}
-                className="cursor-pointer rounded-md border border-primary/30 bg-primary/15 px-5 py-2 text-xs uppercase tracking-[0.08em] text-primary transition-[background,border-color] duration-200 hover:border-primary/50 hover:bg-primary/25"
-              >
+              <Button variant="hud" size="hud" onClick={mgmt.enterCreateMode}>
                 + Create
-              </button>
+              </Button>
             </div>
           )}
         </div>
@@ -148,20 +145,12 @@ function DiscardDialog({
           <DialogDescription>You have unsaved changes. Discard?</DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <button
-            type="button"
-            className="cursor-pointer rounded-md border border-muted-foreground/25 bg-transparent px-5 py-2 text-xs uppercase tracking-[0.08em] text-muted-foreground transition-colors duration-200 hover:border-muted-foreground/45 hover:text-foreground"
-            onClick={onCancel}
-          >
+          <Button variant="hud-ghost" size="hud" onClick={onCancel}>
             Cancel
-          </button>
-          <button
-            type="button"
-            className="cursor-pointer rounded-md border border-destructive/40 bg-destructive/15 px-5 py-2 text-xs uppercase tracking-[0.08em] text-destructive transition-colors duration-200 hover:border-destructive/55 hover:bg-destructive/25"
-            onClick={onConfirm}
-          >
+          </Button>
+          <Button variant="hud-destructive" size="hud" onClick={onConfirm}>
             Discard
-          </button>
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

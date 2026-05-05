@@ -1,4 +1,5 @@
 import {
+  Button,
   cn,
   Select,
   SelectContent,
@@ -196,13 +197,9 @@ function DisconnectedView({ onRetry }: { onRetry: () => void }) {
   return (
     <div className="flex flex-col items-center justify-center gap-4 py-10 text-center">
       <div className="text-sm text-holo-rose/80">Cannot connect to VOICEVOX</div>
-      <button
-        type="button"
-        className="relative z-[7] cursor-pointer rounded-md border border-primary/30 bg-primary/20 px-5 py-2 text-xs font-medium uppercase tracking-[0.08em] text-primary transition-all duration-200 ease-out hover:bg-primary/30"
-        onClick={onRetry}
-      >
+      <Button variant="hud" size="hud" className="relative z-[7]" onClick={onRetry}>
         Retry
-      </button>
+      </Button>
     </div>
   );
 }
@@ -328,14 +325,14 @@ function SpeechTest({
         disabled={disabled || speaking}
       />
       <div className="flex justify-end">
-        <button
-          type="button"
-          className="cursor-pointer rounded-md border border-primary/30 bg-primary/15 px-5 py-2 text-xs uppercase tracking-[0.08em] text-primary transition-[background,border-color,box-shadow] duration-200 ease-out enabled:hover:border-primary/50 enabled:hover:bg-primary/25 enabled:hover:shadow-holo-sm enabled:active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
+        <Button
+          variant="hud"
+          size="hud"
           disabled={disabled || speaking || text.trim().length === 0}
           onClick={() => onSpeak(text.trim())}
         >
           {speaking ? 'Speaking...' : '▶ Speak'}
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -354,27 +351,19 @@ function Footer({
   saved: boolean;
   disabled: boolean;
 }) {
-  const ghostBtn =
-    'cursor-pointer rounded-md border border-muted-foreground/25 bg-transparent px-5 py-2 text-xs uppercase tracking-[0.08em] text-muted-foreground transition-[color,border-color] duration-200 ease-out hover:border-muted-foreground/45 hover:text-foreground active:scale-[0.97]';
-
   return (
     <div className="relative z-[7] flex shrink-0 justify-end gap-2 border-t border-primary/12 bg-primary/4 px-3.5 py-2">
-      <button type="button" className={ghostBtn} onClick={onReset}>
+      <Button variant="hud-ghost" size="hud" onClick={onReset}>
         Reset
-      </button>
-      <button
-        type="button"
-        className={cn(
-          'cursor-pointer rounded-md border px-5 py-2 text-xs uppercase tracking-[0.08em] transition-[background,border-color,box-shadow,color] duration-200 ease-out active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50',
-          saved
-            ? 'border-success/40 bg-success/15 text-success hover:border-success/50 hover:bg-success/20 hover:shadow-holo-sm'
-            : 'border-primary/30 bg-primary/15 text-primary hover:border-primary/50 hover:bg-primary/25 hover:shadow-holo-sm',
-        )}
+      </Button>
+      <Button
+        variant={saved ? 'hud-success' : 'hud'}
+        size="hud"
         onClick={onSave}
         disabled={saving || disabled}
       >
         {saving ? 'Saving...' : saved ? 'Saved!' : 'Save'}
-      </button>
+      </Button>
     </div>
   );
 }
