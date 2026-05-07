@@ -36,8 +36,10 @@ export function BehaviorSection({
     <div className="settings-section">
       <div className="settings-section-heading">Behavior</div>
 
-      <div className="detail-field">
-        <div className="detail-field-label">Process</div>
+      <div className="mb-[14px]">
+        <div className="mb-1.5 text-[9px] font-normal uppercase tracking-[0.15em] text-[oklch(0.72_0.14_192/0.4)]">
+          Process
+        </div>
         <AssetSelect
           value={displayValue}
           onValueChange={(v) => onProcessChange(v === DEFAULT_PROCESS ? null : v)}
@@ -78,8 +80,8 @@ function AnimationFields({
   return (
     <div className="settings-vrma-fields">
       {fields.map(({ key, label, dotClass }) => (
-        <div key={key} className="detail-field">
-          <div className="detail-field-label">
+        <div key={key} className="mb-[14px]">
+          <div className="mb-1.5 text-[9px] font-normal uppercase tracking-[0.15em] text-[oklch(0.72_0.14_192/0.4)]">
             <span className={`settings-state-dot ${dotClass}`} />
             {label}
           </div>

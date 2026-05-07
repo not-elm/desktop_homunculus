@@ -1,6 +1,5 @@
 @import "tailwindcss";
 @import "@hmcs/ui/dist/index.css";
-@import "@persona/shared/detail-body.css";
 
 body {
   background: transparent;

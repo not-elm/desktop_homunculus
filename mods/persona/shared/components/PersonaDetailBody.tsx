@@ -1,3 +1,4 @@
+import { cn } from '@hmcs/ui';
 import { PersonaFields, type PersonaFormValues } from '@persona/shared/components/PersonaFields';
 import { ThumbnailCard } from '@persona/shared/components/ThumbnailCard';
 import VrmSelect from '@persona/shared/components/VrmSelect';
@@ -31,7 +32,7 @@ export function PersonaDetailBody({
   onFormChange,
 }: PersonaDetailBodyProps) {
   return (
-    <div className="detail-body">
+    <div className="flex flex-1 gap-5 overflow-y-auto px-[18px] py-[14px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       <LeftColumn
         personaId={personaId}
         thumbnailUrl={thumbnailUrl}
@@ -64,28 +65,48 @@ function LeftColumn({
   onAutoSpawnToggle: () => void;
 }) {
   return (
-    <div className="detail-left">
+    <div className="w-[140px] flex-shrink-0">
       <ThumbnailCard thumbnailUrl={thumbnailUrl} onThumbnailChange={onThumbnailChange} />
 
       <VrmSelect personaId={personaId} value={vrmAssetId} onChange={onVrmChange} />
 
-      <div className="detail-auto-row">
+      <div className="mt-3 flex items-center justify-between">
         <div>
-          <div className="detail-auto-label">Auto Spawn</div>
-          <div className="detail-auto-sublabel">Launch at startup</div>
+          <div className="text-xs tracking-[0.5px] text-[oklch(0.55_0.02_250)]">Auto Spawn</div>
+          <div className="mt-0.5 text-[10px] tracking-[0.3px] text-[oklch(0.45_0.02_250)]">
+            Launch at startup
+          </div>
         </div>
-        <button
-          type="button"
-          className={`toggle-mini ${autoSpawn ? 'on' : 'off'}`}
-          onClick={onAutoSpawnToggle}
-          aria-label="Toggle auto spawn"
-          role="switch"
-          aria-checked={autoSpawn}
-        >
-          <span className="knob" />
-        </button>
+        <AutoSpawnToggle enabled={autoSpawn} onToggle={onAutoSpawnToggle} />
       </div>
     </div>
+  );
+}
+
+function AutoSpawnToggle({ enabled, onToggle }: { enabled: boolean; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      className={cn(
+        'relative h-4 w-8 cursor-pointer rounded-lg border transition-all duration-[250ms] ease-out',
+        enabled
+          ? 'border-[oklch(0.72_0.14_192/0.5)] bg-[oklch(0.72_0.14_192/0.35)]'
+          : 'border-[oklch(0.4_0.02_250/0.4)] bg-[oklch(0.25_0.01_250)]',
+      )}
+      onClick={onToggle}
+      aria-label="Toggle auto spawn"
+      role="switch"
+      aria-checked={enabled}
+    >
+      <span
+        className={cn(
+          'absolute top-px h-3 w-3 rounded-full transition-all duration-[250ms] ease-out',
+          enabled
+            ? 'right-px bg-[oklch(0.72_0.14_192)] shadow-[0_0_6px_oklch(0.72_0.14_192/0.4)]'
+            : 'left-px bg-[oklch(0.45_0.02_250)]',
+        )}
+      />
+    </button>
   );
 }
 
@@ -99,9 +120,11 @@ function RightColumn({
   onFormChange: (values: PersonaFormValues) => void;
 }) {
   return (
-    <div className="detail-right">
-      <div className="detail-field">
-        <div className="detail-field-label">ID</div>
+    <div className="min-w-0 flex-1">
+      <div className="mb-[14px]">
+        <div className="mb-1.5 text-[9px] font-normal uppercase tracking-[0.15em] text-[oklch(0.72_0.14_192/0.4)]">
+          ID
+        </div>
         <input
           type="text"
           className="settings-input w-full cursor-not-allowed opacity-50"
