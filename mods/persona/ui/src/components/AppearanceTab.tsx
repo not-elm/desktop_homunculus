@@ -21,7 +21,7 @@ export function AppearanceTab({
   return (
     <>
       <ScaleSection scale={scale} onScaleChange={onScaleChange} />
-      <div className="settings-separator" />
+      <div className="my-4 h-px bg-gradient-to-r from-transparent via-[oklch(0.35_0.02_250/0.25)] to-transparent" />
       <BehaviorSection
         process={behaviorProcess}
         animations={behaviorAnimations}
@@ -43,7 +43,7 @@ function ScaleSection({
     <div className="settings-section">
       <label className="settings-label">
         Scale
-        <div className="settings-slider-row">
+        <div className="flex flex-row items-center gap-3">
           <input
             type="range"
             className="settings-slider"
@@ -53,7 +53,9 @@ function ScaleSection({
             value={scale}
             onChange={(e) => onScaleChange(parseFloat(e.target.value))}
           />
-          <span className="settings-slider-value">{scale.toFixed(2)}</span>
+          <span className="min-w-[3.5em] text-right font-mono text-xs text-[oklch(0.72_0.14_192)]">
+            {scale.toFixed(2)}
+          </span>
         </div>
       </label>
     </div>
