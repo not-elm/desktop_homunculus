@@ -1,5 +1,6 @@
 import { Persona } from '@hmcs/sdk';
 import {
+  cn,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -12,6 +13,13 @@ import { PersonaDetailBody } from '@persona/shared/components/PersonaDetailBody'
 import { usePersonaDetail } from '@persona/shared/hooks/usePersonaDetail';
 import { useThumbnailImport } from '@persona/shared/hooks/useThumbnailImport';
 import { useMemo, useState } from 'react';
+import {
+  loadingTextClasses,
+  managementBtnClasses,
+  managementBtnDangerClasses,
+  managementBtnSecondaryClasses,
+  managementBtnSuccessClasses,
+} from '../styles';
 
 type Tab = 'persona' | 'appearance';
 
@@ -60,8 +68,8 @@ export default function DetailView({
 
   if (!snapshot || !formValues) {
     return (
-      <div className="main-loading">
-        <div className="main-loading-text">Loading...</div>
+      <div className="flex h-full min-h-[200px] items-center justify-center">
+        <div className={loadingTextClasses}>Loading...</div>
       </div>
     );
   }
@@ -84,7 +92,7 @@ export default function DetailView({
   }
 
   return (
-    <div className="detail-view">
+    <div className="flex h-full flex-col">
       <DetailHeader
         name={snapshot.name ?? ''}
         personaId={personaId}
@@ -95,12 +103,16 @@ export default function DetailView({
         saved={saved}
       />
 
-      <div className="settings-tabs">
+      <div className="relative z-[7] flex flex-row gap-1 border-b border-[oklch(0.72_0.14_192/0.1)] pb-0">
         {TABS.map((t) => (
           <button
             type="button"
             key={t.id}
-            className={`settings-tab ${tab === t.id ? 'settings-tab--active' : ''}`}
+            className={cn(
+              'cursor-pointer border-none border-b-2 border-transparent bg-transparent px-3 py-2 font-[inherit] text-xs uppercase tracking-[0.08em] text-[oklch(0.75_0.02_250/0.6)] transition-[color,border-color,text-shadow] duration-[var(--hud-duration-content)] ease-linear hover:text-[oklch(0.85_0.06_192/0.8)]',
+              tab === t.id &&
+                'border-b-[oklch(0.72_0.14_192/0.8)] text-[oklch(0.72_0.14_192)] [text-shadow:0_0_12px_oklch(0.72_0.14_192/0.3)]',
+            )}
             onClick={() => setTab(t.id)}
           >
             {t.label}
@@ -108,7 +120,7 @@ export default function DetailView({
         ))}
       </div>
 
-      <div className="detail-tab-content">
+      <div className="flex-1 overflow-y-auto px-[18px] py-3">
         {tab === 'persona' && (
           <PersonaDetailBody
             personaId={personaId}
@@ -143,6 +155,15 @@ export default function DetailView({
   );
 }
 
+const spawnBtnBaseClasses =
+  'cursor-pointer rounded-md border-none px-3.5 py-1.5 text-center font-[inherit] text-[10px] font-semibold uppercase tracking-[0.12em] transition-all duration-[250ms] ease-linear disabled:opacity-50 disabled:cursor-not-allowed';
+
+const spawnBtnActivateClasses =
+  'border border-[oklch(0.72_0.14_192/0.4)] bg-[oklch(0.72_0.14_192/0.15)] text-[oklch(0.72_0.14_192)] hover:bg-[oklch(0.72_0.14_192/0.25)] hover:[box-shadow:0_0_12px_oklch(0.72_0.14_192/0.15)]';
+
+const spawnBtnDeactivateClasses =
+  'border border-[oklch(0.62_0.2_25/0.25)] bg-[oklch(0.62_0.2_25/0.08)] text-[oklch(0.7_0.15_25)] hover:bg-[oklch(0.62_0.2_25/0.15)] hover:[box-shadow:0_0_12px_oklch(0.62_0.2_25/0.3)]';
+
 function DetailHeader({
   name,
   personaId,
@@ -161,15 +182,22 @@ function DetailHeader({
   saved: boolean;
 }) {
   return (
-    <div className="detail-header">
-      <div className="detail-header-left">
-        <span className="detail-header-name">{name}</span>
-        <span className="detail-header-id">{personaId}</span>
+    <div className="flex flex-shrink-0 items-center justify-between border-b border-[oklch(0.72_0.14_192/0.08)] px-[18px] py-3">
+      <div className="flex items-baseline gap-2.5">
+        <span className="text-[15px] font-bold tracking-[0.06em] text-[oklch(0.72_0.14_192/0.95)]">
+          {name}
+        </span>
+        <span className="font-mono text-[9px] tracking-[0.5px] text-[oklch(0.72_0.14_192/0.25)]">
+          {personaId}
+        </span>
       </div>
-      <div className="detail-header-actions">
+      <div className="flex gap-1.5">
         <button
           type="button"
-          className={`detail-spawn-btn ${isSpawned ? 'deactivate' : 'activate'}`}
+          className={cn(
+            spawnBtnBaseClasses,
+            isSpawned ? spawnBtnDeactivateClasses : spawnBtnActivateClasses,
+          )}
           onClick={onSpawnToggle}
           disabled={saving}
         >
@@ -177,7 +205,7 @@ function DetailHeader({
         </button>
         <button
           type="button"
-          className="management-btn management-btn--success"
+          className={`${managementBtnClasses} ${managementBtnSuccessClasses}`}
           onClick={onSave}
           disabled={saving}
         >
@@ -190,8 +218,12 @@ function DetailHeader({
 
 function DeleteSection({ onDelete }: { onDelete: () => void }) {
   return (
-    <div className="delete-section">
-      <button type="button" className="management-btn management-btn--danger" onClick={onDelete}>
+    <div className="flex-shrink-0 border-t border-[oklch(0.62_0.2_25/0.08)] px-[18px] py-3">
+      <button
+        type="button"
+        className={`${managementBtnClasses} ${managementBtnDangerClasses}`}
+        onClick={onDelete}
+      >
         Delete Persona
       </button>
     </div>
@@ -217,14 +249,14 @@ function DeleteConfirmDialog({
         <DialogFooter>
           <button
             type="button"
-            className="management-btn management-btn--secondary"
+            className={`${managementBtnClasses} ${managementBtnSecondaryClasses}`}
             onClick={() => onOpenChange(false)}
           >
             Cancel
           </button>
           <button
             type="button"
-            className="management-btn management-btn--danger"
+            className={`${managementBtnClasses} ${managementBtnDangerClasses}`}
             onClick={onConfirm}
           >
             Delete

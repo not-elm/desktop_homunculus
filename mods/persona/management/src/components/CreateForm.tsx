@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { managementBtnClasses, managementBtnSecondaryClasses } from '../styles';
 
 interface CreateFormProps {
   onCreate: (id: string, name: string) => Promise<void>;
@@ -34,9 +35,14 @@ export default function CreateForm({ onCreate, onCancel }: CreateFormProps) {
   }
 
   return (
-    <div className="create-form-wrapper">
-      <form className="create-form" onSubmit={handleSubmit}>
-        <h2 className="create-form-title">Create Persona</h2>
+    <div className="flex h-full items-center justify-center p-5">
+      <form
+        className="flex w-80 flex-col gap-3.5 rounded-lg border border-[oklch(0.72_0.14_192/0.15)] bg-[oklch(0.72_0.14_192/0.04)] p-6"
+        onSubmit={handleSubmit}
+      >
+        <h2 className="m-0 mb-1 text-sm font-semibold tracking-[0.06em] text-[oklch(0.72_0.14_192/0.9)]">
+          Create Persona
+        </h2>
 
         <label className="settings-label">
           ID
@@ -48,7 +54,7 @@ export default function CreateForm({ onCreate, onCancel }: CreateFormProps) {
             placeholder="e.g. alice, my-persona"
           />
           {idError && (
-            <span className="create-form-error-hint">
+            <span className="mt-0.5 text-[11px] text-[oklch(0.62_0.2_25)]">
               Only letters, numbers, hyphens, and underscores (1-64 chars)
             </span>
           )}
@@ -65,17 +71,25 @@ export default function CreateForm({ onCreate, onCancel }: CreateFormProps) {
           />
         </label>
 
-        {error && <div className="create-form-error">{error}</div>}
+        {error && (
+          <div className="rounded-md border border-[oklch(0.62_0.2_25/0.2)] bg-[oklch(0.62_0.2_25/0.08)] px-2.5 py-2 text-xs text-[oklch(0.62_0.2_25)]">
+            {error}
+          </div>
+        )}
 
-        <div className="create-form-actions">
+        <div className="mt-1 flex justify-end gap-2">
           <button
             type="button"
-            className="management-btn management-btn--secondary"
+            className={`${managementBtnClasses} ${managementBtnSecondaryClasses}`}
             onClick={onCancel}
           >
             Cancel
           </button>
-          <button type="submit" className="management-btn" disabled={!formValid || submitting}>
+          <button
+            type="submit"
+            className={managementBtnClasses}
+            disabled={!formValid || submitting}
+          >
             {submitting ? 'Creating...' : 'Create'}
           </button>
         </div>
